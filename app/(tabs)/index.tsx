@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { timezoneOptions, useAppSettings } from "@/lib/app-settings";
+import { timezoneOptions, timezoneRegions, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
 
@@ -176,6 +176,79 @@ const homeTranslations = {
   },
 } as const;
 
+type RestCountry = {
+  cca2?: string;
+  capital?: string[];
+  capitalInfo?: { latlng?: number[] };
+  name?: { common?: string };
+  region?: string;
+  subregion?: string;
+  timezones?: string[];
+};
+
+const normalizeIdPart = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+const parseUtcOffsetMinutes = (value?: string) => {
+  if (!value || value === "UTC") {
+    return 0;
+  }
+
+  const match = value.match(/^UTC([+-])(\d{2}):?(\d{2})?$/);
+
+  if (!match) {
+    return 0;
+  }
+
+  const sign = match[1] === "-" ? -1 : 1;
+  const hours = Number(match[2]);
+  const minutes = Number(match[3] ?? "0");
+
+  return sign * (hours * 60 + minutes);
+};
+
+const mapCountryRegionToTimezoneRegion = (region?: string, subregion?: string): TimezoneRegion => {
+  if (region === "Africa") {
+    return "Africa";
+  }
+
+  if (region === "Europe") {
+    return "Europe";
+  }
+
+  if (region === "Oceania") {
+    return "Oceania";
+  }
+
+  if (region === "Asia") {
+    return subregion === "Western Asia" ? "Middle East" : "Asia";
+  }
+
+  if (region === "Americas") {
+    if (subregion?.includes("South")) {
+      return "South America";
+    }
+
+    if (subregion?.includes("Central") || subregion === "Caribbean") {
+      return "Central America";
+    }
+
+    return "North America";
+  }
+
+  return "UTC";
+};
+
+const getTimezoneNow = (date: Date, option: TimezoneSetting) =>
+  option.utcOffsetMinutes === undefined ? date : new Date(date.getTime() + option.utcOffsetMinutes * 60 * 1000);
+
+const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes === undefined ? option.timeZone : "UTC");
+
 export default function HomeScreen() {
   const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage } = useAppSettings();
   const copy = homeTranslations[appLanguage as keyof typeof homeTranslations] ?? homeTranslations.English;
@@ -185,6 +258,35 @@ export default function HomeScreen() {
   const isDay = !isNightMode;
   const [now, setNow] = useState(new Date());
   const [isTimezonePickerOpen, setIsTimezonePickerOpen] = useState(false);
+  const [worldCapitalOptions, setWorldCapitalOptions] = useState<TimezoneSetting[]>([]);
+  const [isLoadingCapitals, setIsLoadingCapitals] = useState(false);
+  const [capitalLoadError, setCapitalLoadError] = useState<string | null>(null);
+  const timezonePickerRegions = ["All", ...timezoneRegions] as const;
+  const [selectedTimezoneRegion, setSelectedTimezoneRegion] = useState<TimezoneRegion | "All">("All");
+  const allTimezoneOptions = useMemo(() => {
+    const curatedKeys = new Set(timezoneOptions.map((option) => `${option.city}|${option.country}`.toLowerCase()));
+    const capitals = worldCapitalOptions.filter((option) => !curatedKeys.has(`${option.city}|${option.country}`.toLowerCase()));
+
+    return [...timezoneOptions, ...capitals].sort((a, b) => a.label.localeCompare(b.label));
+  }, [worldCapitalOptions]);
+  const regionTimezoneOptions = allTimezoneOptions.filter(
+    (option) => selectedTimezoneRegion === "All" || option.region === selectedTimezoneRegion
+  );
+
+  const detectTimezone = () => {
+    const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const detectedOption = allTimezoneOptions.find((option) => option.timeZone === detectedTimeZone);
+
+    if (detectedOption) {
+      setTimezone(detectedOption);
+      setSelectedTimezoneRegion(detectedOption.region);
+    } else {
+      setTimezone(timezoneOptions[0]);
+      setSelectedTimezoneRegion("UTC");
+    }
+
+    setIsTimezonePickerOpen(false);
+  };
 
   useEffect(() => {
   const timer = setInterval(() => { setNow(new Date()); }, 1000); // updates every second
@@ -192,18 +294,96 @@ export default function HomeScreen() {
   return () => clearInterval(timer);}, []
   );
 
-  const formattedDate = now.toLocaleDateString("en-AU", {
+  useEffect(() => {
+    if (!isTimezonePickerOpen || worldCapitalOptions.length > 0 || isLoadingCapitals) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function fetchWorldCapitals() {
+      try {
+        setIsLoadingCapitals(true);
+        setCapitalLoadError(null);
+
+        const response = await fetch(
+          "https://restcountries.com/v3.1/all?fields=name,capital,capitalInfo,timezones,region,subregion,cca2"
+        );
+
+        if (!response.ok) {
+          throw new Error("Capital list request failed");
+        }
+
+        const countries = (await response.json()) as RestCountry[];
+        const capitalOptions = countries
+          .flatMap((country) => {
+            const capital = country.capital?.[0];
+            const countryName = country.name?.common;
+            const [latitude, longitude] = country.capitalInfo?.latlng ?? [];
+
+            if (!capital || !countryName || latitude === undefined || longitude === undefined) {
+              return [];
+            }
+
+            const utcOffset = country.timezones?.[0] ?? "UTC";
+            const idCountryPart = country.cca2?.toLowerCase() ?? normalizeIdPart(countryName);
+
+            return [
+              {
+                id: `capital-${idCountryPart}-${normalizeIdPart(capital)}`,
+                label: capital,
+                city: capital,
+                country: countryName,
+                region: mapCountryRegionToTimezoneRegion(country.region, country.subregion),
+                timeZone: "UTC",
+                utcOffset,
+                utcOffsetMinutes: parseUtcOffsetMinutes(utcOffset),
+                usesAutoTimezone: true,
+                latitude,
+                longitude,
+              } satisfies TimezoneSetting,
+            ];
+          })
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        if (isMounted) {
+          setWorldCapitalOptions(capitalOptions);
+        }
+      } catch (error) {
+        console.log("World capitals fetch failed:", error);
+
+        if (isMounted) {
+          setCapitalLoadError("World capitals could not load right now. Curated cities are still available.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingCapitals(false);
+        }
+      }
+    }
+
+    fetchWorldCapitals();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoadingCapitals, isTimezonePickerOpen, worldCapitalOptions.length]);
+
+  const timezoneNow = getTimezoneNow(now, timezone);
+  const displayTimeZone = getDisplayTimeZone(timezone);
+
+  const formattedDate = timezoneNow.toLocaleDateString("en-AU", {
   weekday: "long",
   day: "numeric",
   month: "long",
-  timeZone: timezone.timeZone,
+  timeZone: displayTimeZone,
 }
   );
 
-  const formattedTime = now.toLocaleTimeString("en-AU", {
+  const formattedTime = timezoneNow.toLocaleTimeString("en-AU", {
   hour: "2-digit",
   minute: "2-digit",
-  timeZone: timezone.timeZone,
+  timeZone: displayTimeZone,
 }
 
   );
@@ -213,8 +393,8 @@ export default function HomeScreen() {
     new Intl.DateTimeFormat("en-AU", {
       hour: "numeric",
       hour12: false,
-      timeZone: timezone.timeZone,
-    }).format(now)
+      timeZone: displayTimeZone,
+    }).format(timezoneNow)
   );
 
   const greeting =
@@ -247,7 +427,7 @@ export default function HomeScreen() {
       setWeather({ temperature: null, rainChance: null });
 
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.timeZone)}&forecast_days=1`
+        `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.usesAutoTimezone ? "auto" : timezone.timeZone)}&forecast_days=1`
       );
 
       const data = await response.json();
@@ -349,7 +529,40 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </View>
 
-              {timezoneOptions.map((option) => {
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={detectTimezone}
+                style={[styles.autoTimezoneButton, isDay && styles.dayTimezoneOption]}
+              >
+                <Text style={[styles.timezoneOptionLabel, isDay && styles.dayHeadingText]}>Detect automatically</Text>
+                <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText]}>Use this device's timezone when it matches a supported city.</Text>
+              </TouchableOpacity>
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timezoneRegionRow}>
+                {timezonePickerRegions.map((region) => {
+                  const active = selectedTimezoneRegion === region;
+
+                  return (
+                    <TouchableOpacity
+                      key={region}
+                      activeOpacity={0.78}
+                      onPress={() => setSelectedTimezoneRegion(region)}
+                      style={[styles.timezoneRegionPill, isDay && styles.dayTimezoneRegionPill, active && styles.timezoneRegionPillActive]}
+                    >
+                      <Text style={[styles.timezoneRegionText, isDay && styles.dayMutedText, active && styles.timezoneRegionTextActive]}>{region}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+
+              <ScrollView style={styles.timezoneList} nestedScrollEnabled showsVerticalScrollIndicator>
+              {isLoadingCapitals ? (
+                <Text style={[styles.timezoneStatusText, isDay && styles.dayMutedText]}>Loading world capitals...</Text>
+              ) : null}
+              {capitalLoadError ? (
+                <Text style={[styles.timezoneStatusText, isDay && styles.dayMutedText]}>{capitalLoadError}</Text>
+              ) : null}
+              {regionTimezoneOptions.map((option) => {
                 const selected = option.id === timezone.id;
 
                 return (
@@ -364,12 +577,16 @@ export default function HomeScreen() {
                   >
                     <View>
                       <Text style={[styles.timezoneOptionLabel, isDay && styles.dayHeadingText]}>{option.label}</Text>
-                      <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText]}>{option.timeZone}</Text>
+                      <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText]}>{option.country} · {option.utcOffset}</Text>
+                      <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText]}>
+                        {option.usesAutoTimezone ? "World capital · auto weather timezone" : option.timeZone}
+                      </Text>
                     </View>
                     <Text style={[styles.timezoneCheck, selected && styles.timezoneCheckActive]}>{selected ? "✓" : ""}</Text>
                   </TouchableOpacity>
                 );
               })}
+              </ScrollView>
             </View>
           </View>
         </Modal>
@@ -457,10 +674,19 @@ const styles = StyleSheet.create({
   timezoneSheet: { borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, padding: 16, gap: 10 },
   timezoneHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 },
   timezoneTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "800", lineHeight: 24 },
+  autoTimezoneButton: { minHeight: 62, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, justifyContent: "center" },
+  timezoneRegionRow: { gap: 8, paddingVertical: 2 },
+  timezoneRegionPill: { minHeight: 34, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, alignItems: "center", justifyContent: "center" },
+  dayTimezoneRegionPill: { borderColor: "#B8C9E6", backgroundColor: "#EAF4FF" },
+  timezoneRegionPillActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  timezoneRegionText: { color: nsnColors.muted, fontSize: 12, fontWeight: "800" },
+  timezoneRegionTextActive: { color: nsnColors.text },
+  timezoneList: { maxHeight: 280 },
   timezoneOption: { minHeight: 58, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   timezoneOptionActive: { borderColor: nsnColors.primary },
   timezoneOptionLabel: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   timezoneOptionMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
+  timezoneStatusText: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, paddingHorizontal: 4, paddingVertical: 8 },
   timezoneCheck: { width: 24, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "right" },
   timezoneCheckActive: { color: nsnColors.primary },
   weatherCard: { minHeight: 72, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#1B3566", marginBottom: 12 },

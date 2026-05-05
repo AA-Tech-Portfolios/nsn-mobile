@@ -1,6 +1,7 @@
 {
-  "name": "app-template",
+  "name": "nsn-mobile",
   "version": "1.0.0",
+  "description": "North Shore Nights, a low-pressure social meetup app for small, local connections.",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {

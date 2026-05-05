@@ -36,6 +36,7 @@ yarn-error.*
 .env
 .env.*
 .env*.local
+!.env.example
 
 # typescript
 *.tsbuildinfo
@@ -64,6 +65,7 @@ Thumbs.db
 *.tgz
 *.tar.gz
 .cache/
+expo-qr-code.png
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
