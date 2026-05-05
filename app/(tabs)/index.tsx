@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { useAppSettings } from "@/lib/app-settings";
+import { timezoneOptions, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
 
@@ -49,16 +49,16 @@ function EventCard({ event, isDay, }: { event: EventItem; isDay?: boolean; }) {
 }
 
 export default function HomeScreen() {
-  const { isNightMode, setIsNightMode } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, setTimezone } = useAppSettings();
   
   const mode = isNightMode ? "night" : "day"; // State
   const activeEvents = useMemo(() => (isNightMode ? eveningEvents : dayEvents), [isNightMode]);
   const isDay = !isNightMode;
-  const [now, setNow] = useState(new Date()); useEffect(() => {
-  const timer = setInterval(() => { setNow(new Date()); 
-  const hour = now.getHours();
+  const [now, setNow] = useState(new Date());
+  const [isTimezonePickerOpen, setIsTimezonePickerOpen] = useState(false);
 
-    }, 1000); // updates every second
+  useEffect(() => {
+  const timer = setInterval(() => { setNow(new Date()); }, 1000); // updates every second
 
   return () => clearInterval(timer);}, []
   );
@@ -67,18 +67,26 @@ export default function HomeScreen() {
   weekday: "long",
   day: "numeric",
   month: "long",
+  timeZone: timezone.timeZone,
 }
   );
 
   const formattedTime = now.toLocaleTimeString("en-AU", {
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: timezone.timeZone,
 }
 
   );
 
   // ===== LIVE TIME =====
-  const hour = now.getHours();
+  const hour = Number(
+    new Intl.DateTimeFormat("en-AU", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: timezone.timeZone,
+    }).format(now)
+  );
 
   const greeting =
   hour < 12
@@ -95,30 +103,31 @@ export default function HomeScreen() {
 
   const weatherMessage =
   weather.temperature === null || weather.rainChance === null
-    ? "Loading local weather..."
+    ? `Loading ${timezone.city} weather...`
     : weather.rainChance >= 70
-    ? `☔ Rain likely today • Sydney ${weather.temperature}°C • Indoor alternatives recommended.`
+    ? `☔ Rain likely today • ${timezone.city} ${weather.temperature}°C • Indoor alternatives recommended.`
     : weather.rainChance >= 35
-    ? `🌦️ Slight rain possible • Sydney ${weather.temperature}°C • We'll keep you updated.`
+    ? `🌦️ Slight rain possible • ${timezone.city} ${weather.temperature}°C • We'll keep you updated.`
     : weather.temperature >= 28
-    ? `☀️ Warm day • Sydney ${weather.temperature}°C • Great for outdoor meetups.`
-    : `🌤️ Good meetup weather • Sydney ${weather.temperature}°C • Rain chance ${weather.rainChance}%.`;
+    ? `☀️ Warm day • ${timezone.city} ${weather.temperature}°C • Great for outdoor meetups.`
+    : `🌤️ Good meetup weather • ${timezone.city} ${weather.temperature}°C • Rain chance ${weather.rainChance}%.`;
 
   useEffect(() => {
   async function fetchWeather() {
     try {
-      const latitude = -33.75;
-      const longitude = 151.15;
+      setWeather({ temperature: null, rainChance: null });
 
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=Australia%2FSydney&forecast_days=1`
+        `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.timeZone)}&forecast_days=1`
       );
 
       const data = await response.json();
+      const currentHourIndex = data.hourly.time?.findIndex((time: string) => time === data.current.time) ?? 0;
+      const rainChance = data.hourly.precipitation_probability?.[currentHourIndex >= 0 ? currentHourIndex : 0] ?? null;
 
       setWeather({
         temperature: Math.round(data.current.temperature_2m),
-        rainChance: data.hourly.precipitation_probability?.[0] ?? null,
+        rainChance,
       });
     } catch (error) {
       console.log("Weather fetch failed:", error);
@@ -129,7 +138,7 @@ export default function HomeScreen() {
 
   const timer = setInterval(fetchWeather, 15 * 60 * 1000);
 
-  return () => clearInterval(timer);}, []
+  return () => clearInterval(timer);}, [timezone]
 
     );
 
@@ -165,7 +174,7 @@ export default function HomeScreen() {
       );  
 
     return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background">
+    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
       <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View>
@@ -189,12 +198,52 @@ export default function HomeScreen() {
         <View style={styles.contextRow}>
           <View>
             <Text style={[styles.dateText, isDay && styles.dayMutedText]}>{greeting} • {formattedDate} • {formattedTime}</Text>
-            <Text style={[styles.locationText, isDay && styles.dayMutedText]}>📍 North Shore, NSW</Text>
+            <Text style={[styles.locationText, isDay && styles.dayMutedText]}>📍 {timezone.label}, {timezone.country}</Text>
           </View>
-          <TouchableOpacity activeOpacity={0.75}>
+          <TouchableOpacity activeOpacity={0.75} onPress={() => setIsTimezonePickerOpen(true)}>
             <Text style={[styles.changeText, isDay ? styles.dayLinkText : null]}>Change</Text>
           </TouchableOpacity>
         </View>
+
+        <Modal
+          animationType="fade"
+          transparent
+          visible={isTimezonePickerOpen}
+          onRequestClose={() => setIsTimezonePickerOpen(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={[styles.timezoneSheet, isDay && styles.dayTimezoneSheet]}>
+              <View style={styles.timezoneHeader}>
+                <Text style={[styles.timezoneTitle, isDay && styles.dayHeadingText]}>Timezone</Text>
+                <TouchableOpacity activeOpacity={0.75} onPress={() => setIsTimezonePickerOpen(false)}>
+                  <Text style={[styles.changeText, isDay && styles.dayLinkText]}>Done</Text>
+                </TouchableOpacity>
+              </View>
+
+              {timezoneOptions.map((option) => {
+                const selected = option.id === timezone.id;
+
+                return (
+                  <TouchableOpacity
+                    key={option.id}
+                    activeOpacity={0.78}
+                    onPress={() => {
+                      setTimezone(option);
+                      setIsTimezonePickerOpen(false);
+                    }}
+                    style={[styles.timezoneOption, isDay && styles.dayTimezoneOption, selected && styles.timezoneOptionActive]}
+                  >
+                    <View>
+                      <Text style={[styles.timezoneOptionLabel, isDay && styles.dayHeadingText]}>{option.label}</Text>
+                      <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText]}>{option.timeZone}</Text>
+                    </View>
+                    <Text style={[styles.timezoneCheck, selected && styles.timezoneCheckActive]}>{selected ? "✓" : ""}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </Modal>
 
         <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard]}>
           <View>
@@ -253,6 +302,8 @@ const styles = StyleSheet.create({
   dayPillTextActive: { color: "#FFFFFF", },
   dayScreen: { backgroundColor: "#EAF4FF" },
   dayText: { color: "#111111", },
+  dayTimezoneOption: { borderColor: "#B8C9E6" },
+  dayTimezoneSheet: { backgroundColor: "#F4F9FF", borderColor: "#AFC4E6" },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   logo: { color: nsnColors.text, fontSize: 25, fontWeight: "800", letterSpacing: -0.4, lineHeight: 32 },
@@ -273,6 +324,16 @@ const styles = StyleSheet.create({
   dateText: { color: nsnColors.text, fontSize: 13, lineHeight: 19 },
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   changeText: { color: "#96A5FF", fontSize: 12, fontWeight: "700" },
+  modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.45)", padding: 16 },
+  timezoneSheet: { borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, padding: 16, gap: 10 },
+  timezoneHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 },
+  timezoneTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "800", lineHeight: 24 },
+  timezoneOption: { minHeight: 58, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  timezoneOptionActive: { borderColor: nsnColors.primary },
+  timezoneOptionLabel: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
+  timezoneOptionMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
+  timezoneCheck: { width: 24, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "right" },
+  timezoneCheckActive: { color: nsnColors.primary },
   weatherCard: { minHeight: 72, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#1B3566", marginBottom: 12 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },

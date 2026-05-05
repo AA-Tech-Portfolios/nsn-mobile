@@ -1,19 +1,18 @@
 import { View, Text, StyleSheet, Switch } from "react-native";
 import { useState } from "react";
 
-import { ScreenContainer } from "@/components/screen-container";
 import { useAppSettings } from "@/lib/app-settings";
+import { ScreenContainer } from "@/components/screen-container";
 import { nsnColors } from "@/lib/nsn-data";
 
 export default function SettingsScreen() {
   const { isNightMode } = useAppSettings();
   const isDay = !isNightMode;
-
   const [blurPhoto, setBlurPhoto] = useState(true);
   const [privateProfile, setPrivateProfile] = useState(false);
 
   return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background">
+    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <View style={[styles.container, isDay && styles.dayContainer]}>
         <Text style={[styles.title, isDay && styles.dayTitle]}>Settings & Privacy</Text>
         <Text style={[styles.subtitle, isDay && styles.daySubtitle]}>

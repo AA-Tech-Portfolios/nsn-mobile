@@ -8,11 +8,10 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
 
 export default function TabLayout() {
-  const insets = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
-
   const { isNightMode } = useAppSettings();
   const isDay = !isNightMode;
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
 
   return (
       <Tabs

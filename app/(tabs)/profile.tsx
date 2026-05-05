@@ -3,6 +3,7 @@ import { View, Text, TextInput, Platform, ScrollView, StyleSheet, TouchableOpaci
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 
+import { useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
@@ -17,6 +18,8 @@ const rows = [
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { isNightMode } = useAppSettings();
+  const isDay = !isNightMode;
 
   const [name, setName] = useState("Alon");
   const [isEditingName, setIsEditingName] = useState(false);
@@ -67,11 +70,11 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background">
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+      <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topRight}>
-          <TouchableOpacity activeOpacity={0.75} style={styles.settingsButton}>
-            <IconSymbol name="settings" color={nsnColors.text} size={23} />
+          <TouchableOpacity activeOpacity={0.75} style={[styles.settingsButton, isDay && styles.dayIconButton]}>
+            <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={23} />
           </TouchableOpacity>
         </View>
 
@@ -111,7 +114,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
                 
           {showPhotoMenu && (
-            <View style={styles.photoMenu}>
+            <View style={[styles.photoMenu, isDay && styles.dayCard]}>
           <TouchableOpacity
             style={styles.photoMenuItem}
             onPress={() => {
@@ -119,7 +122,7 @@ export default function ProfileScreen() {
             pickProfilePhoto();
           }}
     >
-      <Text style={styles.photoMenuText}>
+      <Text style={[styles.photoMenuText, isDay && styles.dayTitle]}>
         {profilePhoto ? "Change photo" : "Choose photo"}
       </Text>
     </TouchableOpacity>
@@ -150,12 +153,12 @@ export default function ProfileScreen() {
                 value={name}
                 onChangeText={setName}
                 autoFocus
-                style={styles.nameInput}
+                style={[styles.nameInput, isDay && styles.dayTitle]}
                 selectionColor="#7786FF"
                 onSubmitEditing={() => setIsEditingName(false)}
               />
             ) : (
-              <Text style={styles.name}>{name}</Text>
+              <Text style={[styles.name, isDay && styles.dayTitle]}>{name}</Text>
             )}
 
             <TouchableOpacity
@@ -172,14 +175,14 @@ export default function ProfileScreen() {
               {isEditingName ? (
                 <Text style={styles.editText}>Done</Text>
               ) : (
-                <IconSymbol name="edit" color={nsnColors.muted} size={18} />
+                <IconSymbol name="edit" color={isDay ? "#52657F" : nsnColors.muted} size={18} />
               )}
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>My Vibes</Text>
+          <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>My Vibes</Text>
 
           <Text style={styles.editText} onPress={() => setIsEditingVibes(!isEditingVibes)}>
             {isEditingVibes ? "Done" : "Edit"}
@@ -210,7 +213,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.75}
                 onPress={() => isEditingVibes && toggleVibe(vibe)}
               >
-                <Text style={[styles.vibeChip, isEditingVibes && !selected && styles.vibeChipMuted]}>
+                <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, isEditingVibes && !selected && styles.vibeChipMuted]}>
                   {selected ? vibe : `＋ ${vibe}`}
                 </Text>
               </TouchableOpacity>
@@ -219,7 +222,7 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.sectionTitleRow}>
-          <Text style={styles.sectionTitle}>About me</Text>
+          <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>About me</Text>
           <Text
             accessibilityRole="button"
             accessibilityLabel={
@@ -244,10 +247,10 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        <View style={styles.aboutCard}>
+        <View style={[styles.aboutCard, isDay && styles.dayCard]}>
           {isEditingAbout ? (
             <TextInput
-              style={[styles.aboutText, styles.aboutInput]}
+              style={[styles.aboutText, styles.aboutInput, isDay && styles.dayTitle]}
               value={aboutMe}
               onChangeText={setAboutMe}
               autoFocus
@@ -256,11 +259,11 @@ export default function ProfileScreen() {
               underlineColorAndroid="transparent"
             />
           ) : (
-            <Text style={styles.aboutText}>{aboutMe}</Text>
+            <Text style={[styles.aboutText, isDay && styles.dayTitle]}>{aboutMe}</Text>
           )}
         </View>
 
-        <View style={styles.settingsList}>
+        <View style={[styles.settingsList, isDay && styles.dayCard]}>
           {rows.map((row, index) => (
             <TouchableOpacity 
               key={row.label}
@@ -269,12 +272,12 @@ export default function ProfileScreen() {
               accessibilityHint="Opens section"
               activeOpacity={0.78}
               onPress={() => router.push(row.route as any)}
-              style={[styles.row, index < rows.length - 1 && styles.rowBorder]}
+              style={[styles.row, index < rows.length - 1 && styles.rowBorder, isDay && index < rows.length - 1 && styles.dayRowBorder]}
             >
 
-              <IconSymbol name={row.icon} color={nsnColors.muted} size={22} />
-              <Text style={styles.rowLabel}>{row.label}</Text>
-              <Text style={styles.rowChevron}>›</Text>
+              <IconSymbol name={row.icon} color={isDay ? "#52657F" : nsnColors.muted} size={22} />
+              <Text style={[styles.rowLabel, isDay && styles.dayTitle]}>{row.label}</Text>
+              <Text style={[styles.rowChevron, isDay && styles.dayMutedText]}>›</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -285,9 +288,11 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
+  dayContainer: { backgroundColor: "#EAF4FF" },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 30 },
   topRight: { alignItems: "flex-end", marginBottom: 8 },
   settingsButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
+  dayIconButton: { backgroundColor: "#DDEBFF" },
   profileHeader: { alignItems: "center", marginBottom: 22 },
   avatar: { width: 90, height: 90, borderRadius: 45, alignItems: "center", justifyContent: "center", backgroundColor: "#1590C9" },
   avatarImage: { width: 90, height: 90, borderRadius: 45 },
@@ -301,6 +306,8 @@ const styles = StyleSheet.create({
   photoMenuText: { color: nsnColors.text, fontSize: 13, fontWeight: "700", textAlign: "center", },
   photoMenuDeleteText: { color: "#FF6B6B", fontSize: 13, fontWeight: "800", textAlign: "center", },
   name: { color: nsnColors.text, fontSize: 26, fontWeight: "800", lineHeight: 33 },
+  dayTitle: { color: "#0B1220" },
+  dayMutedText: { color: "#52657F" },
   nameInput: { color: nsnColors.text, fontSize: 26, fontWeight: "800", lineHeight: 33, textAlign: "center", minWidth: 120, borderBottomWidth: 1, borderBottomColor: nsnColors.primary, paddingVertical: 2 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 7, marginTop: 12 },
   sectionTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
@@ -315,7 +322,9 @@ const styles = StyleSheet.create({
   settingsList: { borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   row: { minHeight: 54, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: nsnColors.border },
+  dayRowBorder: { borderBottomColor: "#AFC4E6" },
   rowIcon: { width: 30, color: nsnColors.text, fontSize: 17 },
   rowLabel: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "600", lineHeight: 20 },
   rowChevron: { color: nsnColors.muted, fontSize: 26, lineHeight: 30 },
+  dayCard: { backgroundColor: "#F4F9FF", borderColor: "#AFC4E6" },
 });

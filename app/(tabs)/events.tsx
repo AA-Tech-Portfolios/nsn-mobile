@@ -1,15 +1,19 @@
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
+import { useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { nsnColors } from "@/lib/nsn-data";
 
 export default function EventsScreen() {
-  return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background">
-      <View style={styles.container}>
-        <Text style={styles.title}>My Events</Text>
+  const { isNightMode } = useAppSettings();
+  const isDay = !isNightMode;
 
-        <Text style={styles.subtitle}>
+  return (
+    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+      <View style={[styles.container, isDay && styles.dayContainer]}>
+        <Text style={[styles.title, isDay && styles.dayTitle]}>My Events</Text>
+
+        <Text style={[styles.subtitle, isDay && styles.daySubtitle]}>
           Create your own experiences and invite others on your terms.
         </Text>
 
@@ -17,10 +21,10 @@ export default function EventsScreen() {
           <Text style={styles.createButtonText}>＋ Create Event</Text>
         </TouchableOpacity>
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>No events created yet</Text>
+        <View style={[styles.card, isDay && styles.dayCard]}>
+          <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>No events created yet</Text>
 
-          <Text style={styles.cardText}>
+          <Text style={[styles.cardText, isDay && styles.daySubtitle]}>
             Host a coffee meetup, movie night, board games, walk, study session or anything that feels like you.
           </Text>
         </View>
@@ -36,11 +40,18 @@ const styles = StyleSheet.create({
     padding: 20,
   },
 
+  dayContainer: {
+    backgroundColor: "#EAF4FF",
+  },
+
   title: {
     color: nsnColors.text,
     fontSize: 28,
     fontWeight: "900",
     marginBottom: 8,
+  },
+  dayTitle: {
+    color: "#0B1220",
   },
 
   subtitle: {
@@ -48,6 +59,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 20,
+  },
+  daySubtitle: {
+    color: "#52657F",
   },
 
   createButton: {
@@ -70,6 +84,10 @@ const styles = StyleSheet.create({
     borderColor: nsnColors.border,
     backgroundColor: nsnColors.surface,
     padding: 18,
+  },
+  dayCard: {
+    backgroundColor: "#F4F9FF",
+    borderColor: "#AFC4E6",
   },
 
   cardTitle: {
