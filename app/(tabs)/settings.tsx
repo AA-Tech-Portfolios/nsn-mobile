@@ -1126,6 +1126,7 @@ export default function SettingsScreen() {
     setTranslationLanguage,
     appPalette,
     setAppPalette,
+    resetOnboarding,
   } = useAppSettings();
   const isDay = !isNightMode;
   const [privateProfile, setPrivateProfile] = useState(false);
@@ -1423,6 +1424,24 @@ export default function SettingsScreen() {
               />
             </View>
           ))}
+          <TouchableOpacity
+            activeOpacity={0.78}
+            onPress={resetOnboarding}
+            accessibilityRole="button"
+            accessibilityLabel="Restart SoftHello onboarding"
+            accessibilityHint="Clears onboarding completion and opens the setup flow again."
+            style={[styles.actionRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}
+          >
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+                Restart SoftHello onboarding
+              </Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.
+              </Text>
+            </View>
+            <Text style={[styles.actionText, isDay && styles.dayActionText]}>Start</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
@@ -1718,6 +1737,23 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingHorizontal: 18,
     paddingVertical: 14,
+  },
+  actionRow: {
+    minHeight: 72,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  actionText: {
+    color: "#7786FF",
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  dayActionText: {
+    color: "#3949DB",
   },
   largeSettingRow: {
     minHeight: 86,

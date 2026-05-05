@@ -711,6 +711,7 @@ type AppSettings = {
   visibilityPreference: SoftHelloVisibility;
   setVisibilityPreference: (value: SoftHelloVisibility) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
+  resetOnboarding: () => Promise<void>;
   isNightMode: boolean;
   setIsNightMode: (value: boolean) => void;
   blurProfilePhoto: boolean;
@@ -838,6 +839,17 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     }
   };
 
+  const resetOnboarding = async () => {
+    setHasCompletedOnboarding(false);
+    setAgeConfirmed(false);
+
+    try {
+      await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    } catch (error) {
+      console.log("SoftHello onboarding could not reset:", error);
+    }
+  };
+
   return (
     <AppSettingsContext.Provider
       value={{
@@ -857,6 +869,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         visibilityPreference,
         setVisibilityPreference,
         completeOnboarding,
+        resetOnboarding,
         isNightMode,
         setIsNightMode,
         blurProfilePhoto,
