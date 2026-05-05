@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { chatSeed, dayEvents, eveningEvents, movieNight, nsnColors, profileVibes } from "./nsn-data";
+import { allEvents, chatSeed, dayEvents, eveningEvents, movieNight, nsnColors, profileVibes } from "./nsn-data";
 
 describe("NSN prototype data", () => {
   it("keeps event identifiers unique and route-safe", () => {
-    const allEvents = [...dayEvents, ...eveningEvents];
     const ids = allEvents.map((event) => event.id);
 
     expect(new Set(ids).size).toBe(ids.length);
@@ -21,10 +20,12 @@ describe("NSN prototype data", () => {
   });
 
   it("contains enough seeded content for the home, chat, and profile screens", () => {
-    expect(dayEvents.length).toBeGreaterThanOrEqual(2);
-    expect(eveningEvents.length).toBeGreaterThanOrEqual(2);
+    expect(dayEvents.length).toBeGreaterThanOrEqual(5);
+    expect(eveningEvents.length).toBeGreaterThanOrEqual(4);
+    expect(allEvents.some((event) => event.venue === "Palm Beach")).toBe(true);
     expect(chatSeed.some((message) => message.mine)).toBe(true);
-    expect(profileVibes).toEqual(expect.arrayContaining(["🌿 Calm", "👥 Small groups"]));
+    expect(profileVibes.length).toBeGreaterThanOrEqual(12);
+    expect(profileVibes).toEqual(expect.arrayContaining(["🌿 Calm", "👥 Small groups", "☕ Coffee", "🎬 Movies", "📚 Libraries"]));
   });
 
   it("uses a dark, high-contrast NSN palette", () => {
