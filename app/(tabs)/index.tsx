@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 
 import { getLanguageBase, timezoneOptions, timezoneRegions, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
 
 function Pill({ label, active, isDay }: { label: string; active?: boolean; isDay?: boolean }) {
@@ -250,7 +251,7 @@ const getTimezoneNow = (date: Date, option: TimezoneSetting) =>
 const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes === undefined ? option.timeZone : "UTC");
 
 export default function HomeScreen() {
-  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   
@@ -491,8 +492,15 @@ export default function HomeScreen() {
             <Text style={[styles.logo, isDay && styles.dayText]}>NSN <Text style={styles.moon}>☾</Text></Text>
             <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
           </View>
-          <TouchableOpacity activeOpacity={0.75} style={[styles.bellButton, isDay ? styles.dayBellButton : null]}>
-            <Text style={[styles.bellText, isDay ? styles.dayBellText : null]}>🔔</Text>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={resetOnboarding}
+            accessibilityRole="button"
+            accessibilityLabel="Restart SoftHello onboarding"
+            accessibilityHint="Opens the setup flow again."
+            style={[styles.bellButton, isDay ? styles.dayBellButton : null]}
+          >
+            <IconSymbol name="person.fill" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
           </TouchableOpacity>
         </View>
 
