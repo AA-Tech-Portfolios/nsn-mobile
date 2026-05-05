@@ -56,6 +56,11 @@ type SettingsCopy = {
   allowMessageRequestsCopy?: string;
   safetyCheckIns?: string;
   safetyCheckInsCopy?: string;
+  restartOnboarding?: string;
+  restartOnboardingCopy?: string;
+  restartOnboardingAction?: string;
+  searchLanguage?: string;
+  noLanguageFound?: string;
 };
 
 const englishCopy: SettingsCopy = {
@@ -109,6 +114,11 @@ const englishCopy: SettingsCopy = {
   allowMessageRequestsCopy: "Let people message before you join the same meetup.",
   safetyCheckIns: "Safety check-ins",
   safetyCheckInsCopy: "Enable gentle check-in prompts around joined meetups.",
+  restartOnboarding: "Restart SoftHello onboarding",
+  restartOnboardingCopy: "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
+  restartOnboardingAction: "Start",
+  searchLanguage: "Search language...",
+  noLanguageFound: "No language found",
 };
 
 const settingsTranslations: Record<string, SettingsCopy> = {
@@ -133,6 +143,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "اختر اللغة المستخدمة في NSN.",
     translateMeetupsChats: "ترجمة اللقاءات والدردشات",
     translateMeetupsChatsCopy: "اعرض تفاصيل الفعاليات ورسائل الدردشة بهذه اللغة.",
+    restartOnboarding: "إعادة بدء إعداد SoftHello",
+    restartOnboardingCopy: "راجع تأكيد العمر والضاحية والنية والاسم والصورة وخيارات الظهور.",
+    restartOnboardingAction: "ابدأ",
+    searchLanguage: "ابحث عن لغة...",
+    noLanguageFound: "لم يتم العثور على لغة",
   },
   Chinese: {
     title: "设置与隐私",
@@ -154,6 +169,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "选择 NSN 使用的语言。",
     translateMeetupsChats: "翻译聚会和聊天",
     translateMeetupsChatsCopy: "用此语言显示活动详情和聊天消息。",
+    restartOnboarding: "重新开始 SoftHello 引导",
+    restartOnboardingCopy: "重新设置年龄确认、地区、意图、昵称、照片和可见性选择。",
+    restartOnboardingAction: "开始",
+    searchLanguage: "搜索语言...",
+    noLanguageFound: "未找到语言",
   },
   French: {
     title: "Paramètres et confidentialité",
@@ -175,6 +195,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "Choisissez la langue utilisée dans NSN.",
     translateMeetupsChats: "Traduire les rencontres et discussions",
     translateMeetupsChatsCopy: "Afficher les détails et messages dans cette langue.",
+    restartOnboarding: "Recommencer l'accueil SoftHello",
+    restartOnboardingCopy: "Revoir l'âge, le quartier, l'intention, le pseudo, la photo et la visibilité.",
+    restartOnboardingAction: "Commencer",
+    searchLanguage: "Rechercher une langue...",
+    noLanguageFound: "Aucune langue trouvée",
   },
   German: {
     title: "Einstellungen und Datenschutz",
@@ -196,6 +221,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "Wähle die Sprache für NSN.",
     translateMeetupsChats: "Treffen und Chats übersetzen",
     translateMeetupsChatsCopy: "Zeige Eventdetails und Chatnachrichten in dieser Sprache.",
+    restartOnboarding: "SoftHello-Einstieg neu starten",
+    restartOnboardingCopy: "Alter, Ort, Absicht, Spitzname, Foto und Sichtbarkeit erneut festlegen.",
+    restartOnboardingAction: "Starten",
+    searchLanguage: "Sprache suchen...",
+    noLanguageFound: "Keine Sprache gefunden",
   },
   Hebrew: {
     title: "הגדרות ופרטיות",
@@ -217,6 +247,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "בחר את השפה שבה NSN ישתמש.",
     translateMeetupsChats: "תרגום מפגשים וצ'אטים",
     translateMeetupsChatsCopy: "הצג פרטי אירועים והודעות צ'אט בשפה זו.",
+    restartOnboarding: "התחלת ההיכרות עם SoftHello מחדש",
+    restartOnboardingCopy: "בדיקה מחדש של גיל, אזור, כוונה, כינוי, תמונה והעדפות חשיפה.",
+    restartOnboardingAction: "התחלה",
+    searchLanguage: "חיפוש שפה...",
+    noLanguageFound: "לא נמצאה שפה",
   },
   Hindi: {
     title: "सेटिंग्स और गोपनीयता",
@@ -343,6 +378,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "Elige el idioma usado en NSN.",
     translateMeetupsChats: "Traducir quedadas y chats",
     translateMeetupsChatsCopy: "Muestra detalles de eventos y mensajes en este idioma.",
+    restartOnboarding: "Reiniciar bienvenida de SoftHello",
+    restartOnboardingCopy: "Revisa edad, suburbio, intención, apodo, foto y visibilidad.",
+    restartOnboardingAction: "Empezar",
+    searchLanguage: "Buscar idioma...",
+    noLanguageFound: "No se encontró idioma",
   },
   Urdu: {
     title: "ترتیبات اور رازداری",
@@ -637,6 +677,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "Выберите язык, используемый в NSN.",
     translateMeetupsChats: "Переводить встречи и чаты",
     translateMeetupsChatsCopy: "Показывать детали событий и сообщения чата на этом языке.",
+    restartOnboarding: "Перезапустить знакомство с SoftHello",
+    restartOnboardingCopy: "Снова выбрать возраст, район, цель, имя, фото и видимость.",
+    restartOnboardingAction: "Начать",
+    searchLanguage: "Поиск языка...",
+    noLanguageFound: "Язык не найден",
   },
   Swedish: {
     title: "Inställningar och integritet",
@@ -1138,7 +1183,7 @@ export default function SettingsScreen() {
   const [appLanguageSearch, setAppLanguageSearch] = useState("");
   const [translationLanguageSearch, setTranslationLanguageSearch] = useState("");
   const appLanguageBase = getLanguageBase(appLanguage);
-  const copy = settingsTranslations[appLanguageBase] ?? englishCopy;
+  const copy: SettingsCopy = { ...englishCopy, ...(settingsTranslations[appLanguageBase] ?? {}) };
   const isRtl = rtlLanguages.has(appLanguageBase);
   const paletteAccent = appPalette.swatches[2];
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
@@ -1428,19 +1473,19 @@ export default function SettingsScreen() {
             activeOpacity={0.78}
             onPress={resetOnboarding}
             accessibilityRole="button"
-            accessibilityLabel="Restart SoftHello onboarding"
-            accessibilityHint="Clears onboarding completion and opens the setup flow again."
+            accessibilityLabel={copy.restartOnboarding ?? englishCopy.restartOnboarding}
+            accessibilityHint={copy.restartOnboardingCopy ?? englishCopy.restartOnboardingCopy}
             style={[styles.actionRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}
           >
             <View style={styles.settingCopy}>
               <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-                Restart SoftHello onboarding
+                {copy.restartOnboarding ?? englishCopy.restartOnboarding}
               </Text>
               <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.
+                {copy.restartOnboardingCopy ?? englishCopy.restartOnboardingCopy}
               </Text>
             </View>
-            <Text style={[styles.actionText, isDay && styles.dayActionText]}>Start</Text>
+            <Text style={[styles.actionText, isDay && styles.dayActionText]}>{copy.restartOnboardingAction ?? englishCopy.restartOnboardingAction}</Text>
           </TouchableOpacity>
         </View>
 
@@ -1566,10 +1611,10 @@ export default function SettingsScreen() {
                   setAppLanguageSearch(value);
                   selectExactLanguage(value, setAppLanguage);
                 }}
-                placeholder="Search language..."
+                placeholder={copy.searchLanguage ?? englishCopy.searchLanguage}
                 placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
                 style={[styles.languageSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText]}
-                accessibilityLabel="Search app language"
+                accessibilityLabel={copy.searchLanguage ?? englishCopy.searchLanguage}
               />
               {appLanguageOptions.map((language) => (
                 <TouchableOpacity
@@ -1592,7 +1637,7 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               ))}
               {appLanguageOptions.length === 0 && (
-                <Text style={[styles.noResultsText, isDay && styles.daySubtitle]}>No language found</Text>
+                <Text style={[styles.noResultsText, isDay && styles.daySubtitle]}>{copy.noLanguageFound ?? englishCopy.noLanguageFound}</Text>
               )}
             </ScrollView>
           )}
@@ -1630,10 +1675,10 @@ export default function SettingsScreen() {
                   setTranslationLanguageSearch(value);
                   selectExactLanguage(value, setTranslationLanguage);
                 }}
-                placeholder="Search language..."
+                placeholder={copy.searchLanguage ?? englishCopy.searchLanguage}
                 placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
                 style={[styles.languageSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText]}
-                accessibilityLabel="Search translation language"
+                accessibilityLabel={copy.searchLanguage ?? englishCopy.searchLanguage}
               />
               {translationLanguageOptions.map((language) => (
                 <TouchableOpacity
@@ -1656,7 +1701,7 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               ))}
               {translationLanguageOptions.length === 0 && (
-                <Text style={[styles.noResultsText, isDay && styles.daySubtitle]}>No language found</Text>
+                <Text style={[styles.noResultsText, isDay && styles.daySubtitle]}>{copy.noLanguageFound ?? englishCopy.noLanguageFound}</Text>
               )}
             </ScrollView>
           )}
