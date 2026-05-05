@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { SoftHelloIntent, SoftHelloVisibility, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 
@@ -26,12 +27,21 @@ const visibilityOptions: Array<{
   },
 ];
 
+const normalizeLocalitySearch = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ");
+
+const chatswoodLocality = australianLocalities.find((locality) => locality.suburb === "Chatswood");
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const { completeOnboarding, isNightMode } = useAppSettings();
   const isDay = !isNightMode;
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [suburb, setSuburb] = useState("Chatswood");
+  const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(chatswoodLocality);
   const [intent, setIntent] = useState<SoftHelloIntent>("Exploring");
   const [displayName, setDisplayName] = useState("");
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
@@ -41,6 +51,42 @@ export default function OnboardingScreen() {
     () => ageConfirmed && suburb.trim().length >= 2 && displayName.trim().length >= 2,
     [ageConfirmed, displayName, suburb]
   );
+
+  const localitySuggestions = useMemo(() => {
+    const query = normalizeLocalitySearch(suburb);
+
+    if (query.length < 2) {
+      return [];
+    }
+
+    return australianLocalities
+      .filter((locality) => {
+        const suburbName = normalizeLocalitySearch(locality.suburb);
+        const label = normalizeLocalitySearch(getAustralianLocalityLabel(locality));
+
+        return suburbName.startsWith(query) || label.includes(query);
+      })
+      .slice(0, 6);
+  }, [suburb]);
+
+  const updateSuburb = (value: string) => {
+    setSuburb(value);
+
+    const normalizedValue = normalizeLocalitySearch(value);
+    const exactMatch = australianLocalities.find((locality) => {
+      const suburbName = normalizeLocalitySearch(locality.suburb);
+      const label = normalizeLocalitySearch(getAustralianLocalityLabel(locality));
+
+      return suburbName === normalizedValue || label === normalizedValue;
+    });
+
+    setSelectedLocality(exactMatch);
+  };
+
+  const selectLocality = (locality: AustralianLocality) => {
+    setSelectedLocality(locality);
+    setSuburb(getAustralianLocalityLabel(locality));
+  };
 
   const pickProfilePhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -69,7 +115,7 @@ export default function OnboardingScreen() {
 
     await completeOnboarding({
       ageConfirmed,
-      suburb: suburb.trim(),
+      suburb: selectedLocality ? getAustralianLocalityLabel(selectedLocality) : suburb.trim(),
       intent,
       displayName: displayName.trim(),
       profilePhotoUri,
@@ -118,11 +164,48 @@ export default function OnboardingScreen() {
             <Text style={[styles.label, isDay && styles.dayTitle]}>Suburb or local area</Text>
             <TextInput
               value={suburb}
-              onChangeText={setSuburb}
+              onChangeText={updateSuburb}
               placeholder="Chatswood"
               placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
               style={[styles.input, isDay && styles.dayInput]}
             />
+            {selectedLocality ? (
+              <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+                Recognised: {getAustralianLocalityLabel(selectedLocality)}
+              </Text>
+            ) : suburb.trim().length >= 2 ? (
+              <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+                Choose a suggestion to confirm your local area.
+              </Text>
+            ) : null}
+            {localitySuggestions.length > 0 ? (
+              <View style={[styles.localityList, isDay && styles.dayCard]}>
+                {localitySuggestions.map((locality) => {
+                  const selected =
+                    selectedLocality &&
+                    selectedLocality.suburb === locality.suburb &&
+                    selectedLocality.state === locality.state &&
+                    selectedLocality.postcode === locality.postcode;
+
+                  return (
+                    <TouchableOpacity
+                      key={`${locality.suburb}-${locality.state}-${locality.postcode}`}
+                      activeOpacity={0.82}
+                      onPress={() => selectLocality(locality)}
+                      style={[styles.localityOption, selected && styles.localityOptionActive]}
+                    >
+                      <View>
+                        <Text style={[styles.localityName, isDay && styles.dayTitle]}>{locality.suburb}</Text>
+                        <Text style={[styles.localityMeta, isDay && styles.dayMutedText]}>
+                          {locality.state} {locality.postcode}
+                        </Text>
+                      </View>
+                      <Text style={[styles.localityCheck, selected && styles.localityCheckActive]}>{selected ? "✓" : ""}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : null}
           </View>
 
           <View>
@@ -267,6 +350,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   dayInput: { borderColor: "#EFE2D8", backgroundColor: "#FFFFFF", color: "#18182E" },
+  localityStatus: { color: "#5F6575", fontSize: 12, lineHeight: 17, marginTop: 7 },
+  localityList: { borderRadius: 16, borderWidth: 1, borderColor: "#EFE2D8", backgroundColor: "#FFFFFF", marginTop: 9, overflow: "hidden" },
+  localityOption: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1E8DF",
+  },
+  localityOptionActive: { backgroundColor: "#FAF7FF" },
+  localityName: { color: "#18182E", fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  localityMeta: { color: "#5F6575", fontSize: 12, lineHeight: 17 },
+  localityCheck: { width: 22, color: "#9A8EAB", fontSize: 16, fontWeight: "900", textAlign: "right" },
+  localityCheckActive: { color: "#6C5CE7" },
   optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   intentOption: {
     minHeight: 42,
