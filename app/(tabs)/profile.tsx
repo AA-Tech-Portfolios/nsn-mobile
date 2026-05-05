@@ -182,10 +182,12 @@ export default function ProfileScreen() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(displayName);
   const [nameError, setNameError] = useState("");
+  const [showNameSaved, setShowNameSaved] = useState(false);
 
   const [selectedVibes, setSelectedVibes] = useState(profileVibes.slice(0, 5));
   const [isEditingVibes, setIsEditingVibes] = useState(false);
   const [vibeLimitMessage, setVibeLimitMessage] = useState("");
+  const [showVibesSaved, setShowVibesSaved] = useState(false);
 
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
 
@@ -229,6 +231,10 @@ export default function ProfileScreen() {
     setDisplayName(nextName);
     setNameError("");
     setIsEditingName(false);
+    setShowNameSaved(true);
+    setTimeout(() => {
+      setShowNameSaved(false);
+    }, 1000);
   };
 
   const toggleNameEditing = () => {
@@ -239,7 +245,23 @@ export default function ProfileScreen() {
 
     setDraftName(displayName);
     setNameError("");
+    setShowNameSaved(false);
     setIsEditingName(true);
+  };
+
+  const toggleVibeEditing = () => {
+    if (isEditingVibes) {
+      setIsEditingVibes(false);
+      setVibeLimitMessage("");
+      setShowVibesSaved(true);
+      setTimeout(() => {
+        setShowVibesSaved(false);
+      }, 1000);
+      return;
+    }
+
+    setShowVibesSaved(false);
+    setIsEditingVibes(true);
   };
 
   const toggleVibe = (vibe: string) => {
@@ -362,6 +384,8 @@ export default function ProfileScreen() {
 
               {isEditingName ? (
                 <Text style={styles.editText}>{copy.done}</Text>
+              ) : showNameSaved ? (
+                <Text style={styles.editText}>{copy.saved}</Text>
               ) : (
                 <IconSymbol name="edit" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
               )}
@@ -373,8 +397,8 @@ export default function ProfileScreen() {
         <View style={styles.sectionTitleRow}>
           <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.myVibes}</Text>
 
-          <Text style={styles.editText} onPress={() => setIsEditingVibes(!isEditingVibes)}>
-            {isEditingVibes ? copy.done : copy.edit}
+          <Text style={styles.editText} onPress={toggleVibeEditing}>
+            {showVibesSaved ? copy.saved : isEditingVibes ? copy.done : copy.edit}
           </Text>
         </View>
 

@@ -1,10 +1,10 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
-import { movieNight, nsnColors } from "@/lib/nsn-data";
+import { allEvents, movieNight, nsnColors } from "@/lib/nsn-data";
 
 const eventTranslations = {
   English: {
@@ -116,11 +116,26 @@ const eventTranslations = {
 
 export default function EventDetailsScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const { appLanguage, isNightMode } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = eventTranslations[appLanguageBase as keyof typeof eventTranslations] ?? eventTranslations.English;
   const isDay = !isNightMode;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
+  const event = allEvents.find((item) => item.id === id) ?? movieNight;
+  const isMovieNight = event.id === movieNight.id;
+  const eventTitle = isMovieNight ? copy.title : event.title.replace(" — ", " —\n");
+  const eventCategory = isMovieNight ? copy.category : event.category;
+  const eventTone = isMovieNight ? copy.tone : `☽ ${event.tone}`;
+  const eventDate = isMovieNight ? copy.date : `${isNightMode ? "Tonight" : "Today"} · ${event.time}`;
+  const eventPeople = isMovieNight ? copy.people : event.people;
+  const eventDescription = isMovieNight ? copy.description : `${event.description} A low-pressure meetup with clear expectations before you join.`;
+  const eventWeatherCopy = event.weather.includes("Weather")
+    ? "Weather may affect this plan, so check the backup option before heading out."
+    : "This event has a weather-friendly plan.";
+  const eventMeetingCopy = isMovieNight
+    ? copy.meetingCopy
+    : `Meet near ${event.venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`;
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
@@ -142,27 +157,27 @@ export default function EventDetailsScreen() {
 
         <View style={[styles.heroPanel, isDay && styles.dayPanel]}>
           <View style={styles.eventAvatar}>
-            <Text style={styles.avatarEmoji}>{movieNight.emoji}</Text>
+            <Text style={styles.avatarEmoji}>{event.emoji}</Text>
           </View>
-          <Text style={[styles.title, isDay && styles.dayHeadingText]}>{copy.title}</Text>
+          <Text style={[styles.title, isDay && styles.dayHeadingText]}>{eventTitle}</Text>
           <View style={styles.tagRow}>
-            <Text style={styles.primaryChip}>{copy.category}</Text>
-            <Text style={[styles.quietChip, isDay && styles.dayQuietChip]}>{copy.tone}</Text>
+            <Text style={styles.primaryChip}>{eventCategory}</Text>
+            <Text style={[styles.quietChip, isDay && styles.dayQuietChip]}>{eventTone}</Text>
           </View>
         </View>
 
         <View style={styles.metaStack}>
-          <Text style={[styles.metaLine, isDay && styles.dayText]}>⌖ {movieNight.venue}</Text>
-          <Text style={[styles.metaLine, isDay && styles.dayText]}>▣ {copy.date}</Text>
-          <Text style={[styles.metaLine, isDay && styles.dayText]}>♧ {copy.people}</Text>
+          <Text style={[styles.metaLine, isDay && styles.dayText]}>⌖ {event.venue}</Text>
+          <Text style={[styles.metaLine, isDay && styles.dayText]}>▣ {eventDate}</Text>
+          <Text style={[styles.metaLine, isDay && styles.dayText]}>♧ {eventPeople}</Text>
         </View>
 
-        <Text style={[styles.description, isDay && styles.dayText]}>{copy.description}</Text>
+        <Text style={[styles.description, isDay && styles.dayText]}>{eventDescription}</Text>
 
         <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard]}>
           <View>
             <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText]}>{copy.weatherTitle}</Text>
-            <Text style={[styles.weatherCopy, isDay && styles.dayMutedText]}>{copy.weatherCopy}</Text>
+            <Text style={[styles.weatherCopy, isDay && styles.dayMutedText]}>{isMovieNight ? copy.weatherCopy : eventWeatherCopy}</Text>
           </View>
           <Text style={styles.weatherIcon}>☁️</Text>
         </TouchableOpacity>
@@ -188,7 +203,7 @@ export default function EventDetailsScreen() {
 
         <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel]}>
           <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText]}>{copy.meetingPoint}</Text>
-          <Text style={[styles.meetingCopy, isDay && styles.dayMutedText]}>{copy.meetingCopy}</Text>
+          <Text style={[styles.meetingCopy, isDay && styles.dayMutedText]}>{eventMeetingCopy}</Text>
         </View>
 
         <TouchableOpacity

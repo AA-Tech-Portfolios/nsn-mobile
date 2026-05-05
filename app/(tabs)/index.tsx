@@ -8,6 +8,8 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+const filterKeys = ["All", "Outdoor", "Indoor", "Food", "Active"] as const;
+type EventFilter = (typeof filterKeys)[number];
 
 const eventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
   Hebrew: {
@@ -43,12 +45,52 @@ const eventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "
       tone: "מאוזן",
       weather: "ידידותי לגשם",
     },
+    "library-calm-study": {
+      title: "לימוד רגוע בספרייה",
+      category: "פנים",
+      people: "2–5 אנשים",
+      description: "זמן שקט סביב שולחן, הפסקות שיחה קלות ואיפוס עדין.",
+      tone: "שקט",
+      weather: "ידידותי לגשם",
+    },
+    "coffee-lane-cove": {
+      title: "קפה — שלום קליל",
+      category: "אוכל",
+      people: "2–4 אנשים",
+      description: "קפה, ישיבה נוחה, ואפשר ללכת מתי שצריך.",
+      tone: "מאוזן",
+      weather: "חלופה מקורה מוכנה",
+    },
+    "harbour-walk-waverton": {
+      title: "הליכת נמל — קצב קל",
+      category: "פעיל",
+      people: "3–6 אנשים",
+      description: "הליכה איטית עם מקום לשקט ולשיחות צדדיות.",
+      tone: "מאוזן",
+      weather: "תלוי במזג האוויר",
+    },
+    "ramen-small-table": {
+      title: "ראמן — שולחן קטן",
+      category: "אוכל",
+      people: "3–5 אנשים",
+      description: "אוכל חם, היכרות פשוטה, בלי לחץ להישאר מאוחר.",
+      tone: "מאוזן",
+      weather: "ידידותי לגשם",
+    },
+    "quiet-music-listening": {
+      title: "האזנה למוזיקה שקטה",
+      category: "פנים",
+      people: "2–5 אנשים",
+      description: "משתפים כמה שירים רגועים ומדברים רק כמה שמרגיש טוב.",
+      tone: "שקט",
+      weather: "חלופה מקורה מוכנה",
+    },
   },
 };
 
-function Pill({ label, active, isDay }: { label: string; active?: boolean; isDay?: boolean }) {
+function Pill({ label, active, isDay, onPress }: { label: string; active?: boolean; isDay?: boolean; onPress: () => void }) {
   return (
-    <TouchableOpacity style={[styles.pill, active && styles.pillActive, isDay && styles.dayPill, isDay && active && styles.dayPillActive, ]}>
+    <TouchableOpacity activeOpacity={0.78} onPress={onPress} style={[styles.pill, active && styles.pillActive, isDay && styles.dayPill, isDay && active && styles.dayPillActive, ]}>
       <Text style={[styles.pillText, active && styles.pillTextActive, isDay && styles.dayPillText, isDay && active && styles.dayPillTextActive, ]}>{label}</Text>
     </TouchableOpacity>
   );
@@ -115,6 +157,9 @@ const homeTranslations = {
     dayVsNightCopy: "Find the right vibe at the right time.",
     weatherAdaptive: "Weather Adaptive",
     weatherAdaptiveCopy: "We suggest indoor alternatives if plans change.",
+    clickForMore: "Click here for more info...",
+    dayVsNightMore: "Day events are brighter and activity-friendly. Night events lean calmer, indoors, and easier to leave when your social battery is low.",
+    weatherAdaptiveMore: "Outdoor events can carry backup plans. If rain or heat gets in the way, SoftHello can suggest indoor alternatives before you commit.",
   },
   Arabic: {
     subtitle: "لقاءات بلا ضغط حول نورث شور.",
@@ -140,6 +185,9 @@ const homeTranslations = {
     dayVsNightCopy: "اعثر على الأجواء المناسبة في الوقت المناسب.",
     weatherAdaptive: "يتكيف مع الطقس",
     weatherAdaptiveCopy: "نقترح بدائل داخلية إذا تغيرت الخطط.",
+    clickForMore: "اضغط هنا للمزيد...",
+    dayVsNightMore: "فعاليات النهار أنشط وأكثر إشراقاً. فعاليات الليل أهدأ وغالباً في الداخل وأسهل للمغادرة عند الحاجة.",
+    weatherAdaptiveMore: "يمكن للفعاليات الخارجية أن تتضمن خطة بديلة. إذا تغير الطقس، نقترح خيارات داخلية قبل الالتزام.",
   },
   Hebrew: {
     subtitle: "מפגשים בלי לחץ סביב North Shore.",
@@ -165,6 +213,9 @@ const homeTranslations = {
     dayVsNightCopy: "מצא את הווייב הנכון בזמן הנכון.",
     weatherAdaptive: "מותאם למזג האוויר",
     weatherAdaptiveCopy: "נציע חלופות מקורות אם התוכניות משתנות.",
+    clickForMore: "לחצו כאן למידע נוסף...",
+    dayVsNightMore: "אירועי יום מתאימים יותר לפעילות ולאור. אירועי לילה רגועים יותר, לרוב בפנים, וקלים יותר לעזיבה כשנגמרת האנרגיה החברתית.",
+    weatherAdaptiveMore: "לאירועים בחוץ יכולה להיות תוכנית גיבוי. אם גשם או חום מפריעים, SoftHello יכול להציע חלופות מקורות לפני שמתחייבים.",
   },
   Russian: {
     subtitle: "Встречи без давления вокруг North Shore.",
@@ -190,6 +241,9 @@ const homeTranslations = {
     dayVsNightCopy: "Найдите нужную атмосферу в нужное время.",
     weatherAdaptive: "С учётом погоды",
     weatherAdaptiveCopy: "Мы предложим варианты в помещении, если планы изменятся.",
+    clickForMore: "Нажмите, чтобы узнать больше...",
+    dayVsNightMore: "Дневные события более активные и светлые. Вечерние обычно спокойнее, чаще в помещении, и из них проще уйти, если устали.",
+    weatherAdaptiveMore: "У событий на улице может быть запасной план. Если мешает дождь или жара, SoftHello предложит варианты в помещении.",
   },
   Spanish: {
     subtitle: "Quedadas sin presión por North Shore.",
@@ -215,6 +269,9 @@ const homeTranslations = {
     dayVsNightCopy: "Encuentra el ambiente correcto en el momento correcto.",
     weatherAdaptive: "Adaptado al clima",
     weatherAdaptiveCopy: "Sugerimos alternativas interiores si cambian los planes.",
+    clickForMore: "Haz clic para más información...",
+    dayVsNightMore: "Los eventos de día son más luminosos y activos. Los de noche suelen ser más tranquilos, interiores y fáciles de dejar si necesitas descansar.",
+    weatherAdaptiveMore: "Los eventos al aire libre pueden tener un plan alternativo. Si llueve o hace mucho calor, SoftHello puede sugerir opciones interiores.",
   },
 } as const;
 
@@ -297,7 +354,17 @@ export default function HomeScreen() {
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   
   const mode = isNightMode ? "night" : "day"; // State
-  const activeEvents = useMemo(() => (isNightMode ? eveningEvents : dayEvents), [isNightMode]);
+  const [activeFilter, setActiveFilter] = useState<EventFilter>("All");
+  const [expandedInsight, setExpandedInsight] = useState<"day-night" | "weather" | null>(null);
+  const activeEvents = useMemo(() => {
+    const events = isNightMode ? eveningEvents : dayEvents;
+
+    if (activeFilter === "All") {
+      return events;
+    }
+
+    return events.filter((event) => event.category === activeFilter || event.tags.includes(activeFilter));
+  }, [activeFilter, isNightMode]);
   const isDay = !isNightMode;
   const [now, setNow] = useState(new Date());
   const [isTimezonePickerOpen, setIsTimezonePickerOpen] = useState(false);
@@ -530,7 +597,7 @@ export default function HomeScreen() {
       <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <View>
-            <Text style={[styles.logo, isDay && styles.dayText]}>NSN <Text style={styles.moon}>☾</Text></Text>
+            <Text style={[styles.logo, isDay && styles.dayText]}>SoftHello</Text>
             <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
           </View>
           <TouchableOpacity
@@ -653,9 +720,19 @@ export default function HomeScreen() {
         </TouchableOpacity>
       
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {copy.filters.map((filter, index) => (
-            <Pill key={filter} label={filter} active={index === 0} isDay={isDay} />
-          ))}
+          {copy.filters.map((filter, index) => {
+            const filterKey = filterKeys[index];
+
+            return (
+              <Pill
+                key={filterKey}
+                label={filter}
+                active={activeFilter === filterKey}
+                isDay={isDay}
+                onPress={() => setActiveFilter(filterKey)}
+              />
+            );
+          })}
         </ScrollView>
 
         <View style={styles.sectionHeader}>
@@ -667,16 +744,24 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.insightGrid}>
-          <View style={[styles.insightCard, isDay ? styles.dayCard : null]}>
+          <TouchableOpacity activeOpacity={0.84} onPress={() => setExpandedInsight(expandedInsight === "day-night" ? null : "day-night")} style={[styles.insightCard, isDay ? styles.dayCard : null]}>
             <Text style={styles.insightIcon}>☀️</Text>
             <Text style={[styles.insightTitle, isDay ? styles.dayHeadingText : null]}>{copy.dayVsNight}</Text>
             <Text style={[styles.insightCopy, isDay ? styles.dayMutedText : null]}>{copy.dayVsNightCopy}</Text>
-          </View>
-          <View style={[styles.insightCard, isDay ? styles.dayCard : null]}>
+            <Text style={styles.moreInfoText}>{copy.clickForMore}</Text>
+            {expandedInsight === "day-night" ? (
+              <Text style={[styles.insightDetail, isDay ? styles.dayMutedText : null]}>{copy.dayVsNightMore}</Text>
+            ) : null}
+          </TouchableOpacity>
+          <TouchableOpacity activeOpacity={0.84} onPress={() => setExpandedInsight(expandedInsight === "weather" ? null : "weather")} style={[styles.insightCard, isDay ? styles.dayCard : null]}>
             <Text style={styles.insightIcon}>🌧</Text>
             <Text style={[styles.insightTitle, isDay ? styles.dayHeadingText : null]}>{copy.weatherAdaptive}</Text>
             <Text style={[styles.insightCopy, isDay ? styles.dayMutedText : null]}>{copy.weatherAdaptiveCopy}</Text>
-          </View>
+            <Text style={styles.moreInfoText}>{copy.clickForMore}</Text>
+            {expandedInsight === "weather" ? (
+              <Text style={[styles.insightDetail, isDay ? styles.dayMutedText : null]}>{copy.weatherAdaptiveMore}</Text>
+            ) : null}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </ScreenContainer>
@@ -777,5 +862,7 @@ const styles = StyleSheet.create({
   insightIcon: { fontSize: 25, marginBottom: 7 },
   insightTitle: { color: nsnColors.text, fontWeight: "800", fontSize: 13, lineHeight: 18 },
   insightCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 3 },
+  moreInfoText: { color: nsnColors.warning, fontSize: 12, lineHeight: 17, fontWeight: "800", marginTop: 8 },
+  insightDetail: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 6 },
   insightEmoji: { fontSize: 22, marginBottom: 6, marginTop: 2},
 });
