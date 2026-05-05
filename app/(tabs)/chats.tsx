@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-import { useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { chatSeed, nsnColors } from "@/lib/nsn-data";
@@ -160,9 +160,10 @@ const chatMessageTranslations = {
 
 export default function ChatsScreen() {
   const { isNightMode, translationLanguage } = useAppSettings();
+  const translationLanguageBase = getLanguageBase(translationLanguage);
   const isDay = !isNightMode;
-  const copy = chatTranslations[translationLanguage as keyof typeof chatTranslations] ?? chatTranslations.English;
-  const translatedMessages = chatMessageTranslations[translationLanguage as keyof typeof chatMessageTranslations];
+  const copy = chatTranslations[translationLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
+  const translatedMessages = chatMessageTranslations[translationLanguageBase as keyof typeof chatMessageTranslations];
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
   const [draft, setDraft] = useState("");
 

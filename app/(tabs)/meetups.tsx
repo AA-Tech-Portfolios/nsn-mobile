@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
 
@@ -123,8 +123,9 @@ const meetupsTranslations = {
 export default function MeetupsScreen() {
   const router = useRouter();
   const { isNightMode, translationLanguage } = useAppSettings();
+  const translationLanguageBase = getLanguageBase(translationLanguage);
   const isDay = !isNightMode;
-  const copy = meetupsTranslations[translationLanguage as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
+  const copy = meetupsTranslations[translationLanguageBase as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>

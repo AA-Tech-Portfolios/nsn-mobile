@@ -3,7 +3,7 @@ import { View, Text, TextInput, Platform, ScrollView, StyleSheet, TouchableOpaci
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 
-import { useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
@@ -102,8 +102,9 @@ const profileTranslations = {
 export default function ProfileScreen() {
   const router = useRouter();
   const { isNightMode, blurProfilePhoto, appLanguage } = useAppSettings();
+  const appLanguageBase = getLanguageBase(appLanguage);
   const isDay = !isNightMode;
-  const copy = profileTranslations[appLanguage as keyof typeof profileTranslations] ?? profileTranslations.English;
+  const copy = profileTranslations[appLanguageBase as keyof typeof profileTranslations] ?? profileTranslations.English;
 
   const [name, setName] = useState("Alon");
   const [isEditingName, setIsEditingName] = useState(false);

@@ -2,7 +2,7 @@ import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -42,9 +42,10 @@ const tabLabels: Record<string, { home: string; meetups: string; chats: string; 
 };
 
 export default function TabLayout() {
-  const { isNightMode, appLanguage } = useAppSettings();
+  const { isNightMode, appLanguage, appPalette } = useAppSettings();
   const isDay = !isNightMode;
-  const labels = tabLabels[appLanguage] ?? tabLabels.English;
+  const labels = tabLabels[getLanguageBase(appLanguage)] ?? tabLabels.English;
+  const activeTintColor = appPalette.swatches[2];
   const insets = useSafeAreaInsets();
   const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
 
@@ -52,7 +53,7 @@ export default function TabLayout() {
       <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: nsnColors.primary,
+        tabBarActiveTintColor: activeTintColor,
         tabBarInactiveTintColor: nsnColors.mutedSoft,
         tabBarButton: HapticTab,
         tabBarLabelStyle: {

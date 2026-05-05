@@ -1,44 +1,353 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useMemo, useState } from "react";
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { nsnColors } from "@/lib/nsn-data";
 
+const CREATED_EVENTS_KEY = "nsn.created-events.v1";
+
+const noiseLevels = ["Quiet", "Balanced", "Lively"] as const;
+
+const placeSuggestions = [
+  {
+    id: "lane-cove-library",
+    name: "Lane Cove Library",
+    address: "Library Walk, Lane Cove NSW",
+    coordinates: "33.8145°S, 151.1690°E",
+  },
+  {
+    id: "chatswood-interchange",
+    name: "Chatswood Interchange",
+    address: "Railway Street, Chatswood NSW",
+    coordinates: "33.7974°S, 151.1803°E",
+  },
+  {
+    id: "north-sydney-civic",
+    name: "North Sydney Civic Centre",
+    address: "200 Miller Street, North Sydney NSW",
+    coordinates: "33.8342°S, 151.2089°E",
+  },
+];
+
+type NoiseLevel = (typeof noiseLevels)[number];
+
+type CreatedEvent = {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  venue: string;
+  backupVenue: string;
+  noiseLevel: NoiseLevel;
+  address: string;
+  mapPlace: string;
+  coordinates: string;
+  description: string;
+};
+
+type EventDraft = Omit<CreatedEvent, "id">;
+
+const emptyDraft: EventDraft = {
+  title: "",
+  date: "",
+  time: "",
+  venue: "",
+  backupVenue: "",
+  noiseLevel: "Balanced",
+  address: "",
+  mapPlace: "",
+  coordinates: "",
+  description: "",
+};
+
+const createEventId = (title: string) => {
+  const slug = title
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 42);
+
+  return `${slug || "event"}-${Date.now().toString(36)}`;
+};
+
 export default function EventsScreen() {
   const { isNightMode } = useAppSettings();
   const isDay = !isNightMode;
+  const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
+  const [isCreatorOpen, setIsCreatorOpen] = useState(false);
+  const [draft, setDraft] = useState<EventDraft>(emptyDraft);
+
+  const isDraftValid = useMemo(
+    () => Boolean(draft.title.trim() && draft.date.trim() && draft.time.trim() && draft.venue.trim() && draft.address.trim()),
+    [draft.address, draft.date, draft.time, draft.title, draft.venue]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCreatedEvents() {
+      try {
+        const storedEvents = await AsyncStorage.getItem(CREATED_EVENTS_KEY);
+
+        if (storedEvents && isMounted) {
+          setCreatedEvents(JSON.parse(storedEvents) as CreatedEvent[]);
+        }
+      } catch (error) {
+        console.log("Created events could not load:", error);
+      }
+    }
+
+    loadCreatedEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const saveEvents = async (events: CreatedEvent[]) => {
+    setCreatedEvents(events);
+
+    try {
+      await AsyncStorage.setItem(CREATED_EVENTS_KEY, JSON.stringify(events));
+    } catch (error) {
+      console.log("Created events could not save:", error);
+    }
+  };
+
+  const updateDraft = (field: keyof EventDraft, value: string) => {
+    setDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const selectPlace = (place: (typeof placeSuggestions)[number]) => {
+    setDraft((current) => ({
+      ...current,
+      address: place.address,
+      mapPlace: place.name,
+      coordinates: place.coordinates,
+      venue: current.venue || place.name,
+    }));
+  };
+
+  const resetCreator = () => {
+    setDraft(emptyDraft);
+    setIsCreatorOpen(false);
+  };
+
+  const createEvent = () => {
+    if (!isDraftValid) {
+      return;
+    }
+
+    const newEvent: CreatedEvent = {
+      ...draft,
+      id: createEventId(draft.title),
+      title: draft.title.trim(),
+      date: draft.date.trim(),
+      time: draft.time.trim(),
+      venue: draft.venue.trim(),
+      backupVenue: draft.backupVenue.trim(),
+      address: draft.address.trim(),
+      mapPlace: draft.mapPlace.trim(),
+      coordinates: draft.coordinates.trim(),
+      description: draft.description.trim(),
+    };
+
+    saveEvents([newEvent, ...createdEvents]);
+    resetCreator();
+  };
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
-      <View style={[styles.container, isDay && styles.dayContainer]}>
+      <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={[styles.title, isDay && styles.dayTitle]}>My Events</Text>
 
         <Text style={[styles.subtitle, isDay && styles.daySubtitle]}>
           Create your own experiences and invite others on your terms.
         </Text>
 
-        <TouchableOpacity style={styles.createButton} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.createButton} activeOpacity={0.8} onPress={() => setIsCreatorOpen(true)}>
           <Text style={styles.createButtonText}>＋ Create Event</Text>
         </TouchableOpacity>
 
-        <View style={[styles.card, isDay && styles.dayCard]}>
-          <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>No events created yet</Text>
+        {createdEvents.length === 0 ? (
+          <View style={[styles.card, isDay && styles.dayCard]}>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>No events created yet</Text>
 
-          <Text style={[styles.cardText, isDay && styles.daySubtitle]}>
-            Host a coffee meetup, movie night, board games, walk, study session or anything that feels like you.
-          </Text>
-        </View>
-      </View>
+            <Text style={[styles.cardText, isDay && styles.daySubtitle]}>
+              Host a coffee meetup, movie night, board games, walk, study session or anything that feels like you.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.eventList}>
+            {createdEvents.map((event) => (
+              <View key={event.id} style={[styles.eventCard, isDay && styles.dayCard]}>
+                <View style={styles.eventHeader}>
+                  <View style={[styles.noiseBadge, event.noiseLevel === "Quiet" && styles.quietBadge, event.noiseLevel === "Lively" && styles.livelyBadge]}>
+                    <Text style={styles.noiseBadgeText}>{event.noiseLevel}</Text>
+                  </View>
+                  <Text style={[styles.eventDate, isDay && styles.daySubtitle]}>{event.date} · {event.time}</Text>
+                </View>
+                <Text style={[styles.eventTitle, isDay && styles.dayTitle]}>{event.title}</Text>
+                <Text style={[styles.eventMeta, isDay && styles.daySubtitle]}>⌖ {event.venue}</Text>
+                <Text style={[styles.eventMeta, isDay && styles.daySubtitle]}>◎ {event.mapPlace || event.address}</Text>
+                {event.backupVenue ? (
+                  <Text style={[styles.eventMeta, isDay && styles.daySubtitle]}>☔ Backup: {event.backupVenue}</Text>
+                ) : null}
+                {event.description ? (
+                  <Text style={[styles.eventDescription, isDay && styles.dayText]}>{event.description}</Text>
+                ) : null}
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      <Modal animationType="slide" visible={isCreatorOpen} onRequestClose={resetCreator}>
+        <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+          <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.sheetHeader}>
+              <View>
+                <Text style={[styles.sheetTitle, isDay && styles.dayTitle]}>Create Event</Text>
+                <Text style={[styles.sheetSubtitle, isDay && styles.daySubtitle]}>Set the plan, the place, and the vibe.</Text>
+              </View>
+              <TouchableOpacity activeOpacity={0.75} onPress={resetCreator} style={[styles.closeButton, isDay && styles.dayCloseButton]}>
+                <Text style={[styles.closeText, isDay && styles.dayTitle]}>×</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formStack}>
+              <LabeledInput label="Event name" value={draft.title} onChangeText={(value) => updateDraft("title", value)} placeholder="Board games and coffee" isDay={isDay} />
+
+              <View style={styles.inlineFields}>
+                <View style={styles.inlineField}>
+                  <LabeledInput label="Date" value={draft.date} onChangeText={(value) => updateDraft("date", value)} placeholder="24 May" isDay={isDay} />
+                </View>
+                <View style={styles.inlineField}>
+                  <LabeledInput label="Time" value={draft.time} onChangeText={(value) => updateDraft("time", value)} placeholder="6:30pm" isDay={isDay} />
+                </View>
+              </View>
+
+              <LabeledInput label="Venue" value={draft.venue} onChangeText={(value) => updateDraft("venue", value)} placeholder="Chatswood Social Cafe" isDay={isDay} />
+              <LabeledInput label="Bad weather backup" value={draft.backupVenue} onChangeText={(value) => updateDraft("backupVenue", value)} placeholder="Indoor table at nearby cafe" isDay={isDay} />
+
+              <View>
+                <Text style={[styles.label, isDay && styles.dayTitle]}>Noise level</Text>
+                <View style={styles.noiseRow}>
+                  {noiseLevels.map((level) => {
+                    const active = draft.noiseLevel === level;
+
+                    return (
+                      <TouchableOpacity
+                        key={level}
+                        activeOpacity={0.82}
+                        onPress={() => setDraft((current) => ({ ...current, noiseLevel: level }))}
+                        style={[styles.noiseOption, isDay && styles.dayNoiseOption, active && styles.noiseOptionActive]}
+                      >
+                        <Text style={[styles.noiseOptionText, isDay && styles.daySubtitle, active && styles.noiseOptionTextActive]}>{level}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <LabeledInput label="Address" value={draft.address} onChangeText={(value) => updateDraft("address", value)} placeholder="Enter an address or pick below" isDay={isDay} />
+
+              <View style={[styles.mapPanel, isDay && styles.dayMapPanel]}>
+                <View style={styles.mapGrid}>
+                  <Text style={styles.mapPin}>⌖</Text>
+                  <Text style={styles.mapWatermark}>OpenStreetMap / MapLibre ready</Text>
+                </View>
+                <Text style={[styles.mapTitle, isDay && styles.dayTitle]}>{draft.mapPlace || "Choose from map"}</Text>
+                <Text style={[styles.mapCopy, isDay && styles.daySubtitle]}>
+                  {draft.coordinates || "Pick a suggested North Shore place now. This panel can host a MapLibre map when native map tiles are added."}
+                </Text>
+              </View>
+
+              <View style={styles.placeList}>
+                {placeSuggestions.map((place) => {
+                  const selected = draft.mapPlace === place.name;
+
+                  return (
+                    <TouchableOpacity
+                      key={place.id}
+                      activeOpacity={0.82}
+                      onPress={() => selectPlace(place)}
+                      style={[styles.placeOption, isDay && styles.dayPlaceOption, selected && styles.placeOptionActive]}
+                    >
+                      <View style={styles.placeCopy}>
+                        <Text style={[styles.placeName, isDay && styles.dayTitle]}>{place.name}</Text>
+                        <Text style={[styles.placeAddress, isDay && styles.daySubtitle]}>{place.address}</Text>
+                      </View>
+                      <Text style={[styles.placeCheck, selected && styles.placeCheckActive]}>{selected ? "✓" : ""}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <LabeledInput
+                label="Description"
+                value={draft.description}
+                onChangeText={(value) => updateDraft("description", value)}
+                placeholder="What should people expect?"
+                isDay={isDay}
+                multiline
+              />
+            </View>
+
+            <TouchableOpacity activeOpacity={0.88} onPress={createEvent} disabled={!isDraftValid} style={[styles.saveButton, !isDraftValid && styles.saveButtonDisabled]}>
+              <Text style={styles.saveButtonText}>Create Event</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </ScreenContainer>
+      </Modal>
     </ScreenContainer>
   );
 }
 
+function LabeledInput({
+  label,
+  value,
+  onChangeText,
+  placeholder,
+  isDay,
+  multiline,
+}: {
+  label: string;
+  value: string;
+  onChangeText: (value: string) => void;
+  placeholder: string;
+  isDay?: boolean;
+  multiline?: boolean;
+}) {
+  return (
+    <View>
+      <Text style={[styles.label, isDay && styles.dayTitle]}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+        multiline={multiline}
+        textAlignVertical={multiline ? "top" : "center"}
+        style={[styles.input, multiline && styles.textArea, isDay && styles.dayInput]}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: nsnColors.background },
   container: {
     flex: 1,
     backgroundColor: nsnColors.background,
     padding: 20,
   },
+  content: { padding: 20, paddingBottom: 32 },
 
   dayContainer: {
     backgroundColor: "#EAF4FF",
@@ -62,6 +371,9 @@ const styles = StyleSheet.create({
   },
   daySubtitle: {
     color: "#3B4A63",
+  },
+  dayText: {
+    color: "#111827",
   },
 
   createButton: {
@@ -102,4 +414,119 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 22,
   },
+  eventList: { gap: 12 },
+  eventCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    padding: 16,
+  },
+  eventHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 },
+  noiseBadge: { borderRadius: 12, backgroundColor: "rgba(247,200,91,0.18)", paddingHorizontal: 10, paddingVertical: 5 },
+  quietBadge: { backgroundColor: "rgba(24,200,209,0.18)" },
+  livelyBadge: { backgroundColor: "rgba(114,214,126,0.18)" },
+  noiseBadgeText: { color: nsnColors.text, fontSize: 11, fontWeight: "900" },
+  eventDate: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginBottom: 0 },
+  eventTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 24, marginBottom: 6 },
+  eventMeta: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginBottom: 0 },
+  eventDescription: { color: nsnColors.text, fontSize: 14, lineHeight: 21, marginTop: 10 },
+  sheetContent: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 28 },
+  sheetHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 14, marginBottom: 18 },
+  sheetTitle: { color: nsnColors.text, fontSize: 26, fontWeight: "900", lineHeight: 32 },
+  sheetSubtitle: { color: nsnColors.muted, fontSize: 14, lineHeight: 20, marginTop: 3 },
+  closeButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: nsnColors.surface,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
+  dayCloseButton: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  closeText: { color: nsnColors.text, fontSize: 28, lineHeight: 32, fontWeight: "700" },
+  formStack: { gap: 14 },
+  label: { color: nsnColors.text, fontSize: 13, lineHeight: 18, fontWeight: "800", marginBottom: 7 },
+  input: {
+    minHeight: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    color: nsnColors.text,
+    fontSize: 14,
+    paddingHorizontal: 14,
+  },
+  dayInput: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6", color: "#0B1220" },
+  textArea: { minHeight: 104, paddingTop: 13, lineHeight: 20 },
+  inlineFields: { flexDirection: "row", gap: 10 },
+  inlineField: { flex: 1 },
+  noiseRow: { flexDirection: "row", gap: 8 },
+  noiseOption: {
+    flex: 1,
+    height: 42,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dayNoiseOption: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  noiseOptionActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  noiseOptionText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", marginBottom: 0 },
+  noiseOptionTextActive: { color: nsnColors.text },
+  mapPanel: {
+    minHeight: 174,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#284476",
+    backgroundColor: nsnColors.surfaceRaised,
+    overflow: "hidden",
+  },
+  dayMapPanel: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  mapGrid: {
+    height: 92,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0B1D35",
+    borderBottomWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  mapPin: { color: nsnColors.cyan, fontSize: 32, fontWeight: "900" },
+  mapWatermark: { position: "absolute", right: 12, bottom: 10, color: "#A6B1C7", fontSize: 10, fontWeight: "800" },
+  mapTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21, marginHorizontal: 14, marginTop: 12 },
+  mapCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginHorizontal: 14, marginTop: 4, marginBottom: 13 },
+  placeList: { gap: 9 },
+  placeOption: {
+    minHeight: 64,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 13,
+    gap: 10,
+  },
+  dayPlaceOption: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  placeOptionActive: { borderColor: nsnColors.primary },
+  placeCopy: { flex: 1 },
+  placeName: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  placeAddress: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginBottom: 0 },
+  placeCheck: { width: 22, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "right" },
+  placeCheckActive: { color: nsnColors.primary },
+  saveButton: {
+    height: 54,
+    borderRadius: 17,
+    backgroundColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 22,
+  },
+  saveButtonDisabled: { opacity: 0.42 },
+  saveButtonText: { color: nsnColors.text, fontSize: 16, fontWeight: "900" },
 });

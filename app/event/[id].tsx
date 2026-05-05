@@ -3,7 +3,7 @@ import { Stack, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { movieNight, nsnColors } from "@/lib/nsn-data";
 
 const eventTranslations = {
@@ -117,7 +117,8 @@ const eventTranslations = {
 export default function EventDetailsScreen() {
   const router = useRouter();
   const { appLanguage, isNightMode } = useAppSettings();
-  const copy = eventTranslations[appLanguage as keyof typeof eventTranslations] ?? eventTranslations.English;
+  const appLanguageBase = getLanguageBase(appLanguage);
+  const copy = eventTranslations[appLanguageBase as keyof typeof eventTranslations] ?? eventTranslations.English;
   const isDay = !isNightMode;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
 

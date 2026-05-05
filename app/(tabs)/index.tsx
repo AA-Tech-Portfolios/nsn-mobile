@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { timezoneOptions, timezoneRegions, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, timezoneOptions, timezoneRegions, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
 
@@ -251,7 +251,8 @@ const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes
 
 export default function HomeScreen() {
   const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage } = useAppSettings();
-  const copy = homeTranslations[appLanguage as keyof typeof homeTranslations] ?? homeTranslations.English;
+  const appLanguageBase = getLanguageBase(appLanguage);
+  const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   
   const mode = isNightMode ? "night" : "day"; // State
   const activeEvents = useMemo(() => (isNightMode ? eveningEvents : dayEvents), [isNightMode]);

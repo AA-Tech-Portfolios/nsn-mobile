@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { nsnColors } from "@/lib/nsn-data";
 
@@ -61,8 +61,9 @@ const notificationTranslations = {
 
 export default function NotificationsScreen() {
   const { isNightMode, appLanguage } = useAppSettings();
+  const appLanguageBase = getLanguageBase(appLanguage);
   const isDay = !isNightMode;
-  const copy = notificationTranslations[appLanguage as keyof typeof notificationTranslations] ?? notificationTranslations.English;
+  const copy = notificationTranslations[appLanguageBase as keyof typeof notificationTranslations] ?? notificationTranslations.English;
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>

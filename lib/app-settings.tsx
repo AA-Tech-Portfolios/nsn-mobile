@@ -1,5 +1,49 @@
 import { createContext, useContext, useState } from "react";
 
+export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
+
+export type AppPalette = {
+  id: AppPaletteId;
+  label: string;
+  description: string;
+  swatches: string[];
+};
+
+export const appPalettes: AppPalette[] = [
+  {
+    id: "midnight",
+    label: "Midnight NSN",
+    description: "Deep navy with indigo and teal accents.",
+    swatches: ["#020814", "#071426", "#3848FF", "#18C8D1", "#FFE5A3"],
+  },
+  {
+    id: "ocean",
+    label: "Ocean Calm",
+    description: "Blue, aqua, and soft sky tones.",
+    swatches: ["#052033", "#0E3A5B", "#2F80ED", "#22C8D8", "#DCEEFF"],
+  },
+  {
+    id: "forest",
+    label: "Forest Social",
+    description: "Evergreen surfaces with warm friendly highlights.",
+    swatches: ["#071B14", "#123326", "#2F8F5B", "#72D67E", "#FFE5A3"],
+  },
+  {
+    id: "sunset",
+    label: "Sunset Warm",
+    description: "Warm coral and gold accents for a softer mood.",
+    swatches: ["#211018", "#3A1D2A", "#FF6B6B", "#F7C85B", "#FFECE2"],
+  },
+  {
+    id: "lavender",
+    label: "Lavender Quiet",
+    description: "Soft purple accents for a calmer social feel.",
+    swatches: ["#130F2A", "#231B45", "#7C6CFF", "#B8A7FF", "#F0ECFF"],
+  },
+];
+
+export const getLanguageBase = (language: string) => language.replace(/\s+\([^)]+\)$/, "");
+
 export type TimezoneSetting = {
   id: string;
   label: string;
@@ -647,10 +691,28 @@ type AppSettings = {
   setReduceMotion: (value: boolean) => void;
   screenReaderHints: boolean;
   setScreenReaderHints: (value: boolean) => void;
+  meetupReminders: boolean;
+  setMeetupReminders: (value: boolean) => void;
+  weatherAlerts: boolean;
+  setWeatherAlerts: (value: boolean) => void;
+  chatNotifications: boolean;
+  setChatNotifications: (value: boolean) => void;
+  quietNotifications: boolean;
+  setQuietNotifications: (value: boolean) => void;
+  useApproximateLocation: boolean;
+  setUseApproximateLocation: (value: boolean) => void;
+  showDistanceInMeetups: boolean;
+  setShowDistanceInMeetups: (value: boolean) => void;
+  allowMessageRequests: boolean;
+  setAllowMessageRequests: (value: boolean) => void;
+  safetyCheckIns: boolean;
+  setSafetyCheckIns: (value: boolean) => void;
   appLanguage: string;
   setAppLanguage: (value: string) => void;
   translationLanguage: string;
   setTranslationLanguage: (value: string) => void;
+  appPalette: AppPalette;
+  setAppPalette: (value: AppPalette) => void;
   timezone: TimezoneSetting;
   setTimezone: (value: TimezoneSetting) => void;
 };
@@ -664,8 +726,17 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [highContrast, setHighContrast] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [screenReaderHints, setScreenReaderHints] = useState(true);
+  const [meetupReminders, setMeetupReminders] = useState(true);
+  const [weatherAlerts, setWeatherAlerts] = useState(true);
+  const [chatNotifications, setChatNotifications] = useState(true);
+  const [quietNotifications, setQuietNotifications] = useState(false);
+  const [useApproximateLocation, setUseApproximateLocation] = useState(true);
+  const [showDistanceInMeetups, setShowDistanceInMeetups] = useState(true);
+  const [allowMessageRequests, setAllowMessageRequests] = useState(false);
+  const [safetyCheckIns, setSafetyCheckIns] = useState(true);
   const [appLanguage, setAppLanguage] = useState("English");
   const [translationLanguage, setTranslationLanguage] = useState("English");
+  const [appPalette, setAppPalette] = useState<AppPalette>(appPalettes[0]);
   const [timezone, setTimezone] = useState<TimezoneSetting>(timezoneOptions[0]);
 
   return (
@@ -683,10 +754,28 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setReduceMotion,
         screenReaderHints,
         setScreenReaderHints,
+        meetupReminders,
+        setMeetupReminders,
+        weatherAlerts,
+        setWeatherAlerts,
+        chatNotifications,
+        setChatNotifications,
+        quietNotifications,
+        setQuietNotifications,
+        useApproximateLocation,
+        setUseApproximateLocation,
+        showDistanceInMeetups,
+        setShowDistanceInMeetups,
+        allowMessageRequests,
+        setAllowMessageRequests,
+        safetyCheckIns,
+        setSafetyCheckIns,
         appLanguage,
         setAppLanguage,
         translationLanguage,
         setTranslationLanguage,
+        appPalette,
+        setAppPalette,
         timezone,
         setTimezone,
       }}

@@ -1,7 +1,7 @@
 import { ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity } from "react-native";
 import { useState } from "react";
 
-import { useAppSettings } from "@/lib/app-settings";
+import { appPalettes, getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { nsnColors } from "@/lib/nsn-data";
 
@@ -34,6 +34,28 @@ type SettingsCopy = {
   appLanguageCopy: string;
   translateMeetupsChats: string;
   translateMeetupsChatsCopy: string;
+  appearance?: string;
+  colorPalette?: string;
+  colorPaletteCopy?: string;
+  notifications?: string;
+  meetupReminders?: string;
+  meetupRemindersCopy?: string;
+  weatherAlerts?: string;
+  weatherAlertsCopy?: string;
+  chatNotifications?: string;
+  chatNotificationsCopy?: string;
+  quietNotifications?: string;
+  quietNotificationsCopy?: string;
+  locationDiscovery?: string;
+  useApproximateLocation?: string;
+  useApproximateLocationCopy?: string;
+  showDistanceInMeetups?: string;
+  showDistanceInMeetupsCopy?: string;
+  safetyContact?: string;
+  allowMessageRequests?: string;
+  allowMessageRequestsCopy?: string;
+  safetyCheckIns?: string;
+  safetyCheckInsCopy?: string;
 };
 
 const englishCopy: SettingsCopy = {
@@ -65,6 +87,28 @@ const englishCopy: SettingsCopy = {
   appLanguageCopy: "Choose the language used across NSN.",
   translateMeetupsChats: "Translate meetups and chats",
   translateMeetupsChatsCopy: "Show event details and chat messages in this language.",
+  appearance: "Appearance",
+  colorPalette: "Color palette",
+  colorPaletteCopy: "Choose the mood and accent colors you prefer.",
+  notifications: "Notifications",
+  meetupReminders: "Meetup reminders",
+  meetupRemindersCopy: "Get reminders before meetups you have joined.",
+  weatherAlerts: "Weather alerts",
+  weatherAlertsCopy: "Receive updates when weather may affect an outdoor plan.",
+  chatNotifications: "Chat notifications",
+  chatNotificationsCopy: "Notify me when meetup group chats have new messages.",
+  quietNotifications: "Quiet notifications",
+  quietNotificationsCopy: "Keep notification tone gentle and avoid attention-heavy alerts.",
+  locationDiscovery: "Location & Discovery",
+  useApproximateLocation: "Use approximate location",
+  useApproximateLocationCopy: "Show nearby options without sharing a precise location.",
+  showDistanceInMeetups: "Show distance in meetups",
+  showDistanceInMeetupsCopy: "Display approximate distance on event and meetup cards.",
+  safetyContact: "Safety & Contact",
+  allowMessageRequests: "Allow message requests",
+  allowMessageRequestsCopy: "Let people message before you join the same meetup.",
+  safetyCheckIns: "Safety check-ins",
+  safetyCheckInsCopy: "Enable gentle check-in prompts around joined meetups.",
 };
 
 const settingsTranslations: Record<string, SettingsCopy> = {
@@ -1060,10 +1104,28 @@ export default function SettingsScreen() {
     setReduceMotion,
     screenReaderHints,
     setScreenReaderHints,
+    meetupReminders,
+    setMeetupReminders,
+    weatherAlerts,
+    setWeatherAlerts,
+    chatNotifications,
+    setChatNotifications,
+    quietNotifications,
+    setQuietNotifications,
+    useApproximateLocation,
+    setUseApproximateLocation,
+    showDistanceInMeetups,
+    setShowDistanceInMeetups,
+    allowMessageRequests,
+    setAllowMessageRequests,
+    safetyCheckIns,
+    setSafetyCheckIns,
     appLanguage,
     setAppLanguage,
     translationLanguage,
     setTranslationLanguage,
+    appPalette,
+    setAppPalette,
   } = useAppSettings();
   const isDay = !isNightMode;
   const [privateProfile, setPrivateProfile] = useState(false);
@@ -1071,14 +1133,16 @@ export default function SettingsScreen() {
   const [sameAgeGroupsOnly, setSameAgeGroupsOnly] = useState(false);
   const [revealAfterRsvp, setRevealAfterRsvp] = useState(true);
   const [friendsOfFriendsOnly, setFriendsOfFriendsOnly] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<"app" | "translation" | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<"app" | "translation" | "palette" | null>(null);
   const [appLanguageSearch, setAppLanguageSearch] = useState("");
   const [translationLanguageSearch, setTranslationLanguageSearch] = useState("");
-  const copy = settingsTranslations[appLanguage] ?? englishCopy;
-  const isRtl = rtlLanguages.has(appLanguage);
+  const appLanguageBase = getLanguageBase(appLanguage);
+  const copy = settingsTranslations[appLanguageBase] ?? englishCopy;
+  const isRtl = rtlLanguages.has(appLanguageBase);
+  const paletteAccent = appPalette.swatches[2];
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
   const contrastMutedStyle = highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
-  const accessibilityCopy = accessibilityTranslations[appLanguage] ?? accessibilityTranslations.English;
+  const accessibilityCopy = accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
 
   const languageOptions = [
     { label: "Arabic", nativeName: "العربية", flag: "🇸🇦" },
@@ -1086,10 +1150,15 @@ export default function SettingsScreen() {
     { label: "Chinese", nativeName: "中文", flag: "🇨🇳" },
     { label: "Danish", nativeName: "Dansk", flag: "🇩🇰" },
     { label: "Dutch", nativeName: "Nederlands", flag: "🇳🇱" },
-    { label: "English", nativeName: "English", flag: "🇦🇺" },
+    { label: "English", nativeName: "English", flag: "🇬🇧" },
+    { label: "English (AU)", nativeName: "English · Australia", flag: "🇦🇺" },
+    { label: "English (UK)", nativeName: "English · United Kingdom", flag: "🇬🇧" },
+    { label: "English (US)", nativeName: "English · United States", flag: "🇺🇸" },
     { label: "Filipino", nativeName: "Filipino", flag: "🇵🇭" },
     { label: "Finnish", nativeName: "Suomi", flag: "🇫🇮" },
     { label: "French", nativeName: "Français", flag: "🇫🇷" },
+    { label: "French (CA)", nativeName: "Français · Canada", flag: "🇨🇦" },
+    { label: "French (FR)", nativeName: "Français · France", flag: "🇫🇷" },
     { label: "German", nativeName: "Deutsch", flag: "🇩🇪" },
     { label: "Greek", nativeName: "Ελληνικά", flag: "🇬🇷" },
     { label: "Hebrew", nativeName: "עברית", flag: "🇮🇱" },
@@ -1117,7 +1186,7 @@ export default function SettingsScreen() {
     const normalized = query.trim().toLocaleLowerCase();
     if (!normalized) return languageOptions;
     return languageOptions.filter((language) =>
-      `${language.label} ${language.nativeName}`.toLocaleLowerCase().includes(normalized)
+      `${language.label} ${language.nativeName} ${getLanguageBase(language.label)}`.toLocaleLowerCase().includes(normalized)
     );
   };
   const appLanguageOptions = filterLanguages(appLanguageSearch);
@@ -1125,7 +1194,11 @@ export default function SettingsScreen() {
   const selectExactLanguage = (value: string, selectLanguage: (language: string) => void) => {
     const exactMatch = languageOptions.find((language) => {
       const query = value.trim().toLocaleLowerCase();
-      return language.label.toLocaleLowerCase() === query || language.nativeName.toLocaleLowerCase() === query;
+      return (
+        language.label.toLocaleLowerCase() === query ||
+        language.nativeName.toLocaleLowerCase() === query ||
+        getLanguageBase(language.label).toLocaleLowerCase() === query
+      );
     });
     if (exactMatch) {
       selectLanguage(exactMatch.label);
@@ -1198,6 +1271,63 @@ export default function SettingsScreen() {
     },
   ];
 
+  const notificationRows = [
+    {
+      label: copy.meetupReminders ?? englishCopy.meetupReminders,
+      copy: copy.meetupRemindersCopy ?? englishCopy.meetupRemindersCopy,
+      value: meetupReminders,
+      onValueChange: setMeetupReminders,
+    },
+    {
+      label: copy.weatherAlerts ?? englishCopy.weatherAlerts,
+      copy: copy.weatherAlertsCopy ?? englishCopy.weatherAlertsCopy,
+      value: weatherAlerts,
+      onValueChange: setWeatherAlerts,
+    },
+    {
+      label: copy.chatNotifications ?? englishCopy.chatNotifications,
+      copy: copy.chatNotificationsCopy ?? englishCopy.chatNotificationsCopy,
+      value: chatNotifications,
+      onValueChange: setChatNotifications,
+    },
+    {
+      label: copy.quietNotifications ?? englishCopy.quietNotifications,
+      copy: copy.quietNotificationsCopy ?? englishCopy.quietNotificationsCopy,
+      value: quietNotifications,
+      onValueChange: setQuietNotifications,
+    },
+  ];
+
+  const locationRows = [
+    {
+      label: copy.useApproximateLocation ?? englishCopy.useApproximateLocation,
+      copy: copy.useApproximateLocationCopy ?? englishCopy.useApproximateLocationCopy,
+      value: useApproximateLocation,
+      onValueChange: setUseApproximateLocation,
+    },
+    {
+      label: copy.showDistanceInMeetups ?? englishCopy.showDistanceInMeetups,
+      copy: copy.showDistanceInMeetupsCopy ?? englishCopy.showDistanceInMeetupsCopy,
+      value: showDistanceInMeetups,
+      onValueChange: setShowDistanceInMeetups,
+    },
+  ];
+
+  const safetyRows = [
+    {
+      label: copy.allowMessageRequests ?? englishCopy.allowMessageRequests,
+      copy: copy.allowMessageRequestsCopy ?? englishCopy.allowMessageRequestsCopy,
+      value: allowMessageRequests,
+      onValueChange: setAllowMessageRequests,
+    },
+    {
+      label: copy.safetyCheckIns ?? englishCopy.safetyCheckIns,
+      copy: copy.safetyCheckInsCopy ?? englishCopy.safetyCheckInsCopy,
+      value: safetyCheckIns,
+      onValueChange: setSafetyCheckIns,
+    },
+  ];
+
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView
@@ -1222,7 +1352,73 @@ export default function SettingsScreen() {
                 onValueChange={row.onValueChange}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: nsnColors.primary }}
+                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+              />
+            </View>
+          ))}
+        </View>
+
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          {copy.notifications ?? englishCopy.notifications}
+        </Text>
+        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          {notificationRows.map((row, index) => (
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < notificationRows.length - 1 && styles.rowDivider, isDay && index < notificationRows.length - 1 && styles.dayRowDivider, highContrast && index < notificationRows.length - 1 && styles.highContrastDivider]}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+              </View>
+              <Switch
+                value={row.value}
+                onValueChange={row.onValueChange}
+                accessibilityLabel={row.label}
+                accessibilityHint={screenReaderHints ? row.copy : undefined}
+                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+              />
+            </View>
+          ))}
+        </View>
+
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          {copy.locationDiscovery ?? englishCopy.locationDiscovery}
+        </Text>
+        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          {locationRows.map((row, index) => (
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < locationRows.length - 1 && styles.rowDivider, isDay && index < locationRows.length - 1 && styles.dayRowDivider, highContrast && index < locationRows.length - 1 && styles.highContrastDivider]}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+              </View>
+              <Switch
+                value={row.value}
+                onValueChange={row.onValueChange}
+                accessibilityLabel={row.label}
+                accessibilityHint={screenReaderHints ? row.copy : undefined}
+                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+              />
+            </View>
+          ))}
+        </View>
+
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          {copy.safetyContact ?? englishCopy.safetyContact}
+        </Text>
+        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          {safetyRows.map((row, index) => (
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < safetyRows.length - 1 && styles.rowDivider, isDay && index < safetyRows.length - 1 && styles.dayRowDivider, highContrast && index < safetyRows.length - 1 && styles.highContrastDivider]}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+              </View>
+              <Switch
+                value={row.value}
+                onValueChange={row.onValueChange}
+                accessibilityLabel={row.label}
+                accessibilityHint={screenReaderHints ? row.copy : undefined}
+                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
@@ -1242,11 +1438,78 @@ export default function SettingsScreen() {
                 onValueChange={row.onValueChange}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: nsnColors.primary }}
+                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
           ))}
+        </View>
+
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          {copy.appearance ?? englishCopy.appearance}
+        </Text>
+        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          <View style={[styles.dropdownRow, isRtl && styles.rtlRow]}>
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+                {copy.colorPalette ?? englishCopy.colorPalette}
+              </Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                {copy.colorPaletteCopy ?? englishCopy.colorPaletteCopy}
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.78}
+              onPress={() => setOpenDropdown(openDropdown === "palette" ? null : "palette")}
+              accessibilityRole="button"
+              accessibilityLabel={copy.colorPalette ?? englishCopy.colorPalette}
+              accessibilityHint={screenReaderHints ? copy.colorPaletteCopy ?? englishCopy.colorPaletteCopy : undefined}
+              style={[styles.dropdownButton, styles.paletteDropdownButton, isRtl && styles.rtlDropdownButton, isDay && styles.dayDropdownButton, highContrast && styles.highContrastButton]}
+            >
+              <View style={styles.paletteMiniSwatches}>
+                {appPalette.swatches.slice(0, 4).map((swatch) => (
+                  <View key={swatch} style={[styles.paletteMiniSwatch, { backgroundColor: swatch }]} />
+                ))}
+              </View>
+              <Text style={[styles.dropdownText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle]}>
+                {appPalette.label}
+              </Text>
+              <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
+            </TouchableOpacity>
+          </View>
+
+          {openDropdown === "palette" && (
+            <View style={[styles.dropdownMenu, styles.paletteMenu, isDay && styles.dayDropdownMenu]}>
+              {appPalettes.map((palette) => {
+                const selected = appPalette.id === palette.id;
+
+                return (
+                  <TouchableOpacity
+                    key={palette.id}
+                    activeOpacity={0.75}
+                    onPress={() => {
+                      setAppPalette(palette);
+                      setOpenDropdown(null);
+                    }}
+                    style={[styles.dropdownOption, styles.paletteOption, isRtl && styles.rtlRow, isDay && styles.dayDropdownOption]}
+                  >
+                    <View style={styles.paletteOptionCopy}>
+                      <View style={styles.paletteSwatches}>
+                        {palette.swatches.map((swatch) => (
+                          <View key={swatch} style={[styles.paletteSwatch, { backgroundColor: swatch }]} />
+                        ))}
+                      </View>
+                      <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlText]}>{palette.label}</Text>
+                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{palette.description}</Text>
+                    </View>
+                    <View style={[styles.radioOuter, selected && styles.radioOuterSelected, selected && { borderColor: paletteAccent }]}>
+                      {selected && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.translations}</Text>
@@ -1304,8 +1567,8 @@ export default function SettingsScreen() {
                     <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlText]}>{language.flag} {language.label}</Text>
                     <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{language.nativeName}</Text>
                   </View>
-                  <View style={[styles.radioOuter, appLanguage === language.label && styles.radioOuterSelected]}>
-                    {appLanguage === language.label && <View style={styles.radioInner} />}
+                  <View style={[styles.radioOuter, appLanguage === language.label && styles.radioOuterSelected, appLanguage === language.label && { borderColor: paletteAccent }]}>
+                    {appLanguage === language.label && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
                   </View>
                 </TouchableOpacity>
               ))}
@@ -1368,8 +1631,8 @@ export default function SettingsScreen() {
                     <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlText]}>{language.flag} {language.label}</Text>
                     <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{language.nativeName}</Text>
                   </View>
-                  <View style={[styles.radioOuter, translationLanguage === language.label && styles.radioOuterSelected]}>
-                    {translationLanguage === language.label && <View style={styles.radioInner} />}
+                  <View style={[styles.radioOuter, translationLanguage === language.label && styles.radioOuterSelected, translationLanguage === language.label && { borderColor: paletteAccent }]}>
+                    {translationLanguage === language.label && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
                   </View>
                 </TouchableOpacity>
               ))}
@@ -1502,6 +1765,21 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 13,
   },
+  paletteDropdownButton: {
+    minWidth: 210,
+  },
+  paletteMiniSwatches: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  paletteMiniSwatch: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginRight: -3,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.55)",
+  },
   rtlDropdownButton: {
     flexDirection: "row-reverse",
   },
@@ -1543,6 +1821,10 @@ const styles = StyleSheet.create({
   dropdownMenuContent: {
     paddingVertical: 6,
   },
+  paletteMenu: {
+    maxHeight: undefined,
+    paddingVertical: 6,
+  },
   languageSearchInput: {
     minHeight: 42,
     marginHorizontal: 10,
@@ -1570,6 +1852,25 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(166,177,199,0.14)",
+  },
+  paletteOption: {
+    alignItems: "center",
+    gap: 14,
+  },
+  paletteOptionCopy: {
+    flex: 1,
+  },
+  paletteSwatches: {
+    flexDirection: "row",
+    gap: 5,
+    marginBottom: 8,
+  },
+  paletteSwatch: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.45)",
   },
   dayDropdownOption: {
     borderBottomColor: "#C7D8F0",
