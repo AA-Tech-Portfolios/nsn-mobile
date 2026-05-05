@@ -24,7 +24,8 @@ describe("NSN prototype data", () => {
     expect(dayEvents.length).toBeGreaterThanOrEqual(2);
     expect(eveningEvents.length).toBeGreaterThanOrEqual(2);
     expect(chatSeed.some((message) => message.mine)).toBe(true);
-    expect(profileVibes).toEqual(expect.arrayContaining(["🌿 Calm", "👥 Small groups"]));
+    expect(profileVibes.length).toBeGreaterThanOrEqual(12);
+    expect(profileVibes).toEqual(expect.arrayContaining(["🌿 Calm", "👥 Small groups", "☕ Coffee", "🎬 Movies", "📚 Libraries"]));
   });
 
   it("uses a dark, high-contrast NSN palette", () => {

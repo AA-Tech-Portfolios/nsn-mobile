@@ -2,13 +2,77 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
-import { useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { nsnColors } from "@/lib/nsn-data";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
 
 const noiseLevels = ["Quiet", "Balanced", "Lively"] as const;
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+
+const eventsTranslations = {
+  English: {
+    title: "My Events",
+    subtitle: "Create your own experiences and invite others on your terms.",
+    createEvent: "＋ Create Event",
+    emptyTitle: "No events created yet",
+    emptyCopy: "Host a coffee meetup, movie night, board games, walk, study session or anything that feels like you.",
+    sheetTitle: "Create Event",
+    sheetSubtitle: "Set the plan, the place, and the vibe.",
+    eventName: "Event name",
+    eventNamePlaceholder: "Board games and coffee",
+    date: "Date",
+    datePlaceholder: "24 May",
+    time: "Time",
+    timePlaceholder: "6:30pm",
+    venue: "Venue",
+    venuePlaceholder: "Chatswood Social Cafe",
+    backupVenue: "Bad weather backup",
+    backupVenuePlaceholder: "Indoor table at nearby cafe",
+    noiseLevel: "Noise level",
+    address: "Address",
+    addressPlaceholder: "Enter an address or pick below",
+    mapReady: "OpenStreetMap / MapLibre ready",
+    chooseFromMap: "Choose from map",
+    mapCopy: "Pick a suggested North Shore place now. This panel can host a MapLibre map when native map tiles are added.",
+    description: "Description",
+    descriptionPlaceholder: "What should people expect?",
+    backupPrefix: "Backup",
+    save: "Create Event",
+    noise: { Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
+  },
+  Hebrew: {
+    title: "האירועים שלי",
+    subtitle: "צור חוויות משלך והזמן אחרים בתנאים שמתאימים לך.",
+    createEvent: "＋ יצירת אירוע",
+    emptyTitle: "עדיין לא נוצרו אירועים",
+    emptyCopy: "אפשר לארח קפה, ערב סרט, משחקי קופסה, הליכה, מפגש לימוד או כל דבר שמרגיש לך נכון.",
+    sheetTitle: "יצירת אירוע",
+    sheetSubtitle: "קבע את התוכנית, המקום והאווירה.",
+    eventName: "שם האירוע",
+    eventNamePlaceholder: "משחקי קופסה וקפה",
+    date: "תאריך",
+    datePlaceholder: "24 במאי",
+    time: "שעה",
+    timePlaceholder: "18:30",
+    venue: "מקום",
+    venuePlaceholder: "בית קפה חברתי בצ'אטסווד",
+    backupVenue: "חלופה למזג אוויר גרוע",
+    backupVenuePlaceholder: "שולחן בפנים בבית קפה קרוב",
+    noiseLevel: "רמת רעש",
+    address: "כתובת",
+    addressPlaceholder: "הקלד כתובת או בחר מהרשימה",
+    mapReady: "מוכן ל-OpenStreetMap / MapLibre",
+    chooseFromMap: "בחר מהמפה",
+    mapCopy: "בחר כרגע מקום מוצע באזור North Shore. הפאנל הזה יוכל להכיל מפת MapLibre כשיתווספו אריחי מפה.",
+    description: "תיאור",
+    descriptionPlaceholder: "למה אנשים יכולים לצפות?",
+    backupPrefix: "חלופה",
+    save: "יצירת אירוע",
+    noise: { Quiet: "שקט", Balanced: "מאוזן", Lively: "תוסס" },
+  },
+} as const;
 
 const placeSuggestions = [
   {
@@ -76,7 +140,10 @@ const createEventId = (title: string) => {
 };
 
 export default function EventsScreen() {
-  const { isNightMode } = useAppSettings();
+  const { isNightMode, appLanguage } = useAppSettings();
+  const appLanguageBase = getLanguageBase(appLanguage);
+  const copy = eventsTranslations[appLanguageBase as keyof typeof eventsTranslations] ?? eventsTranslations.English;
+  const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
@@ -164,42 +231,42 @@ export default function EventsScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, isDay && styles.dayTitle]}>My Events</Text>
+        <Text style={[styles.title, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.title}</Text>
 
-        <Text style={[styles.subtitle, isDay && styles.daySubtitle]}>
-          Create your own experiences and invite others on your terms.
+        <Text style={[styles.subtitle, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>
+          {copy.subtitle}
         </Text>
 
         <TouchableOpacity style={styles.createButton} activeOpacity={0.8} onPress={() => setIsCreatorOpen(true)}>
-          <Text style={styles.createButtonText}>＋ Create Event</Text>
+          <Text style={[styles.createButtonText, isRtl && styles.rtlText]}>{copy.createEvent}</Text>
         </TouchableOpacity>
 
         {createdEvents.length === 0 ? (
           <View style={[styles.card, isDay && styles.dayCard]}>
-            <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>No events created yet</Text>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.emptyTitle}</Text>
 
-            <Text style={[styles.cardText, isDay && styles.daySubtitle]}>
-              Host a coffee meetup, movie night, board games, walk, study session or anything that feels like you.
+            <Text style={[styles.cardText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>
+              {copy.emptyCopy}
             </Text>
           </View>
         ) : (
           <View style={styles.eventList}>
             {createdEvents.map((event) => (
               <View key={event.id} style={[styles.eventCard, isDay && styles.dayCard]}>
-                <View style={styles.eventHeader}>
+                <View style={[styles.eventHeader, isRtl && styles.rtlRow]}>
                   <View style={[styles.noiseBadge, event.noiseLevel === "Quiet" && styles.quietBadge, event.noiseLevel === "Lively" && styles.livelyBadge]}>
-                    <Text style={styles.noiseBadgeText}>{event.noiseLevel}</Text>
+                    <Text style={styles.noiseBadgeText}>{copy.noise[event.noiseLevel]}</Text>
                   </View>
-                  <Text style={[styles.eventDate, isDay && styles.daySubtitle]}>{event.date} · {event.time}</Text>
+                  <Text style={[styles.eventDate, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{event.date} · {event.time}</Text>
                 </View>
-                <Text style={[styles.eventTitle, isDay && styles.dayTitle]}>{event.title}</Text>
-                <Text style={[styles.eventMeta, isDay && styles.daySubtitle]}>⌖ {event.venue}</Text>
-                <Text style={[styles.eventMeta, isDay && styles.daySubtitle]}>◎ {event.mapPlace || event.address}</Text>
+                <Text style={[styles.eventTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{event.title}</Text>
+                <Text style={[styles.eventMeta, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>⌖ {event.venue}</Text>
+                <Text style={[styles.eventMeta, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>◎ {event.mapPlace || event.address}</Text>
                 {event.backupVenue ? (
-                  <Text style={[styles.eventMeta, isDay && styles.daySubtitle]}>☔ Backup: {event.backupVenue}</Text>
+                  <Text style={[styles.eventMeta, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>☔ {copy.backupPrefix}: {event.backupVenue}</Text>
                 ) : null}
                 {event.description ? (
-                  <Text style={[styles.eventDescription, isDay && styles.dayText]}>{event.description}</Text>
+                  <Text style={[styles.eventDescription, isDay && styles.dayText, isRtl && styles.rtlText]}>{event.description}</Text>
                 ) : null}
               </View>
             ))}
@@ -210,10 +277,10 @@ export default function EventsScreen() {
       <Modal animationType="slide" visible={isCreatorOpen} onRequestClose={resetCreator}>
         <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
           <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
-            <View style={styles.sheetHeader}>
+            <View style={[styles.sheetHeader, isRtl && styles.rtlRow]}>
               <View>
-                <Text style={[styles.sheetTitle, isDay && styles.dayTitle]}>Create Event</Text>
-                <Text style={[styles.sheetSubtitle, isDay && styles.daySubtitle]}>Set the plan, the place, and the vibe.</Text>
+                <Text style={[styles.sheetTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.sheetTitle}</Text>
+                <Text style={[styles.sheetSubtitle, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.sheetSubtitle}</Text>
               </View>
               <TouchableOpacity activeOpacity={0.75} onPress={resetCreator} style={[styles.closeButton, isDay && styles.dayCloseButton]}>
                 <Text style={[styles.closeText, isDay && styles.dayTitle]}>×</Text>
@@ -221,23 +288,23 @@ export default function EventsScreen() {
             </View>
 
             <View style={styles.formStack}>
-              <LabeledInput label="Event name" value={draft.title} onChangeText={(value) => updateDraft("title", value)} placeholder="Board games and coffee" isDay={isDay} />
+              <LabeledInput label={copy.eventName} value={draft.title} onChangeText={(value) => updateDraft("title", value)} placeholder={copy.eventNamePlaceholder} isDay={isDay} isRtl={isRtl} />
 
-              <View style={styles.inlineFields}>
+              <View style={[styles.inlineFields, isRtl && styles.rtlRow]}>
                 <View style={styles.inlineField}>
-                  <LabeledInput label="Date" value={draft.date} onChangeText={(value) => updateDraft("date", value)} placeholder="24 May" isDay={isDay} />
+                  <LabeledInput label={copy.date} value={draft.date} onChangeText={(value) => updateDraft("date", value)} placeholder={copy.datePlaceholder} isDay={isDay} isRtl={isRtl} />
                 </View>
                 <View style={styles.inlineField}>
-                  <LabeledInput label="Time" value={draft.time} onChangeText={(value) => updateDraft("time", value)} placeholder="6:30pm" isDay={isDay} />
+                  <LabeledInput label={copy.time} value={draft.time} onChangeText={(value) => updateDraft("time", value)} placeholder={copy.timePlaceholder} isDay={isDay} isRtl={isRtl} />
                 </View>
               </View>
 
-              <LabeledInput label="Venue" value={draft.venue} onChangeText={(value) => updateDraft("venue", value)} placeholder="Chatswood Social Cafe" isDay={isDay} />
-              <LabeledInput label="Bad weather backup" value={draft.backupVenue} onChangeText={(value) => updateDraft("backupVenue", value)} placeholder="Indoor table at nearby cafe" isDay={isDay} />
+              <LabeledInput label={copy.venue} value={draft.venue} onChangeText={(value) => updateDraft("venue", value)} placeholder={copy.venuePlaceholder} isDay={isDay} isRtl={isRtl} />
+              <LabeledInput label={copy.backupVenue} value={draft.backupVenue} onChangeText={(value) => updateDraft("backupVenue", value)} placeholder={copy.backupVenuePlaceholder} isDay={isDay} isRtl={isRtl} />
 
               <View>
-                <Text style={[styles.label, isDay && styles.dayTitle]}>Noise level</Text>
-                <View style={styles.noiseRow}>
+                <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.noiseLevel}</Text>
+                <View style={[styles.noiseRow, isRtl && styles.rtlRow]}>
                   {noiseLevels.map((level) => {
                     const active = draft.noiseLevel === level;
 
@@ -248,23 +315,23 @@ export default function EventsScreen() {
                         onPress={() => setDraft((current) => ({ ...current, noiseLevel: level }))}
                         style={[styles.noiseOption, isDay && styles.dayNoiseOption, active && styles.noiseOptionActive]}
                       >
-                        <Text style={[styles.noiseOptionText, isDay && styles.daySubtitle, active && styles.noiseOptionTextActive]}>{level}</Text>
+                        <Text style={[styles.noiseOptionText, isDay && styles.daySubtitle, active && styles.noiseOptionTextActive]}>{copy.noise[level]}</Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
               </View>
 
-              <LabeledInput label="Address" value={draft.address} onChangeText={(value) => updateDraft("address", value)} placeholder="Enter an address or pick below" isDay={isDay} />
+              <LabeledInput label={copy.address} value={draft.address} onChangeText={(value) => updateDraft("address", value)} placeholder={copy.addressPlaceholder} isDay={isDay} isRtl={isRtl} />
 
               <View style={[styles.mapPanel, isDay && styles.dayMapPanel]}>
                 <View style={styles.mapGrid}>
                   <Text style={styles.mapPin}>⌖</Text>
-                  <Text style={styles.mapWatermark}>OpenStreetMap / MapLibre ready</Text>
+                  <Text style={styles.mapWatermark}>{copy.mapReady}</Text>
                 </View>
-                <Text style={[styles.mapTitle, isDay && styles.dayTitle]}>{draft.mapPlace || "Choose from map"}</Text>
-                <Text style={[styles.mapCopy, isDay && styles.daySubtitle]}>
-                  {draft.coordinates || "Pick a suggested North Shore place now. This panel can host a MapLibre map when native map tiles are added."}
+                <Text style={[styles.mapTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{draft.mapPlace || copy.chooseFromMap}</Text>
+                <Text style={[styles.mapCopy, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>
+                  {draft.coordinates || copy.mapCopy}
                 </Text>
               </View>
 
@@ -277,11 +344,11 @@ export default function EventsScreen() {
                       key={place.id}
                       activeOpacity={0.82}
                       onPress={() => selectPlace(place)}
-                      style={[styles.placeOption, isDay && styles.dayPlaceOption, selected && styles.placeOptionActive]}
+                      style={[styles.placeOption, isDay && styles.dayPlaceOption, selected && styles.placeOptionActive, isRtl && styles.rtlRow]}
                     >
                       <View style={styles.placeCopy}>
-                        <Text style={[styles.placeName, isDay && styles.dayTitle]}>{place.name}</Text>
-                        <Text style={[styles.placeAddress, isDay && styles.daySubtitle]}>{place.address}</Text>
+                        <Text style={[styles.placeName, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{place.name}</Text>
+                        <Text style={[styles.placeAddress, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{place.address}</Text>
                       </View>
                       <Text style={[styles.placeCheck, selected && styles.placeCheckActive]}>{selected ? "✓" : ""}</Text>
                     </TouchableOpacity>
@@ -290,17 +357,18 @@ export default function EventsScreen() {
               </View>
 
               <LabeledInput
-                label="Description"
+                label={copy.description}
                 value={draft.description}
                 onChangeText={(value) => updateDraft("description", value)}
-                placeholder="What should people expect?"
+                placeholder={copy.descriptionPlaceholder}
                 isDay={isDay}
+                isRtl={isRtl}
                 multiline
               />
             </View>
 
             <TouchableOpacity activeOpacity={0.88} onPress={createEvent} disabled={!isDraftValid} style={[styles.saveButton, !isDraftValid && styles.saveButtonDisabled]}>
-              <Text style={styles.saveButtonText}>Create Event</Text>
+              <Text style={styles.saveButtonText}>{copy.save}</Text>
             </TouchableOpacity>
           </ScrollView>
         </ScreenContainer>
@@ -316,6 +384,7 @@ function LabeledInput({
   placeholder,
   isDay,
   multiline,
+  isRtl,
 }: {
   label: string;
   value: string;
@@ -323,10 +392,11 @@ function LabeledInput({
   placeholder: string;
   isDay?: boolean;
   multiline?: boolean;
+  isRtl?: boolean;
 }) {
   return (
     <View>
-      <Text style={[styles.label, isDay && styles.dayTitle]}>{label}</Text>
+      <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{label}</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -334,7 +404,7 @@ function LabeledInput({
         placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
         multiline={multiline}
         textAlignVertical={multiline ? "top" : "center"}
-        style={[styles.input, multiline && styles.textArea, isDay && styles.dayInput]}
+        style={[styles.input, multiline && styles.textArea, isDay && styles.dayInput, isRtl && styles.rtlInput]}
       />
     </View>
   );
@@ -352,6 +422,9 @@ const styles = StyleSheet.create({
   dayContainer: {
     backgroundColor: "#EAF4FF",
   },
+  rtlRow: { flexDirection: "row-reverse" },
+  rtlText: { textAlign: "right", writingDirection: "rtl" },
+  rtlInput: { textAlign: "right", writingDirection: "rtl" },
 
   title: {
     color: nsnColors.text,

@@ -7,6 +7,45 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
 
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+
+const eventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
+  Hebrew: {
+    "picnic-easy-hangout": {
+      title: "פיקניק — מפגש קליל",
+      category: "חוץ",
+      people: "2–4 אנשים",
+      description: "מביאים נשנושים, יושבים ונרגעים. אין לחץ לדבר כל הזמן.",
+      tone: "מאוזן",
+      weather: "תלוי במזג האוויר",
+    },
+    "beach-day-chill-vibes": {
+      title: "יום חוף — אווירה רגועה",
+      category: "חוץ",
+      people: "3–6 אנשים",
+      description: "שמש, ים וחברה טובה. להביא מגבת.",
+      tone: "מאוזן",
+      weather: "תלוי במזג האוויר",
+    },
+    "movie-night-watch-chat": {
+      title: "ערב סרט — צפייה + צ'אט",
+      category: "פנים",
+      people: "2–4 אנשים",
+      description: "צופים קודם, וצ'אט קליל אחר כך אם זה מרגיש נכון.",
+      tone: "שקט",
+      weather: "חלופה מקורה מוכנה",
+    },
+    "board-games-coffee": {
+      title: "משחקי קופסה + קפה",
+      category: "פנים",
+      people: "3–5 אנשים",
+      description: "משחקים פשוטים, שתייה חמה ופתיחות שיחה קלילות.",
+      tone: "מאוזן",
+      weather: "ידידותי לגשם",
+    },
+  },
+};
+
 function Pill({ label, active, isDay }: { label: string; active?: boolean; isDay?: boolean }) {
   return (
     <TouchableOpacity style={[styles.pill, active && styles.pillActive, isDay && styles.dayPill, isDay && active && styles.dayPillActive, ]}>
@@ -15,35 +54,37 @@ function Pill({ label, active, isDay }: { label: string; active?: boolean; isDay
   );
 }
 
-function EventCard({ event, isDay, }: { event: EventItem; isDay?: boolean; }) {
+function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?: boolean; appLanguageBase: string }) {
   const router = useRouter();
+  const isRtl = rtlLanguages.has(appLanguageBase);
+  const localizedEvent = { ...event, ...(eventTranslations[appLanguageBase]?.[event.id] ?? {}) };
 
   return (
     <TouchableOpacity
       activeOpacity={0.82}
       onPress={() => router.push(`/event/${event.id}`)}
-      style={[styles.eventCard, isDay ? styles.dayCard : null, ]}
+      style={[styles.eventCard, isDay ? styles.dayCard : null, isRtl && styles.rtlEventCard]}
     >
       <View style={[styles.eventImage, { backgroundColor: event.imageTone }]}>
         <Text style={styles.eventEmoji}>{event.emoji}</Text>
       </View>
       <View style={styles.eventBody}>
-        <View style={styles.eventTopLine}>
+        <View style={[styles.eventTopLine, isRtl && styles.rtlRow]}>
           <View style={[styles.smallTag, isDay ? styles.daySmallTag : null, ]}>
-            <Text style={[styles.smallTagText, isDay ? styles.daySmallTagText : null, ]}>{event.category}</Text>
+            <Text style={[styles.smallTagText, isDay ? styles.daySmallTagText : null, isRtl && styles.rtlText]}>{localizedEvent.category}</Text>
           </View>
-          <Text style={[styles.eventTitle, isDay ? styles.dayHeadingText : null, ]} numberOfLines={1}>{event.title}</Text>
+          <Text style={[styles.eventTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]} numberOfLines={1}>{localizedEvent.title}</Text>
         </View>
-        <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, ]}>⌖ {event.venue}</Text>
-        <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, ]}>◎ {event.people}  ·  {event.time}</Text>
-        <Text style={[styles.eventDescription, isDay ? styles.dayText : null, ]} numberOfLines={2}>{event.description}</Text>
-        <View style={styles.eventTags}>
-          <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, ]}>🌿 {event.tone}</Text>
-          <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, ]}>☔ {event.weather}</Text>
+        <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>⌖ {event.venue}</Text>
+        <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>◎ {localizedEvent.people}  ·  {event.time}</Text>
+        <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={2}>{localizedEvent.description}</Text>
+        <View style={[styles.eventTags, isRtl && styles.rtlRow]}>
+          <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>🌿 {localizedEvent.tone}</Text>
+          <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>☔ {localizedEvent.weather}</Text>
         </View>
       </View>
       <View style={styles.cardArrow}>
-        <Text style={[styles.cardArrowText, isDay ? styles.dayMutedText : null, ]}>›</Text>
+        <Text style={[styles.cardArrowText, isDay ? styles.dayMutedText : null, ]}>{isRtl ? "‹" : "›"}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -622,7 +663,7 @@ export default function HomeScreen() {
           <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null]}>{copy.seeAll}</Text>
         </View>
         <View style={styles.cardStack}>
-          {activeEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} />))}
+          {activeEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} />))}
         </View>
 
         <View style={styles.insightGrid}>
@@ -712,10 +753,13 @@ const styles = StyleSheet.create({
   seeAll: { color: "#96A5FF", fontSize: 12, fontWeight: "700" },
   cardStack: { gap: 10 },
   eventCard: { flexDirection: "row", minHeight: 126, borderRadius: 18, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, padding: 10, overflow: "hidden" },
+  rtlEventCard: { flexDirection: "row-reverse" },
   eventImage: { width: 88, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   eventEmoji: { fontSize: 34 },
   eventBody: { flex: 1, paddingLeft: 11, paddingRight: 4 },
   eventTopLine: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 3 },
+  rtlRow: { flexDirection: "row-reverse" },
+  rtlText: { textAlign: "right", writingDirection: "rtl" },
   smallTag: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 9, backgroundColor: "rgba(114,214,126,0.18)" },
   smallTagText: { color: nsnColors.green, fontSize: 10, fontWeight: "800" },
   daySmallTag: { backgroundColor: "#D9F0DD", },

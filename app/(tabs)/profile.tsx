@@ -7,6 +7,7 @@ import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
+import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 
 const rows = [
   { icon: "calendar", key: "meetups", route: "/meetups" },
@@ -62,7 +63,7 @@ const profileTranslations = {
     saved: "נשמר ✓",
     myVibes: "הווייבים שלי",
     about: "עליי",
-    aboutText: "אני נהנה משיחות משמעותיות, משחקי קופסה, קפה טוב וגילוי מקומות חדשים באזור North Shore.",
+    aboutText: "אני נהנה משיחות משמעותיות, משחקי קופסה, קפה טוב וגילוי מקומות חדשים באזור המקומי.",
     rows: { meetups: "המפגשים שלי", chats: "הצ'אטים שלי", events: "האירועים שלי", places: "מקומות שמורים", settings: "הגדרות ופרטיות" },
   },
   Russian: {
@@ -99,17 +100,92 @@ const profileTranslations = {
   },
 } as const;
 
+const profileVibeTranslations: Record<string, Record<string, string>> = {
+  Hebrew: {
+    "🌿 Calm": "🌿 רגוע",
+    "💬 Good listener": "💬 מקשיב טוב",
+    "🎲 Into games": "🎲 אוהב משחקים",
+    "⭐ Thoughtful": "⭐ מתחשב",
+    "👥 Small groups": "👥 קבוצות קטנות",
+    "☕ Coffee": "☕ קפה",
+    "🎬 Movies": "🎬 סרטים",
+    "🚶 Walks": "🚶 הליכות",
+    "📚 Libraries": "📚 ספריות",
+    "🧺 Picnics": "🧺 פיקניקים",
+    "🍜 Food spots": "🍜 מקומות אוכל",
+    "🎧 Quiet music": "🎧 מוזיקה שקטה",
+    "🧠 Deep chats": "🧠 שיחות עומק",
+    "🌊 Beach days": "🌊 ימי חוף",
+    "🎨 Creative": "🎨 יצירתי",
+  },
+  Arabic: {
+    "🌿 Calm": "🌿 هادئ",
+    "💬 Good listener": "💬 مستمع جيد",
+    "🎲 Into games": "🎲 يحب الألعاب",
+    "⭐ Thoughtful": "⭐ مراعي",
+    "👥 Small groups": "👥 مجموعات صغيرة",
+    "☕ Coffee": "☕ قهوة",
+    "🎬 Movies": "🎬 أفلام",
+    "🚶 Walks": "🚶 مشي",
+    "📚 Libraries": "📚 مكتبات",
+    "🧺 Picnics": "🧺 نزهات",
+    "🍜 Food spots": "🍜 أماكن طعام",
+    "🎧 Quiet music": "🎧 موسيقى هادئة",
+    "🧠 Deep chats": "🧠 أحاديث عميقة",
+    "🌊 Beach days": "🌊 أيام الشاطئ",
+    "🎨 Creative": "🎨 إبداعي",
+  },
+  Russian: {
+    "🌿 Calm": "🌿 Спокойный",
+    "💬 Good listener": "💬 Хорошо слушаю",
+    "🎲 Into games": "🎲 Люблю игры",
+    "⭐ Thoughtful": "⭐ Внимательный",
+    "👥 Small groups": "👥 Малые группы",
+    "☕ Coffee": "☕ Кофе",
+    "🎬 Movies": "🎬 Кино",
+    "🚶 Walks": "🚶 Прогулки",
+    "📚 Libraries": "📚 Библиотеки",
+    "🧺 Picnics": "🧺 Пикники",
+    "🍜 Food spots": "🍜 Еда",
+    "🎧 Quiet music": "🎧 Тихая музыка",
+    "🧠 Deep chats": "🧠 Глубокие беседы",
+    "🌊 Beach days": "🌊 Пляжные дни",
+    "🎨 Creative": "🎨 Творческий",
+  },
+  Spanish: {
+    "🌿 Calm": "🌿 Tranquilo",
+    "💬 Good listener": "💬 Buen oyente",
+    "🎲 Into games": "🎲 Me gustan los juegos",
+    "⭐ Thoughtful": "⭐ Considerado",
+    "👥 Small groups": "👥 Grupos pequeños",
+    "☕ Coffee": "☕ Café",
+    "🎬 Movies": "🎬 Películas",
+    "🚶 Walks": "🚶 Paseos",
+    "📚 Libraries": "📚 Bibliotecas",
+    "🧺 Picnics": "🧺 Picnics",
+    "🍜 Food spots": "🍜 Lugares para comer",
+    "🎧 Quiet music": "🎧 Música tranquila",
+    "🧠 Deep chats": "🧠 Charlas profundas",
+    "🌊 Beach days": "🌊 Días de playa",
+    "🎨 Creative": "🎨 Creativo",
+  },
+};
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { isNightMode, blurProfilePhoto, appLanguage, displayName, setDisplayName, profilePhotoUri, setProfilePhotoUri } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const isDay = !isNightMode;
   const copy = profileTranslations[appLanguageBase as keyof typeof profileTranslations] ?? profileTranslations.English;
+  const vibeCopy = profileVibeTranslations[appLanguageBase] ?? {};
 
   const [isEditingName, setIsEditingName] = useState(false);
+  const [draftName, setDraftName] = useState(displayName);
+  const [nameError, setNameError] = useState("");
 
-  const [selectedVibes, setSelectedVibes] = useState(profileVibes);
+  const [selectedVibes, setSelectedVibes] = useState(profileVibes.slice(0, 5));
   const [isEditingVibes, setIsEditingVibes] = useState(false);
+  const [vibeLimitMessage, setVibeLimitMessage] = useState("");
 
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
 
@@ -142,11 +218,39 @@ export default function ProfileScreen() {
     setShowPhotoMenu(!showPhotoMenu);
   };
 
+  const saveName = () => {
+    const nextName = draftName.trim();
+
+    if (!isAllowedDisplayName(nextName)) {
+      setNameError(nameNotAllowedMessage);
+      return;
+    }
+
+    setDisplayName(nextName);
+    setNameError("");
+    setIsEditingName(false);
+  };
+
+  const toggleNameEditing = () => {
+    if (isEditingName) {
+      saveName();
+      return;
+    }
+
+    setDraftName(displayName);
+    setNameError("");
+    setIsEditingName(true);
+  };
+
   const toggleVibe = (vibe: string) => {
     if (selectedVibes.includes(vibe)) {
       setSelectedVibes(selectedVibes.filter((item) => item !== vibe));
+      setVibeLimitMessage("");
     } else if (selectedVibes.length < 5) {
       setSelectedVibes([...selectedVibes, vibe]);
+      setVibeLimitMessage("");
+    } else {
+      setVibeLimitMessage("Let's keep this calm, what 5 vibes do you think fit really you? 😌");
     }
   };
 
@@ -231,19 +335,22 @@ export default function ProfileScreen() {
           <View style={styles.nameRow}>
             {isEditingName ? (
               <TextInput
-                value={displayName}
-                onChangeText={setDisplayName}
+                value={draftName}
+                onChangeText={(value) => {
+                  setDraftName(value);
+                  if (nameError) setNameError("");
+                }}
                 autoFocus
                 style={[styles.nameInput, isDay && styles.dayTitle]}
                 selectionColor="#7786FF"
-                onSubmitEditing={() => setIsEditingName(false)}
+                onSubmitEditing={saveName}
               />
             ) : (
               <Text style={[styles.name, isDay && styles.dayTitle]}>{displayName}</Text>
             )}
 
             <TouchableOpacity
-              onPress={() => setIsEditingName(!isEditingName)}
+              onPress={toggleNameEditing}
 
               accessibilityRole="button"
               accessibilityLabel={
@@ -260,6 +367,7 @@ export default function ProfileScreen() {
               )}
             </TouchableOpacity>
           </View>
+          {nameError ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{nameError}</Text> : null}
         </View>
 
         <View style={styles.sectionTitleRow}>
@@ -273,13 +381,14 @@ export default function ProfileScreen() {
         <View style={styles.vibeGrid}>
           {profileVibes.map((vibe) => {
             const selected = selectedVibes.includes(vibe);
+            const vibeLabel = vibeCopy[vibe] ?? vibe;
 
             if (!isEditingVibes && !selected) return null;
 
             return (
               <TouchableOpacity
                 accessibilityRole="button"
-                accessibilityLabel={`${vibe}`}
+                accessibilityLabel={vibeLabel}
                 accessibilityState={{
                   selected,
                 }}  
@@ -295,12 +404,13 @@ export default function ProfileScreen() {
                 onPress={() => isEditingVibes && toggleVibe(vibe)}
               >
                 <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, isEditingVibes && !selected && styles.vibeChipMuted]}>
-                  {selected ? vibe : `＋ ${vibe}`}
+                  {selected ? vibeLabel : `＋ ${vibeLabel}`}
                 </Text>
               </TouchableOpacity>
             );
           })}
         </View>
+        {vibeLimitMessage ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{vibeLimitMessage}</Text> : null}
 
         <View style={styles.sectionTitleRow}>
           <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.about}</Text>
@@ -399,6 +509,8 @@ const styles = StyleSheet.create({
   vibeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
   vibeChip: { color: nsnColors.text, fontSize: 13, lineHeight: 18, fontWeight: "700", paddingHorizontal: 13, paddingVertical: 9, borderRadius: 14, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, overflow: "hidden" },
   vibeChipMuted: { opacity: 0.45, borderStyle: "dashed" },
+  inlineMessage: { color: "#F7C85B", fontSize: 12, lineHeight: 17, fontWeight: "700", marginTop: -10, marginBottom: 16, textAlign: "center" },
+  dayMessage: { color: "#7C5A00" },
   aboutCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 15, marginBottom: 16 },
   aboutInput: { minHeight: 80, textAlignVertical: "top", padding: 0, margin: 0, borderWidth: 0, backgroundColor: "transparent", ...(Platform.OS === "web" ? ({ outlineStyle: "none", outlineWidth: 0, outlineColor: "transparent", boxShadow: "none", appearance: "none", caretColor: "#7786FF" } as any) : {}) },
   aboutText: { color: nsnColors.text, fontSize: 15, lineHeight: 23 },

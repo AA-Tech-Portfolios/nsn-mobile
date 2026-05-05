@@ -41,6 +41,8 @@ These features fit SoftHello but should not block v1.1 unless a specific launch 
 | Saved comfort places | Useful for repeated safe venue selection after event basics work. |
 | Conversation starter cards | Low-cost enhancement for chats and meetups. |
 | Host templates | Speeds up event creation after the event model is stable. |
+| Daily motivational messages | Optional comfort feature shown when users open the app, with a setting to turn it on or off. |
+| App animation toggle | Let users enable or disable decorative app animations separately from core accessibility reduce-motion support. |
 
 ## Future
 

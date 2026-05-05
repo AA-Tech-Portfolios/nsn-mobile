@@ -65,6 +65,14 @@ Optional notes can help set expectations, such as:
 - Working full-time, weekends are best.
 - Prefer relaxed meetups.
 
+## Comfort Settings
+
+Comfort settings should let users decide how energetic the app feels.
+
+- Daily motivational messages can appear when the app opens, but must be optional.
+- App animations should have a clear on/off setting for users who prefer a still interface.
+- Reduce-motion accessibility support should remain available even if decorative animations are later added.
+
 ## Communication Preferences
 
 Users should be able to signal:

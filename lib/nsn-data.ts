@@ -95,7 +95,23 @@ export const eveningEvents: EventItem[] = [
 
 export const movieNight = eveningEvents[0];
 
-export const profileVibes = ["🌿 Calm", "💬 Good listener", "🎲 Into games", "⭐ Thoughtful", "👥 Small groups"];
+export const profileVibes = [
+  "🌿 Calm",
+  "💬 Good listener",
+  "🎲 Into games",
+  "⭐ Thoughtful",
+  "👥 Small groups",
+  "☕ Coffee",
+  "🎬 Movies",
+  "🚶 Walks",
+  "📚 Libraries",
+  "🧺 Picnics",
+  "🍜 Food spots",
+  "🎧 Quiet music",
+  "🧠 Deep chats",
+  "🌊 Beach days",
+  "🎨 Creative",
+];
 
 export const chatSeed = [
   { id: "1", name: "Alon", avatar: "A", text: "Hey! I'll be there around 6:45pm 😊", time: "4:32pm", mine: false },

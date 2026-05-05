@@ -7,6 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { SoftHelloIntent, SoftHelloVisibility, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
+import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 
 const intentOptions: SoftHelloIntent[] = ["Friends", "Dating", "Both", "Exploring"];
 
@@ -44,11 +45,12 @@ export default function OnboardingScreen() {
   const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(chatswoodLocality);
   const [intent, setIntent] = useState<SoftHelloIntent>("Exploring");
   const [displayName, setDisplayName] = useState("");
+  const [nameError, setNameError] = useState("");
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const [visibilityPreference, setVisibilityPreference] = useState<SoftHelloVisibility>("Blurred");
 
   const canContinue = useMemo(
-    () => ageConfirmed && suburb.trim().length >= 2 && displayName.trim().length >= 2,
+    () => ageConfirmed && suburb.trim().length >= 2 && isAllowedDisplayName(displayName),
     [ageConfirmed, displayName, suburb]
   );
 
@@ -110,6 +112,10 @@ export default function OnboardingScreen() {
 
   const finishOnboarding = async () => {
     if (!canContinue) {
+      if (displayName.trim().length > 0 && !isAllowedDisplayName(displayName)) {
+        setNameError(nameNotAllowedMessage);
+      }
+
       return;
     }
 
@@ -232,11 +238,20 @@ export default function OnboardingScreen() {
             <Text style={[styles.label, isDay && styles.dayTitle]}>Name or nickname</Text>
             <TextInput
               value={displayName}
-              onChangeText={setDisplayName}
+              onChangeText={(value) => {
+                setDisplayName(value);
+                if (nameError) setNameError("");
+              }}
+              onBlur={() => {
+                if (displayName.trim().length > 0 && !isAllowedDisplayName(displayName)) {
+                  setNameError(nameNotAllowedMessage);
+                }
+              }}
               placeholder="Sam"
               placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
               style={[styles.input, isDay && styles.dayInput]}
             />
+            {nameError ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{nameError}</Text> : null}
           </View>
 
           <View>
@@ -350,6 +365,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   dayInput: { borderColor: "#EFE2D8", backgroundColor: "#FFFFFF", color: "#18182E" },
+  inlineMessage: { color: "#9A6A00", fontSize: 12, lineHeight: 17, fontWeight: "800", marginTop: 7 },
+  dayMessage: { color: "#9A6A00" },
   localityStatus: { color: "#5F6575", fontSize: 12, lineHeight: 17, marginTop: 7 },
   localityList: { borderRadius: 16, borderWidth: 1, borderColor: "#EFE2D8", backgroundColor: "#FFFFFF", marginTop: 9, overflow: "hidden" },
   localityOption: {

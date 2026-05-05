@@ -112,6 +112,11 @@ Missing MVP pieces include:
 - Post-event feedback.
 - Production-ready data persistence and backend rules.
 
+Product to-do ideas captured for upcoming iterations:
+
+- Optional daily motivational messages when the app opens, controlled by a user setting.
+- A dedicated app animations toggle so users can keep the interface still or playful depending on comfort.
+
 ## Non-Goals for v1.1
 
 SoftHello v1.1 does not include:
