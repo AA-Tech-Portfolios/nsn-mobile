@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
 
@@ -43,6 +44,21 @@ export const appPalettes: AppPalette[] = [
 ];
 
 export const getLanguageBase = (language: string) => language.replace(/\s+\([^)]+\)$/, "");
+
+const ONBOARDING_STORAGE_KEY = "softhello.onboarding.v1";
+
+export type SoftHelloIntent = "Friends" | "Dating" | "Both" | "Exploring";
+export type SoftHelloVisibility = "Blurred" | "Visible";
+
+type OnboardingSnapshot = {
+  hasCompletedOnboarding: boolean;
+  ageConfirmed: boolean;
+  suburb: string;
+  intent: SoftHelloIntent;
+  displayName: string;
+  profilePhotoUri: string | null;
+  visibilityPreference: SoftHelloVisibility;
+};
 
 export type TimezoneSetting = {
   id: string;
@@ -679,6 +695,22 @@ export const timezoneOptions: TimezoneSetting[] = [
 ];
 
 type AppSettings = {
+  isOnboardingLoaded: boolean;
+  hasCompletedOnboarding: boolean;
+  setHasCompletedOnboarding: (value: boolean) => void;
+  ageConfirmed: boolean;
+  setAgeConfirmed: (value: boolean) => void;
+  suburb: string;
+  setSuburb: (value: string) => void;
+  intent: SoftHelloIntent;
+  setIntent: (value: SoftHelloIntent) => void;
+  displayName: string;
+  setDisplayName: (value: string) => void;
+  profilePhotoUri: string | null;
+  setProfilePhotoUri: (value: string | null) => void;
+  visibilityPreference: SoftHelloVisibility;
+  setVisibilityPreference: (value: SoftHelloVisibility) => void;
+  completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
   isNightMode: boolean;
   setIsNightMode: (value: boolean) => void;
   blurProfilePhoto: boolean;
@@ -720,6 +752,14 @@ type AppSettings = {
 const AppSettingsContext = createContext<AppSettings | null>(null);
 
 export function AppSettingsProvider({ children }: { children: React.ReactNode }) {
+  const [isOnboardingLoaded, setIsOnboardingLoaded] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [suburb, setSuburb] = useState("");
+  const [intent, setIntent] = useState<SoftHelloIntent>("Exploring");
+  const [displayName, setDisplayName] = useState("Alon");
+  const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
+  const [visibilityPreference, setVisibilityPreference] = useState<SoftHelloVisibility>("Blurred");
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
@@ -739,9 +779,84 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [appPalette, setAppPalette] = useState<AppPalette>(appPalettes[0]);
   const [timezone, setTimezone] = useState<TimezoneSetting>(timezoneOptions[0]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadOnboarding() {
+      try {
+        const storedValue = await AsyncStorage.getItem(ONBOARDING_STORAGE_KEY);
+
+        if (!storedValue || !isMounted) {
+          return;
+        }
+
+        const snapshot = JSON.parse(storedValue) as OnboardingSnapshot;
+        setHasCompletedOnboarding(Boolean(snapshot.hasCompletedOnboarding));
+        setAgeConfirmed(Boolean(snapshot.ageConfirmed));
+        setSuburb(snapshot.suburb ?? "");
+        setIntent(snapshot.intent ?? "Exploring");
+        setDisplayName(snapshot.displayName || "Alon");
+        setProfilePhotoUri(snapshot.profilePhotoUri ?? null);
+        setVisibilityPreference(snapshot.visibilityPreference ?? "Blurred");
+        setBlurProfilePhoto((snapshot.visibilityPreference ?? "Blurred") === "Blurred");
+      } catch (error) {
+        console.log("SoftHello onboarding could not load:", error);
+      } finally {
+        if (isMounted) {
+          setIsOnboardingLoaded(true);
+        }
+      }
+    }
+
+    loadOnboarding();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const completeOnboarding = async (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => {
+    setAgeConfirmed(snapshot.ageConfirmed);
+    setSuburb(snapshot.suburb);
+    setIntent(snapshot.intent);
+    setDisplayName(snapshot.displayName);
+    setProfilePhotoUri(snapshot.profilePhotoUri);
+    setVisibilityPreference(snapshot.visibilityPreference);
+    setBlurProfilePhoto(snapshot.visibilityPreference === "Blurred");
+    setHasCompletedOnboarding(true);
+
+    try {
+      await AsyncStorage.setItem(
+        ONBOARDING_STORAGE_KEY,
+        JSON.stringify({
+          ...snapshot,
+          hasCompletedOnboarding: true,
+        } satisfies OnboardingSnapshot)
+      );
+    } catch (error) {
+      console.log("SoftHello onboarding could not save:", error);
+    }
+  };
+
   return (
     <AppSettingsContext.Provider
       value={{
+        isOnboardingLoaded,
+        hasCompletedOnboarding,
+        setHasCompletedOnboarding,
+        ageConfirmed,
+        setAgeConfirmed,
+        suburb,
+        setSuburb,
+        intent,
+        setIntent,
+        displayName,
+        setDisplayName,
+        profilePhotoUri,
+        setProfilePhotoUri,
+        visibilityPreference,
+        setVisibilityPreference,
+        completeOnboarding,
         isNightMode,
         setIsNightMode,
         blurProfilePhoto,

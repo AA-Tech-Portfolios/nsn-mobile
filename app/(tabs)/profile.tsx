@@ -101,18 +101,16 @@ const profileTranslations = {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { isNightMode, blurProfilePhoto, appLanguage } = useAppSettings();
+  const { isNightMode, blurProfilePhoto, appLanguage, displayName, setDisplayName, profilePhotoUri, setProfilePhotoUri } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const isDay = !isNightMode;
   const copy = profileTranslations[appLanguageBase as keyof typeof profileTranslations] ?? profileTranslations.English;
 
-  const [name, setName] = useState("Alon");
   const [isEditingName, setIsEditingName] = useState(false);
 
   const [selectedVibes, setSelectedVibes] = useState(profileVibes);
   const [isEditingVibes, setIsEditingVibes] = useState(false);
 
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
 
   const [aboutMe, setAboutMe] = useState<string>(copy.aboutText);
@@ -136,7 +134,7 @@ export default function ProfileScreen() {
     });
 
     if (!result.canceled) {
-      setProfilePhoto(result.assets[0].uri);
+      setProfilePhotoUri(result.assets[0].uri);
     }
   };
 
@@ -169,17 +167,17 @@ export default function ProfileScreen() {
           
             accessibilityRole="button"
             accessibilityLabel={
-              profilePhoto
+              profilePhotoUri
                 ? "Edit profile photo"
                 : "Add profile photo"
             }
             accessibilityHint="Opens profile photo options"
           >
-            {profilePhoto ? (
-              <Image source={{ uri: profilePhoto }} style={styles.avatarImage} blurRadius={blurProfilePhoto ? 12 : 0} />
+            {profilePhotoUri ? (
+              <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} blurRadius={blurProfilePhoto ? 12 : 0} />
             ) : (
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+                <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -189,10 +187,10 @@ export default function ProfileScreen() {
             style={[styles.photoButton, isDay && styles.dayPhotoButton]} 
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={ profilePhoto ? "Edit profile photo" : "Add profile photo"}  
+            accessibilityLabel={ profilePhotoUri ? "Edit profile photo" : "Add profile photo"}  
           >
             <Text style={[styles.photoButtonText, isDay && styles.dayPhotoButtonText]}>
-              {profilePhoto ? copy.editPhoto : copy.addPhoto}
+              {profilePhotoUri ? copy.editPhoto : copy.addPhoto}
             </Text>
           </TouchableOpacity>
                 
@@ -206,15 +204,15 @@ export default function ProfileScreen() {
           }}
     >
       <Text style={[styles.photoMenuText, isDay && styles.dayTitle]}>
-        {profilePhoto ? copy.changePhoto : copy.choosePhoto}
+        {profilePhotoUri ? copy.changePhoto : copy.choosePhoto}
       </Text>
     </TouchableOpacity>
 
-    {profilePhoto && (
+    {profilePhotoUri && (
       <TouchableOpacity
         style={styles.photoMenuItem}
         onPress={() => {
-          setProfilePhoto(null);
+          setProfilePhotoUri(null);
           setShowPhotoMenu(false);
         }}
       >
@@ -233,15 +231,15 @@ export default function ProfileScreen() {
           <View style={styles.nameRow}>
             {isEditingName ? (
               <TextInput
-                value={name}
-                onChangeText={setName}
+                value={displayName}
+                onChangeText={setDisplayName}
                 autoFocus
                 style={[styles.nameInput, isDay && styles.dayTitle]}
                 selectionColor="#7786FF"
                 onSubmitEditing={() => setIsEditingName(false)}
               />
             ) : (
-              <Text style={[styles.name, isDay && styles.dayTitle]}>{name}</Text>
+              <Text style={[styles.name, isDay && styles.dayTitle]}>{displayName}</Text>
             )}
 
             <TouchableOpacity
