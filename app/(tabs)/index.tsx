@@ -48,8 +48,137 @@ function EventCard({ event, isDay, }: { event: EventItem; isDay?: boolean; }) {
   );
 }
 
+const homeTranslations = {
+  English: {
+    subtitle: "Low-pressure meetups around the North Shore.",
+    day: "Day ☀️",
+    night: "Night 🌙",
+    morning: "🌅 Good morning",
+    afternoon: "☀️ Good afternoon",
+    evening: "🌙 Good evening",
+    change: "Change",
+    timezone: "Timezone",
+    done: "Done",
+    weatherUpdate: "Weather update",
+    loadingWeather: (city: string) => `Loading ${city} weather...`,
+    rainLikely: (city: string, temp: number) => `☔ Rain likely today • ${city} ${temp}°C • Indoor alternatives recommended.`,
+    slightRain: (city: string, temp: number) => `🌦️ Slight rain possible • ${city} ${temp}°C • We'll keep you updated.`,
+    warmDay: (city: string, temp: number) => `☀️ Warm day • ${city} ${temp}°C • Great for outdoor meetups.`,
+    goodWeather: (city: string, temp: number, rain: number) => `🌤️ Good meetup weather • ${city} ${temp}°C • Rain chance ${rain}%.`,
+    filters: ["All", "Outdoor", "Indoor", "Food", "Active"],
+    dayEvents: "☀️ Day Events",
+    eveningEvents: "🌙 Evening Events",
+    seeAll: "See all",
+    dayVsNight: "Day vs Night",
+    dayVsNightCopy: "Find the right vibe at the right time.",
+    weatherAdaptive: "Weather Adaptive",
+    weatherAdaptiveCopy: "We suggest indoor alternatives if plans change.",
+  },
+  Arabic: {
+    subtitle: "لقاءات بلا ضغط حول نورث شور.",
+    day: "نهار ☀️",
+    night: "ليل 🌙",
+    morning: "🌅 صباح الخير",
+    afternoon: "☀️ مساء الخير",
+    evening: "🌙 مساء هادئ",
+    change: "تغيير",
+    timezone: "المنطقة الزمنية",
+    done: "تم",
+    weatherUpdate: "تحديث الطقس",
+    loadingWeather: (city: string) => `جارٍ تحميل طقس ${city}...`,
+    rainLikely: (city: string, temp: number) => `☔ المطر محتمل اليوم • ${city} ${temp}°C • نوصي ببدائل داخلية.`,
+    slightRain: (city: string, temp: number) => `🌦️ احتمال مطر خفيف • ${city} ${temp}°C • سنبقيك على اطلاع.`,
+    warmDay: (city: string, temp: number) => `☀️ يوم دافئ • ${city} ${temp}°C • مناسب للقاءات الخارجية.`,
+    goodWeather: (city: string, temp: number, rain: number) => `🌤️ طقس جيد للقاءات • ${city} ${temp}°C • احتمال المطر ${rain}%.`,
+    filters: ["الكل", "خارجي", "داخلي", "طعام", "نشاط"],
+    dayEvents: "☀️ فعاليات النهار",
+    eveningEvents: "🌙 فعاليات المساء",
+    seeAll: "عرض الكل",
+    dayVsNight: "نهار أم ليل",
+    dayVsNightCopy: "اعثر على الأجواء المناسبة في الوقت المناسب.",
+    weatherAdaptive: "يتكيف مع الطقس",
+    weatherAdaptiveCopy: "نقترح بدائل داخلية إذا تغيرت الخطط.",
+  },
+  Hebrew: {
+    subtitle: "מפגשים בלי לחץ סביב North Shore.",
+    day: "יום ☀️",
+    night: "לילה 🌙",
+    morning: "🌅 בוקר טוב",
+    afternoon: "☀️ צהריים טובים",
+    evening: "🌙 ערב טוב",
+    change: "שנה",
+    timezone: "אזור זמן",
+    done: "סיום",
+    weatherUpdate: "עדכון מזג אוויר",
+    loadingWeather: (city: string) => `טוען מזג אוויר עבור ${city}...`,
+    rainLikely: (city: string, temp: number) => `☔ סביר גשם היום • ${city} ${temp}°C • מומלצות חלופות מקורות.`,
+    slightRain: (city: string, temp: number) => `🌦️ ייתכן גשם קל • ${city} ${temp}°C • נעדכן אותך.`,
+    warmDay: (city: string, temp: number) => `☀️ יום חמים • ${city} ${temp}°C • נהדר למפגשים בחוץ.`,
+    goodWeather: (city: string, temp: number, rain: number) => `🌤️ מזג אוויר טוב למפגש • ${city} ${temp}°C • סיכוי לגשם ${rain}%.`,
+    filters: ["הכל", "חוץ", "פנים", "אוכל", "פעיל"],
+    dayEvents: "☀️ אירועי יום",
+    eveningEvents: "🌙 אירועי ערב",
+    seeAll: "הצג הכל",
+    dayVsNight: "יום מול לילה",
+    dayVsNightCopy: "מצא את הווייב הנכון בזמן הנכון.",
+    weatherAdaptive: "מותאם למזג האוויר",
+    weatherAdaptiveCopy: "נציע חלופות מקורות אם התוכניות משתנות.",
+  },
+  Russian: {
+    subtitle: "Встречи без давления вокруг North Shore.",
+    day: "День ☀️",
+    night: "Ночь 🌙",
+    morning: "🌅 Доброе утро",
+    afternoon: "☀️ Добрый день",
+    evening: "🌙 Добрый вечер",
+    change: "Изменить",
+    timezone: "Часовой пояс",
+    done: "Готово",
+    weatherUpdate: "Погода",
+    loadingWeather: (city: string) => `Загружаем погоду для ${city}...`,
+    rainLikely: (city: string, temp: number) => `☔ Сегодня вероятен дождь • ${city} ${temp}°C • Рекомендуем варианты в помещении.`,
+    slightRain: (city: string, temp: number) => `🌦️ Возможен небольшой дождь • ${city} ${temp}°C • Мы сообщим обновления.`,
+    warmDay: (city: string, temp: number) => `☀️ Тёплый день • ${city} ${temp}°C • Отлично для встреч на улице.`,
+    goodWeather: (city: string, temp: number, rain: number) => `🌤️ Хорошая погода для встречи • ${city} ${temp}°C • Вероятность дождя ${rain}%.`,
+    filters: ["Все", "На улице", "В помещении", "Еда", "Активно"],
+    dayEvents: "☀️ Дневные события",
+    eveningEvents: "🌙 Вечерние события",
+    seeAll: "Все",
+    dayVsNight: "День и ночь",
+    dayVsNightCopy: "Найдите нужную атмосферу в нужное время.",
+    weatherAdaptive: "С учётом погоды",
+    weatherAdaptiveCopy: "Мы предложим варианты в помещении, если планы изменятся.",
+  },
+  Spanish: {
+    subtitle: "Quedadas sin presión por North Shore.",
+    day: "Día ☀️",
+    night: "Noche 🌙",
+    morning: "🌅 Buenos días",
+    afternoon: "☀️ Buenas tardes",
+    evening: "🌙 Buenas noches",
+    change: "Cambiar",
+    timezone: "Zona horaria",
+    done: "Listo",
+    weatherUpdate: "Actualización del clima",
+    loadingWeather: (city: string) => `Cargando clima de ${city}...`,
+    rainLikely: (city: string, temp: number) => `☔ Probable lluvia hoy • ${city} ${temp}°C • Recomendamos alternativas interiores.`,
+    slightRain: (city: string, temp: number) => `🌦️ Posible lluvia ligera • ${city} ${temp}°C • Te mantendremos al día.`,
+    warmDay: (city: string, temp: number) => `☀️ Día cálido • ${city} ${temp}°C • Genial para quedadas al aire libre.`,
+    goodWeather: (city: string, temp: number, rain: number) => `🌤️ Buen clima para quedar • ${city} ${temp}°C • Probabilidad de lluvia ${rain}%.`,
+    filters: ["Todo", "Exterior", "Interior", "Comida", "Activo"],
+    dayEvents: "☀️ Eventos de día",
+    eveningEvents: "🌙 Eventos de noche",
+    seeAll: "Ver todo",
+    dayVsNight: "Día vs noche",
+    dayVsNightCopy: "Encuentra el ambiente correcto en el momento correcto.",
+    weatherAdaptive: "Adaptado al clima",
+    weatherAdaptiveCopy: "Sugerimos alternativas interiores si cambian los planes.",
+  },
+} as const;
+
 export default function HomeScreen() {
-  const { isNightMode, setIsNightMode, timezone, setTimezone } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage } = useAppSettings();
+  const copy = homeTranslations[appLanguage as keyof typeof homeTranslations] ?? homeTranslations.English;
   
   const mode = isNightMode ? "night" : "day"; // State
   const activeEvents = useMemo(() => (isNightMode ? eveningEvents : dayEvents), [isNightMode]);
@@ -90,10 +219,10 @@ export default function HomeScreen() {
 
   const greeting =
   hour < 12
-    ? "🌅 Good morning"
+    ? copy.morning
     : hour < 18
-    ? "☀️ Good afternoon"
-    : "🌙 Good evening";
+    ? copy.afternoon
+    : copy.evening;
 
   // ===== WEATHER =====
   const [weather, setWeather] = useState({
@@ -103,14 +232,14 @@ export default function HomeScreen() {
 
   const weatherMessage =
   weather.temperature === null || weather.rainChance === null
-    ? `Loading ${timezone.city} weather...`
+    ? copy.loadingWeather(timezone.city)
     : weather.rainChance >= 70
-    ? `☔ Rain likely today • ${timezone.city} ${weather.temperature}°C • Indoor alternatives recommended.`
+    ? copy.rainLikely(timezone.city, weather.temperature)
     : weather.rainChance >= 35
-    ? `🌦️ Slight rain possible • ${timezone.city} ${weather.temperature}°C • We'll keep you updated.`
+    ? copy.slightRain(timezone.city, weather.temperature)
     : weather.temperature >= 28
-    ? `☀️ Warm day • ${timezone.city} ${weather.temperature}°C • Great for outdoor meetups.`
-    : `🌤️ Good meetup weather • ${timezone.city} ${weather.temperature}°C • Rain chance ${weather.rainChance}%.`;
+    ? copy.warmDay(timezone.city, weather.temperature)
+    : copy.goodWeather(timezone.city, weather.temperature, weather.rainChance);
 
   useEffect(() => {
   async function fetchWeather() {
@@ -179,7 +308,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={[styles.logo, isDay && styles.dayText]}>NSN <Text style={styles.moon}>☾</Text></Text>
-            <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>Low-pressure meetups around the North Shore.</Text>
+            <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
           </View>
           <TouchableOpacity activeOpacity={0.75} style={[styles.bellButton, isDay ? styles.dayBellButton : null]}>
             <Text style={[styles.bellText, isDay ? styles.dayBellText : null]}>🔔</Text>
@@ -188,10 +317,10 @@ export default function HomeScreen() {
 
         <View style={[styles.segmented, isDay ? styles.segmentedDay : null]}>
           <TouchableOpacity activeOpacity={0.85} onPress={() => setIsNightMode(false)} style={[styles.segment, mode === "day" ? styles.segmentDay : null, ]}>
-            <Text style={[styles.segmentText, mode === "day" ? styles.segmentDayText : null, isDay && mode !== "day" ? styles.segmentInactiveDayText : null,]}>Day ☀️</Text>
+            <Text style={[styles.segmentText, mode === "day" ? styles.segmentDayText : null, isDay && mode !== "day" ? styles.segmentInactiveDayText : null,]}>{copy.day}</Text>
           </TouchableOpacity>
           <TouchableOpacity activeOpacity={0.85} onPress={() => setIsNightMode(true)} style={[styles.segment, mode === "night" ? styles.segmentNight : null, ]}>
-            <Text style={[styles.segmentText, mode === "night" ? styles.segmentNightText : null, isDay && mode === "day" ? styles.segmentInactiveDayText : null, ]}>Night 🌙</Text>
+            <Text style={[styles.segmentText, mode === "night" ? styles.segmentNightText : null, isDay && mode === "day" ? styles.segmentInactiveDayText : null, ]}>{copy.night}</Text>
           </TouchableOpacity>
         </View>
 
@@ -201,7 +330,7 @@ export default function HomeScreen() {
             <Text style={[styles.locationText, isDay && styles.dayMutedText]}>📍 {timezone.label}, {timezone.country}</Text>
           </View>
           <TouchableOpacity activeOpacity={0.75} onPress={() => setIsTimezonePickerOpen(true)}>
-            <Text style={[styles.changeText, isDay ? styles.dayLinkText : null]}>Change</Text>
+            <Text style={[styles.changeText, isDay ? styles.dayLinkText : null]}>{copy.change}</Text>
           </TouchableOpacity>
         </View>
 
@@ -214,9 +343,9 @@ export default function HomeScreen() {
           <View style={styles.modalBackdrop}>
             <View style={[styles.timezoneSheet, isDay && styles.dayTimezoneSheet]}>
               <View style={styles.timezoneHeader}>
-                <Text style={[styles.timezoneTitle, isDay && styles.dayHeadingText]}>Timezone</Text>
+                <Text style={[styles.timezoneTitle, isDay && styles.dayHeadingText]}>{copy.timezone}</Text>
                 <TouchableOpacity activeOpacity={0.75} onPress={() => setIsTimezonePickerOpen(false)}>
-                  <Text style={[styles.changeText, isDay && styles.dayLinkText]}>Done</Text>
+                  <Text style={[styles.changeText, isDay && styles.dayLinkText]}>{copy.done}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -247,7 +376,7 @@ export default function HomeScreen() {
 
         <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard]}>
           <View>
-            <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText]}>Weather update</Text>
+            <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText]}>{copy.weatherUpdate}</Text>
             <Text style={[styles.weatherCopy, isDay && styles.dayMutedText]}>{weatherMessage}</Text>
           </View>
           <Animated.Text style={[styles.weatherIcon, { transform: [{ translateY: weatherFloat }] }, ]}
@@ -257,14 +386,14 @@ export default function HomeScreen() {
         </TouchableOpacity>
       
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-          {['All', 'Outdoor', 'Indoor', 'Food', 'Active'].map((filter, index) => (
+          {copy.filters.map((filter, index) => (
             <Pill key={filter} label={filter} active={index === 0} isDay={isDay} />
           ))}
         </ScrollView>
 
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null]}>{mode === "day" ? "☀️ Day Events" : "🌙 Evening Events"}</Text>
-          <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null]}>See all</Text>
+          <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null]}>{mode === "day" ? copy.dayEvents : copy.eveningEvents}</Text>
+          <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null]}>{copy.seeAll}</Text>
         </View>
         <View style={styles.cardStack}>
           {activeEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} />))}
@@ -273,13 +402,13 @@ export default function HomeScreen() {
         <View style={styles.insightGrid}>
           <View style={[styles.insightCard, isDay ? styles.dayCard : null]}>
             <Text style={styles.insightIcon}>☀️</Text>
-            <Text style={[styles.insightTitle, isDay ? styles.dayHeadingText : null]}>Day vs Night</Text>
-            <Text style={[styles.insightCopy, isDay ? styles.dayMutedText : null]}>Find the right vibe at the right time.</Text>
+            <Text style={[styles.insightTitle, isDay ? styles.dayHeadingText : null]}>{copy.dayVsNight}</Text>
+            <Text style={[styles.insightCopy, isDay ? styles.dayMutedText : null]}>{copy.dayVsNightCopy}</Text>
           </View>
           <View style={[styles.insightCard, isDay ? styles.dayCard : null]}>
             <Text style={styles.insightIcon}>🌧</Text>
-            <Text style={[styles.insightTitle, isDay ? styles.dayHeadingText : null]}>Weather Adaptive</Text>
-            <Text style={[styles.insightCopy, isDay ? styles.dayMutedText : null]}>We suggest indoor alternatives if plans change.</Text>
+            <Text style={[styles.insightTitle, isDay ? styles.dayHeadingText : null]}>{copy.weatherAdaptive}</Text>
+            <Text style={[styles.insightCopy, isDay ? styles.dayMutedText : null]}>{copy.weatherAdaptiveCopy}</Text>
           </View>
         </View>
       </ScrollView>
@@ -303,7 +432,7 @@ const styles = StyleSheet.create({
   dayScreen: { backgroundColor: "#EAF4FF" },
   dayText: { color: "#111111", },
   dayTimezoneOption: { borderColor: "#B8C9E6" },
-  dayTimezoneSheet: { backgroundColor: "#F4F9FF", borderColor: "#AFC4E6" },
+  dayTimezoneSheet: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   logo: { color: nsnColors.text, fontSize: 25, fontWeight: "800", letterSpacing: -0.4, lineHeight: 32 },

@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   daySubtitle: {
-    color: "#52657F",
+    color: "#3B4A63",
   },
 
   createButton: {
@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
     padding: 18,
   },
   dayCard: {
-    backgroundColor: "#F4F9FF",
-    borderColor: "#AFC4E6",
+    backgroundColor: "#DCEEFF",
+    borderColor: "#B8C9E6",
   },
 
   cardTitle: {

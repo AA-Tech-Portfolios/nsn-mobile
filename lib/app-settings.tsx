@@ -70,6 +70,20 @@ export const timezoneOptions: TimezoneSetting[] = [
 type AppSettings = {
   isNightMode: boolean;
   setIsNightMode: (value: boolean) => void;
+  blurProfilePhoto: boolean;
+  setBlurProfilePhoto: (value: boolean) => void;
+  largerText: boolean;
+  setLargerText: (value: boolean) => void;
+  highContrast: boolean;
+  setHighContrast: (value: boolean) => void;
+  reduceMotion: boolean;
+  setReduceMotion: (value: boolean) => void;
+  screenReaderHints: boolean;
+  setScreenReaderHints: (value: boolean) => void;
+  appLanguage: string;
+  setAppLanguage: (value: string) => void;
+  translationLanguage: string;
+  setTranslationLanguage: (value: string) => void;
   timezone: TimezoneSetting;
   setTimezone: (value: TimezoneSetting) => void;
 };
@@ -78,10 +92,38 @@ const AppSettingsContext = createContext<AppSettings | null>(null);
 
 export function AppSettingsProvider({ children }: { children: React.ReactNode }) {
   const [isNightMode, setIsNightMode] = useState(false);
+  const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
+  const [largerText, setLargerText] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [screenReaderHints, setScreenReaderHints] = useState(true);
+  const [appLanguage, setAppLanguage] = useState("English");
+  const [translationLanguage, setTranslationLanguage] = useState("English");
   const [timezone, setTimezone] = useState<TimezoneSetting>(timezoneOptions[0]);
 
   return (
-    <AppSettingsContext.Provider value={{ isNightMode, setIsNightMode, timezone, setTimezone }}>
+    <AppSettingsContext.Provider
+      value={{
+        isNightMode,
+        setIsNightMode,
+        blurProfilePhoto,
+        setBlurProfilePhoto,
+        largerText,
+        setLargerText,
+        highContrast,
+        setHighContrast,
+        reduceMotion,
+        setReduceMotion,
+        screenReaderHints,
+        setScreenReaderHints,
+        appLanguage,
+        setAppLanguage,
+        translationLanguage,
+        setTranslationLanguage,
+        timezone,
+        setTimezone,
+      }}
+    >
       {children}
     </AppSettingsContext.Provider>
   );
