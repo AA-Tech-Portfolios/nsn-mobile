@@ -4,6 +4,17 @@ NSN is a mobile-first social meetup app concept for young adults who want easier
 
 The current prototype focuses on Sydney's North Shore, but the architecture is moving toward broader location and timezone support.
 
+## SoftHello Prototype Branch
+
+This branch also documents the next global product direction: **SoftHello v1.1**. The repo remains `nsn-mobile`, and North Shore Nights remains the local prototype identity, but SoftHello is the calm, events-first MVP direction for a broader audience.
+
+SoftHello planning docs:
+
+- [`docs/softhello-v1.1-mvp.md`](docs/softhello-v1.1-mvp.md) - product overview and MVP build plan.
+- [`docs/softhello-feature-map.md`](docs/softhello-feature-map.md) - MVP, post-MVP, and future feature boundaries.
+- [`docs/softhello-safety-and-trust.md`](docs/softhello-safety-and-trust.md) - verification, meeting safety, reporting, and 18+ expectations.
+- [`docs/softhello-ux-principles.md`](docs/softhello-ux-principles.md) - calm, ND-friendly, low-pressure UX rules.
+
 ## Product Intent
 
 Many social apps assume users are ready for big groups, loud events, or open-ended networking. NSN is designed for people who may be shy, reserved, new to an area, or simply more comfortable with structured, smaller meetups.
