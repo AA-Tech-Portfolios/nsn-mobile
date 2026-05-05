@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
+import { useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
 
@@ -48,9 +49,11 @@ function EventCard({ event, isDay, }: { event: EventItem; isDay?: boolean; }) {
 }
 
 export default function HomeScreen() {
-  const [mode, setMode] = useState<"day" | "night">("day"); // State
-  const activeEvents = useMemo(() => (mode === "day" ? dayEvents : eveningEvents), [mode]);
-  const isDay = mode === "day";
+  const { isNightMode, setIsNightMode } = useAppSettings();
+  
+  const mode = isNightMode ? "night" : "day"; // State
+  const activeEvents = useMemo(() => (isNightMode ? eveningEvents : dayEvents), [isNightMode]);
+  const isDay = !isNightMode;
   const [now, setNow] = useState(new Date()); useEffect(() => {
   const timer = setInterval(() => { setNow(new Date()); 
   const hour = now.getHours();
@@ -175,10 +178,10 @@ export default function HomeScreen() {
         </View>
 
         <View style={[styles.segmented, isDay ? styles.segmentedDay : null]}>
-          <TouchableOpacity activeOpacity={0.85} onPress={() => setMode("day")} style={[styles.segment, mode === "day" ? styles.segmentDay : null, ]}>
+          <TouchableOpacity activeOpacity={0.85} onPress={() => setIsNightMode(false)} style={[styles.segment, mode === "day" ? styles.segmentDay : null, ]}>
             <Text style={[styles.segmentText, mode === "day" ? styles.segmentDayText : null, isDay && mode !== "day" ? styles.segmentInactiveDayText : null,]}>Day ☀️</Text>
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.85} onPress={() => setMode("night")} style={[styles.segment, mode === "night" ? styles.segmentNight : null, ]}>
+          <TouchableOpacity activeOpacity={0.85} onPress={() => setIsNightMode(true)} style={[styles.segment, mode === "night" ? styles.segmentNight : null, ]}>
             <Text style={[styles.segmentText, mode === "night" ? styles.segmentNightText : null, isDay && mode === "day" ? styles.segmentInactiveDayText : null, ]}>Night 🌙</Text>
           </TouchableOpacity>
         </View>

@@ -1,20 +1,23 @@
 import { useState } from "react";
 import { View, Text, TextInput, Platform, ScrollView, StyleSheet, TouchableOpacity, Image, Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
 
 const rows = [
-  { icon: "▣", label: "My Meetups" },
-  { icon: "◇", label: "My Chats" },
-  { icon: "▤", label: "My Events" },
-  { icon: "⌖", label: "Saved Places" },
-  { icon: "⚙", label: "Settings & Privacy" },
-];
+  { icon: "calendar", label: "My Meetups", route: "/meetups" },
+  { icon: "message", label: "My Chats", route: "/chats" },
+  { icon: "group", label: "My Events", route: "/events" },
+  { icon: "location", label: "Saved Places", route: "/saved-places" },
+  { icon: "settings", label: "Settings & Privacy", route: "/settings" },
+] as const;
 
 export default function ProfileScreen() {
+  const router = useRouter();
+
   const [name, setName] = useState("Alon");
   const [isEditingName, setIsEditingName] = useState(false);
 
@@ -260,15 +263,16 @@ export default function ProfileScreen() {
         <View style={styles.settingsList}>
           {rows.map((row, index) => (
             <TouchableOpacity 
+              key={row.label}
               accessibilityRole="button"
               accessibilityLabel={row.label}
               accessibilityHint="Opens section"
+              activeOpacity={0.78}
+              onPress={() => router.push(row.route as any)}
+              style={[styles.row, index < rows.length - 1 && styles.rowBorder]}
+            >
 
-              key={row.label} 
-              activeOpacity={0.78} 
-              style={[styles.row, index < rows.length - 1 && styles.rowBorder]}>
-
-              <Text style={styles.rowIcon}>{row.icon}</Text>
+              <IconSymbol name={row.icon} color={nsnColors.muted} size={22} />
               <Text style={styles.rowLabel}>{row.label}</Text>
               <Text style={styles.rowChevron}>›</Text>
             </TouchableOpacity>
@@ -309,7 +313,7 @@ const styles = StyleSheet.create({
   aboutInput: { minHeight: 80, textAlignVertical: "top", padding: 0, margin: 0, borderWidth: 0, backgroundColor: "transparent", ...(Platform.OS === "web" ? ({ outlineStyle: "none", outlineWidth: 0, outlineColor: "transparent", boxShadow: "none", appearance: "none", caretColor: "#7786FF" } as any) : {}) },
   aboutText: { color: nsnColors.text, fontSize: 15, lineHeight: 23 },
   settingsList: { borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
-  row: { minHeight: 54, flexDirection: "row", alignItems: "center", paddingHorizontal: 14 },
+  row: { minHeight: 54, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: nsnColors.border },
   rowIcon: { width: 30, color: nsnColors.text, fontSize: 17 },
   rowLabel: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "600", lineHeight: 20 },
