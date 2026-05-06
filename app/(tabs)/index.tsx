@@ -696,7 +696,7 @@ const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding, reduceMotion } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
@@ -921,9 +921,16 @@ export default function HomeScreen() {
 
   // ===== ANIMATIONS =====
   const weatherFloat = useRef(new Animated.Value(0)).current;
+  const modeTransition = useRef(new Animated.Value(isDay ? 1 : 0)).current;
+  const modePulse = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-      Animated.loop(
+      if (reduceMotion) {
+        weatherFloat.setValue(0);
+        return;
+      }
+
+      const weatherAnimation = Animated.loop(
         Animated.sequence([
           Animated.timing(weatherFloat, {
             toValue: -4,
@@ -936,14 +943,72 @@ export default function HomeScreen() {
             useNativeDriver: true,
           }),
         ])
-      ).start();
-    }, [weatherFloat]
-  
-      );  
+      );
+
+      weatherAnimation.start();
+
+      return () => weatherAnimation.stop();
+    }, [reduceMotion, weatherFloat]);
+
+    useEffect(() => {
+      if (reduceMotion) {
+        modeTransition.setValue(isDay ? 1 : 0);
+        modePulse.setValue(0);
+        return;
+      }
+
+      modePulse.setValue(0);
+      Animated.parallel([
+        Animated.timing(modeTransition, {
+          toValue: isDay ? 1 : 0,
+          duration: 460,
+          useNativeDriver: false,
+        }),
+        Animated.sequence([
+          Animated.timing(modePulse, {
+            toValue: 1,
+            duration: 230,
+            useNativeDriver: true,
+          }),
+          Animated.timing(modePulse, {
+            toValue: 0,
+            duration: 260,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    }, [isDay, modePulse, modeTransition, reduceMotion]);
+
+    const animatedScreenColor = modeTransition.interpolate({
+      inputRange: [0, 1],
+      outputRange: [nsnColors.background, "#EAF4FF"],
+    });
+
+    const modeGlowOpacity = modePulse.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 0.36],
+    });
+
+    const modeGlowScale = modePulse.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.94, 1.04],
+    });
 
     return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
-      <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={styles.screen}>
+      <Animated.View style={[styles.animatedScreen, { backgroundColor: animatedScreenColor }]}>
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.modeGlow,
+            {
+              opacity: modeGlowOpacity,
+              transform: [{ scale: modeGlowScale }],
+              backgroundColor: isDay ? "#F2C94C" : "#2F80ED",
+            },
+          ]}
+        />
+      <ScrollView style={styles.scrollSurface} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.header, isRtl && styles.rtlRow]}>
           <View style={isRtl && styles.rtlBlock}>
             <Text style={[styles.logo, isDay && styles.dayText]}>SoftHello</Text>
@@ -1094,7 +1159,6 @@ export default function HomeScreen() {
         </View>
 
         <TouchableOpacity activeOpacity={0.88} onPress={() => router.push("/(tabs)/events")} style={[styles.createMeetupButton, isRtl && styles.rtlRow]}>
-          <View style={styles.createMeetupButtonAccent} />
           <IconSymbol name="add" color={nsnColors.text} size={20} />
           <Text style={[styles.createMeetupButtonText, isRtl && styles.rtlText]}>
             {"createMeetup" in copy ? copy.createMeetup : "Create a Meetup"}
@@ -1122,6 +1186,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      </Animated.View>
     </ScreenContainer>
   );
 }
@@ -1129,6 +1194,9 @@ export default function HomeScreen() {
 // Styling
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
+  animatedScreen: { flex: 1 },
+  scrollSurface: { flex: 1, backgroundColor: "transparent" },
+  modeGlow: { position: "absolute", top: -58, alignSelf: "center", width: 230, height: 230, borderRadius: 115 },
   dayBellButton: {backgroundColor: "#FFFFFF", },
   dayBellText: { color: "#0B1220", },
   dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6", },
@@ -1228,8 +1296,7 @@ const styles = StyleSheet.create({
   liveBadgeText: { color: nsnColors.text, fontSize: 9, fontWeight: "900" },
   cardArrow: { width: 30, alignItems: "center", justifyContent: "center" },
   cardArrowText: { color: nsnColors.text, fontSize: 32, lineHeight: 34 },
-  createMeetupButton: { height: 50, borderRadius: 15, marginTop: 14, marginBottom: 2, backgroundColor: "#4F5BD5", overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderWidth: 1, borderColor: "rgba(44,177,188,0.55)" },
-  createMeetupButtonAccent: { position: "absolute", right: 0, top: 0, bottom: 0, width: "38%", backgroundColor: "#2CB1BC", opacity: 0.86 },
+  createMeetupButton: { height: 50, borderRadius: 15, marginTop: 14, marginBottom: 2, backgroundColor: nsnColors.primary, overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
   createMeetupButtonText: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 20 },
   insightGrid: { flexDirection: "row", gap: 10, marginTop: 16 },
   insightCard: { flex: 1, minHeight: 116, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 14 },

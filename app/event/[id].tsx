@@ -350,7 +350,6 @@ export default function EventDetailsScreen() {
           onPress={() => router.push({ pathname: "/(tabs)/chats" })}
           style={styles.joinButton}
         >
-          <View style={styles.joinButtonAccent} />
           <Text style={styles.joinText}>{copy.join}</Text>
         </TouchableOpacity>
         <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{copy.spotsLeft}</Text>
@@ -406,8 +405,7 @@ const styles = StyleSheet.create({
   daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
   softExitTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, marginBottom: 4 },
   softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
-  joinButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#4F5BD5", borderWidth: 1, borderColor: "rgba(44,177,188,0.58)", overflow: "hidden" },
-  joinButtonAccent: { position: "absolute", right: 0, top: 0, bottom: 0, width: "38%", backgroundColor: "#2CB1BC", opacity: 0.88 },
+  joinButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary },
   joinText: { color: nsnColors.text, fontSize: 16, fontWeight: "800" },
   spotsText: { color: nsnColors.muted, textAlign: "center", marginTop: 10, fontSize: 13, lineHeight: 19 },
 });

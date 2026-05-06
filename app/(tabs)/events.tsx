@@ -239,7 +239,6 @@ export default function EventsScreen() {
         </Text>
 
         <TouchableOpacity style={[styles.createButton, isRtl && styles.rtlRow]} activeOpacity={0.8} onPress={() => setIsCreatorOpen(true)}>
-          <View style={styles.createButtonAccent} />
           <IconSymbol name="add" color={nsnColors.text} size={19} />
           <Text style={[styles.createButtonText, isRtl && styles.rtlText]}>{copy.createEvent}</Text>
         </TouchableOpacity>
@@ -453,7 +452,7 @@ const styles = StyleSheet.create({
   },
 
   createButton: {
-    backgroundColor: "#4F5BD5",
+    backgroundColor: nsnColors.primary,
     borderRadius: 15,
     paddingVertical: 14,
     alignItems: "center",
@@ -461,11 +460,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 7,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "rgba(44,177,188,0.55)",
-    overflow: "hidden",
   },
-  createButtonAccent: { position: "absolute", right: 0, top: 0, bottom: 0, width: "38%", backgroundColor: "#2CB1BC", opacity: 0.86 },
 
   createButtonText: {
     color: nsnColors.text,
