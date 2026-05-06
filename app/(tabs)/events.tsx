@@ -4,21 +4,22 @@ import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View 
 
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
 
 const noiseLevels = ["Quiet", "Balanced", "Lively"] as const;
-const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
 const eventsTranslations = {
   English: {
     title: "My Events",
     subtitle: "Create your own experiences and invite others on your terms.",
-    createEvent: "Create Event",
+    createEvent: "Create a Meetup",
     emptyTitle: "No events created yet",
     emptyCopy: "Host a coffee meetup, movie night, board games, walk, study session or anything that feels like you.",
-    sheetTitle: "Create Event",
+    sheetTitle: "Create a Meetup",
     sheetSubtitle: "Set the plan, the place, and the vibe.",
     eventName: "Event name",
     eventNamePlaceholder: "Board games and coffee",
@@ -39,7 +40,7 @@ const eventsTranslations = {
     description: "Description",
     descriptionPlaceholder: "What should people expect?",
     backupPrefix: "Backup",
-    save: "Create Event",
+    save: "Create Meetup",
     noise: { Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
   },
   Hebrew: {
@@ -238,7 +239,8 @@ export default function EventsScreen() {
         </Text>
 
         <TouchableOpacity style={[styles.createButton, isRtl && styles.rtlRow]} activeOpacity={0.8} onPress={() => setIsCreatorOpen(true)}>
-          <Text style={styles.createButtonText}>＋</Text>
+          <View style={styles.createButtonAccent} />
+          <IconSymbol name="add" color={nsnColors.text} size={19} />
           <Text style={[styles.createButtonText, isRtl && styles.rtlText]}>{copy.createEvent}</Text>
         </TouchableOpacity>
 
@@ -451,15 +453,19 @@ const styles = StyleSheet.create({
   },
 
   createButton: {
-    backgroundColor: nsnColors.primary,
-    borderRadius: 14,
+    backgroundColor: "#4F5BD5",
+    borderRadius: 15,
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
-    gap: 6,
+    gap: 7,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "rgba(44,177,188,0.55)",
+    overflow: "hidden",
   },
+  createButtonAccent: { position: "absolute", right: 0, top: 0, bottom: 0, width: "38%", backgroundColor: "#2CB1BC", opacity: 0.86 },
 
   createButtonText: {
     color: nsnColors.text,
@@ -599,10 +605,12 @@ const styles = StyleSheet.create({
   saveButton: {
     height: 54,
     borderRadius: 17,
-    backgroundColor: nsnColors.primary,
+    backgroundColor: "#4F5BD5",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 22,
+    borderWidth: 1,
+    borderColor: "rgba(44,177,188,0.58)",
   },
   saveButtonDisabled: { opacity: 0.42 },
   saveButtonText: { color: nsnColors.text, fontSize: 16, fontWeight: "900" },

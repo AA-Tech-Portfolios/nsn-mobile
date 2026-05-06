@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { getLanguageBase, timezoneOptions, timezoneRegions, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
@@ -7,7 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
 
-const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 const appLocaleMap: Record<string, string> = {
   Arabic: "ar",
   "Arabic (Egypt)": "ar-EG",
@@ -21,32 +21,41 @@ const appLocaleMap: Record<string, string> = {
   Chinese: "zh-CN",
   "Chinese (Cantonese)": "yue-HK",
   "Chinese (Hong Kong)": "zh-HK",
+  "Chinese (Mainland China)": "zh-CN",
   "Chinese (Singapore)": "zh-SG",
   "Chinese (Taiwan)": "zh-TW",
   Croatian: "hr-HR",
   Czech: "cs-CZ",
+  "Dutch (BE)": "nl-BE",
   "English (AU)": "en-AU",
   "English (CA)": "en-CA",
   "English (HK)": "en-HK",
   "English (IE)": "en-IE",
   "English (IN)": "en-IN",
+  "English (JM)": "en-JM",
   "English (NZ)": "en-NZ",
-  "English (Scotland)": "en-GB",
   "English (SG)": "en-SG",
   "English (UK)": "en-GB",
   "English (US)": "en-US",
   "English (ZA)": "en-ZA",
   Estonian: "et-EE",
   French: "fr",
+  "French (BE)": "fr-BE",
   "French (CA)": "fr-CA",
+  "French (Central Africa)": "fr-CM",
   "French (CH)": "fr-CH",
   "French (FR)": "fr-FR",
+  "French (North Africa)": "fr-MA",
+  "French (West Africa)": "fr-SN",
   German: "de",
   "German (AT)": "de-AT",
+  "German (BE)": "de-BE",
   "German (CH)": "de-CH",
+  "German (Germany)": "de-DE",
   "German (LI)": "de-LI",
   "German (LU)": "de-LU",
   Hebrew: "he",
+  "Haitian Creole": "ht-HT",
   Hungarian: "hu-HU",
   "Italian (CH)": "it-CH",
   Japanese: "ja",
@@ -61,6 +70,8 @@ const appLocaleMap: Record<string, string> = {
   Spanish: "es",
   "Spanish (Latin America)": "es-419",
   "Spanish (Mexico)": "es-MX",
+  "Spanish (Spain)": "es-ES",
+  Yiddish: "yi",
 };
 const timezoneRegionTranslations: Record<string, Partial<Record<TimezoneRegion | "All", string>>> = {
   Arabic: {
@@ -90,6 +101,54 @@ const timezoneRegionTranslations: Record<string, Partial<Record<TimezoneRegion |
 };
 const filterKeys = ["All", "Outdoor", "Indoor", "Food", "Active"] as const;
 type EventFilter = (typeof filterKeys)[number];
+
+const eventLivePreviews: Record<string, { photo: string; place: string; pulse: string }> = {
+  "picnic-easy-hangout": {
+    photo: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=280&q=80",
+    place: "Lane Cove",
+    pulse: "Live 2",
+  },
+  "beach-day-chill-vibes": {
+    photo: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=280&q=80",
+    place: "Palm Beach",
+    pulse: "Live 5",
+  },
+  "library-calm-study": {
+    photo: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=280&q=80",
+    place: "Chatswood",
+    pulse: "Live 1",
+  },
+  "coffee-lane-cove": {
+    photo: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=280&q=80",
+    place: "Lane Cove",
+    pulse: "Live 3",
+  },
+  "harbour-walk-waverton": {
+    photo: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=280&q=80",
+    place: "Waverton",
+    pulse: "Live 4",
+  },
+  "movie-night-watch-chat": {
+    photo: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=280&q=80",
+    place: "Macquarie",
+    pulse: "Live 6",
+  },
+  "board-games-coffee": {
+    photo: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=280&q=80",
+    place: "Chatswood",
+    pulse: "Live 2",
+  },
+  "ramen-small-table": {
+    photo: "https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=280&q=80",
+    place: "Crows Nest",
+    pulse: "Live 3",
+  },
+  "quiet-music-listening": {
+    photo: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=280&q=80",
+    place: "North Sydney",
+    pulse: "Live 1",
+  },
+};
 
 const eventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
   Hebrew: {
@@ -180,6 +239,7 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
   const router = useRouter();
   const isRtl = rtlLanguages.has(appLanguageBase);
   const localizedEvent = { ...event, ...(eventTranslations[appLanguageBase]?.[event.id] ?? {}) };
+  const livePreview = eventLivePreviews[event.id];
 
   return (
     <TouchableOpacity
@@ -205,6 +265,21 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
           <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>☔ {localizedEvent.weather}</Text>
         </View>
       </View>
+      {livePreview ? (
+        <View style={[styles.livePreview, isDay && styles.dayLivePreview]}>
+          <View style={styles.miniMap}>
+            <View style={[styles.mapRoad, styles.mapRoadMain]} />
+            <View style={[styles.mapRoad, styles.mapRoadCross]} />
+            <View style={styles.mapPinDot} />
+            <Text style={styles.mapPlaceText} numberOfLines={1}>{livePreview.place}</Text>
+          </View>
+          <Image source={{ uri: livePreview.photo }} style={styles.livePhoto} />
+          <View style={styles.liveBadge}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveBadgeText}>{livePreview.pulse}</Text>
+          </View>
+        </View>
+      ) : null}
       <View style={styles.cardArrow}>
         <Text style={[styles.cardArrowText, isDay ? styles.dayMutedText : null, ]}>{isRtl ? "‹" : "›"}</Text>
       </View>
@@ -238,6 +313,7 @@ const homeTranslations = {
     dayEvents: "☀️ Day Events",
     eveningEvents: "🌙 Evening Events",
     seeAll: "See all",
+    createMeetup: "Create a Meetup",
     dayVsNight: "Day vs Night",
     dayVsNightCopy: "Find the right vibe at the right time.",
     weatherAdaptive: "Weather Adaptive",
@@ -619,6 +695,7 @@ const getTimezoneNow = (date: Date, option: TimezoneSetting) =>
 const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes === undefined ? option.timeZone : "UTC");
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
@@ -1016,6 +1093,14 @@ export default function HomeScreen() {
           {activeEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} />))}
         </View>
 
+        <TouchableOpacity activeOpacity={0.88} onPress={() => router.push("/(tabs)/events")} style={[styles.createMeetupButton, isRtl && styles.rtlRow]}>
+          <View style={styles.createMeetupButtonAccent} />
+          <IconSymbol name="add" color={nsnColors.text} size={20} />
+          <Text style={[styles.createMeetupButtonText, isRtl && styles.rtlText]}>
+            {"createMeetup" in copy ? copy.createMeetup : "Create a Meetup"}
+          </Text>
+        </TouchableOpacity>
+
         <View style={[styles.insightGrid, isRtl && styles.rtlRow]}>
           <TouchableOpacity activeOpacity={0.84} onPress={() => setExpandedInsight(expandedInsight === "day-night" ? null : "day-night")} style={[styles.insightCard, isDay ? styles.dayCard : null]}>
             <Text style={styles.insightIcon}>☀️</Text>
@@ -1050,6 +1135,7 @@ const styles = StyleSheet.create({
   dayHeadingText: { color: "#0B1220", },
   dayLinkText: { color: "#3949DB", },
   dayMutedText: { color: "#3B4A63", },
+  dayLivePreview: { borderColor: "#B8C9E6", backgroundColor: "#EEF7FF" },
   dayPill: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6", },
   dayPillActive: { backgroundColor: "#4353FF", borderColor: "#4353FF", },
   dayPillText: { color: "#0B1220", },
@@ -1129,8 +1215,22 @@ const styles = StyleSheet.create({
   eventDescription: { color: nsnColors.text, fontSize: 12, lineHeight: 17, marginTop: 2 },
   eventTags: { flexDirection: "row", gap: 6, flexWrap: "wrap", marginTop: 7 },
   eventTagText: { color: nsnColors.muted, fontSize: 10, lineHeight: 14, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, overflow: "hidden" },
+  livePreview: { width: 82, height: 104, borderRadius: 15, borderWidth: 1, borderColor: "#24426F", backgroundColor: "#081A2F", overflow: "hidden", marginLeft: 6 },
+  miniMap: { height: 42, backgroundColor: "#102743", overflow: "hidden", justifyContent: "flex-end", paddingHorizontal: 7, paddingBottom: 5 },
+  mapRoad: { position: "absolute", backgroundColor: "rgba(148,163,184,0.28)", borderRadius: 10 },
+  mapRoadMain: { width: 94, height: 9, left: -7, top: 15, transform: [{ rotate: "-14deg" }] },
+  mapRoadCross: { width: 9, height: 58, right: 21, top: -8, transform: [{ rotate: "22deg" }] },
+  mapPinDot: { position: "absolute", right: 26, top: 14, width: 11, height: 11, borderRadius: 6, borderWidth: 2, borderColor: nsnColors.text, backgroundColor: nsnColors.cyan },
+  mapPlaceText: { color: nsnColors.text, fontSize: 9, fontWeight: "900", lineHeight: 12 },
+  livePhoto: { height: 62, width: "100%", backgroundColor: nsnColors.surfaceSoft },
+  liveBadge: { position: "absolute", left: 6, bottom: 6, minHeight: 19, borderRadius: 10, backgroundColor: "rgba(2,8,20,0.78)", flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 6 },
+  liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: nsnColors.cyan },
+  liveBadgeText: { color: nsnColors.text, fontSize: 9, fontWeight: "900" },
   cardArrow: { width: 30, alignItems: "center", justifyContent: "center" },
   cardArrowText: { color: nsnColors.text, fontSize: 32, lineHeight: 34 },
+  createMeetupButton: { height: 50, borderRadius: 15, marginTop: 14, marginBottom: 2, backgroundColor: "#4F5BD5", overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderWidth: 1, borderColor: "rgba(44,177,188,0.55)" },
+  createMeetupButtonAccent: { position: "absolute", right: 0, top: 0, bottom: 0, width: "38%", backgroundColor: "#2CB1BC", opacity: 0.86 },
+  createMeetupButtonText: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 20 },
   insightGrid: { flexDirection: "row", gap: 10, marginTop: 16 },
   insightCard: { flex: 1, minHeight: 116, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 14 },
   insightIcon: { fontSize: 25, marginBottom: 7 },

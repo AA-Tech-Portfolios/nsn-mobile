@@ -11,11 +11,11 @@ import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-valid
 
 const intentOptions: SoftHelloIntent[] = ["Friends", "Dating", "Both", "Exploring"];
 
-const visibilityOptions: Array<{
+const visibilityOptions: {
   value: SoftHelloVisibility;
   title: string;
   copy: string;
-}> = [
+}[] = [
   {
     value: "Blurred",
     title: "Comfort Mode",

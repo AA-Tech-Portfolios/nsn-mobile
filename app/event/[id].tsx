@@ -6,7 +6,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 
-const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
 const detailEventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
   Hebrew: {
@@ -225,6 +225,27 @@ const eventTranslations = {
   },
 } as const;
 
+function DetailMetaRow({
+  iconName,
+  label,
+  isDay,
+  isRtl,
+}: {
+  iconName: "location" | "calendar" | "group";
+  label: string;
+  isDay?: boolean;
+  isRtl?: boolean;
+}) {
+  return (
+    <View style={[styles.metaRow, isRtl && styles.rtlRow]}>
+      <View style={[styles.metaIconWrap, isDay && styles.dayMetaIconWrap]}>
+        <IconSymbol name={iconName} color={isDay ? "#2F80ED" : "#E5E7EB"} size={19} />
+      </View>
+      <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>{label}</Text>
+    </View>
+  );
+}
+
 export default function EventDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -279,10 +300,10 @@ export default function EventDetailsScreen() {
           </View>
         </View>
 
-        <View style={[styles.metaStack, isRtl && styles.rtlBlock]}>
-          <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>⌖ {event.venue}</Text>
-          <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>▣ {eventDate}</Text>
-          <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>♧ {eventPeople}</Text>
+        <View style={styles.metaStack}>
+          <DetailMetaRow iconName="location" label={event.venue} isDay={isDay} isRtl={isRtl} />
+          <DetailMetaRow iconName="calendar" label={eventDate} isDay={isDay} isRtl={isRtl} />
+          <DetailMetaRow iconName="group" label={eventPeople} isDay={isDay} isRtl={isRtl} />
         </View>
 
         <Text style={[styles.description, isDay && styles.dayText, isRtl && styles.rtlText]}>{eventDescription}</Text>
@@ -329,6 +350,7 @@ export default function EventDetailsScreen() {
           onPress={() => router.push({ pathname: "/(tabs)/chats" })}
           style={styles.joinButton}
         >
+          <View style={styles.joinButtonAccent} />
           <Text style={styles.joinText}>{copy.join}</Text>
         </TouchableOpacity>
         <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{copy.spotsLeft}</Text>
@@ -344,6 +366,7 @@ const styles = StyleSheet.create({
   dayHeadingText: { color: "#0B1220" },
   dayIconButton: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
   dayMeetingPanel: { borderColor: "#B8C9E6" },
+  dayMetaIconWrap: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
   dayMutedText: { color: "#3B4A63" },
   dayPanel: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   dayQuietChip: { color: "#3B4A63", backgroundColor: "#EAF4FF" },
@@ -362,8 +385,10 @@ const styles = StyleSheet.create({
   tagRow: { flexDirection: "row", gap: 8, marginTop: 12 },
   primaryChip: { color: nsnColors.text, fontSize: 12, fontWeight: "800", backgroundColor: nsnColors.primary, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 14, overflow: "hidden" },
   quietChip: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", backgroundColor: "rgba(255,255,255,0.06)", paddingHorizontal: 13, paddingVertical: 7, borderRadius: 14, overflow: "hidden" },
-  metaStack: { gap: 7, marginBottom: 12 },
-  metaLine: { color: nsnColors.text, fontSize: 14, lineHeight: 20 },
+  metaStack: { gap: 8, marginBottom: 12 },
+  metaRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  metaIconWrap: { width: 32, height: 32, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(148,163,184,0.18)" },
+  metaLine: { flex: 1, color: nsnColors.text, fontSize: 14, lineHeight: 20 },
   description: { color: nsnColors.text, fontSize: 15, lineHeight: 23, marginBottom: 14 },
   weatherCard: { minHeight: 78, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#284476", marginBottom: 19 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
@@ -381,7 +406,8 @@ const styles = StyleSheet.create({
   daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
   softExitTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, marginBottom: 4 },
   softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
-  joinButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary },
+  joinButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#4F5BD5", borderWidth: 1, borderColor: "rgba(44,177,188,0.58)", overflow: "hidden" },
+  joinButtonAccent: { position: "absolute", right: 0, top: 0, bottom: 0, width: "38%", backgroundColor: "#2CB1BC", opacity: 0.88 },
   joinText: { color: nsnColors.text, fontSize: 16, fontWeight: "800" },
   spotsText: { color: nsnColors.muted, textAlign: "center", marginTop: 10, fontSize: 13, lineHeight: 19 },
 });

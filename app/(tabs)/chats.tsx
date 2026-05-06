@@ -10,7 +10,7 @@ import { chatSeed, nsnColors } from "@/lib/nsn-data";
 type ChatMessage = (typeof chatSeed)[number];
 type SoftExitChoice = "stepBack" | "skipToday";
 
-const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
 const chatTranslations = {
   English: {

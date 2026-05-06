@@ -4,7 +4,7 @@ import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { nsnColors } from "@/lib/nsn-data";
 
-const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
 const savedPlacesTranslations = {
   English: {
@@ -135,11 +135,93 @@ const regionalEnglishSavedPlaces = {
   },
 } as const;
 
+const supplementalSavedPlacesTranslations = {
+  Afrikaans: {
+    title: "Gestoorde plekke",
+    subtitle: "Jou gunstelingkafees, parke, biblioteke en stil ontmoetingsplekke sal hier verskyn.",
+    emptyTitle: "Nog geen gestoorde plekke nie",
+    emptyCopy: "Later sal jy plekke vanaf ontmoetingsbladsye of kaartvoorstelle kan stoor.",
+  },
+  Albanian: {
+    title: "Vende të ruajtura",
+    subtitle: "Kafenetë, parqet, bibliotekat dhe vendet e qeta të takimeve do të shfaqen këtu.",
+    emptyTitle: "Ende nuk ka vende të ruajtura",
+    emptyCopy: "Më vonë do të mund të ruash vende nga faqet e takimeve ose sugjerimet e hartës.",
+  },
+  Armenian: {
+    title: "Պահված վայրեր",
+    subtitle: "Ձեր սիրելի սրճարանները, այգիները, գրադարանները և հանգիստ հանդիպման վայրերը կհայտնվեն այստեղ։",
+    emptyTitle: "Դեռ պահված վայրեր չկան",
+    emptyCopy: "Հետագայում կարող եք վայրեր պահել հանդիպման էջերից կամ քարտեզի առաջարկներից։",
+  },
+  Croatian: {
+    title: "Spremljena mjesta",
+    subtitle: "Tvoji omiljeni kafići, parkovi, knjižnice i mirna mjesta za susret pojavit će se ovdje.",
+    emptyTitle: "Još nema spremljenih mjesta",
+    emptyCopy: "Kasnije ćeš moći spremati mjesta sa stranica susreta ili prijedloga karte.",
+  },
+  Czech: {
+    title: "Uložená místa",
+    subtitle: "Vaše oblíbené kavárny, parky, knihovny a klidná místa pro setkání se zobrazí zde.",
+    emptyTitle: "Zatím žádná uložená místa",
+    emptyCopy: "Později budete moci ukládat místa ze stránek setkání nebo návrhů mapy.",
+  },
+  Estonian: {
+    title: "Salvestatud kohad",
+    subtitle: "Sinu lemmikkohvikud, pargid, raamatukogud ja vaiksed kohtumispaigad ilmuvad siia.",
+    emptyTitle: "Salvestatud kohti veel pole",
+    emptyCopy: "Hiljem saad kohti salvestada kohtumiste lehtedelt või kaardisoovitustest.",
+  },
+  Hungarian: {
+    title: "Mentett helyek",
+    subtitle: "Kedvenc kávézóid, parkjaid, könyvtáraid és csendes találkozóhelyeidet itt látod majd.",
+    emptyTitle: "Még nincs mentett hely",
+    emptyCopy: "Később találkozóoldalakról vagy térképes javaslatokból menthetsz helyeket.",
+  },
+  "Haitian Creole": {
+    title: "Kote ki sove",
+    subtitle: "Kafe, pak, bibliyotèk ak kote rankont trankil ou renmen yo ap parèt isit la.",
+    emptyTitle: "Pa gen kote ki sove ankò",
+    emptyCopy: "Pita, ou pral kapab sove kote nan paj rankont oswa sijesyon kat la.",
+  },
+  Latvian: {
+    title: "Saglabātās vietas",
+    subtitle: "Tavi iecienītie kafejnīcas, parki, bibliotēkas un klusās tikšanās vietas parādīsies šeit.",
+    emptyTitle: "Vēl nav saglabātu vietu",
+    emptyCopy: "Vēlāk varēsi saglabāt vietas no tikšanās lapām vai kartes ieteikumiem.",
+  },
+  Lithuanian: {
+    title: "Išsaugotos vietos",
+    subtitle: "Tavo mėgstamos kavinės, parkai, bibliotekos ir ramios susitikimų vietos bus rodomos čia.",
+    emptyTitle: "Dar nėra išsaugotų vietų",
+    emptyCopy: "Vėliau galėsi išsaugoti vietas iš susitikimų puslapių arba žemėlapio pasiūlymų.",
+  },
+  Luxembourgish: {
+    title: "Gespäichert Plazen",
+    subtitle: "Deng léifste Caféen, Parken, Bibliothéiken a roueg Meetup-Plaze erschéngen hei.",
+    emptyTitle: "Nach keng gespäichert Plazen",
+    emptyCopy: "Méi spéit kanns du Plaze vu Meetup-Säiten oder Kaartvirschléi späicheren.",
+  },
+  Slovak: {
+    title: "Uložené miesta",
+    subtitle: "Vaše obľúbené kaviarne, parky, knižnice a pokojné miesta na stretnutia sa zobrazia tu.",
+    emptyTitle: "Zatiaľ žiadne uložené miesta",
+    emptyCopy: "Neskôr budete môcť ukladať miesta zo stránok stretnutí alebo návrhov mapy.",
+  },
+  Yiddish: {
+    title: "אפגעהיטע ערטער",
+    subtitle: "דיינע באליבטע קאווע-הייזער, פארקן, ביבליאטעקן און שטילע מיטאפ-ערטער וועלן דא דערשיינען.",
+    emptyTitle: "נאך קיין אפגעהיטע ערטער",
+    emptyCopy: "שפעטער וועסטו קענען אפהיטן ערטער פון מיטאפ-בלעטער אדער מאפע-פארשלאגן.",
+  },
+} as const;
+
 export default function SavedPlacesScreen() {
   const { appLanguage, isNightMode } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = {
     ...(savedPlacesTranslations[appLanguageBase as keyof typeof savedPlacesTranslations] ?? savedPlacesTranslations.English),
+    ...(supplementalSavedPlacesTranslations[appLanguageBase as keyof typeof supplementalSavedPlacesTranslations] ?? {}),
     ...(regionalEnglishSavedPlaces[appLanguage as keyof typeof regionalEnglishSavedPlaces] ?? {}),
   };
   const isRtl = rtlLanguages.has(appLanguageBase);

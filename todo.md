@@ -24,6 +24,7 @@
 - [ ] Add interactive tutorials
 - [x] Add localisation options
 - [ ] Research Celtic language support, starting with Welsh, Irish, and Scottish Gaelic, and only ship languages after native-speaker or community review
+- [ ] Keep endangered-language support community-led instead of adding broad picker entries without active users or native review
 - [ ] Plan later Indian language expansion, prioritising Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi and Nepali after translation review
 - [ ] Complete native-speaker review for newly listed languages before marking them fully translated, including Luxembourgish, Hungarian, Czech, Slovak, Croatian, Estonian, Latvian, Lithuanian, Armenian, Albanian and Afrikaans
 - [ ] Add toggle animations when switching between Day and Night settings
