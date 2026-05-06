@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
@@ -7,97 +8,260 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { chatSeed, nsnColors } from "@/lib/nsn-data";
 
 type ChatMessage = (typeof chatSeed)[number];
+type SoftExitChoice = "stepBack" | "skipToday";
+
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
 
 const chatTranslations = {
   English: {
     title: "Movie Night — Watch + Chat",
     members: "4 members",
     today: "Today",
+    you: "You",
+    now: "Now",
     joined: "You joined the group",
     private: "This chat is only for this meetup.",
     placeholder: "Type a message...",
     disclaimer: "Chat disappears after the meetup.",
+    softExitTitle: "Soft Exit",
+    softExitCopy: "You can step back without making it a big thing. This group not being your group does not mean you are behind.",
+    softExitQuiet: "Your chat is quiet for now. You can look for another group when you are ready.",
+    stepBack: "Step back",
+    stepBackCopy: "Send a gentle preset message.",
+    skipToday: "Skip today",
+    skipTodayCopy: "Leave the meetup without pressure.",
+    findAnotherGroup: "Find another group",
+    findAnotherGroupCopy: "Look for a better fit.",
+    reopenOptions: "Reopen chat options",
+    softExitPresets: {
+      stepBack: "Thanks, I am going to step back for now.",
+      skipToday: "I am not able to make it today, but I appreciate the invite.",
+    },
   },
   Arabic: {
     title: "ليلة فيلم — مشاهدة + دردشة",
     members: "4 أعضاء",
     today: "اليوم",
+    you: "أنت",
+    now: "الآن",
     joined: "انضممت إلى المجموعة",
     private: "هذه الدردشة مخصصة لهذا اللقاء فقط.",
     placeholder: "اكتب رسالة...",
     disclaimer: "تختفي الدردشة بعد اللقاء.",
+    softExitTitle: "خروج هادئ",
+    softExitCopy: "يمكنك التراجع دون أن يكون الأمر كبيراً. كون هذه المجموعة ليست مجموعتك لا يعني أنك متأخر.",
+    softExitQuiet: "الدردشة هادئة الآن. يمكنك البحث عن مجموعة أخرى عندما تكون مستعداً.",
+    stepBack: "تراجع",
+    stepBackCopy: "أرسل رسالة جاهزة ولطيفة.",
+    skipToday: "تخطى اليوم",
+    skipTodayCopy: "غادر اللقاء دون ضغط.",
+    findAnotherGroup: "ابحث عن مجموعة أخرى",
+    findAnotherGroupCopy: "ابحث عن ما يناسبك أكثر.",
+    reopenOptions: "إعادة فتح خيارات الدردشة",
+    softExitPresets: {
+      stepBack: "شكراً، سأتراجع الآن.",
+      skipToday: "لا أستطيع الحضور اليوم، لكنني أقدر الدعوة.",
+    },
   },
   Chinese: {
     title: "电影之夜 — 观看 + 聊天",
     members: "4 位成员",
     today: "今天",
+    you: "你",
+    now: "现在",
     joined: "你已加入群组",
     private: "此聊天仅用于这个聚会。",
     placeholder: "输入消息...",
     disclaimer: "聚会结束后聊天会消失。",
+    softExitTitle: "温和退出",
+    softExitCopy: "你可以退一步，不需要把事情变得很严重。这个小组不适合你，并不代表你落后了。",
+    softExitQuiet: "你的聊天现在已安静下来。准备好时，你可以寻找另一个小组。",
+    stepBack: "退一步",
+    stepBackCopy: "发送一条温和的预设消息。",
+    skipToday: "今天先不去",
+    skipTodayCopy: "无压力地离开这次聚会。",
+    findAnotherGroup: "寻找其他小组",
+    findAnotherGroupCopy: "找一个更适合你的选择。",
+    reopenOptions: "重新打开聊天选项",
+    softExitPresets: {
+      stepBack: "谢谢，我现在想先退一步。",
+      skipToday: "我今天无法参加，但很感谢邀请。",
+    },
   },
   French: {
     title: "Soirée cinéma — Regarder + discuter",
     members: "4 membres",
     today: "Aujourd'hui",
+    you: "Vous",
+    now: "Maintenant",
     joined: "Vous avez rejoint le groupe",
     private: "Ce chat est réservé à cette rencontre.",
     placeholder: "Écrire un message...",
     disclaimer: "Le chat disparaît après la rencontre.",
+    softExitTitle: "Sortie douce",
+    softExitCopy: "Vous pouvez prendre du recul sans en faire quelque chose de lourd. Si ce groupe n'est pas le vôtre, cela ne veut pas dire que vous êtes en retard.",
+    softExitQuiet: "Votre chat est en pause pour l'instant. Vous pourrez chercher un autre groupe quand vous serez prêt.",
+    stepBack: "Prendre du recul",
+    stepBackCopy: "Envoyer un message prédéfini doux.",
+    skipToday: "Passer aujourd'hui",
+    skipTodayCopy: "Quitter la rencontre sans pression.",
+    findAnotherGroup: "Trouver un autre groupe",
+    findAnotherGroupCopy: "Chercher une meilleure affinité.",
+    reopenOptions: "Rouvrir les options du chat",
+    softExitPresets: {
+      stepBack: "Merci, je vais prendre un peu de recul pour l'instant.",
+      skipToday: "Je ne peux pas venir aujourd'hui, mais merci pour l'invitation.",
+    },
   },
   German: {
     title: "Filmabend — Schauen + Chatten",
     members: "4 Mitglieder",
     today: "Heute",
+    you: "Du",
+    now: "Jetzt",
     joined: "Du bist der Gruppe beigetreten",
     private: "Dieser Chat ist nur für dieses Treffen.",
     placeholder: "Nachricht schreiben...",
     disclaimer: "Der Chat verschwindet nach dem Treffen.",
+    softExitTitle: "Sanfter Ausstieg",
+    softExitCopy: "Du kannst dich zurückziehen, ohne daraus etwas Großes zu machen. Wenn diese Gruppe nicht deine Gruppe ist, heißt das nicht, dass du zurückbleibst.",
+    softExitQuiet: "Dein Chat ist jetzt ruhiggestellt. Du kannst nach einer anderen Gruppe suchen, wenn du bereit bist.",
+    stepBack: "Zurücktreten",
+    stepBackCopy: "Eine sanfte Vorlage senden.",
+    skipToday: "Heute aussetzen",
+    skipTodayCopy: "Das Treffen ohne Druck verlassen.",
+    findAnotherGroup: "Andere Gruppe finden",
+    findAnotherGroupCopy: "Nach einer besseren Passung suchen.",
+    reopenOptions: "Chat-Optionen erneut öffnen",
+    softExitPresets: {
+      stepBack: "Danke, ich ziehe mich erst einmal zurück.",
+      skipToday: "Ich kann heute nicht kommen, aber danke für die Einladung.",
+    },
   },
   Hebrew: {
     title: "ערב סרט — צפייה + צ'אט",
     members: "4 חברים",
     today: "היום",
+    you: "את/ה",
+    now: "עכשיו",
     joined: "הצטרפת לקבוצה",
     private: "הצ'אט הזה מיועד רק למפגש הזה.",
     placeholder: "הקלד הודעה...",
     disclaimer: "הצ'אט נעלם אחרי המפגש.",
+    softExitTitle: "יציאה רכה",
+    softExitCopy: "אפשר לקחת צעד אחורה בלי להפוך את זה למשהו גדול. אם זו לא הקבוצה שלך, זה לא אומר שנשארת מאחור.",
+    softExitQuiet: "הצ'אט שלך שקט כרגע. אפשר לחפש קבוצה אחרת כשתהיה מוכן.",
+    stepBack: "לקחת צעד אחורה",
+    stepBackCopy: "שלח הודעה מוכנה ועדינה.",
+    skipToday: "לדלג היום",
+    skipTodayCopy: "לעזוב את המפגש בלי לחץ.",
+    findAnotherGroup: "למצוא קבוצה אחרת",
+    findAnotherGroupCopy: "לחפש התאמה טובה יותר.",
+    reopenOptions: "לפתוח מחדש אפשרויות צ'אט",
+    softExitPresets: {
+      stepBack: "תודה, אני לוקח/ת צעד אחורה כרגע.",
+      skipToday: "אני לא יכול/ה להגיע היום, אבל תודה על ההזמנה.",
+    },
   },
   Japanese: {
     title: "映画ナイト — 観る + 話す",
     members: "4人のメンバー",
     today: "今日",
+    you: "あなた",
+    now: "今",
     joined: "グループに参加しました",
     private: "このチャットはこのミートアップ専用です。",
     placeholder: "メッセージを入力...",
     disclaimer: "チャットはミートアップ後に消えます。",
+    softExitTitle: "やさしい退出",
+    softExitCopy: "大ごとにせず、少し距離を置いて大丈夫です。このグループが合わなくても、あなたが遅れているわけではありません。",
+    softExitQuiet: "チャットはいったん静かになりました。準備ができたら、別のグループを探せます。",
+    stepBack: "距離を置く",
+    stepBackCopy: "やさしい定型メッセージを送る。",
+    skipToday: "今日は見送る",
+    skipTodayCopy: "プレッシャーなくミートアップを離れる。",
+    findAnotherGroup: "別のグループを探す",
+    findAnotherGroupCopy: "もっと合う場所を探す。",
+    reopenOptions: "チャットの選択肢を開き直す",
+    softExitPresets: {
+      stepBack: "ありがとう。今はいったん距離を置きます。",
+      skipToday: "今日は参加できませんが、誘ってくれてありがとう。",
+    },
   },
   Korean: {
     title: "영화의 밤 — 보기 + 채팅",
     members: "멤버 4명",
     today: "오늘",
+    you: "나",
+    now: "지금",
     joined: "그룹에 참여했습니다",
     private: "이 채팅은 이 모임 전용입니다.",
     placeholder: "메시지 입력...",
     disclaimer: "채팅은 모임 후 사라집니다.",
+    softExitTitle: "부드러운 나가기",
+    softExitCopy: "큰일처럼 만들지 않고 물러나도 괜찮아요. 이 그룹이 내 그룹이 아니라고 해서 뒤처진 것은 아니에요.",
+    softExitQuiet: "지금은 채팅이 조용해졌어요. 준비되면 다른 그룹을 찾아볼 수 있어요.",
+    stepBack: "잠시 물러나기",
+    stepBackCopy: "부드러운 기본 메시지를 보내요.",
+    skipToday: "오늘은 쉬기",
+    skipTodayCopy: "부담 없이 모임에서 나가요.",
+    findAnotherGroup: "다른 그룹 찾기",
+    findAnotherGroupCopy: "더 잘 맞는 곳을 찾아요.",
+    reopenOptions: "채팅 옵션 다시 열기",
+    softExitPresets: {
+      stepBack: "고마워요. 지금은 잠시 물러날게요.",
+      skipToday: "오늘은 참석하기 어렵지만, 초대해줘서 고마워요.",
+    },
   },
   Russian: {
     title: "Ночь кино — смотреть + чат",
     members: "4 участника",
     today: "Сегодня",
+    you: "Вы",
+    now: "Сейчас",
     joined: "Вы присоединились к группе",
     private: "Этот чат только для этой встречи.",
     placeholder: "Введите сообщение...",
     disclaimer: "Чат исчезнет после встречи.",
+    softExitTitle: "Мягкий выход",
+    softExitCopy: "Вы можете отойти без лишней драмы. Если эта группа не ваша, это не значит, что вы отстаете.",
+    softExitQuiet: "Ваш чат пока тихий. Вы можете поискать другую группу, когда будете готовы.",
+    stepBack: "Отойти",
+    stepBackCopy: "Отправить мягкое готовое сообщение.",
+    skipToday: "Пропустить сегодня",
+    skipTodayCopy: "Покинуть встречу без давления.",
+    findAnotherGroup: "Найти другую группу",
+    findAnotherGroupCopy: "Поискать более подходящий вариант.",
+    reopenOptions: "Открыть настройки чата снова",
+    softExitPresets: {
+      stepBack: "Спасибо, я пока отойду.",
+      skipToday: "Я не смогу прийти сегодня, но спасибо за приглашение.",
+    },
   },
   Spanish: {
     title: "Noche de cine — Ver + chatear",
     members: "4 miembros",
     today: "Hoy",
+    you: "Tú",
+    now: "Ahora",
     joined: "Te uniste al grupo",
     private: "Este chat es solo para esta quedada.",
     placeholder: "Escribe un mensaje...",
     disclaimer: "El chat desaparece después de la quedada.",
+    softExitTitle: "Salida suave",
+    softExitCopy: "Puedes apartarte sin convertirlo en algo grande. Que este grupo no sea tu grupo no significa que te estés quedando atrás.",
+    softExitQuiet: "Tu chat queda tranquilo por ahora. Puedes buscar otro grupo cuando estés listo.",
+    stepBack: "Apartarme",
+    stepBackCopy: "Enviar un mensaje suave ya preparado.",
+    skipToday: "Saltar hoy",
+    skipTodayCopy: "Salir de la quedada sin presión.",
+    findAnotherGroup: "Buscar otro grupo",
+    findAnotherGroupCopy: "Buscar algo que encaje mejor.",
+    reopenOptions: "Reabrir opciones del chat",
+    softExitPresets: {
+      stepBack: "Gracias, voy a apartarme por ahora.",
+      skipToday: "Hoy no puedo ir, pero agradezco la invitación.",
+    },
   },
 } as const;
 
@@ -159,20 +323,25 @@ const chatMessageTranslations = {
 } as const;
 
 export default function ChatsScreen() {
+  const router = useRouter();
   const { isNightMode, translationLanguage } = useAppSettings();
   const translationLanguageBase = getLanguageBase(translationLanguage);
   const isDay = !isNightMode;
+  const isRtl = rtlLanguages.has(translationLanguageBase);
   const copy = chatTranslations[translationLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
   const translatedMessages = chatMessageTranslations[translationLanguageBase as keyof typeof chatMessageTranslations];
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
   const [draft, setDraft] = useState("");
+  const [softExitOpen, setSoftExitOpen] = useState(false);
+  const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
+  const softExitMessage = softExitChoice ? copy.softExitPresets[softExitChoice] : null;
 
   const sendMessage = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
     setMessages((current) => [
       ...current,
-      { id: String(Date.now()), name: "You", avatar: "Y", text: trimmed, time: "Now", mine: true },
+      { id: String(Date.now()), name: copy.you, avatar: "Y", text: trimmed, time: copy.now, mine: true },
     ]);
     setDraft("");
   };
@@ -186,7 +355,7 @@ export default function ChatsScreen() {
             <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
             <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.members}</Text>
           </View>
-          <TouchableOpacity activeOpacity={0.75} style={styles.iconButton}>
+          <TouchableOpacity activeOpacity={0.75} onPress={() => setSoftExitOpen((current) => !current)} style={styles.iconButton}>
             <IconSymbol name="more" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
           </TouchableOpacity>
         </View>
@@ -197,6 +366,46 @@ export default function ChatsScreen() {
             <Text style={[styles.systemText, isDay && styles.dayTitle]}>{copy.joined}</Text>
             <Text style={[styles.systemSubtext, isDay && styles.dayMutedText]}>{copy.private}</Text>
           </View>
+
+          {(softExitOpen || softExitChoice) && (
+            <View style={[styles.softExitPanel, isDay && styles.daySoftExitPanel]}>
+              <Text style={[styles.softExitTitle, isDay && styles.dayTitle]}>{copy.softExitTitle}</Text>
+              <Text style={[styles.softExitCopy, isDay && styles.dayMutedText]}>{copy.softExitCopy}</Text>
+              {softExitMessage ? (
+                <View style={[styles.softExitResult, isDay && styles.daySoftExitResult]}>
+                  <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>{softExitMessage}</Text>
+                  <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{copy.softExitQuiet}</Text>
+                </View>
+              ) : (
+                <View style={styles.softExitActions}>
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    onPress={() => setSoftExitChoice("stepBack")}
+                    style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
+                  >
+                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.stepBack}</Text>
+                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.stepBackCopy}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    onPress={() => setSoftExitChoice("skipToday")}
+                    style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
+                  >
+                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.skipToday}</Text>
+                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.skipTodayCopy}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    onPress={() => router.push("/(tabs)/meetups")}
+                    style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
+                  >
+                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.findAnotherGroup}</Text>
+                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.findAnotherGroupCopy}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
 
           {messages.map((message) => (
             <View key={message.id} style={[styles.messageRow, message.mine && styles.messageRowMine]}>
@@ -213,6 +422,18 @@ export default function ChatsScreen() {
         </ScrollView>
 
         <View style={styles.composerWrap}>
+          {softExitChoice && (
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={() => {
+                setSoftExitChoice(null);
+                setSoftExitOpen(true);
+              }}
+              style={[styles.resumeButton, isDay && styles.dayCard]}
+            >
+              <Text style={[styles.resumeButtonText, isDay && styles.dayTitle]}>{copy.reopenOptions}</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity activeOpacity={0.75} style={[styles.addButton, isDay && styles.dayCard]}>
             <IconSymbol name="add" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
           </TouchableOpacity>
@@ -222,7 +443,8 @@ export default function ChatsScreen() {
               onChangeText={setDraft}
               placeholder={copy.placeholder}
               placeholderTextColor={isDay ? "#7890AE" : nsnColors.mutedSoft}
-              style={[styles.input, isDay && styles.dayTitle]}
+              style={[styles.input, isDay && styles.dayTitle, isRtl && styles.rtlInput]}
+              textAlign={isRtl ? "right" : "left"}
               returnKeyType="send"
               onSubmitEditing={sendMessage}
             />
@@ -259,6 +481,19 @@ const styles = StyleSheet.create({
   dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   systemText: { color: nsnColors.text, textAlign: "center", fontSize: 12, lineHeight: 17 },
   systemSubtext: { color: nsnColors.muted, textAlign: "center", fontSize: 12, lineHeight: 17 },
+  softExitPanel: { borderRadius: 18, backgroundColor: "#0D1B2F", borderWidth: 1, borderColor: "#2B4578", padding: 14, marginBottom: 18 },
+  daySoftExitPanel: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  softExitTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "800", lineHeight: 21, marginBottom: 4 },
+  softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginBottom: 12 },
+  softExitActions: { gap: 9 },
+  softExitAction: { borderRadius: 14, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, paddingVertical: 10 },
+  daySoftExitAction: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  softExitActionText: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 18 },
+  softExitActionCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 1 },
+  softExitResult: { borderRadius: 14, backgroundColor: "rgba(114,214,126,0.11)", borderWidth: 1, borderColor: "rgba(114,214,126,0.28)", padding: 12 },
+  daySoftExitResult: { backgroundColor: "#E9F7ED", borderColor: "#A8D9B5" },
+  softExitResultText: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 19 },
+  softExitResultSubtext: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 4 },
   messageRow: { flexDirection: "row", gap: 9, marginBottom: 14, alignItems: "flex-end" },
   messageRowMine: { justifyContent: "flex-end" },
   avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#164E6A", alignItems: "center", justifyContent: "center" },
@@ -273,10 +508,13 @@ const styles = StyleSheet.create({
   messageTime: { alignSelf: "flex-end", color: "rgba(245,247,255,0.62)", fontSize: 11, marginTop: 4, lineHeight: 14 },
   dayMessageTime: { color: "#7890AE" },
   composerWrap: { paddingBottom: 10 },
+  resumeButton: { minHeight: 40, borderRadius: 16, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, alignItems: "center", justifyContent: "center", marginBottom: 9 },
+  resumeButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "800" },
   addButton: { position: "absolute", left: 0, bottom: 42, width: 40, height: 40, borderRadius: 20, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border },
   inputWrap: { marginLeft: 48, minHeight: 44, borderRadius: 22, backgroundColor: "#061121", borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "center", paddingLeft: 15, paddingRight: 5 },
   dayInputWrap: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   input: { flex: 1, color: nsnColors.text, fontSize: 14, minHeight: 42 },
+  rtlInput: { paddingRight: 2, writingDirection: "rtl" },
   sendButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center" },
   disclaimer: { color: nsnColors.muted, fontSize: 11, textAlign: "center", marginTop: 8, lineHeight: 15 },
 });

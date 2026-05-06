@@ -5,6 +5,7 @@ SoftHello focuses on safety through design, not punishment. The product should r
 ## Safety Principles
 
 - Users control how visible they are.
+- Users can opt out of meetups, chats, and connections without needing to justify themselves.
 - Meeting requires verification.
 - Block and report actions are always available.
 - Reports are structured and private.
@@ -57,6 +58,18 @@ SoftHello moderation should be proportional:
 - Escalation for safety threats, harassment, underage risk, impersonation, or fraud.
 
 The app should avoid public shaming, public reputation scores, and visible punishment mechanics.
+
+## Opt-Out Safety
+
+SoftHello should make it emotionally and socially safe to not attend, leave early, archive a chat, or choose a different group. Users should not be made to feel left behind because one event, chat, or group does not suit them.
+
+Opt-out flows should:
+
+- Use neutral, respectful language.
+- Avoid public rejection signals.
+- Offer gentle preset messages where useful.
+- Help users find a better-suited group or create their own.
+- Avoid penalizing users for changing their mind before attending.
 
 ## 18+ Compliance Expectations
 

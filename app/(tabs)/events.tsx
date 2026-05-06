@@ -15,7 +15,7 @@ const eventsTranslations = {
   English: {
     title: "My Events",
     subtitle: "Create your own experiences and invite others on your terms.",
-    createEvent: "＋ Create Event",
+    createEvent: "Create Event",
     emptyTitle: "No events created yet",
     emptyCopy: "Host a coffee meetup, movie night, board games, walk, study session or anything that feels like you.",
     sheetTitle: "Create Event",
@@ -45,7 +45,7 @@ const eventsTranslations = {
   Hebrew: {
     title: "האירועים שלי",
     subtitle: "צור חוויות משלך והזמן אחרים בתנאים שמתאימים לך.",
-    createEvent: "＋ יצירת אירוע",
+    createEvent: "יצירת אירוע",
     emptyTitle: "עדיין לא נוצרו אירועים",
     emptyCopy: "אפשר לארח קפה, ערב סרט, משחקי קופסה, הליכה, מפגש לימוד או כל דבר שמרגיש לך נכון.",
     sheetTitle: "יצירת אירוע",
@@ -237,7 +237,8 @@ export default function EventsScreen() {
           {copy.subtitle}
         </Text>
 
-        <TouchableOpacity style={styles.createButton} activeOpacity={0.8} onPress={() => setIsCreatorOpen(true)}>
+        <TouchableOpacity style={[styles.createButton, isRtl && styles.rtlRow]} activeOpacity={0.8} onPress={() => setIsCreatorOpen(true)}>
+          <Text style={styles.createButtonText}>＋</Text>
           <Text style={[styles.createButtonText, isRtl && styles.rtlText]}>{copy.createEvent}</Text>
         </TouchableOpacity>
 
@@ -454,6 +455,9 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 6,
     marginBottom: 20,
   },
 

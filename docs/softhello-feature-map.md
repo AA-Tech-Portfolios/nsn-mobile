@@ -43,6 +43,19 @@ These features fit SoftHello but should not block v1.1 unless a specific launch 
 | Host templates | Speeds up event creation after the event model is stable. |
 | Daily motivational messages | Optional comfort feature shown when users open the app, with a setting to turn it on or off. |
 | App animation toggle | Let users enable or disable decorative app animations separately from core accessibility reduce-motion support. |
+| Personality compatibility matching | Useful once comfort, intent, pacing, and meetup preference data exist; should avoid ranking people or creating pressure to perform. |
+| Zodiac and personality prompts | Can support playful self-expression if optional, private-by-default, and never treated as a hard compatibility score. |
+| Gentle RSVP states | Let people express coming, interested, deciding later, or needing encouragement without making uncertainty feel like failure. |
+| Meetup comfort roles | Optional labels such as quiet joiner, happy to chat, host helper, or first-time attendee can reduce ambiguity before meeting. |
+| Pre-meetup readiness checklist | Helps users confirm the location, host, plan, safety options, and exit path before they commit emotionally to attending. |
+| Event troubleshooting tools | Help participants coordinate around work, study, and timetable constraints after the basic event flow is stable. |
+| Lightweight transport guidance | Reduce arrival anxiety with nearby stops, estimated travel time, suggested arrival windows, meeting-point context, and links out to map apps. |
+| Mutual 1-1 chat consent | Lets members opt into direct pre-meetup chats without assuming everyone wants private messages. |
+| Mutual profile photo reveal | Extends profile blur with a two-sided consent step when both members are ready. |
+| Post-meetup contact preferences | Unlock phone or video call options only after meeting, then let each person choose how or whether to stay in contact. |
+| Post-meetup chat lifecycle controls | Let users archive or hide chats, delete with 30-day recovery, and manage whether the connection continues. |
+| Soft Exit | Give users a calm way to leave a meetup, chat, or connection with optional preset wording and no public drama. |
+| AI companion | Nice-to-have comfort layer for meetup preparation, reflection, and planning support after the core social and safety loop proves itself. |
 
 ## Future
 
@@ -57,6 +70,7 @@ These belong in later product strategy after the MVP proves the core loop.
 | Improved verification methods | Depends on compliance, vendors, and risk model. |
 | Advanced matching | Should remain comfort-first and avoid performance-based mechanics. |
 | Large public communities | Out of scope until safety and moderation are mature. |
+| Group planning votes | Needs careful research because voting may help choose times or venues, but can also create pressure, majority-rule discomfort, or visible rejection. |
 
 ## Current Prototype Coverage
 

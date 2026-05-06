@@ -7,6 +7,54 @@ import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
 
 const upcoming = [eveningEvents[0], dayEvents[0], eveningEvents[1]];
 
+const meetupEventTranslations: Record<string, Record<string, { title: string; people: string }>> = {
+  Arabic: {
+    "movie-night-watch-chat": { title: "ليلة فيلم — مشاهدة + دردشة", people: "2–4 أشخاص" },
+    "picnic-easy-hangout": { title: "نزهة — لقاء سهل", people: "2–4 أشخاص" },
+    "board-games-coffee": { title: "ألعاب لوحية + قهوة", people: "3–5 أشخاص" },
+  },
+  Chinese: {
+    "movie-night-watch-chat": { title: "电影之夜 — 观看 + 聊天", people: "2–4 人" },
+    "picnic-easy-hangout": { title: "野餐 — 轻松相处", people: "2–4 人" },
+    "board-games-coffee": { title: "桌游 + 咖啡", people: "3–5 人" },
+  },
+  French: {
+    "movie-night-watch-chat": { title: "Soirée cinéma — Regarder + discuter", people: "2–4 personnes" },
+    "picnic-easy-hangout": { title: "Pique-nique — Moment simple", people: "2–4 personnes" },
+    "board-games-coffee": { title: "Jeux de société + café", people: "3–5 personnes" },
+  },
+  German: {
+    "movie-night-watch-chat": { title: "Filmabend — Schauen + Chatten", people: "2–4 Personen" },
+    "picnic-easy-hangout": { title: "Picknick — Lockeres Treffen", people: "2–4 Personen" },
+    "board-games-coffee": { title: "Brettspiele + Kaffee", people: "3–5 Personen" },
+  },
+  Hebrew: {
+    "movie-night-watch-chat": { title: "ערב סרט — צפייה + צ'אט", people: "2–4 אנשים" },
+    "picnic-easy-hangout": { title: "פיקניק — מפגש קליל", people: "2–4 אנשים" },
+    "board-games-coffee": { title: "משחקי קופסה + קפה", people: "3–5 אנשים" },
+  },
+  Japanese: {
+    "movie-night-watch-chat": { title: "映画ナイト — 観る + 話す", people: "2–4人" },
+    "picnic-easy-hangout": { title: "ピクニック — 気軽な集まり", people: "2–4人" },
+    "board-games-coffee": { title: "ボードゲーム + コーヒー", people: "3–5人" },
+  },
+  Korean: {
+    "movie-night-watch-chat": { title: "영화의 밤 — 보기 + 채팅", people: "2–4명" },
+    "picnic-easy-hangout": { title: "피크닉 — 편한 만남", people: "2–4명" },
+    "board-games-coffee": { title: "보드게임 + 커피", people: "3–5명" },
+  },
+  Russian: {
+    "movie-night-watch-chat": { title: "Ночь кино — смотреть + чат", people: "2–4 человека" },
+    "picnic-easy-hangout": { title: "Пикник — лёгкая встреча", people: "2–4 человека" },
+    "board-games-coffee": { title: "Настольные игры + кофе", people: "3–5 человек" },
+  },
+  Spanish: {
+    "movie-night-watch-chat": { title: "Noche de cine — Ver + chatear", people: "2–4 personas" },
+    "picnic-easy-hangout": { title: "Picnic — Encuentro fácil", people: "2–4 personas" },
+    "board-games-coffee": { title: "Juegos de mesa + café", people: "3–5 personas" },
+  },
+};
+
 const meetupsTranslations = {
   English: {
     title: "My Meetups",
@@ -144,17 +192,21 @@ export default function MeetupsScreen() {
 
         <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.upcoming}</Text>
         <View style={styles.list}>
-          {upcoming.map((event, index) => (
+          {upcoming.map((event, index) => {
+            const localizedEvent = meetupEventTranslations[translationLanguageBase]?.[event.id] ?? event;
+
+            return (
             <TouchableOpacity key={event.id} activeOpacity={0.85} style={[styles.meetupCard, isDay && styles.dayCard]} onPress={() => router.push(`/event/${event.id}`)}>
               <View style={[styles.emojiBox, { backgroundColor: event.imageTone }]}><Text style={styles.emoji}>{event.emoji}</Text></View>
               <View style={styles.cardBody}>
-                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{event.title}</Text>
+                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedEvent.title}</Text>
                 <Text style={[styles.cardMeta, isDay && styles.dayMutedText]}>{event.venue} · {event.time}</Text>
-                <Text style={[styles.cardCopy, isDay && styles.daySuccessText]}>{event.people} · {index === 0 ? copy.joined : copy.suggested}</Text>
+                <Text style={[styles.cardCopy, isDay && styles.daySuccessText]}>{localizedEvent.people} · {index === 0 ? copy.joined : copy.suggested}</Text>
               </View>
               <Text style={[styles.chevron, isDay && styles.dayMutedText]}>›</Text>
             </TouchableOpacity>
-          ))}
+            );
+          })}
         </View>
       </ScrollView>
     </ScreenContainer>

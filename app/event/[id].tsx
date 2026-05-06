@@ -4,7 +4,78 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
-import { allEvents, movieNight, nsnColors } from "@/lib/nsn-data";
+import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
+
+const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu"]);
+
+const detailEventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
+  Hebrew: {
+    "picnic-easy-hangout": {
+      title: "פיקניק — מפגש קליל",
+      category: "חוץ",
+      people: "2–4 אנשים",
+      description: "מביאים נשנושים, יושבים ונרגעים. אין לחץ לדבר כל הזמן.",
+      tone: "מאוזן",
+      weather: "תלוי במזג האוויר",
+    },
+    "beach-day-chill-vibes": {
+      title: "יום חוף — אווירה רגועה",
+      category: "חוץ",
+      people: "3–6 אנשים",
+      description: "שמש, ים וחברה טובה. להביא מגבת.",
+      tone: "מאוזן",
+      weather: "תלוי במזג האוויר",
+    },
+    "library-calm-study": {
+      title: "לימוד רגוע בספרייה",
+      category: "פנים",
+      people: "2–5 אנשים",
+      description: "זמן שקט סביב שולחן, הפסקות שיחה קלות ואיפוס עדין.",
+      tone: "שקט",
+      weather: "ידידותי לגשם",
+    },
+    "coffee-lane-cove": {
+      title: "קפה — שלום קליל",
+      category: "אוכל",
+      people: "2–4 אנשים",
+      description: "קפה, ישיבה נוחה, ואפשר ללכת מתי שצריך.",
+      tone: "מאוזן",
+      weather: "חלופה מקורה מוכנה",
+    },
+    "harbour-walk-waverton": {
+      title: "הליכת נמל — קצב קל",
+      category: "פעיל",
+      people: "3–6 אנשים",
+      description: "הליכה איטית עם מקום לשקט ולשיחות צדדיות.",
+      tone: "מאוזן",
+      weather: "תלוי במזג האוויר",
+    },
+    "board-games-coffee": {
+      title: "משחקי קופסה + קפה",
+      category: "פנים",
+      people: "3–5 אנשים",
+      description: "משחקים פשוטים, שתייה חמה ופתיחות שיחה קלילות.",
+      tone: "מאוזן",
+      weather: "ידידותי לגשם",
+    },
+    "ramen-small-table": {
+      title: "ראמן — שולחן קטן",
+      category: "אוכל",
+      people: "3–5 אנשים",
+      description: "אוכל חם, היכרות פשוטה, בלי לחץ להישאר מאוחר.",
+      tone: "מאוזן",
+      weather: "ידידותי לגשם",
+    },
+    "quiet-music-listening": {
+      title: "האזנה למוזיקה שקטה",
+      category: "פנים",
+      people: "2–5 אנשים",
+      description: "משתפים כמה שירים רגועים ומדברים רק כמה שמרגיש טוב.",
+      tone: "שקט",
+      weather: "חלופה מקורה מוכנה",
+    },
+  },
+};
 
 const eventTranslations = {
   English: {
@@ -27,6 +98,14 @@ const eventTranslations = {
     meetingCopy: "Meet at Event Cinemas ticket counter at 6:50pm. We'll grab seats together.",
     join: "Join Meetup",
     spotsLeft: "3 spots left",
+    today: "Today",
+    tonight: "Tonight",
+    genericDescriptionSuffix: "A low-pressure meetup with clear expectations before you join.",
+    weatherAffectedCopy: "Weather may affect this plan, so check the backup option before heading out.",
+    weatherFriendlyCopy: "This event has a weather-friendly plan.",
+    genericMeetingCopy: (venue: string) => `Meet near ${venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`,
+    softExitTitle: "You can change your mind",
+    softExitCopy: "It is okay to skip this meetup if it does not feel like your pace today. You can find another group, step back from the chat, or come back later.",
   },
   Arabic: {
     title: "ليلة فيلم —\nمشاهدة + دردشة",
@@ -48,6 +127,14 @@ const eventTranslations = {
     meetingCopy: "نلتقي عند شباك تذاكر Event Cinemas الساعة 6:50 مساءً. سنجلس معاً.",
     join: "انضم للقاء",
     spotsLeft: "3 أماكن متبقية",
+    today: "اليوم",
+    tonight: "الليلة",
+    genericDescriptionSuffix: "لقاء بلا ضغط مع توقعات واضحة قبل الانضمام.",
+    weatherAffectedCopy: "قد يؤثر الطقس على هذه الخطة، لذا تحقق من خيار النسخ الاحتياطي قبل الخروج.",
+    weatherFriendlyCopy: "لهذا الحدث خطة مناسبة للطقس.",
+    genericMeetingCopy: (venue: string) => `نلتقي بالقرب من ${venue} قبل وقت البداية بحوالي 10 دقائق. يمكن للمضيف مشاركة مكان أكثر هدوءاً في الدردشة.`,
+    softExitTitle: "يمكنك تغيير رأيك",
+    softExitCopy: "لا بأس في تخطي هذا اللقاء إذا لم يناسب وتيرتك اليوم. يمكنك العثور على مجموعة أخرى، أو التراجع عن الدردشة، أو العودة لاحقاً.",
   },
   Hebrew: {
     title: "ערב סרט —\nצפייה + שיחה",
@@ -69,6 +156,14 @@ const eventTranslations = {
     meetingCopy: "ניפגש בדלפק הכרטיסים של Event Cinemas בשעה 18:50. נתפוס מקומות יחד.",
     join: "הצטרפות למפגש",
     spotsLeft: "נותרו 3 מקומות",
+    today: "היום",
+    tonight: "הערב",
+    genericDescriptionSuffix: "מפגש בלי לחץ עם ציפיות ברורות לפני ההצטרפות.",
+    weatherAffectedCopy: "מזג האוויר עשוי להשפיע על התוכנית, אז כדאי לבדוק את אפשרות הגיבוי לפני שיוצאים.",
+    weatherFriendlyCopy: "לאירוע הזה יש תוכנית שמתאימה למזג האוויר.",
+    genericMeetingCopy: (venue: string) => `ניפגש ליד ${venue} כ-10 דקות לפני שעת ההתחלה. המארח יכול לשתף נקודה רגועה ומדויקת יותר בצ'אט.`,
+    softExitTitle: "אפשר לשנות את דעתך",
+    softExitCopy: "זה בסדר לדלג על המפגש אם הוא לא מרגיש בקצב שלך היום. אפשר למצוא קבוצה אחרת, לקחת צעד אחורה מהצ'אט, או לחזור מאוחר יותר.",
   },
   Russian: {
     title: "Киновечер —\nСмотрим + общаемся",
@@ -90,6 +185,14 @@ const eventTranslations = {
     meetingCopy: "Встречаемся у кассы Event Cinemas в 18:50. Займём места вместе.",
     join: "Присоединиться",
     spotsLeft: "Осталось 3 места",
+    today: "Сегодня",
+    tonight: "Сегодня вечером",
+    genericDescriptionSuffix: "Встреча без давления с понятными ожиданиями перед присоединением.",
+    weatherAffectedCopy: "Погода может повлиять на план, поэтому проверьте запасной вариант перед выходом.",
+    weatherFriendlyCopy: "У этой встречи есть план, подходящий для погоды.",
+    genericMeetingCopy: (venue: string) => `Встречаемся рядом с ${venue} примерно за 10 минут до начала. Организатор может поделиться более спокойной точной точкой в чате.`,
+    softExitTitle: "Вы можете передумать",
+    softExitCopy: "Можно пропустить эту встречу, если сегодня она не подходит вашему темпу. Вы можете найти другую группу, отойти от чата или вернуться позже.",
   },
   Spanish: {
     title: "Noche de cine —\nVer + charlar",
@@ -111,6 +214,14 @@ const eventTranslations = {
     meetingCopy: "Nos vemos en la taquilla de Event Cinemas a las 6:50 p. m. Buscaremos asientos juntos.",
     join: "Unirse",
     spotsLeft: "Quedan 3 lugares",
+    today: "Hoy",
+    tonight: "Esta noche",
+    genericDescriptionSuffix: "Una quedada sin presión con expectativas claras antes de unirte.",
+    weatherAffectedCopy: "El clima puede afectar este plan, así que revisa la opción de respaldo antes de salir.",
+    weatherFriendlyCopy: "Este evento tiene un plan adecuado para el clima.",
+    genericMeetingCopy: (venue: string) => `Quedamos cerca de ${venue} unos 10 minutos antes de la hora de inicio. La persona anfitriona puede compartir un punto exacto más tranquilo en el chat.`,
+    softExitTitle: "Puedes cambiar de opinión",
+    softExitCopy: "Está bien saltarte esta quedada si hoy no va a tu ritmo. Puedes encontrar otro grupo, apartarte del chat o volver más tarde.",
   },
 } as const;
 
@@ -120,28 +231,30 @@ export default function EventDetailsScreen() {
   const { appLanguage, isNightMode } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = eventTranslations[appLanguageBase as keyof typeof eventTranslations] ?? eventTranslations.English;
+  const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
   const event = allEvents.find((item) => item.id === id) ?? movieNight;
+  const localizedEvent = { ...event, ...(detailEventTranslations[appLanguageBase]?.[event.id] ?? {}) };
   const isMovieNight = event.id === movieNight.id;
-  const eventTitle = isMovieNight ? copy.title : event.title.replace(" — ", " —\n");
-  const eventCategory = isMovieNight ? copy.category : event.category;
-  const eventTone = isMovieNight ? copy.tone : `☽ ${event.tone}`;
-  const eventDate = isMovieNight ? copy.date : `${isNightMode ? "Tonight" : "Today"} · ${event.time}`;
-  const eventPeople = isMovieNight ? copy.people : event.people;
-  const eventDescription = isMovieNight ? copy.description : `${event.description} A low-pressure meetup with clear expectations before you join.`;
+  const eventTitle = isMovieNight ? copy.title : localizedEvent.title.replace(" — ", " —\n");
+  const eventCategory = isMovieNight ? copy.category : localizedEvent.category;
+  const eventTone = isMovieNight ? copy.tone : `☽ ${localizedEvent.tone}`;
+  const eventDate = isMovieNight ? copy.date : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
+  const eventPeople = isMovieNight ? copy.people : localizedEvent.people;
+  const eventDescription = isMovieNight ? copy.description : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
   const eventWeatherCopy = event.weather.includes("Weather")
-    ? "Weather may affect this plan, so check the backup option before heading out."
-    : "This event has a weather-friendly plan.";
+    ? copy.weatherAffectedCopy
+    : copy.weatherFriendlyCopy;
   const eventMeetingCopy = isMovieNight
     ? copy.meetingCopy
-    : `Meet near ${event.venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`;
+    : copy.genericMeetingCopy(event.venue);
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.topBar}>
+        <View style={[styles.topBar, isRtl && styles.rtlRow]}>
           <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.iconButton, isDay && styles.dayIconButton]}>
             <IconSymbol name="chevron.left" color={iconColor} size={26} />
           </TouchableOpacity>
@@ -159,51 +272,56 @@ export default function EventDetailsScreen() {
           <View style={styles.eventAvatar}>
             <Text style={styles.avatarEmoji}>{event.emoji}</Text>
           </View>
-          <Text style={[styles.title, isDay && styles.dayHeadingText]}>{eventTitle}</Text>
-          <View style={styles.tagRow}>
-            <Text style={styles.primaryChip}>{eventCategory}</Text>
-            <Text style={[styles.quietChip, isDay && styles.dayQuietChip]}>{eventTone}</Text>
+          <Text style={[styles.title, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventTitle}</Text>
+          <View style={[styles.tagRow, isRtl && styles.rtlRow]}>
+            <Text style={[styles.primaryChip, isRtl && styles.rtlText]}>{eventCategory}</Text>
+            <Text style={[styles.quietChip, isDay && styles.dayQuietChip, isRtl && styles.rtlText]}>{eventTone}</Text>
           </View>
         </View>
 
-        <View style={styles.metaStack}>
-          <Text style={[styles.metaLine, isDay && styles.dayText]}>⌖ {event.venue}</Text>
-          <Text style={[styles.metaLine, isDay && styles.dayText]}>▣ {eventDate}</Text>
-          <Text style={[styles.metaLine, isDay && styles.dayText]}>♧ {eventPeople}</Text>
+        <View style={[styles.metaStack, isRtl && styles.rtlBlock]}>
+          <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>⌖ {event.venue}</Text>
+          <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>▣ {eventDate}</Text>
+          <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>♧ {eventPeople}</Text>
         </View>
 
-        <Text style={[styles.description, isDay && styles.dayText]}>{eventDescription}</Text>
+        <Text style={[styles.description, isDay && styles.dayText, isRtl && styles.rtlText]}>{eventDescription}</Text>
 
-        <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard]}>
-          <View>
-            <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText]}>{copy.weatherTitle}</Text>
-            <Text style={[styles.weatherCopy, isDay && styles.dayMutedText]}>{isMovieNight ? copy.weatherCopy : eventWeatherCopy}</Text>
+        <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
+          <View style={isRtl && styles.rtlBlock}>
+            <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherTitle}</Text>
+            <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{isMovieNight ? copy.weatherCopy : eventWeatherCopy}</Text>
           </View>
           <Text style={styles.weatherIcon}>☁️</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText]}>{copy.whatToExpect}</Text>
-        <View style={styles.expectGrid}>
-          <View style={[styles.expectCard, isDay && styles.dayCard]}>
+        <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
+        <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
+          <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
             <Text style={styles.expectIcon}>◇</Text>
-            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText]}>{copy.lowPressure}</Text>
-            <Text style={[styles.expectCopy, isDay && styles.dayMutedText]}>{copy.lowPressureCopy}</Text>
+            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.lowPressure}</Text>
+            <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.lowPressureCopy}</Text>
           </View>
-          <View style={[styles.expectCard, isDay && styles.dayCard]}>
+          <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
             <Text style={styles.expectIcon}>◌</Text>
-            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText]}>{copy.sharedExperience}</Text>
-            <Text style={[styles.expectCopy, isDay && styles.dayMutedText]}>{copy.sharedExperienceCopy}</Text>
+            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.sharedExperience}</Text>
+            <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.sharedExperienceCopy}</Text>
           </View>
-          <View style={[styles.expectCard, isDay && styles.dayCard]}>
+          <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
             <Text style={styles.expectIcon}>↺</Text>
-            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText]}>{copy.flexible}</Text>
-            <Text style={[styles.expectCopy, isDay && styles.dayMutedText]}>{copy.flexibleCopy}</Text>
+            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.flexible}</Text>
+            <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.flexibleCopy}</Text>
           </View>
         </View>
 
-        <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel]}>
-          <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText]}>{copy.meetingPoint}</Text>
-          <Text style={[styles.meetingCopy, isDay && styles.dayMutedText]}>{eventMeetingCopy}</Text>
+        <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel, isRtl && styles.rtlBlock]}>
+          <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.meetingPoint}</Text>
+          <Text style={[styles.meetingCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventMeetingCopy}</Text>
+        </View>
+
+        <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
+          <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.softExitTitle}</Text>
+          <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.softExitCopy}</Text>
         </View>
 
         <TouchableOpacity
@@ -233,6 +351,9 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   topActions: { flexDirection: "row", gap: 8 },
+  rtlRow: { flexDirection: "row-reverse" },
+  rtlBlock: { alignItems: "flex-end" },
+  rtlText: { textAlign: "right", writingDirection: "rtl" },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: nsnColors.border },
   heroPanel: { alignItems: "center", borderRadius: 28, paddingTop: 8, paddingBottom: 22, backgroundColor: "#061121", borderWidth: 1, borderColor: "rgba(56,72,255,0.22)", marginBottom: 18 },
   eventAvatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: "#21123E", borderWidth: 2, borderColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: -2, marginBottom: 18 },
@@ -256,6 +377,10 @@ const styles = StyleSheet.create({
   expectCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 1 },
   meetingPanel: { borderTopWidth: 1, borderColor: nsnColors.border, paddingTop: 14, marginTop: 2, marginBottom: 18 },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
+  softExitCard: { borderRadius: 18, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: nsnColors.border, padding: 15, marginBottom: 18 },
+  daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  softExitTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, marginBottom: 4 },
+  softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
   joinButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary },
   joinText: { color: nsnColors.text, fontSize: 16, fontWeight: "800" },
   spotsText: { color: nsnColors.muted, textAlign: "center", marginTop: 10, fontSize: 13, lineHeight: 19 },

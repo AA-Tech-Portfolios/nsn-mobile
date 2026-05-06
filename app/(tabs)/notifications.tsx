@@ -27,6 +27,36 @@ const notificationTranslations = {
       { icon: "🌙", title: "فعاليات هادئة متاحة مساءً", copy: "لقاءات داخلية منخفضة الضوضاء مفتوحة حول Chatswood و Macquarie Park.", tone: "مساء" },
     ],
   },
+  Chinese: {
+    title: "通知",
+    subtitle: "根据天气变化提供温和的聚会提醒。",
+    flow: ["St. Leonards Park 野餐", "预计有雨", "改为保龄球之夜"],
+    alerts: [
+      { icon: "🌧", title: "稍后预计有雨", copy: "野餐计划可能需要室内备用方案。我们会建议附近选项。", tone: "天气" },
+      { icon: "🍿", title: "电影之夜 7:00pm 开始", copy: "请在 6:50pm 左右到 Event Cinemas 售票处集合。", tone: "聚会" },
+      { icon: "🌙", title: "安静的夜间活动可参加", copy: "Chatswood 和 Macquarie Park 附近有低噪音室内聚会。", tone: "夜晚" },
+    ],
+  },
+  French: {
+    title: "Notifications",
+    subtitle: "Invitations météo et rappels de rencontre doux.",
+    flow: ["Pique-nique à St. Leonards Park", "Pluie attendue", "Passer à une soirée bowling"],
+    alerts: [
+      { icon: "🌧", title: "Pluie attendue plus tard", copy: "Le pique-nique peut nécessiter une alternative intérieure. Nous suggérerons des options proches.", tone: "Météo" },
+      { icon: "🍿", title: "La soirée cinéma commence à 19h00", copy: "Rendez-vous au comptoir Event Cinemas vers 18h50.", tone: "Rencontre" },
+      { icon: "🌙", title: "Événements calmes disponibles ce soir", copy: "Des rencontres intérieures peu bruyantes sont ouvertes autour de Chatswood et Macquarie Park.", tone: "Soir" },
+    ],
+  },
+  German: {
+    title: "Hinweise",
+    subtitle: "Wetterbewusste Hinweise und sanfte Treffen-Erinnerungen.",
+    flow: ["Picknick im St. Leonards Park", "Regen erwartet", "Zu Bowlingabend wechseln"],
+    alerts: [
+      { icon: "🌧", title: "Später wird Regen erwartet", copy: "Picknick-Pläne brauchen vielleicht eine Alternative drinnen. Wir schlagen Optionen in der Nähe vor.", tone: "Wetter" },
+      { icon: "🍿", title: "Filmabend beginnt um 19:00", copy: "Trefft euch gegen 18:50 am Event Cinemas-Schalter.", tone: "Treffen" },
+      { icon: "🌙", title: "Ruhige Abend-Events verfügbar", copy: "Leise Indoor-Treffen sind rund um Chatswood und Macquarie Park offen.", tone: "Abend" },
+    ],
+  },
   Hebrew: {
     title: "התראות",
     subtitle: "תזכורות עדינות למפגשים ועדכונים לפי מזג האוויר.",
@@ -35,6 +65,26 @@ const notificationTranslations = {
       { icon: "🌧", title: "גשם צפוי בהמשך", copy: "ייתכן שתוכניות הפיקניק יצטרכו חלופה מקורה. נציע אפשרויות קרובות.", tone: "מזג אוויר" },
       { icon: "🍿", title: "ערב הסרט מתחיל ב-19:00", copy: "נפגשים ליד דלפק Event Cinemas בערך ב-18:50.", tone: "מפגש" },
       { icon: "🌙", title: "אירועי ערב שקטים זמינים", copy: "מפגשים מקורים ושקטים פתוחים סביב Chatswood ו-Macquarie Park.", tone: "ערב" },
+    ],
+  },
+  Japanese: {
+    title: "通知",
+    subtitle: "天気に合わせた案内と、やさしいミートアップのリマインダー。",
+    flow: ["St. Leonards Park でピクニック", "雨の予報", "ボウリングナイトに変更"],
+    alerts: [
+      { icon: "🌧", title: "このあと雨の予報", copy: "ピクニックには屋内の代替案が必要かもしれません。近くの選択肢を提案します。", tone: "天気" },
+      { icon: "🍿", title: "映画ナイトは19:00開始", copy: "18:50ごろ Event Cinemas のチケットカウンターで集合します。", tone: "ミートアップ" },
+      { icon: "🌙", title: "静かな夜イベントがあります", copy: "Chatswood と Macquarie Park 周辺で、低音量の屋内ミートアップが開いています。", tone: "夜" },
+    ],
+  },
+  Korean: {
+    title: "알림",
+    subtitle: "날씨를 고려한 안내와 부드러운 모임 알림.",
+    flow: ["St. Leonards Park 피크닉", "비 예상", "볼링 나이트로 변경"],
+    alerts: [
+      { icon: "🌧", title: "이후 비가 예상돼요", copy: "피크닉 계획에 실내 대안이 필요할 수 있어요. 가까운 옵션을 제안할게요.", tone: "날씨" },
+      { icon: "🍿", title: "영화의 밤은 7:00pm 시작", copy: "6:50pm쯤 Event Cinemas 매표소에서 만나요.", tone: "모임" },
+      { icon: "🌙", title: "조용한 저녁 이벤트 가능", copy: "Chatswood와 Macquarie Park 주변에 조용한 실내 모임이 열려 있어요.", tone: "밤" },
     ],
   },
   Russian: {

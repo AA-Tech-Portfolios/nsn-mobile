@@ -146,7 +146,7 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     restartOnboarding: "إعادة بدء إعداد SoftHello",
     restartOnboardingCopy: "راجع تأكيد العمر والضاحية والنية والاسم والصورة وخيارات الظهور.",
     restartOnboardingAction: "ابدأ",
-    searchLanguage: "ابحث عن لغة...",
+    searchLanguage: "ابحث عن لغة…",
     noLanguageFound: "لم يتم العثور على لغة",
   },
   Chinese: {
@@ -272,7 +272,7 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     restartOnboarding: "התחלת ההיכרות עם SoftHello מחדש",
     restartOnboardingCopy: "בדיקה מחדש של גיל, אזור, כוונה, כינוי, תמונה והעדפות חשיפה.",
     restartOnboardingAction: "התחלה",
-    searchLanguage: "חיפוש שפה...",
+    searchLanguage: "חיפוש שפה…",
     noLanguageFound: "לא נמצאה שפה",
   },
   Hindi: {
@@ -295,6 +295,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "NSN में उपयोग की जाने वाली भाषा चुनें।",
     translateMeetupsChats: "मीटअप और चैट का अनुवाद करें",
     translateMeetupsChatsCopy: "इवेंट विवरण और चैट संदेश इस भाषा में दिखाएँ।",
+    restartOnboarding: "SoftHello परिचय फिर शुरू करें",
+    restartOnboardingCopy: "उम्र, उपनगर, इरादा, नाम, फ़ोटो और दृश्यता विकल्प फिर से देखें।",
+    restartOnboardingAction: "शुरू करें",
+    searchLanguage: "भाषा खोजें…",
+    noLanguageFound: "भाषा नहीं मिली",
   },
   Italian: {
     title: "Impostazioni e privacy",
@@ -337,6 +342,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "NSNで使う言語を選びます。",
     translateMeetupsChats: "ミートアップとチャットを翻訳",
     translateMeetupsChatsCopy: "イベント詳細とチャットをこの言語で表示します。",
+    restartOnboarding: "SoftHelloの案内をやり直す",
+    restartOnboardingCopy: "年齢、地域、目的、ニックネーム、写真、表示設定を見直します。",
+    restartOnboardingAction: "開始",
+    searchLanguage: "言語を検索…",
+    noLanguageFound: "言語が見つかりません",
   },
   Korean: {
     title: "설정 및 개인정보",
@@ -358,6 +368,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "NSN에서 사용할 언어를 선택하세요.",
     translateMeetupsChats: "모임과 채팅 번역",
     translateMeetupsChatsCopy: "이벤트 정보와 채팅 메시지를 이 언어로 표시합니다.",
+    restartOnboarding: "SoftHello 온보딩 다시 시작",
+    restartOnboardingCopy: "나이, 지역, 의도, 닉네임, 사진, 공개 설정을 다시 확인합니다.",
+    restartOnboardingAction: "시작",
+    searchLanguage: "언어 검색…",
+    noLanguageFound: "언어를 찾을 수 없습니다",
   },
   Persian: {
     title: "تنظیمات و حریم خصوصی",
@@ -379,6 +394,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "زبان استفاده‌شده در NSN را انتخاب کنید.",
     translateMeetupsChats: "ترجمه دیدارها و چت‌ها",
     translateMeetupsChatsCopy: "جزئیات رویداد و پیام‌ها را به این زبان نشان دهید.",
+    restartOnboarding: "شروع دوباره آشنایی با SoftHello",
+    restartOnboardingCopy: "سن، محله، نیت، نام، عکس و گزینه‌های نمایش را دوباره مرور کنید.",
+    restartOnboardingAction: "شروع",
+    searchLanguage: "جستجوی زبان…",
+    noLanguageFound: "زبانی پیدا نشد",
   },
   Spanish: {
     title: "Configuración y privacidad",
@@ -426,6 +446,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "NSN میں استعمال ہونے والی زبان منتخب کریں۔",
     translateMeetupsChats: "میٹ اپس اور چیٹس کا ترجمہ",
     translateMeetupsChatsCopy: "ایونٹ کی تفصیلات اور چیٹ پیغامات اس زبان میں دکھائیں۔",
+    restartOnboarding: "SoftHello تعارف دوبارہ شروع کریں",
+    restartOnboardingCopy: "عمر، علاقہ، ارادہ، نام، تصویر اور نمائش کے انتخاب دوبارہ دیکھیں۔",
+    restartOnboardingAction: "شروع کریں",
+    searchLanguage: "زبان تلاش کریں…",
+    noLanguageFound: "زبان نہیں ملی",
   },
   Bengali: {
     title: "সেটিংস ও গোপনীয়তা",
@@ -447,6 +472,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "NSN-এ ব্যবহৃত ভাষা বেছে নিন।",
     translateMeetupsChats: "মিটআপ ও চ্যাট অনুবাদ করুন",
     translateMeetupsChatsCopy: "ইভেন্টের বিস্তারিত ও চ্যাট বার্তা এই ভাষায় দেখান।",
+    restartOnboarding: "SoftHello পরিচিতি আবার শুরু করুন",
+    restartOnboardingCopy: "বয়স, এলাকা, উদ্দেশ্য, নাম, ছবি ও দৃশ্যমানতার পছন্দ আবার দেখুন।",
+    restartOnboardingAction: "শুরু করুন",
+    searchLanguage: "ভাষা খুঁজুন…",
+    noLanguageFound: "কোনো ভাষা পাওয়া যায়নি",
   },
   Danish: {
     title: "Indstillinger og privatliv",
@@ -510,6 +540,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "Piliin ang wikang gagamitin sa NSN.",
     translateMeetupsChats: "Isalin ang meetups at chats",
     translateMeetupsChatsCopy: "Ipakita ang event details at chat messages sa wikang ito.",
+    restartOnboarding: "Simulan muli ang SoftHello onboarding",
+    restartOnboardingCopy: "Balikan ang edad, lugar, layunin, pangalan, larawan at visibility choices.",
+    restartOnboardingAction: "Simulan",
+    searchLanguage: "Maghanap ng wika…",
+    noLanguageFound: "Walang nahanap na wika",
   },
   Finnish: {
     title: "Asetukset ja yksityisyys",
@@ -573,6 +608,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "Pilih bahasa yang digunakan di NSN.",
     translateMeetupsChats: "Terjemahkan meetup dan chat",
     translateMeetupsChatsCopy: "Tampilkan detail event dan pesan chat dalam bahasa ini.",
+    restartOnboarding: "Mulai ulang perkenalan SoftHello",
+    restartOnboardingCopy: "Tinjau usia, area, niat, nama, foto, dan pilihan visibilitas.",
+    restartOnboardingAction: "Mulai",
+    searchLanguage: "Cari bahasa…",
+    noLanguageFound: "Bahasa tidak ditemukan",
   },
   Malay: {
     title: "Tetapan & Privasi",
@@ -594,6 +634,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "Pilih bahasa yang digunakan dalam NSN.",
     translateMeetupsChats: "Terjemah meetup dan chat",
     translateMeetupsChatsCopy: "Tunjukkan butiran acara dan mesej chat dalam bahasa ini.",
+    restartOnboarding: "Mulakan semula pengenalan SoftHello",
+    restartOnboardingCopy: "Semak umur, kawasan, niat, nama, foto dan pilihan keterlihatan.",
+    restartOnboardingAction: "Mula",
+    searchLanguage: "Cari bahasa…",
+    noLanguageFound: "Bahasa tidak ditemui",
   },
   Norwegian: {
     title: "Innstillinger og personvern",
@@ -746,6 +791,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "เลือกภาษาที่ใช้ใน NSN",
     translateMeetupsChats: "แปลมีตอัปและแชต",
     translateMeetupsChatsCopy: "แสดงรายละเอียดกิจกรรมและข้อความแชตในภาษานี้",
+    restartOnboarding: "เริ่มแนะนำ SoftHello ใหม่",
+    restartOnboardingCopy: "ทบทวนอายุ พื้นที่ ความตั้งใจ ชื่อ รูปภาพ และการมองเห็นอีกครั้ง",
+    restartOnboardingAction: "เริ่ม",
+    searchLanguage: "ค้นหาภาษา…",
+    noLanguageFound: "ไม่พบภาษา",
   },
   Turkish: {
     title: "Ayarlar ve Gizlilik",
@@ -767,6 +817,11 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "NSN'de kullanılacak dili seçin.",
     translateMeetupsChats: "Meetup ve sohbetleri çevir",
     translateMeetupsChatsCopy: "Etkinlik ayrıntılarını ve sohbet mesajlarını bu dilde gösterin.",
+    restartOnboarding: "SoftHello başlangıcını yeniden başlat",
+    restartOnboardingCopy: "Yaş, bölge, niyet, ad, fotoğraf ve görünürlük seçimlerini yeniden gözden geçir.",
+    restartOnboardingAction: "Başla",
+    searchLanguage: "Dil ara…",
+    noLanguageFound: "Dil bulunamadı",
   },
   Ukrainian: {
     title: "Налаштування та приватність",
@@ -809,6 +864,905 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     appLanguageCopy: "Chọn ngôn ngữ dùng trong NSN.",
     translateMeetupsChats: "Dịch meetup và chat",
     translateMeetupsChatsCopy: "Hiển thị chi tiết sự kiện và tin nhắn bằng ngôn ngữ này.",
+    restartOnboarding: "Bắt đầu lại phần giới thiệu SoftHello",
+    restartOnboardingCopy: "Xem lại tuổi, khu vực, ý định, tên, ảnh và lựa chọn hiển thị.",
+    restartOnboardingAction: "Bắt đầu",
+    searchLanguage: "Tìm ngôn ngữ…",
+    noLanguageFound: "Không tìm thấy ngôn ngữ",
+  },
+};
+
+const regionalEnglishSettings: Record<string, Partial<SettingsCopy>> = {
+  "English (AU)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (CA)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (HK)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (IE)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (IN)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (NZ)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (SG)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (UK)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (Scotland)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+  "English (ZA)": {
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
+};
+
+const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
+  Arabic: {
+    appearance: "المظهر",
+    colorPalette: "لوحة الألوان",
+    colorPaletteCopy: "اختر المزاج وألوان التمييز التي تفضلها.",
+    notifications: "الإشعارات",
+    meetupReminders: "تذكيرات اللقاءات",
+    meetupRemindersCopy: "احصل على تذكيرات قبل اللقاءات التي انضممت إليها.",
+    weatherAlerts: "تنبيهات الطقس",
+    weatherAlertsCopy: "استقبل تحديثات عندما قد يؤثر الطقس على خطة خارجية.",
+    chatNotifications: "إشعارات الدردشة",
+    chatNotificationsCopy: "أخبرني عند وجود رسائل جديدة في دردشات اللقاءات.",
+    quietNotifications: "إشعارات هادئة",
+    quietNotificationsCopy: "حافظ على نغمة الإشعارات لطيفة وبعيدة عن لفت الانتباه الزائد.",
+    locationDiscovery: "الموقع والاكتشاف",
+    useApproximateLocation: "استخدام موقع تقريبي",
+    useApproximateLocationCopy: "اعرض خيارات قريبة دون مشاركة موقع دقيق.",
+    showDistanceInMeetups: "إظهار المسافة في اللقاءات",
+    showDistanceInMeetupsCopy: "اعرض المسافة التقريبية على بطاقات الفعاليات واللقاءات.",
+    safetyContact: "السلامة والتواصل",
+    allowMessageRequests: "السماح بطلبات الرسائل",
+    allowMessageRequestsCopy: "دع الأشخاص يراسلونك قبل الانضمام إلى نفس اللقاء.",
+    safetyCheckIns: "اطمئنانات السلامة",
+    safetyCheckInsCopy: "فعّل تذكيرات لطيفة حول اللقاءات التي انضممت إليها.",
+    accessibility: "إمكانية الوصول",
+    largerText: "نص أكبر",
+    largerTextCopy: "كبّر النص واحفظ هذا التفضيل للتطبيق.",
+    highContrast: "تباين عالٍ",
+    highContrastCopy: "قوِّ الحدود وتباين النص لتسهيل القراءة.",
+    reduceMotion: "تقليل الحركة",
+    reduceMotionCopy: "فضّل انتقالات أهدأ وحركة أقل.",
+    screenReaderHints: "تلميحات قارئ الشاشة",
+    screenReaderHintsCopy: "أضف تسميات وتلميحات إضافية للتقنيات المساعدة.",
+  },
+  Chinese: {
+    appearance: "外观",
+    colorPalette: "配色",
+    colorPaletteCopy: "选择你喜欢的氛围和强调色。",
+    notifications: "通知",
+    meetupReminders: "聚会提醒",
+    meetupRemindersCopy: "在你加入的聚会开始前收到提醒。",
+    weatherAlerts: "天气提醒",
+    weatherAlertsCopy: "当天气可能影响户外计划时接收更新。",
+    chatNotifications: "聊天通知",
+    chatNotificationsCopy: "聚会群聊有新消息时通知我。",
+    quietNotifications: "安静通知",
+    quietNotificationsCopy: "保持通知语气温和，避免过度吸引注意。",
+    locationDiscovery: "位置与发现",
+    useApproximateLocation: "使用大致位置",
+    useApproximateLocationCopy: "显示附近选项，而不分享精确位置。",
+    showDistanceInMeetups: "在聚会中显示距离",
+    showDistanceInMeetupsCopy: "在活动和聚会卡片上显示大致距离。",
+    safetyContact: "安全与联系",
+    allowMessageRequests: "允许消息请求",
+    allowMessageRequestsCopy: "允许他人在加入同一聚会前给你发消息。",
+    safetyCheckIns: "安全确认",
+    safetyCheckInsCopy: "围绕已加入的聚会启用温和确认提醒。",
+  },
+  French: {
+    appearance: "Apparence",
+    colorPalette: "Palette de couleurs",
+    colorPaletteCopy: "Choisissez l'ambiance et les couleurs d'accent que vous préférez.",
+    notifications: "Notifications",
+    meetupReminders: "Rappels de rencontres",
+    meetupRemindersCopy: "Recevez des rappels avant les rencontres que vous avez rejointes.",
+    weatherAlerts: "Alertes météo",
+    weatherAlertsCopy: "Recevez des mises à jour quand la météo peut affecter un plan extérieur.",
+    chatNotifications: "Notifications de chat",
+    chatNotificationsCopy: "Prévenez-moi quand les chats de rencontre ont de nouveaux messages.",
+    quietNotifications: "Notifications calmes",
+    quietNotificationsCopy: "Gardez un ton de notification doux, sans alertes trop insistantes.",
+    locationDiscovery: "Lieu et découverte",
+    useApproximateLocation: "Utiliser une position approximative",
+    useApproximateLocationCopy: "Afficher des options proches sans partager une position précise.",
+    showDistanceInMeetups: "Afficher la distance dans les rencontres",
+    showDistanceInMeetupsCopy: "Afficher une distance approximative sur les cartes d'événement et de rencontre.",
+    safetyContact: "Sécurité et contact",
+    allowMessageRequests: "Autoriser les demandes de message",
+    allowMessageRequestsCopy: "Permettre aux personnes d'envoyer un message avant de rejoindre la même rencontre.",
+    safetyCheckIns: "Points de sécurité",
+    safetyCheckInsCopy: "Activer des rappels doux autour des rencontres rejointes.",
+  },
+  German: {
+    appearance: "Darstellung",
+    colorPalette: "Farbpalette",
+    colorPaletteCopy: "Wähle Stimmung und Akzentfarben, die dir angenehm sind.",
+    notifications: "Benachrichtigungen",
+    meetupReminders: "Treffen-Erinnerungen",
+    meetupRemindersCopy: "Erhalte Erinnerungen vor Treffen, denen du beigetreten bist.",
+    weatherAlerts: "Wetterhinweise",
+    weatherAlertsCopy: "Erhalte Updates, wenn Wetter einen Plan im Freien beeinflussen kann.",
+    chatNotifications: "Chat-Benachrichtigungen",
+    chatNotificationsCopy: "Benachrichtige mich bei neuen Nachrichten in Gruppen-Chats.",
+    quietNotifications: "Leise Benachrichtigungen",
+    quietNotificationsCopy: "Halte Benachrichtigungen sanft und vermeide aufdringliche Hinweise.",
+    locationDiscovery: "Standort und Entdecken",
+    useApproximateLocation: "Ungefähren Standort verwenden",
+    useApproximateLocationCopy: "Zeige nahe Optionen, ohne einen genauen Standort zu teilen.",
+    showDistanceInMeetups: "Entfernung in Treffen anzeigen",
+    showDistanceInMeetupsCopy: "Zeige ungefähre Entfernung auf Event- und Treffen-Karten.",
+    safetyContact: "Sicherheit und Kontakt",
+    allowMessageRequests: "Nachrichtenanfragen erlauben",
+    allowMessageRequestsCopy: "Erlaube Nachrichten, bevor ihr demselben Treffen beitretet.",
+    safetyCheckIns: "Sicherheits-Check-ins",
+    safetyCheckInsCopy: "Aktiviere sanfte Check-in-Hinweise rund um beigetretene Treffen.",
+  },
+  Hindi: {
+    appearance: "दिखावट",
+    colorPalette: "रंग पैलेट",
+    colorPaletteCopy: "अपनी पसंद का मूड और ऐक्सेंट रंग चुनें।",
+    notifications: "सूचनाएँ",
+    meetupReminders: "मीटअप रिमाइंडर",
+    meetupRemindersCopy: "जिन मीटअप में आप शामिल हुए हैं, उनसे पहले रिमाइंडर पाएँ।",
+    weatherAlerts: "मौसम अलर्ट",
+    weatherAlertsCopy: "जब मौसम किसी बाहरी योजना को प्रभावित कर सकता है, अपडेट पाएँ।",
+    chatNotifications: "चैट सूचनाएँ",
+    chatNotificationsCopy: "मीटअप ग्रुप चैट में नए संदेश आने पर सूचित करें।",
+    quietNotifications: "शांत सूचनाएँ",
+    quietNotificationsCopy: "सूचनाओं का स्वर नरम रखें और ध्यान खींचने वाले अलर्ट से बचें।",
+    locationDiscovery: "स्थान और खोज",
+    useApproximateLocation: "अनुमानित स्थान उपयोग करें",
+    useApproximateLocationCopy: "सटीक स्थान साझा किए बिना पास के विकल्प दिखाएँ।",
+    showDistanceInMeetups: "मीटअप में दूरी दिखाएँ",
+    showDistanceInMeetupsCopy: "इवेंट और मीटअप कार्ड पर अनुमानित दूरी दिखाएँ।",
+    safetyContact: "सुरक्षा और संपर्क",
+    allowMessageRequests: "संदेश अनुरोध अनुमति दें",
+    allowMessageRequestsCopy: "लोगों को समान मीटअप में शामिल होने से पहले संदेश भेजने दें।",
+    safetyCheckIns: "सुरक्षा चेक-इन",
+    safetyCheckInsCopy: "शामिल मीटअप के आसपास नरम चेक-इन संकेत चालू करें।",
+  },
+  Italian: {
+    appearance: "Aspetto",
+    colorPalette: "Palette colori",
+    colorPaletteCopy: "Scegli l'atmosfera e i colori di accento che preferisci.",
+    notifications: "Notifiche",
+    meetupReminders: "Promemoria meetup",
+    meetupRemindersCopy: "Ricevi promemoria prima dei meetup a cui hai aderito.",
+    weatherAlerts: "Avvisi meteo",
+    weatherAlertsCopy: "Ricevi aggiornamenti quando il meteo può influire su un piano all'aperto.",
+    chatNotifications: "Notifiche chat",
+    chatNotificationsCopy: "Avvisami quando le chat dei meetup hanno nuovi messaggi.",
+    quietNotifications: "Notifiche discrete",
+    quietNotificationsCopy: "Mantieni notifiche gentili ed evita avvisi troppo insistenti.",
+    locationDiscovery: "Posizione e scoperta",
+    useApproximateLocation: "Usa posizione approssimativa",
+    useApproximateLocationCopy: "Mostra opzioni vicine senza condividere una posizione precisa.",
+    showDistanceInMeetups: "Mostra distanza nei meetup",
+    showDistanceInMeetupsCopy: "Mostra la distanza approssimativa su schede evento e meetup.",
+    safetyContact: "Sicurezza e contatto",
+    allowMessageRequests: "Consenti richieste di messaggio",
+    allowMessageRequestsCopy: "Permetti messaggi prima di unirvi allo stesso meetup.",
+    safetyCheckIns: "Check-in di sicurezza",
+    safetyCheckInsCopy: "Attiva promemoria gentili intorno ai meetup a cui partecipi.",
+  },
+  Japanese: {
+    appearance: "外観",
+    colorPalette: "カラーパレット",
+    colorPaletteCopy: "好みの雰囲気とアクセントカラーを選びます。",
+    notifications: "通知",
+    meetupReminders: "ミートアップのリマインダー",
+    meetupRemindersCopy: "参加したミートアップの前にリマインダーを受け取ります。",
+    weatherAlerts: "天気アラート",
+    weatherAlertsCopy: "天気が屋外プランに影響しそうなときに更新を受け取ります。",
+    chatNotifications: "チャット通知",
+    chatNotificationsCopy: "ミートアップのグループチャットに新着メッセージがあると通知します。",
+    quietNotifications: "静かな通知",
+    quietNotificationsCopy: "通知をやさしい雰囲気に保ち、注意を引きすぎないようにします。",
+    locationDiscovery: "場所と発見",
+    useApproximateLocation: "おおよその位置を使う",
+    useApproximateLocationCopy: "正確な位置を共有せずに近くの選択肢を表示します。",
+    showDistanceInMeetups: "ミートアップで距離を表示",
+    showDistanceInMeetupsCopy: "イベントやミートアップのカードにおおよその距離を表示します。",
+    safetyContact: "安全と連絡",
+    allowMessageRequests: "メッセージリクエストを許可",
+    allowMessageRequestsCopy: "同じミートアップに参加する前でもメッセージできるようにします。",
+    safetyCheckIns: "安全チェックイン",
+    safetyCheckInsCopy: "参加したミートアップの前後にやさしい確認を表示します。",
+  },
+  Korean: {
+    appearance: "모양",
+    colorPalette: "색상 팔레트",
+    colorPaletteCopy: "원하는 분위기와 강조 색상을 선택하세요.",
+    notifications: "알림",
+    meetupReminders: "모임 알림",
+    meetupRemindersCopy: "참여한 모임 전에 알림을 받아요.",
+    weatherAlerts: "날씨 알림",
+    weatherAlertsCopy: "날씨가 야외 계획에 영향을 줄 수 있을 때 업데이트를 받아요.",
+    chatNotifications: "채팅 알림",
+    chatNotificationsCopy: "모임 그룹 채팅에 새 메시지가 있으면 알려줘요.",
+    quietNotifications: "조용한 알림",
+    quietNotificationsCopy: "알림을 부드럽게 유지하고 부담스러운 알림을 피합니다.",
+    locationDiscovery: "위치와 탐색",
+    useApproximateLocation: "대략적인 위치 사용",
+    useApproximateLocationCopy: "정확한 위치를 공유하지 않고 가까운 옵션을 보여줘요.",
+    showDistanceInMeetups: "모임에서 거리 표시",
+    showDistanceInMeetupsCopy: "이벤트와 모임 카드에 대략적인 거리를 표시해요.",
+    safetyContact: "안전과 연락",
+    allowMessageRequests: "메시지 요청 허용",
+    allowMessageRequestsCopy: "같은 모임에 참여하기 전에도 메시지할 수 있게 해요.",
+    safetyCheckIns: "안전 체크인",
+    safetyCheckInsCopy: "참여한 모임 주변에 부드러운 확인 알림을 켜요.",
+  },
+  Persian: {
+    appearance: "ظاهر",
+    colorPalette: "پالت رنگ",
+    colorPaletteCopy: "حال‌وهوا و رنگ‌های برجسته‌ای را که ترجیح می‌دهید انتخاب کنید.",
+    notifications: "اعلان‌ها",
+    meetupReminders: "یادآوری دیدارها",
+    meetupRemindersCopy: "پیش از دیدارهایی که به آن‌ها پیوسته‌اید یادآوری بگیرید.",
+    weatherAlerts: "هشدارهای هوا",
+    weatherAlertsCopy: "وقتی هوا ممکن است روی برنامه بیرونی اثر بگذارد، به‌روزرسانی بگیرید.",
+    chatNotifications: "اعلان‌های چت",
+    chatNotificationsCopy: "وقتی در چت‌های گروهی دیدار پیام تازه هست به من اطلاع بده.",
+    quietNotifications: "اعلان‌های آرام",
+    quietNotificationsCopy: "لحن اعلان‌ها را ملایم نگه دارید و از هشدارهای پرتنش دوری کنید.",
+    locationDiscovery: "مکان و کشف",
+    useApproximateLocation: "استفاده از مکان تقریبی",
+    useApproximateLocationCopy: "گزینه‌های نزدیک را بدون اشتراک‌گذاری مکان دقیق نشان بده.",
+    showDistanceInMeetups: "نمایش فاصله در دیدارها",
+    showDistanceInMeetupsCopy: "فاصله تقریبی را روی کارت‌های رویداد و دیدار نشان بده.",
+    safetyContact: "ایمنی و تماس",
+    allowMessageRequests: "اجازه درخواست پیام",
+    allowMessageRequestsCopy: "اجازه بده افراد پیش از پیوستن به همان دیدار پیام بدهند.",
+    safetyCheckIns: "بررسی‌های ایمنی",
+    safetyCheckInsCopy: "یادآوری‌های ملایم بررسی را پیرامون دیدارهای پیوسته فعال کن.",
+  },
+  Urdu: {
+    appearance: "ظاہری شکل",
+    colorPalette: "رنگوں کی پیلیٹ",
+    colorPaletteCopy: "اپنی پسند کا ماحول اور نمایاں رنگ منتخب کریں۔",
+    notifications: "اطلاعات",
+    meetupReminders: "میٹ اپ یاددہانیاں",
+    meetupRemindersCopy: "جن میٹ اپس میں آپ شامل ہیں، ان سے پہلے یاددہانی پائیں۔",
+    weatherAlerts: "موسم کی اطلاعات",
+    weatherAlertsCopy: "جب موسم کسی بیرونی منصوبے کو متاثر کر سکتا ہو تو اپ ڈیٹس پائیں۔",
+    chatNotifications: "چیٹ اطلاعات",
+    chatNotificationsCopy: "میٹ اپ گروپ چیٹس میں نئے پیغامات پر مجھے بتائیں۔",
+    quietNotifications: "خاموش اطلاعات",
+    quietNotificationsCopy: "اطلاعات کو نرم رکھیں اور زیادہ توجہ کھینچنے والی الرٹس سے بچیں۔",
+    locationDiscovery: "مقام اور دریافت",
+    useApproximateLocation: "تقریبی مقام استعمال کریں",
+    useApproximateLocationCopy: "درست مقام شیئر کیے بغیر قریبی اختیارات دکھائیں۔",
+    showDistanceInMeetups: "میٹ اپس میں فاصلہ دکھائیں",
+    showDistanceInMeetupsCopy: "ایونٹ اور میٹ اپ کارڈز پر اندازاً فاصلہ دکھائیں۔",
+    safetyContact: "حفاظت اور رابطہ",
+    allowMessageRequests: "پیغام کی درخواستیں اجازت دیں",
+    allowMessageRequestsCopy: "لوگوں کو ایک ہی میٹ اپ میں شامل ہونے سے پہلے پیغام بھیجنے دیں۔",
+    safetyCheckIns: "حفاظتی چیک اِن",
+    safetyCheckInsCopy: "شامل میٹ اپس کے آس پاس نرم چیک اِن یاددہانیاں فعال کریں۔",
+  },
+  Bengali: {
+    appearance: "দেখনদারি",
+    colorPalette: "রঙের প্যালেট",
+    colorPaletteCopy: "আপনার পছন্দের মুড ও অ্যাকসেন্ট রঙ বেছে নিন।",
+    notifications: "বিজ্ঞপ্তি",
+    meetupReminders: "মিটআপ রিমাইন্ডার",
+    meetupRemindersCopy: "আপনি যেসব মিটআপে যোগ দিয়েছেন তার আগে রিমাইন্ডার পান।",
+    weatherAlerts: "আবহাওয়া সতর্কতা",
+    weatherAlertsCopy: "আবহাওয়া কোনো বাইরের পরিকল্পনায় প্রভাব ফেলতে পারে হলে আপডেট পান।",
+    chatNotifications: "চ্যাট বিজ্ঞপ্তি",
+    chatNotificationsCopy: "মিটআপ গ্রুপ চ্যাটে নতুন বার্তা এলে আমাকে জানান।",
+    quietNotifications: "শান্ত বিজ্ঞপ্তি",
+    quietNotificationsCopy: "বিজ্ঞপ্তির সুর নরম রাখুন এবং বেশি মনোযোগ-টানা সতর্কতা এড়ান।",
+    locationDiscovery: "অবস্থান ও আবিষ্কার",
+    useApproximateLocation: "আনুমানিক অবস্থান ব্যবহার করুন",
+    useApproximateLocationCopy: "নির্দিষ্ট অবস্থান শেয়ার না করে কাছাকাছি বিকল্প দেখান।",
+    showDistanceInMeetups: "মিটআপে দূরত্ব দেখান",
+    showDistanceInMeetupsCopy: "ইভেন্ট ও মিটআপ কার্ডে আনুমানিক দূরত্ব দেখান।",
+    safetyContact: "নিরাপত্তা ও যোগাযোগ",
+    allowMessageRequests: "বার্তার অনুরোধ অনুমতি দিন",
+    allowMessageRequestsCopy: "একই মিটআপে যোগ দেওয়ার আগে মানুষকে বার্তা পাঠাতে দিন।",
+    safetyCheckIns: "নিরাপত্তা চেক-ইন",
+    safetyCheckInsCopy: "যোগ দেওয়া মিটআপ ঘিরে নরম চেক-ইন রিমাইন্ডার চালু করুন।",
+  },
+  Filipino: {
+    appearance: "Hitsura",
+    colorPalette: "Paleta ng kulay",
+    colorPaletteCopy: "Piliin ang mood at accent colors na mas komportable sa iyo.",
+    notifications: "Mga notification",
+    meetupReminders: "Meetup reminders",
+    meetupRemindersCopy: "Makatanggap ng paalala bago ang meetups na sinalihan mo.",
+    weatherAlerts: "Weather alerts",
+    weatherAlertsCopy: "Makatanggap ng update kapag maaaring maapektuhan ng panahon ang outdoor plan.",
+    chatNotifications: "Chat notifications",
+    chatNotificationsCopy: "I-notify ako kapag may bagong mensahe sa meetup group chats.",
+    quietNotifications: "Tahimik na notifications",
+    quietNotificationsCopy: "Panatilihing banayad ang tono at iwasan ang alerts na masyadong agaw-pansin.",
+    locationDiscovery: "Lokasyon at discovery",
+    useApproximateLocation: "Gamitin ang tinatayang lokasyon",
+    useApproximateLocationCopy: "Magpakita ng malapit na options nang hindi ibinabahagi ang eksaktong lokasyon.",
+    showDistanceInMeetups: "Ipakita ang distance sa meetups",
+    showDistanceInMeetupsCopy: "Ipakita ang tinatayang distance sa event at meetup cards.",
+    safetyContact: "Safety at contact",
+    allowMessageRequests: "Payagan ang message requests",
+    allowMessageRequestsCopy: "Hayaan ang iba na mag-message bago kayo sumali sa parehong meetup.",
+    safetyCheckIns: "Safety check-ins",
+    safetyCheckInsCopy: "I-on ang banayad na check-in prompts sa paligid ng sinalihang meetups.",
+  },
+  Indonesian: {
+    appearance: "Tampilan",
+    colorPalette: "Palet warna",
+    colorPaletteCopy: "Pilih suasana dan warna aksen yang Anda sukai.",
+    notifications: "Notifikasi",
+    meetupReminders: "Pengingat meetup",
+    meetupRemindersCopy: "Dapatkan pengingat sebelum meetup yang Anda ikuti.",
+    weatherAlerts: "Peringatan cuaca",
+    weatherAlertsCopy: "Terima pembaruan saat cuaca dapat memengaruhi rencana luar ruangan.",
+    chatNotifications: "Notifikasi chat",
+    chatNotificationsCopy: "Beri tahu saya saat chat grup meetup memiliki pesan baru.",
+    quietNotifications: "Notifikasi tenang",
+    quietNotificationsCopy: "Jaga nada notifikasi tetap lembut dan hindari peringatan yang terlalu menarik perhatian.",
+    locationDiscovery: "Lokasi & penemuan",
+    useApproximateLocation: "Gunakan lokasi perkiraan",
+    useApproximateLocationCopy: "Tampilkan opsi terdekat tanpa membagikan lokasi tepat.",
+    showDistanceInMeetups: "Tampilkan jarak di meetup",
+    showDistanceInMeetupsCopy: "Tampilkan perkiraan jarak di kartu event dan meetup.",
+    safetyContact: "Keamanan & kontak",
+    allowMessageRequests: "Izinkan permintaan pesan",
+    allowMessageRequestsCopy: "Biarkan orang mengirim pesan sebelum bergabung di meetup yang sama.",
+    safetyCheckIns: "Check-in keamanan",
+    safetyCheckInsCopy: "Aktifkan pengingat check-in lembut di sekitar meetup yang diikuti.",
+  },
+  Malay: {
+    appearance: "Penampilan",
+    colorPalette: "Palet warna",
+    colorPaletteCopy: "Pilih suasana dan warna aksen yang anda suka.",
+    notifications: "Pemberitahuan",
+    meetupReminders: "Peringatan meetup",
+    meetupRemindersCopy: "Terima peringatan sebelum meetup yang anda sertai.",
+    weatherAlerts: "Amaran cuaca",
+    weatherAlertsCopy: "Terima kemas kini apabila cuaca mungkin menjejaskan rancangan luar.",
+    chatNotifications: "Pemberitahuan chat",
+    chatNotificationsCopy: "Beritahu saya apabila chat kumpulan meetup ada mesej baharu.",
+    quietNotifications: "Pemberitahuan lembut",
+    quietNotificationsCopy: "Kekalkan nada pemberitahuan yang lembut dan elakkan amaran yang terlalu menarik perhatian.",
+    locationDiscovery: "Lokasi & penemuan",
+    useApproximateLocation: "Guna lokasi anggaran",
+    useApproximateLocationCopy: "Tunjukkan pilihan berdekatan tanpa berkongsi lokasi tepat.",
+    showDistanceInMeetups: "Tunjukkan jarak dalam meetup",
+    showDistanceInMeetupsCopy: "Tunjukkan jarak anggaran pada kad acara dan meetup.",
+    safetyContact: "Keselamatan & hubungan",
+    allowMessageRequests: "Benarkan permintaan mesej",
+    allowMessageRequestsCopy: "Benarkan orang menghantar mesej sebelum menyertai meetup yang sama.",
+    safetyCheckIns: "Daftar masuk keselamatan",
+    safetyCheckInsCopy: "Aktifkan peringatan daftar masuk lembut sekitar meetup yang disertai.",
+  },
+  Thai: {
+    appearance: "รูปลักษณ์",
+    colorPalette: "พาเลตสี",
+    colorPaletteCopy: "เลือกบรรยากาศและสีเน้นที่คุณชอบ",
+    notifications: "การแจ้งเตือน",
+    meetupReminders: "เตือนมีตอัป",
+    meetupRemindersCopy: "รับการเตือนก่อนมีตอัปที่คุณเข้าร่วม",
+    weatherAlerts: "แจ้งเตือนสภาพอากาศ",
+    weatherAlertsCopy: "รับอัปเดตเมื่อสภาพอากาศอาจส่งผลต่อแผนกลางแจ้ง",
+    chatNotifications: "แจ้งเตือนแชต",
+    chatNotificationsCopy: "แจ้งฉันเมื่อแชตกลุ่มมีตอัปมีข้อความใหม่",
+    quietNotifications: "การแจ้งเตือนแบบนุ่มนวล",
+    quietNotificationsCopy: "คงโทนการแจ้งเตือนให้สุภาพและไม่ดึงความสนใจเกินไป",
+    locationDiscovery: "ตำแหน่งและการค้นพบ",
+    useApproximateLocation: "ใช้ตำแหน่งโดยประมาณ",
+    useApproximateLocationCopy: "แสดงตัวเลือกใกล้เคียงโดยไม่แชร์ตำแหน่งที่แม่นยำ",
+    showDistanceInMeetups: "แสดงระยะทางในมีตอัป",
+    showDistanceInMeetupsCopy: "แสดงระยะทางโดยประมาณบนการ์ดกิจกรรมและมีตอัป",
+    safetyContact: "ความปลอดภัยและการติดต่อ",
+    allowMessageRequests: "อนุญาตคำขอส่งข้อความ",
+    allowMessageRequestsCopy: "ให้ผู้อื่นส่งข้อความก่อนเข้าร่วมมีตอัปเดียวกันได้",
+    safetyCheckIns: "เช็กอินความปลอดภัย",
+    safetyCheckInsCopy: "เปิดการเตือนเช็กอินแบบนุ่มนวลรอบมีตอัปที่เข้าร่วม",
+  },
+  Vietnamese: {
+    appearance: "Giao diện",
+    colorPalette: "Bảng màu",
+    colorPaletteCopy: "Chọn tâm trạng và màu nhấn bạn thích.",
+    notifications: "Thông báo",
+    meetupReminders: "Nhắc meetup",
+    meetupRemindersCopy: "Nhận nhắc nhở trước các meetup bạn đã tham gia.",
+    weatherAlerts: "Cảnh báo thời tiết",
+    weatherAlertsCopy: "Nhận cập nhật khi thời tiết có thể ảnh hưởng đến kế hoạch ngoài trời.",
+    chatNotifications: "Thông báo chat",
+    chatNotificationsCopy: "Báo cho tôi khi chat nhóm meetup có tin nhắn mới.",
+    quietNotifications: "Thông báo nhẹ nhàng",
+    quietNotificationsCopy: "Giữ thông báo dịu nhẹ và tránh cảnh báo gây chú ý quá mức.",
+    locationDiscovery: "Vị trí & khám phá",
+    useApproximateLocation: "Dùng vị trí gần đúng",
+    useApproximateLocationCopy: "Hiển thị lựa chọn gần bạn mà không chia sẻ vị trí chính xác.",
+    showDistanceInMeetups: "Hiển thị khoảng cách trong meetup",
+    showDistanceInMeetupsCopy: "Hiển thị khoảng cách gần đúng trên thẻ sự kiện và meetup.",
+    safetyContact: "An toàn & liên hệ",
+    allowMessageRequests: "Cho phép yêu cầu tin nhắn",
+    allowMessageRequestsCopy: "Cho phép người khác nhắn trước khi cùng tham gia một meetup.",
+    safetyCheckIns: "Check-in an toàn",
+    safetyCheckInsCopy: "Bật nhắc nhở check-in nhẹ nhàng quanh các meetup đã tham gia.",
+  },
+  Russian: {
+    appearance: "Внешний вид",
+    colorPalette: "Цветовая палитра",
+    colorPaletteCopy: "Выберите настроение и акцентные цвета, которые вам подходят.",
+    notifications: "Уведомления",
+    meetupReminders: "Напоминания о встречах",
+    meetupRemindersCopy: "Получайте напоминания перед встречами, к которым вы присоединились.",
+    weatherAlerts: "Погодные уведомления",
+    weatherAlertsCopy: "Получайте обновления, если погода может повлиять на план на улице.",
+    chatNotifications: "Уведомления чата",
+    chatNotificationsCopy: "Сообщать о новых сообщениях в групповых чатах встреч.",
+    quietNotifications: "Тихие уведомления",
+    quietNotificationsCopy: "Сохраняйте мягкий тон уведомлений без резких сигналов.",
+    locationDiscovery: "Локация и поиск",
+    useApproximateLocation: "Использовать примерное местоположение",
+    useApproximateLocationCopy: "Показывать варианты рядом без точного местоположения.",
+    showDistanceInMeetups: "Показывать расстояние во встречах",
+    showDistanceInMeetupsCopy: "Показывать примерное расстояние на карточках событий и встреч.",
+    safetyContact: "Безопасность и контакт",
+    allowMessageRequests: "Разрешить запросы сообщений",
+    allowMessageRequestsCopy: "Позволить людям писать до присоединения к одной встрече.",
+    safetyCheckIns: "Проверки безопасности",
+    safetyCheckInsCopy: "Включить мягкие напоминания вокруг присоединённых встреч.",
+  },
+  Spanish: {
+    appearance: "Apariencia",
+    colorPalette: "Paleta de colores",
+    colorPaletteCopy: "Elige el ambiente y los colores de acento que prefieres.",
+    notifications: "Notificaciones",
+    meetupReminders: "Recordatorios de quedadas",
+    meetupRemindersCopy: "Recibe recordatorios antes de las quedadas a las que te uniste.",
+    weatherAlerts: "Alertas del clima",
+    weatherAlertsCopy: "Recibe actualizaciones cuando el clima pueda afectar un plan al aire libre.",
+    chatNotifications: "Notificaciones de chat",
+    chatNotificationsCopy: "Avísame cuando los chats de quedadas tengan mensajes nuevos.",
+    quietNotifications: "Notificaciones tranquilas",
+    quietNotificationsCopy: "Mantén un tono suave y evita alertas que llamen demasiado la atención.",
+    locationDiscovery: "Ubicación y descubrimiento",
+    useApproximateLocation: "Usar ubicación aproximada",
+    useApproximateLocationCopy: "Muestra opciones cercanas sin compartir una ubicación precisa.",
+    showDistanceInMeetups: "Mostrar distancia en quedadas",
+    showDistanceInMeetupsCopy: "Muestra la distancia aproximada en tarjetas de eventos y quedadas.",
+    safetyContact: "Seguridad y contacto",
+    allowMessageRequests: "Permitir solicitudes de mensaje",
+    allowMessageRequestsCopy: "Permite mensajes antes de unirse a la misma quedada.",
+    safetyCheckIns: "Controles de seguridad",
+    safetyCheckInsCopy: "Activa recordatorios suaves alrededor de las quedadas unidas.",
+  },
+  Danish: {
+    appearance: "Udseende",
+    colorPalette: "Farvepalet",
+    colorPaletteCopy: "Vælg den stemning og de accentfarver, du foretrækker.",
+    notifications: "Notifikationer",
+    meetupReminders: "Meetup-påmindelser",
+    meetupRemindersCopy: "Få påmindelser før meetups, du har tilmeldt dig.",
+    weatherAlerts: "Vejrvarsler",
+    weatherAlertsCopy: "Få opdateringer, når vejret kan påvirke en udendørs plan.",
+    chatNotifications: "Chatnotifikationer",
+    chatNotificationsCopy: "Giv mig besked, når meetup-gruppechats har nye beskeder.",
+    quietNotifications: "Stille notifikationer",
+    quietNotificationsCopy: "Hold notifikationerne blide og undgå opmærksomhedstunge alarmer.",
+    locationDiscovery: "Placering og opdagelse",
+    useApproximateLocation: "Brug omtrentlig placering",
+    useApproximateLocationCopy: "Vis muligheder i nærheden uden at dele en præcis placering.",
+    showDistanceInMeetups: "Vis afstand i meetups",
+    showDistanceInMeetupsCopy: "Vis omtrentlig afstand på event- og meetupkort.",
+    safetyContact: "Sikkerhed og kontakt",
+    allowMessageRequests: "Tillad beskedanmodninger",
+    allowMessageRequestsCopy: "Lad personer sende beskeder, før I deltager i samme meetup.",
+    safetyCheckIns: "Sikkerheds-check-ins",
+    safetyCheckInsCopy: "Slå blide check-in-påmindelser til omkring dine meetups.",
+  },
+  Dutch: {
+    appearance: "Weergave",
+    colorPalette: "Kleurenpalet",
+    colorPaletteCopy: "Kies de sfeer en accentkleuren die je prettig vindt.",
+    notifications: "Meldingen",
+    meetupReminders: "Meetup-herinneringen",
+    meetupRemindersCopy: "Ontvang herinneringen voor meetups waaraan je deelneemt.",
+    weatherAlerts: "Weerwaarschuwingen",
+    weatherAlertsCopy: "Ontvang updates wanneer het weer een buitenplan kan beïnvloeden.",
+    chatNotifications: "Chatmeldingen",
+    chatNotificationsCopy: "Laat het me weten wanneer meetup-groepschats nieuwe berichten hebben.",
+    quietNotifications: "Rustige meldingen",
+    quietNotificationsCopy: "Houd meldingen zacht en vermijd aandachttrekkende waarschuwingen.",
+    locationDiscovery: "Locatie en ontdekken",
+    useApproximateLocation: "Gebruik globale locatie",
+    useApproximateLocationCopy: "Toon opties in de buurt zonder een exacte locatie te delen.",
+    showDistanceInMeetups: "Afstand tonen in meetups",
+    showDistanceInMeetupsCopy: "Toon geschatte afstand op event- en meetupkaarten.",
+    safetyContact: "Veiligheid en contact",
+    allowMessageRequests: "Berichtverzoeken toestaan",
+    allowMessageRequestsCopy: "Laat mensen berichten sturen voordat jullie bij dezelfde meetup zitten.",
+    safetyCheckIns: "Veiligheidscheck-ins",
+    safetyCheckInsCopy: "Schakel zachte check-in prompts in rond meetups waaraan je meedoet.",
+  },
+  Finnish: {
+    appearance: "Ulkoasu",
+    colorPalette: "Väripaletti",
+    colorPaletteCopy: "Valitse tunnelma ja korostusvärit, jotka tuntuvat sinusta hyviltä.",
+    notifications: "Ilmoitukset",
+    meetupReminders: "Tapaamismuistutukset",
+    meetupRemindersCopy: "Saat muistutuksia ennen tapaamisia, joihin olet liittynyt.",
+    weatherAlerts: "Sääilmoitukset",
+    weatherAlertsCopy: "Saat päivityksiä, kun sää voi vaikuttaa ulkosuunnitelmaan.",
+    chatNotifications: "Chat-ilmoitukset",
+    chatNotificationsCopy: "Ilmoita, kun tapaamisen ryhmächatissa on uusia viestejä.",
+    quietNotifications: "Rauhalliset ilmoitukset",
+    quietNotificationsCopy: "Pidä ilmoitukset lempeinä ja vältä huomiota vaativia hälytyksiä.",
+    locationDiscovery: "Sijainti ja löytäminen",
+    useApproximateLocation: "Käytä likimääräistä sijaintia",
+    useApproximateLocationCopy: "Näytä lähellä olevia vaihtoehtoja jakamatta tarkkaa sijaintia.",
+    showDistanceInMeetups: "Näytä etäisyys tapaamisissa",
+    showDistanceInMeetupsCopy: "Näytä likimääräinen etäisyys tapahtuma- ja tapaamiskorteissa.",
+    safetyContact: "Turvallisuus ja yhteydenpito",
+    allowMessageRequests: "Salli viestipyynnöt",
+    allowMessageRequestsCopy: "Anna ihmisten lähettää viesti ennen samaan tapaamiseen liittymistä.",
+    safetyCheckIns: "Turvallisuustarkistukset",
+    safetyCheckInsCopy: "Ota käyttöön lempeät tarkistusmuistutukset liittymiesi tapaamisten ympärillä.",
+  },
+  Greek: {
+    appearance: "Εμφάνιση",
+    colorPalette: "Παλέτα χρωμάτων",
+    colorPaletteCopy: "Επιλέξτε τη διάθεση και τα χρώματα έμφασης που προτιμάτε.",
+    notifications: "Ειδοποιήσεις",
+    meetupReminders: "Υπενθυμίσεις συναντήσεων",
+    meetupRemindersCopy: "Λάβετε υπενθυμίσεις πριν από συναντήσεις στις οποίες έχετε συμμετάσχει.",
+    weatherAlerts: "Ειδοποιήσεις καιρού",
+    weatherAlertsCopy: "Λάβετε ενημερώσεις όταν ο καιρός μπορεί να επηρεάσει ένα εξωτερικό σχέδιο.",
+    chatNotifications: "Ειδοποιήσεις συνομιλίας",
+    chatNotificationsCopy: "Ειδοποιήστε με όταν οι ομαδικές συνομιλίες συναντήσεων έχουν νέα μηνύματα.",
+    quietNotifications: "Ήρεμες ειδοποιήσεις",
+    quietNotificationsCopy: "Κρατήστε τον τόνο των ειδοποιήσεων ήπιο και χωρίς έντονες ειδοποιήσεις.",
+    locationDiscovery: "Τοποθεσία και ανακάλυψη",
+    useApproximateLocation: "Χρήση κατά προσέγγιση τοποθεσίας",
+    useApproximateLocationCopy: "Εμφανίστε κοντινές επιλογές χωρίς κοινοποίηση ακριβούς τοποθεσίας.",
+    showDistanceInMeetups: "Εμφάνιση απόστασης στις συναντήσεις",
+    showDistanceInMeetupsCopy: "Εμφανίστε κατά προσέγγιση απόσταση σε κάρτες εκδηλώσεων και συναντήσεων.",
+    safetyContact: "Ασφάλεια και επικοινωνία",
+    allowMessageRequests: "Να επιτρέπονται αιτήματα μηνυμάτων",
+    allowMessageRequestsCopy: "Επιτρέψτε σε άτομα να στείλουν μήνυμα πριν μπείτε στην ίδια συνάντηση.",
+    safetyCheckIns: "Έλεγχοι ασφαλείας",
+    safetyCheckInsCopy: "Ενεργοποιήστε ήπιες υπενθυμίσεις ελέγχου γύρω από τις συναντήσεις σας.",
+  },
+  Norwegian: {
+    appearance: "Utseende",
+    colorPalette: "Fargepalett",
+    colorPaletteCopy: "Velg stemningen og aksentfargene du foretrekker.",
+    notifications: "Varsler",
+    meetupReminders: "Meetup-påminnelser",
+    meetupRemindersCopy: "Få påminnelser før meetups du har blitt med på.",
+    weatherAlerts: "Værvarsler",
+    weatherAlertsCopy: "Motta oppdateringer når været kan påvirke en utendørs plan.",
+    chatNotifications: "Chatvarsler",
+    chatNotificationsCopy: "Varsle meg når meetup-gruppechatter har nye meldinger.",
+    quietNotifications: "Stille varsler",
+    quietNotificationsCopy: "Hold varslene milde og unngå oppmerksomhetstunge varsler.",
+    locationDiscovery: "Plassering og oppdagelse",
+    useApproximateLocation: "Bruk omtrentlig plassering",
+    useApproximateLocationCopy: "Vis alternativer i nærheten uten å dele nøyaktig plassering.",
+    showDistanceInMeetups: "Vis avstand i meetups",
+    showDistanceInMeetupsCopy: "Vis omtrentlig avstand på event- og meetupkort.",
+    safetyContact: "Sikkerhet og kontakt",
+    allowMessageRequests: "Tillat meldingsforespørsler",
+    allowMessageRequestsCopy: "La folk sende melding før dere blir med på samme meetup.",
+    safetyCheckIns: "Sikkerhetsinnsjekker",
+    safetyCheckInsCopy: "Aktiver milde innsjekkingspåminnelser rundt meetups du har blitt med på.",
+  },
+  Polish: {
+    appearance: "Wygląd",
+    colorPalette: "Paleta kolorów",
+    colorPaletteCopy: "Wybierz nastrój i kolory akcentu, które preferujesz.",
+    notifications: "Powiadomienia",
+    meetupReminders: "Przypomnienia o spotkaniach",
+    meetupRemindersCopy: "Otrzymuj przypomnienia przed spotkaniami, do których dołączysz.",
+    weatherAlerts: "Alerty pogodowe",
+    weatherAlertsCopy: "Otrzymuj aktualizacje, gdy pogoda może wpłynąć na plan na zewnątrz.",
+    chatNotifications: "Powiadomienia czatu",
+    chatNotificationsCopy: "Powiadom mnie, gdy czaty grupowe spotkań mają nowe wiadomości.",
+    quietNotifications: "Ciche powiadomienia",
+    quietNotificationsCopy: "Zachowaj łagodny ton powiadomień i unikaj natarczywych alertów.",
+    locationDiscovery: "Lokalizacja i odkrywanie",
+    useApproximateLocation: "Użyj przybliżonej lokalizacji",
+    useApproximateLocationCopy: "Pokaż opcje w pobliżu bez udostępniania dokładnej lokalizacji.",
+    showDistanceInMeetups: "Pokaż odległość w spotkaniach",
+    showDistanceInMeetupsCopy: "Wyświetl przybliżoną odległość na kartach wydarzeń i spotkań.",
+    safetyContact: "Bezpieczeństwo i kontakt",
+    allowMessageRequests: "Zezwalaj na prośby o wiadomość",
+    allowMessageRequestsCopy: "Pozwól ludziom pisać przed dołączeniem do tego samego spotkania.",
+    safetyCheckIns: "Kontrole bezpieczeństwa",
+    safetyCheckInsCopy: "Włącz łagodne przypomnienia kontrolne wokół spotkań, do których dołączasz.",
+  },
+  Portuguese: {
+    appearance: "Aparência",
+    colorPalette: "Paleta de cores",
+    colorPaletteCopy: "Escolha o ambiente e as cores de destaque que prefere.",
+    notifications: "Notificações",
+    meetupReminders: "Lembretes de encontros",
+    meetupRemindersCopy: "Receba lembretes antes dos encontros a que se juntou.",
+    weatherAlerts: "Alertas meteorológicos",
+    weatherAlertsCopy: "Receba atualizações quando o tempo puder afetar um plano ao ar livre.",
+    chatNotifications: "Notificações de chat",
+    chatNotificationsCopy: "Avise-me quando os chats de grupo dos encontros tiverem novas mensagens.",
+    quietNotifications: "Notificações discretas",
+    quietNotificationsCopy: "Mantenha as notificações suaves e evite alertas que chamem muita atenção.",
+    locationDiscovery: "Localização e descoberta",
+    useApproximateLocation: "Usar localização aproximada",
+    useApproximateLocationCopy: "Mostre opções próximas sem partilhar uma localização precisa.",
+    showDistanceInMeetups: "Mostrar distância nos encontros",
+    showDistanceInMeetupsCopy: "Mostre distância aproximada nos cartões de eventos e encontros.",
+    safetyContact: "Segurança e contacto",
+    allowMessageRequests: "Permitir pedidos de mensagem",
+    allowMessageRequestsCopy: "Permita mensagens antes de se juntarem ao mesmo encontro.",
+    safetyCheckIns: "Check-ins de segurança",
+    safetyCheckInsCopy: "Ative lembretes suaves de check-in em torno dos encontros aderidos.",
+  },
+  Romanian: {
+    appearance: "Aspect",
+    colorPalette: "Paletă de culori",
+    colorPaletteCopy: "Alege starea și culorile de accent pe care le preferi.",
+    notifications: "Notificări",
+    meetupReminders: "Mementouri pentru întâlniri",
+    meetupRemindersCopy: "Primește mementouri înaintea întâlnirilor la care te-ai alăturat.",
+    weatherAlerts: "Alerte meteo",
+    weatherAlertsCopy: "Primește actualizări când vremea poate afecta un plan în aer liber.",
+    chatNotifications: "Notificări chat",
+    chatNotificationsCopy: "Anunță-mă când chaturile de grup ale întâlnirilor au mesaje noi.",
+    quietNotifications: "Notificări liniștite",
+    quietNotificationsCopy: "Păstrează notificările blânde și evită alertele prea insistente.",
+    locationDiscovery: "Locație și descoperire",
+    useApproximateLocation: "Folosește locația aproximativă",
+    useApproximateLocationCopy: "Afișează opțiuni apropiate fără a partaja locația exactă.",
+    showDistanceInMeetups: "Arată distanța în întâlniri",
+    showDistanceInMeetupsCopy: "Afișează distanța aproximativă pe cardurile de eveniment și întâlnire.",
+    safetyContact: "Siguranță și contact",
+    allowMessageRequests: "Permite cereri de mesaj",
+    allowMessageRequestsCopy: "Permite oamenilor să trimită mesaj înainte de aceeași întâlnire.",
+    safetyCheckIns: "Verificări de siguranță",
+    safetyCheckInsCopy: "Activează verificări blânde în jurul întâlnirilor la care participi.",
+  },
+  Swedish: {
+    appearance: "Utseende",
+    colorPalette: "Färgpalett",
+    colorPaletteCopy: "Välj den stämning och de accentfärger du föredrar.",
+    notifications: "Aviseringar",
+    meetupReminders: "Meetup-påminnelser",
+    meetupRemindersCopy: "Få påminnelser före meetups du har gått med i.",
+    weatherAlerts: "Vädervarningar",
+    weatherAlertsCopy: "Få uppdateringar när vädret kan påverka en utomhusplan.",
+    chatNotifications: "Chattaviseringar",
+    chatNotificationsCopy: "Meddela mig när meetup-gruppchattar har nya meddelanden.",
+    quietNotifications: "Tysta aviseringar",
+    quietNotificationsCopy: "Håll aviseringstonen mild och undvik uppmärksamhetstunga larm.",
+    locationDiscovery: "Plats och upptäckt",
+    useApproximateLocation: "Använd ungefärlig plats",
+    useApproximateLocationCopy: "Visa alternativ i närheten utan att dela exakt plats.",
+    showDistanceInMeetups: "Visa avstånd i meetups",
+    showDistanceInMeetupsCopy: "Visa ungefärligt avstånd på event- och meetupkort.",
+    safetyContact: "Säkerhet och kontakt",
+    allowMessageRequests: "Tillåt meddelandeförfrågningar",
+    allowMessageRequestsCopy: "Låt personer skicka meddelanden innan ni går med i samma meetup.",
+    safetyCheckIns: "Säkerhetsincheckningar",
+    safetyCheckInsCopy: "Aktivera milda incheckningspåminnelser kring meetups du har gått med i.",
+  },
+  Turkish: {
+    appearance: "Görünüm",
+    colorPalette: "Renk paleti",
+    colorPaletteCopy: "Tercih ettiğiniz ruh halini ve vurgu renklerini seçin.",
+    notifications: "Bildirimler",
+    meetupReminders: "Meetup hatırlatıcıları",
+    meetupRemindersCopy: "Katıldığınız meetuplardan önce hatırlatıcı alın.",
+    weatherAlerts: "Hava durumu uyarıları",
+    weatherAlertsCopy: "Hava durumu açık hava planını etkileyebileceğinde güncellemeler alın.",
+    chatNotifications: "Sohbet bildirimleri",
+    chatNotificationsCopy: "Meetup grup sohbetlerinde yeni mesaj olduğunda bildir.",
+    quietNotifications: "Sessiz bildirimler",
+    quietNotificationsCopy: "Bildirim tonunu nazik tutun ve dikkat çekici uyarılardan kaçının.",
+    locationDiscovery: "Konum ve keşif",
+    useApproximateLocation: "Yaklaşık konum kullan",
+    useApproximateLocationCopy: "Kesin konum paylaşmadan yakındaki seçenekleri göster.",
+    showDistanceInMeetups: "Meetuplarda mesafeyi göster",
+    showDistanceInMeetupsCopy: "Etkinlik ve meetup kartlarında yaklaşık mesafeyi göster.",
+    safetyContact: "Güvenlik ve iletişim",
+    allowMessageRequests: "Mesaj isteklerine izin ver",
+    allowMessageRequestsCopy: "Aynı meetupa katılmadan önce insanların mesaj atmasına izin ver.",
+    safetyCheckIns: "Güvenlik kontrolleri",
+    safetyCheckInsCopy: "Katıldığınız meetuplar etrafında nazik kontrol hatırlatıcıları açın.",
+  },
+  Ukrainian: {
+    appearance: "Вигляд",
+    colorPalette: "Колірна палітра",
+    colorPaletteCopy: "Оберіть настрій і акцентні кольори, які вам підходять.",
+    notifications: "Сповіщення",
+    meetupReminders: "Нагадування про зустрічі",
+    meetupRemindersCopy: "Отримуйте нагадування перед зустрічами, до яких ви приєдналися.",
+    weatherAlerts: "Погодні сповіщення",
+    weatherAlertsCopy: "Отримуйте оновлення, коли погода може вплинути на план надворі.",
+    chatNotifications: "Сповіщення чату",
+    chatNotificationsCopy: "Повідомляти, коли групові чати зустрічей мають нові повідомлення.",
+    quietNotifications: "Тихі сповіщення",
+    quietNotificationsCopy: "Зберігайте м'який тон сповіщень і уникайте нав'язливих сигналів.",
+    locationDiscovery: "Локація і пошук",
+    useApproximateLocation: "Використовувати приблизну локацію",
+    useApproximateLocationCopy: "Показувати варіанти поруч без точної локації.",
+    showDistanceInMeetups: "Показувати відстань у зустрічах",
+    showDistanceInMeetupsCopy: "Показувати приблизну відстань на картках подій і зустрічей.",
+    safetyContact: "Безпека і контакт",
+    allowMessageRequests: "Дозволити запити повідомлень",
+    allowMessageRequestsCopy: "Дозволити людям писати перед приєднанням до тієї самої зустрічі.",
+    safetyCheckIns: "Перевірки безпеки",
+    safetyCheckInsCopy: "Увімкнути м'які нагадування про перевірку навколо ваших зустрічей.",
+  },
+};
+
+const paletteTranslations: Record<string, Record<string, { label: string; description: string }>> = {
+  Arabic: {
+    midnight: { label: "منتصف الليل NSN", description: "كحلي عميق مع لمسات نيلي وفيروزية." },
+    ocean: { label: "هدوء المحيط", description: "درجات الأزرق والأكوا والسماء الناعمة." },
+    forest: { label: "غابة اجتماعية", description: "أسطح خضراء دائمة مع لمسات دافئة وودودة." },
+    sunset: { label: "غروب دافئ", description: "لمسات مرجانية وذهبية لمزاج أكثر نعومة." },
+    lavender: { label: "لافندر هادئ", description: "لمسات بنفسجية ناعمة لشعور اجتماعي أهدأ." },
+  },
+  Chinese: {
+    midnight: { label: "午夜 NSN", description: "深海军蓝，搭配靛蓝和青绿色强调色。" },
+    ocean: { label: "海洋平静", description: "蓝色、水色和柔和天空色。" },
+    forest: { label: "森林社交", description: "常青色界面，带温暖友好的高亮。" },
+    sunset: { label: "温暖日落", description: "珊瑚色和金色强调，带来更柔和的心情。" },
+    lavender: { label: "安静薰衣草", description: "柔和紫色强调，营造更平静的社交感。" },
+  },
+  French: {
+    midnight: { label: "Minuit NSN", description: "Bleu nuit profond avec accents indigo et turquoise." },
+    ocean: { label: "Calme océan", description: "Bleu, aqua et tons doux de ciel." },
+    forest: { label: "Forêt sociale", description: "Surfaces vert forêt avec touches chaleureuses." },
+    sunset: { label: "Coucher chaud", description: "Accents corail et or pour une humeur plus douce." },
+    lavender: { label: "Lavande calme", description: "Accents violets doux pour une sensation sociale plus calme." },
+  },
+  German: {
+    midnight: { label: "Mitternacht NSN", description: "Tiefes Marineblau mit Indigo- und Türkisakzenten." },
+    ocean: { label: "Ozeanruhe", description: "Blau-, Aqua- und weiche Himmelstöne." },
+    forest: { label: "Sozialer Wald", description: "Immergrüne Flächen mit warmen freundlichen Highlights." },
+    sunset: { label: "Warmer Sonnenuntergang", description: "Koralle und Gold für eine weichere Stimmung." },
+    lavender: { label: "Ruhiger Lavendel", description: "Weiche violette Akzente für ein ruhigeres soziales Gefühl." },
+  },
+  Hebrew: {
+    midnight: { label: "חצות NSN", description: "כחול עמוק עם הדגשות אינדיגו וטורקיז." },
+    ocean: { label: "רוגע אוקיינוס", description: "כחול, אקווה וגווני שמיים רכים." },
+    forest: { label: "יער חברתי", description: "משטחי ירוק-עד עם הדגשות חמימות וידידותיות." },
+    sunset: { label: "שקיעה חמימה", description: "הדגשות קורל וזהב לאווירה רכה יותר." },
+    lavender: { label: "לבנדר שקט", description: "הדגשות סגולות רכות לתחושה חברתית רגועה יותר." },
+  },
+  Hindi: {
+    midnight: { label: "मिडनाइट NSN", description: "इंडिगो और टील ऐक्सेंट के साथ गहरा नेवी।" },
+    ocean: { label: "ओशन calm", description: "नीले, एक्वा और नरम आसमानी रंग।" },
+    forest: { label: "फॉरेस्ट सोशल", description: "गरम दोस्ताना हाइलाइट्स के साथ एवरग्रीन सतहें।" },
+    sunset: { label: "सनसेट वार्म", description: "नरम मूड के लिए कोरल और गोल्ड ऐक्सेंट।" },
+    lavender: { label: "लैवेंडर quiet", description: "शांत सामाजिक एहसास के लिए नरम बैंगनी ऐक्सेंट।" },
+  },
+  Italian: {
+    midnight: { label: "Mezzanotte NSN", description: "Blu navy profondo con accenti indaco e teal." },
+    ocean: { label: "Calma oceano", description: "Toni blu, acqua e cielo morbido." },
+    forest: { label: "Foresta sociale", description: "Superfici sempreverdi con accenti caldi e amichevoli." },
+    sunset: { label: "Tramonto caldo", description: "Accenti corallo e oro per un mood più morbido." },
+    lavender: { label: "Lavanda quieta", description: "Accenti viola morbidi per una sensazione sociale più calma." },
+  },
+  Japanese: {
+    midnight: { label: "ミッドナイト NSN", description: "深いネイビーにインディゴとティールのアクセント。" },
+    ocean: { label: "オーシャン Calm", description: "ブルー、アクア、やわらかな空色のトーン。" },
+    forest: { label: "フォレスト Social", description: "常緑の面に温かく親しみやすいハイライト。" },
+    sunset: { label: "サンセット Warm", description: "やわらかな気分のためのコーラルとゴールドのアクセント。" },
+    lavender: { label: "ラベンダー Quiet", description: "より落ち着いた社交感のための淡い紫のアクセント。" },
+  },
+  Korean: {
+    midnight: { label: "미드나이트 NSN", description: "인디고와 틸 포인트가 있는 깊은 네이비." },
+    ocean: { label: "오션 Calm", description: "블루, 아쿠아, 부드러운 하늘색 톤." },
+    forest: { label: "포레스트 Social", description: "따뜻하고 친근한 포인트가 있는 에버그린 표면." },
+    sunset: { label: "선셋 Warm", description: "부드러운 분위기의 코랄과 골드 포인트." },
+    lavender: { label: "라벤더 Quiet", description: "더 차분한 사회적 느낌을 위한 부드러운 보라 포인트." },
+  },
+  Persian: {
+    midnight: { label: "نیمه‌شب NSN", description: "سرمه‌ای عمیق با لمسه‌های نیلی و فیروزه‌ای." },
+    ocean: { label: "آرامش اقیانوس", description: "رنگ‌های آبی، آکوا و آسمانی نرم." },
+    forest: { label: "جنگل اجتماعی", description: "سطح‌های سبز همیشه‌بهار با برجسته‌های گرم و دوستانه." },
+    sunset: { label: "غروب گرم", description: "لمسه‌های مرجانی و طلایی برای حال‌وهوایی نرم‌تر." },
+    lavender: { label: "اسطوخودوس آرام", description: "لمسه‌های بنفش نرم برای حس اجتماعی آرام‌تر." },
+  },
+  Urdu: {
+    midnight: { label: "نصف شب NSN", description: "انڈیگو اور ٹیل جھلکوں کے ساتھ گہرا نیوی۔" },
+    ocean: { label: "سمندری سکون", description: "نیلے، ایکوا اور نرم آسمانی رنگ۔" },
+    forest: { label: "سماجی جنگل", description: "گرم دوستانہ جھلکوں کے ساتھ evergreen سطحیں۔" },
+    sunset: { label: "گرم غروب", description: "نرم مزاج کے لیے کورل اور سنہری جھلکیں۔" },
+    lavender: { label: "پرسکون لیونڈر", description: "زیادہ پرسکون سماجی احساس کے لیے نرم جامنی جھلکیں۔" },
+  },
+  Bengali: {
+    midnight: { label: "মিডনাইট NSN", description: "ইন্ডিগো ও টিল অ্যাকসেন্টসহ গভীর নেভি।" },
+    ocean: { label: "ওশান শান্তি", description: "নীল, অ্যাকোয়া ও নরম আকাশি টোন।" },
+    forest: { label: "সামাজিক বন", description: "উষ্ণ বন্ধুত্বপূর্ণ হাইলাইটসহ চিরসবুজ পৃষ্ঠ।" },
+    sunset: { label: "উষ্ণ সূর্যাস্ত", description: "নরম মুডের জন্য কোরাল ও সোনালি অ্যাকসেন্ট।" },
+    lavender: { label: "শান্ত ল্যাভেন্ডার", description: "আরও শান্ত সামাজিক অনুভূতির জন্য নরম বেগুনি অ্যাকসেন্ট।" },
+  },
+  Filipino: {
+    midnight: { label: "Midnight NSN", description: "Malalim na navy na may indigo at teal accents." },
+    ocean: { label: "Ocean Calm", description: "Blue, aqua at malambot na sky tones." },
+    forest: { label: "Forest Social", description: "Evergreen surfaces na may mainit at friendly highlights." },
+    sunset: { label: "Sunset Warm", description: "Coral at gold accents para sa mas banayad na mood." },
+    lavender: { label: "Lavender Quiet", description: "Malambot na purple accents para sa mas kalmadong social feel." },
+  },
+  Indonesian: {
+    midnight: { label: "Midnight NSN", description: "Navy gelap dengan aksen indigo dan teal." },
+    ocean: { label: "Ocean Calm", description: "Nuansa biru, aqua, dan langit lembut." },
+    forest: { label: "Forest Social", description: "Permukaan hijau abadi dengan sorotan hangat dan ramah." },
+    sunset: { label: "Sunset Warm", description: "Aksen koral dan emas untuk suasana yang lebih lembut." },
+    lavender: { label: "Lavender Quiet", description: "Aksen ungu lembut untuk rasa sosial yang lebih tenang." },
+  },
+  Malay: {
+    midnight: { label: "Midnight NSN", description: "Biru navy gelap dengan aksen indigo dan teal." },
+    ocean: { label: "Ocean Calm", description: "Nada biru, aqua dan langit lembut." },
+    forest: { label: "Forest Social", description: "Permukaan hijau dengan sorotan hangat dan mesra." },
+    sunset: { label: "Sunset Warm", description: "Aksen karang dan emas untuk suasana lebih lembut." },
+    lavender: { label: "Lavender Quiet", description: "Aksen ungu lembut untuk rasa sosial yang lebih tenang." },
+  },
+  Thai: {
+    midnight: { label: "Midnight NSN", description: "น้ำเงินเข้มพร้อมสีเน้นอินดิโกและทีล" },
+    ocean: { label: "Ocean Calm", description: "โทนฟ้า อะควา และสีท้องฟ้านุ่มๆ" },
+    forest: { label: "Forest Social", description: "พื้นผิวเขียวเข้มพร้อมไฮไลต์อบอุ่นและเป็นมิตร" },
+    sunset: { label: "Sunset Warm", description: "สีเน้นคอรัลและทองเพื่ออารมณ์ที่นุ่มขึ้น" },
+    lavender: { label: "Lavender Quiet", description: "สีม่วงนุ่มๆ สำหรับความรู้สึกทางสังคมที่สงบขึ้น" },
+  },
+  Turkish: {
+    midnight: { label: "Gece Yarısı NSN", description: "İndigo ve teal vurgulu derin lacivert." },
+    ocean: { label: "Okyanus Sakinliği", description: "Mavi, aqua ve yumuşak gökyüzü tonları." },
+    forest: { label: "Sosyal Orman", description: "Sıcak ve dostça vurgularla yaprak dökmeyen yüzeyler." },
+    sunset: { label: "Sıcak Gün Batımı", description: "Daha yumuşak bir ruh hali için mercan ve altın vurgular." },
+    lavender: { label: "Sakin Lavanta", description: "Daha sakin bir sosyal his için yumuşak mor vurgular." },
+  },
+  Vietnamese: {
+    midnight: { label: "Midnight NSN", description: "Xanh navy sâu với điểm nhấn chàm và teal." },
+    ocean: { label: "Ocean Calm", description: "Tông xanh, aqua và màu trời dịu." },
+    forest: { label: "Forest Social", description: "Bề mặt xanh lá với điểm nhấn ấm áp và thân thiện." },
+    sunset: { label: "Sunset Warm", description: "Điểm nhấn san hô và vàng cho tâm trạng mềm hơn." },
+    lavender: { label: "Lavender Quiet", description: "Điểm nhấn tím dịu cho cảm giác xã hội bình tĩnh hơn." },
+  },
+  Russian: {
+    midnight: { label: "Полночь NSN", description: "Глубокий тёмно-синий с индиго и бирюзовыми акцентами." },
+    ocean: { label: "Океанское спокойствие", description: "Синие, аква и мягкие небесные тона." },
+    forest: { label: "Лесное общение", description: "Вечнозелёные поверхности с тёплыми дружелюбными акцентами." },
+    sunset: { label: "Тёплый закат", description: "Коралловые и золотые акценты для более мягкого настроения." },
+    lavender: { label: "Тихая лаванда", description: "Мягкие фиолетовые акценты для более спокойного общения." },
+  },
+  Spanish: {
+    midnight: { label: "Medianoche NSN", description: "Azul marino profundo con acentos índigo y turquesa." },
+    ocean: { label: "Calma océano", description: "Tonos azules, aqua y cielo suave." },
+    forest: { label: "Bosque social", description: "Superficies verdes con detalles cálidos y amables." },
+    sunset: { label: "Atardecer cálido", description: "Acentos coral y dorado para un ánimo más suave." },
+    lavender: { label: "Lavanda tranquila", description: "Acentos morados suaves para una sensación social más calmada." },
   },
 };
 
@@ -1204,8 +2158,16 @@ export default function SettingsScreen() {
   const [openDropdown, setOpenDropdown] = useState<"app" | "translation" | "palette" | null>(null);
   const [appLanguageSearch, setAppLanguageSearch] = useState("");
   const [translationLanguageSearch, setTranslationLanguageSearch] = useState("");
+  const [appLanguageRegionBase, setAppLanguageRegionBase] = useState<string | null>(null);
+  const [translationLanguageRegionBase, setTranslationLanguageRegionBase] = useState<string | null>(null);
   const appLanguageBase = getLanguageBase(appLanguage);
-  const copy: SettingsCopy = { ...englishCopy, ...(settingsTranslations[appLanguageBase] ?? {}) };
+  const copy: SettingsCopy = {
+    ...englishCopy,
+    ...(settingsSectionTranslations[appLanguageBase] ?? {}),
+    ...(settingsTranslations[appLanguageBase] ?? {}),
+    ...(regionalEnglishSettings[appLanguage] ?? {}),
+  };
+  const paletteCopy = paletteTranslations[appLanguageBase] ?? {};
   const isRtl = rtlLanguages.has(appLanguageBase);
   const paletteAccent = appPalette.swatches[2];
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
@@ -1214,25 +2176,58 @@ export default function SettingsScreen() {
 
   const languageOptions = [
     { label: "Arabic", nativeName: "العربية", flag: "🇸🇦" },
+    { label: "Arabic (Egypt)", nativeName: "العربية · مصر", flag: "🇪🇬" },
+    { label: "Arabic (Gulf)", nativeName: "العربية · الخليج", flag: "🇦🇪" },
+    { label: "Arabic (Levant)", nativeName: "العربية · الشام", flag: "🇯🇴" },
+    { label: "Arabic (Maghreb)", nativeName: "العربية · المغرب العربي", flag: "🇲🇦" },
+    { label: "Arabic (Modern Standard)", nativeName: "العربية الفصحى", flag: "🇸🇦" },
+    { label: "Afrikaans", nativeName: "Afrikaans", flag: "🇿🇦" },
+    { label: "Albanian", nativeName: "Shqip", flag: "🇦🇱" },
+    { label: "Armenian", nativeName: "Հայերեն", flag: "🇦🇲" },
     { label: "Bengali", nativeName: "বাংলা", flag: "🇧🇩" },
     { label: "Chinese", nativeName: "中文", flag: "🇨🇳" },
+    { label: "Chinese (Cantonese)", nativeName: "粵語 · 香港", flag: "🇭🇰" },
+    { label: "Chinese (Hong Kong)", nativeName: "繁體中文 · 香港", flag: "🇭🇰" },
+    { label: "Chinese (Singapore)", nativeName: "简体中文 · 新加坡", flag: "🇸🇬" },
+    { label: "Chinese (Taiwan)", nativeName: "繁體中文 · 台灣", flag: "🇹🇼" },
+    { label: "Croatian", nativeName: "Hrvatski", flag: "🇭🇷" },
+    { label: "Czech", nativeName: "Čeština", flag: "🇨🇿" },
     { label: "Danish", nativeName: "Dansk", flag: "🇩🇰" },
     { label: "Dutch", nativeName: "Nederlands", flag: "🇳🇱" },
     { label: "English", nativeName: "English", flag: "🇬🇧" },
     { label: "English (AU)", nativeName: "English · Australia", flag: "🇦🇺" },
+    { label: "English (CA)", nativeName: "English · Canada", flag: "🇨🇦" },
+    { label: "English (HK)", nativeName: "English · Hong Kong", flag: "🇭🇰" },
+    { label: "English (IE)", nativeName: "English · Ireland", flag: "🇮🇪" },
+    { label: "English (IN)", nativeName: "English · India", flag: "🇮🇳" },
+    { label: "English (NZ)", nativeName: "English · New Zealand", flag: "🇳🇿" },
+    { label: "English (Scotland)", nativeName: "English · Scotland", flag: "🏴" },
+    { label: "English (SG)", nativeName: "English · Singapore", flag: "🇸🇬" },
     { label: "English (UK)", nativeName: "English · United Kingdom", flag: "🇬🇧" },
     { label: "English (US)", nativeName: "English · United States", flag: "🇺🇸" },
+    { label: "English (ZA)", nativeName: "English · South Africa", flag: "🇿🇦" },
+    { label: "Estonian", nativeName: "Eesti", flag: "🇪🇪" },
     { label: "Filipino", nativeName: "Filipino", flag: "🇵🇭" },
     { label: "Finnish", nativeName: "Suomi", flag: "🇫🇮" },
     { label: "French", nativeName: "Français", flag: "🇫🇷" },
     { label: "French (CA)", nativeName: "Français · Canada", flag: "🇨🇦" },
     { label: "French (FR)", nativeName: "Français · France", flag: "🇫🇷" },
+    { label: "French (CH)", nativeName: "Français · Suisse", flag: "🇨🇭" },
     { label: "German", nativeName: "Deutsch", flag: "🇩🇪" },
+    { label: "German (AT)", nativeName: "Deutsch · Österreich", flag: "🇦🇹" },
+    { label: "German (CH)", nativeName: "Deutsch · Schweiz", flag: "🇨🇭" },
+    { label: "German (LI)", nativeName: "Deutsch · Liechtenstein", flag: "🇱🇮" },
+    { label: "German (LU)", nativeName: "Deutsch · Luxemburg", flag: "🇱🇺" },
     { label: "Greek", nativeName: "Ελληνικά", flag: "🇬🇷" },
     { label: "Hebrew", nativeName: "עברית", flag: "🇮🇱" },
     { label: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳" },
+    { label: "Hungarian", nativeName: "Magyar", flag: "🇭🇺" },
     { label: "Indonesian", nativeName: "Bahasa Indonesia", flag: "🇮🇩" },
     { label: "Italian", nativeName: "Italiano", flag: "🇮🇹" },
+    { label: "Italian (CH)", nativeName: "Italiano · Svizzera", flag: "🇨🇭" },
+    { label: "Latvian", nativeName: "Latviešu", flag: "🇱🇻" },
+    { label: "Lithuanian", nativeName: "Lietuvių", flag: "🇱🇹" },
+    { label: "Luxembourgish", nativeName: "Lëtzebuergesch", flag: "🇱🇺" },
     { label: "Japanese", nativeName: "日本語", flag: "🇯🇵" },
     { label: "Korean", nativeName: "한국어", flag: "🇰🇷" },
     { label: "Malay", nativeName: "Bahasa Melayu", flag: "🇲🇾" },
@@ -1240,9 +2235,14 @@ export default function SettingsScreen() {
     { label: "Persian", nativeName: "فارسی", flag: "🇮🇷" },
     { label: "Polish", nativeName: "Polski", flag: "🇵🇱" },
     { label: "Portuguese", nativeName: "Português", flag: "🇵🇹" },
+    { label: "Portuguese (BR)", nativeName: "Português · Brasil", flag: "🇧🇷" },
+    { label: "Portuguese (PT)", nativeName: "Português · Portugal", flag: "🇵🇹" },
     { label: "Romanian", nativeName: "Română", flag: "🇷🇴" },
     { label: "Russian", nativeName: "Русский", flag: "🇷🇺" },
+    { label: "Slovak", nativeName: "Slovenčina", flag: "🇸🇰" },
     { label: "Spanish", nativeName: "Español", flag: "🇪🇸" },
+    { label: "Spanish (Latin America)", nativeName: "Español · Latinoamérica", flag: "🌎" },
+    { label: "Spanish (Mexico)", nativeName: "Español · México", flag: "🇲🇽" },
     { label: "Swedish", nativeName: "Svenska", flag: "🇸🇪" },
     { label: "Thai", nativeName: "ไทย", flag: "🇹🇭" },
     { label: "Turkish", nativeName: "Türkçe", flag: "🇹🇷" },
@@ -1250,16 +2250,27 @@ export default function SettingsScreen() {
     { label: "Urdu", nativeName: "اردو", flag: "🇵🇰" },
     { label: "Vietnamese", nativeName: "Tiếng Việt", flag: "🇻🇳" },
   ].sort((a, b) => a.label.localeCompare(b.label));
-  const filterLanguages = (query: string) => {
+  const getRegionalLanguages = (baseLanguage: string) =>
+    languageOptions.filter((language) => language.label !== baseLanguage && getLanguageBase(language.label) === baseLanguage);
+  const hasRegionalLanguages = (language: string) => getRegionalLanguages(language).length > 0;
+  const filterLanguages = (query: string, regionBase: string | null) => {
     const normalized = query.trim().toLocaleLowerCase();
-    if (!normalized) return languageOptions;
-    return languageOptions.filter((language) =>
+    const options = regionBase
+      ? getRegionalLanguages(regionBase)
+      : languageOptions.filter((language) => language.label === getLanguageBase(language.label));
+
+    if (!normalized) return options;
+    return options.filter((language) =>
       `${language.label} ${language.nativeName} ${getLanguageBase(language.label)}`.toLocaleLowerCase().includes(normalized)
     );
   };
-  const appLanguageOptions = filterLanguages(appLanguageSearch);
-  const translationLanguageOptions = filterLanguages(translationLanguageSearch);
-  const selectExactLanguage = (value: string, selectLanguage: (language: string) => void) => {
+  const appLanguageOptions = filterLanguages(appLanguageSearch, appLanguageRegionBase);
+  const translationLanguageOptions = filterLanguages(translationLanguageSearch, translationLanguageRegionBase);
+  const selectExactLanguage = (
+    value: string,
+    selectLanguage: (language: string) => void,
+    setRegionBase: (language: string | null) => void
+  ) => {
     const exactMatch = languageOptions.find((language) => {
       const query = value.trim().toLocaleLowerCase();
       return (
@@ -1269,8 +2280,30 @@ export default function SettingsScreen() {
       );
     });
     if (exactMatch) {
+      if (exactMatch.label === getLanguageBase(exactMatch.label) && hasRegionalLanguages(exactMatch.label)) {
+        setRegionBase(exactMatch.label);
+        return;
+      }
+
       selectLanguage(exactMatch.label);
     }
+  };
+  const selectLanguageOption = (
+    language: (typeof languageOptions)[number],
+    selectLanguage: (language: string) => void,
+    setSearch: (value: string) => void,
+    setRegionBase: (language: string | null) => void
+  ) => {
+    if (language.label === getLanguageBase(language.label) && hasRegionalLanguages(language.label)) {
+      setRegionBase(language.label);
+      setSearch("");
+      return;
+    }
+
+    selectLanguage(language.label);
+    setSearch("");
+    setRegionBase(null);
+    setOpenDropdown(null);
   };
 
   const privacyRows = [
@@ -1558,14 +2591,19 @@ export default function SettingsScreen() {
                 ))}
               </View>
               <Text style={[styles.dropdownText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle]}>
-                {appPalette.label}
+                {paletteCopy[appPalette.id]?.label ?? appPalette.label}
               </Text>
               <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
             </TouchableOpacity>
           </View>
 
           {openDropdown === "palette" && (
-            <View style={[styles.dropdownMenu, styles.paletteMenu, isDay && styles.dayDropdownMenu]}>
+            <ScrollView
+              style={[styles.dropdownMenu, styles.paletteMenu, isDay && styles.dayDropdownMenu]}
+              contentContainerStyle={styles.paletteMenuContent}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+            >
               {appPalettes.map((palette) => {
                 const selected = appPalette.id === palette.id;
 
@@ -1585,8 +2623,8 @@ export default function SettingsScreen() {
                           <View key={swatch} style={[styles.paletteSwatch, { backgroundColor: swatch }]} />
                         ))}
                       </View>
-                      <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlText]}>{palette.label}</Text>
-                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{palette.description}</Text>
+                      <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlText]}>{paletteCopy[palette.id]?.label ?? palette.label}</Text>
+                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{paletteCopy[palette.id]?.description ?? palette.description}</Text>
                     </View>
                     <View style={[styles.radioOuter, selected && styles.radioOuterSelected, selected && { borderColor: paletteAccent }]}>
                       {selected && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
@@ -1594,7 +2632,7 @@ export default function SettingsScreen() {
                   </TouchableOpacity>
                 );
               })}
-            </View>
+            </ScrollView>
           )}
         </View>
 
@@ -1613,7 +2651,7 @@ export default function SettingsScreen() {
               accessibilityHint={screenReaderHints ? copy.appLanguageCopy : undefined}
               style={[styles.dropdownButton, isRtl && styles.rtlDropdownButton, isDay && styles.dayDropdownButton, highContrast && styles.highContrastButton]}
             >
-              <Text style={[styles.dropdownText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle]}>
+              <Text style={[styles.dropdownText, styles.languageValueText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlAlignedText]}>
                 {languageOptions.find((language) => language.label === appLanguage)?.flag} {appLanguage}
               </Text>
               <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
@@ -1631,35 +2669,62 @@ export default function SettingsScreen() {
                 value={appLanguageSearch}
                 onChangeText={(value) => {
                   setAppLanguageSearch(value);
-                  selectExactLanguage(value, setAppLanguage);
+                  selectExactLanguage(value, setAppLanguage, setAppLanguageRegionBase);
                 }}
                 placeholder={copy.searchLanguage ?? englishCopy.searchLanguage}
                 placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
-                style={[styles.languageSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText]}
+                style={[styles.languageSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText, isRtl && styles.rtlSearchInput]}
                 accessibilityLabel={copy.searchLanguage ?? englishCopy.searchLanguage}
               />
-              {appLanguageOptions.map((language) => (
-                <TouchableOpacity
-                  key={language.label}
-                  activeOpacity={0.75}
-                  onPress={() => {
-                    setAppLanguage(language.label);
-                    setAppLanguageSearch("");
-                    setOpenDropdown(null);
-                  }}
-                  style={[styles.dropdownOption, isRtl && styles.rtlRow, isDay && styles.dayDropdownOption]}
-                >
-                  <View>
-                    <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlText]}>{language.flag} {language.label}</Text>
-                    <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{language.nativeName}</Text>
+              {appLanguageRegionBase && (
+                <View style={[styles.languageRegionHeader, isDay && styles.dayDropdownOption, isRtl && styles.rtlRow]}>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    onPress={() => {
+                      setAppLanguageRegionBase(null);
+                      setAppLanguageSearch("");
+                    }}
+                    style={styles.languageRegionBack}
+                  >
+                    <Text style={[styles.languageRegionBackText, isDay && styles.dayLabel]}>{isRtl ? "›" : "‹"}</Text>
+                  </TouchableOpacity>
+                  <View style={styles.languageOptionCopy}>
+                    <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{appLanguageRegionBase}</Text>
+                    <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
+                      {getRegionalLanguages(appLanguageRegionBase).map((language) => language.nativeName).join(" / ")}
+                    </Text>
                   </View>
-                  <View style={[styles.radioOuter, appLanguage === language.label && styles.radioOuterSelected, appLanguage === language.label && { borderColor: paletteAccent }]}>
-                    {appLanguage === language.label && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
-                  </View>
-                </TouchableOpacity>
-              ))}
+                </View>
+              )}
+              {appLanguageOptions.map((language) => {
+                const optionIsRtl = rtlLanguages.has(getLanguageBase(language.label));
+                const hasRegions = language.label === getLanguageBase(language.label) && hasRegionalLanguages(language.label);
+
+                return (
+                  <TouchableOpacity
+                    key={language.label}
+                    activeOpacity={0.75}
+                    onPress={() => selectLanguageOption(language, setAppLanguage, setAppLanguageSearch, setAppLanguageRegionBase)}
+                    style={[styles.dropdownOption, isRtl && styles.rtlRow, isDay && styles.dayDropdownOption]}
+                  >
+                    <View style={styles.languageOptionCopy}>
+                      <Text style={[styles.dropdownOptionText, styles.languageLabelText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{language.flag} {language.label}</Text>
+                      <Text style={[styles.dropdownNativeText, optionIsRtl ? styles.languageNativeRtlText : styles.languageNativeLtrText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
+                        {hasRegions ? getRegionalLanguages(language.label).map((option) => option.nativeName).join(" / ") : language.nativeName}
+                      </Text>
+                    </View>
+                    {hasRegions ? (
+                      <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>{isRtl ? "‹" : "›"}</Text>
+                    ) : (
+                      <View style={[styles.radioOuter, appLanguage === language.label && styles.radioOuterSelected, appLanguage === language.label && { borderColor: paletteAccent }]}>
+                        {appLanguage === language.label && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
               {appLanguageOptions.length === 0 && (
-                <Text style={[styles.noResultsText, isDay && styles.daySubtitle]}>{copy.noLanguageFound ?? englishCopy.noLanguageFound}</Text>
+                <Text style={[styles.noResultsText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.noLanguageFound ?? englishCopy.noLanguageFound}</Text>
               )}
             </ScrollView>
           )}
@@ -1677,7 +2742,7 @@ export default function SettingsScreen() {
               accessibilityHint={screenReaderHints ? copy.translateMeetupsChatsCopy : undefined}
               style={[styles.dropdownButton, isRtl && styles.rtlDropdownButton, isDay && styles.dayDropdownButton, highContrast && styles.highContrastButton]}
             >
-              <Text style={[styles.dropdownText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle]}>
+              <Text style={[styles.dropdownText, styles.languageValueText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlAlignedText]}>
                 {languageOptions.find((language) => language.label === translationLanguage)?.flag} {translationLanguage}
               </Text>
               <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
@@ -1695,35 +2760,62 @@ export default function SettingsScreen() {
                 value={translationLanguageSearch}
                 onChangeText={(value) => {
                   setTranslationLanguageSearch(value);
-                  selectExactLanguage(value, setTranslationLanguage);
+                  selectExactLanguage(value, setTranslationLanguage, setTranslationLanguageRegionBase);
                 }}
                 placeholder={copy.searchLanguage ?? englishCopy.searchLanguage}
                 placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
-                style={[styles.languageSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText]}
+                style={[styles.languageSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText, isRtl && styles.rtlSearchInput]}
                 accessibilityLabel={copy.searchLanguage ?? englishCopy.searchLanguage}
               />
-              {translationLanguageOptions.map((language) => (
-                <TouchableOpacity
-                  key={language.label}
-                  activeOpacity={0.75}
-                  onPress={() => {
-                    setTranslationLanguage(language.label);
-                    setTranslationLanguageSearch("");
-                    setOpenDropdown(null);
-                  }}
-                  style={[styles.dropdownOption, isRtl && styles.rtlRow, isDay && styles.dayDropdownOption]}
-                >
-                  <View>
-                    <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlText]}>{language.flag} {language.label}</Text>
-                    <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{language.nativeName}</Text>
+              {translationLanguageRegionBase && (
+                <View style={[styles.languageRegionHeader, isDay && styles.dayDropdownOption, isRtl && styles.rtlRow]}>
+                  <TouchableOpacity
+                    activeOpacity={0.75}
+                    onPress={() => {
+                      setTranslationLanguageRegionBase(null);
+                      setTranslationLanguageSearch("");
+                    }}
+                    style={styles.languageRegionBack}
+                  >
+                    <Text style={[styles.languageRegionBackText, isDay && styles.dayLabel]}>{isRtl ? "›" : "‹"}</Text>
+                  </TouchableOpacity>
+                  <View style={styles.languageOptionCopy}>
+                    <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{translationLanguageRegionBase}</Text>
+                    <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
+                      {getRegionalLanguages(translationLanguageRegionBase).map((language) => language.nativeName).join(" / ")}
+                    </Text>
                   </View>
-                  <View style={[styles.radioOuter, translationLanguage === language.label && styles.radioOuterSelected, translationLanguage === language.label && { borderColor: paletteAccent }]}>
-                    {translationLanguage === language.label && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
-                  </View>
-                </TouchableOpacity>
-              ))}
+                </View>
+              )}
+              {translationLanguageOptions.map((language) => {
+                const optionIsRtl = rtlLanguages.has(getLanguageBase(language.label));
+                const hasRegions = language.label === getLanguageBase(language.label) && hasRegionalLanguages(language.label);
+
+                return (
+                  <TouchableOpacity
+                    key={language.label}
+                    activeOpacity={0.75}
+                    onPress={() => selectLanguageOption(language, setTranslationLanguage, setTranslationLanguageSearch, setTranslationLanguageRegionBase)}
+                    style={[styles.dropdownOption, isRtl && styles.rtlRow, isDay && styles.dayDropdownOption]}
+                  >
+                    <View style={styles.languageOptionCopy}>
+                      <Text style={[styles.dropdownOptionText, styles.languageLabelText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{language.flag} {language.label}</Text>
+                      <Text style={[styles.dropdownNativeText, optionIsRtl ? styles.languageNativeRtlText : styles.languageNativeLtrText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
+                        {hasRegions ? getRegionalLanguages(language.label).map((option) => option.nativeName).join(" / ") : language.nativeName}
+                      </Text>
+                    </View>
+                    {hasRegions ? (
+                      <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>{isRtl ? "‹" : "›"}</Text>
+                    ) : (
+                      <View style={[styles.radioOuter, translationLanguage === language.label && styles.radioOuterSelected, translationLanguage === language.label && { borderColor: paletteAccent }]}>
+                        {translationLanguage === language.label && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
               {translationLanguageOptions.length === 0 && (
-                <Text style={[styles.noResultsText, isDay && styles.daySubtitle]}>{copy.noLanguageFound ?? englishCopy.noLanguageFound}</Text>
+                <Text style={[styles.noResultsText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.noLanguageFound ?? englishCopy.noLanguageFound}</Text>
               )}
             </ScrollView>
           )}
@@ -1846,6 +2938,9 @@ const styles = StyleSheet.create({
     textAlign: "right",
     writingDirection: "rtl",
   },
+  rtlAlignedText: {
+    textAlign: "right",
+  },
   dropdownRow: {
     minHeight: 76,
     flexDirection: "row",
@@ -1925,7 +3020,9 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   paletteMenu: {
-    maxHeight: undefined,
+    maxHeight: 300,
+  },
+  paletteMenuContent: {
     paddingVertical: 6,
   },
   languageSearchInput: {
@@ -1941,6 +3038,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
+  rtlSearchInput: {
+    textAlign: "right",
+    writingDirection: "rtl",
+  },
   dayLanguageSearchInput: {
     borderColor: "#8EACD6",
     color: "#0B1220",
@@ -1955,6 +3056,46 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(166,177,199,0.14)",
+  },
+  languageOptionCopy: {
+    flex: 1,
+  },
+  languageRegionHeader: {
+    minHeight: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(166,177,199,0.14)",
+  },
+  languageRegionBack: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  languageRegionBackText: {
+    color: nsnColors.text,
+    fontSize: 22,
+    fontWeight: "800",
+    lineHeight: 24,
+  },
+  languageValueText: {
+    writingDirection: "ltr",
+  },
+  languageLabelText: {
+    writingDirection: "ltr",
+  },
+  languageNativeLtrText: {
+    writingDirection: "ltr",
+  },
+  languageNativeRtlText: {
+    writingDirection: "rtl",
   },
   paletteOption: {
     alignItems: "center",

@@ -12,6 +12,7 @@ SoftHello should feel warm, calm, trustworthy, inclusive, and genuine. The exper
 - No urgency to respond.
 - No public ratings or reviews.
 - No pressure to reveal photos before the user is ready.
+- No pressure to attend, stay, or keep engaging when a group does not feel right.
 
 ## Comfort-First Design
 
@@ -26,6 +27,9 @@ The app should prioritize:
 - Clear context before joining events or chats.
 - Small group meetups instead of large events.
 - Consent-first profile visibility.
+- Respectful opt-outs and group changes.
+
+Choosing not to attend should feel valid and supported. Users should be encouraged to skip, leave, or change groups before they feel forced into an experience they may not enjoy. The app should frame group fit as personal preference, not social success or failure.
 
 ## Progressive Reveal
 
@@ -121,4 +125,6 @@ Good examples:
 - Say hello, your way.
 - Reveal only when you are ready.
 - You can leave anytime before it starts.
+- It is okay if this group is not your group.
+- Find a group that feels more like your pace.
 - Safety first, so you can be yourself.

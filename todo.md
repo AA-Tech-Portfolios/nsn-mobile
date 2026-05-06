@@ -23,12 +23,42 @@
 
 - [ ] Add interactive tutorials
 - [x] Add localisation options
+- [ ] Research Celtic language support, starting with Welsh, Irish, and Scottish Gaelic, and only ship languages after native-speaker or community review
+- [ ] Plan later Indian language expansion, prioritising Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi and Nepali after translation review
+- [ ] Complete native-speaker review for newly listed languages before marking them fully translated, including Luxembourgish, Hungarian, Czech, Slovak, Croatian, Estonian, Latvian, Lithuanian, Armenian, Albanian and Afrikaans
 - [ ] Add toggle animations when switching between Day and Night settings
 - [ ] Fix buttons and standardise button behaviour across the app
 - [x] Allow profiles to blur their images for privacy
+
+### Matching and Discovery
+
+- [ ] Add personality compatibility matching that prioritises comfort, intent, pacing, and shared meetup preferences
+- [ ] Consider optional zodiac and personality prompts as playful self-expression, without using them as hard filters or compatibility scores
+- [ ] Explore an optional AI companion as a later comfort feature for meetup preparation, reflection, and gentle planning support
+
+### Event Planning and Attendance
+
+- [ ] Add gentle RSVP states such as coming, interested, deciding later, or needing encouragement
+- [ ] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, or first-time attendee
 - [ ] Add pre-meetup grounding screen with expectations, safety reminder, and backup plan
-- [ ] Add conversation starter cards for low-pressure chats and meetups
+- [ ] Add pre-meetup readiness checklist covering location, host, plan, safety, and exit options
+- [ ] Add event troubleshooting tools to help participants coordinate around busy work, study, and timetable constraints
+- [ ] Add lightweight transportation options with nearby stops, estimated travel time, suggested arrival windows, and links out to maps
 - [ ] Add host templates for common meetup types
+- [ ] Evaluate whether group voting helps plan meetups or creates extra pressure for participants
+
+### Consent and Contact
+
+- [ ] Add conversation starter cards for low-pressure chats and meetups
+- [ ] Add mutual pre-meetup consent for optional 1-1 chats between members
+- [ ] Add mutual consent flow for revealing blurred profile pictures when both members feel ready
+- [ ] Unlock phone or video call preferences after a meetup, with users choosing the contact mode they are comfortable with
+
+### Exit and Chat Lifecycle
+
+- [ ] Add post-meetup chat controls: archive or hide chats, delete with 30-day recovery, and choose whether to stay in contact
+- [ ] Add Soft Exit controls so users can politely leave a meetup, chat, or connection without needing to over-explain
+- [ ] Add opt-out and group-change flows that reassure users it is okay to skip, leave, find a better-suited group, or create their own
 
 ### Media and Web
 
