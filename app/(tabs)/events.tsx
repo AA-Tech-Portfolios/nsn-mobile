@@ -600,12 +600,10 @@ const styles = StyleSheet.create({
   saveButton: {
     height: 54,
     borderRadius: 17,
-    backgroundColor: "#4F5BD5",
+    backgroundColor: nsnColors.primary,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 22,
-    borderWidth: 1,
-    borderColor: "rgba(44,177,188,0.58)",
   },
   saveButtonDisabled: { opacity: 0.42 },
   saveButtonText: { color: nsnColors.text, fontSize: 16, fontWeight: "900" },
