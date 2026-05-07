@@ -8,8 +8,10 @@ import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } 
 import { SoftHelloIntent, SoftHelloVisibility, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
+import { defaultComfortPreferences, type SoftHelloComfortPreference } from "@/lib/softhello-mvp";
 
 const intentOptions: SoftHelloIntent[] = ["Friends", "Dating", "Both", "Exploring"];
+const comfortOptions: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet", "Flexible pace", "Indoor backup"];
 
 const visibilityOptions: {
   value: SoftHelloVisibility;
@@ -48,6 +50,7 @@ export default function OnboardingScreen() {
   const [nameError, setNameError] = useState("");
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const [visibilityPreference, setVisibilityPreference] = useState<SoftHelloVisibility>("Blurred");
+  const [comfortPreferences, setComfortPreferences] = useState<SoftHelloComfortPreference[]>(defaultComfortPreferences);
 
   const canContinue = useMemo(
     () => ageConfirmed && suburb.trim().length >= 2 && isAllowedDisplayName(displayName),
@@ -126,6 +129,15 @@ export default function OnboardingScreen() {
       displayName: displayName.trim(),
       profilePhotoUri,
       visibilityPreference,
+      comfortPreferences,
+      verificationLevel: "Contact Verified",
+      eventMemberships: [],
+      blockedUserIds: [],
+      safetyReports: [],
+      postEventFeedback: [],
+      savedPlaces: [],
+      pinnedEventIds: [],
+      hiddenEventIds: [],
     });
 
     router.replace("/(tabs)");
@@ -298,6 +310,33 @@ export default function OnboardingScreen() {
                 );
               })}
             </View>
+          </View>
+
+          <View>
+            <Text style={[styles.label, isDay && styles.dayTitle]}>Comfort preferences</Text>
+            <View style={styles.optionGrid}>
+              {comfortOptions.map((option) => {
+                const active = comfortPreferences.includes(option);
+
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    activeOpacity={0.82}
+                    onPress={() =>
+                      setComfortPreferences((current) =>
+                        current.includes(option) ? current.filter((item) => item !== option) : [...current, option]
+                      )
+                    }
+                    style={[styles.intentOption, isDay && styles.dayChoice, active && styles.choiceActive]}
+                  >
+                    <Text style={[styles.choiceText, isDay && styles.dayMutedText, active && styles.choiceTextActive]}>{option}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+              These shape event suggestions without hiding everything else.
+            </Text>
           </View>
         </View>
 

@@ -22,6 +22,12 @@ const MAPPING = {
   more: "more-vert",
   add: "add",
   edit: "edit",
+  flag: "outlined-flag",
+  bookmark: "bookmark",
+  "bookmark.border": "bookmark-border",
+  pin: "push-pin",
+  visibility: "visibility",
+  "visibility.off": "visibility-off",
 } satisfies Record<string, MaterialIconName>;
 
 type IconSymbolName = keyof typeof MAPPING;

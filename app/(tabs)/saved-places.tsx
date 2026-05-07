@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet } from "react-native";
+import { ScrollView, View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
+import { removeSavedPlace } from "@/lib/softhello-mvp";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
@@ -11,7 +13,9 @@ const savedPlacesTranslations = {
     title: "Saved Places",
     subtitle: "Your favourite cafés, parks, libraries and quiet meetup spots will appear here.",
     emptyTitle: "No saved places yet",
-    emptyCopy: "Later, you’ll be able to save places from meetup pages or map suggestions.",
+    emptyCopy: "Save a venue from any meetup page and it will appear here.",
+    savedFrom: "Saved from",
+    remove: "Remove",
   },
   Arabic: {
     title: "الأماكن المحفوظة",
@@ -217,7 +221,7 @@ const supplementalSavedPlacesTranslations = {
 } as const;
 
 export default function SavedPlacesScreen() {
-  const { appLanguage, isNightMode } = useAppSettings();
+  const { appLanguage, isNightMode, savedPlaces, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = {
     ...(savedPlacesTranslations[appLanguageBase as keyof typeof savedPlacesTranslations] ?? savedPlacesTranslations.English),
@@ -226,18 +230,50 @@ export default function SavedPlacesScreen() {
   };
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
+  const fallbackCopy = savedPlacesTranslations.English;
+  const savedFromLabel = "savedFrom" in copy ? copy.savedFrom : fallbackCopy.savedFrom;
+  const removeLabel = "remove" in copy ? copy.remove : fallbackCopy.remove;
+
+  const handleRemove = async (placeId: string) => {
+    await saveSoftHelloMvpState({ savedPlaces: removeSavedPlace(placeId, savedPlaces) });
+  };
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
-      <View style={[styles.container, isDay && styles.dayContainer]}>
+      <ScrollView style={[styles.container, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={[styles.title, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.title}</Text>
         <Text style={[styles.subtitle, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.subtitle}</Text>
 
-        <View style={[styles.emptyCard, isDay && styles.dayCard]}>
-          <Text style={[styles.emptyTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.emptyTitle}</Text>
-          <Text style={[styles.emptyText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.emptyCopy}</Text>
-        </View>
-      </View>
+        {savedPlaces.length > 0 ? (
+          <View style={styles.placeList}>
+            {savedPlaces.map((place) => (
+              <View key={place.id} style={[styles.placeCard, isDay && styles.dayCard]}>
+                <View style={[styles.placeHeader, isRtl && styles.rtlRow]}>
+                  <View style={[styles.placeIcon, isDay && styles.dayPlaceIcon]}>
+                    <IconSymbol name="location" color={isDay ? "#2F80ED" : nsnColors.text} size={20} />
+                  </View>
+                  <View style={styles.placeTitleBlock}>
+                    <Text style={[styles.placeTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{place.venue}</Text>
+                    <Text style={[styles.placeMeta, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{place.category} · {place.weather}</Text>
+                  </View>
+                </View>
+                <Text style={[styles.placeSource, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>
+                  {savedFromLabel}: {place.sourceEventTitle}
+                </Text>
+                <TouchableOpacity activeOpacity={0.82} onPress={() => handleRemove(place.id)} style={[styles.removeButton, isRtl && styles.rtlRow]}>
+                  <IconSymbol name="bookmark" color={nsnColors.day} size={18} />
+                  <Text style={styles.removeButtonText}>{removeLabel}</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={[styles.emptyCard, isDay && styles.dayCard]}>
+            <Text style={[styles.emptyTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.emptyTitle}</Text>
+            <Text style={[styles.emptyText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.emptyCopy}</Text>
+          </View>
+        )}
+      </ScrollView>
     </ScreenContainer>
   );
 }
@@ -246,7 +282,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: nsnColors.background,
+  },
+  content: {
     padding: 20,
+    paddingBottom: 34,
   },
   dayContainer: {
     backgroundColor: "#EAF4FF",
@@ -273,6 +312,9 @@ const styles = StyleSheet.create({
     textAlign: "right",
     writingDirection: "rtl",
   },
+  rtlRow: {
+    flexDirection: "row-reverse",
+  },
   emptyCard: {
     borderWidth: 1,
     borderColor: nsnColors.border,
@@ -294,5 +336,73 @@ const styles = StyleSheet.create({
     color: nsnColors.muted,
     fontSize: 14,
     lineHeight: 21,
+  },
+  placeList: {
+    gap: 12,
+  },
+  placeCard: {
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    borderRadius: 18,
+    padding: 16,
+  },
+  placeHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  placeIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.18)",
+  },
+  dayPlaceIcon: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#B8C9E6",
+  },
+  placeTitleBlock: {
+    flex: 1,
+  },
+  placeTitle: {
+    color: nsnColors.text,
+    fontSize: 17,
+    fontWeight: "900",
+    lineHeight: 23,
+  },
+  placeMeta: {
+    color: nsnColors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 2,
+  },
+  placeSource: {
+    color: nsnColors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 12,
+  },
+  removeButton: {
+    minHeight: 38,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "rgba(247,200,91,0.45)",
+    paddingHorizontal: 12,
+    marginTop: 12,
+  },
+  removeButtonText: {
+    color: nsnColors.day,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
   },
 });

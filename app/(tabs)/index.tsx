@@ -697,7 +697,7 @@ const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding, reduceMotion, comfortPreferences } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding, reduceMotion, comfortPreferences, pinnedEventIds, hiddenEventIds } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
@@ -707,14 +707,18 @@ export default function HomeScreen() {
   const [activeFilter, setActiveFilter] = useState<EventFilter>("All");
   const [expandedInsight, setExpandedInsight] = useState<"day-night" | "weather" | null>(null);
   const activeEvents = useMemo(() => {
-    const events = prioritizeEventsForComfort(isNightMode ? eveningEvents : dayEvents, comfortPreferences);
+    const hiddenIds = new Set(hiddenEventIds);
+    const pinnedIds = new Set(pinnedEventIds);
+    const events = prioritizeEventsForComfort(isNightMode ? eveningEvents : dayEvents, comfortPreferences)
+      .filter((event) => !hiddenIds.has(event.id))
+      .sort((a, b) => Number(pinnedIds.has(b.id)) - Number(pinnedIds.has(a.id)));
 
     if (activeFilter === "All") {
       return events;
     }
 
     return events.filter((event) => event.category === activeFilter || event.tags.includes(activeFilter));
-  }, [activeFilter, comfortPreferences, isNightMode]);
+  }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, pinnedEventIds]);
   const isDay = !isNightMode;
   const [now, setNow] = useState(new Date());
   const [isTimezonePickerOpen, setIsTimezonePickerOpen] = useState(false);

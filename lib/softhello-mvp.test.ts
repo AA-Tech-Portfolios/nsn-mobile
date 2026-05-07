@@ -7,10 +7,16 @@ import {
   createSafetyReport,
   getMeetingSafetyCopy,
   getVerificationLevelLabel,
+  hideEvent,
   joinEvent,
   leaveEvent,
+  pinEvent,
   prioritizeEventsForComfort,
+  removeSavedPlace,
+  savePlace,
   savePostEventFeedback,
+  unhideEvent,
+  unpinEvent,
 } from "./softhello-mvp";
 
 describe("SoftHello MVP domain rules", () => {
@@ -66,5 +72,34 @@ describe("SoftHello MVP domain rules", () => {
     expect(prioritized).toHaveLength(dayEvents.length);
     expect(prioritized[0].id).toBe("library-calm-study");
     expect(prioritized.map((event) => event.id)).toEqual(expect.arrayContaining(dayEvents.map((event) => event.id)));
+  });
+
+  it("saves places idempotently and removes them by id", () => {
+    const place = {
+      id: "event:library-calm-study:Chatswood Library",
+      venue: "Chatswood Library",
+      category: "Indoor",
+      sourceEventId: "library-calm-study",
+      sourceEventTitle: "Library Calm Study",
+      weather: "Rain friendly",
+      savedAt: "2026-05-07T05:00:00.000Z",
+    };
+
+    const saved = savePlace(place, []);
+    const resaved = savePlace({ ...place, category: "Quiet", savedAt: "2026-05-07T06:00:00.000Z" }, saved);
+
+    expect(resaved).toHaveLength(1);
+    expect(resaved[0]).toMatchObject({ category: "Quiet", savedAt: "2026-05-07T05:00:00.000Z" });
+    expect(removeSavedPlace(place.id, resaved)).toEqual([]);
+  });
+
+  it("pins and hides events idempotently", () => {
+    expect(pinEvent("library-calm-study", [])).toEqual(["library-calm-study"]);
+    expect(pinEvent("library-calm-study", ["library-calm-study"])).toEqual(["library-calm-study"]);
+    expect(unpinEvent("library-calm-study", ["library-calm-study", "coffee-lane-cove"])).toEqual(["coffee-lane-cove"]);
+
+    expect(hideEvent("library-calm-study", [])).toEqual(["library-calm-study"]);
+    expect(hideEvent("library-calm-study", ["library-calm-study"])).toEqual(["library-calm-study"]);
+    expect(unhideEvent("library-calm-study", ["library-calm-study", "coffee-lane-cove"])).toEqual(["coffee-lane-cove"]);
   });
 });

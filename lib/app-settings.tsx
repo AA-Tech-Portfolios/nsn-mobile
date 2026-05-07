@@ -1,6 +1,16 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useContext, useEffect, useState } from "react";
 
+import {
+  defaultComfortPreferences,
+  type EventMembership,
+  type PostEventFeedback,
+  type SafetyReport,
+  type SavedPlace,
+  type SoftHelloComfortPreference,
+  type SoftHelloVerificationLevel,
+} from "./softhello-mvp";
+
 export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
 
 export type AppPalette = {
@@ -58,6 +68,15 @@ type OnboardingSnapshot = {
   displayName: string;
   profilePhotoUri: string | null;
   visibilityPreference: SoftHelloVisibility;
+  comfortPreferences: SoftHelloComfortPreference[];
+  verificationLevel: SoftHelloVerificationLevel;
+  eventMemberships: EventMembership[];
+  blockedUserIds: string[];
+  safetyReports: SafetyReport[];
+  postEventFeedback: PostEventFeedback[];
+  savedPlaces: SavedPlace[];
+  pinnedEventIds: string[];
+  hiddenEventIds: string[];
 };
 
 export type TimezoneSetting = {
@@ -710,7 +729,26 @@ type AppSettings = {
   setProfilePhotoUri: (value: string | null) => void;
   visibilityPreference: SoftHelloVisibility;
   setVisibilityPreference: (value: SoftHelloVisibility) => void;
+  comfortPreferences: SoftHelloComfortPreference[];
+  setComfortPreferences: (value: SoftHelloComfortPreference[]) => void;
+  verificationLevel: SoftHelloVerificationLevel;
+  setVerificationLevel: (value: SoftHelloVerificationLevel) => void;
+  eventMemberships: EventMembership[];
+  setEventMemberships: (value: EventMembership[]) => void;
+  blockedUserIds: string[];
+  setBlockedUserIds: (value: string[]) => void;
+  safetyReports: SafetyReport[];
+  setSafetyReports: (value: SafetyReport[]) => void;
+  postEventFeedback: PostEventFeedback[];
+  setPostEventFeedback: (value: PostEventFeedback[]) => void;
+  savedPlaces: SavedPlace[];
+  setSavedPlaces: (value: SavedPlace[]) => void;
+  pinnedEventIds: string[];
+  setPinnedEventIds: (value: string[]) => void;
+  hiddenEventIds: string[];
+  setHiddenEventIds: (value: string[]) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
+  saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
   resetOnboarding: () => Promise<void>;
   isNightMode: boolean;
   setIsNightMode: (value: boolean) => void;
@@ -761,6 +799,15 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [displayName, setDisplayName] = useState("Alon");
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
   const [visibilityPreference, setVisibilityPreference] = useState<SoftHelloVisibility>("Blurred");
+  const [comfortPreferences, setComfortPreferences] = useState<SoftHelloComfortPreference[]>(defaultComfortPreferences);
+  const [verificationLevel, setVerificationLevel] = useState<SoftHelloVerificationLevel>("Contact Verified");
+  const [eventMemberships, setEventMemberships] = useState<EventMembership[]>([]);
+  const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
+  const [safetyReports, setSafetyReports] = useState<SafetyReport[]>([]);
+  const [postEventFeedback, setPostEventFeedback] = useState<PostEventFeedback[]>([]);
+  const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
+  const [pinnedEventIds, setPinnedEventIds] = useState<string[]>([]);
+  const [hiddenEventIds, setHiddenEventIds] = useState<string[]>([]);
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
@@ -799,6 +846,15 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setDisplayName(snapshot.displayName || "Alon");
         setProfilePhotoUri(snapshot.profilePhotoUri ?? null);
         setVisibilityPreference(snapshot.visibilityPreference ?? "Blurred");
+        setComfortPreferences(snapshot.comfortPreferences?.length ? snapshot.comfortPreferences : defaultComfortPreferences);
+        setVerificationLevel(snapshot.verificationLevel ?? "Contact Verified");
+        setEventMemberships(snapshot.eventMemberships ?? []);
+        setBlockedUserIds(snapshot.blockedUserIds ?? []);
+        setSafetyReports(snapshot.safetyReports ?? []);
+        setPostEventFeedback(snapshot.postEventFeedback ?? []);
+        setSavedPlaces(snapshot.savedPlaces ?? []);
+        setPinnedEventIds(snapshot.pinnedEventIds ?? []);
+        setHiddenEventIds(snapshot.hiddenEventIds ?? []);
         setBlurProfilePhoto((snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("SoftHello onboarding could not load:", error);
@@ -823,6 +879,15 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setDisplayName(snapshot.displayName);
     setProfilePhotoUri(snapshot.profilePhotoUri);
     setVisibilityPreference(snapshot.visibilityPreference);
+    setComfortPreferences(snapshot.comfortPreferences);
+    setVerificationLevel(snapshot.verificationLevel);
+    setEventMemberships(snapshot.eventMemberships);
+    setBlockedUserIds(snapshot.blockedUserIds);
+    setSafetyReports(snapshot.safetyReports);
+    setPostEventFeedback(snapshot.postEventFeedback);
+    setSavedPlaces(snapshot.savedPlaces);
+    setPinnedEventIds(snapshot.pinnedEventIds);
+    setHiddenEventIds(snapshot.hiddenEventIds);
     setBlurProfilePhoto(snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -836,6 +901,53 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       );
     } catch (error) {
       console.log("SoftHello onboarding could not save:", error);
+    }
+  };
+
+  const saveSoftHelloMvpState = async (snapshot: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">> = {}) => {
+    const nextSnapshot: OnboardingSnapshot = {
+      hasCompletedOnboarding,
+      ageConfirmed,
+      suburb,
+      intent,
+      displayName,
+      profilePhotoUri,
+      visibilityPreference,
+      comfortPreferences,
+      verificationLevel,
+      eventMemberships,
+      blockedUserIds,
+      safetyReports,
+      postEventFeedback,
+      savedPlaces,
+      pinnedEventIds,
+      hiddenEventIds,
+      ...snapshot,
+    };
+
+    if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
+    if (snapshot.suburb !== undefined) setSuburb(snapshot.suburb);
+    if (snapshot.intent !== undefined) setIntent(snapshot.intent);
+    if (snapshot.displayName !== undefined) setDisplayName(snapshot.displayName);
+    if (snapshot.profilePhotoUri !== undefined) setProfilePhotoUri(snapshot.profilePhotoUri);
+    if (snapshot.visibilityPreference !== undefined) {
+      setVisibilityPreference(snapshot.visibilityPreference);
+      setBlurProfilePhoto(snapshot.visibilityPreference === "Blurred");
+    }
+    if (snapshot.comfortPreferences !== undefined) setComfortPreferences(snapshot.comfortPreferences);
+    if (snapshot.verificationLevel !== undefined) setVerificationLevel(snapshot.verificationLevel);
+    if (snapshot.eventMemberships !== undefined) setEventMemberships(snapshot.eventMemberships);
+    if (snapshot.blockedUserIds !== undefined) setBlockedUserIds(snapshot.blockedUserIds);
+    if (snapshot.safetyReports !== undefined) setSafetyReports(snapshot.safetyReports);
+    if (snapshot.postEventFeedback !== undefined) setPostEventFeedback(snapshot.postEventFeedback);
+    if (snapshot.savedPlaces !== undefined) setSavedPlaces(snapshot.savedPlaces);
+    if (snapshot.pinnedEventIds !== undefined) setPinnedEventIds(snapshot.pinnedEventIds);
+    if (snapshot.hiddenEventIds !== undefined) setHiddenEventIds(snapshot.hiddenEventIds);
+
+    try {
+      await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
+    } catch (error) {
+      console.log("SoftHello MVP state could not save:", error);
     }
   };
 
@@ -868,7 +980,26 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setProfilePhotoUri,
         visibilityPreference,
         setVisibilityPreference,
+        comfortPreferences,
+        setComfortPreferences,
+        verificationLevel,
+        setVerificationLevel,
+        eventMemberships,
+        setEventMemberships,
+        blockedUserIds,
+        setBlockedUserIds,
+        safetyReports,
+        setSafetyReports,
+        postEventFeedback,
+        setPostEventFeedback,
+        savedPlaces,
+        setSavedPlaces,
+        pinnedEventIds,
+        setPinnedEventIds,
+        hiddenEventIds,
+        setHiddenEventIds,
         completeOnboarding,
+        saveSoftHelloMvpState,
         resetOnboarding,
         isNightMode,
         setIsNightMode,

@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { chatSeed, nsnColors } from "@/lib/nsn-data";
+import { blockUser, createSafetyReport, leaveEvent } from "@/lib/softhello-mvp";
 
 type ChatMessage = (typeof chatSeed)[number];
 type SoftExitChoice = "stepBack" | "skipToday";
@@ -26,6 +27,12 @@ const chatTranslations = {
     softExitTitle: "Soft Exit",
     softExitCopy: "You can step back without making it a big thing. This group not being your group does not mean you are behind.",
     softExitQuiet: "Your chat is quiet for now. You can look for another group when you are ready.",
+    safetyTitle: "Safety options",
+    safetyCopy: "Use these when something feels off. They stay private in this prototype.",
+    reportConcern: "Report concern",
+    reportConcernCopy: "Private structured safety note.",
+    blockHost: "Block host",
+    blockHostCopy: "Stops direct interaction privately.",
     stepBack: "Step back",
     stepBackCopy: "Send a gentle preset message.",
     skipToday: "Skip today",
@@ -51,6 +58,12 @@ const chatTranslations = {
     softExitTitle: "خروج هادئ",
     softExitCopy: "يمكنك التراجع دون أن يكون الأمر كبيراً. كون هذه المجموعة ليست مجموعتك لا يعني أنك متأخر.",
     softExitQuiet: "الدردشة هادئة الآن. يمكنك البحث عن مجموعة أخرى عندما تكون مستعداً.",
+    safetyTitle: "خيارات السلامة",
+    safetyCopy: "استخدمها عندما تشعر أن هناك شيئاً غير مريح. تبقى خاصة في هذا النموذج.",
+    reportConcern: "الإبلاغ عن مشكلة",
+    reportConcernCopy: "ملاحظة سلامة خاصة ومنظمة.",
+    blockHost: "حظر المضيف",
+    blockHostCopy: "يوقف التفاعل المباشر بشكل خاص.",
     stepBack: "تراجع",
     stepBackCopy: "أرسل رسالة جاهزة ولطيفة.",
     skipToday: "تخطى اليوم",
@@ -76,6 +89,12 @@ const chatTranslations = {
     softExitTitle: "温和退出",
     softExitCopy: "你可以退一步，不需要把事情变得很严重。这个小组不适合你，并不代表你落后了。",
     softExitQuiet: "你的聊天现在已安静下来。准备好时，你可以寻找另一个小组。",
+    safetyTitle: "安全选项",
+    safetyCopy: "当你觉得不对劲时使用。这些操作在原型中保持私密。",
+    reportConcern: "报告问题",
+    reportConcernCopy: "私密的结构化安全记录。",
+    blockHost: "屏蔽主持人",
+    blockHostCopy: "私下停止直接互动。",
     stepBack: "退一步",
     stepBackCopy: "发送一条温和的预设消息。",
     skipToday: "今天先不去",
@@ -101,6 +120,12 @@ const chatTranslations = {
     softExitTitle: "Sortie douce",
     softExitCopy: "Vous pouvez prendre du recul sans en faire quelque chose de lourd. Si ce groupe n'est pas le vôtre, cela ne veut pas dire que vous êtes en retard.",
     softExitQuiet: "Votre chat est en pause pour l'instant. Vous pourrez chercher un autre groupe quand vous serez prêt.",
+    safetyTitle: "Options de sécurité",
+    safetyCopy: "À utiliser si quelque chose vous semble anormal. Elles restent privées dans ce prototype.",
+    reportConcern: "Signaler un souci",
+    reportConcernCopy: "Note de sécurité privée et structurée.",
+    blockHost: "Bloquer l'hôte",
+    blockHostCopy: "Arrête les interactions directes en privé.",
     stepBack: "Prendre du recul",
     stepBackCopy: "Envoyer un message prédéfini doux.",
     skipToday: "Passer aujourd'hui",
@@ -126,6 +151,12 @@ const chatTranslations = {
     softExitTitle: "Sanfter Ausstieg",
     softExitCopy: "Du kannst dich zurückziehen, ohne daraus etwas Großes zu machen. Wenn diese Gruppe nicht deine Gruppe ist, heißt das nicht, dass du zurückbleibst.",
     softExitQuiet: "Dein Chat ist jetzt ruhiggestellt. Du kannst nach einer anderen Gruppe suchen, wenn du bereit bist.",
+    safetyTitle: "Sicherheitsoptionen",
+    safetyCopy: "Nutze sie, wenn sich etwas nicht richtig anfühlt. Sie bleiben in diesem Prototyp privat.",
+    reportConcern: "Anliegen melden",
+    reportConcernCopy: "Private strukturierte Sicherheitsnotiz.",
+    blockHost: "Host blockieren",
+    blockHostCopy: "Stoppt direkte Interaktion privat.",
     stepBack: "Zurücktreten",
     stepBackCopy: "Eine sanfte Vorlage senden.",
     skipToday: "Heute aussetzen",
@@ -151,6 +182,12 @@ const chatTranslations = {
     softExitTitle: "יציאה רכה",
     softExitCopy: "אפשר לקחת צעד אחורה בלי להפוך את זה למשהו גדול. אם זו לא הקבוצה שלך, זה לא אומר שנשארת מאחור.",
     softExitQuiet: "הצ'אט שלך שקט כרגע. אפשר לחפש קבוצה אחרת כשתהיה מוכן.",
+    safetyTitle: "אפשרויות בטיחות",
+    safetyCopy: "השתמש בזה כשמשהו מרגיש לא תקין. זה נשאר פרטי באב הטיפוס.",
+    reportConcern: "דיווח על חשש",
+    reportConcernCopy: "הערת בטיחות פרטית ומובנית.",
+    blockHost: "חסימת המארח",
+    blockHostCopy: "עוצר אינטראקציה ישירה באופן פרטי.",
     stepBack: "לקחת צעד אחורה",
     stepBackCopy: "שלח הודעה מוכנה ועדינה.",
     skipToday: "לדלג היום",
@@ -176,6 +213,12 @@ const chatTranslations = {
     softExitTitle: "やさしい退出",
     softExitCopy: "大ごとにせず、少し距離を置いて大丈夫です。このグループが合わなくても、あなたが遅れているわけではありません。",
     softExitQuiet: "チャットはいったん静かになりました。準備ができたら、別のグループを探せます。",
+    safetyTitle: "安全オプション",
+    safetyCopy: "違和感があるときに使えます。このプロトタイプでは非公開です。",
+    reportConcern: "懸念を報告",
+    reportConcernCopy: "非公開の構造化された安全メモ。",
+    blockHost: "ホストをブロック",
+    blockHostCopy: "直接のやり取りを非公開で止めます。",
     stepBack: "距離を置く",
     stepBackCopy: "やさしい定型メッセージを送る。",
     skipToday: "今日は見送る",
@@ -201,6 +244,12 @@ const chatTranslations = {
     softExitTitle: "부드러운 나가기",
     softExitCopy: "큰일처럼 만들지 않고 물러나도 괜찮아요. 이 그룹이 내 그룹이 아니라고 해서 뒤처진 것은 아니에요.",
     softExitQuiet: "지금은 채팅이 조용해졌어요. 준비되면 다른 그룹을 찾아볼 수 있어요.",
+    safetyTitle: "안전 옵션",
+    safetyCopy: "뭔가 불편하게 느껴질 때 사용하세요. 이 프로토타입에서는 비공개로 유지돼요.",
+    reportConcern: "문제 신고",
+    reportConcernCopy: "비공개 구조화 안전 메모.",
+    blockHost: "호스트 차단",
+    blockHostCopy: "직접 상호작용을 비공개로 중지해요.",
     stepBack: "잠시 물러나기",
     stepBackCopy: "부드러운 기본 메시지를 보내요.",
     skipToday: "오늘은 쉬기",
@@ -226,6 +275,12 @@ const chatTranslations = {
     softExitTitle: "Мягкий выход",
     softExitCopy: "Вы можете отойти без лишней драмы. Если эта группа не ваша, это не значит, что вы отстаете.",
     softExitQuiet: "Ваш чат пока тихий. Вы можете поискать другую группу, когда будете готовы.",
+    safetyTitle: "Параметры безопасности",
+    safetyCopy: "Используйте, если что-то кажется неправильным. В этом прототипе они остаются приватными.",
+    reportConcern: "Сообщить о проблеме",
+    reportConcernCopy: "Приватная структурированная заметка о безопасности.",
+    blockHost: "Заблокировать организатора",
+    blockHostCopy: "Приватно прекращает прямое взаимодействие.",
     stepBack: "Отойти",
     stepBackCopy: "Отправить мягкое готовое сообщение.",
     skipToday: "Пропустить сегодня",
@@ -251,6 +306,12 @@ const chatTranslations = {
     softExitTitle: "Salida suave",
     softExitCopy: "Puedes apartarte sin convertirlo en algo grande. Que este grupo no sea tu grupo no significa que te estés quedando atrás.",
     softExitQuiet: "Tu chat queda tranquilo por ahora. Puedes buscar otro grupo cuando estés listo.",
+    safetyTitle: "Opciones de seguridad",
+    safetyCopy: "Úsalas cuando algo se sienta raro. En este prototipo se mantienen privadas.",
+    reportConcern: "Reportar inquietud",
+    reportConcernCopy: "Nota de seguridad privada y estructurada.",
+    blockHost: "Bloquear anfitrión",
+    blockHostCopy: "Detiene la interacción directa en privado.",
     stepBack: "Apartarme",
     stepBackCopy: "Enviar un mensaje suave ya preparado.",
     skipToday: "Saltar hoy",
@@ -324,7 +385,14 @@ const chatMessageTranslations = {
 
 export default function ChatsScreen() {
   const router = useRouter();
-  const { isNightMode, translationLanguage } = useAppSettings();
+  const {
+    isNightMode,
+    translationLanguage,
+    eventMemberships,
+    blockedUserIds,
+    safetyReports,
+    saveSoftHelloMvpState,
+  } = useAppSettings();
   const translationLanguageBase = getLanguageBase(translationLanguage);
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(translationLanguageBase);
@@ -333,8 +401,11 @@ export default function ChatsScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
   const [draft, setDraft] = useState("");
   const [softExitOpen, setSoftExitOpen] = useState(false);
+  const [safetyOpen, setSafetyOpen] = useState(false);
   const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
   const softExitMessage = softExitChoice ? copy.softExitPresets[softExitChoice] : null;
+  const eventId = "movie-night-watch-chat";
+  const hostUserId = "maya-host";
 
   const sendMessage = () => {
     const trimmed = draft.trim();
@@ -346,6 +417,25 @@ export default function ChatsScreen() {
     setDraft("");
   };
 
+  const reportConcern = async () => {
+    const report = createSafetyReport(eventId, hostUserId, "Safety concern");
+    await saveSoftHelloMvpState({ safetyReports: [...safetyReports, report] });
+    Alert.alert("Report saved", "Thanks. This prototype stores the concern privately for moderator review.");
+  };
+
+  const blockHost = async () => {
+    await saveSoftHelloMvpState({ blockedUserIds: blockUser(hostUserId, blockedUserIds) });
+    Alert.alert("Blocked privately", "You will not receive direct interaction from this prototype host.");
+  };
+
+  const chooseSoftExit = async (choice: SoftExitChoice) => {
+    setSoftExitChoice(choice);
+
+    if (choice === "skipToday") {
+      await saveSoftHelloMvpState({ eventMemberships: leaveEvent(eventId, eventMemberships) });
+    }
+  };
+
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <View style={[styles.screen, isDay && styles.dayContainer]}>
@@ -355,8 +445,29 @@ export default function ChatsScreen() {
             <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
             <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.members}</Text>
           </View>
-          <TouchableOpacity activeOpacity={0.75} onPress={() => setSoftExitOpen((current) => !current)} style={styles.iconButton}>
-            <IconSymbol name="more" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => {
+              setSafetyOpen((current) => !current);
+              setSoftExitOpen(false);
+            }}
+            style={styles.iconButton}
+            accessibilityRole="button"
+            accessibilityLabel={copy.safetyTitle}
+          >
+            <IconSymbol name="flag" color={isDay ? "#0B1220" : nsnColors.text} size={21} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => {
+              setSoftExitOpen((current) => !current);
+              setSafetyOpen(false);
+            }}
+            style={styles.iconButton}
+            accessibilityRole="button"
+            accessibilityLabel={copy.softExitTitle}
+          >
+            <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={21} />
           </TouchableOpacity>
         </View>
 
@@ -366,6 +477,31 @@ export default function ChatsScreen() {
             <Text style={[styles.systemText, isDay && styles.dayTitle]}>{copy.joined}</Text>
             <Text style={[styles.systemSubtext, isDay && styles.dayMutedText]}>{copy.private}</Text>
           </View>
+
+          {safetyOpen && (
+            <View style={[styles.softExitPanel, isDay && styles.daySoftExitPanel]}>
+              <Text style={[styles.softExitTitle, isDay && styles.dayTitle]}>{copy.safetyTitle}</Text>
+              <Text style={[styles.softExitCopy, isDay && styles.dayMutedText]}>{copy.safetyCopy}</Text>
+              <View style={styles.softExitActions}>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={reportConcern}
+                  style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
+                >
+                  <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.reportConcern}</Text>
+                  <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.reportConcernCopy}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={blockHost}
+                  style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
+                >
+                  <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.blockHost}</Text>
+                  <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.blockHostCopy}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
 
           {(softExitOpen || softExitChoice) && (
             <View style={[styles.softExitPanel, isDay && styles.daySoftExitPanel]}>
@@ -380,7 +516,7 @@ export default function ChatsScreen() {
                 <View style={styles.softExitActions}>
                   <TouchableOpacity
                     activeOpacity={0.82}
-                    onPress={() => setSoftExitChoice("stepBack")}
+                    onPress={() => chooseSoftExit("stepBack")}
                     style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                   >
                     <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.stepBack}</Text>
@@ -388,7 +524,7 @@ export default function ChatsScreen() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     activeOpacity={0.82}
-                    onPress={() => setSoftExitChoice("skipToday")}
+                    onPress={() => chooseSoftExit("skipToday")}
                     style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                   >
                     <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.skipToday}</Text>

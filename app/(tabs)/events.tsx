@@ -6,6 +6,7 @@ import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
+import { canMeetInPerson, getMeetingSafetyCopy } from "@/lib/softhello-mvp";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
 
@@ -41,6 +42,8 @@ const eventsTranslations = {
     descriptionPlaceholder: "What should people expect?",
     backupPrefix: "Backup",
     save: "Create Meetup",
+    verificationRequiredTitle: "Real Person Verified required",
+    verificationRequiredCopy: "To keep meetups trustworthy, creators need Real Person Verified status before opening a real-world plan.",
     noise: { Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
   },
   Hebrew: {
@@ -71,6 +74,8 @@ const eventsTranslations = {
     descriptionPlaceholder: "למה אנשים יכולים לצפות?",
     backupPrefix: "חלופה",
     save: "יצירת אירוע",
+    verificationRequiredTitle: "נדרש אימות אדם אמיתי",
+    verificationRequiredCopy: "כדי לשמור על אמון במפגשים, יוצרים צריכים סטטוס אימות אדם אמיתי לפני פתיחת תוכנית בעולם האמיתי.",
     noise: { Quiet: "שקט", Balanced: "מאוזן", Lively: "תוסס" },
   },
 } as const;
@@ -141,13 +146,15 @@ const createEventId = (title: string) => {
 };
 
 export default function EventsScreen() {
-  const { isNightMode, appLanguage } = useAppSettings();
+  const { isNightMode, appLanguage, verificationLevel } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = eventsTranslations[appLanguageBase as keyof typeof eventsTranslations] ?? eventsTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
+  const canCreateMeetups = canMeetInPerson(verificationLevel);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
+  const [showVerificationGate, setShowVerificationGate] = useState(false);
   const [draft, setDraft] = useState<EventDraft>(emptyDraft);
 
   const isDraftValid = useMemo(
@@ -206,6 +213,16 @@ export default function EventsScreen() {
     setIsCreatorOpen(false);
   };
 
+  const openCreator = () => {
+    if (!canCreateMeetups) {
+      setShowVerificationGate(true);
+      return;
+    }
+
+    setShowVerificationGate(false);
+    setIsCreatorOpen(true);
+  };
+
   const createEvent = () => {
     if (!isDraftValid) {
       return;
@@ -238,10 +255,24 @@ export default function EventsScreen() {
           {copy.subtitle}
         </Text>
 
-        <TouchableOpacity style={[styles.createButton, isRtl && styles.rtlRow]} activeOpacity={0.8} onPress={() => setIsCreatorOpen(true)}>
+        <TouchableOpacity
+          style={[styles.createButton, !canCreateMeetups && styles.createButtonLocked, isRtl && styles.rtlRow]}
+          activeOpacity={0.8}
+          onPress={openCreator}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !canCreateMeetups }}
+        >
           <IconSymbol name="add" color={nsnColors.text} size={19} />
           <Text style={[styles.createButtonText, isRtl && styles.rtlText]}>{copy.createEvent}</Text>
         </TouchableOpacity>
+
+        {showVerificationGate ? (
+          <View style={[styles.card, styles.verificationGateCard, isDay && styles.dayCard]}>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.verificationRequiredTitle}</Text>
+            <Text style={[styles.cardText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.verificationRequiredCopy}</Text>
+            <Text style={[styles.verificationGateStatus, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(verificationLevel, appLanguageBase)}</Text>
+          </View>
+        ) : null}
 
         {createdEvents.length === 0 ? (
           <View style={[styles.card, isDay && styles.dayCard]}>
@@ -461,6 +492,9 @@ const styles = StyleSheet.create({
     gap: 7,
     marginBottom: 20,
   },
+  createButtonLocked: {
+    backgroundColor: "#6D83A8",
+  },
 
   createButtonText: {
     color: nsnColors.text,
@@ -474,6 +508,16 @@ const styles = StyleSheet.create({
     borderColor: nsnColors.border,
     backgroundColor: nsnColors.surface,
     padding: 18,
+  },
+  verificationGateCard: {
+    marginBottom: 20,
+  },
+  verificationGateStatus: {
+    color: nsnColors.muted,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 18,
+    marginTop: 10,
   },
   dayCard: {
     backgroundColor: "#DCEEFF",

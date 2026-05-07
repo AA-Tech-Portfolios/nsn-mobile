@@ -30,6 +30,16 @@ export type PostEventFeedback = {
   createdAt: string;
 };
 
+export type SavedPlace = {
+  id: string;
+  venue: string;
+  category: string;
+  sourceEventId: string;
+  sourceEventTitle: string;
+  weather: string;
+  savedAt: string;
+};
+
 export const defaultComfortPreferences: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet"];
 
 export const verificationLevels: SoftHelloVerificationLevel[] = ["Unverified", "Contact Verified", "Real Person Verified"];
@@ -212,6 +222,32 @@ export function savePostEventFeedback(feedback: PostEventFeedback, existing: Pos
   return existing.some((item) => item.eventId === feedback.eventId)
     ? existing.map((item) => (item.eventId === feedback.eventId ? feedback : item))
     : [...existing, feedback];
+}
+
+export function savePlace(place: SavedPlace, existing: SavedPlace[]) {
+  return existing.some((item) => item.id === place.id)
+    ? existing.map((item) => (item.id === place.id ? { ...item, ...place, savedAt: item.savedAt } : item))
+    : [place, ...existing];
+}
+
+export function removeSavedPlace(placeId: string, existing: SavedPlace[]) {
+  return existing.filter((place) => place.id !== placeId);
+}
+
+export function pinEvent(eventId: string, pinnedEventIds: string[]) {
+  return pinnedEventIds.includes(eventId) ? pinnedEventIds : [eventId, ...pinnedEventIds];
+}
+
+export function unpinEvent(eventId: string, pinnedEventIds: string[]) {
+  return pinnedEventIds.filter((id) => id !== eventId);
+}
+
+export function hideEvent(eventId: string, hiddenEventIds: string[]) {
+  return hiddenEventIds.includes(eventId) ? hiddenEventIds : [eventId, ...hiddenEventIds];
+}
+
+export function unhideEvent(eventId: string, hiddenEventIds: string[]) {
+  return hiddenEventIds.filter((id) => id !== eventId);
 }
 
 export function filterEventsForComfort(events: EventItem[], preferences: SoftHelloComfortPreference[]) {
