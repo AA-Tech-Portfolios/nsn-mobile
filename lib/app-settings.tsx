@@ -61,6 +61,7 @@ const ONBOARDING_STORAGE_KEY = "softhello.onboarding.v1";
 export type SoftHelloIntent = "Friends" | "Dating" | "Both" | "Exploring";
 export type SoftHelloVisibility = "Blurred" | "Visible";
 export type ProfileShortcutLayout = "Clean" | "Expanded";
+export type ProfileWidthPreference = "Contained" | "Wide";
 export type NoiseLevelPreference = "Any" | NoiseLevel;
 export type TransportationMethod = "Driving" | "Public transport" | "Walking" | "Cycling" | "Rideshare" | "Getting dropped off" | "Not sure yet";
 export type DietaryPreference =
@@ -101,6 +102,7 @@ type OnboardingSnapshot = {
   dietaryPreferences: DietaryPreference[];
   hobbiesInterests: string[];
   profileShortcutLayout?: ProfileShortcutLayout;
+  profileWidthPreference?: ProfileWidthPreference;
 };
 
 export type TimezoneSetting = {
@@ -789,6 +791,8 @@ type AppSettings = {
   setHobbiesInterests: (value: string[]) => void;
   profileShortcutLayout: ProfileShortcutLayout;
   setProfileShortcutLayout: (value: ProfileShortcutLayout) => void;
+  profileWidthPreference: ProfileWidthPreference;
+  setProfileWidthPreference: (value: ProfileWidthPreference) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
   saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
   resetOnboarding: () => Promise<void>;
@@ -804,6 +808,16 @@ type AppSettings = {
   setReduceMotion: (value: boolean) => void;
   screenReaderHints: boolean;
   setScreenReaderHints: (value: boolean) => void;
+  largerTouchTargets: boolean;
+  setLargerTouchTargets: (value: boolean) => void;
+  reduceTransparency: boolean;
+  setReduceTransparency: (value: boolean) => void;
+  boldText: boolean;
+  setBoldText: (value: boolean) => void;
+  simplifiedInterface: boolean;
+  setSimplifiedInterface: (value: boolean) => void;
+  slowerTransitions: boolean;
+  setSlowerTransitions: (value: boolean) => void;
   meetupReminders: boolean;
   setMeetupReminders: (value: boolean) => void;
   weatherAlerts: boolean;
@@ -826,6 +840,10 @@ type AppSettings = {
   setTranslationLanguage: (value: string) => void;
   appPalette: AppPalette;
   setAppPalette: (value: AppPalette) => void;
+  softSurfaces: boolean;
+  setSoftSurfaces: (value: boolean) => void;
+  clearBorders: boolean;
+  setClearBorders: (value: boolean) => void;
   timezone: TimezoneSetting;
   setTimezone: (value: TimezoneSetting) => void;
 };
@@ -859,12 +877,18 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
   const [hobbiesInterests, setHobbiesInterests] = useState<string[]>(["Coffee", "Movies", "Walks"]);
   const [profileShortcutLayout, setProfileShortcutLayout] = useState<ProfileShortcutLayout>("Clean");
+  const [profileWidthPreference, setProfileWidthPreference] = useState<ProfileWidthPreference>("Contained");
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [screenReaderHints, setScreenReaderHints] = useState(true);
+  const [largerTouchTargets, setLargerTouchTargets] = useState(false);
+  const [reduceTransparency, setReduceTransparency] = useState(false);
+  const [boldText, setBoldText] = useState(false);
+  const [simplifiedInterface, setSimplifiedInterface] = useState(false);
+  const [slowerTransitions, setSlowerTransitions] = useState(false);
   const [meetupReminders, setMeetupReminders] = useState(true);
   const [weatherAlerts, setWeatherAlerts] = useState(true);
   const [chatNotifications, setChatNotifications] = useState(true);
@@ -876,6 +900,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [appLanguage, setAppLanguage] = useState("English");
   const [translationLanguage, setTranslationLanguage] = useState("English");
   const [appPalette, setAppPalette] = useState<AppPalette>(appPalettes[0]);
+  const [softSurfaces, setSoftSurfaces] = useState(false);
+  const [clearBorders, setClearBorders] = useState(false);
   const [timezone, setTimezone] = useState<TimezoneSetting>(timezoneOptions[0]);
 
   useEffect(() => {
@@ -915,6 +941,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
         setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
         setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
+        setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
         setBlurProfilePhoto((snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("SoftHello onboarding could not load:", error);
@@ -957,6 +984,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setDietaryPreferences(snapshot.dietaryPreferences);
     setHobbiesInterests(snapshot.hobbiesInterests);
     setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
+    setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
     setBlurProfilePhoto(snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -1000,6 +1028,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       dietaryPreferences,
       hobbiesInterests,
       profileShortcutLayout,
+      profileWidthPreference,
       ...snapshot,
     };
 
@@ -1030,6 +1059,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
     if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
+    if (snapshot.profileWidthPreference !== undefined) setProfileWidthPreference(snapshot.profileWidthPreference);
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
@@ -1103,6 +1133,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHobbiesInterests,
         profileShortcutLayout,
         setProfileShortcutLayout,
+        profileWidthPreference,
+        setProfileWidthPreference,
         completeOnboarding,
         saveSoftHelloMvpState,
         resetOnboarding,
@@ -1118,6 +1150,16 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setReduceMotion,
         screenReaderHints,
         setScreenReaderHints,
+        largerTouchTargets,
+        setLargerTouchTargets,
+        reduceTransparency,
+        setReduceTransparency,
+        boldText,
+        setBoldText,
+        simplifiedInterface,
+        setSimplifiedInterface,
+        slowerTransitions,
+        setSlowerTransitions,
         meetupReminders,
         setMeetupReminders,
         weatherAlerts,
@@ -1140,6 +1182,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTranslationLanguage,
         appPalette,
         setAppPalette,
+        softSurfaces,
+        setSoftSurfaces,
+        clearBorders,
+        setClearBorders,
         timezone,
         setTimezone,
       }}

@@ -741,7 +741,7 @@ const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding, reduceMotion, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
@@ -1031,27 +1031,31 @@ export default function HomeScreen() {
         return;
       }
 
+      const transitionDuration = slowerTransitions ? 1100 : 460;
+      const pulseInDuration = slowerTransitions ? 520 : 230;
+      const pulseOutDuration = slowerTransitions ? 620 : 260;
+
       modePulse.setValue(0);
       Animated.parallel([
         Animated.timing(modeTransition, {
           toValue: isDay ? 1 : 0,
-          duration: 460,
+          duration: transitionDuration,
           useNativeDriver: false,
         }),
         Animated.sequence([
           Animated.timing(modePulse, {
             toValue: 1,
-            duration: 230,
+            duration: pulseInDuration,
             useNativeDriver: true,
           }),
           Animated.timing(modePulse, {
             toValue: 0,
-            duration: 260,
+            duration: pulseOutDuration,
             useNativeDriver: true,
           }),
         ]),
       ]).start();
-    }, [isDay, modePulse, modeTransition, reduceMotion]);
+    }, [isDay, modePulse, modeTransition, reduceMotion, slowerTransitions]);
 
     const animatedScreenColor = modeTransition.interpolate({
       inputRange: [0, 1],

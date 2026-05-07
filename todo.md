@@ -42,7 +42,7 @@
 - [ ] Keep endangered-language support community-led instead of adding broad picker entries without active users or native review
 - [ ] Plan later Indian language expansion, prioritising Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi and Nepali after translation review
 - [ ] Complete native-speaker review for newly listed languages before marking them fully translated, including Luxembourgish, Hungarian, Czech, Slovak, Croatian, Estonian, Latvian, Lithuanian, Armenian, Albanian and Afrikaans
-- [ ] Add toggle animations when switching between Day and Night settings
+- [ ] Add toggle animations when switching between Day and Night settings, including alternatives to the current circular glow
 - [ ] Fix buttons and standardise button behaviour across the app
 - [x] Allow profiles to blur their images for privacy
 - [x] Add Comfort Mode and Open Mode profile visibility controls

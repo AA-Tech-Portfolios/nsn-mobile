@@ -3,7 +3,7 @@ import { View, Text, TextInput, Platform, ScrollView, StyleSheet, TouchableOpaci
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 
-import { getLanguageBase, type ProfileShortcutLayout, type SoftHelloVisibility, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type ProfileShortcutLayout, type ProfileWidthPreference, type SoftHelloVisibility, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
@@ -27,6 +27,7 @@ type ProfileShortcutRow = (typeof rows)[number] | typeof settingsRow;
 type ProfileShortcutKey = ProfileShortcutRow["key"];
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
+const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
 
 const comfortOptions: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet", "Flexible pace", "Indoor backup"];
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -630,6 +631,11 @@ const profileMenuTranslations = {
     cleanCopy: "Move shortcuts into this menu.",
     expanded: "Full profile",
     expandedCopy: "Show shortcuts as rows.",
+    widthTitle: "Screen width",
+    contained: "Contained",
+    containedCopy: "Keep profile sections comfortably centered.",
+    wide: "Wide screen",
+    wideCopy: "Stretch profile sections across the screen.",
   },
   Hebrew: {
     menuTitle: "קיצורי פרופיל",
@@ -638,6 +644,11 @@ const profileMenuTranslations = {
     cleanCopy: "להעביר קיצורים לתפריט הזה.",
     expanded: "פרופיל מלא",
     expandedCopy: "להציג קיצורים כשורות.",
+    widthTitle: "רוחב מסך",
+    contained: "מרוכז",
+    containedCopy: "להשאיר את אזורי הפרופיל ממורכזים בנוחות.",
+    wide: "מסך רחב",
+    wideCopy: "למתוח את אזורי הפרופיל לרוחב המסך.",
   },
 } as const;
 
@@ -718,6 +729,10 @@ export default function ProfileScreen() {
     comfortPreferences,
     verificationLevel,
     profileShortcutLayout,
+    profileWidthPreference,
+    screenReaderHints,
+    softSurfaces,
+    clearBorders,
     saveSoftHelloMvpState,
     suburb,
     transportationMethod,
@@ -745,6 +760,7 @@ export default function ProfileScreen() {
     return copy.rows[key];
   };
   const isCleanProfile = profileShortcutLayout === "Clean";
+  const isWideProfile = profileWidthPreference === "Wide";
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(displayName);
@@ -908,6 +924,12 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ profileShortcutLayout: nextLayout });
   };
 
+  const updateProfileWidthPreference = async (nextPreference: ProfileWidthPreference) => {
+    if (nextPreference === profileWidthPreference) return;
+
+    await saveSoftHelloMvpState({ profileWidthPreference: nextPreference });
+  };
+
   const openVerificationReview = () => {
     setDraftContactEmail(contactEmail);
     setDraftContactPhone(contactPhone);
@@ -950,7 +972,7 @@ export default function ProfileScreen() {
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView
         style={[styles.screen, isDay && styles.dayContainer]}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, isWideProfile && styles.contentWide]}
         showsVerticalScrollIndicator={false}
         scrollEnabled={!showProfileMenu}
       >
@@ -961,55 +983,84 @@ export default function ProfileScreen() {
             style={[styles.settingsButton, isDay && styles.dayIconButton]}
             accessibilityRole="button"
             accessibilityLabel={copy.rows.settings}
+            accessibilityHint={screenReaderHints ? "Opens profile shortcuts, layout, width, and settings links." : undefined}
           >
             <IconSymbol name="more" color={isDay ? "#0B1220" : nsnColors.text} size={23} />
           </TouchableOpacity>
           {showProfileMenu ? (
             <View style={[styles.profileMenu, isDay && styles.dayCard]}>
-              <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>{profileMenuCopy.menuTitle}</Text>
-              {expandedProfileRows.map((row) => (
-                <TouchableOpacity
-                  key={row.key}
-                  activeOpacity={0.78}
-                  onPress={() => {
-                    setShowProfileMenu(false);
-                    router.push(row.route as any);
-                  }}
-                  style={styles.profileMenuItem}
-                  accessibilityRole="button"
-                  accessibilityLabel={getRowLabel(row.key)}
-                >
-                  <IconSymbol name={row.icon} color={isDay ? "#3B4A63" : nsnColors.muted} size={20} />
-                  <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getRowLabel(row.key)}</Text>
-                  <Text style={[styles.profileMenuChevron, isDay && styles.dayMutedText]}>›</Text>
-                </TouchableOpacity>
-              ))}
-              <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
-              <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>{profileMenuCopy.layoutTitle}</Text>
-              <View style={styles.profileLayoutStack}>
-                {profileShortcutLayoutOptions.map((option) => {
-                  const active = profileShortcutLayout === option;
-                  const label = option === "Clean" ? profileMenuCopy.clean : profileMenuCopy.expanded;
-                  const optionCopy = option === "Clean" ? profileMenuCopy.cleanCopy : profileMenuCopy.expandedCopy;
+              <ScrollView style={styles.profileMenuScroll} contentContainerStyle={styles.profileMenuContent} showsVerticalScrollIndicator={false}>
+                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>{profileMenuCopy.menuTitle}</Text>
+                {expandedProfileRows.map((row) => (
+                  <TouchableOpacity
+                    key={row.key}
+                    activeOpacity={0.78}
+                    onPress={() => {
+                      setShowProfileMenu(false);
+                      router.push(row.route as any);
+                    }}
+                    style={styles.profileMenuItem}
+                    accessibilityRole="button"
+                    accessibilityLabel={getRowLabel(row.key)}
+                  >
+                    <IconSymbol name={row.icon} color={isDay ? "#3B4A63" : nsnColors.muted} size={20} />
+                    <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getRowLabel(row.key)}</Text>
+                    <Text style={[styles.profileMenuChevron, isDay && styles.dayMutedText]}>›</Text>
+                  </TouchableOpacity>
+                ))}
+                <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
+                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>{profileMenuCopy.layoutTitle}</Text>
+                <View style={styles.profileLayoutStack}>
+                  {profileShortcutLayoutOptions.map((option) => {
+                    const active = profileShortcutLayout === option;
+                    const label = option === "Clean" ? profileMenuCopy.clean : profileMenuCopy.expanded;
+                    const optionCopy = option === "Clean" ? profileMenuCopy.cleanCopy : profileMenuCopy.expandedCopy;
 
-                  return (
-                    <TouchableOpacity
-                      key={option}
-                      activeOpacity={0.82}
-                      onPress={() => updateProfileShortcutLayout(option)}
-                      style={[styles.profileLayoutOption, isDay && styles.daySoftOption, active && styles.profileLayoutOptionActive]}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                    >
-                      <View style={styles.profileLayoutBody}>
-                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{label}</Text>
-                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, active && styles.profileLayoutTextActive]}>{optionCopy}</Text>
-                      </View>
-                      <Text style={[styles.profileLayoutCheck, active && styles.profileLayoutTextActive]}>{active ? "✓" : ""}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        activeOpacity={0.82}
+                        onPress={() => updateProfileShortcutLayout(option)}
+                        style={[styles.profileLayoutOption, isDay && styles.daySoftOption, active && styles.profileLayoutOptionActive]}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                      >
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{label}</Text>
+                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, active && styles.profileLayoutTextActive]}>{optionCopy}</Text>
+                        </View>
+                        <Text style={[styles.profileLayoutCheck, active && styles.profileLayoutTextActive]}>{active ? "✓" : ""}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
+                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>{profileMenuCopy.widthTitle}</Text>
+                <View style={styles.profileLayoutStack}>
+                  {profileWidthPreferenceOptions.map((option) => {
+                    const active = profileWidthPreference === option;
+                    const label = option === "Contained" ? profileMenuCopy.contained : profileMenuCopy.wide;
+                    const optionCopy = option === "Contained" ? profileMenuCopy.containedCopy : profileMenuCopy.wideCopy;
+
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        activeOpacity={0.82}
+                        onPress={() => updateProfileWidthPreference(option)}
+                        style={[styles.profileLayoutOption, isDay && styles.daySoftOption, active && styles.profileLayoutOptionActive]}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                      >
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{label}</Text>
+                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, active && styles.profileLayoutTextActive]}>{optionCopy}</Text>
+                        </View>
+                        <Text style={[styles.profileLayoutCheck, active && styles.profileLayoutTextActive]}>{active ? "✓" : ""}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </ScrollView>
             </View>
           ) : null}
         </View>
@@ -1231,7 +1282,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        <View style={[styles.aboutCard, isDay && styles.dayCard]}>
+        <View style={[styles.aboutCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
           {isEditingAbout ? (
             <TextInput
               style={[styles.aboutText, styles.aboutInput, isDay && styles.dayTitle, isRtl && styles.rtlText]}
@@ -1247,34 +1298,7 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        <View style={[styles.trustCard, isDay && styles.dayCard]}>
-          <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
-            <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.trustStatus}</Text>
-            <Text style={[styles.trustPill, isDay && styles.dayTrustPill, canMeetInPerson(effectiveVerificationLevel) && styles.trustPillReady, isDay && canMeetInPerson(effectiveVerificationLevel) && styles.dayTrustPillReady]}>
-              {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
-            </Text>
-          </View>
-          <Text style={[styles.trustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
-          <View style={styles.verificationSteps}>
-            {verificationLevels.map((level) => (
-              <View key={level} style={[styles.verificationStep, isDay && styles.dayVerificationStep, level === effectiveVerificationLevel && styles.verificationStepActive, isDay && level === effectiveVerificationLevel && styles.dayVerificationStepActive]}>
-                <Text style={[styles.verificationStepText, isDay && styles.dayVerificationStepText, level === effectiveVerificationLevel && styles.verificationStepTextActive, isDay && level === effectiveVerificationLevel && styles.dayVerificationStepTextActive]}>
-                  {getVerificationLevelLabel(level, appLanguageBase)}
-                </Text>
-              </View>
-            ))}
-          </View>
-          <TouchableOpacity
-            activeOpacity={0.82}
-            onPress={openVerificationReview}
-            style={[styles.reviewSettingsButton, isRtl && styles.rtlRow]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.reviewSettingsText}>{profileVerificationCopy.reviewSettings}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={[styles.trustCard, isDay && styles.dayCard]}>
+        <View style={[styles.trustCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
             <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.comfortProfile}</Text>
             <Text style={styles.editText} onPress={toggleComfortEditing}>
@@ -1308,8 +1332,36 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        <View style={[styles.trustCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+          <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+            <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.trustStatus}</Text>
+            <Text style={[styles.trustPill, isDay && styles.dayTrustPill, canMeetInPerson(effectiveVerificationLevel) && styles.trustPillReady, isDay && canMeetInPerson(effectiveVerificationLevel) && styles.dayTrustPillReady]}>
+              {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
+            </Text>
+          </View>
+          <Text style={[styles.trustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
+          <View style={styles.verificationSteps}>
+            {verificationLevels.map((level) => (
+              <View key={level} style={[styles.verificationStep, isDay && styles.dayVerificationStep, level === effectiveVerificationLevel && styles.verificationStepActive, isDay && level === effectiveVerificationLevel && styles.dayVerificationStepActive]}>
+                <Text style={[styles.verificationStepText, isDay && styles.dayVerificationStepText, level === effectiveVerificationLevel && styles.verificationStepTextActive, isDay && level === effectiveVerificationLevel && styles.dayVerificationStepTextActive]}>
+                  {getVerificationLevelLabel(level, appLanguageBase)}
+                </Text>
+              </View>
+            ))}
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.82}
+            onPress={openVerificationReview}
+            style={[styles.reviewSettingsButton, isRtl && styles.rtlRow]}
+            accessibilityRole="button"
+            accessibilityHint={screenReaderHints ? "Opens contact, selfie, and ID fields used for trust status." : undefined}
+          >
+            <Text style={styles.reviewSettingsText}>{profileVerificationCopy.reviewSettings}</Text>
+          </TouchableOpacity>
+        </View>
+
         {!isCleanProfile ? (
-          <View style={[styles.settingsList, isDay && styles.dayCard]}>
+          <View style={[styles.settingsList, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
             {expandedProfileRows.map((row, index) => (
               <TouchableOpacity 
                 key={row.key}
@@ -1372,20 +1424,20 @@ export default function ProfileScreen() {
                   style={[styles.verificationInput, isDay && styles.dayInput, isRtl && styles.rtlInput]}
                 />
               </View>
-              <TouchableOpacity activeOpacity={0.82} onPress={pickIdentitySelfie} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]}>
+              <TouchableOpacity activeOpacity={0.82} onPress={pickIdentitySelfie} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Adds or replaces the selfie used for identity verification." : undefined}>
                 <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.selfie}</Text>
                 <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
                   {draftIdentitySelfieUri ? profileVerificationCopy.selfieAdded : profileVerificationCopy.addSelfie}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.82} onPress={() => setDraftHasIdentityDocument((current) => !current)} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]}>
+              <TouchableOpacity activeOpacity={0.82} onPress={() => setDraftHasIdentityDocument((current) => !current)} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Toggles whether a government ID has been provided." : undefined}>
                 <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.idDocument}</Text>
                 <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
                   {draftHasIdentityDocument ? profileVerificationCopy.idProvided : profileVerificationCopy.idMissing}
                 </Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity activeOpacity={0.86} onPress={confirmVerificationDetails} style={styles.confirmReviewButton}>
+            <TouchableOpacity activeOpacity={0.86} onPress={confirmVerificationDetails} style={styles.confirmReviewButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Saves trust settings and updates your current verification status." : undefined}>
               <Text style={styles.confirmReviewText}>{profileVerificationCopy.confirmDetails}</Text>
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.82} onPress={() => setIsVerificationReviewOpen(false)} style={[styles.secondaryReviewButton, isDay && styles.daySoftOption]}>
@@ -1401,19 +1453,22 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#EAF4FF" },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 30 },
+  content: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 30 },
+  contentWide: { maxWidth: "100%" },
   rtlInput: { textAlign: "right", writingDirection: "rtl" },
   topRight: { alignItems: "flex-end", marginBottom: 8, zIndex: 20 },
   settingsButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
   dayIconButton: { backgroundColor: "#DCEEFF" },
-  profileMenu: { width: "100%", maxWidth: 390, marginTop: 8, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 8 },
-  profileMenuTitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, paddingHorizontal: 10, paddingVertical: 6 },
-  profileMenuItem: { minHeight: 46, borderRadius: 12, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10 },
+  profileMenu: { width: "100%", maxWidth: 410, maxHeight: 720, marginTop: 8, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
+  profileMenuScroll: { width: "100%" },
+  profileMenuContent: { padding: 8 },
+  profileMenuTitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, paddingHorizontal: 10, paddingVertical: 5 },
+  profileMenuItem: { minHeight: 43, borderRadius: 12, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10 },
   profileMenuText: { flex: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   profileMenuChevron: { color: nsnColors.muted, fontSize: 20, fontWeight: "900", lineHeight: 24 },
   profileMenuDivider: { height: 1, backgroundColor: nsnColors.border, marginVertical: 7 },
   profileLayoutStack: { gap: 8 },
-  profileLayoutOption: { minHeight: 62, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },
+  profileLayoutOption: { minHeight: 58, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },
   daySoftOption: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
   profileLayoutOptionActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   profileLayoutBody: { flex: 1 },
@@ -1421,7 +1476,7 @@ const styles = StyleSheet.create({
   profileLayoutCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   profileLayoutCheck: { width: 22, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
   profileLayoutTextActive: { color: "#FFFFFF" },
-  profileHeader: { alignItems: "center", marginBottom: 22 },
+  profileHeader: { alignItems: "center", marginTop: 4, marginBottom: 22 },
   avatar: { width: 90, height: 90, borderRadius: 45, alignItems: "center", justifyContent: "center", backgroundColor: "#1590C9" },
   avatarImage: { width: 90, height: 90, borderRadius: 45 },
   avatarRing: { width: 104, height: 104, borderRadius: 52, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.10)" },
@@ -1442,7 +1497,7 @@ const styles = StyleSheet.create({
   visibilityModeText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
   visibilityModeTextActive: { color: "#FFFFFF" },
   visibilityModeCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 8, textAlign: "center" },
-  trustCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 14, marginBottom: 16 },
+  trustCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, marginBottom: 16 },
   trustHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 6 },
   trustPill: { color: nsnColors.warning, borderColor: "rgba(247,200,91,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
   trustPillReady: { color: nsnColors.green, borderColor: "rgba(114,214,126,0.45)" },
@@ -1500,7 +1555,7 @@ const styles = StyleSheet.create({
   rtlText: { textAlign: "right", writingDirection: "rtl" },
   inlineMessage: { color: "#F7C85B", fontSize: 12, lineHeight: 17, fontWeight: "700", marginTop: -10, marginBottom: 16, textAlign: "center" },
   dayMessage: { color: "#7C5A00" },
-  aboutCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 15, marginBottom: 16 },
+  aboutCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 16, marginBottom: 16 },
   aboutInput: { minHeight: 80, textAlignVertical: "top", padding: 0, margin: 0, borderWidth: 0, backgroundColor: "transparent", ...(Platform.OS === "web" ? ({ outlineStyle: "none", outlineWidth: 0, outlineColor: "transparent", boxShadow: "none", appearance: "none", caretColor: "#7786FF" } as any) : {}) },
   aboutText: { color: nsnColors.text, fontSize: 15, lineHeight: 23 },
   settingsList: { borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
@@ -1511,4 +1566,6 @@ const styles = StyleSheet.create({
   rowLabel: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "600", lineHeight: 20 },
   rowChevron: { color: nsnColors.muted, fontSize: 26, lineHeight: 30 },
   dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  softSurfaceCard: { backgroundColor: "rgba(220,238,255,0.72)", borderColor: "rgba(184,201,230,0.56)" },
+  clearBorderCard: { borderColor: "#6F8BB8", borderWidth: 1.5 },
 });

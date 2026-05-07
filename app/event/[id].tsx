@@ -397,6 +397,7 @@ export default function EventDetailsScreen() {
     savedPlaces,
     pinnedEventIds,
     hiddenEventIds,
+    screenReaderHints,
     saveSoftHelloMvpState,
   } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
@@ -535,7 +536,7 @@ export default function EventDetailsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.topBar, isRtl && styles.rtlRow]}>
-          <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.iconButton, isDay && styles.dayIconButton]}>
+          <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.iconButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel="Go back" accessibilityHint={screenReaderHints ? "Returns to the previous screen." : undefined}>
             <IconSymbol name="chevron.left" color={iconColor} size={26} />
           </TouchableOpacity>
           <View style={styles.topActions}>
@@ -544,6 +545,7 @@ export default function EventDetailsScreen() {
               onPress={toggleSavedPlace}
               accessibilityRole="button"
               accessibilityLabel={isPlaceSaved ? saveCopy.saved : saveCopy.save}
+              accessibilityHint={screenReaderHints ? (isPlaceSaved ? "Removes this venue from your saved places." : "Saves this venue to your saved places.") : undefined}
               style={[styles.iconButton, isDay && styles.dayIconButton, isPlaceSaved && styles.savedIconButton]}
             >
               <IconSymbol name={isPlaceSaved ? "bookmark" : "bookmark.border"} color={isPlaceSaved ? nsnColors.day : iconColor} size={22} />
@@ -553,6 +555,7 @@ export default function EventDetailsScreen() {
               onPress={shareEvent}
               accessibilityRole="button"
               accessibilityLabel={actionCopy.shareTitle}
+              accessibilityHint={screenReaderHints ? "Shares this meetup with someone else, or copies a share message on web." : undefined}
               style={[styles.iconButton, isDay && styles.dayIconButton]}
             >
               <IconSymbol name="share" color={iconColor} size={22} />
@@ -562,6 +565,7 @@ export default function EventDetailsScreen() {
               onPress={() => setIsMoreMenuOpen(true)}
               accessibilityRole="button"
               accessibilityLabel={actionCopy.moreTitle}
+              accessibilityHint={screenReaderHints ? "Opens event options such as pin, hide, and saved places." : undefined}
               style={[styles.iconButton, isDay && styles.dayIconButton, (isEventPinned || isEventHidden) && styles.activeMoreButton]}
             >
               <IconSymbol name="more" color={iconColor} size={23} />
@@ -575,11 +579,11 @@ export default function EventDetailsScreen() {
               <Text style={[styles.actionSheetTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{actionCopy.moreTitle}</Text>
               <Text style={[styles.actionSheetCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{actionCopy.moreCopy}</Text>
               <View style={styles.actionList}>
-                <TouchableOpacity activeOpacity={0.82} onPress={togglePinnedEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}>
+                <TouchableOpacity activeOpacity={0.82} onPress={togglePinnedEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Changes whether this event is prioritized for you." : undefined}>
                   <IconSymbol name="pin" color={isEventPinned ? nsnColors.day : iconColor} size={20} />
                   <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isEventPinned ? actionCopy.unpin : actionCopy.pin}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity activeOpacity={0.82} onPress={toggleHiddenEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}>
+                <TouchableOpacity activeOpacity={0.82} onPress={toggleHiddenEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Changes whether this event appears on Home." : undefined}>
                   <IconSymbol name={isEventHidden ? "visibility" : "visibility.off"} color={isEventHidden ? "#2F80ED" : nsnColors.danger} size={20} />
                   <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isEventHidden ? actionCopy.unhide : actionCopy.hide}</Text>
                 </TouchableOpacity>
@@ -590,6 +594,8 @@ export default function EventDetailsScreen() {
                     router.push("/(tabs)/saved-places");
                   }}
                   style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
+                  accessibilityRole="button"
+                  accessibilityHint={screenReaderHints ? "Opens your saved places list." : undefined}
                 >
                   <IconSymbol name="bookmark" color={nsnColors.day} size={20} />
                   <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{actionCopy.viewSavedPlaces}</Text>
@@ -623,7 +629,7 @@ export default function EventDetailsScreen() {
                 ))}
               </View>
               <View style={styles.verificationActions}>
-                <TouchableOpacity activeOpacity={0.82} onPress={confirmVerificationDetails} style={styles.confirmVerificationButton}>
+              <TouchableOpacity activeOpacity={0.82} onPress={confirmVerificationDetails} style={styles.confirmVerificationButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Confirms these details for this meetup check." : undefined}>
                   <Text style={styles.confirmVerificationText}>{verificationCopy.confirm}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -633,6 +639,8 @@ export default function EventDetailsScreen() {
                     router.push("/(tabs)/profile");
                   }}
                   style={[styles.secondaryVerificationButton, isDay && styles.dayActionRow]}
+                  accessibilityRole="button"
+                  accessibilityHint={screenReaderHints ? "Opens Profile to update trust, contact, and profile details." : undefined}
                 >
                   <Text style={[styles.secondaryVerificationText, isDay && styles.dayText]}>{verificationCopy.editProfile}</Text>
                 </TouchableOpacity>
@@ -665,6 +673,8 @@ export default function EventDetailsScreen() {
           activeOpacity={0.86}
           onPress={toggleSavedPlace}
           style={[styles.savePlaceButton, isDay && styles.daySavePlaceButton, isRtl && styles.rtlRow]}
+          accessibilityRole="button"
+          accessibilityHint={screenReaderHints ? (isPlaceSaved ? "Removes this venue from saved places." : "Saves this venue so you can find it later.") : undefined}
         >
           <IconSymbol name={isPlaceSaved ? "bookmark" : "bookmark.border"} color={isPlaceSaved ? nsnColors.day : iconColor} size={20} />
           <Text style={[styles.savePlaceText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isPlaceSaved ? saveCopy.saved : saveCopy.save}</Text>
@@ -733,6 +743,8 @@ export default function EventDetailsScreen() {
           activeOpacity={0.88}
           onPress={handleJoin}
           style={[styles.joinButton, !canMeet && styles.joinButtonLocked]}
+          accessibilityRole="button"
+          accessibilityHint={screenReaderHints ? (hasJoined ? "Opens the meetup group chat." : canMeet ? "Joins this meetup." : "Opens verification details required before meeting in person.") : undefined}
         >
           <Text style={styles.joinText}>
             {hasJoined ? "Open Meetup Chat" : canMeet ? copy.join : "verifyBeforeMeeting" in copy ? copy.verifyBeforeMeeting : "Verify before meeting"}

@@ -55,7 +55,7 @@ const tabLabels: Record<string, { home: string; meetups: string; chats: string; 
 };
 
 export default function TabLayout() {
-  const { isNightMode, appLanguage, appPalette } = useAppSettings();
+  const { isNightMode, appLanguage, appPalette, largerTouchTargets, reduceTransparency, boldText, simplifiedInterface, screenReaderHints, softSurfaces, clearBorders } = useAppSettings();
   const isDay = !isNightMode;
   const labels = tabLabels[getLanguageBase(appLanguage)] ?? tabLabels.English;
   const activeTintColor = appPalette.swatches[2];
@@ -71,15 +71,21 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: "600",
+          fontWeight: boldText ? "800" : "600",
+          lineHeight: 15,
+          marginTop: 2,
+        },
+        tabBarIconStyle: {
+          marginTop: 4,
+          marginBottom: 1,
         },
         tabBarStyle: {
-          height: 58 + bottomPadding,
-          paddingTop: 8,
+          height: (largerTouchTargets ? 76 : 66) + bottomPadding,
+          paddingTop: largerTouchTargets ? 12 : 9,
           paddingBottom: bottomPadding,
-          backgroundColor: isDay ? "#F4F9FF" : nsnColors.background,
-          borderTopColor: isDay ? "#B8C9E6" : nsnColors.border,
-          borderTopWidth: 0.8,
+          backgroundColor: reduceTransparency ? (isDay ? "#FFFFFF" : "#020814") : isDay ? "#F4F9FF" : nsnColors.background,
+          borderTopColor: clearBorders ? (isDay ? "#6F8BB8" : "#5A6EA5") : softSurfaces ? (isDay ? "#D5E5F8" : "rgba(148,163,184,0.18)") : isDay ? "#B8C9E6" : nsnColors.border,
+          borderTopWidth: clearBorders ? 1.5 : softSurfaces ? 0.6 : 0.8,
         },
       }}
     >
@@ -87,35 +93,40 @@ export default function TabLayout() {
         name="index"
         options={{
           title: labels.home,
-          tabBarIcon: ({ color }) => <IconSymbol size={25} name="house.fill" color={color} />,
+          tabBarAccessibilityLabel: screenReaderHints ? `${labels.home}. Opens your home feed and event suggestions.` : labels.home,
+          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="house.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="meetups"
         options={{
           title: labels.meetups,
-          tabBarIcon: ({ color }) => <IconSymbol size={25} name="calendar" color={color} />,
+          tabBarAccessibilityLabel: screenReaderHints ? `${labels.meetups}. Opens your joined and upcoming meetups.` : labels.meetups,
+          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="calendar" color={color} />,
         }}
       />
       <Tabs.Screen
         name="chats"
         options={{
           title: labels.chats,
-          tabBarIcon: ({ color }) => <IconSymbol size={25} name="message" color={color} />,
+          tabBarAccessibilityLabel: screenReaderHints ? `${labels.chats}. Opens meetup group chats and private chats.` : labels.chats,
+          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="message" color={color} />,
         }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
           title: labels.alerts,
-          tabBarIcon: ({ color }) => <IconSymbol size={25} name="bell" color={color} />,
+          tabBarAccessibilityLabel: screenReaderHints ? `${labels.alerts}. Opens reminders and safety alerts.` : labels.alerts,
+          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="bell" color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: labels.profile,
-          tabBarIcon: ({ color }) => <IconSymbol size={25} name="person.fill" color={color} />,
+          tabBarAccessibilityLabel: screenReaderHints ? `${labels.profile}. Opens profile, preferences, and trust settings.` : labels.profile,
+          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="person.fill" color={color} />,
         }}
       />
       <Tabs.Screen

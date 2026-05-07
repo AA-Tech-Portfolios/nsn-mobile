@@ -69,7 +69,33 @@ type ChatMenuCopy = {
   title: string;
   current: string;
   openLabel: string;
+  landingTitle: string;
+  landingCopy: string;
+  meetupGroups: string;
+  people: string;
+  privateChat: string;
+  host: string;
+  member: string;
 };
+type ChatTarget =
+  | {
+      id: string;
+      type: "group";
+      title: string;
+      subtitle: string;
+      emoji: string;
+      tone: string;
+      eventId: string;
+    }
+  | {
+      id: string;
+      type: "person";
+      title: string;
+      subtitle: string;
+      emoji: string;
+      tone: string;
+      personId: string;
+    };
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
@@ -97,6 +123,23 @@ const reportTargets: ReportTarget[] = [
 ];
 
 const memberBlockTargets = reportTargets.filter((target) => target.role === "member");
+const directChatTargets = [
+  { id: "person-maya-host", personId: "maya-host", name: "Maya", role: "host", emoji: "M", tone: "#174667" },
+  { id: "person-alon-member", personId: "alon-member", name: "Alon", role: "member", emoji: "A", tone: "#1590C9" },
+  { id: "person-james-member", personId: "james-member", name: "James", role: "member", emoji: "J", tone: "#0F5B7C" },
+] as const;
+
+const directChatSeedByPerson: Record<string, ChatMessage[]> = {
+  "maya-host": [
+    { id: "maya-direct-1", name: "Maya", avatar: "M", text: "Hi, happy to help if you have any questions before the meetup.", time: "4:28pm", mine: false },
+  ],
+  "alon-member": [
+    { id: "alon-direct-1", name: "Alon", avatar: "A", text: "Hey, nice to meet you here.", time: "4:30pm", mine: false },
+  ],
+  "james-member": [
+    { id: "james-direct-1", name: "James", avatar: "J", text: "Hi, are you going to the movie night too?", time: "4:31pm", mine: false },
+  ],
+};
 
 const reportFlowCopy: ReportFlowCopy = {
   targetTitle: "Who is this about?",
@@ -209,11 +252,25 @@ const chatMenuTranslations = {
     title: "Meetup chats",
     current: "Current chat",
     openLabel: "Choose meetup chat",
+    landingTitle: "Choose a chat",
+    landingCopy: "Select a meetup group or verified person to open the right conversation.",
+    meetupGroups: "Meetup groups",
+    people: "People",
+    privateChat: "Private chat",
+    host: "Host",
+    member: "Member",
   },
   Hebrew: {
     title: "צ'אטים של מפגשים",
     current: "הצ'אט הנוכחי",
     openLabel: "בחירת צ'אט מפגש",
+    landingTitle: "בחירת צ'אט",
+    landingCopy: "בחר/י קבוצת מפגש או אדם מאומת כדי לפתוח את השיחה המתאימה.",
+    meetupGroups: "קבוצות מפגש",
+    people: "אנשים",
+    privateChat: "צ'אט פרטי",
+    host: "מארח/ת",
+    member: "חבר/ה",
   },
 } satisfies Record<string, ChatMenuCopy>;
 
@@ -776,6 +833,7 @@ export default function ChatsScreen() {
     blockedUserIds,
     safetyReports,
     transportationMethod,
+    screenReaderHints,
     saveSoftHelloMvpState,
   } = useAppSettings();
   const translationLanguageBase = getLanguageBase(translationLanguage);
@@ -794,8 +852,10 @@ export default function ChatsScreen() {
   const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
   const canUsePrivateChats = canChatPrivately(effectiveVerificationLevel);
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
+  const [directMessagesByPerson, setDirectMessagesByPerson] = useState<Record<string, ChatMessage[]>>(directChatSeedByPerson);
   const [draft, setDraft] = useState("");
   const [selectedChatId, setSelectedChatId] = useState("movie-night-watch-chat");
+  const [selectedChatTargetId, setSelectedChatTargetId] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [softExitOpen, setSoftExitOpen] = useState(false);
   const [safetyOpen, setSafetyOpen] = useState(false);
@@ -814,7 +874,37 @@ export default function ChatsScreen() {
   const selectedChat = allEvents.find((event) => event.id === selectedChatId) ?? allEvents.find((event) => event.id === "movie-night-watch-chat") ?? allEvents[0]!;
   const selectedChatTitle = chatEventTitleCopy[selectedChat.id] ?? selectedChat.title;
   const selectedChatMembers = selectedChat.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(selectedChat, translationLanguageBase);
+  const groupChatTargets: ChatTarget[] = allEvents.map((event) => ({
+    id: `group-${event.id}`,
+    type: "group",
+    title: chatEventTitleCopy[event.id] ?? event.title,
+    subtitle: `${event.venue} · ${event.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(event, translationLanguageBase)}`,
+    emoji: event.emoji,
+    tone: event.imageTone,
+    eventId: event.id,
+  }));
+  const personChatTargets: ChatTarget[] = directChatTargets.map((person) => ({
+    id: person.id,
+    type: "person",
+    title: person.name,
+    subtitle: `${chatMenuCopy.privateChat} · ${person.role === "host" ? chatMenuCopy.host : chatMenuCopy.member}`,
+    emoji: person.emoji,
+    tone: person.tone,
+    personId: person.personId,
+  }));
+  const chatTargets = [...groupChatTargets, ...personChatTargets];
+  const selectedChatTarget = selectedChatTargetId ? chatTargets.find((target) => target.id === selectedChatTargetId) : undefined;
+  const isPersonChat = selectedChatTarget?.type === "person";
+  const activeChatTitle = selectedChatTarget?.title ?? selectedChatTitle;
+  const activeChatSubtitle = selectedChatTarget?.subtitle ?? selectedChatMembers;
+  const activeChatEmoji = selectedChatTarget?.emoji ?? selectedChat.emoji;
+  const activeChatTone = selectedChatTarget?.tone ?? selectedChat.imageTone;
+  const conversationId = selectedChatTarget?.type === "person" ? selectedChatTarget.personId : selectedChat.id;
   const eventId = selectedChat.id;
+  const activeMessages =
+    selectedChatTarget?.type === "person"
+      ? directMessagesByPerson[selectedChatTarget.personId] ?? []
+      : messages;
   const hostUserId = "maya-host";
   const isHostBlocked = blockedUserIds.includes(hostUserId);
   const selectedBlockMember = memberBlockTargets.find((target) => target.id === selectedBlockMemberId) ?? memberBlockTargets[0];
@@ -839,7 +929,10 @@ export default function ChatsScreen() {
           <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
             <Text style={[styles.trustGateTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredTitle}</Text>
             <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredCopy}</Text>
-            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.trustGateButton}>
+            <Text style={[styles.trustGateStatus, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+              {getVerificationLevelLabel(effectiveVerificationLevel, translationLanguageBase)}
+            </Text>
+            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.trustGateButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Opens Profile so you can review and add contact verification details." : undefined}>
               <Text style={styles.trustGateButtonText}>{trustGateCopy.reviewSettings}</Text>
             </TouchableOpacity>
           </View>
@@ -851,10 +944,17 @@ export default function ChatsScreen() {
   const sendMessage = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
-    setMessages((current) => [
-      ...current,
-      { id: String(Date.now()), name: copy.you, avatar: "Y", text: trimmed, time: copy.now, mine: true },
-    ]);
+    const nextMessage = { id: String(Date.now()), name: copy.you, avatar: "Y", text: trimmed, time: copy.now, mine: true };
+
+    if (selectedChatTarget?.type === "person") {
+      setDirectMessagesByPerson((current) => ({
+        ...current,
+        [selectedChatTarget.personId]: [...(current[selectedChatTarget.personId] ?? []), nextMessage],
+      }));
+    } else {
+      setMessages((current) => [...current, nextMessage]);
+    }
+
     setDraft("");
   };
 
@@ -876,7 +976,7 @@ export default function ChatsScreen() {
   };
 
   const reportConcern = async (reason: SafetyReportReason) => {
-    const report = createSafetyReport(eventId, selectedReportTarget.id, reason, new Date().toISOString(), {
+    const report = createSafetyReport(conversationId, selectedReportTarget.id, reason, new Date().toISOString(), {
       reportedUserName: selectedReportTarget.name,
       route: effectiveReportRoute,
     });
@@ -967,8 +1067,12 @@ export default function ChatsScreen() {
     }
   };
 
-  const chooseChat = (nextChatId: string) => {
-    setSelectedChatId(nextChatId);
+  const chooseChat = (target: ChatTarget) => {
+    if (target.type === "group") {
+      setSelectedChatId(target.eventId);
+    }
+
+    setSelectedChatTargetId(target.id);
     setChatMenuOpen(false);
     setSafetyOpen(false);
     setSoftExitOpen(false);
@@ -980,10 +1084,72 @@ export default function ChatsScreen() {
     setReportNotice("");
   };
 
+  const renderChatTargetButton = (target: ChatTarget) => {
+    const active = selectedChatTarget?.id === target.id;
+
+    return (
+      <TouchableOpacity
+        key={target.id}
+        activeOpacity={0.82}
+        onPress={() => chooseChat(target)}
+        style={[styles.chatMenuItem, isDay && styles.daySoftExitAction, active && styles.chatMenuItemActive]}
+        accessibilityRole="button"
+        accessibilityState={{ selected: active }}
+        accessibilityHint={screenReaderHints ? `Opens ${target.type === "person" ? "a private chat with" : "the group chat for"} ${target.title}.` : undefined}
+      >
+        <View style={[styles.chatMenuEmoji, { backgroundColor: target.tone }]}>
+          <Text style={target.type === "person" ? styles.chatMenuInitialText : styles.chatMenuEmojiText}>{target.emoji}</Text>
+        </View>
+        <View style={styles.chatMenuItemBody}>
+          <Text style={[styles.chatMenuItemTitle, isDay && styles.dayTitle, active && styles.chatMenuItemTextActive, isRtl && styles.rtlText]}>{target.title}</Text>
+          <Text style={[styles.chatMenuItemMeta, isDay && styles.dayMutedText, active && styles.chatMenuItemTextActive, isRtl && styles.rtlText]}>
+            {target.subtitle}
+          </Text>
+        </View>
+        <Text style={[styles.chatMenuStatus, active && styles.chatMenuItemTextActive]}>{active ? "✓" : "›"}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  if (!selectedChatTarget) {
+    return (
+      <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+        <View style={[styles.screen, isDay && styles.dayContainer]}>
+          <ScrollView style={styles.chat} contentContainerStyle={styles.chatSelectionContent} showsVerticalScrollIndicator={false}>
+            <Text style={[styles.chatSelectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{chatMenuCopy.landingTitle}</Text>
+            <Text style={[styles.chatSelectionCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.landingCopy}</Text>
+
+            <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.meetupGroups}</Text>
+            <View style={styles.chatSelectionList}>{groupChatTargets.map(renderChatTargetButton)}</View>
+
+            <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.people}</Text>
+            <View style={styles.chatSelectionList}>{personChatTargets.map(renderChatTargetButton)}</View>
+          </ScrollView>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <View style={[styles.screen, isDay && styles.dayContainer]}>
-        <View style={[styles.header, isDay && styles.dayHeader]}>
+          <View style={[styles.header, isDay && styles.dayHeader]}>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => {
+              setSelectedChatTargetId(null);
+              setChatMenuOpen(false);
+              setSafetyOpen(false);
+              setSoftExitOpen(false);
+              setCannotMakeItOpen(false);
+            }}
+            style={styles.iconButton}
+            accessibilityRole="button"
+            accessibilityLabel={chatMenuCopy.openLabel}
+            accessibilityHint={screenReaderHints ? "Returns to the chat chooser." : undefined}
+          >
+            <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
+          </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.78}
             onPress={() => {
@@ -994,11 +1160,12 @@ export default function ChatsScreen() {
             style={styles.chatPickerButton}
             accessibilityRole="button"
             accessibilityLabel={chatMenuCopy.openLabel}
+            accessibilityHint={screenReaderHints ? "Opens the list of meetup groups and people you can chat with." : undefined}
           >
-            <View style={styles.eventAvatar}><Text style={styles.eventEmoji}>{selectedChat.emoji}</Text></View>
+            <View style={[styles.eventAvatar, { backgroundColor: activeChatTone }]}><Text style={selectedChatTarget.type === "person" ? styles.eventInitial : styles.eventEmoji}>{activeChatEmoji}</Text></View>
             <View style={styles.headerText}>
-              <Text style={[styles.title, isDay && styles.dayTitle]}>{selectedChatTitle}</Text>
-              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{selectedChatMembers}</Text>
+              <Text style={[styles.title, isDay && styles.dayTitle]}>{activeChatTitle}</Text>
+              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{activeChatSubtitle}</Text>
             </View>
             <Text style={[styles.chatPickerChevron, isDay && styles.dayMutedText]}>{chatMenuOpen ? "⌃" : "⌄"}</Text>
           </TouchableOpacity>
@@ -1014,55 +1181,36 @@ export default function ChatsScreen() {
             style={styles.iconButton}
             accessibilityRole="button"
             accessibilityLabel={copy.safetyTitle}
+            accessibilityHint={screenReaderHints ? "Opens private safety, report, and block options for this chat." : undefined}
           >
             <IconSymbol name="more" color={isDay ? "#0B1220" : nsnColors.text} size={21} />
           </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={() => {
-              setSoftExitOpen((current) => !current);
-              setSafetyOpen(false);
-              setMemberBlockOpen(false);
-            }}
-            style={styles.iconButton}
-            accessibilityRole="button"
-            accessibilityLabel={copy.softExitTitle}
-          >
-            <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={21} />
-          </TouchableOpacity>
+          {!isPersonChat ? (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={() => {
+                setSoftExitOpen((current) => !current);
+                setSafetyOpen(false);
+                setMemberBlockOpen(false);
+              }}
+              style={styles.iconButton}
+              accessibilityRole="button"
+              accessibilityLabel={copy.softExitTitle}
+              accessibilityHint={screenReaderHints ? "Opens gentle options for stepping back from this meetup chat." : undefined}
+            >
+              <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={21} />
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {chatMenuOpen ? (
           <View style={[styles.chatMenu, isDay && styles.dayCard]}>
             <Text style={[styles.chatMenuTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.title}</Text>
             <ScrollView style={styles.chatMenuList} contentContainerStyle={styles.chatMenuListContent} showsVerticalScrollIndicator={false}>
-              {allEvents.map((event) => {
-                const active = selectedChat.id === event.id;
-                const eventTitle = chatEventTitleCopy[event.id] ?? event.title;
-                const members = event.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(event, translationLanguageBase);
-
-                return (
-                  <TouchableOpacity
-                    key={event.id}
-                    activeOpacity={0.82}
-                    onPress={() => chooseChat(event.id)}
-                    style={[styles.chatMenuItem, isDay && styles.daySoftExitAction, active && styles.chatMenuItemActive]}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                  >
-                    <View style={[styles.chatMenuEmoji, { backgroundColor: event.imageTone }]}>
-                      <Text style={styles.chatMenuEmojiText}>{event.emoji}</Text>
-                    </View>
-                    <View style={styles.chatMenuItemBody}>
-                      <Text style={[styles.chatMenuItemTitle, isDay && styles.dayTitle, active && styles.chatMenuItemTextActive, isRtl && styles.rtlText]}>{eventTitle}</Text>
-                      <Text style={[styles.chatMenuItemMeta, isDay && styles.dayMutedText, active && styles.chatMenuItemTextActive, isRtl && styles.rtlText]}>
-                        {event.venue} · {members}
-                      </Text>
-                    </View>
-                    <Text style={[styles.chatMenuStatus, active && styles.chatMenuItemTextActive]}>{active ? "✓" : ""}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.meetupGroups}</Text>
+              {groupChatTargets.map(renderChatTargetButton)}
+              <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.people}</Text>
+              {personChatTargets.map(renderChatTargetButton)}
             </ScrollView>
           </View>
         ) : null}
@@ -1355,7 +1503,7 @@ export default function ChatsScreen() {
             </View>
           )}
 
-          {messages.map((message) => (
+          {activeMessages.map((message) => (
             <View key={message.id} style={[styles.messageRow, message.mine && styles.messageRowMine]}>
               {!message.mine && <View style={styles.avatar}><Text style={styles.avatarText}>{message.avatar}</Text></View>}
               <View style={[styles.messageBlock, message.mine && styles.messageBlockMine]}>
@@ -1370,7 +1518,7 @@ export default function ChatsScreen() {
         </ScrollView>
 
         <View style={styles.composerWrap}>
-          <View style={[styles.arrivalPanel, isDay && styles.dayCard]}>
+          {!isPersonChat ? <View style={[styles.arrivalPanel, isDay && styles.dayCard]}>
             <Text style={[styles.arrivalTitle, isDay && styles.dayTitle]}>{localizedArrivalUpdateCopy.title}</Text>
             <View style={styles.arrivalActions}>
               <TouchableOpacity activeOpacity={0.82} onPress={sendRunningLateUpdate} style={styles.arrivalButton}>
@@ -1405,7 +1553,7 @@ export default function ChatsScreen() {
                 </View>
               </View>
             ) : null}
-          </View>
+          </View> : null}
           {softExitChoice && (
             <TouchableOpacity
               activeOpacity={0.82}
@@ -1450,22 +1598,26 @@ const styles = StyleSheet.create({
   dayHeader: { borderColor: "#B8C9E6" },
   eventAvatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#26133F", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.primary },
   eventEmoji: { fontSize: 22 },
+  eventInitial: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
   chatPickerButton: { flex: 1, minHeight: 46, flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 16, paddingRight: 8 },
   headerText: { flex: 1 },
   title: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 21 },
   dayTitle: { color: "#0B1220" },
   subtitle: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
   dayMutedText: { color: "#3B4A63" },
+  dayAccentText: { color: "#3949DB" },
   chatPickerChevron: { width: 20, color: nsnColors.muted, fontSize: 18, fontWeight: "900", lineHeight: 22, textAlign: "center" },
   iconButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   chatMenu: { maxHeight: 360, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginTop: 10, marginBottom: 8 },
   chatMenuTitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
+  chatMenuSectionTitle: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, marginTop: 4, marginBottom: 6, textTransform: "uppercase" },
   chatMenuList: { maxHeight: 300 },
   chatMenuListContent: { gap: 8 },
   chatMenuItem: { minHeight: 64, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },
   chatMenuItemActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   chatMenuEmoji: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   chatMenuEmojiText: { fontSize: 20 },
+  chatMenuInitialText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
   chatMenuItemBody: { flex: 1 },
   chatMenuItemTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   chatMenuItemMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
@@ -1473,6 +1625,10 @@ const styles = StyleSheet.create({
   chatMenuItemTextActive: { color: "#FFFFFF" },
   chat: { flex: 1 },
   chatContent: { paddingTop: 16, paddingBottom: 16 },
+  chatSelectionContent: { paddingTop: 22, paddingBottom: 28 },
+  chatSelectionTitle: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35 },
+  chatSelectionCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 4, marginBottom: 18 },
+  chatSelectionList: { gap: 8, marginBottom: 18 },
   dayPill: { alignSelf: "center", backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 13, paddingVertical: 7, borderRadius: 15, marginBottom: 14 },
   dayPillLight: { backgroundColor: "#DCEEFF" },
   dayPillText: { color: nsnColors.muted, fontSize: 12, fontWeight: "700" },
@@ -1482,9 +1638,10 @@ const styles = StyleSheet.create({
   systemSubtext: { color: nsnColors.muted, textAlign: "center", fontSize: 12, lineHeight: 17 },
   trustGateCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, marginTop: 16 },
   trustGateTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
-  trustGateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 14 },
-  trustGateButton: { alignSelf: "flex-start", minHeight: 40, borderRadius: 14, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 14 },
-  trustGateButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  trustGateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 10 },
+  trustGateStatus: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 12 },
+  trustGateButton: { width: "100%", minHeight: 46, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10 },
+  trustGateButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "center" },
   softExitPanel: { borderRadius: 18, backgroundColor: "#0D1B2F", borderWidth: 1, borderColor: "#2B4578", padding: 14, marginBottom: 18 },
   daySoftExitPanel: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
   softExitTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "800", lineHeight: 21, marginBottom: 4 },

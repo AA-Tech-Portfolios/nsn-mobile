@@ -190,7 +190,7 @@ const meetupsTrustGateTranslations = {
 
 export default function MeetupsScreen() {
   const router = useRouter();
-  const { contactEmail, contactPhone, hasIdentityDocument, identitySelfieUri, isNightMode, translationLanguage } = useAppSettings();
+  const { contactEmail, contactPhone, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage } = useAppSettings();
   const translationLanguageBase = getLanguageBase(translationLanguage);
   const isDay = !isNightMode;
   const copy = meetupsTranslations[translationLanguageBase as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
@@ -209,8 +209,8 @@ export default function MeetupsScreen() {
             <Text style={[styles.gateTitle, isDay && styles.dayTitle]}>{trustGateCopy.trustRequiredTitle}</Text>
             <Text style={[styles.gateCopy, isDay && styles.dayMutedText]}>{trustGateCopy.trustRequiredCopy}</Text>
             <Text style={[styles.gateStatus, isDay && styles.dayAccentText]}>{getVerificationLevelLabel(effectiveVerificationLevel, translationLanguageBase)}</Text>
-            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.summaryButton}>
-              <Text style={styles.summaryButtonText}>{trustGateCopy.reviewSettings}</Text>
+            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.gateButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Opens Profile so you can add contact details for chat access." : undefined}>
+              <Text style={styles.gateButtonText}>{trustGateCopy.reviewSettings}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -219,7 +219,7 @@ export default function MeetupsScreen() {
           <Text style={[styles.summaryLabel, isDay && styles.dayAccentText]}>{copy.next}</Text>
           <Text style={[styles.summaryTitle, isDay && styles.dayTitle]}>{copy.summaryTitle}</Text>
           <Text style={[styles.summaryCopy, isDay && styles.dayMutedText]}>{copy.summaryCopy}</Text>
-          <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/event/movie-night-watch-chat")} style={styles.summaryButton}>
+          <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/event/movie-night-watch-chat")} style={styles.summaryButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Opens the next meetup details and safety information." : undefined}>
             <Text style={styles.summaryButtonText}>{copy.details}</Text>
           </TouchableOpacity>
         </View> : null}
@@ -230,7 +230,7 @@ export default function MeetupsScreen() {
             const localizedEvent = meetupEventTranslations[translationLanguageBase]?.[event.id] ?? event;
 
             return (
-            <TouchableOpacity key={event.id} activeOpacity={0.85} style={[styles.meetupCard, isDay && styles.dayCard]} onPress={() => router.push(`/event/${event.id}`)}>
+            <TouchableOpacity key={event.id} activeOpacity={0.85} style={[styles.meetupCard, isDay && styles.dayCard]} onPress={() => router.push(`/event/${event.id}`)} accessibilityRole="button" accessibilityHint={screenReaderHints ? `Opens details for ${localizedEvent.title}.` : undefined}>
               <View style={[styles.emojiBox, { backgroundColor: event.imageTone }]}><Text style={styles.emoji}>{event.emoji}</Text></View>
               <View style={styles.cardBody}>
                 <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedEvent.title}</Text>
@@ -267,6 +267,8 @@ const styles = StyleSheet.create({
   gateTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
   gateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 10 },
   gateStatus: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 12 },
+  gateButton: { width: "100%", minHeight: 46, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10 },
+  gateButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "center" },
   sectionTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "800", lineHeight: 24, marginBottom: 10 },
   list: { gap: 10 },
   meetupCard: { minHeight: 88, borderRadius: 18, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "center", padding: 10 },

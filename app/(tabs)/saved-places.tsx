@@ -1,4 +1,5 @@
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
@@ -221,6 +222,7 @@ const supplementalSavedPlacesTranslations = {
 } as const;
 
 export default function SavedPlacesScreen() {
+  const router = useRouter();
   const { appLanguage, isNightMode, savedPlaces, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = {
@@ -241,6 +243,10 @@ export default function SavedPlacesScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView style={[styles.container, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel="Go back">
+          <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
+        </TouchableOpacity>
+
         <Text style={[styles.title, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.title}</Text>
         <Text style={[styles.subtitle, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.subtitle}</Text>
 
@@ -289,6 +295,18 @@ const styles = StyleSheet.create({
   },
   dayContainer: {
     backgroundColor: "#EAF4FF",
+  },
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    marginBottom: 10,
+  },
+  dayIconButton: {
+    backgroundColor: "#DCEEFF",
   },
   title: {
     color: nsnColors.text,

@@ -1,8 +1,10 @@
 import { ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity } from "react-native";
 import { useState } from "react";
+import { useRouter } from "expo-router";
 
 import { appPalettes, getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
 import { createSettingsToggleSections, selectSettingsPalette, toggleSettingsDropdown, type SettingsDropdownName } from "@/lib/settings-controls";
 
@@ -2751,6 +2753,7 @@ const accessibilityTranslations: Record<string, Required<Pick<SettingsCopy, "acc
 };
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const {
     isNightMode,
     blurProfilePhoto,
@@ -2763,6 +2766,16 @@ export default function SettingsScreen() {
     setReduceMotion,
     screenReaderHints,
     setScreenReaderHints,
+    largerTouchTargets,
+    setLargerTouchTargets,
+    reduceTransparency,
+    setReduceTransparency,
+    boldText,
+    setBoldText,
+    simplifiedInterface,
+    setSimplifiedInterface,
+    slowerTransitions,
+    setSlowerTransitions,
     meetupReminders,
     setMeetupReminders,
     weatherAlerts,
@@ -2785,6 +2798,10 @@ export default function SettingsScreen() {
     setTranslationLanguage,
     appPalette,
     setAppPalette,
+    softSurfaces,
+    setSoftSurfaces,
+    clearBorders,
+    setClearBorders,
     resetOnboarding,
   } = useAppSettings();
   const isDay = !isNightMode;
@@ -2807,11 +2824,49 @@ export default function SettingsScreen() {
     ...(regionalEnglishSettings[appLanguage] ?? {}),
   };
   const paletteCopy = paletteTranslations[appLanguageBase] ?? {};
+  const appearanceOptionCopy = appLanguageBase === "Hebrew"
+    ? {
+        softSurfaces: "משטחים רכים",
+        softSurfacesCopy: "רכך רקעים וגבולות כדי שהמסכים ירגישו רגועים יותר.",
+        clearBorders: "גבולות ברורים",
+        clearBordersCopy: "חזק את קווי ההפרדה סביב כרטיסים ותפריטים.",
+      }
+    : {
+        softSurfaces: "Soft surfaces",
+        softSurfacesCopy: "Soften panels and borders so screens feel calmer.",
+        clearBorders: "Clear borders",
+        clearBordersCopy: "Strengthen card and menu outlines for clearer separation.",
+      };
   const isRtl = rtlLanguages.has(appLanguageBase);
   const paletteAccent = appPalette.swatches[2];
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
   const contrastMutedStyle = highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
   const accessibilityCopy = accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
+  const extraAccessibilityCopy = appLanguageBase === "Hebrew"
+    ? {
+        largerTouchTargets: "אזורי לחיצה גדולים",
+        largerTouchTargetsCopy: "הגדל כפתורים ואזורים לחיצים כדי שיהיה קל יותר ללחוץ בבטחה.",
+        reduceTransparency: "פחות שקיפות",
+        reduceTransparencyCopy: "השתמש ברקעים אטומים יותר כדי לשפר קריאות.",
+        boldText: "טקסט מודגש",
+        boldTextCopy: "חזק משקלי טקסט בממשק לסריקה קלה יותר.",
+        simplifiedInterface: "ממשק פשוט יותר",
+        simplifiedInterfaceCopy: "הפחת פרטים משניים כדי שהמסכים יהיו רגועים יותר.",
+        slowerTransitions: "מעברים איטיים יותר",
+        slowerTransitionsCopy: "האט שינויי מצב כמו יום ולילה כדי שיהיה יותר זמן להתמצא.",
+      }
+    : {
+        largerTouchTargets: "Larger touch targets",
+        largerTouchTargetsCopy: "Make buttons and tap areas larger so they are easier to press confidently.",
+        reduceTransparency: "Reduce transparency",
+        reduceTransparencyCopy: "Use more solid surfaces to improve readability.",
+        boldText: "Bold interface text",
+        boldTextCopy: "Strengthen label weights across the interface for easier scanning.",
+        simplifiedInterface: "Simplified interface",
+        simplifiedInterfaceCopy: "Reduce secondary detail so screens feel calmer and easier to parse.",
+        slowerTransitions: "Slower transitions",
+        slowerTransitionsCopy: "Slow down mode changes like Day and Night so there is more time to orient.",
+      };
 
   const languageOptions = [
     { label: "Arabic", nativeName: "العربية", flag: "🇸🇦" },
@@ -3001,6 +3056,39 @@ export default function SettingsScreen() {
       setScreenReaderHints,
     },
   });
+  const extraAccessibilityRows = [
+    {
+      label: extraAccessibilityCopy.largerTouchTargets,
+      copy: extraAccessibilityCopy.largerTouchTargetsCopy,
+      value: largerTouchTargets,
+      onValueChange: setLargerTouchTargets,
+    },
+    {
+      label: extraAccessibilityCopy.reduceTransparency,
+      copy: extraAccessibilityCopy.reduceTransparencyCopy,
+      value: reduceTransparency,
+      onValueChange: setReduceTransparency,
+    },
+    {
+      label: extraAccessibilityCopy.boldText,
+      copy: extraAccessibilityCopy.boldTextCopy,
+      value: boldText,
+      onValueChange: setBoldText,
+    },
+    {
+      label: extraAccessibilityCopy.simplifiedInterface,
+      copy: extraAccessibilityCopy.simplifiedInterfaceCopy,
+      value: simplifiedInterface,
+      onValueChange: setSimplifiedInterface,
+    },
+    {
+      label: extraAccessibilityCopy.slowerTransitions,
+      copy: extraAccessibilityCopy.slowerTransitionsCopy,
+      value: slowerTransitions,
+      onValueChange: setSlowerTransitions,
+    },
+  ];
+  const allAccessibilityRows = [...accessibilityRows, ...extraAccessibilityRows];
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -3009,6 +3097,10 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator
       >
+        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel="Go back">
+          <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
+        </TouchableOpacity>
+
         <Text style={[styles.title, largerText && styles.largeTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.title}</Text>
         <Text style={[styles.subtitle, largerText && styles.largeBodyText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
           {copy.subtitle}
@@ -3119,10 +3211,10 @@ export default function SettingsScreen() {
 
         <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {accessibilityRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < accessibilityRows.length - 1 && styles.rowDivider, isDay && index < accessibilityRows.length - 1 && styles.dayRowDivider, highContrast && index < accessibilityRows.length - 1 && styles.highContrastDivider]}>
+          {allAccessibilityRows.map((row, index) => (
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, largerTouchTargets && styles.accessibleSettingRow, isRtl && styles.rtlRow, index < allAccessibilityRows.length - 1 && styles.rowDivider, isDay && index < allAccessibilityRows.length - 1 && styles.dayRowDivider, highContrast && index < allAccessibilityRows.length - 1 && styles.highContrastDivider]}>
               <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                <Text style={[styles.label, largerText && styles.largeLabel, boldText && styles.boldInterfaceText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
               </View>
               <Switch
@@ -3141,6 +3233,25 @@ export default function SettingsScreen() {
           {copy.appearance ?? englishCopy.appearance}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          {[
+            { label: appearanceOptionCopy.softSurfaces, copy: appearanceOptionCopy.softSurfacesCopy, value: softSurfaces, onValueChange: setSoftSurfaces },
+            { label: appearanceOptionCopy.clearBorders, copy: appearanceOptionCopy.clearBordersCopy, value: clearBorders, onValueChange: setClearBorders },
+          ].map((row) => (
+            <View key={row.label} style={[styles.settingRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, boldText && styles.boldInterfaceText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+              </View>
+              <Switch
+                value={row.value}
+                onValueChange={row.onValueChange}
+                accessibilityLabel={row.label}
+                accessibilityHint={screenReaderHints ? row.copy : undefined}
+                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+              />
+            </View>
+          ))}
           <View style={[styles.dropdownRow, isRtl && styles.rtlRow]}>
             <View style={styles.settingCopy}>
               <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
@@ -3407,6 +3518,18 @@ const styles = StyleSheet.create({
   dayContainer: {
     backgroundColor: "#EAF4FF",
   },
+  backButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    marginBottom: 10,
+  },
+  dayIconButton: {
+    backgroundColor: "#DCEEFF",
+  },
   title: {
     color: nsnColors.text,
     fontSize: 28,
@@ -3487,6 +3610,10 @@ const styles = StyleSheet.create({
   largeSettingRow: {
     minHeight: 86,
     paddingVertical: 17,
+  },
+  accessibleSettingRow: {
+    minHeight: 88,
+    paddingVertical: 18,
   },
   rowDivider: {
     borderBottomWidth: 1,
@@ -3734,6 +3861,9 @@ const styles = StyleSheet.create({
   largeLabel: {
     fontSize: 17,
     lineHeight: 23,
+  },
+  boldInterfaceText: {
+    fontWeight: "900",
   },
   dayLabel: {
     color: "#0B1220",
