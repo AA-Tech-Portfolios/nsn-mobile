@@ -5,7 +5,7 @@ import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity
 
 import { ScreenContainer } from "@/components/screen-container";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
-import { SoftHelloIntent, SoftHelloVisibility, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, SoftHelloIntent, SoftHelloVisibility, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { defaultComfortPreferences, type SoftHelloComfortPreference } from "@/lib/softhello-mvp";
@@ -30,6 +30,79 @@ const visibilityOptions: {
   },
 ];
 
+const onboardingTranslations = {
+  English: {
+    tagline: "Meet people, not pressure.",
+    step: "Step 1 of 5",
+    title: "Nice to meet you.",
+    copy: "Create a calm profile for local friendships, dating, or simply exploring at your own pace.",
+    ageConfirm: "I confirm I am 18 or older",
+    adultsOnly: "SoftHello is for adults only.",
+    suburbLabel: "Suburb or local area",
+    recognised: "Recognised:",
+    chooseSuggestion: "Choose a suggestion to confirm your local area.",
+    hereFor: "I am here for",
+    nameLabel: "Name or nickname",
+    photoLabel: "Optional photo",
+    photoSelected: "Photo selected",
+    photoLater: "You can add this later",
+    photoCopy: "Profiles can stay blurred until you are ready.",
+    changePhoto: "Change",
+    addPhoto: "Add",
+    visibilityLabel: "Visibility preference",
+    comfortLabel: "Comfort preferences",
+    comfortCopy: "These shape event suggestions without hiding everything else.",
+    enter: "Enter SoftHello",
+    permissionTitle: "Permission needed",
+    permissionCopy: "Please allow photo access to choose a profile picture, or continue without one.",
+    intents: {} as Partial<Record<SoftHelloIntent, string>>,
+    comfortOptions: {} as Partial<Record<SoftHelloComfortPreference, string>>,
+    visibilityOptions: {} as Partial<Record<SoftHelloVisibility, { title: string; copy: string }>>,
+  },
+  Hebrew: {
+    tagline: "לפגוש אנשים, בלי לחץ.",
+    step: "שלב 1 מתוך 5",
+    title: "נעים להכיר.",
+    copy: "צרו פרופיל רגוע לחברויות מקומיות, דייטינג, או פשוט חקירה בקצב שלכם.",
+    ageConfirm: "אני מאשר/ת שאני בן/בת 18 ומעלה",
+    adultsOnly: "SoftHello מיועדת למבוגרים בלבד.",
+    suburbLabel: "פרבר או אזור מקומי",
+    recognised: "זוהה:",
+    chooseSuggestion: "בחר/י הצעה כדי לאשר את האזור המקומי שלך.",
+    hereFor: "אני כאן בשביל",
+    nameLabel: "שם או כינוי",
+    photoLabel: "תמונה אופציונלית",
+    photoSelected: "תמונה נבחרה",
+    photoLater: "אפשר להוסיף את זה אחר כך",
+    photoCopy: "פרופילים יכולים להישאר מטושטשים עד שתרגיש/י מוכן/ה.",
+    changePhoto: "שינוי",
+    addPhoto: "הוספה",
+    visibilityLabel: "העדפת נראות",
+    comfortLabel: "העדפות נוחות",
+    comfortCopy: "אלה מעצבות הצעות לאירועים בלי להסתיר את כל השאר.",
+    enter: "כניסה ל-SoftHello",
+    permissionTitle: "נדרשת הרשאה",
+    permissionCopy: "יש לאפשר גישה לתמונות כדי לבחור תמונת פרופיל, או להמשיך בלי תמונה.",
+    intents: {
+      Friends: "חברים",
+      Dating: "דייטינג",
+      Both: "שניהם",
+      Exploring: "חקירה",
+    },
+    comfortOptions: {
+      "Small groups": "קבוצות קטנות",
+      "Text-first": "טקסט קודם",
+      Quiet: "שקט",
+      "Flexible pace": "קצב גמיש",
+      "Indoor backup": "גיבוי בפנים",
+    },
+    visibilityOptions: {
+      Blurred: { title: "מצב נוחות", copy: "להתחיל בפרטי. לחשוף רק כשאת/ה בוחר/ת." },
+      Visible: { title: "מצב פתוח", copy: "להציג את התמונה בבירור מההתחלה." },
+    },
+  },
+} as const;
+
 const normalizeLocalitySearch = (value: string) =>
   value
     .trim()
@@ -40,8 +113,9 @@ const chatswoodLocality = australianLocalities.find((locality) => locality.subur
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding, isNightMode } = useAppSettings();
+  const { appLanguage, completeOnboarding, isNightMode } = useAppSettings();
   const isDay = !isNightMode;
+  const copy = onboardingTranslations[getLanguageBase(appLanguage) as keyof typeof onboardingTranslations] ?? onboardingTranslations.English;
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [suburb, setSuburb] = useState("Chatswood");
   const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(chatswoodLocality);
@@ -97,7 +171,7 @@ export default function OnboardingScreen() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
-      Alert.alert("Permission needed", "Please allow photo access to choose a profile picture, or continue without one.");
+      Alert.alert(copy.permissionTitle, copy.permissionCopy);
       return;
     }
 
@@ -156,14 +230,14 @@ export default function OnboardingScreen() {
             <View style={styles.logoBubbleRight} />
           </View>
           <Text style={[styles.brand, isDay && styles.dayTitle]}>SoftHello</Text>
-          <Text style={[styles.tagline, isDay && styles.dayMutedText]}>Meet people, not pressure.</Text>
+          <Text style={[styles.tagline, isDay && styles.dayMutedText]}>{copy.tagline}</Text>
         </View>
 
         <View style={[styles.panel, isDay && styles.dayPanel]}>
-          <Text style={[styles.stepLabel, isDay && styles.dayAccentText]}>Step 1 of 5</Text>
-          <Text style={[styles.title, isDay && styles.dayTitle]}>Nice to meet you.</Text>
+          <Text style={[styles.stepLabel, isDay && styles.dayAccentText]}>{copy.step}</Text>
+          <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
           <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-            Create a calm profile for local friendships, dating, or simply exploring at your own pace.
+            {copy.copy}
           </Text>
         </View>
 
@@ -176,14 +250,14 @@ export default function OnboardingScreen() {
             <Text style={styles.checkText}>{ageConfirmed ? "✓" : ""}</Text>
           </View>
           <View style={styles.confirmCopy}>
-            <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>I confirm I am 18 or older</Text>
-            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>SoftHello is for adults only.</Text>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{copy.ageConfirm}</Text>
+            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy.adultsOnly}</Text>
           </View>
         </TouchableOpacity>
 
         <View style={styles.formStack}>
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>Suburb or local area</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.suburbLabel}</Text>
             <TextInput
               value={suburb}
               onChangeText={updateSuburb}
@@ -193,11 +267,11 @@ export default function OnboardingScreen() {
             />
             {selectedLocality ? (
               <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
-                Recognised: {getAustralianLocalityLabel(selectedLocality)}
+                {copy.recognised} {getAustralianLocalityLabel(selectedLocality)}
               </Text>
             ) : suburb.trim().length >= 2 ? (
               <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
-                Choose a suggestion to confirm your local area.
+                {copy.chooseSuggestion}
               </Text>
             ) : null}
             {localitySuggestions.length > 0 ? (
@@ -231,7 +305,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>I am here for</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.hereFor}</Text>
             <View style={styles.optionGrid}>
               {intentOptions.map((option) => {
                 const active = intent === option;
@@ -251,7 +325,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>Name or nickname</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.nameLabel}</Text>
             <TextInput
               value={displayName}
               onChangeText={(value) => {
@@ -271,7 +345,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>Optional photo</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.photoLabel}</Text>
             <View style={[styles.photoRow, isDay && styles.dayCard]}>
               <View style={styles.photoPreview}>
                 {profilePhotoUri ? (
@@ -281,20 +355,21 @@ export default function OnboardingScreen() {
                 )}
               </View>
               <View style={styles.photoBody}>
-                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{profilePhotoUri ? "Photo selected" : "You can add this later"}</Text>
-                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Profiles can stay blurred until you are ready.</Text>
+                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{profilePhotoUri ? copy.photoSelected : copy.photoLater}</Text>
+                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy.photoCopy}</Text>
               </View>
               <TouchableOpacity activeOpacity={0.8} onPress={pickProfilePhoto} style={styles.smallButton}>
-                <Text style={styles.smallButtonText}>{profilePhotoUri ? "Change" : "Add"}</Text>
+                <Text style={styles.smallButtonText}>{profilePhotoUri ? copy.changePhoto : copy.addPhoto}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>Visibility preference</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.visibilityLabel}</Text>
             <View style={styles.visibilityStack}>
               {visibilityOptions.map((option) => {
                 const active = visibilityPreference === option.value;
+                const localizedOption = copy.visibilityOptions[option.value] ?? option;
 
                 return (
                   <TouchableOpacity
@@ -304,8 +379,8 @@ export default function OnboardingScreen() {
                     style={[styles.visibilityCard, isDay && styles.dayCard, active && styles.visibilityActive]}
                   >
                     <View>
-                      <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{option.title}</Text>
-                      <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{option.copy}</Text>
+                      <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedOption.title}</Text>
+                      <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{localizedOption.copy}</Text>
                     </View>
                     <View style={[styles.radioOuter, active && styles.radioOuterActive]}>
                       {active ? <View style={styles.radioInner} /> : null}
@@ -317,7 +392,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>Comfort preferences</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.comfortLabel}</Text>
             <View style={styles.optionGrid}>
               {comfortOptions.map((option) => {
                 const active = comfortPreferences.includes(option);
@@ -333,13 +408,13 @@ export default function OnboardingScreen() {
                     }
                     style={[styles.intentOption, isDay && styles.dayChoice, active && styles.choiceActive]}
                   >
-                    <Text style={[styles.choiceText, isDay && styles.dayMutedText, active && styles.choiceTextActive]}>{option}</Text>
+                    <Text style={[styles.choiceText, isDay && styles.dayMutedText, active && styles.choiceTextActive]}>{copy.comfortOptions[option] ?? option}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
             <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
-              These shape event suggestions without hiding everything else.
+              {copy.comfortCopy}
             </Text>
           </View>
         </View>
@@ -350,7 +425,7 @@ export default function OnboardingScreen() {
           onPress={finishOnboarding}
           style={[styles.primaryButton, !canContinue && styles.primaryButtonDisabled]}
         >
-          <Text style={styles.primaryButtonText}>Enter SoftHello</Text>
+          <Text style={styles.primaryButtonText}>{copy.enter}</Text>
         </TouchableOpacity>
       </ScrollView>
     </ScreenContainer>

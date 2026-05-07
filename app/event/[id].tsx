@@ -37,6 +37,7 @@ const eventActionTranslations = {
     shareTitle: "Share event",
     shareMessage: (title: string, venue: string, time: string) => `I found this SoftHello meetup: ${title} at ${venue}, ${time}.`,
     shareError: "This event could not be shared right now.",
+    copiedMessage: "Event details copied to clipboard.",
     moreTitle: "Event options",
     moreCopy: "Tune how this meetup appears for you.",
     pin: "Pin event",
@@ -49,6 +50,24 @@ const eventActionTranslations = {
     unpinnedMessage: "Event unpinned",
     hiddenMessage: "Event hidden from Home",
     unhiddenMessage: "Event visible on Home",
+  },
+  Hebrew: {
+    shareTitle: "שיתוף אירוע",
+    shareMessage: (title: string, venue: string, time: string) => `מצאתי מפגש ב-SoftHello: ${title} ב-${venue}, ${time}.`,
+    shareError: "לא הצלחנו לשתף את האירוע כרגע.",
+    copiedMessage: "פרטי האירוע הועתקו ללוח.",
+    moreTitle: "אפשרויות אירוע",
+    moreCopy: "התאם/י איך המפגש הזה מופיע עבורך.",
+    pin: "נעץ אירוע",
+    unpin: "בטל נעיצה",
+    hide: "הסתר מהבית",
+    unhide: "הצג בבית",
+    viewSavedPlaces: "הצג מקומות שמורים",
+    close: "סגירה",
+    pinnedMessage: "האירוע ננעץ",
+    unpinnedMessage: "נעיצת האירוע בוטלה",
+    hiddenMessage: "האירוע הוסתר מהבית",
+    unhiddenMessage: "האירוע יוצג בבית",
   },
 } as const;
 
@@ -150,6 +169,7 @@ const eventTranslations = {
     genericMeetingCopy: (venue: string) => `Meet near ${venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`,
     softExitTitle: "You can change your mind",
     softExitCopy: "It is okay to skip this meetup if it does not feel like your pace today. You can find another group, step back from the chat, or come back later.",
+    verifyBeforeMeeting: "Verify before meeting",
   },
   Arabic: {
     title: "ليلة فيلم —\nمشاهدة + دردشة",
@@ -208,6 +228,7 @@ const eventTranslations = {
     genericMeetingCopy: (venue: string) => `ניפגש ליד ${venue} כ-10 דקות לפני שעת ההתחלה. המארח יכול לשתף נקודה רגועה ומדויקת יותר בצ'אט.`,
     softExitTitle: "אפשר לשנות את דעתך",
     softExitCopy: "זה בסדר לדלג על המפגש אם הוא לא מרגיש בקצב שלך היום. אפשר למצוא קבוצה אחרת, לקחת צעד אחורה מהצ'אט, או לחזור מאוחר יותר.",
+    verifyBeforeMeeting: "אימות לפני מפגש",
   },
   Russian: {
     title: "Киновечер —\nСмотрим + общаемся",
@@ -308,7 +329,7 @@ export default function EventDetailsScreen() {
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = eventTranslations[appLanguageBase as keyof typeof eventTranslations] ?? eventTranslations.English;
   const saveCopy = savePlaceTranslations[appLanguageBase as keyof typeof savePlaceTranslations] ?? savePlaceTranslations.English;
-  const actionCopy = eventActionTranslations.English;
+  const actionCopy = eventActionTranslations[appLanguageBase as keyof typeof eventActionTranslations] ?? eventActionTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
@@ -350,7 +371,7 @@ export default function EventDetailsScreen() {
 
         if (webNavigator?.clipboard?.writeText) {
           await webNavigator.clipboard.writeText(message);
-          Alert.alert(actionCopy.shareTitle, "Event details copied to clipboard.");
+          Alert.alert(actionCopy.shareTitle, actionCopy.copiedMessage);
           return;
         }
       }
@@ -582,7 +603,9 @@ export default function EventDetailsScreen() {
           onPress={handleJoin}
           style={[styles.joinButton, !canMeet && styles.joinButtonLocked]}
         >
-          <Text style={styles.joinText}>{hasJoined ? "Open Meetup Chat" : canMeet ? copy.join : "Verify before meeting"}</Text>
+          <Text style={styles.joinText}>
+            {hasJoined ? "Open Meetup Chat" : canMeet ? copy.join : "verifyBeforeMeeting" in copy ? copy.verifyBeforeMeeting : "Verify before meeting"}
+          </Text>
         </TouchableOpacity>
         <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{copy.spotsLeft}</Text>
 

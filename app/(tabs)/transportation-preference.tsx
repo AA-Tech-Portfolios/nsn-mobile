@@ -3,8 +3,9 @@ import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { type TransportationMethod, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type TransportationMethod, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
+import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 
 const transportationOptions: { value: TransportationMethod; label: string; copy: string }[] = [
   { value: "Driving", label: "Driving", copy: "I may need parking or a clear meeting point." },
@@ -18,8 +19,9 @@ const transportationOptions: { value: TransportationMethod; label: string; copy:
 
 export default function TransportationPreferenceScreen() {
   const router = useRouter();
-  const { isNightMode, saveSoftHelloMvpState, transportationMethod } = useAppSettings();
+  const { appLanguage, isNightMode, saveSoftHelloMvpState, transportationMethod } = useAppSettings();
   const isDay = !isNightMode;
+  const copy = getProfilePreferenceCopy(getLanguageBase(appLanguage)).transportation;
 
   const saveTransportationMethod = async (nextMethod: TransportationMethod) => {
     await saveSoftHelloMvpState({ transportationMethod: nextMethod });
@@ -39,15 +41,16 @@ export default function TransportationPreferenceScreen() {
         </TouchableOpacity>
 
         <View style={[styles.headerCard, isDay && styles.dayCard]}>
-          <Text style={[styles.title, isDay && styles.dayTitle]}>Transportation Method</Text>
+          <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
           <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-            Choose how you usually arrive so meetups can make the meeting point and timing feel easier.
+            {copy.copy}
           </Text>
         </View>
 
         <View style={styles.optionStack}>
           {transportationOptions.map((option) => {
             const active = transportationMethod === option.value;
+            const localizedOption = copy.options?.[option.value] ?? option;
 
             return (
               <TouchableOpacity
@@ -62,8 +65,8 @@ export default function TransportationPreferenceScreen() {
                   <IconSymbol name="transport" color={active ? "#FFFFFF" : isDay ? "#3B4A63" : nsnColors.muted} size={21} />
                 </View>
                 <View style={styles.optionBody}>
-                  <Text style={[styles.optionTitle, isDay && styles.dayTitle, active && styles.activeText]}>{option.label}</Text>
-                  <Text style={[styles.optionCopy, isDay && styles.dayMutedText, active && styles.activeText]}>{option.copy}</Text>
+                  <Text style={[styles.optionTitle, isDay && styles.dayTitle, active && styles.activeText]}>{localizedOption.label}</Text>
+                  <Text style={[styles.optionCopy, isDay && styles.dayMutedText, active && styles.activeText]}>{localizedOption.copy}</Text>
                 </View>
                 <Text style={[styles.check, active && styles.checkActive]}>{active ? "✓" : ""}</Text>
               </TouchableOpacity>

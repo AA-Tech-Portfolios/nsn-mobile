@@ -7,6 +7,7 @@ import { getLanguageBase, type SoftHelloVisibility, useAppSettings } from "@/lib
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
+import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { canMeetInPerson, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
 
@@ -610,23 +611,15 @@ export default function ProfileScreen() {
   const vibeCopy = profileVibeTranslations[appLanguageBase] ?? {};
   const comfortCopy = comfortPreferenceTranslations[appLanguageBase] ?? {};
   const visibilityCopy = visibilityModeTranslations[appLanguageBase as keyof typeof visibilityModeTranslations] ?? visibilityModeTranslations.English;
+  const profilePreferenceCopy = getProfilePreferenceCopy(appLanguageBase);
   const visibilityModeCopy = visibilityPreference === "Blurred" ? visibilityCopy.comfortCopy : visibilityCopy.openCopy;
-  const locationPreferenceRowLabel =
-    locationPreferenceRowTranslations[appLanguageBase as keyof typeof locationPreferenceRowTranslations] ??
-    locationPreferenceRowTranslations.English;
-  const transportationRowLabel =
-    transportationRowTranslations[appLanguageBase as keyof typeof transportationRowTranslations] ?? transportationRowTranslations.English;
-  const foodPreferencesRowLabel =
-    foodPreferencesRowTranslations[appLanguageBase as keyof typeof foodPreferencesRowTranslations] ?? foodPreferencesRowTranslations.English;
-  const hobbiesInterestsRowLabel =
-    hobbiesInterestsRowTranslations[appLanguageBase as keyof typeof hobbiesInterestsRowTranslations] ?? hobbiesInterestsRowTranslations.English;
   const getComfortLabel = (preference: SoftHelloComfortPreference) => comfortCopy[preference] ?? preference;
   const comfortSummary = comfortPreferences.length ? comfortPreferences.map(getComfortLabel).join(" · ") : copy.noComfortPreferences;
   const getRowLabel = (key: (typeof rows)[number]["key"]) => {
-    if (key === "locationPreference") return locationPreferenceRowLabel;
-    if (key === "transportation") return transportationRowLabel;
-    if (key === "foodPreferences") return foodPreferencesRowLabel;
-    if (key === "hobbiesInterests") return hobbiesInterestsRowLabel;
+    if (key === "locationPreference") return profilePreferenceCopy.rows.locationPreference;
+    if (key === "transportation") return profilePreferenceCopy.rows.transportation;
+    if (key === "foodPreferences") return profilePreferenceCopy.rows.foodPreferences;
+    if (key === "hobbiesInterests") return profilePreferenceCopy.rows.hobbiesInterests;
 
     return copy.rows[key];
   };

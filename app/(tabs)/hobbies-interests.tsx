@@ -3,8 +3,9 @@ import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
+import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 
 const hobbyOptions = [
   "Coffee",
@@ -29,8 +30,9 @@ const hobbyOptions = [
 
 export default function HobbiesInterestsScreen() {
   const router = useRouter();
-  const { hobbiesInterests, isNightMode, saveSoftHelloMvpState } = useAppSettings();
+  const { appLanguage, hobbiesInterests, isNightMode, saveSoftHelloMvpState } = useAppSettings();
   const isDay = !isNightMode;
+  const copy = getProfilePreferenceCopy(getLanguageBase(appLanguage)).hobbies;
 
   const toggleInterest = async (interest: string) => {
     const nextInterests = hobbiesInterests.includes(interest)
@@ -48,20 +50,21 @@ export default function HobbiesInterestsScreen() {
         </TouchableOpacity>
 
         <View style={[styles.headerCard, isDay && styles.dayCard]}>
-          <Text style={[styles.title, isDay && styles.dayTitle]}>Hobbies & Interests</Text>
+          <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
           <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-            Choose what you like doing in your own time, so meetups can feel closer to your real life.
+            {copy.copy}
           </Text>
         </View>
 
         <View style={[styles.card, isDay && styles.dayCard]}>
           <View style={styles.cardHeader}>
-            <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>Personal time</Text>
-            <Text style={[styles.count, isDay && styles.dayMutedText]}>{hobbiesInterests.length} selected</Text>
+            <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.personalTime}</Text>
+            <Text style={[styles.count, isDay && styles.dayMutedText]}>{copy.selected(hobbiesInterests.length)}</Text>
           </View>
           <View style={styles.optionGrid}>
             {hobbyOptions.map((option) => {
               const active = hobbiesInterests.includes(option);
+              const localizedOption = copy.options?.[option] ?? option;
 
               return (
                 <TouchableOpacity
@@ -72,7 +75,7 @@ export default function HobbiesInterestsScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                 >
-                  <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]}>{option}</Text>
+                  <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]}>{localizedOption}</Text>
                 </TouchableOpacity>
               );
             })}

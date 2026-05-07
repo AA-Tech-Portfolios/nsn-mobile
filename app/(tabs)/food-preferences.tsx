@@ -3,8 +3,9 @@ import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { type DietaryPreference, type MealPaymentPreference, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type DietaryPreference, type MealPaymentPreference, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
+import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 
 const dietaryOptions: DietaryPreference[] = [
   "No preference",
@@ -27,8 +28,9 @@ const paymentOptions: { value: MealPaymentPreference; copy: string }[] = [
 
 export default function FoodPreferencesScreen() {
   const router = useRouter();
-  const { dietaryPreferences, isNightMode, mealPaymentPreference, saveSoftHelloMvpState } = useAppSettings();
+  const { appLanguage, dietaryPreferences, isNightMode, mealPaymentPreference, saveSoftHelloMvpState } = useAppSettings();
   const isDay = !isNightMode;
+  const copy = getProfilePreferenceCopy(getLanguageBase(appLanguage)).food;
 
   const toggleDietaryPreference = async (preference: DietaryPreference) => {
     const nextPreferences =
@@ -53,17 +55,18 @@ export default function FoodPreferencesScreen() {
         </TouchableOpacity>
 
         <View style={[styles.headerCard, isDay && styles.dayCard]}>
-          <Text style={[styles.title, isDay && styles.dayTitle]}>Food & Payment Preferences</Text>
+          <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
           <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-            Share dietary needs and meal payment expectations before food meetups, so nobody has to guess at the table.
+            {copy.copy}
           </Text>
         </View>
 
         <View style={[styles.card, isDay && styles.dayCard]}>
-          <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>Food or dietary preferences</Text>
+          <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.dietary}</Text>
           <View style={styles.optionGrid}>
             {dietaryOptions.map((option) => {
               const active = dietaryPreferences.includes(option);
+              const localizedOption = copy.dietaryOptions?.[option] ?? option;
 
               return (
                 <TouchableOpacity
@@ -74,7 +77,7 @@ export default function FoodPreferencesScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                 >
-                  <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]}>{option}</Text>
+                  <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]}>{localizedOption}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -82,10 +85,11 @@ export default function FoodPreferencesScreen() {
         </View>
 
         <View style={[styles.card, isDay && styles.dayCard]}>
-          <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>Meal payment preference</Text>
+          <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.payment}</Text>
           <View style={styles.paymentStack}>
             {paymentOptions.map((option) => {
               const active = mealPaymentPreference === option.value;
+              const localizedOption = copy.paymentOptions?.[option.value] ?? { label: option.value, copy: option.copy };
 
               return (
                 <TouchableOpacity
@@ -96,8 +100,8 @@ export default function FoodPreferencesScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                 >
-                  <Text style={[styles.paymentTitle, isDay && styles.dayTitle, active && styles.activeText]}>{option.value}</Text>
-                  <Text style={[styles.paymentCopy, isDay && styles.dayMutedText, active && styles.activeText]}>{option.copy}</Text>
+                  <Text style={[styles.paymentTitle, isDay && styles.dayTitle, active && styles.activeText]}>{localizedOption.label}</Text>
+                  <Text style={[styles.paymentCopy, isDay && styles.dayMutedText, active && styles.activeText]}>{localizedOption.copy}</Text>
                 </TouchableOpacity>
               );
             })}

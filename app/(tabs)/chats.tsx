@@ -23,6 +23,29 @@ type SafetyReportReasonOption = {
   reason: SafetyReportReason;
   copy: string;
 };
+type ReportFlowCopy = {
+  targetTitle: string;
+  routeTitle: string;
+  hostRole: string;
+  memberRole: string;
+  chatRole: string;
+  reportToHost: string;
+  reportToHostCopy: string;
+  appReview: string;
+  appReviewCopy: string;
+  cancelWindow: string;
+  cancelReport: string;
+  reportCancelled: string;
+  reportSaved: string;
+};
+type ArrivalUpdateCopy = {
+  title: string;
+  runningLate: string;
+  cannotMakeIt: string;
+  cannotMakeItReasonTitle: string;
+  runningLateMessage: (method: string) => string;
+  cannotMakeItReasons: Record<CannotMakeItReason, { label: string; message: string }>;
+};
 type ReportTarget = {
   id: string;
   name: string;
@@ -54,7 +77,7 @@ const reportTargets: ReportTarget[] = [
   { id: "movie-night-watch-chat", name: "Whole chat", role: "chat" },
 ];
 
-const reportFlowCopy = {
+const reportFlowCopy: ReportFlowCopy = {
   targetTitle: "Who is this about?",
   routeTitle: "Where should this go?",
   hostRole: "Host",
@@ -67,9 +90,10 @@ const reportFlowCopy = {
   cancelWindow: "You can cancel this report for 10 minutes.",
   cancelReport: "Cancel report",
   reportCancelled: "Report cancelled",
-} as const;
+  reportSaved: "Report saved",
+};
 
-const arrivalUpdateCopy = {
+const arrivalUpdateCopy: ArrivalUpdateCopy = {
   title: "Arrival updates",
   runningLate: "Running late",
   cannotMakeIt: "Can’t make it",
@@ -82,7 +106,57 @@ const arrivalUpdateCopy = {
     somethingCameUp: { label: "Something came up", message: "I am sorry, something came up and I will not be able to make it today. I hope the meetup goes well." },
     changedMind: { label: "Changed my mind", message: "I am sorry, I have changed my mind and will not be able to make it today. I hope the meetup goes well." },
   } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
-} as const;
+};
+
+const safetyReasonTranslations: Record<string, Partial<Record<SafetyReportReason, { label: string; copy: string }>>> = {
+  Hebrew: {
+    "Safety threat": { label: "איום בטיחותי", copy: "סיכון מיידי, כפייה, מעקב, איומים או התנהגות לא בטוחה במפגש." },
+    Harassment: { label: "הטרדה", copy: "פנייה חוזרת לא רצויה, הפחדה, לחץ מיני או הודעות פוגעניות." },
+    "Underage risk": { label: "חשש לקטין", copy: "ייתכן שמישהו מתחת לגיל 18 או מנסה לערב קטין." },
+    Impersonation: { label: "התחזות", copy: "העמדת פנים כאדם אחר או שימוש בפרטים מטעים." },
+    Fraud: { label: "הונאה", copy: "בקשות כסף, תרמיות, פישינג, סחיטה או קישורים חשודים." },
+    "Fake profile": { label: "פרופיל מזויף", copy: "פרטי פרופיל, תמונות או התנהגות לא נראים אמינים." },
+    Spam: { label: "ספאם", copy: "הודעות פרסומיות, פנייה חוזרת או קישורים לא קשורים." },
+    "Hate or discrimination": { label: "שנאה או אפליה", copy: "פגיעה שמכוונת לזהות, תרבות, דת, מוגבלות, מגדר או מיניות." },
+    "Privacy concern": { label: "חשש לפרטיות", copy: "שיתוף מידע פרטי, צילומי מסך או פרטים אישיים ללא הסכמה." },
+    Other: { label: "אחר", copy: "משהו אחר מרגיש לא תקין וצריך בדיקה." },
+  },
+};
+
+const reportFlowTranslations = {
+  Hebrew: {
+    targetTitle: "על מי הדיווח?",
+    routeTitle: "לאן לשלוח את זה?",
+    hostRole: "מארח/ת",
+    memberRole: "חבר/ה",
+    chatRole: "קבוצה",
+    reportToHost: "לדווח קודם למארח/ת",
+    reportToHostCopy: "מתאים כשמדובר בחבר/ה אחר/ת והמארח/ת יכולים להתערב.",
+    appReview: "שליחה לבדיקה באפליקציה",
+    appReviewCopy: "מתאים לבעיה עם המארח/ת, הסלמה דחופה, או אם דיווח למארח/ת לא עזר.",
+    cancelWindow: "אפשר לבטל את הדיווח במשך 10 דקות.",
+    cancelReport: "ביטול דיווח",
+    reportCancelled: "הדיווח בוטל",
+    reportSaved: "הדיווח נשמר",
+  },
+} satisfies Record<string, ReportFlowCopy>;
+
+const arrivalUpdateTranslations = {
+  Hebrew: {
+    title: "עדכוני הגעה",
+    runningLate: "מאחר/ת",
+    cannotMakeIt: "לא אוכל להגיע",
+    cannotMakeItReasonTitle: "למה לא תוכל/י להגיע?",
+    runningLateMessage: (method: string) => `עדכון קצר: אני מאחר/ת. אני מגיע/ה באמצעות ${method}, ואעדכן בהמשך.`,
+    cannotMakeItReasons: {
+      unwell: { label: "לא מרגיש/ה טוב", message: "סליחה, אני לא מרגיש/ה טוב ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
+      work: { label: "עבודה צצה", message: "סליחה, צצה לי עבודה ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
+      appointment: { label: "תור או פגישה", message: "סליחה, יש לי תור או פגישה ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
+      somethingCameUp: { label: "משהו צץ", message: "סליחה, משהו צץ ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
+      changedMind: { label: "שיניתי את דעתי", message: "סליחה, שיניתי את דעתי ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
+    } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
+  },
+} satisfies Record<string, ArrivalUpdateCopy>;
 
 const chatTranslations = {
   English: {
@@ -609,6 +683,10 @@ export default function ChatsScreen() {
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(translationLanguageBase);
   const copy = chatTranslations[translationLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
+  const localizedReportFlowCopy = reportFlowTranslations[translationLanguageBase as keyof typeof reportFlowTranslations] ?? reportFlowCopy;
+  const localizedArrivalUpdateCopy =
+    arrivalUpdateTranslations[translationLanguageBase as keyof typeof arrivalUpdateTranslations] ?? arrivalUpdateCopy;
+  const localizedSafetyReasons = safetyReasonTranslations[translationLanguageBase] ?? {};
   const translatedMessages = chatMessageTranslations[translationLanguageBase as keyof typeof chatMessageTranslations];
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
   const [draft, setDraft] = useState("");
@@ -651,11 +729,11 @@ export default function ChatsScreen() {
   };
 
   const sendRunningLateUpdate = () => {
-    sendArrivalUpdate(arrivalUpdateCopy.runningLateMessage(transportationMethod));
+    sendArrivalUpdate(localizedArrivalUpdateCopy.runningLateMessage(transportationMethod));
   };
 
   const sendCannotMakeItUpdate = async (reason: CannotMakeItReason) => {
-    sendArrivalUpdate(arrivalUpdateCopy.cannotMakeItReasons[reason].message);
+    sendArrivalUpdate(localizedArrivalUpdateCopy.cannotMakeItReasons[reason].message);
     setCannotMakeItOpen(false);
     await saveSoftHelloMvpState({ eventMemberships: leaveEvent(eventId, eventMemberships) });
   };
@@ -674,7 +752,7 @@ export default function ChatsScreen() {
         ? `${reason} about ${selectedReportTarget.name} was sent to the host.`
         : `${reason} about ${selectedReportTarget.name} was submitted for app review.`
     );
-    Alert.alert("Report saved", `${reportFlowCopy.cancelWindow}`);
+    Alert.alert(localizedReportFlowCopy.reportSaved, `${localizedReportFlowCopy.cancelWindow}`);
   };
 
   const cancelLastReport = async () => {
@@ -682,7 +760,7 @@ export default function ChatsScreen() {
 
     const nextReports = cancelSafetyReport(lastReportId, safetyReports);
     await saveSoftHelloMvpState({ safetyReports: nextReports });
-    setReportNotice(reportFlowCopy.reportCancelled);
+    setReportNotice(localizedReportFlowCopy.reportCancelled);
     setLastReportId(null);
   };
 
@@ -779,16 +857,16 @@ export default function ChatsScreen() {
                 </TouchableOpacity>
                 {reportReasonsOpen ? (
                   <View style={styles.reportReasonStack}>
-                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{reportFlowCopy.targetTitle}</Text>
+                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{localizedReportFlowCopy.targetTitle}</Text>
                     <View style={styles.reportTargetGrid}>
                       {reportTargets.map((target) => {
                         const active = selectedReportTarget.id === target.id;
                         const roleLabel =
                           target.role === "host"
-                            ? reportFlowCopy.hostRole
+                            ? localizedReportFlowCopy.hostRole
                             : target.role === "member"
-                              ? reportFlowCopy.memberRole
-                              : reportFlowCopy.chatRole;
+                              ? localizedReportFlowCopy.memberRole
+                              : localizedReportFlowCopy.chatRole;
 
                         return (
                           <TouchableOpacity
@@ -814,11 +892,11 @@ export default function ChatsScreen() {
                     </View>
                     {selectedReportTarget.role === "member" ? (
                       <>
-                        <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{reportFlowCopy.routeTitle}</Text>
+                        <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{localizedReportFlowCopy.routeTitle}</Text>
                         <View style={styles.reportRouteStack}>
                           {([
-                            { value: "host_review" as SafetyReportRoute, label: reportFlowCopy.reportToHost, copy: reportFlowCopy.reportToHostCopy },
-                            { value: "app_review" as SafetyReportRoute, label: reportFlowCopy.appReview, copy: reportFlowCopy.appReviewCopy },
+                            { value: "host_review" as SafetyReportRoute, label: localizedReportFlowCopy.reportToHost, copy: localizedReportFlowCopy.reportToHostCopy },
+                            { value: "app_review" as SafetyReportRoute, label: localizedReportFlowCopy.appReview, copy: localizedReportFlowCopy.appReviewCopy },
                           ]).map((route) => {
                             const active = selectedReportRoute === route.value;
 
@@ -840,38 +918,46 @@ export default function ChatsScreen() {
                       </>
                     ) : (
                       <View style={[styles.reportRouteButton, isDay && styles.dayReportReasonButton]}>
-                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{reportFlowCopy.appReview}</Text>
-                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{reportFlowCopy.appReviewCopy}</Text>
+                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{localizedReportFlowCopy.appReview}</Text>
+                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{localizedReportFlowCopy.appReviewCopy}</Text>
                       </View>
                     )}
                     <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{copy.escalationReasons}</Text>
-                    {escalationReportReasons.map((option) => (
-                      <TouchableOpacity
-                        key={option.reason}
-                        activeOpacity={0.82}
-                        onPress={() => reportConcern(option.reason)}
-                        style={[styles.reportReasonButton, isDay && styles.dayReportReasonButton]}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Report ${option.reason}`}
-                      >
-                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{option.reason}</Text>
-                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{option.copy}</Text>
-                      </TouchableOpacity>
-                    ))}
+                    {escalationReportReasons.map((option) => {
+                      const localizedOption = localizedSafetyReasons[option.reason] ?? { label: option.reason, copy: option.copy };
+
+                      return (
+                        <TouchableOpacity
+                          key={option.reason}
+                          activeOpacity={0.82}
+                          onPress={() => reportConcern(option.reason)}
+                          style={[styles.reportReasonButton, isDay && styles.dayReportReasonButton]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Report ${option.reason}`}
+                        >
+                          <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{localizedOption.label}</Text>
+                          <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{localizedOption.copy}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                     <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{copy.otherReportReasons}</Text>
-                    {otherReportReasons.map((option) => (
-                      <TouchableOpacity
-                        key={option.reason}
-                        activeOpacity={0.82}
-                        onPress={() => reportConcern(option.reason)}
-                        style={[styles.reportReasonButton, isDay && styles.dayReportReasonButton]}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Report ${option.reason}`}
-                      >
-                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{option.reason}</Text>
-                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{option.copy}</Text>
-                      </TouchableOpacity>
-                    ))}
+                    {otherReportReasons.map((option) => {
+                      const localizedOption = localizedSafetyReasons[option.reason] ?? { label: option.reason, copy: option.copy };
+
+                      return (
+                        <TouchableOpacity
+                          key={option.reason}
+                          activeOpacity={0.82}
+                          onPress={() => reportConcern(option.reason)}
+                          style={[styles.reportReasonButton, isDay && styles.dayReportReasonButton]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Report ${option.reason}`}
+                        >
+                          <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{localizedOption.label}</Text>
+                          <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{localizedOption.copy}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 ) : null}
                 {reportNotice ? (
@@ -879,10 +965,10 @@ export default function ChatsScreen() {
                     <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>{reportNotice}</Text>
                     {canCancelLastReport ? (
                       <TouchableOpacity activeOpacity={0.82} onPress={cancelLastReport} style={styles.cancelReportButton}>
-                        <Text style={styles.cancelReportText}>{reportFlowCopy.cancelReport}</Text>
+                        <Text style={styles.cancelReportText}>{localizedReportFlowCopy.cancelReport}</Text>
                       </TouchableOpacity>
                     ) : (
-                      <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{reportFlowCopy.cancelWindow}</Text>
+                      <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{localizedReportFlowCopy.cancelWindow}</Text>
                     )}
                   </View>
                 ) : null}
@@ -985,10 +1071,10 @@ export default function ChatsScreen() {
 
         <View style={styles.composerWrap}>
           <View style={[styles.arrivalPanel, isDay && styles.dayCard]}>
-            <Text style={[styles.arrivalTitle, isDay && styles.dayTitle]}>{arrivalUpdateCopy.title}</Text>
+            <Text style={[styles.arrivalTitle, isDay && styles.dayTitle]}>{localizedArrivalUpdateCopy.title}</Text>
             <View style={styles.arrivalActions}>
               <TouchableOpacity activeOpacity={0.82} onPress={sendRunningLateUpdate} style={styles.arrivalButton}>
-                <Text style={styles.arrivalButtonText}>{arrivalUpdateCopy.runningLate}</Text>
+                <Text style={styles.arrivalButtonText}>{localizedArrivalUpdateCopy.runningLate}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.82}
@@ -996,15 +1082,15 @@ export default function ChatsScreen() {
                 style={[styles.arrivalButton, styles.arrivalButtonMuted]}
               >
                 <Text style={[styles.arrivalButtonText, styles.arrivalButtonMutedText, isDay && styles.dayArrivalButtonMutedText]}>
-                  {arrivalUpdateCopy.cannotMakeIt}
+                  {localizedArrivalUpdateCopy.cannotMakeIt}
                 </Text>
               </TouchableOpacity>
             </View>
             {cannotMakeItOpen ? (
               <View style={styles.cannotMakeItPanel}>
-                <Text style={[styles.cannotMakeItTitle, isDay && styles.dayTitle]}>{arrivalUpdateCopy.cannotMakeItReasonTitle}</Text>
+                <Text style={[styles.cannotMakeItTitle, isDay && styles.dayTitle]}>{localizedArrivalUpdateCopy.cannotMakeItReasonTitle}</Text>
                 <View style={styles.cannotMakeItGrid}>
-                  {(Object.keys(arrivalUpdateCopy.cannotMakeItReasons) as CannotMakeItReason[]).map((reason) => (
+                  {(Object.keys(localizedArrivalUpdateCopy.cannotMakeItReasons) as CannotMakeItReason[]).map((reason) => (
                     <TouchableOpacity
                       key={reason}
                       activeOpacity={0.82}
@@ -1012,7 +1098,7 @@ export default function ChatsScreen() {
                       style={[styles.cannotMakeItReasonButton, isDay && styles.dayCannotMakeItReasonButton]}
                     >
                       <Text style={[styles.cannotMakeItReasonText, isDay && styles.dayTitle]}>
-                        {arrivalUpdateCopy.cannotMakeItReasons[reason].label}
+                        {localizedArrivalUpdateCopy.cannotMakeItReasons[reason].label}
                       </Text>
                     </TouchableOpacity>
                   ))}
