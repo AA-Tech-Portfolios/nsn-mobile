@@ -1,4 +1,5 @@
 import "@/global.css";
+import "@/lib/ignore-known-web-warnings";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
