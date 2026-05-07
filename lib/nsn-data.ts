@@ -16,6 +16,10 @@ export const nsnColors = {
   danger: "#FF7777",
 };
 
+export type NoiseLevel = "Quiet" | "Balanced" | "Lively";
+
+export const noiseLevelOptions: NoiseLevel[] = ["Quiet", "Balanced", "Lively"];
+
 export type EventItem = {
   id: string;
   title: string;
@@ -25,6 +29,7 @@ export type EventItem = {
   people: string;
   description: string;
   tone: string;
+  noiseLevel: NoiseLevel;
   weather: string;
   imageTone: string;
   emoji: string;
@@ -41,6 +46,7 @@ export const dayEvents: EventItem[] = [
     people: "2–4 people",
     description: "Bring snacks, sit, relax. No pressure to talk constantly.",
     tone: "Balanced",
+    noiseLevel: "Quiet",
     weather: "Weather dependent",
     imageTone: "#19432D",
     emoji: "🧺",
@@ -55,6 +61,7 @@ export const dayEvents: EventItem[] = [
     people: "3–6 people",
     description: "Sun, ocean and good company. BYO towel.",
     tone: "Balanced",
+    noiseLevel: "Balanced",
     weather: "Weather dependent",
     imageTone: "#1A4964",
     emoji: "🌊",
@@ -69,6 +76,7 @@ export const dayEvents: EventItem[] = [
     people: "2–5 people",
     description: "Quiet table time, light chat breaks and a gentle reset.",
     tone: "Quiet",
+    noiseLevel: "Quiet",
     weather: "Rain friendly",
     imageTone: "#29365E",
     emoji: "📚",
@@ -83,6 +91,7 @@ export const dayEvents: EventItem[] = [
     people: "2–4 people",
     description: "Grab a coffee, sit somewhere easy, leave whenever you need.",
     tone: "Balanced",
+    noiseLevel: "Balanced",
     weather: "Indoor backup ready",
     imageTone: "#5A3823",
     emoji: "☕",
@@ -97,6 +106,7 @@ export const dayEvents: EventItem[] = [
     people: "3–6 people",
     description: "A slow walk with room for quiet moments and side chats.",
     tone: "Balanced",
+    noiseLevel: "Quiet",
     weather: "Weather dependent",
     imageTone: "#1E4F55",
     emoji: "🚶",
@@ -114,6 +124,7 @@ export const eveningEvents: EventItem[] = [
     people: "2–4 people",
     description: "Watch first, optional chat after if it feels right.",
     tone: "Quiet",
+    noiseLevel: "Lively",
     weather: "Indoor backup ready",
     imageTone: "#281C45",
     emoji: "🍿",
@@ -128,6 +139,7 @@ export const eveningEvents: EventItem[] = [
     people: "3–5 people",
     description: "Simple games, warm drinks and easy conversation starters.",
     tone: "Balanced",
+    noiseLevel: "Balanced",
     weather: "Rain friendly",
     imageTone: "#3B2D15",
     emoji: "🎲",
@@ -142,6 +154,7 @@ export const eveningEvents: EventItem[] = [
     people: "3–5 people",
     description: "Warm food, simple introductions and no pressure to stay late.",
     tone: "Balanced",
+    noiseLevel: "Balanced",
     weather: "Rain friendly",
     imageTone: "#55331C",
     emoji: "🍜",
@@ -156,6 +169,7 @@ export const eveningEvents: EventItem[] = [
     people: "2–5 people",
     description: "Share a few calm songs and chat only as much as feels good.",
     tone: "Quiet",
+    noiseLevel: "Balanced",
     weather: "Indoor backup ready",
     imageTone: "#1F2B4A",
     emoji: "🎧",

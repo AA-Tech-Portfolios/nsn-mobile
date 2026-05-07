@@ -23,6 +23,10 @@
 
 - [ ] Add interactive tutorials
 - [x] Add localisation options
+- [x] Add timezone search and expanded timezone picker
+- [x] Add profile display layout preference for clean profile vs full shortcut rows
+- [ ] Implement onboarding steps 2-5 beyond the current "Step 1 of 5" screen
+- [ ] Review translations with real users or native speakers before treating each language as complete
 - [ ] Research Celtic language support, starting with Welsh, Irish, and Scottish Gaelic, and only ship languages after native-speaker or community review
 - [ ] Keep endangered-language support community-led instead of adding broad picker entries without active users or native review
 - [ ] Plan later Indian language expansion, prioritising Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi and Nepali after translation review
@@ -30,12 +34,15 @@
 - [ ] Add toggle animations when switching between Day and Night settings
 - [ ] Fix buttons and standardise button behaviour across the app
 - [x] Allow profiles to blur their images for privacy
+- [x] Add Comfort Mode and Open Mode profile visibility controls
+- [x] Add Location Preference, Transportation Method, Food & Payment Preferences, Hobbies & Interests, Saved Places, and Settings & Privacy profile areas
 
 ### Matching and Discovery
 
 - [ ] Add personality compatibility matching that prioritises comfort, intent, pacing, and shared meetup preferences
 - [ ] Consider optional zodiac and personality prompts as playful self-expression, without using them as hard filters or compatibility scores
 - [ ] Explore an optional AI companion as a later comfort feature for meetup preparation, reflection, and gentle planning support
+- [ ] Consider achievements as a later, gentle motivation layer that does not create social pressure
 
 ### Event Planning and Attendance
 
@@ -44,8 +51,14 @@
 - [ ] Add pre-meetup grounding screen with expectations, safety reminder, and backup plan
 - [ ] Add pre-meetup readiness checklist covering location, host, plan, safety, and exit options
 - [ ] Add event troubleshooting tools to help participants coordinate around busy work, study, and timetable constraints
+- [x] Add transportation preference and arrival update messages for running late or not making it
 - [ ] Add lightweight transportation options with nearby stops, estimated travel time, suggested arrival windows, and links out to maps
 - [ ] Add host templates for common meetup types
+- [x] Add event sharing, pinning, hiding, saved places, and hidden-event viewing controls
+- [x] Add Noise Level Guide filtering that separates venue sound level from social talking pressure
+- [ ] Separate Day Events and Evening Events into clearer availability states and notify users when it is time to switch views
+- [ ] Add empty-state timing messages for no active events, sleeping time, and quiet hours
+- [ ] Add regional holiday and birthday greetings, with a setting to turn celebration messages off
 - [ ] Evaluate whether group voting helps plan meetups or creates extra pressure for participants
 
 ### Consent and Contact
@@ -58,7 +71,11 @@
 ### Exit and Chat Lifecycle
 
 - [ ] Add post-meetup chat controls: archive or hide chats, delete with 30-day recovery, and choose whether to stay in contact
-- [ ] Add Soft Exit controls so users can politely leave a meetup, chat, or connection without needing to over-explain
+- [x] Add arrival update reasons for users who cannot make it or are running late
+- [x] Add Soft Exit controls so users can politely leave a meetup, chat, or connection without needing to over-explain
+- [x] Add reporting, block host/member, unblock, report cancellation window, and escalation options
+- [ ] Add chat appearance settings so users and hosts/admins can change background and text colours
+- [ ] Add pre-made reply options behind the chat plus button
 - [ ] Add opt-out and group-change flows that reassure users it is okay to skip, leave, find a better-suited group, or create their own
 
 ### Media and Web
@@ -69,8 +86,8 @@
 
 - [ ] Add calm music player with ambient loops and a meetup prep timer
 - [ ] Add mini-games for solo and group icebreakers
-- [ ] Add private post-event reflection prompts
-- [ ] Add saved comfort places for trusted venues
+- [x] Add private post-event reflection prompts
+- [x] Add saved comfort places for trusted venues
 - [ ] Add buddy mode or guide request for first meetups
 
 ### Brand and Operations

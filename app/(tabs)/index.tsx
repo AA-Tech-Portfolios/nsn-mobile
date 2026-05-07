@@ -2,10 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { getLanguageBase, timezoneOptions, timezoneRegions, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, timezoneOptions, timezoneRegions, type NoiseLevelPreference, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { dayEvents, eveningEvents, EventItem, nsnColors } from "@/lib/nsn-data";
+import { dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
 import { prioritizeEventsForComfort } from "@/lib/softhello-mvp";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -102,6 +102,40 @@ const timezoneRegionTranslations: Record<string, Partial<Record<TimezoneRegion |
 };
 const filterKeys = ["All", "Outdoor", "Indoor", "Food", "Active"] as const;
 type EventFilter = (typeof filterKeys)[number];
+const noiseFilterKeys: NoiseLevelPreference[] = ["Any", ...noiseLevelOptions];
+
+const noiseGuideTranslations = {
+  English: {
+    title: "Noise Level Guide",
+    copy: "Filter by the actual sound level of the place, separate from how much talking is expected.",
+    filters: { Any: "All", Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
+    levels: {
+      Quiet: { icon: "🔇", label: "Quiet", copy: "Low noise" },
+      Balanced: { icon: "🌿", label: "Balanced", copy: "Moderate noise" },
+      Lively: { icon: "🔊", label: "Lively", copy: "More energy" },
+    },
+  },
+  Arabic: {
+    title: "دليل مستوى الضوضاء",
+    copy: "فلتر حسب الصوت الفعلي للمكان، بشكل منفصل عن مقدار الحديث المتوقع.",
+    filters: { Any: "الكل", Quiet: "هادئ", Balanced: "متوازن", Lively: "نشيط" },
+    levels: {
+      Quiet: { icon: "🔇", label: "هادئ", copy: "ضوضاء منخفضة" },
+      Balanced: { icon: "🌿", label: "متوازن", copy: "ضوضاء معتدلة" },
+      Lively: { icon: "🔊", label: "نشيط", copy: "طاقة أكثر" },
+    },
+  },
+  Hebrew: {
+    title: "מדריך רמת רעש",
+    copy: "סינון לפי רמת הצליל בפועל במקום, בנפרד מכמות השיחה הצפויה.",
+    filters: { Any: "הכל", Quiet: "שקט", Balanced: "מאוזן", Lively: "תוסס" },
+    levels: {
+      Quiet: { icon: "🔇", label: "שקט", copy: "רעש נמוך" },
+      Balanced: { icon: "🌿", label: "מאוזן", copy: "רעש מתון" },
+      Lively: { icon: "🔊", label: "תוסס", copy: "יותר אנרגיה" },
+    },
+  },
+} as const;
 
 const eventLivePreviews: Record<string, { photo: string; place: string; pulse: string }> = {
   "picnic-easy-hangout": {
@@ -240,6 +274,8 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
   const router = useRouter();
   const isRtl = rtlLanguages.has(appLanguageBase);
   const localizedEvent = { ...event, ...(eventTranslations[appLanguageBase]?.[event.id] ?? {}) };
+  const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
+  const eventNoise = noiseCopy.levels[event.noiseLevel];
   const livePreview = eventLivePreviews[event.id];
 
   return (
@@ -263,6 +299,7 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
         <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={2}>{localizedEvent.description}</Text>
         <View style={[styles.eventTags, isRtl && styles.rtlRow]}>
           <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>🌿 {localizedEvent.tone}</Text>
+          <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{eventNoise.icon} {eventNoise.label}</Text>
           <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>☔ {localizedEvent.weather}</Text>
         </View>
       </View>
@@ -486,6 +523,7 @@ const homeTranslations = {
     eveningEvents: "🌙 אירועי ערב",
     seeAll: "הצג הכל",
     hideHidden: "הסתר מוסתרים",
+    createMeetup: "יצירת מפגש",
     dayVsNight: "יום מול לילה",
     dayVsNightCopy: "מצא את הווייב הנכון בזמן הנכון.",
     weatherAdaptive: "מותאם למזג האוויר",
@@ -703,9 +741,10 @@ const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding, reduceMotion, comfortPreferences, pinnedEventIds, hiddenEventIds } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding, reduceMotion, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
+  const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const locale = appLocaleMap[appLanguage] ?? appLocaleMap[appLanguageBase] ?? "en-AU";
   
@@ -720,12 +759,16 @@ export default function HomeScreen() {
       .filter((event) => showHiddenEvents || !hiddenIds.has(event.id))
       .sort((a, b) => Number(pinnedIds.has(b.id)) - Number(pinnedIds.has(a.id)));
 
-    if (activeFilter === "All") {
-      return events;
+    const categoryFilteredEvents = activeFilter === "All"
+      ? events
+      : events.filter((event) => event.category === activeFilter || event.tags.includes(activeFilter));
+
+    if (noiseLevelPreference === "Any") {
+      return categoryFilteredEvents;
     }
 
-    return events.filter((event) => event.category === activeFilter || event.tags.includes(activeFilter));
-  }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, pinnedEventIds, showHiddenEvents]);
+    return categoryFilteredEvents.filter((event) => event.noiseLevel === noiseLevelPreference);
+  }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, noiseLevelPreference, pinnedEventIds, showHiddenEvents]);
   const isDay = !isNightMode;
   const [now, setNow] = useState(new Date());
   const [isTimezonePickerOpen, setIsTimezonePickerOpen] = useState(false);
@@ -772,6 +815,10 @@ export default function HomeScreen() {
     }
 
     setIsTimezonePickerOpen(false);
+  };
+
+  const selectNoiseLevelPreference = (preference: NoiseLevelPreference) => {
+    saveSoftHelloMvpState({ noiseLevelPreference: preference });
   };
 
   useEffect(() => {
@@ -1191,6 +1238,45 @@ export default function HomeScreen() {
           })}
         </ScrollView>
 
+        <View style={[styles.noiseGuideCard, isDay && styles.dayCard]}>
+          <View style={[styles.noiseGuideHeader, isRtl && styles.rtlRow]}>
+            <View style={isRtl && styles.rtlBlock}>
+              <Text style={[styles.noiseGuideTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{noiseCopy.title}</Text>
+              <Text style={[styles.noiseGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{noiseCopy.copy}</Text>
+            </View>
+          </View>
+          <View style={[styles.noiseLevelRow, isRtl && styles.rtlRow]}>
+            {noiseLevelOptions.map((level) => {
+              const levelCopy = noiseCopy.levels[level];
+              const active = noiseLevelPreference === level;
+
+              return (
+                <TouchableOpacity
+                  key={level}
+                  activeOpacity={0.82}
+                  onPress={() => selectNoiseLevelPreference(level)}
+                  style={[styles.noiseLevelItem, active && styles.noiseLevelItemActive, isDay && styles.dayNoiseLevelItem, active && isDay && styles.dayNoiseLevelItemActive]}
+                >
+                  <Text style={styles.noiseLevelIcon}>{levelCopy.icon}</Text>
+                  <Text style={[styles.noiseLevelTitle, isDay && styles.dayHeadingText, active && styles.noiseLevelTitleActive, isRtl && styles.rtlText]}>{levelCopy.label}</Text>
+                  <Text style={[styles.noiseLevelCopy, isDay && styles.dayMutedText, active && styles.noiseLevelCopyActive, isRtl && styles.rtlText]}>{levelCopy.copy}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.noiseFilterRow, isRtl && styles.rtlRow]}>
+            {noiseFilterKeys.map((filter) => (
+              <Pill
+                key={filter}
+                label={noiseCopy.filters[filter]}
+                active={noiseLevelPreference === filter}
+                isDay={isDay}
+                onPress={() => selectNoiseLevelPreference(filter)}
+              />
+            ))}
+          </ScrollView>
+        </View>
+
         <View style={[styles.sectionHeader, isRtl && styles.rtlRow]}>
           <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]}>{mode === "day" ? copy.dayEvents : copy.eveningEvents}</Text>
           <TouchableOpacity activeOpacity={0.75} onPress={() => setShowHiddenEvents((current) => !current)}>
@@ -1257,6 +1343,8 @@ const styles = StyleSheet.create({
   dayText: { color: "#111111", },
   dayTimezoneOption: { borderColor: "#B8C9E6" },
   dayTimezoneSheet: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayNoiseLevelItem: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayNoiseLevelItemActive: { backgroundColor: "#EEF7FF", borderColor: nsnColors.primary },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   logo: { color: nsnColors.text, fontSize: 25, fontWeight: "800", letterSpacing: -0.4, lineHeight: 32 },
@@ -1303,6 +1391,19 @@ const styles = StyleSheet.create({
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },
   weatherIcon: { fontSize: 28 },
   filterRow: { gap: 8, paddingBottom: 14 },
+  noiseGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 14, marginBottom: 14 },
+  noiseGuideHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 },
+  noiseGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  noiseGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  noiseLevelRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
+  noiseLevelItem: { flex: 1, minHeight: 78, borderRadius: 14, borderWidth: 1, borderColor: "#172B49", backgroundColor: "rgba(255,255,255,0.03)", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 10 },
+  noiseLevelItemActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.16)" },
+  noiseLevelIcon: { fontSize: 20, lineHeight: 24, marginBottom: 4 },
+  noiseLevelTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
+  noiseLevelTitleActive: { color: nsnColors.text },
+  noiseLevelCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, textAlign: "center" },
+  noiseLevelCopyActive: { color: nsnColors.text },
+  noiseFilterRow: { gap: 8 },
   pill: { height: 34, paddingHorizontal: 16, borderRadius: 17, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: "#13243E", alignItems: "center", justifyContent: "center" },
   pillActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   pillText: { color: nsnColors.muted, fontWeight: "700", fontSize: 12 },

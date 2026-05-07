@@ -10,6 +10,7 @@ import {
   type SoftHelloComfortPreference,
   type SoftHelloVerificationLevel,
 } from "./softhello-mvp";
+import type { NoiseLevel } from "./nsn-data";
 
 export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
 
@@ -59,6 +60,8 @@ const ONBOARDING_STORAGE_KEY = "softhello.onboarding.v1";
 
 export type SoftHelloIntent = "Friends" | "Dating" | "Both" | "Exploring";
 export type SoftHelloVisibility = "Blurred" | "Visible";
+export type ProfileShortcutLayout = "Clean" | "Expanded";
+export type NoiseLevelPreference = "Any" | NoiseLevel;
 export type TransportationMethod = "Driving" | "Public transport" | "Walking" | "Cycling" | "Rideshare" | "Getting dropped off" | "Not sure yet";
 export type DietaryPreference =
   | "No preference"
@@ -90,10 +93,12 @@ type OnboardingSnapshot = {
   savedPlaces: SavedPlace[];
   pinnedEventIds: string[];
   hiddenEventIds: string[];
+  noiseLevelPreference?: NoiseLevelPreference;
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
   mealPaymentPreference: MealPaymentPreference;
   hobbiesInterests: string[];
+  profileShortcutLayout?: ProfileShortcutLayout;
 };
 
 export type TimezoneSetting = {
@@ -764,6 +769,8 @@ type AppSettings = {
   setPinnedEventIds: (value: string[]) => void;
   hiddenEventIds: string[];
   setHiddenEventIds: (value: string[]) => void;
+  noiseLevelPreference: NoiseLevelPreference;
+  setNoiseLevelPreference: (value: NoiseLevelPreference) => void;
   transportationMethod: TransportationMethod;
   setTransportationMethod: (value: TransportationMethod) => void;
   dietaryPreferences: DietaryPreference[];
@@ -772,6 +779,8 @@ type AppSettings = {
   setMealPaymentPreference: (value: MealPaymentPreference) => void;
   hobbiesInterests: string[];
   setHobbiesInterests: (value: string[]) => void;
+  profileShortcutLayout: ProfileShortcutLayout;
+  setProfileShortcutLayout: (value: ProfileShortcutLayout) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
   saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
   resetOnboarding: () => Promise<void>;
@@ -833,10 +842,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [pinnedEventIds, setPinnedEventIds] = useState<string[]>([]);
   const [hiddenEventIds, setHiddenEventIds] = useState<string[]>([]);
+  const [noiseLevelPreference, setNoiseLevelPreference] = useState<NoiseLevelPreference>("Any");
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
   const [mealPaymentPreference, setMealPaymentPreference] = useState<MealPaymentPreference>("Pay my own way");
   const [hobbiesInterests, setHobbiesInterests] = useState<string[]>(["Coffee", "Movies", "Walks"]);
+  const [profileShortcutLayout, setProfileShortcutLayout] = useState<ProfileShortcutLayout>("Clean");
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
@@ -884,10 +895,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setSavedPlaces(snapshot.savedPlaces ?? []);
         setPinnedEventIds(snapshot.pinnedEventIds ?? []);
         setHiddenEventIds(snapshot.hiddenEventIds ?? []);
+        setNoiseLevelPreference(snapshot.noiseLevelPreference ?? "Any");
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
         setMealPaymentPreference(snapshot.mealPaymentPreference ?? "Pay my own way");
         setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
+        setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
         setBlurProfilePhoto((snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("SoftHello onboarding could not load:", error);
@@ -921,10 +934,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setSavedPlaces(snapshot.savedPlaces);
     setPinnedEventIds(snapshot.pinnedEventIds);
     setHiddenEventIds(snapshot.hiddenEventIds);
+    setNoiseLevelPreference(snapshot.noiseLevelPreference ?? "Any");
     setTransportationMethod(snapshot.transportationMethod);
     setDietaryPreferences(snapshot.dietaryPreferences);
     setMealPaymentPreference(snapshot.mealPaymentPreference);
     setHobbiesInterests(snapshot.hobbiesInterests);
+    setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
     setBlurProfilePhoto(snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -959,10 +974,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       savedPlaces,
       pinnedEventIds,
       hiddenEventIds,
+      noiseLevelPreference,
       transportationMethod,
       dietaryPreferences,
       mealPaymentPreference,
       hobbiesInterests,
+      profileShortcutLayout,
       ...snapshot,
     };
 
@@ -984,10 +1001,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.savedPlaces !== undefined) setSavedPlaces(snapshot.savedPlaces);
     if (snapshot.pinnedEventIds !== undefined) setPinnedEventIds(snapshot.pinnedEventIds);
     if (snapshot.hiddenEventIds !== undefined) setHiddenEventIds(snapshot.hiddenEventIds);
+    if (snapshot.noiseLevelPreference !== undefined) setNoiseLevelPreference(snapshot.noiseLevelPreference);
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
     if (snapshot.mealPaymentPreference !== undefined) setMealPaymentPreference(snapshot.mealPaymentPreference);
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
+    if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
@@ -1043,6 +1062,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setPinnedEventIds,
         hiddenEventIds,
         setHiddenEventIds,
+        noiseLevelPreference,
+        setNoiseLevelPreference,
         transportationMethod,
         setTransportationMethod,
         dietaryPreferences,
@@ -1051,6 +1072,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setMealPaymentPreference,
         hobbiesInterests,
         setHobbiesInterests,
+        profileShortcutLayout,
+        setProfileShortcutLayout,
         completeOnboarding,
         saveSoftHelloMvpState,
         resetOnboarding,

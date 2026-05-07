@@ -6,7 +6,7 @@ import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
-import { canMeetInPerson, getMeetingSafetyCopy } from "@/lib/softhello-mvp";
+import { canMeetInPerson, getMeetingSafetyCopy, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
 
@@ -44,6 +44,22 @@ const eventsTranslations = {
     save: "Create Meetup",
     verificationRequiredTitle: "Real Person Verified required",
     verificationRequiredCopy: "To keep meetups trustworthy, creators need Real Person Verified status before opening a real-world plan.",
+    reviewSettings: "Review settings",
+    verificationTitle: "Confirm your details",
+    verificationCopy: "Before creating real-world plans, please confirm the profile details members rely on for safety.",
+    displayName: "Name",
+    suburb: "Local area",
+    age: "Age confirmation",
+    photo: "Profile photo",
+    contact: "Contact status",
+    transport: "Arrival method",
+    ageConfirmed: "18 or older confirmed",
+    ageMissing: "Needs confirmation",
+    photoAdded: "Photo added",
+    photoMissing: "Can be added later",
+    confirmDetails: "Confirm details",
+    editProfile: "Edit profile",
+    close: "Close",
     noise: { Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
   },
   Hebrew: {
@@ -76,6 +92,22 @@ const eventsTranslations = {
     save: "יצירת אירוע",
     verificationRequiredTitle: "נדרש אימות אדם אמיתי",
     verificationRequiredCopy: "כדי לשמור על אמון במפגשים, יוצרים צריכים סטטוס אימות אדם אמיתי לפני פתיחת תוכנית בעולם האמיתי.",
+    reviewSettings: "סקירת הגדרות",
+    verificationTitle: "אישור הפרטים שלך",
+    verificationCopy: "לפני יצירת תוכניות בעולם האמיתי, נא לאשר את פרטי הפרופיל שחברים מסתמכים עליהם לבטיחות.",
+    displayName: "שם",
+    suburb: "אזור מקומי",
+    age: "אישור גיל",
+    photo: "תמונת פרופיל",
+    contact: "סטטוס קשר",
+    transport: "דרך הגעה",
+    ageConfirmed: "אושר גיל 18 ומעלה",
+    ageMissing: "נדרש אישור",
+    photoAdded: "נוספה תמונה",
+    photoMissing: "אפשר להוסיף אחר כך",
+    confirmDetails: "אישור פרטים",
+    editProfile: "עריכת פרופיל",
+    close: "סגירה",
     noise: { Quiet: "שקט", Balanced: "מאוזן", Lively: "תוסס" },
   },
 } as const;
@@ -146,7 +178,17 @@ const createEventId = (title: string) => {
 };
 
 export default function EventsScreen() {
-  const { isNightMode, appLanguage, verificationLevel } = useAppSettings();
+  const {
+    ageConfirmed,
+    appLanguage,
+    displayName,
+    isNightMode,
+    profilePhotoUri,
+    saveSoftHelloMvpState,
+    suburb,
+    transportationMethod,
+    verificationLevel,
+  } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = eventsTranslations[appLanguageBase as keyof typeof eventsTranslations] ?? eventsTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
@@ -155,6 +197,7 @@ export default function EventsScreen() {
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [showVerificationGate, setShowVerificationGate] = useState(false);
+  const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
   const [draft, setDraft] = useState<EventDraft>(emptyDraft);
 
   const isDraftValid = useMemo(
@@ -223,6 +266,13 @@ export default function EventsScreen() {
     setIsCreatorOpen(true);
   };
 
+  const confirmVerificationDetails = async () => {
+    await saveSoftHelloMvpState({ verificationLevel: "Real Person Verified" });
+    setIsVerificationReviewOpen(false);
+    setShowVerificationGate(false);
+    setIsCreatorOpen(true);
+  };
+
   const createEvent = () => {
     if (!isDraftValid) {
       return;
@@ -271,6 +321,14 @@ export default function EventsScreen() {
             <Text style={[styles.cardTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.verificationRequiredTitle}</Text>
             <Text style={[styles.cardText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.verificationRequiredCopy}</Text>
             <Text style={[styles.verificationGateStatus, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(verificationLevel, appLanguageBase)}</Text>
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={() => setIsVerificationReviewOpen(true)}
+              style={[styles.reviewSettingsButton, isRtl && styles.rtlRow]}
+              accessibilityRole="button"
+            >
+              <Text style={styles.reviewSettingsText}>{copy.reviewSettings}</Text>
+            </TouchableOpacity>
           </View>
         ) : null}
 
@@ -406,6 +464,36 @@ export default function EventsScreen() {
           </ScrollView>
         </ScreenContainer>
       </Modal>
+
+      <Modal transparent animationType="fade" visible={isVerificationReviewOpen} onRequestClose={() => setIsVerificationReviewOpen(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.verificationSheet, isDay && styles.dayModalSheet]}>
+            <Text style={[styles.sheetReviewTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.verificationTitle}</Text>
+            <Text style={[styles.sheetReviewCopy, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.verificationCopy}</Text>
+            <View style={styles.reviewList}>
+              {[
+                { label: copy.displayName, value: displayName || "SoftHello member" },
+                { label: copy.suburb, value: suburb || "Not set" },
+                { label: copy.age, value: ageConfirmed ? copy.ageConfirmed : copy.ageMissing },
+                { label: copy.photo, value: profilePhotoUri ? copy.photoAdded : copy.photoMissing },
+                { label: copy.contact, value: getVerificationLevelLabel(verificationLevel, appLanguageBase) },
+                { label: copy.transport, value: transportationMethod },
+              ].map((item) => (
+                <View key={item.label} style={[styles.reviewRow, isDay && styles.dayReviewRow, isRtl && styles.rtlRow]}>
+                  <Text style={[styles.reviewLabel, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{item.label}</Text>
+                  <Text style={[styles.reviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{item.value}</Text>
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity activeOpacity={0.86} onPress={confirmVerificationDetails} style={styles.confirmReviewButton}>
+              <Text style={styles.confirmReviewText}>{copy.confirmDetails}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity activeOpacity={0.82} onPress={() => setIsVerificationReviewOpen(false)} style={[styles.secondaryReviewButton, isDay && styles.dayReviewRow]}>
+              <Text style={[styles.secondaryReviewText, isDay && styles.dayTitle]}>{copy.close}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -519,6 +607,17 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 10,
   },
+  reviewSettingsButton: {
+    alignSelf: "flex-start",
+    minHeight: 38,
+    borderRadius: 13,
+    backgroundColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    marginTop: 13,
+  },
+  reviewSettingsText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   dayCard: {
     backgroundColor: "#DCEEFF",
     borderColor: "#B8C9E6",
@@ -651,4 +750,18 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: { opacity: 0.42 },
   saveButtonText: { color: nsnColors.text, fontSize: 16, fontWeight: "900" },
+  modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(2,8,20,0.42)", padding: 16 },
+  verificationSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
+  dayModalSheet: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  sheetReviewTitle: { color: nsnColors.text, fontSize: 20, fontWeight: "900", lineHeight: 26 },
+  sheetReviewCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 12 },
+  reviewList: { gap: 8 },
+  reviewRow: { minHeight: 56, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 9 },
+  dayReviewRow: { backgroundColor: "#EAF4FF", borderColor: "#B8C9E6" },
+  reviewLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, marginBottom: 2 },
+  reviewValue: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  confirmReviewButton: { minHeight: 48, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: 12 },
+  confirmReviewText: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  secondaryReviewButton: { minHeight: 46, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", marginTop: 9 },
+  secondaryReviewText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
 });

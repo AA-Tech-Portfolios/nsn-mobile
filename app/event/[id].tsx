@@ -71,6 +71,68 @@ const eventActionTranslations = {
   },
 } as const;
 
+const verificationWindowTranslations = {
+  English: {
+    title: "Confirm your details",
+    copy: "Before in-person meetups, SoftHello asks you to confirm the basics other members rely on for safety.",
+    displayName: "Name",
+    suburb: "Local area",
+    age: "Age confirmation",
+    photo: "Profile photo",
+    contact: "Contact status",
+    transport: "Arrival method",
+    ageConfirmed: "18 or older confirmed",
+    ageMissing: "Needs confirmation",
+    photoAdded: "Photo added",
+    photoMissing: "Can be added later",
+    confirm: "Confirm details",
+    editProfile: "Edit profile",
+    close: "Close",
+    verifiedTitle: "Details confirmed",
+    verifiedCopy: "You are ready for in-person meetups.",
+  },
+  Hebrew: {
+    title: "אישור הפרטים שלך",
+    copy: "לפני מפגשים פנים אל פנים, SoftHello מבקשת לאשר את הפרטים הבסיסיים שחברים אחרים מסתמכים עליהם לבטיחות.",
+    displayName: "שם",
+    suburb: "אזור מקומי",
+    age: "אישור גיל",
+    photo: "תמונת פרופיל",
+    contact: "סטטוס קשר",
+    transport: "דרך הגעה",
+    ageConfirmed: "אושר גיל 18 ומעלה",
+    ageMissing: "נדרש אישור",
+    photoAdded: "נוספה תמונה",
+    photoMissing: "אפשר להוסיף אחר כך",
+    confirm: "אישור פרטים",
+    editProfile: "עריכת פרופיל",
+    close: "סגירה",
+    verifiedTitle: "הפרטים אושרו",
+    verifiedCopy: "אפשר להצטרף למפגשים פנים אל פנים.",
+  },
+} as const;
+
+const noiseGuideTranslations = {
+  English: {
+    title: "Noise level",
+    copy: "This describes the sound level of the venue, separate from the social pressure to talk.",
+    levels: {
+      Quiet: { icon: "🔇", label: "Quiet", copy: "Low noise" },
+      Balanced: { icon: "🌿", label: "Balanced", copy: "Moderate noise" },
+      Lively: { icon: "🔊", label: "Lively", copy: "More energy" },
+    },
+  },
+  Hebrew: {
+    title: "רמת רעש",
+    copy: "זה מתאר את רמת הצליל במקום, בנפרד מהלחץ החברתי לדבר.",
+    levels: {
+      Quiet: { icon: "🔇", label: "שקט", copy: "רעש נמוך" },
+      Balanced: { icon: "🌿", label: "מאוזן", copy: "רעש מתון" },
+      Lively: { icon: "🔊", label: "תוסס", copy: "יותר אנרגיה" },
+    },
+  },
+} as const;
+
 const detailEventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
   Hebrew: {
     "picnic-easy-hangout": {
@@ -315,9 +377,15 @@ export default function EventDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
+  const [isVerificationOpen, setIsVerificationOpen] = useState(false);
   const {
+    ageConfirmed,
     appLanguage,
+    displayName,
     isNightMode,
+    profilePhotoUri,
+    suburb,
+    transportationMethod,
     verificationLevel,
     eventMemberships,
     postEventFeedback,
@@ -330,6 +398,8 @@ export default function EventDetailsScreen() {
   const copy = eventTranslations[appLanguageBase as keyof typeof eventTranslations] ?? eventTranslations.English;
   const saveCopy = savePlaceTranslations[appLanguageBase as keyof typeof savePlaceTranslations] ?? savePlaceTranslations.English;
   const actionCopy = eventActionTranslations[appLanguageBase as keyof typeof eventActionTranslations] ?? eventActionTranslations.English;
+  const verificationCopy = verificationWindowTranslations[appLanguageBase as keyof typeof verificationWindowTranslations] ?? verificationWindowTranslations.English;
+  const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
@@ -342,6 +412,7 @@ export default function EventDetailsScreen() {
   const eventDate = isMovieNight ? copy.date : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
   const eventPeople = isMovieNight ? copy.people : localizedEvent.people;
   const eventDescription = isMovieNight ? copy.description : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
+  const eventNoise = noiseCopy.levels[event.noiseLevel];
   const eventWeatherCopy = event.weather.includes("Weather")
     ? copy.weatherAffectedCopy
     : copy.weatherFriendlyCopy;
@@ -387,15 +458,24 @@ export default function EventDetailsScreen() {
 
   const handleJoin = async () => {
     if (!canMeet) {
-      Alert.alert("Verification needed", getMeetingSafetyCopy(verificationLevel, appLanguageBase), [
-        { text: "Keep browsing", style: "cancel" },
-        { text: "Open profile", onPress: () => router.push("/(tabs)/profile") },
-      ]);
+      setIsVerificationOpen(true);
       return;
     }
 
     const nextMemberships = joinEvent(event.id, eventMemberships);
     await saveSoftHelloMvpState({ eventMemberships: nextMemberships });
+    router.push({ pathname: "/(tabs)/chats" });
+  };
+
+  const confirmVerificationDetails = async () => {
+    const nextMemberships = joinEvent(event.id, eventMemberships);
+
+    await saveSoftHelloMvpState({
+      verificationLevel: "Real Person Verified",
+      eventMemberships: nextMemberships,
+    });
+    setIsVerificationOpen(false);
+    Alert.alert(verificationCopy.verifiedTitle, verificationCopy.verifiedCopy);
     router.push({ pathname: "/(tabs)/chats" });
   };
 
@@ -523,6 +603,48 @@ export default function EventDetailsScreen() {
           </View>
         </Modal>
 
+        <Modal transparent animationType="fade" visible={isVerificationOpen} onRequestClose={() => setIsVerificationOpen(false)}>
+          <View style={styles.modalBackdrop}>
+            <View style={[styles.verificationSheet, isDay && styles.dayActionSheet]}>
+              <Text style={[styles.actionSheetTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{verificationCopy.title}</Text>
+              <Text style={[styles.actionSheetCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{verificationCopy.copy}</Text>
+              <View style={styles.verificationList}>
+                {[
+                  { label: verificationCopy.displayName, value: displayName || "SoftHello member" },
+                  { label: verificationCopy.suburb, value: suburb || event.venue },
+                  { label: verificationCopy.age, value: ageConfirmed ? verificationCopy.ageConfirmed : verificationCopy.ageMissing },
+                  { label: verificationCopy.photo, value: profilePhotoUri ? verificationCopy.photoAdded : verificationCopy.photoMissing },
+                  { label: verificationCopy.contact, value: getVerificationLevelLabel(verificationLevel, appLanguageBase) },
+                  { label: verificationCopy.transport, value: transportationMethod },
+                ].map((item) => (
+                  <View key={item.label} style={[styles.verificationRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}>
+                    <Text style={[styles.verificationLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.label}</Text>
+                    <Text style={[styles.verificationValue, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.value}</Text>
+                  </View>
+                ))}
+              </View>
+              <View style={styles.verificationActions}>
+                <TouchableOpacity activeOpacity={0.82} onPress={confirmVerificationDetails} style={styles.confirmVerificationButton}>
+                  <Text style={styles.confirmVerificationText}>{verificationCopy.confirm}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() => {
+                    setIsVerificationOpen(false);
+                    router.push("/(tabs)/profile");
+                  }}
+                  style={[styles.secondaryVerificationButton, isDay && styles.dayActionRow]}
+                >
+                  <Text style={[styles.secondaryVerificationText, isDay && styles.dayText]}>{verificationCopy.editProfile}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity activeOpacity={0.82} onPress={() => setIsVerificationOpen(false)} style={styles.closeActionButton}>
+                  <Text style={styles.closeActionText}>{verificationCopy.close}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         <View style={[styles.heroPanel, isDay && styles.dayPanel]}>
           <View style={styles.eventAvatar}>
             <Text style={styles.avatarEmoji}>{event.emoji}</Text>
@@ -558,6 +680,16 @@ export default function EventDetailsScreen() {
           </View>
           <Text style={styles.weatherIcon}>☁️</Text>
         </TouchableOpacity>
+
+        <View style={[styles.noiseGuideCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
+          <View style={[styles.noiseIconWrap, isDay && styles.dayMetaIconWrap]}>
+            <Text style={styles.noiseIcon}>{eventNoise.icon}</Text>
+          </View>
+          <View style={[styles.noiseCopyBlock, isRtl && styles.rtlBlock]}>
+            <Text style={[styles.noiseTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{noiseCopy.title}: {eventNoise.label}</Text>
+            <Text style={[styles.noiseDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventNoise.copy}. {noiseCopy.copy}</Text>
+          </View>
+        </View>
 
         <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
         <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
@@ -658,6 +790,7 @@ const styles = StyleSheet.create({
   activeMoreButton: { borderColor: "rgba(47,128,237,0.52)", backgroundColor: "rgba(47,128,237,0.12)" },
   modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(2,8,20,0.42)", padding: 16 },
   actionSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#071426", padding: 16 },
+  verificationSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#071426", padding: 16 },
   actionSheetTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 },
   actionSheetCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginTop: 3, marginBottom: 12 },
   actionList: { gap: 8 },
@@ -665,6 +798,15 @@ const styles = StyleSheet.create({
   actionText: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   closeActionButton: { minHeight: 46, alignItems: "center", justifyContent: "center", borderRadius: 15, backgroundColor: nsnColors.primary, marginTop: 12 },
   closeActionText: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  verificationList: { gap: 8 },
+  verificationRow: { minHeight: 56, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 9 },
+  verificationLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, marginBottom: 2 },
+  verificationValue: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  verificationActions: { marginTop: 12, gap: 9 },
+  confirmVerificationButton: { minHeight: 48, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center" },
+  confirmVerificationText: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  secondaryVerificationButton: { minHeight: 46, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
+  secondaryVerificationText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   heroPanel: { alignItems: "center", borderRadius: 28, paddingTop: 8, paddingBottom: 22, backgroundColor: "#061121", borderWidth: 1, borderColor: "rgba(56,72,255,0.22)", marginBottom: 18 },
   eventAvatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: "#21123E", borderWidth: 2, borderColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: -2, marginBottom: 18 },
   avatarEmoji: { fontSize: 43 },
@@ -684,6 +826,12 @@ const styles = StyleSheet.create({
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },
   weatherIcon: { fontSize: 28 },
+  noiseGuideCard: { minHeight: 74, flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 13, marginBottom: 16 },
+  noiseIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  noiseIcon: { fontSize: 21, lineHeight: 24 },
+  noiseCopyBlock: { flex: 1 },
+  noiseTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  noiseDescription: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 2 },
   sectionTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 23, marginBottom: 10 },
   expectGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   expectCard: { width: "48%", minHeight: 82, borderRadius: 16, padding: 13, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border },
