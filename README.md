@@ -14,6 +14,7 @@ SoftHello planning docs:
 - [`docs/softhello-feature-map.md`](docs/softhello-feature-map.md) - MVP, post-MVP, and future feature boundaries.
 - [`docs/softhello-safety-and-trust.md`](docs/softhello-safety-and-trust.md) - verification, meeting safety, reporting, and 18+ expectations.
 - [`docs/softhello-ux-principles.md`](docs/softhello-ux-principles.md) - calm, ND-friendly, low-pressure UX rules.
+- [`docs/brand-systems.md`](docs/brand-systems.md) - SoftHello global brand system and NSN local visual system.
 
 ## Product Intent
 
@@ -94,6 +95,7 @@ The app can run as a UI prototype without most backend values configured.
 - `pnpm qr "exps://..."` generates a QR code PNG for an Expo URL.
 
 More script notes live in [`scripts/README.md`](scripts/README.md).
+Windows and PowerShell-safe command notes live in [`docs/development-workflow.md`](docs/development-workflow.md).
 
 ## Design Notes
 

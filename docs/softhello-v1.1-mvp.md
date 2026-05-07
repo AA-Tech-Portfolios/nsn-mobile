@@ -2,6 +2,9 @@
 
 ## Overview
 
+SoftHello's original concept is documented as the global brand and journey anchor in
+[`docs/brand-systems.md`](brand-systems.md).
+
 SoftHello is a calm, local platform for adults navigating friendships and dating in a low-pressure, safe, and natural environment. It is not built around swiping, performance, popularity, or urgency. The product is built around gradual human connection.
 
 SoftHello prioritizes:

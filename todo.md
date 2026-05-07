@@ -37,6 +37,7 @@
 - [x] Add timezone search and expanded timezone picker
 - [x] Add profile display layout preference for clean profile vs full shortcut rows
 - [ ] Implement onboarding steps 2-5 beyond the current "Step 1 of 5" screen
+- [ ] Add user age and preferred age range to onboarding and profile preferences, while keeping 18+ safeguards separate from matching preferences
 - [ ] Review translations with real users or native speakers before treating each language as complete
 - [ ] Research Celtic language support, starting with Welsh, Irish, and Scottish Gaelic, and only ship languages after native-speaker or community review
 - [ ] Keep endangered-language support community-led instead of adding broad picker entries without active users or native review
@@ -103,6 +104,8 @@
 
 ### Brand and Operations
 
+- [x] Clarify product split between SoftHello global release and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
+- [x] Define separate brand systems: SoftHello should use the soft purple global identity, while North Shore Nights can keep the local light-blue/dark-blue Australian design direction
 - [ ] Rename project to a global name
 - [ ] Remove AI Expo related settings as the app develops
 - [ ] Add optional donation button
