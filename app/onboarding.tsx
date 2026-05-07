@@ -204,7 +204,7 @@ export default function OnboardingScreen() {
       profilePhotoUri,
       visibilityPreference,
       comfortPreferences,
-      verificationLevel: "Contact Verified",
+      verificationLevel: "Unverified",
       eventMemberships: [],
       blockedUserIds: [],
       safetyReports: [],

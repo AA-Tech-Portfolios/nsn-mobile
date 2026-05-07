@@ -8,6 +8,7 @@ import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   canMeetInPerson,
+  deriveVerificationLevel,
   getEventMembership,
   getMeetingSafetyCopy,
   getVerificationLevelLabel,
@@ -85,7 +86,7 @@ const verificationWindowTranslations = {
     ageMissing: "Needs confirmation",
     photoAdded: "Photo added",
     photoMissing: "Can be added later",
-    confirm: "Confirm details",
+    confirm: "Review in profile",
     editProfile: "Edit profile",
     close: "Close",
     verifiedTitle: "Details confirmed",
@@ -104,7 +105,7 @@ const verificationWindowTranslations = {
     ageMissing: "נדרש אישור",
     photoAdded: "נוספה תמונה",
     photoMissing: "אפשר להוסיף אחר כך",
-    confirm: "אישור פרטים",
+    confirm: "סקירה בפרופיל",
     editProfile: "עריכת פרופיל",
     close: "סגירה",
     verifiedTitle: "הפרטים אושרו",
@@ -384,6 +385,10 @@ export default function EventDetailsScreen() {
     displayName,
     isNightMode,
     profilePhotoUri,
+    contactEmail,
+    contactPhone,
+    identitySelfieUri,
+    hasIdentityDocument,
     suburb,
     transportationMethod,
     verificationLevel,
@@ -421,7 +426,8 @@ export default function EventDetailsScreen() {
     : copy.genericMeetingCopy(event.venue);
   const membership = getEventMembership(event.id, eventMemberships);
   const hasJoined = membership.status === "joined";
-  const canMeet = canMeetInPerson(verificationLevel);
+  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const canMeet = canMeetInPerson(effectiveVerificationLevel);
   const existingFeedback = postEventFeedback.find((item) => item.eventId === event.id);
   const savedPlaceId = `event:${event.id}:${event.venue}`;
   const isPlaceSaved = savedPlaces.some((place) => place.id === savedPlaceId);
@@ -468,15 +474,8 @@ export default function EventDetailsScreen() {
   };
 
   const confirmVerificationDetails = async () => {
-    const nextMemberships = joinEvent(event.id, eventMemberships);
-
-    await saveSoftHelloMvpState({
-      verificationLevel: "Real Person Verified",
-      eventMemberships: nextMemberships,
-    });
     setIsVerificationOpen(false);
-    Alert.alert(verificationCopy.verifiedTitle, verificationCopy.verifiedCopy);
-    router.push({ pathname: "/(tabs)/chats" });
+    router.push("/(tabs)/profile");
   };
 
   const saveFeedback = async (comfort: PostEventFeedback["comfort"], wouldMeetAgain: boolean) => {
@@ -614,7 +613,7 @@ export default function EventDetailsScreen() {
                   { label: verificationCopy.suburb, value: suburb || event.venue },
                   { label: verificationCopy.age, value: ageConfirmed ? verificationCopy.ageConfirmed : verificationCopy.ageMissing },
                   { label: verificationCopy.photo, value: profilePhotoUri ? verificationCopy.photoAdded : verificationCopy.photoMissing },
-                  { label: verificationCopy.contact, value: getVerificationLevelLabel(verificationLevel, appLanguageBase) },
+                  { label: verificationCopy.contact, value: getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase) },
                   { label: verificationCopy.transport, value: transportationMethod },
                 ].map((item) => (
                   <View key={item.label} style={[styles.verificationRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}>
@@ -719,10 +718,10 @@ export default function EventDetailsScreen() {
           <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
             <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meeting safety</Text>
             <Text style={[styles.verificationChip, canMeet && styles.verificationChipReady]}>
-              {getVerificationLevelLabel(verificationLevel, appLanguageBase)}
+              {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
           </View>
-          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(verificationLevel, appLanguageBase)}</Text>
+          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
         </View>
 
         <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>

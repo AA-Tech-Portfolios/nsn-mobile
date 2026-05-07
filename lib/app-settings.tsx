@@ -83,6 +83,10 @@ type OnboardingSnapshot = {
   intent: SoftHelloIntent;
   displayName: string;
   profilePhotoUri: string | null;
+  contactEmail?: string;
+  contactPhone?: string;
+  identitySelfieUri?: string | null;
+  hasIdentityDocument?: boolean;
   visibilityPreference: SoftHelloVisibility;
   comfortPreferences: SoftHelloComfortPreference[];
   verificationLevel: SoftHelloVerificationLevel;
@@ -749,6 +753,14 @@ type AppSettings = {
   setDisplayName: (value: string) => void;
   profilePhotoUri: string | null;
   setProfilePhotoUri: (value: string | null) => void;
+  contactEmail: string;
+  setContactEmail: (value: string) => void;
+  contactPhone: string;
+  setContactPhone: (value: string) => void;
+  identitySelfieUri: string | null;
+  setIdentitySelfieUri: (value: string | null) => void;
+  hasIdentityDocument: boolean;
+  setHasIdentityDocument: (value: boolean) => void;
   visibilityPreference: SoftHelloVisibility;
   setVisibilityPreference: (value: SoftHelloVisibility) => void;
   comfortPreferences: SoftHelloComfortPreference[];
@@ -832,9 +844,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [intent, setIntent] = useState<SoftHelloIntent>("Exploring");
   const [displayName, setDisplayName] = useState("Alon");
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(null);
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [identitySelfieUri, setIdentitySelfieUri] = useState<string | null>(null);
+  const [hasIdentityDocument, setHasIdentityDocument] = useState(false);
   const [visibilityPreference, setVisibilityPreference] = useState<SoftHelloVisibility>("Blurred");
   const [comfortPreferences, setComfortPreferences] = useState<SoftHelloComfortPreference[]>(defaultComfortPreferences);
-  const [verificationLevel, setVerificationLevel] = useState<SoftHelloVerificationLevel>("Contact Verified");
+  const [verificationLevel, setVerificationLevel] = useState<SoftHelloVerificationLevel>("Unverified");
   const [eventMemberships, setEventMemberships] = useState<EventMembership[]>([]);
   const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
   const [safetyReports, setSafetyReports] = useState<SafetyReport[]>([]);
@@ -885,9 +901,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setIntent(snapshot.intent ?? "Exploring");
         setDisplayName(snapshot.displayName || "Alon");
         setProfilePhotoUri(snapshot.profilePhotoUri ?? null);
+        setContactEmail(snapshot.contactEmail ?? "");
+        setContactPhone(snapshot.contactPhone ?? "");
+        setIdentitySelfieUri(snapshot.identitySelfieUri ?? null);
+        setHasIdentityDocument(Boolean(snapshot.hasIdentityDocument));
         setVisibilityPreference(snapshot.visibilityPreference ?? "Blurred");
         setComfortPreferences(snapshot.comfortPreferences?.length ? snapshot.comfortPreferences : defaultComfortPreferences);
-        setVerificationLevel(snapshot.verificationLevel ?? "Contact Verified");
+        setVerificationLevel(snapshot.verificationLevel ?? "Unverified");
         setEventMemberships(snapshot.eventMemberships ?? []);
         setBlockedUserIds(snapshot.blockedUserIds ?? []);
         setSafetyReports(snapshot.safetyReports ?? []);
@@ -924,6 +944,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setIntent(snapshot.intent);
     setDisplayName(snapshot.displayName);
     setProfilePhotoUri(snapshot.profilePhotoUri);
+    setContactEmail(snapshot.contactEmail ?? "");
+    setContactPhone(snapshot.contactPhone ?? "");
+    setIdentitySelfieUri(snapshot.identitySelfieUri ?? null);
+    setHasIdentityDocument(Boolean(snapshot.hasIdentityDocument));
     setVisibilityPreference(snapshot.visibilityPreference);
     setComfortPreferences(snapshot.comfortPreferences);
     setVerificationLevel(snapshot.verificationLevel);
@@ -964,6 +988,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       intent,
       displayName,
       profilePhotoUri,
+      contactEmail,
+      contactPhone,
+      identitySelfieUri,
+      hasIdentityDocument,
       visibilityPreference,
       comfortPreferences,
       verificationLevel,
@@ -988,6 +1016,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.intent !== undefined) setIntent(snapshot.intent);
     if (snapshot.displayName !== undefined) setDisplayName(snapshot.displayName);
     if (snapshot.profilePhotoUri !== undefined) setProfilePhotoUri(snapshot.profilePhotoUri);
+    if (snapshot.contactEmail !== undefined) setContactEmail(snapshot.contactEmail);
+    if (snapshot.contactPhone !== undefined) setContactPhone(snapshot.contactPhone);
+    if (snapshot.identitySelfieUri !== undefined) setIdentitySelfieUri(snapshot.identitySelfieUri);
+    if (snapshot.hasIdentityDocument !== undefined) setHasIdentityDocument(snapshot.hasIdentityDocument);
     if (snapshot.visibilityPreference !== undefined) {
       setVisibilityPreference(snapshot.visibilityPreference);
       setBlurProfilePhoto(snapshot.visibilityPreference === "Blurred");
@@ -1042,6 +1074,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setDisplayName,
         profilePhotoUri,
         setProfilePhotoUri,
+        contactEmail,
+        setContactEmail,
+        contactPhone,
+        setContactPhone,
+        identitySelfieUri,
+        setIdentitySelfieUri,
+        hasIdentityDocument,
+        setHasIdentityDocument,
         visibilityPreference,
         setVisibilityPreference,
         comfortPreferences,

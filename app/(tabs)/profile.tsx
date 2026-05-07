@@ -9,7 +9,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
-import { canMeetInPerson, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
+import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
 
 const rows = [
   { icon: "calendar", key: "meetups", route: "/meetups" },
@@ -650,13 +650,24 @@ const profileVerificationTranslations = {
     suburb: "Local area",
     age: "Age confirmation",
     photo: "Profile photo",
-    contact: "Contact status",
+    email: "Email address",
+    emailPlaceholder: "you@example.com",
+    phone: "Phone number",
+    phonePlaceholder: "+61 400 000 000",
+    selfie: "Facial recognition selfie",
+    selfieMissing: "Needs selfie",
+    selfieAdded: "Selfie added",
+    addSelfie: "Add selfie",
+    idDocument: "Government ID",
+    idMissing: "Needs ID check",
+    idProvided: "ID provided",
+    contact: "Current trust status",
     transport: "Arrival method",
     ageConfirmed: "18 or older confirmed",
     ageMissing: "Needs confirmation",
     photoAdded: "Photo added",
     photoMissing: "Can be added later",
-    confirmDetails: "Confirm details",
+    confirmDetails: "Save trust settings",
   },
   Hebrew: {
     reviewSettings: "סקירת הגדרות",
@@ -666,13 +677,24 @@ const profileVerificationTranslations = {
     suburb: "אזור מקומי",
     age: "אישור גיל",
     photo: "תמונת פרופיל",
-    contact: "סטטוס קשר",
+    email: "כתובת אימייל",
+    emailPlaceholder: "you@example.com",
+    phone: "מספר טלפון",
+    phonePlaceholder: "+61 400 000 000",
+    selfie: "סלפי לזיהוי פנים",
+    selfieMissing: "נדרש סלפי",
+    selfieAdded: "נוסף סלפי",
+    addSelfie: "הוספת סלפי",
+    idDocument: "תעודה ממשלתית",
+    idMissing: "נדרש אימות תעודה",
+    idProvided: "סופקה תעודה",
+    contact: "סטטוס אמון נוכחי",
     transport: "דרך הגעה",
     ageConfirmed: "אושר גיל 18 ומעלה",
     ageMissing: "נדרש אישור",
     photoAdded: "נוספה תמונה",
     photoMissing: "אפשר להוסיף אחר כך",
-    confirmDetails: "אישור פרטים",
+    confirmDetails: "שמירת הגדרות אמון",
   },
 } as const;
 
@@ -687,6 +709,11 @@ export default function ProfileScreen() {
     setDisplayName,
     profilePhotoUri,
     setProfilePhotoUri,
+    contactEmail,
+    contactPhone,
+    identitySelfieUri,
+    setIdentitySelfieUri,
+    hasIdentityDocument,
     visibilityPreference,
     comfortPreferences,
     verificationLevel,
@@ -706,6 +733,7 @@ export default function ProfileScreen() {
   const profileVerificationCopy = profileVerificationTranslations[appLanguageBase as keyof typeof profileVerificationTranslations] ?? profileVerificationTranslations.English;
   const profilePreferenceCopy = getProfilePreferenceCopy(appLanguageBase);
   const visibilityModeCopy = visibilityPreference === "Blurred" ? visibilityCopy.comfortCopy : visibilityCopy.openCopy;
+  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
   const getComfortLabel = (preference: SoftHelloComfortPreference) => comfortCopy[preference] ?? preference;
   const comfortSummary = comfortPreferences.length ? comfortPreferences.map(getComfortLabel).join(" · ") : copy.noComfortPreferences;
   const getRowLabel = (key: ProfileShortcutKey) => {
@@ -732,6 +760,10 @@ export default function ProfileScreen() {
   const [showComfortSaved, setShowComfortSaved] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
+  const [draftContactEmail, setDraftContactEmail] = useState(contactEmail);
+  const [draftContactPhone, setDraftContactPhone] = useState(contactPhone);
+  const [draftIdentitySelfieUri, setDraftIdentitySelfieUri] = useState<string | null>(identitySelfieUri);
+  const [draftHasIdentityDocument, setDraftHasIdentityDocument] = useState(hasIdentityDocument);
 
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
 
@@ -820,6 +852,26 @@ export default function ProfileScreen() {
     setIsEditingVibes(true);
   };
 
+  const pickIdentitySelfie = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Please allow photo access to add an identity selfie.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setDraftIdentitySelfieUri(result.assets[0].uri);
+    }
+  };
+
   const toggleComfortEditing = async () => {
     if (isEditingComfort) {
       await saveSoftHelloMvpState({ comfortPreferences: draftComfortPreferences });
@@ -856,8 +908,29 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ profileShortcutLayout: nextLayout });
   };
 
+  const openVerificationReview = () => {
+    setDraftContactEmail(contactEmail);
+    setDraftContactPhone(contactPhone);
+    setDraftIdentitySelfieUri(identitySelfieUri);
+    setDraftHasIdentityDocument(hasIdentityDocument);
+    setIsVerificationReviewOpen(true);
+  };
+
   const confirmVerificationDetails = async () => {
-    await saveSoftHelloMvpState({ verificationLevel: "Real Person Verified" });
+    const nextVerificationLevel = deriveVerificationLevel({
+      contactEmail: draftContactEmail,
+      contactPhone: draftContactPhone,
+      identitySelfieUri: draftIdentitySelfieUri,
+      hasIdentityDocument: draftHasIdentityDocument,
+    });
+
+    await saveSoftHelloMvpState({
+      contactEmail: draftContactEmail.trim(),
+      contactPhone: draftContactPhone.trim(),
+      identitySelfieUri: draftIdentitySelfieUri,
+      hasIdentityDocument: draftHasIdentityDocument,
+      verificationLevel: nextVerificationLevel,
+    });
     setIsVerificationReviewOpen(false);
   };
 
@@ -1177,15 +1250,15 @@ export default function ProfileScreen() {
         <View style={[styles.trustCard, isDay && styles.dayCard]}>
           <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
             <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.trustStatus}</Text>
-            <Text style={[styles.trustPill, isDay && styles.dayTrustPill, canMeetInPerson(verificationLevel) && styles.trustPillReady, isDay && canMeetInPerson(verificationLevel) && styles.dayTrustPillReady]}>
-              {getVerificationLevelLabel(verificationLevel, appLanguageBase)}
+            <Text style={[styles.trustPill, isDay && styles.dayTrustPill, canMeetInPerson(effectiveVerificationLevel) && styles.trustPillReady, isDay && canMeetInPerson(effectiveVerificationLevel) && styles.dayTrustPillReady]}>
+              {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
           </View>
-          <Text style={[styles.trustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(verificationLevel, appLanguageBase)}</Text>
+          <Text style={[styles.trustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
           <View style={styles.verificationSteps}>
             {verificationLevels.map((level) => (
-              <View key={level} style={[styles.verificationStep, isDay && styles.dayVerificationStep, level === verificationLevel && styles.verificationStepActive, isDay && level === verificationLevel && styles.dayVerificationStepActive]}>
-                <Text style={[styles.verificationStepText, isDay && styles.dayVerificationStepText, level === verificationLevel && styles.verificationStepTextActive, isDay && level === verificationLevel && styles.dayVerificationStepTextActive]}>
+              <View key={level} style={[styles.verificationStep, isDay && styles.dayVerificationStep, level === effectiveVerificationLevel && styles.verificationStepActive, isDay && level === effectiveVerificationLevel && styles.dayVerificationStepActive]}>
+                <Text style={[styles.verificationStepText, isDay && styles.dayVerificationStepText, level === effectiveVerificationLevel && styles.verificationStepTextActive, isDay && level === effectiveVerificationLevel && styles.dayVerificationStepTextActive]}>
                   {getVerificationLevelLabel(level, appLanguageBase)}
                 </Text>
               </View>
@@ -1193,7 +1266,7 @@ export default function ProfileScreen() {
           </View>
           <TouchableOpacity
             activeOpacity={0.82}
-            onPress={() => setIsVerificationReviewOpen(true)}
+            onPress={openVerificationReview}
             style={[styles.reviewSettingsButton, isRtl && styles.rtlRow]}
             accessibilityRole="button"
           >
@@ -1268,7 +1341,7 @@ export default function ProfileScreen() {
                 { label: profileVerificationCopy.suburb, value: suburb || "Not set" },
                 { label: profileVerificationCopy.age, value: ageConfirmed ? profileVerificationCopy.ageConfirmed : profileVerificationCopy.ageMissing },
                 { label: profileVerificationCopy.photo, value: profilePhotoUri ? profileVerificationCopy.photoAdded : profileVerificationCopy.photoMissing },
-                { label: profileVerificationCopy.contact, value: getVerificationLevelLabel(verificationLevel, appLanguageBase) },
+                { label: profileVerificationCopy.contact, value: getVerificationLevelLabel(deriveVerificationLevel({ contactEmail: draftContactEmail, contactPhone: draftContactPhone, identitySelfieUri: draftIdentitySelfieUri, hasIdentityDocument: draftHasIdentityDocument }), appLanguageBase) },
                 { label: profileVerificationCopy.transport, value: transportationMethod },
               ].map((item) => (
                 <View key={item.label} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]}>
@@ -1276,6 +1349,41 @@ export default function ProfileScreen() {
                   <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{item.value}</Text>
                 </View>
               ))}
+              <View style={[styles.verificationInputGroup, isDay && styles.daySoftOption]}>
+                <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.email}</Text>
+                <TextInput
+                  value={draftContactEmail}
+                  onChangeText={setDraftContactEmail}
+                  placeholder={profileVerificationCopy.emailPlaceholder}
+                  placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={[styles.verificationInput, isDay && styles.dayInput, isRtl && styles.rtlInput]}
+                />
+              </View>
+              <View style={[styles.verificationInputGroup, isDay && styles.daySoftOption]}>
+                <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.phone}</Text>
+                <TextInput
+                  value={draftContactPhone}
+                  onChangeText={setDraftContactPhone}
+                  placeholder={profileVerificationCopy.phonePlaceholder}
+                  placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+                  keyboardType="phone-pad"
+                  style={[styles.verificationInput, isDay && styles.dayInput, isRtl && styles.rtlInput]}
+                />
+              </View>
+              <TouchableOpacity activeOpacity={0.82} onPress={pickIdentitySelfie} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]}>
+                <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.selfie}</Text>
+                <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                  {draftIdentitySelfieUri ? profileVerificationCopy.selfieAdded : profileVerificationCopy.addSelfie}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity activeOpacity={0.82} onPress={() => setDraftHasIdentityDocument((current) => !current)} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]}>
+                <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.idDocument}</Text>
+                <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                  {draftHasIdentityDocument ? profileVerificationCopy.idProvided : profileVerificationCopy.idMissing}
+                </Text>
+              </TouchableOpacity>
             </View>
             <TouchableOpacity activeOpacity={0.86} onPress={confirmVerificationDetails} style={styles.confirmReviewButton}>
               <Text style={styles.confirmReviewText}>{profileVerificationCopy.confirmDetails}</Text>
@@ -1294,6 +1402,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#EAF4FF" },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 30 },
+  rtlInput: { textAlign: "right", writingDirection: "rtl" },
   topRight: { alignItems: "flex-end", marginBottom: 8, zIndex: 20 },
   settingsButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
   dayIconButton: { backgroundColor: "#DCEEFF" },
@@ -1360,6 +1469,9 @@ const styles = StyleSheet.create({
   verificationReviewRow: { minHeight: 56, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 9 },
   verificationReviewLabel: { flex: 1, color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   verificationReviewValue: { flex: 1.5, color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  verificationInputGroup: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 9 },
+  verificationInput: { minHeight: 42, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, fontSize: 14, fontWeight: "800", paddingHorizontal: 12, marginTop: 7 },
+  dayInput: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6", color: "#0B1220" },
   confirmReviewButton: { minHeight: 48, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: 12 },
   confirmReviewText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20 },
   secondaryReviewButton: { minHeight: 46, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", marginTop: 9 },

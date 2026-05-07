@@ -4,6 +4,13 @@ export type SoftHelloComfortPreference = "Small groups" | "Text-first" | "Quiet"
 
 export type SoftHelloVerificationLevel = "Unverified" | "Contact Verified" | "Real Person Verified";
 
+export type TrustEvidence = {
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  identitySelfieUri?: string | null;
+  hasIdentityDocument?: boolean;
+};
+
 export type EventMembershipStatus = "none" | "joined" | "left";
 
 export type EventMembership = {
@@ -70,6 +77,25 @@ export const verificationRank: Record<SoftHelloVerificationLevel, number> = {
 
 export function canMeetInPerson(level: SoftHelloVerificationLevel) {
   return verificationRank[level] >= verificationRank["Real Person Verified"];
+}
+
+export function canChatPrivately(level: SoftHelloVerificationLevel) {
+  return verificationRank[level] >= verificationRank["Contact Verified"];
+}
+
+export function deriveVerificationLevel(evidence: TrustEvidence): SoftHelloVerificationLevel {
+  const hasContactDetails = Boolean(evidence.contactEmail?.trim() && evidence.contactPhone?.trim());
+  const hasIdentityProof = Boolean(evidence.identitySelfieUri && evidence.hasIdentityDocument);
+
+  if (hasContactDetails && hasIdentityProof) {
+    return "Real Person Verified";
+  }
+
+  if (hasContactDetails) {
+    return "Contact Verified";
+  }
+
+  return "Unverified";
 }
 
 const meetingSafetyCopyTranslations: Record<string, Record<SoftHelloVerificationLevel, string>> = {

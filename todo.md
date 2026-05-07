@@ -19,6 +19,17 @@
 - [ ] Add 18+ compliance flow and safeguards
 - [ ] Gather user feedback from testing sessions
 
+### Emergency and Safety
+
+- [ ] Plan emergency safety features for later, with careful privacy, legal, and regional review before implementation
+- [ ] Add optional trusted contact setup for meetups
+- [ ] Add discreet emergency help action from active meetup chats and event details
+- [ ] Add optional check-in timer with "I'm safe" confirmation and escalation if the user does not respond
+- [ ] Add share-my-meetup-plan controls for selected trusted contacts
+- [ ] Add location-sharing safeguards, including clear consent, expiry, and approximate-location options
+- [ ] Add region-aware emergency resources and crisis support links
+- [ ] Add abuse-prevention rules so emergency tools cannot be used to stalk, coerce, or expose another user
+
 ### Product Experience
 
 - [ ] Add interactive tutorials

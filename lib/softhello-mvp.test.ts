@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 import { dayEvents } from "./nsn-data";
 import {
   canMeetInPerson,
+  canChatPrivately,
   blockUser,
   cancelSafetyReport,
   createSafetyReport,
+  deriveVerificationLevel,
   getMeetingSafetyCopy,
   getVerificationLevelLabel,
   hideEvent,
@@ -26,6 +28,25 @@ describe("SoftHello MVP domain rules", () => {
     expect(canMeetInPerson("Unverified")).toBe(false);
     expect(canMeetInPerson("Contact Verified")).toBe(false);
     expect(canMeetInPerson("Real Person Verified")).toBe(true);
+  });
+
+  it("requires contact verification for private chat surfaces", () => {
+    expect(canChatPrivately("Unverified")).toBe(false);
+    expect(canChatPrivately("Contact Verified")).toBe(true);
+    expect(canChatPrivately("Real Person Verified")).toBe(true);
+  });
+
+  it("derives trust status from contact and identity evidence", () => {
+    expect(deriveVerificationLevel({})).toBe("Unverified");
+    expect(deriveVerificationLevel({ contactEmail: "alon@example.com", contactPhone: "+61400000000" })).toBe("Contact Verified");
+    expect(
+      deriveVerificationLevel({
+        contactEmail: "alon@example.com",
+        contactPhone: "+61400000000",
+        identitySelfieUri: "file://selfie.jpg",
+        hasIdentityDocument: true,
+      })
+    ).toBe("Real Person Verified");
   });
 
   it("localizes trust copy while falling back to English", () => {

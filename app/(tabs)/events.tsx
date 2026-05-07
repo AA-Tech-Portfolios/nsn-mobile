@@ -1,12 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
-import { canMeetInPerson, getMeetingSafetyCopy, getVerificationLevelLabel } from "@/lib/softhello-mvp";
+import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
 
@@ -57,7 +58,7 @@ const eventsTranslations = {
     ageMissing: "Needs confirmation",
     photoAdded: "Photo added",
     photoMissing: "Can be added later",
-    confirmDetails: "Confirm details",
+    confirmDetails: "Review in profile",
     editProfile: "Edit profile",
     close: "Close",
     noise: { Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
@@ -105,7 +106,7 @@ const eventsTranslations = {
     ageMissing: "נדרש אישור",
     photoAdded: "נוספה תמונה",
     photoMissing: "אפשר להוסיף אחר כך",
-    confirmDetails: "אישור פרטים",
+    confirmDetails: "סקירה בפרופיל",
     editProfile: "עריכת פרופיל",
     close: "סגירה",
     noise: { Quiet: "שקט", Balanced: "מאוזן", Lively: "תוסס" },
@@ -178,10 +179,15 @@ const createEventId = (title: string) => {
 };
 
 export default function EventsScreen() {
+  const router = useRouter();
   const {
     ageConfirmed,
     appLanguage,
+    contactEmail,
+    contactPhone,
     displayName,
+    hasIdentityDocument,
+    identitySelfieUri,
     isNightMode,
     profilePhotoUri,
     saveSoftHelloMvpState,
@@ -193,7 +199,8 @@ export default function EventsScreen() {
   const copy = eventsTranslations[appLanguageBase as keyof typeof eventsTranslations] ?? eventsTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
-  const canCreateMeetups = canMeetInPerson(verificationLevel);
+  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const canCreateMeetups = canMeetInPerson(effectiveVerificationLevel);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [showVerificationGate, setShowVerificationGate] = useState(false);
@@ -267,10 +274,9 @@ export default function EventsScreen() {
   };
 
   const confirmVerificationDetails = async () => {
-    await saveSoftHelloMvpState({ verificationLevel: "Real Person Verified" });
     setIsVerificationReviewOpen(false);
     setShowVerificationGate(false);
-    setIsCreatorOpen(true);
+    router.push("/(tabs)/profile");
   };
 
   const createEvent = () => {
@@ -320,7 +326,7 @@ export default function EventsScreen() {
           <View style={[styles.card, styles.verificationGateCard, isDay && styles.dayCard]}>
             <Text style={[styles.cardTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.verificationRequiredTitle}</Text>
             <Text style={[styles.cardText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.verificationRequiredCopy}</Text>
-            <Text style={[styles.verificationGateStatus, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(verificationLevel, appLanguageBase)}</Text>
+            <Text style={[styles.verificationGateStatus, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
             <TouchableOpacity
               activeOpacity={0.82}
               onPress={() => setIsVerificationReviewOpen(true)}
@@ -476,7 +482,7 @@ export default function EventsScreen() {
                 { label: copy.suburb, value: suburb || "Not set" },
                 { label: copy.age, value: ageConfirmed ? copy.ageConfirmed : copy.ageMissing },
                 { label: copy.photo, value: profilePhotoUri ? copy.photoAdded : copy.photoMissing },
-                { label: copy.contact, value: getVerificationLevelLabel(verificationLevel, appLanguageBase) },
+                { label: copy.contact, value: getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase) },
                 { label: copy.transport, value: transportationMethod },
               ].map((item) => (
                 <View key={item.label} style={[styles.reviewRow, isDay && styles.dayReviewRow, isRtl && styles.rtlRow]}>

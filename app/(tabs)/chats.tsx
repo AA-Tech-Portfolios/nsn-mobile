@@ -9,7 +9,10 @@ import { allEvents, chatSeed, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   blockUser,
   cancelSafetyReport,
+  canChatPrivately,
   createSafetyReport,
+  deriveVerificationLevel,
+  getVerificationLevelLabel,
   leaveEvent,
   unblockUser,
   type SafetyReportReason,
@@ -272,6 +275,9 @@ const chatTranslations = {
     findAnotherGroup: "Find another group",
     findAnotherGroupCopy: "Look for a better fit.",
     reopenOptions: "Reopen chat options",
+    trustRequiredTitle: "Contact Verified required",
+    trustRequiredCopy: "Private chats open only when both people have verified contact details.",
+    reviewSettings: "Review Trust status",
     softExitPresets: {
       stepBack: "Thanks, I am going to step back for now.",
       skipToday: "I am not able to make it today, but I appreciate the invite.",
@@ -497,6 +503,9 @@ const chatTranslations = {
     findAnotherGroup: "למצוא קבוצה אחרת",
     findAnotherGroupCopy: "לחפש התאמה טובה יותר.",
     reopenOptions: "לפתוח מחדש אפשרויות צ'אט",
+    trustRequiredTitle: "נדרש אימות קשר",
+    trustRequiredCopy: "צ'אטים פרטיים נפתחים רק כששני האנשים אימתו פרטי קשר.",
+    reviewSettings: "סקירת סטטוס אמון",
     softExitPresets: {
       stepBack: "תודה, אני לוקח/ת צעד אחורה כרגע.",
       skipToday: "אני לא יכול/ה להגיע היום, אבל תודה על ההזמנה.",
@@ -684,6 +693,19 @@ const chatTranslations = {
   },
 } as const;
 
+const chatTrustGateTranslations = {
+  English: {
+    trustRequiredTitle: "Contact Verified required",
+    trustRequiredCopy: "Private chats open only when both people have verified contact details.",
+    reviewSettings: "Review Trust status",
+  },
+  Hebrew: {
+    trustRequiredTitle: "נדרש אימות קשר",
+    trustRequiredCopy: "צ'אטים פרטיים נפתחים רק כששני האנשים אימתו פרטי קשר.",
+    reviewSettings: "סקירת סטטוס אמון",
+  },
+} as const;
+
 const chatMessageTranslations = {
   Arabic: {
     "1": "مرحباً! سأصل حوالي 6:45م 😊",
@@ -746,6 +768,10 @@ export default function ChatsScreen() {
   const {
     isNightMode,
     translationLanguage,
+    contactEmail,
+    contactPhone,
+    identitySelfieUri,
+    hasIdentityDocument,
     eventMemberships,
     blockedUserIds,
     safetyReports,
@@ -756,6 +782,7 @@ export default function ChatsScreen() {
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(translationLanguageBase);
   const copy = chatTranslations[translationLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
+  const trustGateCopy = chatTrustGateTranslations[translationLanguageBase as keyof typeof chatTrustGateTranslations] ?? chatTrustGateTranslations.English;
   const localizedReportFlowCopy = reportFlowTranslations[translationLanguageBase as keyof typeof reportFlowTranslations] ?? reportFlowCopy;
   const localizedArrivalUpdateCopy =
     arrivalUpdateTranslations[translationLanguageBase as keyof typeof arrivalUpdateTranslations] ?? arrivalUpdateCopy;
@@ -764,6 +791,8 @@ export default function ChatsScreen() {
   const chatMenuCopy = chatMenuTranslations[translationLanguageBase as keyof typeof chatMenuTranslations] ?? chatMenuTranslations.English;
   const chatEventTitleCopy = chatEventTitleTranslations[translationLanguageBase] ?? {};
   const translatedMessages = chatMessageTranslations[translationLanguageBase as keyof typeof chatMessageTranslations];
+  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const canUsePrivateChats = canChatPrivately(effectiveVerificationLevel);
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
   const [draft, setDraft] = useState("");
   const [selectedChatId, setSelectedChatId] = useState("movie-night-watch-chat");
@@ -795,6 +824,29 @@ export default function ChatsScreen() {
     selectedReportTarget.role === "host" || selectedReportTarget.role === "chat" ? "app_review" : selectedReportRoute;
   const lastReport = lastReportId ? safetyReports.find((report) => report.id === lastReportId) : undefined;
   const canCancelLastReport = Boolean(lastReport && !lastReport.cancelledAt && lastReport.cancelUntil && Date.now() <= Date.parse(lastReport.cancelUntil));
+
+  if (!canUsePrivateChats) {
+    return (
+      <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+        <View style={[styles.screen, isDay && styles.dayContainer]}>
+          <View style={[styles.header, isDay && styles.dayHeader]}>
+            <View style={styles.eventAvatar}><Text style={styles.eventEmoji}>💬</Text></View>
+            <View style={styles.headerText}>
+              <Text style={[styles.title, isDay && styles.dayTitle]}>{trustGateCopy.trustRequiredTitle}</Text>
+              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{getVerificationLevelLabel(effectiveVerificationLevel, translationLanguageBase)}</Text>
+            </View>
+          </View>
+          <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
+            <Text style={[styles.trustGateTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredTitle}</Text>
+            <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredCopy}</Text>
+            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.trustGateButton}>
+              <Text style={styles.trustGateButtonText}>{trustGateCopy.reviewSettings}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   const sendMessage = () => {
     const trimmed = draft.trim();
@@ -1428,6 +1480,11 @@ const styles = StyleSheet.create({
   dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   systemText: { color: nsnColors.text, textAlign: "center", fontSize: 12, lineHeight: 17 },
   systemSubtext: { color: nsnColors.muted, textAlign: "center", fontSize: 12, lineHeight: 17 },
+  trustGateCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, marginTop: 16 },
+  trustGateTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
+  trustGateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 14 },
+  trustGateButton: { alignSelf: "flex-start", minHeight: 40, borderRadius: 14, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 14 },
+  trustGateButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "900", lineHeight: 18 },
   softExitPanel: { borderRadius: 18, backgroundColor: "#0D1B2F", borderWidth: 1, borderColor: "#2B4578", padding: 14, marginBottom: 18 },
   daySoftExitPanel: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
   softExitTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "800", lineHeight: 21, marginBottom: 4 },

@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
+import { canChatPrivately, deriveVerificationLevel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const upcoming = [eveningEvents[0], dayEvents[0], eveningEvents[1]];
 
@@ -66,6 +67,9 @@ const meetupsTranslations = {
     upcoming: "Upcoming",
     joined: "Joined",
     suggested: "Suggested",
+    trustRequiredTitle: "Contact Verified required",
+    trustRequiredCopy: "Meetups and private chats open once both people have verified contact details.",
+    reviewSettings: "Review Trust status",
   },
   Arabic: {
     title: "لقاءاتي",
@@ -121,6 +125,9 @@ const meetupsTranslations = {
     upcoming: "בקרוב",
     joined: "הצטרפת",
     suggested: "מוצע",
+    trustRequiredTitle: "נדרש אימות קשר",
+    trustRequiredCopy: "מפגשים וצ'אטים פרטיים נפתחים כששני האנשים אימתו פרטי קשר.",
+    reviewSettings: "סקירת סטטוס אמון",
   },
   Japanese: {
     title: "マイミートアップ",
@@ -168,12 +175,28 @@ const meetupsTranslations = {
   },
 } as const;
 
+const meetupsTrustGateTranslations = {
+  English: {
+    trustRequiredTitle: "Contact Verified required",
+    trustRequiredCopy: "Meetups and private chats open once both people have verified contact details.",
+    reviewSettings: "Review Trust status",
+  },
+  Hebrew: {
+    trustRequiredTitle: "נדרש אימות קשר",
+    trustRequiredCopy: "מפגשים וצ'אטים פרטיים נפתחים כששני האנשים אימתו פרטי קשר.",
+    reviewSettings: "סקירת סטטוס אמון",
+  },
+} as const;
+
 export default function MeetupsScreen() {
   const router = useRouter();
-  const { isNightMode, translationLanguage } = useAppSettings();
+  const { contactEmail, contactPhone, hasIdentityDocument, identitySelfieUri, isNightMode, translationLanguage } = useAppSettings();
   const translationLanguageBase = getLanguageBase(translationLanguage);
   const isDay = !isNightMode;
   const copy = meetupsTranslations[translationLanguageBase as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
+  const trustGateCopy = meetupsTrustGateTranslations[translationLanguageBase as keyof typeof meetupsTrustGateTranslations] ?? meetupsTrustGateTranslations.English;
+  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const canUseMeetups = canChatPrivately(effectiveVerificationLevel);
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -181,17 +204,28 @@ export default function MeetupsScreen() {
         <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
         <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
 
-        <View style={[styles.summaryCard, isDay && styles.dayCard]}>
+        {!canUseMeetups ? (
+          <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
+            <Text style={[styles.gateTitle, isDay && styles.dayTitle]}>{trustGateCopy.trustRequiredTitle}</Text>
+            <Text style={[styles.gateCopy, isDay && styles.dayMutedText]}>{trustGateCopy.trustRequiredCopy}</Text>
+            <Text style={[styles.gateStatus, isDay && styles.dayAccentText]}>{getVerificationLevelLabel(effectiveVerificationLevel, translationLanguageBase)}</Text>
+            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.summaryButton}>
+              <Text style={styles.summaryButtonText}>{trustGateCopy.reviewSettings}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {canUseMeetups ? <View style={[styles.summaryCard, isDay && styles.dayCard]}>
           <Text style={[styles.summaryLabel, isDay && styles.dayAccentText]}>{copy.next}</Text>
           <Text style={[styles.summaryTitle, isDay && styles.dayTitle]}>{copy.summaryTitle}</Text>
           <Text style={[styles.summaryCopy, isDay && styles.dayMutedText]}>{copy.summaryCopy}</Text>
           <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/event/movie-night-watch-chat")} style={styles.summaryButton}>
             <Text style={styles.summaryButtonText}>{copy.details}</Text>
           </TouchableOpacity>
-        </View>
+        </View> : null}
 
-        <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.upcoming}</Text>
-        <View style={styles.list}>
+        {canUseMeetups ? <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.upcoming}</Text> : null}
+        {canUseMeetups ? <View style={styles.list}>
           {upcoming.map((event, index) => {
             const localizedEvent = meetupEventTranslations[translationLanguageBase]?.[event.id] ?? event;
 
@@ -207,7 +241,7 @@ export default function MeetupsScreen() {
             </TouchableOpacity>
             );
           })}
-        </View>
+        </View> : null}
       </ScrollView>
     </ScreenContainer>
   );
@@ -229,6 +263,10 @@ const styles = StyleSheet.create({
   summaryCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 14 },
   summaryButton: { alignSelf: "flex-start", backgroundColor: nsnColors.primary, borderRadius: 15, paddingHorizontal: 16, paddingVertical: 9 },
   summaryButtonText: { color: nsnColors.text, fontWeight: "800", fontSize: 13 },
+  trustGateCard: { borderRadius: 22, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#2B4578", padding: 18, marginBottom: 22 },
+  gateTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
+  gateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 10 },
+  gateStatus: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 12 },
   sectionTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "800", lineHeight: 24, marginBottom: 10 },
   list: { gap: 10 },
   meetupCard: { minHeight: 88, borderRadius: 18, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "center", padding: 10 },
