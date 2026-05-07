@@ -14,6 +14,10 @@ const rows = [
   { icon: "calendar", key: "meetups", route: "/meetups" },
   { icon: "message", key: "chats", route: "/chats" },
   { icon: "group", key: "events", route: "/events" },
+  { icon: "explore", key: "locationPreference", route: "/location-preference" },
+  { icon: "transport", key: "transportation", route: "/transportation-preference" },
+  { icon: "food", key: "foodPreferences", route: "/food-preferences" },
+  { icon: "interests", key: "hobbiesInterests", route: "/hobbies-interests" },
   { icon: "location", key: "places", route: "/saved-places" },
   { icon: "settings", key: "settings", route: "/settings" },
 ] as const;
@@ -528,6 +532,62 @@ const visibilityModeTranslations = {
   },
 } as const;
 
+const locationPreferenceRowTranslations = {
+  English: "Location Preference",
+  Arabic: "تفضيل الموقع",
+  Hebrew: "העדפת מיקום",
+  Russian: "Предпочтение локации",
+  Spanish: "Preferencia de ubicación",
+  Chinese: "位置偏好",
+  French: "Préférence de lieu",
+  German: "Standortpräferenz",
+  Japanese: "場所の希望",
+  Korean: "위치 선호",
+  Yiddish: "ארט-פרעפערענץ",
+} as const;
+
+const transportationRowTranslations = {
+  English: "Transportation Method",
+  Arabic: "طريقة الوصول",
+  Hebrew: "דרך הגעה",
+  Russian: "Способ прибытия",
+  Spanish: "Método de transporte",
+  Chinese: "交通方式",
+  French: "Mode de transport",
+  German: "Anreiseart",
+  Japanese: "移動手段",
+  Korean: "이동 방법",
+  Yiddish: "טראנספארט-אופֿן",
+} as const;
+
+const foodPreferencesRowTranslations = {
+  English: "Food & Payment Preferences",
+  Arabic: "تفضيلات الطعام والدفع",
+  Hebrew: "העדפות אוכל ותשלום",
+  Russian: "Еда и оплата",
+  Spanish: "Comida y pago",
+  Chinese: "饮食与付款偏好",
+  French: "Repas et paiement",
+  German: "Essen und Zahlung",
+  Japanese: "食事と支払い",
+  Korean: "음식 및 결제 선호",
+  Yiddish: "עסן און באצאלונג",
+} as const;
+
+const hobbiesInterestsRowTranslations = {
+  English: "Hobbies & Interests",
+  Arabic: "الهوايات والاهتمامات",
+  Hebrew: "תחביבים ותחומי עניין",
+  Russian: "Хобби и интересы",
+  Spanish: "Hobbies e intereses",
+  Chinese: "爱好与兴趣",
+  French: "Loisirs et centres d'intérêt",
+  German: "Hobbys und Interessen",
+  Japanese: "趣味と興味",
+  Korean: "취미와 관심사",
+  Yiddish: "האביס און אינטערעסן",
+} as const;
+
 export default function ProfileScreen() {
   const router = useRouter();
   const {
@@ -551,8 +611,25 @@ export default function ProfileScreen() {
   const comfortCopy = comfortPreferenceTranslations[appLanguageBase] ?? {};
   const visibilityCopy = visibilityModeTranslations[appLanguageBase as keyof typeof visibilityModeTranslations] ?? visibilityModeTranslations.English;
   const visibilityModeCopy = visibilityPreference === "Blurred" ? visibilityCopy.comfortCopy : visibilityCopy.openCopy;
+  const locationPreferenceRowLabel =
+    locationPreferenceRowTranslations[appLanguageBase as keyof typeof locationPreferenceRowTranslations] ??
+    locationPreferenceRowTranslations.English;
+  const transportationRowLabel =
+    transportationRowTranslations[appLanguageBase as keyof typeof transportationRowTranslations] ?? transportationRowTranslations.English;
+  const foodPreferencesRowLabel =
+    foodPreferencesRowTranslations[appLanguageBase as keyof typeof foodPreferencesRowTranslations] ?? foodPreferencesRowTranslations.English;
+  const hobbiesInterestsRowLabel =
+    hobbiesInterestsRowTranslations[appLanguageBase as keyof typeof hobbiesInterestsRowTranslations] ?? hobbiesInterestsRowTranslations.English;
   const getComfortLabel = (preference: SoftHelloComfortPreference) => comfortCopy[preference] ?? preference;
   const comfortSummary = comfortPreferences.length ? comfortPreferences.map(getComfortLabel).join(" · ") : copy.noComfortPreferences;
+  const getRowLabel = (key: (typeof rows)[number]["key"]) => {
+    if (key === "locationPreference") return locationPreferenceRowLabel;
+    if (key === "transportation") return transportationRowLabel;
+    if (key === "foodPreferences") return foodPreferencesRowLabel;
+    if (key === "hobbiesInterests") return hobbiesInterestsRowLabel;
+
+    return copy.rows[key];
+  };
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(displayName);
@@ -700,7 +777,13 @@ export default function ProfileScreen() {
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.topRight}>
-          <TouchableOpacity activeOpacity={0.75} style={[styles.settingsButton, isDay && styles.dayIconButton]}>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => router.push("/(tabs)/settings")}
+            style={[styles.settingsButton, isDay && styles.dayIconButton]}
+            accessibilityRole="button"
+            accessibilityLabel={copy.rows.settings}
+          >
             <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={23} />
           </TouchableOpacity>
         </View>
@@ -996,7 +1079,7 @@ export default function ProfileScreen() {
             <TouchableOpacity 
               key={row.key}
               accessibilityRole="button"
-              accessibilityLabel={copy.rows[row.key]}
+              accessibilityLabel={getRowLabel(row.key)}
               accessibilityHint="Opens section"
               activeOpacity={0.78}
               onPress={() => router.push(row.route as any)}
@@ -1004,7 +1087,7 @@ export default function ProfileScreen() {
             >
 
               <IconSymbol name={row.icon} color={isDay ? "#3B4A63" : nsnColors.muted} size={22} />
-              <Text style={[styles.rowLabel, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.rows[row.key]}</Text>
+              <Text style={[styles.rowLabel, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{getRowLabel(row.key)}</Text>
               <Text style={[styles.rowChevron, isDay && styles.dayMutedText]}>›</Text>
             </TouchableOpacity>
           ))}

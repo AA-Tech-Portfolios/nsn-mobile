@@ -28,6 +28,10 @@ const MAPPING = {
   pin: "push-pin",
   visibility: "visibility",
   "visibility.off": "visibility-off",
+  explore: "explore",
+  transport: "directions-transit",
+  food: "restaurant",
+  interests: "interests",
 } satisfies Record<string, MaterialIconName>;
 
 type IconSymbolName = keyof typeof MAPPING;

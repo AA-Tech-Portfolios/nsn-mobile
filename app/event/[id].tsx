@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Modal, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Modal, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -337,10 +337,27 @@ export default function EventDetailsScreen() {
   const isEventHidden = hiddenEventIds.includes(event.id);
 
   const shareEvent = async () => {
+    const message = actionCopy.shareMessage(event.title, event.venue, eventDate);
+
     try {
+      if (Platform.OS === "web") {
+        const webNavigator = typeof navigator !== "undefined" ? navigator : undefined;
+
+        if (webNavigator?.share) {
+          await webNavigator.share({ title: actionCopy.shareTitle, text: message });
+          return;
+        }
+
+        if (webNavigator?.clipboard?.writeText) {
+          await webNavigator.clipboard.writeText(message);
+          Alert.alert(actionCopy.shareTitle, "Event details copied to clipboard.");
+          return;
+        }
+      }
+
       await Share.share({
         title: actionCopy.shareTitle,
-        message: actionCopy.shareMessage(event.title, event.venue, eventDate),
+        message,
       });
     } catch {
       Alert.alert(actionCopy.shareTitle, actionCopy.shareError);

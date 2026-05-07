@@ -136,6 +136,30 @@ export default function TabLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="location-preference"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="transportation-preference"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="food-preferences"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="hobbies-interests"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }

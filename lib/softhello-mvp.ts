@@ -13,14 +13,32 @@ export type EventMembership = {
   leftAt?: string;
 };
 
-export type SafetyReportReason = "Safety concern" | "Harassment" | "Fake profile" | "Underage concern" | "Spam" | "Other";
+export type SafetyReportReason =
+  | "Safety concern"
+  | "Safety threat"
+  | "Harassment"
+  | "Underage risk"
+  | "Underage concern"
+  | "Impersonation"
+  | "Fraud"
+  | "Fake profile"
+  | "Spam"
+  | "Hate or discrimination"
+  | "Privacy concern"
+  | "Other";
+
+export type SafetyReportRoute = "host_review" | "app_review";
 
 export type SafetyReport = {
   id: string;
   eventId: string;
   reportedUserId: string;
+  reportedUserName?: string;
   reason: SafetyReportReason;
+  route?: SafetyReportRoute;
   createdAt: string;
+  cancelUntil?: string;
+  cancelledAt?: string;
 };
 
 export type PostEventFeedback = {
@@ -208,14 +226,48 @@ export function blockUser(userId: string, blockedUserIds: string[]) {
   return blockedUserIds.includes(userId) ? blockedUserIds : [...blockedUserIds, userId];
 }
 
-export function createSafetyReport(eventId: string, reportedUserId: string, reason: SafetyReportReason, now = new Date().toISOString()): SafetyReport {
+export function unblockUser(userId: string, blockedUserIds: string[]) {
+  return blockedUserIds.filter((blockedUserId) => blockedUserId !== userId);
+}
+
+export function createSafetyReport(
+  eventId: string,
+  reportedUserId: string,
+  reason: SafetyReportReason,
+  now = new Date().toISOString(),
+  options: { reportedUserName?: string; route?: SafetyReportRoute; cancelWindowMinutes?: number } = {}
+): SafetyReport {
+  const createdAtMs = Date.parse(now);
+  const cancelWindowMinutes = options.cancelWindowMinutes ?? 10;
+
   return {
     id: `${eventId}-${reportedUserId}-${Date.parse(now) || now}`,
     eventId,
     reportedUserId,
+    reportedUserName: options.reportedUserName,
     reason,
+    route: options.route,
     createdAt: now,
+    cancelUntil: Number.isNaN(createdAtMs) ? undefined : new Date(createdAtMs + cancelWindowMinutes * 60 * 1000).toISOString(),
   };
+}
+
+export function cancelSafetyReport(reportId: string, reports: SafetyReport[], now = new Date().toISOString()) {
+  const nowMs = Date.parse(now);
+
+  return reports.map((report) => {
+    if (report.id !== reportId || report.cancelledAt || !report.cancelUntil) {
+      return report;
+    }
+
+    const cancelUntilMs = Date.parse(report.cancelUntil);
+
+    if (Number.isNaN(nowMs) || Number.isNaN(cancelUntilMs) || nowMs > cancelUntilMs) {
+      return report;
+    }
+
+    return { ...report, cancelledAt: now };
+  });
 }
 
 export function savePostEventFeedback(feedback: PostEventFeedback, existing: PostEventFeedback[]) {

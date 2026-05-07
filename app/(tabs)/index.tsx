@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { getLanguageBase, timezoneOptions, timezoneRegions, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
@@ -302,6 +302,8 @@ const homeTranslations = {
     allRegions: "All",
     detectAutomatically: "Detect automatically",
     detectAutomaticallyCopy: "Use this device's timezone when it matches a supported city.",
+    searchTimezones: "Search city, country, or timezone",
+    noTimezonesFound: "No matching timezones found.",
     loadingCapitals: "Loading world capitals...",
     worldCapitalAutoTimezone: "World capital · auto weather timezone",
     weatherUpdate: "Weather update",
@@ -314,6 +316,7 @@ const homeTranslations = {
     dayEvents: "☀️ Day Events",
     eveningEvents: "🌙 Evening Events",
     seeAll: "See all",
+    hideHidden: "Hide hidden",
     createMeetup: "Create a Meetup",
     dayVsNight: "Day vs Night",
     dayVsNightCopy: "Find the right vibe at the right time.",
@@ -705,12 +708,13 @@ export default function HomeScreen() {
   
   const mode = isNightMode ? "night" : "day"; // State
   const [activeFilter, setActiveFilter] = useState<EventFilter>("All");
+  const [showHiddenEvents, setShowHiddenEvents] = useState(false);
   const [expandedInsight, setExpandedInsight] = useState<"day-night" | "weather" | null>(null);
   const activeEvents = useMemo(() => {
     const hiddenIds = new Set(hiddenEventIds);
     const pinnedIds = new Set(pinnedEventIds);
     const events = prioritizeEventsForComfort(isNightMode ? eveningEvents : dayEvents, comfortPreferences)
-      .filter((event) => !hiddenIds.has(event.id))
+      .filter((event) => showHiddenEvents || !hiddenIds.has(event.id))
       .sort((a, b) => Number(pinnedIds.has(b.id)) - Number(pinnedIds.has(a.id)));
 
     if (activeFilter === "All") {
@@ -718,7 +722,7 @@ export default function HomeScreen() {
     }
 
     return events.filter((event) => event.category === activeFilter || event.tags.includes(activeFilter));
-  }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, pinnedEventIds]);
+  }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, pinnedEventIds, showHiddenEvents]);
   const isDay = !isNightMode;
   const [now, setNow] = useState(new Date());
   const [isTimezonePickerOpen, setIsTimezonePickerOpen] = useState(false);
@@ -727,15 +731,30 @@ export default function HomeScreen() {
   const [capitalLoadError, setCapitalLoadError] = useState<string | null>(null);
   const timezonePickerRegions = ["All", ...timezoneRegions] as const;
   const [selectedTimezoneRegion, setSelectedTimezoneRegion] = useState<TimezoneRegion | "All">("All");
+  const [timezoneSearch, setTimezoneSearch] = useState("");
   const allTimezoneOptions = useMemo(() => {
     const curatedKeys = new Set(timezoneOptions.map((option) => `${option.city}|${option.country}`.toLowerCase()));
     const capitals = worldCapitalOptions.filter((option) => !curatedKeys.has(`${option.city}|${option.country}`.toLowerCase()));
 
     return [...timezoneOptions, ...capitals].sort((a, b) => a.label.localeCompare(b.label));
   }, [worldCapitalOptions]);
-  const regionTimezoneOptions = allTimezoneOptions.filter(
-    (option) => selectedTimezoneRegion === "All" || option.region === selectedTimezoneRegion
-  );
+  const normalizedTimezoneSearch = timezoneSearch.trim().toLowerCase();
+  const regionTimezoneOptions = allTimezoneOptions.filter((option) => {
+    const matchesRegion = selectedTimezoneRegion === "All" || option.region === selectedTimezoneRegion;
+
+    if (!matchesRegion) {
+      return false;
+    }
+
+    if (!normalizedTimezoneSearch) {
+      return true;
+    }
+
+    return [option.label, option.city, option.country, option.region, option.timeZone, option.utcOffset]
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedTimezoneSearch);
+  });
 
   const detectTimezone = () => {
     const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -1074,6 +1093,15 @@ export default function HomeScreen() {
                 <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.detectAutomaticallyCopy}</Text>
               </TouchableOpacity>
 
+              <TextInput
+                value={timezoneSearch}
+                onChangeText={setTimezoneSearch}
+                placeholder={"searchTimezones" in copy ? copy.searchTimezones : "Search city, country, or timezone"}
+                placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+                style={[styles.timezoneSearchInput, isDay && styles.dayTimezoneSearchInput, isRtl && styles.rtlText]}
+                selectionColor={nsnColors.primary}
+              />
+
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.timezoneRegionRow, isRtl && styles.rtlRow]}>
                 {timezonePickerRegions.map((region) => {
                   const active = selectedTimezoneRegion === region;
@@ -1098,6 +1126,11 @@ export default function HomeScreen() {
               ) : null}
               {capitalLoadError ? (
                 <Text style={[styles.timezoneStatusText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{capitalLoadError}</Text>
+              ) : null}
+              {regionTimezoneOptions.length === 0 ? (
+                <Text style={[styles.timezoneStatusText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  {"noTimezonesFound" in copy ? copy.noTimezonesFound : "No matching timezones found."}
+                </Text>
               ) : null}
               {regionTimezoneOptions.map((option) => {
                 const selected = option.id === timezone.id;
@@ -1157,7 +1190,11 @@ export default function HomeScreen() {
 
         <View style={[styles.sectionHeader, isRtl && styles.rtlRow]}>
           <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]}>{mode === "day" ? copy.dayEvents : copy.eveningEvents}</Text>
-          <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null, isRtl && styles.rtlText]}>{copy.seeAll}</Text>
+          <TouchableOpacity activeOpacity={0.75} onPress={() => setShowHiddenEvents((current) => !current)}>
+            <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null, isRtl && styles.rtlText]}>
+              {showHiddenEvents ? ("hideHidden" in copy ? copy.hideHidden : "Hide hidden") : copy.seeAll}
+            </Text>
+          </TouchableOpacity>
         </View>
         <View style={styles.cardStack}>
           {activeEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} />))}
@@ -1237,18 +1274,20 @@ const styles = StyleSheet.create({
   dateText: { color: nsnColors.text, fontSize: 13, lineHeight: 19 },
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   changeText: { color: "#96A5FF", fontSize: 12, fontWeight: "700" },
-  modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.45)", padding: 16 },
-  timezoneSheet: { borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, padding: 16, gap: 10 },
+  modalBackdrop: { flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.45)", padding: 16 },
+  timezoneSheet: { width: "100%", maxWidth: 920, maxHeight: "88%", alignSelf: "center", borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, padding: 16, gap: 10 },
   timezoneHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 },
   timezoneTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "800", lineHeight: 24 },
   autoTimezoneButton: { minHeight: 62, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, justifyContent: "center" },
+  timezoneSearchInput: { minHeight: 46, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", color: nsnColors.text, paddingHorizontal: 13, fontSize: 14, fontWeight: "700" },
+  dayTimezoneSearchInput: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6", color: "#0B1220" },
   timezoneRegionRow: { gap: 8, paddingVertical: 2 },
   timezoneRegionPill: { minHeight: 34, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, alignItems: "center", justifyContent: "center" },
   dayTimezoneRegionPill: { borderColor: "#B8C9E6", backgroundColor: "#EAF4FF" },
   timezoneRegionPillActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
   timezoneRegionText: { color: nsnColors.muted, fontSize: 12, fontWeight: "800" },
   timezoneRegionTextActive: { color: nsnColors.text },
-  timezoneList: { maxHeight: 280 },
+  timezoneList: { maxHeight: 520 },
   timezoneOption: { minHeight: 58, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   timezoneOptionActive: { borderColor: nsnColors.primary },
   timezoneOptionLabel: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },

@@ -138,6 +138,10 @@ export default function OnboardingScreen() {
       savedPlaces: [],
       pinnedEventIds: [],
       hiddenEventIds: [],
+      transportationMethod: "Public transport",
+      dietaryPreferences: ["No preference"],
+      mealPaymentPreference: "Pay my own way",
+      hobbiesInterests: ["Coffee", "Movies", "Walks"],
     });
 
     router.replace("/(tabs)");

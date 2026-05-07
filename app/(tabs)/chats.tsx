@@ -6,12 +6,83 @@ import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { chatSeed, nsnColors } from "@/lib/nsn-data";
-import { blockUser, createSafetyReport, leaveEvent } from "@/lib/softhello-mvp";
+import {
+  blockUser,
+  cancelSafetyReport,
+  createSafetyReport,
+  leaveEvent,
+  unblockUser,
+  type SafetyReportReason,
+  type SafetyReportRoute,
+} from "@/lib/softhello-mvp";
 
 type ChatMessage = (typeof chatSeed)[number];
 type SoftExitChoice = "stepBack" | "skipToday";
+type CannotMakeItReason = "unwell" | "work" | "appointment" | "somethingCameUp" | "changedMind";
+type SafetyReportReasonOption = {
+  reason: SafetyReportReason;
+  copy: string;
+};
+type ReportTarget = {
+  id: string;
+  name: string;
+  role: "host" | "member" | "chat";
+};
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
+
+const escalationReportReasons: SafetyReportReasonOption[] = [
+  { reason: "Safety threat", copy: "Immediate risk, coercion, stalking, threats, or unsafe meetup behavior." },
+  { reason: "Harassment", copy: "Repeated unwanted contact, intimidation, sexual pressure, or abusive messages." },
+  { reason: "Underage risk", copy: "Someone may be under 18 or trying to involve a minor." },
+  { reason: "Impersonation", copy: "Pretending to be another person, using stolen details, or misleading identity." },
+  { reason: "Fraud", copy: "Money requests, scams, phishing, blackmail, or suspicious links." },
+];
+
+const otherReportReasons: SafetyReportReasonOption[] = [
+  { reason: "Fake profile", copy: "Profile details, photos, or behavior do not seem genuine." },
+  { reason: "Spam", copy: "Promotional messages, repetitive outreach, or unrelated links." },
+  { reason: "Hate or discrimination", copy: "Abuse targeting identity, culture, religion, disability, gender, or sexuality." },
+  { reason: "Privacy concern", copy: "Sharing private information, screenshots, or personal details without consent." },
+  { reason: "Other", copy: "Something else feels wrong and should be reviewed." },
+];
+
+const reportTargets: ReportTarget[] = [
+  { id: "maya-host", name: "Maya", role: "host" },
+  { id: "alon-member", name: "Alon", role: "member" },
+  { id: "james-member", name: "James", role: "member" },
+  { id: "movie-night-watch-chat", name: "Whole chat", role: "chat" },
+];
+
+const reportFlowCopy = {
+  targetTitle: "Who is this about?",
+  routeTitle: "Where should this go?",
+  hostRole: "Host",
+  memberRole: "Member",
+  chatRole: "Group",
+  reportToHost: "Report to host first",
+  reportToHostCopy: "Use this when the concern is about another member and the host may be able to step in.",
+  appReview: "Submit for app review",
+  appReviewCopy: "Use this for host issues, urgent escalation, or when reporting to the host does not help.",
+  cancelWindow: "You can cancel this report for 10 minutes.",
+  cancelReport: "Cancel report",
+  reportCancelled: "Report cancelled",
+} as const;
+
+const arrivalUpdateCopy = {
+  title: "Arrival updates",
+  runningLate: "Running late",
+  cannotMakeIt: "Can’t make it",
+  cannotMakeItReasonTitle: "Why can’t you make it?",
+  runningLateMessage: (method: string) => `Quick update: I am running late. I am coming by ${method.toLowerCase()}, so I will keep you posted.`,
+  cannotMakeItReasons: {
+    unwell: { label: "Feeling unwell", message: "I am sorry, I am feeling unwell and will not be able to make it today. I hope the meetup goes well." },
+    work: { label: "Work came up", message: "I am sorry, work has come up and I will not be able to make it today. I hope the meetup goes well." },
+    appointment: { label: "Appointment", message: "I am sorry, I have an appointment and will not be able to make it today. I hope the meetup goes well." },
+    somethingCameUp: { label: "Something came up", message: "I am sorry, something came up and I will not be able to make it today. I hope the meetup goes well." },
+    changedMind: { label: "Changed my mind", message: "I am sorry, I have changed my mind and will not be able to make it today. I hope the meetup goes well." },
+  } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
+} as const;
 
 const chatTranslations = {
   English: {
@@ -30,9 +101,23 @@ const chatTranslations = {
     safetyTitle: "Safety options",
     safetyCopy: "Use these when something feels off. They stay private in this prototype.",
     reportConcern: "Report concern",
-    reportConcernCopy: "Private structured safety note.",
+    reportConcernCopy: "Choose a private report reason for moderator review.",
+    escalationReasons: "Escalation reasons",
+    otherReportReasons: "Other report reasons",
     blockHost: "Block host",
     blockHostCopy: "Stops direct interaction privately.",
+    unblockHost: "Unblock host",
+    unblockHostCopy: "Allow direct interaction again.",
+    blockChoiceTitle: "Block this person?",
+    blockChoiceCopy: "You can only block, or block and also choose a report reason.",
+    blockOnly: "Just block",
+    blockAndReport: "Block and report",
+    blockedSaved: "Blocked privately",
+    blockedSavedCopy: "You will not receive direct interaction from this prototype host.",
+    unblockedSaved: "Unblocked",
+    unblockedSavedCopy: "Direct interaction is allowed again in this prototype.",
+    chooseReportAfterBlock: "Blocked. Choose a report reason if you want moderator review too.",
+    cancel: "Cancel",
     stepBack: "Step back",
     stepBackCopy: "Send a gentle preset message.",
     skipToday: "Skip today",
@@ -61,9 +146,23 @@ const chatTranslations = {
     safetyTitle: "خيارات السلامة",
     safetyCopy: "استخدمها عندما تشعر أن هناك شيئاً غير مريح. تبقى خاصة في هذا النموذج.",
     reportConcern: "الإبلاغ عن مشكلة",
-    reportConcernCopy: "ملاحظة سلامة خاصة ومنظمة.",
+    reportConcernCopy: "اختر سبب بلاغ خاص للمراجعة.",
+    escalationReasons: "أسباب التصعيد",
+    otherReportReasons: "أسباب أخرى للإبلاغ",
     blockHost: "حظر المضيف",
     blockHostCopy: "يوقف التفاعل المباشر بشكل خاص.",
+    unblockHost: "إلغاء حظر المضيف",
+    unblockHostCopy: "اسمح بالتفاعل المباشر مرة أخرى.",
+    blockChoiceTitle: "حظر هذا الشخص؟",
+    blockChoiceCopy: "يمكنك الحظر فقط، أو الحظر واختيار سبب بلاغ أيضاً.",
+    blockOnly: "حظر فقط",
+    blockAndReport: "حظر وإبلاغ",
+    blockedSaved: "تم الحظر بشكل خاص",
+    blockedSavedCopy: "لن تتلقى تفاعلاً مباشراً من مضيف النموذج هذا.",
+    unblockedSaved: "تم إلغاء الحظر",
+    unblockedSavedCopy: "أصبح التفاعل المباشر مسموحاً مرة أخرى في هذا النموذج.",
+    chooseReportAfterBlock: "تم الحظر. اختر سبب البلاغ إذا أردت مراجعة المشرف أيضاً.",
+    cancel: "إلغاء",
     stepBack: "تراجع",
     stepBackCopy: "أرسل رسالة جاهزة ولطيفة.",
     skipToday: "تخطى اليوم",
@@ -92,9 +191,23 @@ const chatTranslations = {
     safetyTitle: "安全选项",
     safetyCopy: "当你觉得不对劲时使用。这些操作在原型中保持私密。",
     reportConcern: "报告问题",
-    reportConcernCopy: "私密的结构化安全记录。",
+    reportConcernCopy: "选择一个私密举报原因供审核。",
+    escalationReasons: "升级处理原因",
+    otherReportReasons: "其他举报原因",
     blockHost: "屏蔽主持人",
     blockHostCopy: "私下停止直接互动。",
+    unblockHost: "取消屏蔽主持人",
+    unblockHostCopy: "再次允许直接互动。",
+    blockChoiceTitle: "屏蔽此人？",
+    blockChoiceCopy: "你可以只屏蔽，或屏蔽并选择举报原因。",
+    blockOnly: "只屏蔽",
+    blockAndReport: "屏蔽并举报",
+    blockedSaved: "已私密屏蔽",
+    blockedSavedCopy: "你不会再收到此原型主持人的直接互动。",
+    unblockedSaved: "已取消屏蔽",
+    unblockedSavedCopy: "此原型中再次允许直接互动。",
+    chooseReportAfterBlock: "已屏蔽。如需审核，也可以选择举报原因。",
+    cancel: "取消",
     stepBack: "退一步",
     stepBackCopy: "发送一条温和的预设消息。",
     skipToday: "今天先不去",
@@ -123,9 +236,23 @@ const chatTranslations = {
     safetyTitle: "Options de sécurité",
     safetyCopy: "À utiliser si quelque chose vous semble anormal. Elles restent privées dans ce prototype.",
     reportConcern: "Signaler un souci",
-    reportConcernCopy: "Note de sécurité privée et structurée.",
+    reportConcernCopy: "Choisir un motif privé pour examen.",
+    escalationReasons: "Motifs d'escalade",
+    otherReportReasons: "Autres motifs",
     blockHost: "Bloquer l'hôte",
     blockHostCopy: "Arrête les interactions directes en privé.",
+    unblockHost: "Débloquer l'hôte",
+    unblockHostCopy: "Autoriser à nouveau l'interaction directe.",
+    blockChoiceTitle: "Bloquer cette personne ?",
+    blockChoiceCopy: "Vous pouvez seulement bloquer, ou bloquer et choisir aussi un motif de signalement.",
+    blockOnly: "Bloquer seulement",
+    blockAndReport: "Bloquer et signaler",
+    blockedSaved: "Bloqué en privé",
+    blockedSavedCopy: "Vous ne recevrez pas d'interaction directe de cet hôte du prototype.",
+    unblockedSaved: "Débloqué",
+    unblockedSavedCopy: "L'interaction directe est à nouveau autorisée dans ce prototype.",
+    chooseReportAfterBlock: "Bloqué. Choisissez un motif si vous voulez aussi un examen.",
+    cancel: "Annuler",
     stepBack: "Prendre du recul",
     stepBackCopy: "Envoyer un message prédéfini doux.",
     skipToday: "Passer aujourd'hui",
@@ -154,9 +281,23 @@ const chatTranslations = {
     safetyTitle: "Sicherheitsoptionen",
     safetyCopy: "Nutze sie, wenn sich etwas nicht richtig anfühlt. Sie bleiben in diesem Prototyp privat.",
     reportConcern: "Anliegen melden",
-    reportConcernCopy: "Private strukturierte Sicherheitsnotiz.",
+    reportConcernCopy: "Wähle einen privaten Meldegrund zur Prüfung.",
+    escalationReasons: "Eskalationsgründe",
+    otherReportReasons: "Andere Meldegründe",
     blockHost: "Host blockieren",
     blockHostCopy: "Stoppt direkte Interaktion privat.",
+    unblockHost: "Host entsperren",
+    unblockHostCopy: "Direkte Interaktion wieder erlauben.",
+    blockChoiceTitle: "Diese Person blockieren?",
+    blockChoiceCopy: "Du kannst nur blockieren oder blockieren und zusätzlich einen Meldegrund wählen.",
+    blockOnly: "Nur blockieren",
+    blockAndReport: "Blockieren und melden",
+    blockedSaved: "Privat blockiert",
+    blockedSavedCopy: "Du erhältst keine direkte Interaktion mehr von diesem Prototyp-Host.",
+    unblockedSaved: "Entsperrt",
+    unblockedSavedCopy: "Direkte Interaktion ist in diesem Prototyp wieder erlaubt.",
+    chooseReportAfterBlock: "Blockiert. Wähle einen Meldegrund, wenn du auch eine Prüfung möchtest.",
+    cancel: "Abbrechen",
     stepBack: "Zurücktreten",
     stepBackCopy: "Eine sanfte Vorlage senden.",
     skipToday: "Heute aussetzen",
@@ -185,9 +326,23 @@ const chatTranslations = {
     safetyTitle: "אפשרויות בטיחות",
     safetyCopy: "השתמש בזה כשמשהו מרגיש לא תקין. זה נשאר פרטי באב הטיפוס.",
     reportConcern: "דיווח על חשש",
-    reportConcernCopy: "הערת בטיחות פרטית ומובנית.",
+    reportConcernCopy: "בחר סיבת דיווח פרטית לבדיקה.",
+    escalationReasons: "סיבות להסלמה",
+    otherReportReasons: "סיבות דיווח אחרות",
     blockHost: "חסימת המארח",
     blockHostCopy: "עוצר אינטראקציה ישירה באופן פרטי.",
+    unblockHost: "ביטול חסימת המארח",
+    unblockHostCopy: "לאפשר שוב אינטראקציה ישירה.",
+    blockChoiceTitle: "לחסום את האדם הזה?",
+    blockChoiceCopy: "אפשר רק לחסום, או לחסום וגם לבחור סיבת דיווח.",
+    blockOnly: "רק לחסום",
+    blockAndReport: "לחסום ולדווח",
+    blockedSaved: "נחסם באופן פרטי",
+    blockedSavedCopy: "לא תקבל/י אינטראקציה ישירה מהמארח באב הטיפוס.",
+    unblockedSaved: "החסימה בוטלה",
+    unblockedSavedCopy: "אינטראקציה ישירה מותרת שוב באב הטיפוס.",
+    chooseReportAfterBlock: "נחסם. אפשר לבחור סיבת דיווח אם רוצים גם בדיקת מנחה.",
+    cancel: "ביטול",
     stepBack: "לקחת צעד אחורה",
     stepBackCopy: "שלח הודעה מוכנה ועדינה.",
     skipToday: "לדלג היום",
@@ -216,9 +371,23 @@ const chatTranslations = {
     safetyTitle: "安全オプション",
     safetyCopy: "違和感があるときに使えます。このプロトタイプでは非公開です。",
     reportConcern: "懸念を報告",
-    reportConcernCopy: "非公開の構造化された安全メモ。",
+    reportConcernCopy: "確認用の非公開の報告理由を選びます。",
+    escalationReasons: "エスカレーション理由",
+    otherReportReasons: "その他の報告理由",
     blockHost: "ホストをブロック",
     blockHostCopy: "直接のやり取りを非公開で止めます。",
+    unblockHost: "ホストのブロック解除",
+    unblockHostCopy: "直接のやり取りを再び許可します。",
+    blockChoiceTitle: "この人をブロックしますか？",
+    blockChoiceCopy: "ブロックだけ、またはブロックして報告理由を選べます。",
+    blockOnly: "ブロックのみ",
+    blockAndReport: "ブロックして報告",
+    blockedSaved: "非公開でブロックしました",
+    blockedSavedCopy: "このプロトタイプのホストから直接のやり取りは届きません。",
+    unblockedSaved: "ブロックを解除しました",
+    unblockedSavedCopy: "このプロトタイプで直接のやり取りが再び許可されます。",
+    chooseReportAfterBlock: "ブロックしました。確認も希望する場合は報告理由を選んでください。",
+    cancel: "キャンセル",
     stepBack: "距離を置く",
     stepBackCopy: "やさしい定型メッセージを送る。",
     skipToday: "今日は見送る",
@@ -247,9 +416,23 @@ const chatTranslations = {
     safetyTitle: "안전 옵션",
     safetyCopy: "뭔가 불편하게 느껴질 때 사용하세요. 이 프로토타입에서는 비공개로 유지돼요.",
     reportConcern: "문제 신고",
-    reportConcernCopy: "비공개 구조화 안전 메모.",
+    reportConcernCopy: "검토를 위한 비공개 신고 사유를 선택하세요.",
+    escalationReasons: "긴급 검토 사유",
+    otherReportReasons: "기타 신고 사유",
     blockHost: "호스트 차단",
     blockHostCopy: "직접 상호작용을 비공개로 중지해요.",
+    unblockHost: "호스트 차단 해제",
+    unblockHostCopy: "직접 상호작용을 다시 허용해요.",
+    blockChoiceTitle: "이 사람을 차단할까요?",
+    blockChoiceCopy: "차단만 하거나, 차단 후 신고 사유도 선택할 수 있어요.",
+    blockOnly: "차단만",
+    blockAndReport: "차단하고 신고",
+    blockedSaved: "비공개로 차단됨",
+    blockedSavedCopy: "이 프로토타입 호스트의 직접 상호작용을 받지 않아요.",
+    unblockedSaved: "차단 해제됨",
+    unblockedSavedCopy: "이 프로토타입에서 직접 상호작용이 다시 허용돼요.",
+    chooseReportAfterBlock: "차단됐어요. 검토도 원하면 신고 사유를 선택하세요.",
+    cancel: "취소",
     stepBack: "잠시 물러나기",
     stepBackCopy: "부드러운 기본 메시지를 보내요.",
     skipToday: "오늘은 쉬기",
@@ -278,9 +461,23 @@ const chatTranslations = {
     safetyTitle: "Параметры безопасности",
     safetyCopy: "Используйте, если что-то кажется неправильным. В этом прототипе они остаются приватными.",
     reportConcern: "Сообщить о проблеме",
-    reportConcernCopy: "Приватная структурированная заметка о безопасности.",
+    reportConcernCopy: "Выберите приватную причину для проверки.",
+    escalationReasons: "Причины эскалации",
+    otherReportReasons: "Другие причины",
     blockHost: "Заблокировать организатора",
     blockHostCopy: "Приватно прекращает прямое взаимодействие.",
+    unblockHost: "Разблокировать организатора",
+    unblockHostCopy: "Снова разрешить прямое взаимодействие.",
+    blockChoiceTitle: "Заблокировать этого человека?",
+    blockChoiceCopy: "Можно только заблокировать или заблокировать и выбрать причину жалобы.",
+    blockOnly: "Только заблокировать",
+    blockAndReport: "Заблокировать и пожаловаться",
+    blockedSaved: "Заблокировано приватно",
+    blockedSavedCopy: "Вы не будете получать прямое взаимодействие от этого прототипного организатора.",
+    unblockedSaved: "Разблокировано",
+    unblockedSavedCopy: "Прямое взаимодействие снова разрешено в этом прототипе.",
+    chooseReportAfterBlock: "Заблокировано. Выберите причину, если также нужна проверка.",
+    cancel: "Отмена",
     stepBack: "Отойти",
     stepBackCopy: "Отправить мягкое готовое сообщение.",
     skipToday: "Пропустить сегодня",
@@ -309,9 +506,23 @@ const chatTranslations = {
     safetyTitle: "Opciones de seguridad",
     safetyCopy: "Úsalas cuando algo se sienta raro. En este prototipo se mantienen privadas.",
     reportConcern: "Reportar inquietud",
-    reportConcernCopy: "Nota de seguridad privada y estructurada.",
+    reportConcernCopy: "Elige un motivo privado para revisión.",
+    escalationReasons: "Motivos de escalamiento",
+    otherReportReasons: "Otros motivos",
     blockHost: "Bloquear anfitrión",
     blockHostCopy: "Detiene la interacción directa en privado.",
+    unblockHost: "Desbloquear anfitrión",
+    unblockHostCopy: "Permite de nuevo la interacción directa.",
+    blockChoiceTitle: "¿Bloquear a esta persona?",
+    blockChoiceCopy: "Puedes solo bloquear, o bloquear y elegir también un motivo de reporte.",
+    blockOnly: "Solo bloquear",
+    blockAndReport: "Bloquear y reportar",
+    blockedSaved: "Bloqueado en privado",
+    blockedSavedCopy: "No recibirás interacción directa de este anfitrión del prototipo.",
+    unblockedSaved: "Desbloqueado",
+    unblockedSavedCopy: "La interacción directa vuelve a estar permitida en este prototipo.",
+    chooseReportAfterBlock: "Bloqueado. Elige un motivo si también quieres revisión.",
+    cancel: "Cancelar",
     stepBack: "Apartarme",
     stepBackCopy: "Enviar un mensaje suave ya preparado.",
     skipToday: "Saltar hoy",
@@ -391,6 +602,7 @@ export default function ChatsScreen() {
     eventMemberships,
     blockedUserIds,
     safetyReports,
+    transportationMethod,
     saveSoftHelloMvpState,
   } = useAppSettings();
   const translationLanguageBase = getLanguageBase(translationLanguage);
@@ -402,10 +614,24 @@ export default function ChatsScreen() {
   const [draft, setDraft] = useState("");
   const [softExitOpen, setSoftExitOpen] = useState(false);
   const [safetyOpen, setSafetyOpen] = useState(false);
+  const [reportReasonsOpen, setReportReasonsOpen] = useState(false);
+  const [blockChoiceOpen, setBlockChoiceOpen] = useState(false);
+  const [blockNotice, setBlockNotice] = useState("");
+  const [selectedReportTargetId, setSelectedReportTargetId] = useState("maya-host");
+  const [selectedReportRoute, setSelectedReportRoute] = useState<SafetyReportRoute>("app_review");
+  const [lastReportId, setLastReportId] = useState<string | null>(null);
+  const [reportNotice, setReportNotice] = useState("");
+  const [cannotMakeItOpen, setCannotMakeItOpen] = useState(false);
   const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
   const softExitMessage = softExitChoice ? copy.softExitPresets[softExitChoice] : null;
   const eventId = "movie-night-watch-chat";
   const hostUserId = "maya-host";
+  const isHostBlocked = blockedUserIds.includes(hostUserId);
+  const selectedReportTarget = reportTargets.find((target) => target.id === selectedReportTargetId) ?? reportTargets[0];
+  const effectiveReportRoute =
+    selectedReportTarget.role === "host" || selectedReportTarget.role === "chat" ? "app_review" : selectedReportRoute;
+  const lastReport = lastReportId ? safetyReports.find((report) => report.id === lastReportId) : undefined;
+  const canCancelLastReport = Boolean(lastReport && !lastReport.cancelledAt && lastReport.cancelUntil && Date.now() <= Date.parse(lastReport.cancelUntil));
 
   const sendMessage = () => {
     const trimmed = draft.trim();
@@ -417,15 +643,73 @@ export default function ChatsScreen() {
     setDraft("");
   };
 
-  const reportConcern = async () => {
-    const report = createSafetyReport(eventId, hostUserId, "Safety concern");
-    await saveSoftHelloMvpState({ safetyReports: [...safetyReports, report] });
-    Alert.alert("Report saved", "Thanks. This prototype stores the concern privately for moderator review.");
+  const sendArrivalUpdate = (text: string) => {
+    setMessages((current) => [
+      ...current,
+      { id: String(Date.now()), name: copy.you, avatar: "Y", text, time: copy.now, mine: true },
+    ]);
   };
 
-  const blockHost = async () => {
+  const sendRunningLateUpdate = () => {
+    sendArrivalUpdate(arrivalUpdateCopy.runningLateMessage(transportationMethod));
+  };
+
+  const sendCannotMakeItUpdate = async (reason: CannotMakeItReason) => {
+    sendArrivalUpdate(arrivalUpdateCopy.cannotMakeItReasons[reason].message);
+    setCannotMakeItOpen(false);
+    await saveSoftHelloMvpState({ eventMemberships: leaveEvent(eventId, eventMemberships) });
+  };
+
+  const reportConcern = async (reason: SafetyReportReason) => {
+    const report = createSafetyReport(eventId, selectedReportTarget.id, reason, new Date().toISOString(), {
+      reportedUserName: selectedReportTarget.name,
+      route: effectiveReportRoute,
+    });
+    await saveSoftHelloMvpState({ safetyReports: [...safetyReports, report] });
+    setReportReasonsOpen(false);
+    setBlockChoiceOpen(false);
+    setLastReportId(report.id);
+    setReportNotice(
+      effectiveReportRoute === "host_review"
+        ? `${reason} about ${selectedReportTarget.name} was sent to the host.`
+        : `${reason} about ${selectedReportTarget.name} was submitted for app review.`
+    );
+    Alert.alert("Report saved", `${reportFlowCopy.cancelWindow}`);
+  };
+
+  const cancelLastReport = async () => {
+    if (!lastReportId) return;
+
+    const nextReports = cancelSafetyReport(lastReportId, safetyReports);
+    await saveSoftHelloMvpState({ safetyReports: nextReports });
+    setReportNotice(reportFlowCopy.reportCancelled);
+    setLastReportId(null);
+  };
+
+  const saveBlockedHost = async () => {
     await saveSoftHelloMvpState({ blockedUserIds: blockUser(hostUserId, blockedUserIds) });
-    Alert.alert("Blocked privately", "You will not receive direct interaction from this prototype host.");
+  };
+
+  const blockHostOnly = async () => {
+    await saveBlockedHost();
+    setBlockChoiceOpen(false);
+    setReportReasonsOpen(false);
+    setBlockNotice(copy.blockedSavedCopy);
+  };
+
+  const blockHostAndReport = async () => {
+    await saveBlockedHost();
+    setBlockChoiceOpen(false);
+    setSafetyOpen(true);
+    setReportReasonsOpen(true);
+    setBlockNotice(copy.chooseReportAfterBlock);
+  };
+
+  const unblockHost = async () => {
+    await saveSoftHelloMvpState({ blockedUserIds: unblockUser(hostUserId, blockedUserIds) });
+    setBlockChoiceOpen(false);
+    setReportReasonsOpen(false);
+    setBlockNotice(copy.unblockedSavedCopy);
   };
 
   const chooseSoftExit = async (choice: SoftExitChoice) => {
@@ -449,6 +733,8 @@ export default function ChatsScreen() {
             activeOpacity={0.75}
             onPress={() => {
               setSafetyOpen((current) => !current);
+              setReportReasonsOpen(false);
+              setBlockChoiceOpen(false);
               setSoftExitOpen(false);
             }}
             style={styles.iconButton}
@@ -485,20 +771,160 @@ export default function ChatsScreen() {
               <View style={styles.softExitActions}>
                 <TouchableOpacity
                   activeOpacity={0.82}
-                  onPress={reportConcern}
+                  onPress={() => setReportReasonsOpen((current) => !current)}
                   style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                 >
                   <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.reportConcern}</Text>
                   <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.reportConcernCopy}</Text>
                 </TouchableOpacity>
+                {reportReasonsOpen ? (
+                  <View style={styles.reportReasonStack}>
+                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{reportFlowCopy.targetTitle}</Text>
+                    <View style={styles.reportTargetGrid}>
+                      {reportTargets.map((target) => {
+                        const active = selectedReportTarget.id === target.id;
+                        const roleLabel =
+                          target.role === "host"
+                            ? reportFlowCopy.hostRole
+                            : target.role === "member"
+                              ? reportFlowCopy.memberRole
+                              : reportFlowCopy.chatRole;
+
+                        return (
+                          <TouchableOpacity
+                            key={target.id}
+                            activeOpacity={0.82}
+                            onPress={() => {
+                              setSelectedReportTargetId(target.id);
+                              if (target.role !== "member") setSelectedReportRoute("app_review");
+                            }}
+                            style={[
+                              styles.reportTargetButton,
+                              isDay && styles.dayReportReasonButton,
+                              active && styles.reportTargetButtonActive,
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: active }}
+                          >
+                            <Text style={[styles.reportTargetName, isDay && styles.dayTitle, active && styles.reportTargetTextActive]}>{target.name}</Text>
+                            <Text style={[styles.reportTargetRole, isDay && styles.dayMutedText, active && styles.reportTargetTextActive]}>{roleLabel}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                    {selectedReportTarget.role === "member" ? (
+                      <>
+                        <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{reportFlowCopy.routeTitle}</Text>
+                        <View style={styles.reportRouteStack}>
+                          {([
+                            { value: "host_review" as SafetyReportRoute, label: reportFlowCopy.reportToHost, copy: reportFlowCopy.reportToHostCopy },
+                            { value: "app_review" as SafetyReportRoute, label: reportFlowCopy.appReview, copy: reportFlowCopy.appReviewCopy },
+                          ]).map((route) => {
+                            const active = selectedReportRoute === route.value;
+
+                            return (
+                              <TouchableOpacity
+                                key={route.value}
+                                activeOpacity={0.82}
+                                onPress={() => setSelectedReportRoute(route.value)}
+                                style={[styles.reportRouteButton, isDay && styles.dayReportReasonButton, active && styles.reportTargetButtonActive]}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
+                              >
+                                <Text style={[styles.reportReasonText, isDay && styles.dayTitle, active && styles.reportTargetTextActive]}>{route.label}</Text>
+                                <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText, active && styles.reportTargetTextActive]}>{route.copy}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </>
+                    ) : (
+                      <View style={[styles.reportRouteButton, isDay && styles.dayReportReasonButton]}>
+                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{reportFlowCopy.appReview}</Text>
+                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{reportFlowCopy.appReviewCopy}</Text>
+                      </View>
+                    )}
+                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{copy.escalationReasons}</Text>
+                    {escalationReportReasons.map((option) => (
+                      <TouchableOpacity
+                        key={option.reason}
+                        activeOpacity={0.82}
+                        onPress={() => reportConcern(option.reason)}
+                        style={[styles.reportReasonButton, isDay && styles.dayReportReasonButton]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Report ${option.reason}`}
+                      >
+                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{option.reason}</Text>
+                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{option.copy}</Text>
+                      </TouchableOpacity>
+                    ))}
+                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{copy.otherReportReasons}</Text>
+                    {otherReportReasons.map((option) => (
+                      <TouchableOpacity
+                        key={option.reason}
+                        activeOpacity={0.82}
+                        onPress={() => reportConcern(option.reason)}
+                        style={[styles.reportReasonButton, isDay && styles.dayReportReasonButton]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Report ${option.reason}`}
+                      >
+                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{option.reason}</Text>
+                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{option.copy}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                ) : null}
+                {reportNotice ? (
+                  <View style={[styles.softExitResult, isDay && styles.daySoftExitResult]}>
+                    <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>{reportNotice}</Text>
+                    {canCancelLastReport ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={cancelLastReport} style={styles.cancelReportButton}>
+                        <Text style={styles.cancelReportText}>{reportFlowCopy.cancelReport}</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{reportFlowCopy.cancelWindow}</Text>
+                    )}
+                  </View>
+                ) : null}
                 <TouchableOpacity
                   activeOpacity={0.82}
-                  onPress={blockHost}
+                  onPress={
+                    isHostBlocked
+                      ? unblockHost
+                      : () => {
+                          setBlockChoiceOpen((current) => !current);
+                          setReportReasonsOpen(false);
+                          setBlockNotice("");
+                        }
+                  }
                   style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                 >
-                  <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.blockHost}</Text>
-                  <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.blockHostCopy}</Text>
+                  <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{isHostBlocked ? copy.unblockHost : copy.blockHost}</Text>
+                  <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{isHostBlocked ? copy.unblockHostCopy : copy.blockHostCopy}</Text>
                 </TouchableOpacity>
+                {blockChoiceOpen && !isHostBlocked ? (
+                  <View style={[styles.blockChoiceCard, isDay && styles.dayReportReasonButton]}>
+                    <Text style={[styles.blockChoiceTitle, isDay && styles.dayTitle]}>{copy.blockChoiceTitle}</Text>
+                    <Text style={[styles.blockChoiceCopy, isDay && styles.dayMutedText]}>{copy.blockChoiceCopy}</Text>
+                    <View style={styles.blockChoiceActions}>
+                      <TouchableOpacity activeOpacity={0.82} onPress={blockHostOnly} style={[styles.blockChoiceButton, isDay && styles.daySoftExitAction]}>
+                        <Text style={[styles.blockChoiceButtonText, isDay && styles.dayTitle]}>{copy.blockOnly}</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity activeOpacity={0.82} onPress={blockHostAndReport} style={[styles.blockChoiceButton, styles.blockChoiceButtonDanger]}>
+                        <Text style={styles.blockChoiceButtonTextDanger}>{copy.blockAndReport}</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity activeOpacity={0.7} onPress={() => setBlockChoiceOpen(false)} style={styles.blockCancelButton}>
+                      <Text style={[styles.blockCancelText, isDay && styles.dayMutedText]}>{copy.cancel}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
+                {blockNotice ? (
+                  <View style={[styles.softExitResult, isDay && styles.daySoftExitResult]}>
+                    <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>{isHostBlocked ? copy.blockedSaved : copy.unblockedSaved}</Text>
+                    <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{blockNotice}</Text>
+                  </View>
+                ) : null}
               </View>
             </View>
           )}
@@ -558,6 +984,42 @@ export default function ChatsScreen() {
         </ScrollView>
 
         <View style={styles.composerWrap}>
+          <View style={[styles.arrivalPanel, isDay && styles.dayCard]}>
+            <Text style={[styles.arrivalTitle, isDay && styles.dayTitle]}>{arrivalUpdateCopy.title}</Text>
+            <View style={styles.arrivalActions}>
+              <TouchableOpacity activeOpacity={0.82} onPress={sendRunningLateUpdate} style={styles.arrivalButton}>
+                <Text style={styles.arrivalButtonText}>{arrivalUpdateCopy.runningLate}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => setCannotMakeItOpen((current) => !current)}
+                style={[styles.arrivalButton, styles.arrivalButtonMuted]}
+              >
+                <Text style={[styles.arrivalButtonText, styles.arrivalButtonMutedText, isDay && styles.dayArrivalButtonMutedText]}>
+                  {arrivalUpdateCopy.cannotMakeIt}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {cannotMakeItOpen ? (
+              <View style={styles.cannotMakeItPanel}>
+                <Text style={[styles.cannotMakeItTitle, isDay && styles.dayTitle]}>{arrivalUpdateCopy.cannotMakeItReasonTitle}</Text>
+                <View style={styles.cannotMakeItGrid}>
+                  {(Object.keys(arrivalUpdateCopy.cannotMakeItReasons) as CannotMakeItReason[]).map((reason) => (
+                    <TouchableOpacity
+                      key={reason}
+                      activeOpacity={0.82}
+                      onPress={() => sendCannotMakeItUpdate(reason)}
+                      style={[styles.cannotMakeItReasonButton, isDay && styles.dayCannotMakeItReasonButton]}
+                    >
+                      <Text style={[styles.cannotMakeItReasonText, isDay && styles.dayTitle]}>
+                        {arrivalUpdateCopy.cannotMakeItReasons[reason].label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+          </View>
           {softExitChoice && (
             <TouchableOpacity
               activeOpacity={0.82}
@@ -626,6 +1088,32 @@ const styles = StyleSheet.create({
   daySoftExitAction: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   softExitActionText: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 18 },
   softExitActionCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 1 },
+  reportReasonStack: { gap: 8, paddingTop: 2, paddingBottom: 3 },
+  reportReasonHeading: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, letterSpacing: 0, textTransform: "uppercase" },
+  reportReasonButton: { borderRadius: 12, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingHorizontal: 11, paddingVertical: 9 },
+  dayReportReasonButton: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  reportReasonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  reportReasonCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  reportTargetGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  reportTargetButton: { flexGrow: 1, minWidth: 118, minHeight: 50, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingHorizontal: 10, paddingVertical: 8 },
+  reportTargetButtonActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  reportTargetName: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  reportTargetRole: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 1 },
+  reportTargetTextActive: { color: "#FFFFFF" },
+  reportRouteStack: { gap: 8 },
+  reportRouteButton: { borderRadius: 12, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingHorizontal: 11, paddingVertical: 9 },
+  cancelReportButton: { alignSelf: "flex-start", minHeight: 34, borderRadius: 999, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 12, marginTop: 9 },
+  cancelReportText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  blockChoiceCard: { borderRadius: 14, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", padding: 12, gap: 8 },
+  blockChoiceTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  blockChoiceCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
+  blockChoiceActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  blockChoiceButton: { flex: 1, minWidth: 130, minHeight: 40, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
+  blockChoiceButtonDanger: { backgroundColor: "#B42318", borderColor: "#B42318" },
+  blockChoiceButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
+  blockChoiceButtonTextDanger: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
+  blockCancelButton: { minHeight: 30, alignItems: "center", justifyContent: "center" },
+  blockCancelText: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 17 },
   softExitResult: { borderRadius: 14, backgroundColor: "rgba(114,214,126,0.11)", borderWidth: 1, borderColor: "rgba(114,214,126,0.28)", padding: 12 },
   daySoftExitResult: { backgroundColor: "#E9F7ED", borderColor: "#A8D9B5" },
   softExitResultText: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 19 },
@@ -644,6 +1132,20 @@ const styles = StyleSheet.create({
   messageTime: { alignSelf: "flex-end", color: "rgba(245,247,255,0.62)", fontSize: 11, marginTop: 4, lineHeight: 14 },
   dayMessageTime: { color: "#7890AE" },
   composerWrap: { paddingBottom: 10 },
+  arrivalPanel: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginBottom: 9 },
+  arrivalTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
+  arrivalActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  arrivalButton: { flex: 1, minWidth: 130, minHeight: 38, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary, paddingHorizontal: 10 },
+  arrivalButtonMuted: { backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: nsnColors.border },
+  arrivalButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
+  arrivalButtonMutedText: { color: nsnColors.text },
+  dayArrivalButtonMutedText: { color: "#0B1220" },
+  cannotMakeItPanel: { gap: 8, marginTop: 10 },
+  cannotMakeItTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  cannotMakeItGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  cannotMakeItReasonButton: { flexGrow: 1, minWidth: 150, minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
+  dayCannotMakeItReasonButton: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  cannotMakeItReasonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
   resumeButton: { minHeight: 40, borderRadius: 16, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, alignItems: "center", justifyContent: "center", marginBottom: 9 },
   resumeButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "800" },
   addButton: { position: "absolute", left: 0, bottom: 42, width: 40, height: 40, borderRadius: 20, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border },

@@ -4,6 +4,7 @@ import { dayEvents } from "./nsn-data";
 import {
   canMeetInPerson,
   blockUser,
+  cancelSafetyReport,
   createSafetyReport,
   getMeetingSafetyCopy,
   getVerificationLevelLabel,
@@ -15,6 +16,7 @@ import {
   removeSavedPlace,
   savePlace,
   savePostEventFeedback,
+  unblockUser,
   unhideEvent,
   unpinEvent,
 } from "./softhello-mvp";
@@ -47,6 +49,8 @@ describe("SoftHello MVP domain rules", () => {
   it("keeps block state private and idempotent", () => {
     expect(blockUser("maya", [])).toEqual(["maya"]);
     expect(blockUser("maya", ["maya"])).toEqual(["maya"]);
+    expect(unblockUser("maya", ["maya", "james"])).toEqual(["james"]);
+    expect(unblockUser("maya", ["james"])).toEqual(["james"]);
   });
 
   it("creates structured reports and replaces post-event feedback per event", () => {
@@ -64,6 +68,34 @@ describe("SoftHello MVP domain rules", () => {
 
     expect(second).toHaveLength(1);
     expect(second[0]).toMatchObject({ comfort: "Good", wouldMeetAgain: true });
+  });
+
+  it("supports escalation safety report reasons", () => {
+    const report = createSafetyReport("movie-night-watch-chat", "maya-host", "Underage risk", "2026-05-07T02:30:00.000Z", {
+      reportedUserName: "Maya",
+      route: "app_review",
+    });
+
+    expect(report).toMatchObject({
+      eventId: "movie-night-watch-chat",
+      reportedUserId: "maya-host",
+      reportedUserName: "Maya",
+      reason: "Underage risk",
+      route: "app_review",
+      createdAt: "2026-05-07T02:30:00.000Z",
+    });
+    expect(report.cancelUntil).toBe("2026-05-07T02:40:00.000Z");
+  });
+
+  it("allows reports to be cancelled within the cancel window only", () => {
+    const report = createSafetyReport("movie-night-watch-chat", "james-member", "Harassment", "2026-05-07T02:30:00.000Z", {
+      route: "host_review",
+    });
+    const cancelled = cancelSafetyReport(report.id, [report], "2026-05-07T02:35:00.000Z");
+    const tooLate = cancelSafetyReport(report.id, [report], "2026-05-07T02:45:00.000Z");
+
+    expect(cancelled[0].cancelledAt).toBe("2026-05-07T02:35:00.000Z");
+    expect(tooLate[0].cancelledAt).toBeUndefined();
   });
 
   it("prioritizes comfort matches without hiding other events", () => {
