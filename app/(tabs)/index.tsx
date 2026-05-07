@@ -1076,9 +1076,9 @@ export default function HomeScreen() {
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={styles.screen}>
       <Animated.View style={[styles.animatedScreen, { backgroundColor: animatedScreenColor }]}>
         <Animated.View
-          pointerEvents="none"
           style={[
             styles.modeGlow,
+            { pointerEvents: "none" },
             {
               opacity: modeGlowOpacity,
               transform: [{ scale: modeGlowScale }],

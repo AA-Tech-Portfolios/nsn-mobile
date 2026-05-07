@@ -974,7 +974,6 @@ export default function ProfileScreen() {
         style={[styles.screen, isDay && styles.dayContainer]}
         contentContainerStyle={[styles.content, isWideProfile && styles.contentWide]}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!showProfileMenu}
       >
         <View style={styles.topRight}>
           <TouchableOpacity
@@ -989,7 +988,12 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           {showProfileMenu ? (
             <View style={[styles.profileMenu, isDay && styles.dayCard]}>
-              <ScrollView style={styles.profileMenuScroll} contentContainerStyle={styles.profileMenuContent} showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={styles.profileMenuScroll}
+                contentContainerStyle={styles.profileMenuContent}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+              >
                 <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>{profileMenuCopy.menuTitle}</Text>
                 {expandedProfileRows.map((row) => (
                   <TouchableOpacity
