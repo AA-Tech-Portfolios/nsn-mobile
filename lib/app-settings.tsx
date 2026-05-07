@@ -74,7 +74,6 @@ export type DietaryPreference =
   | "Nut allergy"
   | "Seafood allergy"
   | "Prefer non-alcohol venues";
-export type MealPaymentPreference = "Pay my own way" | "Split evenly" | "Discuss as a group";
 
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
@@ -100,7 +99,6 @@ type OnboardingSnapshot = {
   noiseLevelPreference?: NoiseLevelPreference;
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
-  mealPaymentPreference: MealPaymentPreference;
   hobbiesInterests: string[];
   profileShortcutLayout?: ProfileShortcutLayout;
 };
@@ -787,8 +785,6 @@ type AppSettings = {
   setTransportationMethod: (value: TransportationMethod) => void;
   dietaryPreferences: DietaryPreference[];
   setDietaryPreferences: (value: DietaryPreference[]) => void;
-  mealPaymentPreference: MealPaymentPreference;
-  setMealPaymentPreference: (value: MealPaymentPreference) => void;
   hobbiesInterests: string[];
   setHobbiesInterests: (value: string[]) => void;
   profileShortcutLayout: ProfileShortcutLayout;
@@ -861,7 +857,6 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [noiseLevelPreference, setNoiseLevelPreference] = useState<NoiseLevelPreference>("Any");
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
-  const [mealPaymentPreference, setMealPaymentPreference] = useState<MealPaymentPreference>("Pay my own way");
   const [hobbiesInterests, setHobbiesInterests] = useState<string[]>(["Coffee", "Movies", "Walks"]);
   const [profileShortcutLayout, setProfileShortcutLayout] = useState<ProfileShortcutLayout>("Clean");
   const [isNightMode, setIsNightMode] = useState(false);
@@ -918,7 +913,6 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setNoiseLevelPreference(snapshot.noiseLevelPreference ?? "Any");
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
-        setMealPaymentPreference(snapshot.mealPaymentPreference ?? "Pay my own way");
         setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
         setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
         setBlurProfilePhoto((snapshot.visibilityPreference ?? "Blurred") === "Blurred");
@@ -961,7 +955,6 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setNoiseLevelPreference(snapshot.noiseLevelPreference ?? "Any");
     setTransportationMethod(snapshot.transportationMethod);
     setDietaryPreferences(snapshot.dietaryPreferences);
-    setMealPaymentPreference(snapshot.mealPaymentPreference);
     setHobbiesInterests(snapshot.hobbiesInterests);
     setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
     setBlurProfilePhoto(snapshot.visibilityPreference === "Blurred");
@@ -1005,7 +998,6 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       noiseLevelPreference,
       transportationMethod,
       dietaryPreferences,
-      mealPaymentPreference,
       hobbiesInterests,
       profileShortcutLayout,
       ...snapshot,
@@ -1036,7 +1028,6 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.noiseLevelPreference !== undefined) setNoiseLevelPreference(snapshot.noiseLevelPreference);
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
-    if (snapshot.mealPaymentPreference !== undefined) setMealPaymentPreference(snapshot.mealPaymentPreference);
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
     if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
 
@@ -1108,8 +1099,6 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTransportationMethod,
         dietaryPreferences,
         setDietaryPreferences,
-        mealPaymentPreference,
-        setMealPaymentPreference,
         hobbiesInterests,
         setHobbiesInterests,
         profileShortcutLayout,

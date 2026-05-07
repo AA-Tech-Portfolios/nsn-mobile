@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { getLanguageBase, type DietaryPreference, type MealPaymentPreference, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type DietaryPreference, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 
@@ -20,15 +20,9 @@ const dietaryOptions: DietaryPreference[] = [
   "Prefer non-alcohol venues",
 ];
 
-const paymentOptions: { value: MealPaymentPreference; copy: string }[] = [
-  { value: "Pay my own way", copy: "I prefer to order and pay for myself." },
-  { value: "Split evenly", copy: "I am comfortable sharing the bill evenly with the group." },
-  { value: "Discuss as a group", copy: "I would rather decide together at the meetup." },
-];
-
 export default function FoodPreferencesScreen() {
   const router = useRouter();
-  const { appLanguage, dietaryPreferences, isNightMode, mealPaymentPreference, saveSoftHelloMvpState } = useAppSettings();
+  const { appLanguage, dietaryPreferences, isNightMode, saveSoftHelloMvpState } = useAppSettings();
   const isDay = !isNightMode;
   const copy = getProfilePreferenceCopy(getLanguageBase(appLanguage)).food;
 
@@ -41,10 +35,6 @@ export default function FoodPreferencesScreen() {
           : [...dietaryPreferences.filter((item) => item !== "No preference"), preference];
 
     await saveSoftHelloMvpState({ dietaryPreferences: nextPreferences.length ? nextPreferences : ["No preference"] });
-  };
-
-  const savePaymentPreference = async (preference: MealPaymentPreference) => {
-    await saveSoftHelloMvpState({ mealPaymentPreference: preference });
   };
 
   return (
@@ -84,29 +74,6 @@ export default function FoodPreferencesScreen() {
           </View>
         </View>
 
-        <View style={[styles.card, isDay && styles.dayCard]}>
-          <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.payment}</Text>
-          <View style={styles.paymentStack}>
-            {paymentOptions.map((option) => {
-              const active = mealPaymentPreference === option.value;
-              const localizedOption = copy.paymentOptions?.[option.value] ?? { label: option.value, copy: option.copy };
-
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  activeOpacity={0.82}
-                  onPress={() => savePaymentPreference(option.value)}
-                  style={[styles.paymentOption, isDay && styles.dayChip, active && styles.chipActive]}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                >
-                  <Text style={[styles.paymentTitle, isDay && styles.dayTitle, active && styles.activeText]}>{localizedOption.label}</Text>
-                  <Text style={[styles.paymentCopy, isDay && styles.dayMutedText, active && styles.activeText]}>{localizedOption.copy}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
       </ScrollView>
     </ScreenContainer>
   );
@@ -128,10 +95,6 @@ const styles = StyleSheet.create({
   dayChip: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
   chipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   chipText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
-  paymentStack: { gap: 9 },
-  paymentOption: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 12 },
-  paymentTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
-  paymentCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   dayTitle: { color: "#0B1220" },
   dayMutedText: { color: "#3B4A63" },

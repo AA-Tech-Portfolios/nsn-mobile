@@ -214,7 +214,6 @@ export default function OnboardingScreen() {
       hiddenEventIds: [],
       transportationMethod: "Public transport",
       dietaryPreferences: ["No preference"],
-      mealPaymentPreference: "Pay my own way",
       hobbiesInterests: ["Coffee", "Movies", "Walks"],
     });
 

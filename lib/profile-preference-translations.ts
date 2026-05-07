@@ -14,7 +14,7 @@ export type ProfilePreferenceCopy = {
     title: string;
     copy: string;
     dietary: string;
-    payment: string;
+    payment?: string;
     dietaryOptions?: Record<string, string>;
     paymentOptions?: Record<string, { label: string; copy: string }>;
   };
@@ -31,7 +31,7 @@ const en: ProfilePreferenceCopy = {
   rows: {
     locationPreference: "Location Preference",
     transportation: "Transportation Method",
-    foodPreferences: "Food & Payment Preferences",
+    foodPreferences: "Food Preferences",
     hobbiesInterests: "Hobbies & Interests",
   },
   transportation: {
@@ -39,10 +39,9 @@ const en: ProfilePreferenceCopy = {
     copy: "Choose how you usually arrive so meetups can make the meeting point and timing feel easier.",
   },
   food: {
-    title: "Food & Payment Preferences",
-    copy: "Share dietary needs and meal payment expectations before food meetups, so nobody has to guess at the table.",
+    title: "Food Preferences",
+    copy: "Share dietary needs before food meetups, so nobody has to guess at the table.",
     dietary: "Food or dietary preferences",
-    payment: "Meal payment preference",
   },
   hobbies: {
     title: "Hobbies & Interests",
@@ -157,7 +156,7 @@ export const profilePreferenceTranslations: Record<string, ProfilePreferenceCopy
     hobbies: { title: "Pastan ak enterè", copy: "Chwazi sa ou renmen fè nan tan pèsonèl ou.", personalTime: "Tan pèsonèl", selected: (count) => `${count} chwazi` },
   },
   Hebrew: {
-    rows: { locationPreference: "העדפת מיקום", transportation: "דרך הגעה", foodPreferences: "העדפות אוכל ותשלום", hobbiesInterests: "תחביבים ותחומי עניין" },
+    rows: { locationPreference: "העדפת מיקום", transportation: "דרך הגעה", foodPreferences: "העדפות אוכל", hobbiesInterests: "תחביבים ותחומי עניין" },
     transportation: {
       title: "דרך הגעה",
       copy: "בחר/י איך את/ה בדרך כלל מגיע/ה כדי שנקודת המפגש והתזמון יהיו קלים יותר.",
@@ -172,10 +171,9 @@ export const profilePreferenceTranslations: Record<string, ProfilePreferenceCopy
       },
     },
     food: {
-      title: "העדפות אוכל ותשלום",
-      copy: "שתף/י צרכים תזונתיים וציפיות תשלום לפני מפגשי אוכל.",
+      title: "העדפות אוכל",
+      copy: "שתף/י צרכים תזונתיים לפני מפגשי אוכל.",
       dietary: "העדפות אוכל או תזונה",
-      payment: "העדפת תשלום על ארוחה",
       dietaryOptions: {
         "No preference": "אין העדפה",
         Vegetarian: "צמחוני",
@@ -187,11 +185,6 @@ export const profilePreferenceTranslations: Record<string, ProfilePreferenceCopy
         "Nut allergy": "אלרגיה לאגוזים",
         "Seafood allergy": "אלרגיה לפירות ים",
         "Prefer non-alcohol venues": "מעדיף/ה מקומות ללא אלכוהול",
-      },
-      paymentOptions: {
-        "Pay my own way": { label: "משלם/ת על עצמי", copy: "אני מעדיף/ה להזמין ולשלם עבור עצמי." },
-        "Split evenly": { label: "חלוקה שווה", copy: "נוח לי לחלק את החשבון שווה בשווה עם הקבוצה." },
-        "Discuss as a group": { label: "להחליט כקבוצה", copy: "אני מעדיף/ה להחליט יחד במפגש." },
       },
     },
     hobbies: {

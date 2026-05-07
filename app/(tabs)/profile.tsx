@@ -595,17 +595,17 @@ const transportationRowTranslations = {
 } as const;
 
 const foodPreferencesRowTranslations = {
-  English: "Food & Payment Preferences",
-  Arabic: "تفضيلات الطعام والدفع",
-  Hebrew: "העדפות אוכל ותשלום",
-  Russian: "Еда и оплата",
-  Spanish: "Comida y pago",
-  Chinese: "饮食与付款偏好",
-  French: "Repas et paiement",
-  German: "Essen und Zahlung",
-  Japanese: "食事と支払い",
-  Korean: "음식 및 결제 선호",
-  Yiddish: "עסן און באצאלונג",
+  English: "Food Preferences",
+  Arabic: "تفضيلات الطعام",
+  Hebrew: "העדפות אוכל",
+  Russian: "Еда",
+  Spanish: "Comida",
+  Chinese: "饮食偏好",
+  French: "Repas",
+  German: "Essen",
+  Japanese: "食事",
+  Korean: "음식 선호",
+  Yiddish: "עסן",
 } as const;
 
 const hobbiesInterestsRowTranslations = {

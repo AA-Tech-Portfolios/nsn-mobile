@@ -46,7 +46,7 @@
 - [ ] Fix buttons and standardise button behaviour across the app
 - [x] Allow profiles to blur their images for privacy
 - [x] Add Comfort Mode and Open Mode profile visibility controls
-- [x] Add Location Preference, Transportation Method, Food & Payment Preferences, Hobbies & Interests, Saved Places, and Settings & Privacy profile areas
+- [x] Add Location Preference, Transportation Method, Food Preferences, Hobbies & Interests, Saved Places, and Settings & Privacy profile areas
 
 ### Matching and Discovery
 
