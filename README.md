@@ -10,9 +10,12 @@ This branch also documents the next global product direction: **SoftHello v1.1**
 
 SoftHello planning docs:
 
+- [`docs/core-principles.md`](docs/core-principles.md) - non-negotiable SoftHello product principles.
 - [`docs/softhello-v1.1-mvp.md`](docs/softhello-v1.1-mvp.md) - product overview and MVP build plan.
 - [`docs/softhello-feature-map.md`](docs/softhello-feature-map.md) - MVP, post-MVP, and future feature boundaries.
 - [`docs/softhello-safety-and-trust.md`](docs/softhello-safety-and-trust.md) - verification, meeting safety, reporting, and 18+ expectations.
+- [`docs/softhello-privacy-comfort-trust-roadmap.md`](docs/softhello-privacy-comfort-trust-roadmap.md) - privacy, comfort, visibility, atmosphere, and trust roadmap.
+- [`docs/user-experience-roadmap.md`](docs/user-experience-roadmap.md) - phased trust, safety, comfort, and personalisation roadmap.
 - [`docs/softhello-ux-principles.md`](docs/softhello-ux-principles.md) - calm, ND-friendly, low-pressure UX rules.
 - [`docs/brand-systems.md`](docs/brand-systems.md) - SoftHello global brand system and NSN local visual system.
 
