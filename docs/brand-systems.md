@@ -1,5 +1,7 @@
 # Brand Systems
 
+> North Shore Nights (NSN) is the active app identity for this repository. SoftHello references in this document are future/global context only.
+
 This repo currently contains two related but distinct product identities:
 
 - **SoftHello** is the global release direction.

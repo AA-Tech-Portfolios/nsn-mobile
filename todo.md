@@ -104,8 +104,8 @@
 
 ### Brand and Operations
 
-- [x] Clarify product split between SoftHello global release and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
-- [x] Define separate brand systems: SoftHello should use the soft purple global identity, while North Shore Nights can keep the local light-blue/dark-blue Australian design direction
-- [ ] Rename project to a global name
+- [x] Clarify product split between future/global release context and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
+- [x] Define separate brand systems: future/global directions should stay out of NSN screens, while North Shore Nights keeps the local light-blue/dark-blue Australian design direction
+- [ ] Revisit global product naming only outside the active NSN pilot
 - [ ] Remove AI Expo related settings as the app develops
 - [ ] Add optional donation button

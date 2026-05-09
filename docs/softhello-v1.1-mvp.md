@@ -1,5 +1,7 @@
 # SoftHello v1.1 MVP Plan
 
+> Future/global context only: North Shore Nights (NSN) remains the active identity for this repository and Sydney/North Shore pilot.
+
 ## Overview
 
 SoftHello's original concept is documented as the global brand and journey anchor in
@@ -14,7 +16,7 @@ SoftHello prioritizes:
 - Safety before meeting.
 - Freedom to opt out before forced participation.
 
-This repo is still named `nsn-mobile`. North Shore Nights remains the local prototype identity, while SoftHello is the global product direction for the `prototype-2-softhello` branch.
+This repo is still named `nsn-mobile`. North Shore Nights remains the local prototype identity, while SoftHello is retained here as possible future/global product context.
 
 ## Target Audience
 

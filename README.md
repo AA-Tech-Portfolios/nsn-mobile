@@ -1,20 +1,20 @@
-# NSN - North Shore Nights
+# North Shore Nights (NSN)
 
-NSN is a mobile-first social meetup app concept for young adults who want easier, calmer ways to meet new people locally. The product direction is intentionally low-pressure: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
+North Shore Nights (NSN) is a Sydney/North Shore local pilot for low-pressure social meetups. It is built for young adults who want easier, calmer ways to meet new people locally: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
 
-The current prototype focuses on Sydney's North Shore, but the architecture is moving toward broader location and timezone support.
+The current prototype focuses on Sydney's North Shore. Broader location and timezone support may arrive later, but the active app identity in this repository is North Shore Nights.
 
-## SoftHello Prototype Branch
+## Future Global Context
 
-This branch also documents the next global product direction: **SoftHello v1.1**. The repo remains `nsn-mobile`, and North Shore Nights remains the local prototype identity, but SoftHello is the calm, events-first MVP direction for a broader audience.
+Some planning docs mention **SoftHello v1.1** as a possible future/global product direction. Those notes are retained as context only; they are not the active app identity for this repository.
 
-SoftHello planning docs:
+Future/global planning docs:
 
 - [`docs/softhello-v1.1-mvp.md`](docs/softhello-v1.1-mvp.md) - product overview and MVP build plan.
 - [`docs/softhello-feature-map.md`](docs/softhello-feature-map.md) - MVP, post-MVP, and future feature boundaries.
 - [`docs/softhello-safety-and-trust.md`](docs/softhello-safety-and-trust.md) - verification, meeting safety, reporting, and 18+ expectations.
 - [`docs/softhello-ux-principles.md`](docs/softhello-ux-principles.md) - calm, ND-friendly, low-pressure UX rules.
-- [`docs/brand-systems.md`](docs/brand-systems.md) - SoftHello global brand system and NSN local visual system.
+- [`docs/brand-systems.md`](docs/brand-systems.md) - future/global brand context and the NSN local visual system.
 
 ## Product Intent
 
