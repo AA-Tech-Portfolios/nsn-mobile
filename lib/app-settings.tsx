@@ -56,6 +56,38 @@ export const appPalettes: AppPalette[] = [
 
 export const getLanguageBase = (language: string) => language.replace(/\s+\([^)]+\)$/, "");
 
+export const DEFAULT_NSN_LANGUAGE = "English (Australia)";
+
+export const nsnLocalLanguageOptions = [
+  { label: "English (Australia)", nativeName: "English · Australia", flag: "🇦🇺" },
+  { label: "Hebrew", nativeName: "עברית", flag: "🇮🇱" },
+  { label: "Chinese (Simplified)", nativeName: "简体中文", flag: "🇨🇳" },
+  { label: "Korean", nativeName: "한국어", flag: "🇰🇷" },
+  { label: "Japanese", nativeName: "日本語", flag: "🇯🇵" },
+] as const;
+
+export type NsnLocalLanguage = (typeof nsnLocalLanguageOptions)[number]["label"];
+
+const supportedLanguageLabels = new Set<string>(nsnLocalLanguageOptions.map((language) => language.label));
+
+export function normalizeNsnLanguage(language?: string | null): NsnLocalLanguage {
+  if (!language) return DEFAULT_NSN_LANGUAGE;
+
+  if (supportedLanguageLabels.has(language)) {
+    return language as NsnLocalLanguage;
+  }
+
+  const baseLanguage = getLanguageBase(language);
+
+  if (language === "English (AU)" || baseLanguage === "English") return DEFAULT_NSN_LANGUAGE;
+  if (baseLanguage === "Chinese") return "Chinese (Simplified)";
+  if (baseLanguage === "Hebrew") return "Hebrew";
+  if (baseLanguage === "Korean") return "Korean";
+  if (baseLanguage === "Japanese") return "Japanese";
+
+  return DEFAULT_NSN_LANGUAGE;
+}
+
 const ONBOARDING_STORAGE_KEY = "softhello.onboarding.v1";
 
 export type SoftHelloIntent = "Friends" | "Dating" | "Both" | "Exploring";
@@ -103,6 +135,8 @@ type OnboardingSnapshot = {
   hobbiesInterests: string[];
   profileShortcutLayout?: ProfileShortcutLayout;
   profileWidthPreference?: ProfileWidthPreference;
+  appLanguage?: string;
+  translationLanguage?: string;
 };
 
 export type TimezoneSetting = {
@@ -897,8 +931,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [showDistanceInMeetups, setShowDistanceInMeetups] = useState(true);
   const [allowMessageRequests, setAllowMessageRequests] = useState(false);
   const [safetyCheckIns, setSafetyCheckIns] = useState(true);
-  const [appLanguage, setAppLanguage] = useState("English");
-  const [translationLanguage, setTranslationLanguage] = useState("English");
+  const [appLanguage, setAppLanguageState] = useState<NsnLocalLanguage>(DEFAULT_NSN_LANGUAGE);
+  const [translationLanguage, setTranslationLanguageState] = useState<NsnLocalLanguage>(DEFAULT_NSN_LANGUAGE);
   const [appPalette, setAppPalette] = useState<AppPalette>(appPalettes[0]);
   const [softSurfaces, setSoftSurfaces] = useState(false);
   const [clearBorders, setClearBorders] = useState(false);
@@ -942,6 +976,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
         setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
         setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
+        setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
+        setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
         setBlurProfilePhoto((snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("NSN onboarding could not load:", error);
@@ -985,6 +1021,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHobbiesInterests(snapshot.hobbiesInterests);
     setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
     setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
+    setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
+    setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     setBlurProfilePhoto(snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -993,6 +1031,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         ONBOARDING_STORAGE_KEY,
         JSON.stringify({
           ...snapshot,
+          appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
+          translationLanguage: normalizeNsnLanguage(snapshot.translationLanguage),
           hasCompletedOnboarding: true,
         } satisfies OnboardingSnapshot)
       );
@@ -1029,8 +1069,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       hobbiesInterests,
       profileShortcutLayout,
       profileWidthPreference,
+      appLanguage,
+      translationLanguage,
       ...snapshot,
     };
+    nextSnapshot.appLanguage = normalizeNsnLanguage(nextSnapshot.appLanguage);
+    nextSnapshot.translationLanguage = normalizeNsnLanguage(nextSnapshot.translationLanguage);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.suburb !== undefined) setSuburb(snapshot.suburb);
@@ -1060,12 +1104,26 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
     if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
     if (snapshot.profileWidthPreference !== undefined) setProfileWidthPreference(snapshot.profileWidthPreference);
+    if (snapshot.appLanguage !== undefined) setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
+    if (snapshot.translationLanguage !== undefined) setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
     } catch (error) {
       console.log("NSN state could not save:", error);
     }
+  };
+
+  const setAppLanguage = (value: string) => {
+    const nextLanguage = normalizeNsnLanguage(value);
+    setAppLanguageState(nextLanguage);
+    saveSoftHelloMvpState({ appLanguage: nextLanguage });
+  };
+
+  const setTranslationLanguage = (value: string) => {
+    const nextLanguage = normalizeNsnLanguage(value);
+    setTranslationLanguageState(nextLanguage);
+    saveSoftHelloMvpState({ translationLanguage: nextLanguage });
   };
 
   const resetOnboarding = async () => {

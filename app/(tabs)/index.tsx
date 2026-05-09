@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { getLanguageBase, timezoneOptions, timezoneRegions, type NoiseLevelPreference, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
@@ -28,6 +28,7 @@ const appLocaleMap: Record<string, string> = {
   Croatian: "hr-HR",
   Czech: "cs-CZ",
   "Dutch (BE)": "nl-BE",
+  "English (Australia)": "en-AU",
   "English (AU)": "en-AU",
   "English (CA)": "en-CA",
   "English (HK)": "en-HK",
@@ -739,6 +740,61 @@ const getTimezoneNow = (date: Date, option: TimezoneSetting) =>
 
 const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes === undefined ? option.timeZone : "UTC");
 
+function HeaderActionButton({
+  accessibilityLabel,
+  accessibilityHint,
+  isDay,
+  onPress,
+  children,
+}: {
+  accessibilityLabel: string;
+  accessibilityHint: string;
+  isDay: boolean;
+  onPress: () => void;
+  children: ReactNode;
+}) {
+  if (Platform.OS === "web") {
+    return (
+      <button
+        type="button"
+        role="button"
+        aria-label={accessibilityLabel}
+        title={accessibilityLabel}
+        onClick={onPress}
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 21,
+          alignItems: "center",
+          justifyContent: "center",
+          borderWidth: 1,
+          borderStyle: "solid",
+          borderColor: nsnColors.border,
+          backgroundColor: isDay ? "#FFFFFF" : nsnColors.surface,
+          display: "flex",
+          padding: 0,
+          cursor: "pointer",
+        }}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      style={[styles.headerActionButton, isDay && styles.dayBellButton]}
+      hitSlop={6}
+    >
+      {children}
+    </Pressable>
+  );
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
@@ -823,19 +879,19 @@ export default function HomeScreen() {
     saveSoftHelloMvpState({ noiseLevelPreference: preference });
   };
 
-  const showSearchPlaceholder = () => {
+  const showSearchPlaceholder = useCallback(() => {
     setHeaderPlaceholder({
       title: "Search events",
       copy: "Search events by suburb, activity, time, group size, or vibe.",
     });
-  };
+  }, []);
 
-  const showViewFilterPlaceholder = () => {
+  const showViewFilterPlaceholder = useCallback(() => {
     setHeaderPlaceholder({
       title: "Change event view and filters",
       copy: "Choose how events are shown: compact view, comfortable view, nearby, small groups only, weather-safe, or map/list view.",
     });
-  };
+  }, []);
 
   const switchToSuggestedTheme = (suggestedMode: "day" | "night") => {
     setIsNightMode(suggestedMode === "night");
@@ -1126,20 +1182,28 @@ export default function HomeScreen() {
         />
       <ScrollView style={styles.scrollSurface} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.header, isRtl && styles.rtlRow]}>
-          <View style={isRtl && styles.rtlBlock}>
+          <View style={[styles.headerTitle, isRtl && styles.rtlBlock]}>
             <Text style={[styles.logo, isDay && styles.dayText]}>NSN</Text>
             <Text style={[styles.subtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.subtitle}</Text>
           </View>
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={resetOnboarding}
-            accessibilityRole="button"
-            accessibilityLabel="Restart NSN onboarding"
-            accessibilityHint="Opens the setup flow again."
-            style={[styles.bellButton, isDay ? styles.dayBellButton : null]}
-          >
-            <IconSymbol name="person.fill" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
-          </TouchableOpacity>
+          <View style={[styles.headerActions, isRtl && styles.rtlRow]}>
+            <HeaderActionButton
+              onPress={showSearchPlaceholder}
+              accessibilityLabel="Search events"
+              accessibilityHint="Shows a temporary search options message."
+              isDay={isDay}
+            >
+              <IconSymbol name="magnifyingglass" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
+            </HeaderActionButton>
+            <HeaderActionButton
+              onPress={showViewFilterPlaceholder}
+              accessibilityLabel="Change event view and filters"
+              accessibilityHint="Shows a temporary view and filter options message."
+              isDay={isDay}
+            >
+              <IconSymbol name="ellipsis" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
+            </HeaderActionButton>
+          </View>
         </View>
 
         {headerPlaceholder ? (

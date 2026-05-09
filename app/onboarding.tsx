@@ -12,6 +12,7 @@ import { defaultComfortPreferences, type SoftHelloComfortPreference } from "@/li
 
 const intentOptions: SoftHelloIntent[] = ["Friends", "Dating", "Both", "Exploring"];
 const comfortOptions: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet", "Flexible pace", "Indoor backup"];
+const rtlLanguages = new Set(["Hebrew"]);
 
 const visibilityOptions: {
   value: SoftHelloVisibility;
@@ -32,16 +33,16 @@ const visibilityOptions: {
 
 const onboardingTranslations = {
   English: {
-    tagline: "Meet people, not pressure.",
-    step: "Step 1 of 5",
+    tagline: "Meet locally, move gently.",
+    step: "Step 1 of 5 - Your local setup",
     title: "Nice to meet you.",
-    copy: "Create a calm profile for local friendships, dating, or simply exploring at your own pace.",
+    copy: "Set up a calm NSN profile for local North Shore plans, friendships, dating, or simply exploring at your own pace.",
     ageConfirm: "I confirm I am 18 or older",
     adultsOnly: "North Shore Nights is for adults only.",
     suburbLabel: "Suburb or local area",
     recognised: "Recognised:",
     chooseSuggestion: "Choose a suggestion to confirm your local area.",
-    hereFor: "I am here for",
+    hereFor: "What brings you here?",
     nameLabel: "Name or nickname",
     photoLabel: "Optional photo",
     photoSelected: "Photo selected",
@@ -115,7 +116,9 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const { appLanguage, completeOnboarding, isNightMode } = useAppSettings();
   const isDay = !isNightMode;
-  const copy = onboardingTranslations[getLanguageBase(appLanguage) as keyof typeof onboardingTranslations] ?? onboardingTranslations.English;
+  const appLanguageBase = getLanguageBase(appLanguage);
+  const isRtl = rtlLanguages.has(appLanguageBase);
+  const copy = onboardingTranslations[appLanguageBase as keyof typeof onboardingTranslations] ?? onboardingTranslations.English;
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [suburb, setSuburb] = useState("Chatswood");
   const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(chatswoodLocality);
@@ -224,18 +227,18 @@ export default function OnboardingScreen() {
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
       <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.brandLockup}>
-          <View style={styles.logoMark}>
-            <View style={styles.logoBubbleLeft} />
-            <View style={styles.logoBubbleRight} />
+          <View style={[styles.logoMark, isDay && styles.dayLogoMark]} accessibilityRole="image" accessibilityLabel="NSN logo">
+            <Text style={[styles.logoText, isDay && styles.dayLogoText]}>NSN</Text>
+            <View style={[styles.logoSignal, isDay && styles.dayLogoSignal]} />
           </View>
-          <Text style={[styles.brand, isDay && styles.dayTitle]}>North Shore Nights</Text>
-          <Text style={[styles.tagline, isDay && styles.dayMutedText]}>{copy.tagline}</Text>
+          <Text style={[styles.brand, isDay && styles.dayTitle, isRtl && styles.rtlText]}>North Shore Nights</Text>
+          <Text style={[styles.tagline, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>{copy.tagline}</Text>
         </View>
 
         <View style={[styles.panel, isDay && styles.dayPanel]}>
-          <Text style={[styles.stepLabel, isDay && styles.dayAccentText]}>{copy.step}</Text>
-          <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
-          <Text style={[styles.copy, isDay && styles.dayMutedText]}>
+          <Text style={[styles.stepLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>{copy.step}</Text>
+          <Text style={[styles.title, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.title}</Text>
+          <Text style={[styles.copy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
             {copy.copy}
           </Text>
         </View>
@@ -243,33 +246,36 @@ export default function OnboardingScreen() {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => setAgeConfirmed((current) => !current)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: ageConfirmed }}
+          accessibilityLabel={copy.ageConfirm}
           style={[styles.confirmCard, isDay && styles.dayCard, ageConfirmed && styles.confirmCardActive]}
         >
           <View style={[styles.checkBox, ageConfirmed && styles.checkBoxActive]}>
             <Text style={styles.checkText}>{ageConfirmed ? "✓" : ""}</Text>
           </View>
           <View style={styles.confirmCopy}>
-            <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{copy.ageConfirm}</Text>
-            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy.adultsOnly}</Text>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.ageConfirm}</Text>
+            <Text style={[styles.cardCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.adultsOnly}</Text>
           </View>
         </TouchableOpacity>
 
         <View style={styles.formStack}>
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.suburbLabel}</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.suburbLabel}</Text>
             <TextInput
               value={suburb}
               onChangeText={updateSuburb}
               placeholder="Chatswood"
               placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
-              style={[styles.input, isDay && styles.dayInput]}
+              style={[styles.input, isDay && styles.dayInput, isRtl && styles.rtlInput]}
             />
             {selectedLocality ? (
-              <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+              <Text style={[styles.localityStatus, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                 {copy.recognised} {getAustralianLocalityLabel(selectedLocality)}
               </Text>
             ) : suburb.trim().length >= 2 ? (
-              <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+              <Text style={[styles.localityStatus, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                 {copy.chooseSuggestion}
               </Text>
             ) : null}
@@ -290,8 +296,8 @@ export default function OnboardingScreen() {
                       style={[styles.localityOption, selected && styles.localityOptionActive]}
                     >
                       <View>
-                        <Text style={[styles.localityName, isDay && styles.dayTitle]}>{locality.suburb}</Text>
-                        <Text style={[styles.localityMeta, isDay && styles.dayMutedText]}>
+                        <Text style={[styles.localityName, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{locality.suburb}</Text>
+                        <Text style={[styles.localityMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                           {locality.state} {locality.postcode}
                         </Text>
                       </View>
@@ -304,7 +310,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.hereFor}</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.hereFor}</Text>
             <View style={styles.optionGrid}>
               {intentOptions.map((option) => {
                 const active = intent === option;
@@ -316,7 +322,7 @@ export default function OnboardingScreen() {
                     onPress={() => setIntent(option)}
                     style={[styles.intentOption, isDay && styles.dayChoice, active && styles.choiceActive]}
                   >
-                    <Text style={[styles.choiceText, isDay && styles.dayMutedText, active && styles.choiceTextActive]}>{option}</Text>
+                    <Text style={[styles.choiceText, isDay && styles.dayMutedText, active && styles.choiceTextActive]}>{copy.intents[option] ?? option}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -324,7 +330,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.nameLabel}</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.nameLabel}</Text>
             <TextInput
               value={displayName}
               onChangeText={(value) => {
@@ -338,13 +344,13 @@ export default function OnboardingScreen() {
               }}
               placeholder="Sam"
               placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
-              style={[styles.input, isDay && styles.dayInput]}
+              style={[styles.input, isDay && styles.dayInput, isRtl && styles.rtlInput]}
             />
-            {nameError ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{nameError}</Text> : null}
+            {nameError ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage, isRtl && styles.rtlText]}>{nameError}</Text> : null}
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.photoLabel}</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.photoLabel}</Text>
             <View style={[styles.photoRow, isDay && styles.dayCard]}>
               <View style={styles.photoPreview}>
                 {profilePhotoUri ? (
@@ -354,8 +360,8 @@ export default function OnboardingScreen() {
                 )}
               </View>
               <View style={styles.photoBody}>
-                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{profilePhotoUri ? copy.photoSelected : copy.photoLater}</Text>
-                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy.photoCopy}</Text>
+                <Text style={[styles.cardTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{profilePhotoUri ? copy.photoSelected : copy.photoLater}</Text>
+                <Text style={[styles.cardCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.photoCopy}</Text>
               </View>
               <TouchableOpacity activeOpacity={0.8} onPress={pickProfilePhoto} style={styles.smallButton}>
                 <Text style={styles.smallButtonText}>{profilePhotoUri ? copy.changePhoto : copy.addPhoto}</Text>
@@ -364,7 +370,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.visibilityLabel}</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.visibilityLabel}</Text>
             <View style={styles.visibilityStack}>
               {visibilityOptions.map((option) => {
                 const active = visibilityPreference === option.value;
@@ -378,8 +384,8 @@ export default function OnboardingScreen() {
                     style={[styles.visibilityCard, isDay && styles.dayCard, active && styles.visibilityActive]}
                   >
                     <View>
-                      <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedOption.title}</Text>
-                      <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{localizedOption.copy}</Text>
+                      <Text style={[styles.cardTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{localizedOption.title}</Text>
+                      <Text style={[styles.cardCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{localizedOption.copy}</Text>
                     </View>
                     <View style={[styles.radioOuter, active && styles.radioOuterActive]}>
                       {active ? <View style={styles.radioInner} /> : null}
@@ -391,7 +397,7 @@ export default function OnboardingScreen() {
           </View>
 
           <View>
-            <Text style={[styles.label, isDay && styles.dayTitle]}>{copy.comfortLabel}</Text>
+            <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.comfortLabel}</Text>
             <View style={styles.optionGrid}>
               {comfortOptions.map((option) => {
                 const active = comfortPreferences.includes(option);
@@ -412,7 +418,7 @@ export default function OnboardingScreen() {
                 );
               })}
             </View>
-            <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+            <Text style={[styles.localityStatus, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
               {copy.comfortCopy}
             </Text>
           </View>
@@ -432,60 +438,63 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#FFF9F1" },
-  dayScreen: { backgroundColor: "#FFF9F1" },
-  content: { paddingHorizontal: 22, paddingTop: 24, paddingBottom: 34 },
-  brandLockup: { alignItems: "center", marginBottom: 22 },
-  logoMark: { width: 88, height: 58, alignItems: "center", justifyContent: "center", marginBottom: 8 },
-  logoBubbleLeft: { position: "absolute", left: 15, width: 48, height: 48, borderRadius: 24, backgroundColor: "#6C5CE7" },
-  logoBubbleRight: { position: "absolute", right: 15, width: 48, height: 48, borderRadius: 24, backgroundColor: "#FFB48A" },
-  brand: { color: "#18182E", fontSize: 34, fontWeight: "900", lineHeight: 42 },
-  tagline: { color: "#6C5CE7", fontSize: 16, fontWeight: "700", lineHeight: 23 },
-  panel: { borderRadius: 20, borderWidth: 1, borderColor: "#EFE2D8", backgroundColor: "#FFFFFF", padding: 18, marginBottom: 14 },
-  dayPanel: { backgroundColor: "#FFFFFF", borderColor: "#EFE2D8" },
-  stepLabel: { color: "#6C5CE7", fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
-  dayAccentText: { color: "#6C5CE7" },
-  title: { color: "#18182E", fontSize: 24, fontWeight: "900", lineHeight: 31 },
-  dayTitle: { color: "#18182E" },
-  copy: { color: "#5F6575", fontSize: 14, lineHeight: 21, marginTop: 6 },
-  dayMutedText: { color: "#5F6575" },
+  screen: { flex: 1, backgroundColor: nsnColors.background },
+  dayScreen: { backgroundColor: "#EAF4FF" },
+  content: { paddingHorizontal: 22, paddingTop: 22, paddingBottom: 36 },
+  brandLockup: { alignItems: "center", marginBottom: 24 },
+  logoMark: { width: 98, height: 60, borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  dayLogoMark: { borderColor: "#B8C9E6", backgroundColor: "#FFFFFF" },
+  logoText: { color: nsnColors.text, fontSize: 24, fontWeight: "900", lineHeight: 30, letterSpacing: 0 },
+  dayLogoText: { color: "#0B1220" },
+  logoSignal: { position: "absolute", right: 12, top: 11, width: 9, height: 9, borderRadius: 5, backgroundColor: nsnColors.cyan },
+  dayLogoSignal: { backgroundColor: nsnColors.primary },
+  brand: { color: nsnColors.text, fontSize: 34, fontWeight: "900", lineHeight: 40, textAlign: "center" },
+  tagline: { color: nsnColors.cyan, fontSize: 16, fontWeight: "800", lineHeight: 22, textAlign: "center", marginTop: 3 },
+  panel: { borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 18, marginBottom: 16 },
+  dayPanel: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  stepLabel: { color: nsnColors.cyan, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 10 },
+  dayAccentText: { color: nsnColors.primary },
+  title: { color: nsnColors.text, fontSize: 24, fontWeight: "900", lineHeight: 31 },
+  dayTitle: { color: "#0B1220" },
+  copy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 6 },
+  dayMutedText: { color: "#3B4A63" },
   confirmCard: {
     minHeight: 76,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#EFE2D8",
-    backgroundColor: "#FFFFFF",
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
     flexDirection: "row",
     alignItems: "center",
     padding: 14,
     gap: 12,
     marginBottom: 17,
   },
-  dayCard: { backgroundColor: "#FFFFFF", borderColor: "#EFE2D8" },
-  confirmCardActive: { borderColor: "#6C5CE7" },
-  checkBox: { width: 28, height: 28, borderRadius: 9, borderWidth: 1, borderColor: "#D9CFE8", alignItems: "center", justifyContent: "center" },
-  checkBoxActive: { backgroundColor: "#6C5CE7", borderColor: "#6C5CE7" },
+  dayCard: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  confirmCardActive: { borderColor: nsnColors.cyan },
+  checkBox: { width: 28, height: 28, borderRadius: 9, borderWidth: 1, borderColor: nsnColors.border, alignItems: "center", justifyContent: "center" },
+  checkBoxActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   checkText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
   confirmCopy: { flex: 1 },
-  cardTitle: { color: "#18182E", fontSize: 14, fontWeight: "900", lineHeight: 20 },
-  cardCopy: { color: "#5F6575", fontSize: 12, lineHeight: 17, marginTop: 2 },
-  formStack: { gap: 16 },
-  label: { color: "#18182E", fontSize: 13, fontWeight: "900", lineHeight: 18, marginBottom: 7 },
+  cardTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  cardCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  formStack: { gap: 17 },
+  label: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginBottom: 8 },
   input: {
     minHeight: 50,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "#EFE2D8",
-    backgroundColor: "#FFFFFF",
-    color: "#18182E",
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    color: nsnColors.text,
     fontSize: 15,
     paddingHorizontal: 14,
   },
-  dayInput: { borderColor: "#EFE2D8", backgroundColor: "#FFFFFF", color: "#18182E" },
-  inlineMessage: { color: "#9A6A00", fontSize: 12, lineHeight: 17, fontWeight: "800", marginTop: 7 },
-  dayMessage: { color: "#9A6A00" },
-  localityStatus: { color: "#5F6575", fontSize: 12, lineHeight: 17, marginTop: 7 },
-  localityList: { borderRadius: 16, borderWidth: 1, borderColor: "#EFE2D8", backgroundColor: "#FFFFFF", marginTop: 9, overflow: "hidden" },
+  dayInput: { borderColor: "#B8C9E6", backgroundColor: "#FFFFFF", color: "#0B1220" },
+  inlineMessage: { color: nsnColors.warning, fontSize: 12, lineHeight: 17, fontWeight: "800", marginTop: 7 },
+  dayMessage: { color: "#7A5600" },
+  localityStatus: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 7 },
+  localityList: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, marginTop: 9, overflow: "hidden" },
   localityOption: {
     minHeight: 56,
     flexDirection: "row",
@@ -495,65 +504,67 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1E8DF",
+    borderBottomColor: nsnColors.border,
   },
-  localityOptionActive: { backgroundColor: "#FAF7FF" },
-  localityName: { color: "#18182E", fontSize: 14, fontWeight: "900", lineHeight: 20 },
-  localityMeta: { color: "#5F6575", fontSize: 12, lineHeight: 17 },
-  localityCheck: { width: 22, color: "#9A8EAB", fontSize: 16, fontWeight: "900", textAlign: "right" },
-  localityCheckActive: { color: "#6C5CE7" },
-  optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
+  localityOptionActive: { backgroundColor: "rgba(56,72,255,0.16)" },
+  localityName: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  localityMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
+  localityCheck: { width: 22, color: nsnColors.mutedSoft, fontSize: 16, fontWeight: "900", textAlign: "right" },
+  localityCheckActive: { color: nsnColors.cyan },
+  optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   intentOption: {
     minHeight: 42,
     minWidth: "47%",
     flex: 1,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#EFE2D8",
-    backgroundColor: "#FFFFFF",
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 12,
   },
-  dayChoice: { backgroundColor: "#FFFFFF", borderColor: "#EFE2D8" },
-  choiceActive: { backgroundColor: "#6C5CE7", borderColor: "#6C5CE7" },
-  choiceText: { color: "#5F6575", fontSize: 13, fontWeight: "900" },
+  dayChoice: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  choiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  choiceText: { color: nsnColors.muted, fontSize: 13, fontWeight: "900" },
   choiceTextActive: { color: "#FFFFFF" },
   photoRow: {
     minHeight: 82,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#EFE2D8",
-    backgroundColor: "#FFFFFF",
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     padding: 12,
   },
-  photoPreview: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#18182E", alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  photoPreview: { width: 56, height: 56, borderRadius: 28, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: nsnColors.border, alignItems: "center", justifyContent: "center", overflow: "hidden" },
   photoImage: { width: 56, height: 56, borderRadius: 28 },
   photoInitial: { color: "#FFFFFF", fontSize: 23, fontWeight: "900" },
   photoBody: { flex: 1 },
-  smallButton: { minHeight: 36, borderRadius: 13, backgroundColor: "#F2EDFF", alignItems: "center", justifyContent: "center", paddingHorizontal: 13 },
-  smallButtonText: { color: "#6C5CE7", fontSize: 12, fontWeight: "900" },
+  smallButton: { minHeight: 36, borderRadius: 13, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 13 },
+  smallButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900" },
   visibilityStack: { gap: 9 },
   visibilityCard: {
     minHeight: 72,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#EFE2D8",
-    backgroundColor: "#FFFFFF",
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
     padding: 14,
   },
-  visibilityActive: { borderColor: "#6C5CE7", backgroundColor: "#FAF7FF" },
-  radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: "#D9CFE8", alignItems: "center", justifyContent: "center" },
-  radioOuterActive: { borderColor: "#6C5CE7" },
-  radioInner: { width: 11, height: 11, borderRadius: 6, backgroundColor: "#6C5CE7" },
-  primaryButton: { height: 54, borderRadius: 17, backgroundColor: "#6C5CE7", alignItems: "center", justifyContent: "center", marginTop: 22 },
+  visibilityActive: { borderColor: nsnColors.cyan, backgroundColor: "rgba(56,72,255,0.16)" },
+  radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: nsnColors.border, alignItems: "center", justifyContent: "center" },
+  radioOuterActive: { borderColor: nsnColors.cyan },
+  radioInner: { width: 11, height: 11, borderRadius: 6, backgroundColor: nsnColors.cyan },
+  primaryButton: { height: 54, borderRadius: 17, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: 24 },
   primaryButtonDisabled: { opacity: 0.42 },
   primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
+  rtlText: { textAlign: "right", writingDirection: "rtl" },
+  rtlInput: { textAlign: "right", writingDirection: "rtl" },
 });
