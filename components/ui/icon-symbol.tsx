@@ -20,6 +20,8 @@ const MAPPING = {
   group: "groups",
   share: "ios-share",
   more: "more-vert",
+  ellipsis: "more-horiz",
+  magnifyingglass: "search",
   add: "add",
   edit: "edit",
   flag: "outlined-flag",

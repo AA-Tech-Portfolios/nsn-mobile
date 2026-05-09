@@ -741,7 +741,7 @@ const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, resetOnboarding, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
@@ -752,6 +752,8 @@ export default function HomeScreen() {
   const [activeFilter, setActiveFilter] = useState<EventFilter>("All");
   const [showHiddenEvents, setShowHiddenEvents] = useState(false);
   const [expandedInsight, setExpandedInsight] = useState<"day-night" | "weather" | null>(null);
+  const [dismissedThemeSuggestion, setDismissedThemeSuggestion] = useState<"day" | "night" | null>(null);
+  const [headerPlaceholder, setHeaderPlaceholder] = useState<{ title: string; copy: string } | null>(null);
   const activeEvents = useMemo(() => {
     const hiddenIds = new Set(hiddenEventIds);
     const pinnedIds = new Set(pinnedEventIds);
@@ -819,6 +821,24 @@ export default function HomeScreen() {
 
   const selectNoiseLevelPreference = (preference: NoiseLevelPreference) => {
     saveSoftHelloMvpState({ noiseLevelPreference: preference });
+  };
+
+  const showSearchPlaceholder = () => {
+    setHeaderPlaceholder({
+      title: "Search events",
+      copy: "Search events by suburb, activity, time, group size, or vibe.",
+    });
+  };
+
+  const showViewFilterPlaceholder = () => {
+    setHeaderPlaceholder({
+      title: "Change event view and filters",
+      copy: "Choose how events are shown: compact view, comfortable view, nearby, small groups only, weather-safe, or map/list view.",
+    });
+  };
+
+  const switchToSuggestedTheme = (suggestedMode: "day" | "night") => {
+    setIsNightMode(suggestedMode === "night");
   };
 
   useEffect(() => {
@@ -936,6 +956,24 @@ export default function HomeScreen() {
     : hour < 18
     ? copy.afternoon
     : copy.evening;
+
+  const localHour = now.getHours();
+  const localTimeSuggestedMode = localHour >= 18 || localHour < 6 ? "night" : "day";
+  const shouldShowThemeSuggestion = localTimeSuggestedMode !== mode && dismissedThemeSuggestion !== localTimeSuggestedMode;
+  const themeSuggestion =
+    localTimeSuggestedMode === "night"
+      ? {
+          icon: "🌙",
+          title: "Evening suggestion",
+          copy: "It looks like evening where you are. Switch to Night mode?",
+          button: "Switch",
+        }
+      : {
+          icon: "☀️",
+          title: "Daytime suggestion",
+          copy: "It looks like daytime where you are. Switch to Day mode?",
+          button: "Switch",
+        };
 
   // ===== WEATHER =====
   const [weather, setWeather] = useState({
@@ -1104,6 +1142,31 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {headerPlaceholder ? (
+          <View
+            style={[styles.headerPlaceholderCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}
+            accessibilityRole="alert"
+          >
+            <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
+              <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+                {headerPlaceholder.title}
+              </Text>
+              <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                {headerPlaceholder.copy}
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.78}
+              onPress={() => setHeaderPlaceholder(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss message"
+              style={[styles.headerPlaceholderDismiss, isDay && styles.dayHeaderPlaceholderDismiss]}
+            >
+              <Text style={[styles.headerPlaceholderDismissText, isDay && styles.dayMutedText]}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         <View style={[styles.segmented, isDay ? styles.segmentedDay : null, isRtl && styles.rtlRow]}>
           <TouchableOpacity activeOpacity={0.85} onPress={() => setIsNightMode(false)} style={[styles.segment, mode === "day" ? styles.segmentDay : null, ]}>
             <Text style={[styles.segmentText, mode === "day" ? styles.segmentDayText : null, isDay && mode !== "day" ? styles.segmentInactiveDayText : null,]}>{copy.day}</Text>
@@ -1112,6 +1175,36 @@ export default function HomeScreen() {
             <Text style={[styles.segmentText, mode === "night" ? styles.segmentNightText : null, isDay && mode === "day" ? styles.segmentInactiveDayText : null, ]}>{copy.night}</Text>
           </TouchableOpacity>
         </View>
+
+        {shouldShowThemeSuggestion ? (
+          <View style={[styles.themeSuggestionCard, isDay && styles.dayThemeSuggestionCard, isRtl && styles.rtlRow]}>
+            <Text style={styles.themeSuggestionIcon}>{themeSuggestion.icon}</Text>
+            <View style={[styles.themeSuggestionBody, isRtl && styles.rtlBlock]}>
+              <Text style={[styles.themeSuggestionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{themeSuggestion.title}</Text>
+              <Text style={[styles.themeSuggestionCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{themeSuggestion.copy}</Text>
+              <View style={[styles.themeSuggestionActions, isRtl && styles.rtlRow]}>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() => switchToSuggestedTheme(localTimeSuggestedMode)}
+                  accessibilityRole="button"
+                  accessibilityLabel={localTimeSuggestedMode === "night" ? "Switch to Night mode" : "Switch to Day mode"}
+                  style={styles.themeSuggestionSwitch}
+                >
+                  <Text style={styles.themeSuggestionSwitchText}>{themeSuggestion.button}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={() => setDismissedThemeSuggestion(localTimeSuggestedMode)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Dismiss theme suggestion"
+                  style={[styles.themeSuggestionDismiss, isDay && styles.dayThemeSuggestionDismiss]}
+                >
+                  <Text style={[styles.themeSuggestionDismissText, isDay && styles.dayMutedText]}>Not now</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        ) : null}
 
         <View style={[styles.contextRow, isRtl && styles.rtlRow]}>
           <View style={isRtl && styles.rtlBlock}>
@@ -1351,6 +1444,17 @@ const styles = StyleSheet.create({
   dayNoiseLevelItemActive: { backgroundColor: "#EEF7FF", borderColor: nsnColors.primary },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  headerTitle: { flex: 1, minWidth: 0 },
+  headerActions: { flexShrink: 0, flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 12 },
+  headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
+  headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  dayHeaderPlaceholderCard: { borderColor: "#B8C9E6", backgroundColor: "#F8FBFF" },
+  headerPlaceholderBody: { flex: 1, minWidth: 0 },
+  headerPlaceholderTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  headerPlaceholderCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  headerPlaceholderDismiss: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 13, alignItems: "center", justifyContent: "center" },
+  dayHeaderPlaceholderDismiss: { borderColor: "#B8C9E6" },
+  headerPlaceholderDismissText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900" },
   logo: { color: nsnColors.text, fontSize: 25, fontWeight: "800", letterSpacing: -0.4, lineHeight: 32 },
   moon: { color: nsnColors.day },
   subtitle: { color: nsnColors.muted, fontSize: 13, lineHeight: 18 },
@@ -1365,6 +1469,18 @@ const styles = StyleSheet.create({
   segmentText: { color: nsnColors.muted, fontWeight: "700", fontSize: 14 },
   segmentDayText: { color: "#1B2233" },
   segmentNightText: { color: nsnColors.text },
+  themeSuggestionCard: { flexDirection: "row", alignItems: "flex-start", gap: 11, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  dayThemeSuggestionCard: { borderColor: "#B8C9E6", backgroundColor: "#F8FBFF" },
+  themeSuggestionIcon: { fontSize: 22, lineHeight: 27 },
+  themeSuggestionBody: { flex: 1, minWidth: 0 },
+  themeSuggestionTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  themeSuggestionCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  themeSuggestionActions: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 10 },
+  themeSuggestionSwitch: { minHeight: 32, borderRadius: 16, backgroundColor: nsnColors.primary, paddingHorizontal: 14, alignItems: "center", justifyContent: "center" },
+  themeSuggestionSwitchText: { color: nsnColors.text, fontSize: 12, fontWeight: "900" },
+  themeSuggestionDismiss: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, alignItems: "center", justifyContent: "center" },
+  dayThemeSuggestionDismiss: { borderColor: "#B8C9E6" },
+  themeSuggestionDismissText: { color: nsnColors.muted, fontSize: 12, fontWeight: "800" },
   contextRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
   dateText: { color: nsnColors.text, fontSize: 13, lineHeight: 19 },
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
