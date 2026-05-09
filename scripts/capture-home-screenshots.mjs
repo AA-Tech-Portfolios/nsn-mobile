@@ -97,9 +97,25 @@ function createCdpClient(webSocketDebuggerUrl) {
   const listeners = new Map();
   const socket = new WebSocket(webSocketDebuggerUrl);
 
+  const rejectPending = (error) => {
+    for (const { reject } of pending.values()) {
+      reject(error);
+    }
+
+    pending.clear();
+  };
+
   const opened = new Promise((resolveOpen, rejectOpen) => {
     socket.addEventListener("open", resolveOpen, { once: true });
     socket.addEventListener("error", rejectOpen, { once: true });
+  });
+
+  socket.addEventListener("error", () => {
+    rejectPending(new Error("Browser DevTools WebSocket failed."));
+  });
+
+  socket.addEventListener("close", () => {
+    rejectPending(new Error("Browser DevTools WebSocket closed before the screenshot capture completed."));
   });
 
   socket.addEventListener("message", (event) => {

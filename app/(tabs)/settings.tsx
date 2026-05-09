@@ -2,7 +2,7 @@ import { ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity
 import { useState } from "react";
 import { useRouter } from "expo-router";
 
-import { appPalettes, getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -78,7 +78,7 @@ const englishCopy: SettingsCopy = {
   reduceMotionCopy: "Turn off decorative movement and use instant Day/Night changes.",
   screenReaderHints: "Screen reader hints",
   screenReaderHintsCopy: "Add extra labels and hints for assistive technologies.",
-  translations: "Translations",
+  translations: "Language",
   blurProfilePhoto: "Blur profile photo",
   blurProfilePhotoCopy: "Keep your photo softened until you choose otherwise.",
   privateProfile: "Private profile",
@@ -91,10 +91,10 @@ const englishCopy: SettingsCopy = {
   revealAfterRsvpCopy: "Show your profile once both sides have committed to the plan.",
   friendsOfFriendsOnly: "Friends-of-friends only",
   friendsOfFriendsOnlyCopy: "Prefer people connected through your trusted network.",
-  appLanguage: "App language",
-  appLanguageCopy: "Choose the language used across NSN.",
-  translateMeetupsChats: "Translate meetups and chats",
-  translateMeetupsChatsCopy: "Show event details and chat messages in this language.",
+  appLanguage: "Preferred language",
+  appLanguageCopy: "Choose the language NSN uses for the North Shore pilot.",
+  translateMeetupsChats: "Community language",
+  translateMeetupsChatsCopy: "Show meetup details and chat messages in this language.",
   appearance: "Appearance",
   colorPalette: "Color palette",
   colorPaletteCopy: "Choose the mood and accent colors you prefer.",
@@ -120,7 +120,7 @@ const englishCopy: SettingsCopy = {
   restartOnboarding: "Restart NSN onboarding",
   restartOnboardingCopy: "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
   restartOnboardingAction: "Start",
-  searchLanguage: "Search language...",
+  searchLanguage: "Search local languages...",
   noLanguageFound: "No language found",
 };
 
@@ -1334,7 +1334,21 @@ const supplementalSettingsTranslations: Record<string, Partial<SettingsCopy>> = 
 };
 
 const regionalEnglishSettings: Record<string, Partial<SettingsCopy>> = {
+  "English (Australia)": {
+    appLanguage: "Preferred language",
+    appLanguageCopy: "Choose the language NSN uses for the Sydney/North Shore pilot.",
+    translateMeetupsChats: "Community language",
+    translateMeetupsChatsCopy: "Show meetup details and chat messages in this language.",
+    searchLanguage: "Search local languages...",
+    colorPalette: "Colour palette",
+    colorPaletteCopy: "Choose the mood and accent colours you prefer.",
+  },
   "English (AU)": {
+    appLanguage: "Preferred language",
+    appLanguageCopy: "Choose the language NSN uses for the Sydney/North Shore pilot.",
+    translateMeetupsChats: "Community language",
+    translateMeetupsChatsCopy: "Show meetup details and chat messages in this language.",
+    searchLanguage: "Search local languages...",
     colorPalette: "Colour palette",
     colorPaletteCopy: "Choose the mood and accent colours you prefer.",
   },
@@ -2868,101 +2882,13 @@ export default function SettingsScreen() {
         slowerTransitionsCopy: "Slow down mode changes like Day and Night so there is more time to orient.",
       };
 
-  const languageOptions = [
-    { label: "Arabic", nativeName: "العربية", flag: "🇸🇦" },
-    { label: "Arabic (Egypt)", nativeName: "العربية · مصر", flag: "🇪🇬" },
-    { label: "Arabic (Gulf)", nativeName: "العربية · الخليج", flag: "🇦🇪" },
-    { label: "Arabic (Levant)", nativeName: "العربية · الشام", flag: "🇯🇴" },
-    { label: "Arabic (Maghreb)", nativeName: "العربية · المغرب العربي", flag: "🇲🇦" },
-    { label: "Arabic (Modern Standard)", nativeName: "العربية الفصحى", flag: "🇸🇦" },
-    { label: "Afrikaans", nativeName: "Afrikaans", flag: "🇿🇦" },
-    { label: "Albanian", nativeName: "Shqip", flag: "🇦🇱" },
-    { label: "Armenian", nativeName: "Հայերեն", flag: "🇦🇲" },
-    { label: "Bengali", nativeName: "বাংলা", flag: "🇧🇩" },
-    { label: "Chinese", nativeName: "中文", flag: "🇨🇳" },
-    { label: "Chinese (Cantonese)", nativeName: "粵語 · 香港", flag: "🇭🇰" },
-    { label: "Chinese (Hong Kong)", nativeName: "繁體中文 · 香港", flag: "🇭🇰" },
-    { label: "Chinese (Mainland China)", nativeName: "简体中文 · 中国大陆", flag: "🇨🇳" },
-    { label: "Chinese (Singapore)", nativeName: "简体中文 · 新加坡", flag: "🇸🇬" },
-    { label: "Chinese (Taiwan)", nativeName: "繁體中文 · 台灣", flag: "🇹🇼" },
-    { label: "Croatian", nativeName: "Hrvatski", flag: "🇭🇷" },
-    { label: "Czech", nativeName: "Čeština", flag: "🇨🇿" },
-    { label: "Danish", nativeName: "Dansk", flag: "🇩🇰" },
-    { label: "Dutch", nativeName: "Nederlands", flag: "🇳🇱" },
-    { label: "Dutch (BE)", nativeName: "Nederlands · België", flag: "🇧🇪" },
-    { label: "English", nativeName: "English", flag: "🇬🇧" },
-    { label: "English (AU)", nativeName: "English · Australia", flag: "🇦🇺" },
-    { label: "English (CA)", nativeName: "English · Canada", flag: "🇨🇦" },
-    { label: "English (HK)", nativeName: "English · Hong Kong", flag: "🇭🇰" },
-    { label: "English (IE)", nativeName: "English · Ireland", flag: "🇮🇪" },
-    { label: "English (IN)", nativeName: "English · India", flag: "🇮🇳" },
-    { label: "English (JM)", nativeName: "English · Jamaica", flag: "🇯🇲" },
-    { label: "English (NZ)", nativeName: "English · New Zealand", flag: "🇳🇿" },
-    { label: "English (SG)", nativeName: "English · Singapore", flag: "🇸🇬" },
-    { label: "English (UK)", nativeName: "English · United Kingdom", flag: "🇬🇧" },
-    { label: "English (US)", nativeName: "English · United States", flag: "🇺🇸" },
-    { label: "English (ZA)", nativeName: "English · South Africa", flag: "🇿🇦" },
-    { label: "Estonian", nativeName: "Eesti", flag: "🇪🇪" },
-    { label: "Filipino", nativeName: "Filipino", flag: "🇵🇭" },
-    { label: "Finnish", nativeName: "Suomi", flag: "🇫🇮" },
-    { label: "French", nativeName: "Français", flag: "🇫🇷" },
-    { label: "French (BE)", nativeName: "Français · Belgique", flag: "🇧🇪" },
-    { label: "French (CA)", nativeName: "Français · Canada", flag: "🇨🇦" },
-    { label: "French (Central Africa)", nativeName: "Français · Afrique centrale", flag: "🌍" },
-    { label: "French (CH)", nativeName: "Français · Suisse", flag: "🇨🇭" },
-    { label: "French (FR)", nativeName: "Français · France", flag: "🇫🇷" },
-    { label: "French (North Africa)", nativeName: "Français · Afrique du Nord", flag: "🌍" },
-    { label: "French (West Africa)", nativeName: "Français · Afrique de l'Ouest", flag: "🌍" },
-    { label: "German", nativeName: "Deutsch", flag: "🇩🇪" },
-    { label: "German (AT)", nativeName: "Deutsch · Österreich", flag: "🇦🇹" },
-    { label: "German (BE)", nativeName: "Deutsch · Belgien", flag: "🇧🇪" },
-    { label: "German (CH)", nativeName: "Deutsch · Schweiz", flag: "🇨🇭" },
-    { label: "German (Germany)", nativeName: "Deutsch · Deutschland", flag: "🇩🇪" },
-    { label: "German (LI)", nativeName: "Deutsch · Liechtenstein", flag: "🇱🇮" },
-    { label: "German (LU)", nativeName: "Deutsch · Luxemburg", flag: "🇱🇺" },
-    { label: "Greek", nativeName: "Ελληνικά", flag: "🇬🇷" },
-    { label: "Haitian Creole", nativeName: "Kreyòl ayisyen", flag: "🇭🇹" },
-    { label: "Hebrew", nativeName: "עברית", flag: "🇮🇱" },
-    { label: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳" },
-    { label: "Hungarian", nativeName: "Magyar", flag: "🇭🇺" },
-    { label: "Indonesian", nativeName: "Bahasa Indonesia", flag: "🇮🇩" },
-    { label: "Italian", nativeName: "Italiano", flag: "🇮🇹" },
-    { label: "Italian (CH)", nativeName: "Italiano · Svizzera", flag: "🇨🇭" },
-    { label: "Latvian", nativeName: "Latviešu", flag: "🇱🇻" },
-    { label: "Lithuanian", nativeName: "Lietuvių", flag: "🇱🇹" },
-    { label: "Luxembourgish", nativeName: "Lëtzebuergesch", flag: "🇱🇺" },
-    { label: "Japanese", nativeName: "日本語", flag: "🇯🇵" },
-    { label: "Korean", nativeName: "한국어", flag: "🇰🇷" },
-    { label: "Malay", nativeName: "Bahasa Melayu", flag: "🇲🇾" },
-    { label: "Norwegian", nativeName: "Norsk", flag: "🇳🇴" },
-    { label: "Persian", nativeName: "فارسی", flag: "🇮🇷" },
-    { label: "Polish", nativeName: "Polski", flag: "🇵🇱" },
-    { label: "Portuguese", nativeName: "Português", flag: "🇵🇹" },
-    { label: "Portuguese (BR)", nativeName: "Português · Brasil", flag: "🇧🇷" },
-    { label: "Portuguese (PT)", nativeName: "Português · Portugal", flag: "🇵🇹" },
-    { label: "Romanian", nativeName: "Română", flag: "🇷🇴" },
-    { label: "Russian", nativeName: "Русский", flag: "🇷🇺" },
-    { label: "Slovak", nativeName: "Slovenčina", flag: "🇸🇰" },
-    { label: "Spanish", nativeName: "Español", flag: "🇪🇸" },
-    { label: "Spanish (Spain)", nativeName: "Español · España", flag: "🇪🇸" },
-    { label: "Spanish (Latin America)", nativeName: "Español · Latinoamérica", flag: "🌎" },
-    { label: "Spanish (Mexico)", nativeName: "Español · México", flag: "🇲🇽" },
-    { label: "Swedish", nativeName: "Svenska", flag: "🇸🇪" },
-    { label: "Thai", nativeName: "ไทย", flag: "🇹🇭" },
-    { label: "Turkish", nativeName: "Türkçe", flag: "🇹🇷" },
-    { label: "Ukrainian", nativeName: "Українська", flag: "🇺🇦" },
-    { label: "Urdu", nativeName: "اردو", flag: "🇵🇰" },
-    { label: "Vietnamese", nativeName: "Tiếng Việt", flag: "🇻🇳" },
-    { label: "Yiddish", nativeName: "יידיש", flag: "🌐" },
-  ].sort((a, b) => a.label.localeCompare(b.label));
+  const languageOptions = [...nsnLocalLanguageOptions];
   const getRegionalLanguages = (baseLanguage: string) =>
     languageOptions.filter((language) => language.label !== baseLanguage && getLanguageBase(language.label) === baseLanguage);
-  const hasRegionalLanguages = (language: string) => getRegionalLanguages(language).length > 0;
+  const hasRegionalLanguages = () => false;
   const filterLanguages = (query: string, regionBase: string | null) => {
     const normalized = query.trim().toLocaleLowerCase();
-    const options = regionBase
-      ? getRegionalLanguages(regionBase)
-      : languageOptions.filter((language) => language.label === getLanguageBase(language.label));
+    const options = regionBase ? getRegionalLanguages(regionBase) : languageOptions;
 
     if (!normalized) return options;
     return options.filter((language) =>
@@ -2985,12 +2911,12 @@ export default function SettingsScreen() {
       );
     });
     if (exactMatch) {
-      if (exactMatch.label === getLanguageBase(exactMatch.label) && hasRegionalLanguages(exactMatch.label)) {
+      if (exactMatch.label === getLanguageBase(exactMatch.label) && hasRegionalLanguages()) {
         setRegionBase(exactMatch.label);
         return;
       }
 
-      selectLanguage(exactMatch.label);
+      selectLanguage(normalizeNsnLanguage(exactMatch.label));
     }
   };
   const selectLanguageOption = (
@@ -2999,13 +2925,13 @@ export default function SettingsScreen() {
     setSearch: (value: string) => void,
     setRegionBase: (language: string | null) => void
   ) => {
-    if (language.label === getLanguageBase(language.label) && hasRegionalLanguages(language.label)) {
+    if (language.label === getLanguageBase(language.label) && hasRegionalLanguages()) {
       setRegionBase(language.label);
       setSearch("");
       return;
     }
 
-    selectLanguage(language.label);
+    selectLanguage(normalizeNsnLanguage(language.label));
     setSearch("");
     setRegionBase(null);
     setOpenDropdown(null);
@@ -3379,7 +3305,7 @@ export default function SettingsScreen() {
               )}
               {appLanguageOptions.map((language) => {
                 const optionIsRtl = rtlLanguages.has(getLanguageBase(language.label));
-                const hasRegions = language.label === getLanguageBase(language.label) && hasRegionalLanguages(language.label);
+                const hasRegions = language.label === getLanguageBase(language.label) && hasRegionalLanguages();
 
                 return (
                   <TouchableOpacity
@@ -3470,7 +3396,7 @@ export default function SettingsScreen() {
               )}
               {translationLanguageOptions.map((language) => {
                 const optionIsRtl = rtlLanguages.has(getLanguageBase(language.label));
-                const hasRegions = language.label === getLanguageBase(language.label) && hasRegionalLanguages(language.label);
+                const hasRegions = language.label === getLanguageBase(language.label) && hasRegionalLanguages();
 
                 return (
                   <TouchableOpacity
