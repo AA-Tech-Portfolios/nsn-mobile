@@ -478,7 +478,7 @@ export default function EventsScreen() {
             <Text style={[styles.sheetReviewCopy, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.verificationCopy}</Text>
             <View style={styles.reviewList}>
               {[
-                { label: copy.displayName, value: displayName || "SoftHello member" },
+                { label: copy.displayName, value: displayName || "NSN member" },
                 { label: copy.suburb, value: suburb || "Not set" },
                 { label: copy.age, value: ageConfirmed ? copy.ageConfirmed : copy.ageMissing },
                 { label: copy.photo, value: profilePhotoUri ? copy.photoAdded : copy.photoMissing },

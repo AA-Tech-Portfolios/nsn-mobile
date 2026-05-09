@@ -1,5 +1,7 @@
 # SoftHello UX Principles
 
+> Future/global context only: North Shore Nights (NSN) remains the active identity for this repository and Sydney/North Shore pilot.
+
 SoftHello should feel warm, calm, trustworthy, inclusive, and genuine. The experience should help users say hello at their own pace.
 
 ## Core UX Rules

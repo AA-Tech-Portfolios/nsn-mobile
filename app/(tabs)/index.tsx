@@ -361,7 +361,7 @@ const homeTranslations = {
     weatherAdaptiveCopy: "We suggest indoor alternatives if plans change.",
     clickForMore: "Click here for more info...",
     dayVsNightMore: "Day events are brighter and activity-friendly. Night events lean calmer, indoors, and easier to leave when your social battery is low.",
-    weatherAdaptiveMore: "Outdoor events can carry backup plans. If rain or heat gets in the way, SoftHello can suggest indoor alternatives before you commit.",
+    weatherAdaptiveMore: "Outdoor events can carry backup plans. If rain or heat gets in the way, NSN can suggest indoor alternatives before you commit.",
   },
   Arabic: {
     subtitle: "لقاءات بلا ضغط حول نورث شور.",
@@ -427,7 +427,7 @@ const homeTranslations = {
     weatherAdaptiveCopy: "如果计划变化，我们会建议室内替代方案。",
     clickForMore: "点击查看更多...",
     dayVsNightMore: "白天活动更明亮、更适合活动。夜晚活动更安静、偏室内，也更容易在社交能量低时离开。",
-    weatherAdaptiveMore: "户外活动可以有备用方案。如果下雨或太热，SoftHello 可以在你确认前建议室内选择。",
+    weatherAdaptiveMore: "户外活动可以有备用方案。如果下雨或太热，NSN 可以在你确认前建议室内选择。",
   },
   French: {
     subtitle: "Rencontres sans pression autour de la North Shore.",
@@ -460,7 +460,7 @@ const homeTranslations = {
     weatherAdaptiveCopy: "Nous suggérons des alternatives intérieures si les plans changent.",
     clickForMore: "Cliquez pour plus d'infos...",
     dayVsNightMore: "Les événements de jour sont plus lumineux et actifs. Les événements du soir sont plus calmes, souvent intérieurs, et plus faciles à quitter quand l'énergie sociale baisse.",
-    weatherAdaptiveMore: "Les événements extérieurs peuvent avoir un plan de secours. Si pluie ou chaleur gênent, SoftHello peut suggérer des alternatives intérieures avant votre engagement.",
+    weatherAdaptiveMore: "Les événements extérieurs peuvent avoir un plan de secours. Si pluie ou chaleur gênent, NSN peut suggérer des alternatives intérieures avant votre engagement.",
   },
   German: {
     subtitle: "Treffen ohne Druck rund um die North Shore.",
@@ -493,7 +493,7 @@ const homeTranslations = {
     weatherAdaptiveCopy: "Wir schlagen Innenalternativen vor, wenn sich Pläne ändern.",
     clickForMore: "Mehr Infos...",
     dayVsNightMore: "Tages-Events sind heller und aktiver. Abend-Events sind ruhiger, eher drinnen und leichter zu verlassen, wenn deine soziale Energie niedrig ist.",
-    weatherAdaptiveMore: "Outdoor-Events können Backup-Pläne haben. Bei Regen oder Hitze kann SoftHello Innenalternativen vorschlagen, bevor du zusagst.",
+    weatherAdaptiveMore: "Outdoor-Events können Backup-Pläne haben. Bei Regen oder Hitze kann NSN Innenalternativen vorschlagen, bevor du zusagst.",
   },
   Hebrew: {
     subtitle: "מפגשים בלי לחץ באזור החוף הצפוני.",
@@ -530,7 +530,7 @@ const homeTranslations = {
     weatherAdaptiveCopy: "נציע חלופות מקורות אם התוכניות משתנות.",
     clickForMore: "לחצו כאן למידע נוסף...",
     dayVsNightMore: "אירועי יום מתאימים יותר לפעילות ולאור. אירועי לילה רגועים יותר, לרוב בפנים, וקלים יותר לעזיבה כשנגמרת האנרגיה החברתית.",
-    weatherAdaptiveMore: "לאירועים בחוץ יכולה להיות תוכנית גיבוי. אם גשם או חום מפריעים, SoftHello יכול להציע חלופות מקורות לפני שמתחייבים.",
+    weatherAdaptiveMore: "לאירועים בחוץ יכולה להיות תוכנית גיבוי. אם גשם או חום מפריעים, NSN יכול להציע חלופות מקורות לפני שמתחייבים.",
   },
   Japanese: {
     subtitle: "North Shore 周辺の低プレッシャーなミートアップ。",
@@ -629,7 +629,7 @@ const homeTranslations = {
     weatherAdaptiveCopy: "Мы предложим варианты в помещении, если планы изменятся.",
     clickForMore: "Нажмите, чтобы узнать больше...",
     dayVsNightMore: "Дневные события более активные и светлые. Вечерние обычно спокойнее, чаще в помещении, и из них проще уйти, если устали.",
-    weatherAdaptiveMore: "У событий на улице может быть запасной план. Если мешает дождь или жара, SoftHello предложит варианты в помещении.",
+    weatherAdaptiveMore: "У событий на улице может быть запасной план. Если мешает дождь или жара, NSN предложит варианты в помещении.",
   },
   Spanish: {
     subtitle: "Quedadas sin presión por North Shore.",
@@ -662,7 +662,7 @@ const homeTranslations = {
     weatherAdaptiveCopy: "Sugerimos alternativas interiores si cambian los planes.",
     clickForMore: "Haz clic para más información...",
     dayVsNightMore: "Los eventos de día son más luminosos y activos. Los de noche suelen ser más tranquilos, interiores y fáciles de dejar si necesitas descansar.",
-    weatherAdaptiveMore: "Los eventos al aire libre pueden tener un plan alternativo. Si llueve o hace mucho calor, SoftHello puede sugerir opciones interiores.",
+    weatherAdaptiveMore: "Los eventos al aire libre pueden tener un plan alternativo. Si llueve o hace mucho calor, NSN puede sugerir opciones interiores.",
   },
 } as const;
 
@@ -1126,32 +1126,20 @@ export default function HomeScreen() {
         />
       <ScrollView style={styles.scrollSurface} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.header, isRtl && styles.rtlRow]}>
-          <View style={[styles.headerTitle, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.logo, isDay && styles.dayText]}>SoftHello</Text>
+          <View style={isRtl && styles.rtlBlock}>
+            <Text style={[styles.logo, isDay && styles.dayText]}>NSN</Text>
             <Text style={[styles.subtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.subtitle}</Text>
           </View>
-          <View style={[styles.headerActions, isRtl && styles.rtlRow]}>
-            <TouchableOpacity
-              activeOpacity={0.75}
-              onPress={showSearchPlaceholder}
-              accessibilityRole="button"
-              accessibilityLabel="Search events"
-              accessibilityHint="Shows a placeholder for searching events by location, activity, time, group size, or vibe."
-              style={[styles.headerActionButton, isDay ? styles.dayBellButton : null]}
-            >
-              <IconSymbol name="magnifyingglass" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.75}
-              onPress={showViewFilterPlaceholder}
-              accessibilityRole="button"
-              accessibilityLabel="Change event view and filters"
-              accessibilityHint="Shows a placeholder for event view and filter options."
-              style={[styles.headerActionButton, isDay ? styles.dayBellButton : null]}
-            >
-              <IconSymbol name="ellipsis" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={resetOnboarding}
+            accessibilityRole="button"
+            accessibilityLabel="Restart NSN onboarding"
+            accessibilityHint="Opens the setup flow again."
+            style={[styles.bellButton, isDay ? styles.dayBellButton : null]}
+          >
+            <IconSymbol name="person.fill" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
+          </TouchableOpacity>
         </View>
 
         {headerPlaceholder ? (

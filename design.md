@@ -63,6 +63,5 @@ The first build will prioritize the visible screens from the concept image and a
 The NSN v1.0 concept image is the original visual anchor for this design document: Home,
 Event Details, Group Chat, and Profile in a dark iOS-inspired North Shore Nights interface.
 The NSN v1.1 concept extends that direction with Day/Night discovery, Noise Level Guide,
-weather-adaptive suggestions, and indoor alternatives. The broader brand split between NSN
-and SoftHello is documented in
+weather-adaptive suggestions, and indoor alternatives. Future/global brand context is documented in
 [`docs/brand-systems.md`](docs/brand-systems.md).

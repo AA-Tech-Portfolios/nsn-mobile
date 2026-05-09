@@ -1393,7 +1393,7 @@ export default function ProfileScreen() {
             <Text style={[styles.verificationReviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.copy}</Text>
             <View style={styles.verificationReviewList}>
               {[
-                { label: profileVerificationCopy.name, value: displayName || "SoftHello member" },
+                { label: profileVerificationCopy.name, value: displayName || "NSN member" },
                 { label: profileVerificationCopy.suburb, value: suburb || "Not set" },
                 { label: profileVerificationCopy.age, value: ageConfirmed ? profileVerificationCopy.ageConfirmed : profileVerificationCopy.ageMissing },
                 { label: profileVerificationCopy.photo, value: profilePhotoUri ? profileVerificationCopy.photoAdded : profileVerificationCopy.photoMissing },

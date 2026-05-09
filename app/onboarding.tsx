@@ -37,7 +37,7 @@ const onboardingTranslations = {
     title: "Nice to meet you.",
     copy: "Create a calm profile for local friendships, dating, or simply exploring at your own pace.",
     ageConfirm: "I confirm I am 18 or older",
-    adultsOnly: "SoftHello is for adults only.",
+    adultsOnly: "North Shore Nights is for adults only.",
     suburbLabel: "Suburb or local area",
     recognised: "Recognised:",
     chooseSuggestion: "Choose a suggestion to confirm your local area.",
@@ -52,7 +52,7 @@ const onboardingTranslations = {
     visibilityLabel: "Visibility preference",
     comfortLabel: "Comfort preferences",
     comfortCopy: "These shape event suggestions without hiding everything else.",
-    enter: "Enter SoftHello",
+    enter: "Enter NSN",
     permissionTitle: "Permission needed",
     permissionCopy: "Please allow photo access to choose a profile picture, or continue without one.",
     intents: {} as Partial<Record<SoftHelloIntent, string>>,
@@ -65,7 +65,7 @@ const onboardingTranslations = {
     title: "נעים להכיר.",
     copy: "צרו פרופיל רגוע לחברויות מקומיות, דייטינג, או פשוט חקירה בקצב שלכם.",
     ageConfirm: "אני מאשר/ת שאני בן/בת 18 ומעלה",
-    adultsOnly: "SoftHello מיועדת למבוגרים בלבד.",
+    adultsOnly: "NSN מיועדת למבוגרים בלבד.",
     suburbLabel: "פרבר או אזור מקומי",
     recognised: "זוהה:",
     chooseSuggestion: "בחר/י הצעה כדי לאשר את האזור המקומי שלך.",
@@ -80,7 +80,7 @@ const onboardingTranslations = {
     visibilityLabel: "העדפת נראות",
     comfortLabel: "העדפות נוחות",
     comfortCopy: "אלה מעצבות הצעות לאירועים בלי להסתיר את כל השאר.",
-    enter: "כניסה ל-SoftHello",
+    enter: "כניסה ל-NSN",
     permissionTitle: "נדרשת הרשאה",
     permissionCopy: "יש לאפשר גישה לתמונות כדי לבחור תמונת פרופיל, או להמשיך בלי תמונה.",
     intents: {
@@ -228,7 +228,7 @@ export default function OnboardingScreen() {
             <View style={styles.logoBubbleLeft} />
             <View style={styles.logoBubbleRight} />
           </View>
-          <Text style={[styles.brand, isDay && styles.dayTitle]}>SoftHello</Text>
+          <Text style={[styles.brand, isDay && styles.dayTitle]}>North Shore Nights</Text>
           <Text style={[styles.tagline, isDay && styles.dayMutedText]}>{copy.tagline}</Text>
         </View>
 

@@ -1,5 +1,7 @@
 # SoftHello Safety and Trust
 
+> Future/global context only: North Shore Nights (NSN) remains the active identity for this repository and Sydney/North Shore pilot.
+
 SoftHello focuses on safety through design, not punishment. The product should reduce exposure, avoid pressure mechanics, and make trust visible before interaction moves toward meeting.
 
 ## Safety Principles

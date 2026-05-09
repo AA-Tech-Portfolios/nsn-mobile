@@ -36,7 +36,7 @@ const savePlaceTranslations = {
 const eventActionTranslations = {
   English: {
     shareTitle: "Share event",
-    shareMessage: (title: string, venue: string, time: string) => `I found this SoftHello meetup: ${title} at ${venue}, ${time}.`,
+    shareMessage: (title: string, venue: string, time: string) => `I found this NSN meetup: ${title} at ${venue}, ${time}.`,
     shareError: "This event could not be shared right now.",
     copiedMessage: "Event details copied to clipboard.",
     moreTitle: "Event options",
@@ -54,7 +54,7 @@ const eventActionTranslations = {
   },
   Hebrew: {
     shareTitle: "שיתוף אירוע",
-    shareMessage: (title: string, venue: string, time: string) => `מצאתי מפגש ב-SoftHello: ${title} ב-${venue}, ${time}.`,
+    shareMessage: (title: string, venue: string, time: string) => `מצאתי מפגש ב-NSN: ${title} ב-${venue}, ${time}.`,
     shareError: "לא הצלחנו לשתף את האירוע כרגע.",
     copiedMessage: "פרטי האירוע הועתקו ללוח.",
     moreTitle: "אפשרויות אירוע",
@@ -75,7 +75,7 @@ const eventActionTranslations = {
 const verificationWindowTranslations = {
   English: {
     title: "Confirm your details",
-    copy: "Before in-person meetups, SoftHello asks you to confirm the basics other members rely on for safety.",
+    copy: "Before in-person meetups, NSN asks you to confirm the basics other members rely on for safety.",
     displayName: "Name",
     suburb: "Local area",
     age: "Age confirmation",
@@ -94,7 +94,7 @@ const verificationWindowTranslations = {
   },
   Hebrew: {
     title: "אישור הפרטים שלך",
-    copy: "לפני מפגשים פנים אל פנים, SoftHello מבקשת לאשר את הפרטים הבסיסיים שחברים אחרים מסתמכים עליהם לבטיחות.",
+    copy: "לפני מפגשים פנים אל פנים, NSN מבקשת לאשר את הפרטים הבסיסיים שחברים אחרים מסתמכים עליהם לבטיחות.",
     displayName: "שם",
     suburb: "אזור מקומי",
     age: "אישור גיל",
@@ -615,7 +615,7 @@ export default function EventDetailsScreen() {
               <Text style={[styles.actionSheetCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{verificationCopy.copy}</Text>
               <View style={styles.verificationList}>
                 {[
-                  { label: verificationCopy.displayName, value: displayName || "SoftHello member" },
+                  { label: verificationCopy.displayName, value: displayName || "NSN member" },
                   { label: verificationCopy.suburb, value: suburb || event.venue },
                   { label: verificationCopy.age, value: ageConfirmed ? verificationCopy.ageConfirmed : verificationCopy.ageMissing },
                   { label: verificationCopy.photo, value: profilePhotoUri ? verificationCopy.photoAdded : verificationCopy.photoMissing },

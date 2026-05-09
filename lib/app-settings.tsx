@@ -944,7 +944,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
         setBlurProfilePhoto((snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
-        console.log("SoftHello onboarding could not load:", error);
+        console.log("NSN onboarding could not load:", error);
       } finally {
         if (isMounted) {
           setIsOnboardingLoaded(true);
@@ -997,7 +997,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         } satisfies OnboardingSnapshot)
       );
     } catch (error) {
-      console.log("SoftHello onboarding could not save:", error);
+      console.log("NSN onboarding could not save:", error);
     }
   };
 
@@ -1064,7 +1064,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
     } catch (error) {
-      console.log("SoftHello MVP state could not save:", error);
+      console.log("NSN state could not save:", error);
     }
   };
 
@@ -1075,7 +1075,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     try {
       await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
     } catch (error) {
-      console.log("SoftHello onboarding could not reset:", error);
+      console.log("NSN onboarding could not reset:", error);
     }
   };
 

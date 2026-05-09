@@ -1,5 +1,7 @@
 # SoftHello Feature Map
 
+> Future/global context only: North Shore Nights (NSN) remains the active identity for this repository and Sydney/North Shore pilot.
+
 This map separates SoftHello ideas into MVP, post-MVP, and future work so v1.1 stays buildable.
 
 ## MVP
