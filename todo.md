@@ -94,6 +94,10 @@
 
 - [ ] Add drag-and-drop image uploads for the web version
 
+### Repository Presentation
+
+- [ ] Add README screenshots or mockups for the home screen, blur settings, profile privacy, and meetups page
+
 ### Wellbeing and Icebreakers
 
 - [ ] Add calm music player with ambient loops and a meetup prep timer
@@ -106,6 +110,7 @@
 
 - [x] Clarify product split between SoftHello global release and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
 - [x] Define separate brand systems: SoftHello should use the soft purple global identity, while North Shore Nights can keep the local light-blue/dark-blue Australian design direction
+- [ ] Create first release tag when ready: `v0.1.0 - Trust Foundations`
 - [ ] Rename project to a global name
 - [ ] Remove AI Expo related settings as the app develops
 - [ ] Add optional donation button

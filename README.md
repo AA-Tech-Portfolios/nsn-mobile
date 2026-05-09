@@ -1,6 +1,40 @@
-# NSN - North Shore Nights
+# SoftHello / NSN 🌫️✨
 
-NSN is a mobile-first social meetup app concept for young adults who want easier, calmer ways to meet new people locally. The product direction is intentionally low-pressure: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
+A privacy-first social meetup and connection platform designed for introverts, shy-spoken people, and privacy-conscious users.
+
+Built with Expo, React Native, and TypeScript.
+
+## What Is SoftHello?
+
+SoftHello is a calm, low-pressure way to meet people through small groups, clear expectations, gradual trust, and user-controlled privacy.
+
+The product began as **NSN - North Shore Nights**, a mobile-first local meetup prototype for Sydney's North Shore. NSN remains the local prototype identity, while SoftHello is the broader product direction.
+
+## Who It Is For
+
+SoftHello is for people who:
+
+- Prefer slower introductions.
+- Feel drained by performance-driven social apps.
+- Want friendships, dating, or social connection without pressure.
+- Value privacy, consent, and control over profile visibility.
+- Feel more comfortable in small groups than crowded discovery feeds.
+
+## Why SoftHello?
+
+Most social apps reward performance.
+
+SoftHello rewards trust.
+
+It exists to make meeting people feel safer, calmer, and more human by prioritizing comfort before exposure, privacy before popularity, and consent before contact.
+
+## Core Principles
+
+- 🌫️ Progressive Visibility
+- 💙 Privacy before popularity
+- 👥 Small groups over social performance
+- 🛡 Verified but private identity
+- 🎼 Comfort-first design
 
 The current prototype focuses on Sydney's North Shore, but the architecture is moving toward broader location and timezone support.
 
@@ -10,6 +44,7 @@ This branch also documents the next global product direction: **SoftHello v1.1**
 
 SoftHello planning docs:
 
+- [`docs/vision.md`](docs/vision.md) - the heart and north star for SoftHello.
 - [`docs/core-principles.md`](docs/core-principles.md) - non-negotiable SoftHello product principles.
 - [`docs/softhello-v1.1-mvp.md`](docs/softhello-v1.1-mvp.md) - product overview and MVP build plan.
 - [`docs/softhello-feature-map.md`](docs/softhello-feature-map.md) - MVP, post-MVP, and future feature boundaries.
