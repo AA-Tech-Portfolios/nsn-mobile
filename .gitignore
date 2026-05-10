@@ -2,6 +2,7 @@
 
 # dependencies
 node_modules/
+.pnpm-store/
 
 # Expo
 .expo/
@@ -69,3 +70,7 @@ expo-qr-code.png
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
+
+# Local screenshot automation profiles
+screenshots/.edge-*/
+screenshots/**/.edge-profile-*/

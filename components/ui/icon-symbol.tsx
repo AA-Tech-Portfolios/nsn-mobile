@@ -23,6 +23,7 @@ const MAPPING = {
   ellipsis: "more-horiz",
   magnifyingglass: "search",
   add: "add",
+  checkmark: "check",
   edit: "edit",
   flag: "outlined-flag",
   bookmark: "bookmark",
@@ -34,6 +35,14 @@ const MAPPING = {
   transport: "directions-transit",
   food: "restaurant",
   interests: "interests",
+  contact: "contact-phone",
+  weather: "wb-cloudy",
+  "low-pressure": "sentiment-satisfied-alt",
+  experience: "local-activity",
+  flexible: "sync",
+  volume: "volume-up",
+  "volume.off": "volume-off",
+  pace: "forum",
 } satisfies Record<string, MaterialIconName>;
 
 type IconSymbolName = keyof typeof MAPPING;

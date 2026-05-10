@@ -3,12 +3,19 @@ export type ProfilePreferenceCopy = {
   rows: {
     locationPreference: string;
     transportation: string;
+    contactPreference?: string;
     foodPreferences: string;
     hobbiesInterests: string;
   };
   transportation: {
     title: string;
     copy: string;
+    options?: Record<string, { label: string; copy: string }>;
+  };
+  contact?: {
+    title: string;
+    copy: string;
+    selected: (count: number) => string;
     options?: Record<string, { label: string; copy: string }>;
   };
   food: {
@@ -33,12 +40,18 @@ const en: ProfilePreferenceCopy = {
   rows: {
     locationPreference: "Location Preference",
     transportation: "Transportation Method",
+    contactPreference: "Contact Preference",
     foodPreferences: "Food Preferences",
     hobbiesInterests: "Hobbies & Interests",
   },
   transportation: {
     title: "Transportation Method",
     copy: "Choose how you usually arrive so meetups can make the meeting point and timing feel easier.",
+  },
+  contact: {
+    title: "Contact Preference",
+    copy: "Choose how you prefer people to approach you socially. This is separate from official app communication settings.",
+    selected: (count) => `${count} selected`,
   },
   food: {
     title: "Food Preferences",

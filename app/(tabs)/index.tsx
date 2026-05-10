@@ -83,10 +83,10 @@ const noiseGuideTranslations = {
   English: {
     title: "Noise Level Guide",
     copy: "Filter by the actual sound level of the place, separate from how much talking is expected.",
-    filters: { Any: "All", Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
+    filters: { Any: "All", Quiet: "Quiet", Balanced: "Moderate", Lively: "Lively" },
     levels: {
       Quiet: { icon: "🔇", label: "Quiet", copy: "Low noise" },
-      Balanced: { icon: "🌿", label: "Balanced", copy: "Moderate noise" },
+      Balanced: { icon: "🌿", label: "Moderate", copy: "Moderate noise" },
       Lively: { icon: "🔊", label: "Lively", copy: "More energy" },
     },
   },
@@ -308,6 +308,24 @@ function Pill({ label, active, isDay, onPress }: { label: string; active?: boole
   );
 }
 
+const getSocialPaceLabel = (tone: string) => {
+  if (tone === "Quiet") return "Low chat";
+  if (tone === "Balanced") return "Easy pace";
+  if (tone === "Lively") return "Chatty";
+  return tone;
+};
+
+const getNoiseTagLabel = (label: string) => (label === "Balanced" ? "Moderate sound" : `${label} sound`);
+
+function EventTag({ icon, label, isDay, isRtl }: { icon: "pace" | "volume" | "volume.off" | "weather"; label: string; isDay?: boolean; isRtl?: boolean }) {
+  return (
+    <View style={[styles.eventTag, isDay && styles.dayEventTag, isRtl && styles.rtlRow]}>
+      <IconSymbol name={icon} color={isDay ? "#3B4A63" : nsnColors.muted} size={12} />
+      <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{label}</Text>
+    </View>
+  );
+}
+
 function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?: boolean; appLanguageBase: string }) {
   const router = useRouter();
   const isRtl = rtlLanguages.has(appLanguageBase);
@@ -332,13 +350,19 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
           </View>
           <Text style={[styles.eventTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]} numberOfLines={1}>{localizedEvent.title}</Text>
         </View>
-        <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>⌖ {event.venue}</Text>
-        <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>◎ {localizedEvent.people}  ·  {event.time}</Text>
+        <View style={[styles.eventMetaRow, isRtl && styles.rtlRow]}>
+          <IconSymbol name="location" color={isDay ? "#3B4A63" : nsnColors.muted} size={12} />
+          <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{event.venue}</Text>
+        </View>
+        <View style={[styles.eventMetaRow, isRtl && styles.rtlRow]}>
+          <IconSymbol name="group" color={isDay ? "#3B4A63" : nsnColors.muted} size={12} />
+          <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{localizedEvent.people}  ·  {event.time}</Text>
+        </View>
         <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={2}>{localizedEvent.description}</Text>
         <View style={[styles.eventTags, isRtl && styles.rtlRow]}>
-          <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>🌿 {localizedEvent.tone}</Text>
-          <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{eventNoise.icon} {eventNoise.label}</Text>
-          <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>☔ {localizedEvent.weather}</Text>
+          <EventTag icon="pace" label={`Pace: ${getSocialPaceLabel(localizedEvent.tone)}`} isDay={isDay} isRtl={isRtl} />
+          <EventTag icon={event.noiseLevel === "Quiet" ? "volume.off" : "volume"} label={getNoiseTagLabel(eventNoise.label)} isDay={isDay} isRtl={isRtl} />
+          <EventTag icon="weather" label={localizedEvent.weather} isDay={isDay} isRtl={isRtl} />
         </View>
       </View>
       {livePreview ? (
@@ -357,7 +381,7 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
         </View>
       ) : null}
       <View style={styles.cardArrow}>
-        <Text style={[styles.cardArrowText, isDay ? styles.dayMutedText : null, ]}>{isRtl ? "‹" : "›"}</Text>
+        <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#3B4A63" : nsnColors.muted} size={26} />
       </View>
     </TouchableOpacity>
   );
@@ -1335,11 +1359,14 @@ const styles = StyleSheet.create({
   daySmallTag: { backgroundColor: "#D9F0DD", },
   daySmallTagText: { color: "#3E6F47", },
   eventTitle: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 19 },
+  eventMetaRow: { flexDirection: "row", alignItems: "center", gap: 4 },
   eventMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 16 },
   eventMetaDay: { color: "#CBD7EA", },
   eventDescription: { color: nsnColors.text, fontSize: 12, lineHeight: 17, marginTop: 2 },
   eventTags: { flexDirection: "row", gap: 6, flexWrap: "wrap", marginTop: 7 },
-  eventTagText: { color: nsnColors.muted, fontSize: 10, lineHeight: 14, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, overflow: "hidden" },
+  eventTag: { minHeight: 22, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8 },
+  dayEventTag: { backgroundColor: "#F8FBFF", borderWidth: 1, borderColor: "#B8C9E6" },
+  eventTagText: { color: nsnColors.muted, fontSize: 10, lineHeight: 14 },
   livePreview: { width: 82, height: 104, borderRadius: 15, borderWidth: 1, borderColor: "#24426F", backgroundColor: "#081A2F", overflow: "hidden", marginLeft: 6 },
   miniMap: { height: 42, backgroundColor: "#102743", overflow: "hidden", justifyContent: "flex-end", paddingHorizontal: 7, paddingBottom: 5 },
   mapRoad: { position: "absolute", backgroundColor: "rgba(148,163,184,0.28)", borderRadius: 10 },

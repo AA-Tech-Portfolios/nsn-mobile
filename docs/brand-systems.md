@@ -44,7 +44,7 @@ The original concept also introduces:
 
 - Global release name and identity.
 - Local events can still exist, but copy should avoid feeling tied only to Sydney or Australia.
-- Location fields should support global city, neighbourhood, postcode, region, and timezone use cases.
+- Active NSN location fields should stay local to Sydney's North Shore, NSW, and Australia/Sydney time.
 - Suburb/local-area language can be adapted by region rather than hard-coded as Australian-only wording.
 
 ### Core Features
