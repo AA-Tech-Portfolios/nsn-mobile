@@ -1,6 +1,6 @@
 import { Alert, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent } from "react-native";
-import { useRef, useState } from "react";
-import { useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
 import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, useAppSettings } from "@/lib/app-settings";
@@ -2847,8 +2847,10 @@ const accessibilityTranslations: Record<string, Required<Pick<SettingsCopy, "acc
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { section: requestedSection } = useLocalSearchParams<{ section?: string | string[] }>();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const sectionOffsets = useRef<Partial<Record<SettingsSectionJumpId, number>>>({});
+  const handledRequestedSection = useRef(false);
   const {
     isNightMode,
     accountPaused,
@@ -3163,6 +3165,24 @@ export default function SettingsScreen() {
       animated: !batterySaver && !reduceMotion,
     });
   };
+  const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
+  useEffect(() => {
+    if (normalizedRequestedSection !== "notifications") {
+      handledRequestedSection.current = false;
+      return;
+    }
+
+    if (!isAdvancedSettings) {
+      saveSoftHelloMvpState({ settingsPrivacyMode: "Advanced" });
+      return;
+    }
+
+    if (handledRequestedSection.current) return;
+    handledRequestedSection.current = true;
+
+    const timer = setTimeout(() => jumpToSection("notifications"), 350);
+    return () => clearTimeout(timer);
+  }, [isAdvancedSettings, normalizedRequestedSection, saveSoftHelloMvpState]);
   const saveBooleanPrivacy = (key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView", value: boolean) => {
     if (key === "showSuburbArea") setShowSuburbArea(value);
     if (key === "showInterests") setShowInterests(value);

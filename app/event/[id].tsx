@@ -1013,7 +1013,7 @@ export default function EventDetailsScreen() {
           <View style={[styles.weatherIconWrap, isDay && styles.dayMetaIconWrap]}>
             <IconSymbol name="weather" color={isDay ? "#3B4A63" : "#7FA9FF"} size={24} />
           </View>
-          <View style={isRtl && styles.rtlBlock}>
+          <View style={[styles.weatherCopyBlock, isRtl && styles.rtlBlock]}>
             <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherTitle}</Text>
             <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{isMovieNight ? copy.weatherCopy : eventWeatherCopy}</Text>
           </View>
@@ -1162,7 +1162,8 @@ const styles = StyleSheet.create({
   metaIconWrap: { width: 32, height: 32, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(148,163,184,0.18)" },
   metaLine: { flex: 1, color: nsnColors.text, fontSize: 14, lineHeight: 20 },
   description: { color: nsnColors.text, fontSize: 15, lineHeight: 23, marginBottom: 14 },
-  weatherCard: { minHeight: 78, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#284476", marginBottom: 19 },
+  weatherCard: { minHeight: 78, flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#284476", marginBottom: 19 },
+  weatherCopyBlock: { flex: 1 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },
   weatherIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },

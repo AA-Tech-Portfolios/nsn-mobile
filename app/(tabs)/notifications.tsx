@@ -1,13 +1,24 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
 
-import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type LiveWeatherAlert, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
 
-const alerts = [
-  { icon: "🌧", title: "Rain expected later", copy: "Picnic plans may need an indoor fallback. We’ll suggest options nearby.", tone: "Weather" },
-  { icon: "🍿", title: "Movie Night starts at 7:00pm", copy: "Meet at the Event Cinemas ticket counter around 6:50pm.", tone: "Meetup" },
-  { icon: "🌙", title: "Quiet evening events available", copy: "Low-noise indoor meetups are open around Chatswood and Macquarie Park.", tone: "Night" },
+type NotificationAlert = {
+  icon: string;
+  title: string;
+  copy: string;
+  tone: string;
+  isLive?: boolean;
+  action?: LiveWeatherAlert["action"] | "event" | "events";
+};
+
+const alerts: NotificationAlert[] = [
+  { icon: "🌧", title: "Rain expected later", copy: "Picnic plans may need an indoor fallback. We’ll suggest options nearby.", tone: "Weather", action: "home" },
+  { icon: "🍿", title: "Movie Night starts at 7:00pm", copy: "Meet at the Event Cinemas ticket counter around 6:50pm.", tone: "Meetup", action: "event" },
+  { icon: "🌙", title: "Quiet evening events available", copy: "Low-noise indoor meetups are open around Chatswood and Macquarie Park.", tone: "Night", action: "events" },
 ];
 
 const notificationTranslations = {
@@ -110,16 +121,54 @@ const notificationTranslations = {
 } as const;
 
 export default function NotificationsScreen() {
-  const { isNightMode, appLanguage } = useAppSettings();
+  const router = useRouter();
+  const { isNightMode, appLanguage, liveWeatherAlert } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const isDay = !isNightMode;
   const copy = notificationTranslations[appLanguageBase as keyof typeof notificationTranslations] ?? notificationTranslations.English;
 
+  const displayAlerts: NotificationAlert[] = liveWeatherAlert ? [{ ...liveWeatherAlert, isLive: true }, ...copy.alerts] : [...copy.alerts];
+  const openNotificationSettings = () => {
+    router.push("/(tabs)/settings?section=notifications");
+  };
+  const openAlert = (alert: NotificationAlert) => {
+    if (alert.action === "settings") {
+      openNotificationSettings();
+      return;
+    }
+
+    if (alert.action === "event") {
+      router.push("/event/movie-night-watch-chat");
+      return;
+    }
+
+    if (alert.action === "events") {
+      router.push("/(tabs)/events");
+      return;
+    }
+
+    router.push("/(tabs)");
+  };
+
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
-        <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
+        <View style={styles.headerRow}>
+          <View style={styles.headerCopy}>
+            <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
+            <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.82}
+            onPress={openNotificationSettings}
+            style={[styles.settingsShortcut, isDay && styles.daySettingsShortcut]}
+            accessibilityRole="button"
+            accessibilityLabel="Open notification settings"
+          >
+            <IconSymbol name="settings" size={18} color={isDay ? "#3949DB" : nsnColors.day} />
+            <Text style={[styles.settingsShortcutText, isDay && styles.dayAccentText]}>Settings</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={[styles.weatherFlow, isDay && styles.dayWeatherFlow]}>
           <View style={[styles.flowStep, isDay && styles.dayCard]}><Text style={styles.flowIcon}>🧺</Text><Text style={[styles.flowText, isDay && styles.dayTitle]}>{copy.flow[0]}</Text></View>
@@ -130,8 +179,15 @@ export default function NotificationsScreen() {
         </View>
 
         <View style={styles.list}>
-          {copy.alerts.map((alert) => (
-            <TouchableOpacity key={alert.title} activeOpacity={0.85} style={[styles.alertCard, isDay && styles.dayCard]}>
+          {displayAlerts.map((alert) => (
+            <TouchableOpacity
+              key={alert.title}
+              activeOpacity={0.85}
+              onPress={() => openAlert(alert)}
+              accessibilityRole="button"
+              accessibilityLabel={`${alert.title}. ${alert.copy}`}
+              style={[styles.alertCard, alert.isLive && styles.liveAlertCard, isDay && styles.dayCard, isDay && alert.isLive && styles.dayLiveAlertCard]}
+            >
               <View style={[styles.alertIcon, isDay && styles.dayIconBubble]}><Text style={styles.alertEmoji}>{alert.icon}</Text></View>
               <View style={styles.alertBody}>
                 <View style={styles.alertTopLine}>
@@ -152,10 +208,15 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#EAF4FF" },
   content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28 },
+  headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 },
+  headerCopy: { flex: 1 },
   title: { color: nsnColors.text, fontSize: 28, fontWeight: "800", lineHeight: 35 },
   dayTitle: { color: "#0B1220" },
-  subtitle: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginBottom: 18 },
+  subtitle: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   dayMutedText: { color: "#3B4A63" },
+  settingsShortcut: { minHeight: 38, borderRadius: 19, borderWidth: 1, borderColor: "#284476", backgroundColor: nsnColors.surface, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 6 },
+  daySettingsShortcut: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  settingsShortcutText: { color: nsnColors.day, fontSize: 12, fontWeight: "800", lineHeight: 16 },
   weatherFlow: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#061121", padding: 12, marginBottom: 20, flexDirection: "row", alignItems: "center", gap: 7 },
   dayWeatherFlow: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   flowStep: { flex: 1, minHeight: 80, borderRadius: 16, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", padding: 8 },
@@ -164,7 +225,9 @@ const styles = StyleSheet.create({
   flowArrow: { color: nsnColors.muted, fontSize: 24 },
   list: { gap: 10 },
   alertCard: { flexDirection: "row", gap: 12, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 13 },
+  liveAlertCard: { borderColor: nsnColors.day, backgroundColor: "#0B1930" },
   dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayLiveAlertCard: { backgroundColor: "#D7EAFF", borderColor: "#5C7CFA" },
   alertIcon: { width: 46, height: 46, borderRadius: 23, backgroundColor: nsnColors.surfaceRaised, alignItems: "center", justifyContent: "center" },
   dayIconBubble: { backgroundColor: "#EAF4FF" },
   alertEmoji: { fontSize: 23 },

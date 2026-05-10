@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 import {
   defaultComfortPreferences,
@@ -199,6 +199,7 @@ type OnboardingSnapshot = {
   lowLightLevel?: LowLightLevel;
   notificationSnoozed?: boolean;
   notificationSnoozePreset?: NotificationSnoozePreset;
+  timezone?: TimezoneSetting;
   appLanguage?: string;
   translationLanguage?: string;
   brandThemeId?: BrandThemeId;
@@ -214,6 +215,21 @@ export type TimezoneSetting = {
   longitude: number;
 };
 
+export type WeatherSnapshot = {
+  temperature: number | null;
+  rainChance: number | null;
+  category: "unknown" | "clear" | "warm" | "showers" | "rain";
+};
+
+export type LiveWeatherAlert = {
+  icon: string;
+  title: string;
+  copy: string;
+  tone: string;
+  changed: boolean;
+  action: "home" | "settings";
+};
+
 export const defaultNsnTimezone: TimezoneSetting = {
   id: "sydney-north-shore",
   label: "Sydney North Shore",
@@ -223,6 +239,61 @@ export const defaultNsnTimezone: TimezoneSetting = {
   latitude: -33.75,
   longitude: 151.15,
 };
+
+export const australianLocalAreas: TimezoneSetting[] = [
+  defaultNsnTimezone,
+  { id: "newcastle", label: "Newcastle", city: "Newcastle", country: "NSW, Australia", timeZone: "Australia/Sydney", latitude: -32.9283, longitude: 151.7817 },
+  { id: "wollongong", label: "Wollongong", city: "Wollongong", country: "NSW, Australia", timeZone: "Australia/Sydney", latitude: -34.4278, longitude: 150.8931 },
+  { id: "canberra", label: "Canberra", city: "Canberra", country: "ACT, Australia", timeZone: "Australia/Sydney", latitude: -35.2809, longitude: 149.13 },
+  { id: "melbourne", label: "Melbourne", city: "Melbourne", country: "VIC, Australia", timeZone: "Australia/Melbourne", latitude: -37.8136, longitude: 144.9631 },
+  { id: "adelaide", label: "Adelaide", city: "Adelaide", country: "SA, Australia", timeZone: "Australia/Adelaide", latitude: -34.9285, longitude: 138.6007 },
+  { id: "brisbane", label: "Brisbane", city: "Brisbane", country: "QLD, Australia", timeZone: "Australia/Brisbane", latitude: -27.4698, longitude: 153.0251 },
+  { id: "gold-coast", label: "Gold Coast", city: "Gold Coast", country: "QLD, Australia", timeZone: "Australia/Brisbane", latitude: -28.0167, longitude: 153.4 },
+  { id: "cairns", label: "Cairns", city: "Cairns", country: "QLD, Australia", timeZone: "Australia/Brisbane", latitude: -16.9186, longitude: 145.7781 },
+  { id: "darwin", label: "Darwin", city: "Darwin", country: "NT, Australia", timeZone: "Australia/Darwin", latitude: -12.4634, longitude: 130.8456 },
+  { id: "hobart", label: "Hobart", city: "Hobart", country: "TAS, Australia", timeZone: "Australia/Hobart", latitude: -42.8821, longitude: 147.3272 },
+  { id: "perth", label: "Perth", city: "Perth", country: "WA, Australia", timeZone: "Australia/Perth", latitude: -31.9523, longitude: 115.8613 },
+];
+
+const normalizeTimezoneSetting = (value?: TimezoneSetting | null) => {
+  if (!value) return defaultNsnTimezone;
+  return australianLocalAreas.find((area) => area.id === value.id) ?? value;
+};
+
+const getWeatherCategory = (temperature: number | null, rainChance: number | null): WeatherSnapshot["category"] => {
+  if (temperature === null || rainChance === null) return "unknown";
+  if (rainChance >= 70) return "rain";
+  if (rainChance >= 35) return "showers";
+  if (temperature >= 28) return "warm";
+  return "clear";
+};
+
+const didWeatherChange = (previous: WeatherSnapshot | null, next: WeatherSnapshot) => {
+  if (!previous) return false;
+  if (previous.category !== next.category) return true;
+  if (previous.rainChance !== null && next.rainChance !== null && Math.abs(previous.rainChance - next.rainChance) >= 15) return true;
+  return previous.temperature !== null && next.temperature !== null && Math.abs(previous.temperature - next.temperature) >= 3;
+};
+
+const getDistanceKm = (from: Pick<TimezoneSetting, "latitude" | "longitude">, to: Pick<TimezoneSetting, "latitude" | "longitude">) => {
+  const radiusKm = 6371;
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const deltaLatitude = toRadians(to.latitude - from.latitude);
+  const deltaLongitude = toRadians(to.longitude - from.longitude);
+  const startLatitude = toRadians(from.latitude);
+  const endLatitude = toRadians(to.latitude);
+  const a = Math.sin(deltaLatitude / 2) ** 2 + Math.cos(startLatitude) * Math.cos(endLatitude) * Math.sin(deltaLongitude / 2) ** 2;
+
+  return 2 * radiusKm * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+export const findNearestAustralianLocalArea = (latitude: number, longitude: number) =>
+  australianLocalAreas.reduce((nearest, area) => {
+    const nearestDistance = getDistanceKm({ latitude, longitude }, nearest);
+    const areaDistance = getDistanceKm({ latitude, longitude }, area);
+
+    return areaDistance < nearestDistance ? area : nearest;
+  }, australianLocalAreas[0]);
 
 type AppSettings = {
   isOnboardingLoaded: boolean;
@@ -394,6 +465,8 @@ type AppSettings = {
   setClearBorders: (value: boolean) => void;
   timezone: TimezoneSetting;
   setTimezone: (value: TimezoneSetting) => void;
+  weather: WeatherSnapshot;
+  liveWeatherAlert: LiveWeatherAlert | null;
 };
 
 const AppSettingsContext = createContext<AppSettings | null>(null);
@@ -482,6 +555,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [softSurfaces, setSoftSurfaces] = useState(false);
   const [clearBorders, setClearBorders] = useState(false);
   const [timezone, setTimezone] = useState<TimezoneSetting>(defaultNsnTimezone);
+  const [weather, setWeather] = useState<WeatherSnapshot>({ temperature: null, rainChance: null, category: "unknown" });
+  const [liveWeatherAlert, setLiveWeatherAlert] = useState<LiveWeatherAlert | null>(null);
+  const previousWeather = useRef<WeatherSnapshot | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -557,6 +633,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
         setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
         setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
+        setTimezone(normalizeTimezoneSetting(snapshot.timezone));
         setBlurProfilePhoto(snapshot.blurProfilePhoto ?? (snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("NSN onboarding could not load:", error);
@@ -635,6 +712,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
+    setTimezone(normalizeTimezoneSetting(snapshot.timezone));
     setBlurProfilePhoto(snapshot.blurProfilePhoto ?? snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -648,6 +726,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           preferredAgeMax: nextAgeRange.max,
           appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
           translationLanguage: normalizeNsnLanguage(snapshot.translationLanguage),
+          timezone: normalizeTimezoneSetting(snapshot.timezone),
           hasCompletedOnboarding: true,
         } satisfies OnboardingSnapshot)
       );
@@ -718,11 +797,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       appLanguage,
       translationLanguage,
       brandThemeId,
+      timezone,
       ...snapshot,
     };
     nextSnapshot.appLanguage = normalizeNsnLanguage(nextSnapshot.appLanguage);
     nextSnapshot.translationLanguage = normalizeNsnLanguage(nextSnapshot.translationLanguage);
     nextSnapshot.brandThemeId = normalizeBrandThemeId(nextSnapshot.brandThemeId);
+    nextSnapshot.timezone = normalizeTimezoneSetting(nextSnapshot.timezone);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
@@ -815,6 +896,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.appLanguage !== undefined) setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     if (snapshot.translationLanguage !== undefined) setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     if (snapshot.brandThemeId !== undefined) setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
+    if (snapshot.timezone !== undefined) setTimezone(normalizeTimezoneSetting(snapshot.timezone));
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
@@ -840,6 +922,103 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setBrandThemeIdState(nextBrandThemeId);
     saveSoftHelloMvpState({ brandThemeId: nextBrandThemeId });
   };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!weatherAlerts) {
+      previousWeather.current = null;
+      setLiveWeatherAlert({
+        icon: "!",
+        title: "Weather alerts are off",
+        copy: "Turn them on in Settings to receive live updates when conditions change.",
+        tone: "Settings",
+        changed: false,
+        action: "settings",
+      });
+      return undefined;
+    }
+
+    if (notificationSnoozed) {
+      previousWeather.current = null;
+      setLiveWeatherAlert({
+        icon: "zZ",
+        title: "Weather alerts are snoozed",
+        copy: "Routine weather updates will stay quiet until notification snooze is turned off.",
+        tone: "Snoozed",
+        changed: false,
+        action: "settings",
+      });
+      return undefined;
+    }
+
+    async function fetchLiveWeather() {
+      try {
+        const response = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.timeZone)}&forecast_days=1`
+        );
+
+        if (!response.ok) {
+          throw new Error(`Weather request failed with ${response.status}`);
+        }
+
+        const data = await response.json();
+        const currentHourIndex = data.hourly.time?.findIndex((time: string) => time === data.current.time) ?? 0;
+        const rainChance = data.hourly.precipitation_probability?.[currentHourIndex >= 0 ? currentHourIndex : 0] ?? null;
+        const temperature = typeof data.current.temperature_2m === "number" ? Math.round(data.current.temperature_2m) : null;
+        const nextWeather: WeatherSnapshot = {
+          temperature,
+          rainChance,
+          category: getWeatherCategory(temperature, rainChance),
+        };
+        const changed = didWeatherChange(previousWeather.current, nextWeather);
+        previousWeather.current = nextWeather;
+
+        if (cancelled) return;
+
+        setWeather(nextWeather);
+
+        const temperatureCopy = nextWeather.temperature === null ? "temperature unavailable" : `${nextWeather.temperature}C`;
+        const rainCopy = nextWeather.rainChance === null ? "rain chance unavailable" : `${nextWeather.rainChance}% rain chance`;
+        const detail = nextWeather.category === "rain"
+          ? "Rain is likely, so outdoor plans may need an indoor fallback."
+          : nextWeather.category === "showers"
+            ? "Showers are possible; keep an indoor backup nearby."
+            : nextWeather.category === "warm"
+              ? "It is warming up; shade and water-friendly meetups are best."
+              : "No major weather shift for nearby plans right now.";
+
+        setLiveWeatherAlert({
+          icon: changed ? "!" : "~",
+          title: changed ? "Weather changed just now" : "Live weather watch",
+          copy: `${timezone.city}: ${temperatureCopy}, ${rainCopy}. ${detail}`,
+          tone: "Live weather",
+          changed,
+          action: "home",
+        });
+      } catch (error) {
+        console.log("Live weather notification fetch failed:", error);
+        if (!cancelled) {
+          setLiveWeatherAlert({
+            icon: "!",
+            title: "Weather update delayed",
+            copy: "We will keep checking and refresh this alert when weather data is available.",
+            tone: "Weather",
+            changed: false,
+            action: "home",
+          });
+        }
+      }
+    }
+
+    fetchLiveWeather();
+    const timer = setInterval(fetchLiveWeather, batterySaver ? 5 * 60 * 1000 : 60 * 1000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [batterySaver, notificationSnoozed, timezone, weatherAlerts]);
 
   const resetOnboarding = async () => {
     setHasCompletedOnboarding(false);
@@ -1024,6 +1203,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setClearBorders,
         timezone,
         setTimezone,
+        weather,
+        liveWeatherAlert,
       }}
     >
       {children}
