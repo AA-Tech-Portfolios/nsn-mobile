@@ -160,6 +160,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="contact-preference"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="food-preferences"
         options={{
           href: null,

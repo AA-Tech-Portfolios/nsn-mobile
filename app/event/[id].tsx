@@ -245,7 +245,7 @@ const noiseGuideTranslations = {
     copy: "This describes the sound level of the venue, separate from the social pressure to talk.",
     levels: {
       Quiet: { icon: "🔇", label: "Quiet", copy: "Low noise" },
-      Balanced: { icon: "🌿", label: "Balanced", copy: "Moderate noise" },
+      Balanced: { icon: "🌿", label: "Moderate", copy: "Moderate noise" },
       Lively: { icon: "🔊", label: "Lively", copy: "More energy" },
     },
   },
@@ -286,6 +286,13 @@ const noiseGuideTranslations = {
     },
   },
 } as const;
+
+const getDetailSocialPaceLabel = (tone: string) => {
+  if (tone === "Quiet") return "Low chat";
+  if (tone === "Balanced") return "Easy pace";
+  if (tone === "Lively") return "Chatty";
+  return tone;
+};
 
 const detailEventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
   Chinese: {
@@ -390,11 +397,11 @@ const eventTranslations = {
   English: {
     title: "Movie Night —\nWatch + Chat",
     category: "Indoor",
-    tone: "☽ Quiet",
+    tone: "Pace: Low chat",
     date: "Saturday, 24 May · 7:00pm",
     people: "2–4 people",
     description: "Watch first, optional chat after if it feels right. Perfect for low-pressure meetups.",
-    weatherTitle: "☀ Weather update",
+    weatherTitle: "Weather update",
     weatherCopy: "Rain expected in the evening. This is an indoor meetup.",
     whatToExpect: "What to expect",
     lowPressure: "Low pressure",
@@ -734,7 +741,7 @@ export default function EventDetailsScreen() {
   const isMovieNight = event.id === movieNight.id;
   const eventTitle = isMovieNight ? copy.title : localizedEvent.title.replace(" — ", " —\n");
   const eventCategory = isMovieNight ? copy.category : localizedEvent.category;
-  const eventTone = isMovieNight ? copy.tone : `☽ ${localizedEvent.tone}`;
+  const eventTone = isMovieNight ? copy.tone : `Pace: ${getDetailSocialPaceLabel(localizedEvent.tone)}`;
   const eventDate = isMovieNight ? copy.date : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
   const eventPeople = isMovieNight ? copy.people : localizedEvent.people;
   const eventDescription = isMovieNight ? copy.description : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
@@ -1003,16 +1010,18 @@ export default function EventDetailsScreen() {
         <Text style={[styles.description, isDay && styles.dayText, isRtl && styles.rtlText]}>{eventDescription}</Text>
 
         <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
+          <View style={[styles.weatherIconWrap, isDay && styles.dayMetaIconWrap]}>
+            <IconSymbol name="weather" color={isDay ? "#3B4A63" : "#7FA9FF"} size={24} />
+          </View>
           <View style={isRtl && styles.rtlBlock}>
             <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherTitle}</Text>
             <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{isMovieNight ? copy.weatherCopy : eventWeatherCopy}</Text>
           </View>
-          <Text style={styles.weatherIcon}>☁️</Text>
         </TouchableOpacity>
 
         <View style={[styles.noiseGuideCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
           <View style={[styles.noiseIconWrap, isDay && styles.dayMetaIconWrap]}>
-            <Text style={styles.noiseIcon}>{eventNoise.icon}</Text>
+            <IconSymbol name={event.noiseLevel === "Quiet" ? "volume.off" : "volume"} color={isDay ? "#3B4A63" : "#7FA9FF"} size={22} />
           </View>
           <View style={[styles.noiseCopyBlock, isRtl && styles.rtlBlock]}>
             <Text style={[styles.noiseTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{noiseCopy.title}: {eventNoise.label}</Text>
@@ -1023,17 +1032,17 @@ export default function EventDetailsScreen() {
         <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
         <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
           <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <Text style={styles.expectIcon}>◇</Text>
+            <IconSymbol name="low-pressure" color={isDay ? "#3B4A63" : "#7FA9FF"} size={20} />
             <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.lowPressure}</Text>
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.lowPressureCopy}</Text>
           </View>
           <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <Text style={styles.expectIcon}>◌</Text>
+            <IconSymbol name="experience" color={isDay ? "#3B4A63" : "#7FA9FF"} size={20} />
             <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.sharedExperience}</Text>
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.sharedExperienceCopy}</Text>
           </View>
           <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <Text style={styles.expectIcon}>↺</Text>
+            <IconSymbol name="flexible" color={isDay ? "#3B4A63" : "#7FA9FF"} size={20} />
             <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.flexible}</Text>
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.flexibleCopy}</Text>
           </View>
@@ -1156,6 +1165,7 @@ const styles = StyleSheet.create({
   weatherCard: { minHeight: 78, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#284476", marginBottom: 19 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },
+  weatherIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
   weatherIcon: { fontSize: 28 },
   noiseGuideCard: { minHeight: 74, flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 13, marginBottom: 16 },
   noiseIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },

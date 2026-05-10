@@ -1,12 +1,37 @@
-import { ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity } from "react-native";
+import { Alert, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 
-import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, useAppSettings } from "@/lib/app-settings";
+import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
+import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
+import { brandThemes, isSoftHelloThemeEnabled, type BrandThemeId } from "@/lib/brand-theme";
 import { createSettingsToggleSections, selectSettingsPalette, toggleSettingsDropdown, type SettingsDropdownName } from "@/lib/settings-controls";
+
+const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
+const comfortModeOptions: { value: NsnComfortMode; copy: string }[] = [
+  { value: "Comfort Mode", copy: "Profiles stay blurred with matched or shared visibility only." },
+  { value: "Warm Up Mode", copy: "Profiles are partly visible and can use a softer blur while warming up." },
+  { value: "Open Mode", copy: "Basic profile details are visible to people in the event." },
+];
+const genderOptions: ProfileGender[] = ["Not specified", "Male", "Female", "Other"];
+const nameDisplayOptions: { value: ProfileNameDisplayMode; label: string; copy: string }[] = [
+  { value: "Hidden", label: "Hidden", copy: "Do not show this name part." },
+  { value: "Initial", label: "Initial", copy: "Show only the first letter." },
+  { value: "Full", label: "Full", copy: "Show the saved name." },
+];
+const settingsPrivacyModeOptions: { value: SettingsPrivacyMode; label: string; copy: string }[] = [
+  { value: "Basic", label: "Basic", copy: "Show the essentials for profile visibility, comfort and account controls." },
+  { value: "Advanced", label: "Advanced", copy: "Show every privacy, notification, language and appearance setting." },
+];
+const accountPauseTimelineOptions: { value: AccountPauseTimeline; label: string; copy: string }[] = [
+  { value: "A few days", label: "A few days", copy: "A short reset without changing your setup." },
+  { value: "One week", label: "One week", copy: "Step away for a calmer week." },
+  { value: "One month", label: "One month", copy: "Take a longer break from discovery." },
+  { value: "Until I return", label: "Until I return", copy: "Stay deactivated until you choose to come back." },
+];
 
 type SettingsCopy = {
   title: string;
@@ -2772,8 +2797,52 @@ export default function SettingsScreen() {
   const router = useRouter();
   const {
     isNightMode,
+    accountPaused,
+    accountPauseTimeline,
     blurProfilePhoto,
     setBlurProfilePhoto,
+    blurLevel,
+    setBlurLevel,
+    age,
+    preferredAgeMin,
+    preferredAgeMax,
+    middleName,
+    lastName,
+    gender,
+    setGender,
+    middleNameDisplay,
+    lastNameDisplay,
+    showMiddleName,
+    setShowMiddleName,
+    showLastName,
+    setShowLastName,
+    showAge,
+    setShowAge,
+    showPreferredAgeRange,
+    setShowPreferredAgeRange,
+    showGender,
+    setShowGender,
+    warmUpLowerBlur,
+    setWarmUpLowerBlur,
+    setComfortMode,
+    privateProfile,
+    setPrivateProfile,
+    showSuburbArea,
+    setShowSuburbArea,
+    showInterests,
+    setShowInterests,
+    showComfortPreferences,
+    setShowComfortPreferences,
+    minimalProfileView,
+    setMinimalProfileView,
+    comfortMode,
+    displayName,
+    suburb,
+    hobbiesInterests,
+    comfortPreferences,
+    contactPreferences,
+    profilePhotoUri,
+    settingsPrivacyMode,
     largerText,
     setLargerText,
     highContrast,
@@ -2814,14 +2883,17 @@ export default function SettingsScreen() {
     setTranslationLanguage,
     appPalette,
     setAppPalette,
+    brandThemeId,
+    setBrandThemeId,
+    brandTheme,
     softSurfaces,
     setSoftSurfaces,
     clearBorders,
     setClearBorders,
+    saveSoftHelloMvpState,
     resetOnboarding,
   } = useAppSettings();
   const isDay = !isNightMode;
-  const [privateProfile, setPrivateProfile] = useState(false);
   const [showFirstNameOnly, setShowFirstNameOnly] = useState(true);
   const [sameAgeGroupsOnly, setSameAgeGroupsOnly] = useState(false);
   const [revealAfterRsvp, setRevealAfterRsvp] = useState(true);
@@ -2876,6 +2948,8 @@ export default function SettingsScreen() {
       };
   const isRtl = rtlLanguages.has(appLanguageBase);
   const paletteAccent = appPalette.swatches[2];
+  const brandThemeOptions = (isSoftHelloThemeEnabled ? [brandThemes.nsn, brandThemes.softhello] : [brandThemes.nsn]);
+  const isAdvancedSettings = settingsPrivacyMode === "Advanced";
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
   const contrastMutedStyle = highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
   const accessibilityCopy = accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
@@ -2959,6 +3033,95 @@ export default function SettingsScreen() {
   };
   const appLanguageOptions = filterLanguages(appLanguageSearch, appLanguageRegionBase);
   const translationLanguageOptions = filterLanguages(translationLanguageSearch, translationLanguageRegionBase);
+  const setAndSaveBlurProfilePhoto = (value: boolean) => {
+    setBlurProfilePhoto(value);
+    saveSoftHelloMvpState({ blurProfilePhoto: value });
+  };
+  const setAndSavePrivateProfile = (value: boolean) => {
+    setPrivateProfile(value);
+    saveSoftHelloMvpState({ privateProfile: value });
+  };
+  const saveBooleanPrivacy = (key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView", value: boolean) => {
+    if (key === "showSuburbArea") setShowSuburbArea(value);
+    if (key === "showInterests") setShowInterests(value);
+    if (key === "showComfortPreferences") setShowComfortPreferences(value);
+    if (key === "minimalProfileView") setMinimalProfileView(value);
+    saveSoftHelloMvpState({ [key]: value });
+  };
+  const saveBlurLevel = (value: NsnBlurLevel) => {
+    setBlurLevel(value);
+    saveSoftHelloMvpState({ blurLevel: value });
+  };
+  const saveWarmUpLowerBlur = (value: boolean) => {
+    setWarmUpLowerBlur(value);
+    saveSoftHelloMvpState({ warmUpLowerBlur: value });
+  };
+  const getComfortModePreviewDefaults = (value: NsnComfortMode) => {
+    if (value === "Comfort Mode") {
+      return {
+        visibilityPreference: "Blurred" as const,
+        blurProfilePhoto: true,
+        showSuburbArea: false,
+        middleNameDisplay: "Hidden" as const,
+        lastNameDisplay: "Hidden" as const,
+        showMiddleName: false,
+        showLastName: false,
+        showAge: false,
+        showPreferredAgeRange: false,
+        showGender: false,
+        showInterests: false,
+        showComfortPreferences: false,
+        minimalProfileView: false,
+      };
+    }
+
+    if (value === "Warm Up Mode") {
+      return {
+        visibilityPreference: "Blurred" as const,
+        blurProfilePhoto: true,
+        showSuburbArea: false,
+        middleNameDisplay: "Hidden" as const,
+        lastNameDisplay: "Hidden" as const,
+        showMiddleName: false,
+        showLastName: false,
+        showAge: Boolean(age),
+        showPreferredAgeRange: false,
+        showGender: gender !== "Not specified",
+        showInterests: true,
+        showComfortPreferences: true,
+        minimalProfileView: false,
+      };
+    }
+
+    return {
+      visibilityPreference: "Visible" as const,
+      blurProfilePhoto: false,
+      showSuburbArea: true,
+      middleNameDisplay: middleName ? ("Full" as const) : ("Hidden" as const),
+      lastNameDisplay: lastName ? ("Full" as const) : ("Hidden" as const),
+      showMiddleName: Boolean(middleName),
+      showLastName: Boolean(lastName),
+      showAge: Boolean(age),
+      showPreferredAgeRange: true,
+      showGender: gender !== "Not specified",
+      showInterests: true,
+      showComfortPreferences: true,
+      minimalProfileView: false,
+    };
+  };
+  const saveComfortMode = (value: NsnComfortMode) => {
+    const previewDefaults = getComfortModePreviewDefaults(value);
+    setComfortMode(value);
+    setBlurProfilePhoto(previewDefaults.blurProfilePhoto);
+    setShowSuburbArea(previewDefaults.showSuburbArea);
+    setShowInterests(previewDefaults.showInterests);
+    setShowComfortPreferences(previewDefaults.showComfortPreferences);
+    setMinimalProfileView(previewDefaults.minimalProfileView);
+    saveSoftHelloMvpState({
+      comfortMode: value,
+      ...previewDefaults,
+    });
+  };
   const selectExactLanguage = (
     value: string,
     selectLanguage: (language: string) => void,
@@ -3024,8 +3187,8 @@ export default function SettingsScreen() {
       screenReaderHints,
     },
     actions: {
-      setBlurProfilePhoto,
-      setPrivateProfile,
+      setBlurProfilePhoto: setAndSaveBlurProfilePhoto,
+      setPrivateProfile: setAndSavePrivateProfile,
       setShowFirstNameOnly,
       setSameAgeGroupsOnly,
       setRevealAfterRsvp,
@@ -3078,11 +3241,61 @@ export default function SettingsScreen() {
   ];
   const allAccessibilityRows = [...accessibilityRows, ...extraAccessibilityRows];
 
+  const resetProfileDefaults = async () => {
+    await saveSoftHelloMvpState({
+      comfortMode: "Comfort Mode",
+      visibilityPreference: "Blurred",
+      privateProfile: false,
+      blurProfilePhoto: true,
+      blurLevel: "Medium blur",
+      warmUpLowerBlur: true,
+      showSuburbArea: false,
+      middleNameDisplay: "Hidden",
+      lastNameDisplay: "Hidden",
+      showMiddleName: false,
+      showLastName: false,
+      showAge: false,
+      showPreferredAgeRange: false,
+      showGender: false,
+      showInterests: false,
+      showComfortPreferences: false,
+      minimalProfileView: false,
+      hobbiesInterests: ["Coffee", "Movies", "Walks", "Dinner"],
+      comfortPreferences: ["Small groups", "Text-first", "Quiet"],
+      contactPreferences: ["Text"],
+    });
+  };
+
+  const saveSettingsPrivacyMode = (value: SettingsPrivacyMode) => {
+    saveSoftHelloMvpState({ settingsPrivacyMode: value });
+  };
+
+  const deactivateAccount = (timeline: AccountPauseTimeline) => {
+    saveSoftHelloMvpState({ accountPaused: true, accountPauseTimeline: timeline });
+  };
+
+  const reactivateAccount = () => {
+    saveSoftHelloMvpState({ accountPaused: false });
+  };
+
+  const showDeleteAccountNotice = () => {
+    Alert.alert(
+      "Delete account",
+      "Accounts are not connected in the NSN pilot yet. When authentication is added, this will permanently delete your account and profile data."
+    );
+  };
+
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView
         style={[styles.screen, isDay && styles.dayContainer]}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={[
+          styles.container,
+          {
+            padding: brandTheme.spacing.screenX,
+            paddingBottom: brandTheme.spacing.screenY + 18,
+          },
+        ]}
         showsVerticalScrollIndicator
       >
         <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={copy.goBack ?? englishCopy.goBack}>
@@ -3094,7 +3307,32 @@ export default function SettingsScreen() {
           {copy.subtitle}
         </Text>
 
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          Settings view
+        </Text>
+        <View style={styles.settingsModeGrid}>
+          {settingsPrivacyModeOptions.map((option) => {
+            const active = settingsPrivacyMode === option.value;
+            return (
+              <TouchableOpacity
+                key={option.value}
+                activeOpacity={0.82}
+                onPress={() => saveSettingsPrivacyMode(option.value)}
+                style={[styles.settingsModeButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.comfortModeTitle, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
+                <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          General privacy
+        </Text>
+        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {privacyRows.map((row, index) => (
             <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < privacyRows.length - 1 && styles.rowDivider, isDay && index < privacyRows.length - 1 && styles.dayRowDivider, highContrast && index < privacyRows.length - 1 && styles.highContrastDivider]}>
               <View style={styles.settingCopy}>
@@ -3113,6 +3351,199 @@ export default function SettingsScreen() {
           ))}
         </View>
 
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          Profile visibility
+        </Text>
+        <View style={styles.comfortModeGrid}>
+          {comfortModeOptions.map((option) => {
+            const active = comfortMode === option.value;
+            return (
+              <TouchableOpacity
+                key={option.value}
+                activeOpacity={0.82}
+                onPress={() => saveComfortMode(option.value)}
+                style={[styles.comfortModeButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[styles.comfortModeTitle, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.value}</Text>
+                <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        {[
+          {
+            title: "Identity basics",
+            rows: [
+              { label: "Show middle name", copy: middleName ? "Use name display below: full name or initial only." : "Add a middle name in Profile before showing it.", value: Boolean(middleName && middleNameDisplay !== "Hidden"), onChange: (value: boolean) => saveSoftHelloMvpState({ middleNameDisplay: Boolean(middleName && value) ? "Full" : "Hidden" }) },
+              { label: "Show last name", copy: lastName ? "Use name display below: full name or initial only." : "Add a last name in Profile before showing it.", value: Boolean(lastName && lastNameDisplay !== "Hidden"), onChange: (value: boolean) => saveSoftHelloMvpState({ lastNameDisplay: Boolean(lastName && value) ? "Full" : "Hidden" }) },
+              { label: "Show age", copy: "Let others see your age in profile previews.", value: showAge, onChange: (value: boolean) => saveSoftHelloMvpState({ showAge: value }) },
+              { label: "Show preferred age range", copy: "Show the age range you prefer for matching.", value: showPreferredAgeRange, onChange: (value: boolean) => saveSoftHelloMvpState({ showPreferredAgeRange: value }) },
+              { label: "Show gender", copy: gender === "Not specified" ? "Choose a gender below before showing it." : "Include your optional gender in profile previews.", value: Boolean(gender !== "Not specified" && showGender), onChange: (value: boolean) => saveSoftHelloMvpState({ showGender: Boolean(gender !== "Not specified" && value) }) },
+            ],
+          },
+          {
+            title: "Local & social details",
+            rows: [
+              { label: "Show suburb / area", copy: "Share your local area without precise location.", value: showSuburbArea, onChange: (value: boolean) => saveBooleanPrivacy("showSuburbArea", value) },
+              { label: "Show interests", copy: "Show coffee, movies, walks and other first-meetup interests.", value: showInterests, onChange: (value: boolean) => saveBooleanPrivacy("showInterests", value) },
+              { label: "Show comfort preferences", copy: "Share gentle context like small groups or text-first.", value: showComfortPreferences, onChange: (value: boolean) => saveBooleanPrivacy("showComfortPreferences", value) },
+            ],
+          },
+          {
+            title: "Profile view",
+            rows: [
+              { label: "Minimal profile view", copy: "Show only the essentials in event-visible previews.", value: minimalProfileView, onChange: (value: boolean) => saveBooleanPrivacy("minimalProfileView", value) },
+              ...(comfortMode === "Warm Up Mode"
+                ? [{ label: "Lower blur in Warm Up", copy: "Use a softer blur while warming up, or keep your chosen blur level.", value: warmUpLowerBlur, onChange: saveWarmUpLowerBlur }]
+                : []),
+            ],
+          },
+        ].map((group) => (
+          <View key={group.title} style={styles.settingsGroup}>
+            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{group.title}</Text>
+            <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+              {group.rows.map((row, index) => (
+                <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < group.rows.length - 1 && styles.rowDivider, isDay && index < group.rows.length - 1 && styles.dayRowDivider, highContrast && index < group.rows.length - 1 && styles.highContrastDivider]}>
+                  <View style={styles.settingCopy}>
+                    <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                    <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                  </View>
+                  <Switch
+                    value={row.value}
+                    onValueChange={row.onChange}
+                    accessibilityLabel={row.label}
+                    accessibilityHint={screenReaderHints ? row.copy : undefined}
+                    trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                    thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                  />
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+
+        {isAdvancedSettings ? (
+          <>
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          Name display
+        </Text>
+        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          {[
+            { label: "Middle name", value: middleName, mode: middleNameDisplay, field: "middleNameDisplay" as const },
+            { label: "Last name", value: lastName, mode: lastNameDisplay, field: "lastNameDisplay" as const },
+          ].map((row, index) => (
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index === 0 && styles.rowDivider, isDay && index === 0 && styles.dayRowDivider, highContrast && index === 0 && styles.highContrastDivider]}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  {row.value ? `Saved as ${row.value}. Choose how it appears in preview.` : `Add a ${row.label.toLowerCase()} in Profile before showing it.`}
+                </Text>
+                <View style={styles.blurLevelGrid}>
+                  {nameDisplayOptions.map((option) => {
+                    const active = row.mode === option.value;
+                    return (
+                      <TouchableOpacity
+                        key={`${row.label}-${option.value}`}
+                        activeOpacity={0.82}
+                        disabled={!row.value}
+                        onPress={() => saveSoftHelloMvpState({ [row.field]: row.value ? option.value : "Hidden" })}
+                        style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }, !row.value && styles.disabledOption]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active, disabled: !row.value }}
+                      >
+                        <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
+                        <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        {comfortMode !== "Open Mode" ? (
+          <>
+          <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+            Photo blur level
+          </Text>
+          <View style={styles.blurLevelGrid}>
+            {blurLevelOptions.map((level) => {
+              const active = blurLevel === level;
+              return (
+                <TouchableOpacity
+                  key={level}
+                  activeOpacity={0.82}
+                  onPress={() => saveBlurLevel(level)}
+                  style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                >
+                  <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{level}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          </>
+        ) : null}
+
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          Gender
+        </Text>
+        <View style={styles.blurLevelGrid}>
+          {genderOptions.map((option) => {
+            const active = gender === option;
+            return (
+              <TouchableOpacity
+                key={option}
+                activeOpacity={0.82}
+                onPress={() => saveSoftHelloMvpState({ gender: option, showGender: option === "Not specified" ? false : showGender })}
+                style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: active }}
+              >
+                <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+          </>
+        ) : null}
+
+        <ProfileVisibilityPreview
+          displayName={displayName}
+          middleName={middleName}
+          lastName={lastName}
+          suburb={suburb}
+          age={age}
+          preferredAgeMin={preferredAgeMin}
+          preferredAgeMax={preferredAgeMax}
+          gender={gender}
+          middleNameDisplay={middleNameDisplay}
+          lastNameDisplay={lastNameDisplay}
+          interests={hobbiesInterests}
+          comfortPreferences={comfortPreferences}
+          contactPreferences={contactPreferences}
+          comfortMode={comfortMode}
+          profilePhotoUri={profilePhotoUri}
+          privateProfile={privateProfile}
+          blurProfilePhoto={blurProfilePhoto}
+          blurLevel={blurLevel}
+          warmUpLowerBlur={warmUpLowerBlur}
+          showSuburbArea={showSuburbArea}
+          showMiddleName={showMiddleName}
+          showLastName={showLastName}
+          showAge={showAge}
+          showPreferredAgeRange={showPreferredAgeRange}
+          showGender={showGender}
+          showInterests={showInterests}
+          showComfortPreferences={showComfortPreferences}
+          minimalProfileView={minimalProfileView}
+          isDay={isDay}
+        />
+
+        {isAdvancedSettings ? (
+          <>
         <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.notifications ?? englishCopy.notifications}
         </Text>
@@ -3221,6 +3652,42 @@ export default function SettingsScreen() {
           {copy.appearance ?? englishCopy.appearance}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          <View style={[styles.brandThemeBlock, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+            <Text style={[styles.label, largerText && styles.largeLabel, boldText && styles.boldInterfaceText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+              Brand theme
+            </Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              NSN is the default pilot identity. SoftHello is available only when the future-theme feature flag is enabled.
+            </Text>
+            <View style={styles.brandThemeGrid}>
+              {brandThemeOptions.map((theme) => {
+                const active = brandThemeId === theme.id;
+                return (
+                  <TouchableOpacity
+                    key={theme.id}
+                    activeOpacity={0.82}
+                    onPress={() => setBrandThemeId(theme.id as BrandThemeId)}
+                    style={[
+                      styles.brandThemeOption,
+                      { borderRadius: brandTheme.radius.control },
+                      isDay && styles.dayDropdownButton,
+                      active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                  >
+                    <View style={[styles.brandThemeMark, active && styles.brandThemeMarkActive]}>
+                      <Text style={[styles.brandThemeMarkText, active && styles.blurLevelTextActive]}>{theme.logo.monogram}</Text>
+                    </View>
+                    <View style={styles.settingCopy}>
+                      <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{theme.logo.wordmark}</Text>
+                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{theme.tone}</Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
           {[
             { label: appearanceOptionCopy.softSurfaces, copy: appearanceOptionCopy.softSurfacesCopy, value: softSurfaces, onValueChange: setSoftSurfaces },
             { label: appearanceOptionCopy.clearBorders, copy: appearanceOptionCopy.clearBordersCopy, value: clearBorders, onValueChange: setClearBorders },
@@ -3489,6 +3956,84 @@ export default function SettingsScreen() {
             </ScrollView>
           )}
         </View>
+          </>
+        ) : null}
+
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          General settings
+        </Text>
+        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          <TouchableOpacity
+            activeOpacity={0.78}
+            onPress={resetProfileDefaults}
+            accessibilityRole="button"
+            accessibilityLabel="Reset to defaults"
+            style={[styles.actionRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}
+          >
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Reset to defaults</Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Restore NSN privacy and comfort defaults.
+              </Text>
+            </View>
+            <Text style={[styles.actionText, isDay && styles.dayActionText]}>Reset</Text>
+          </TouchableOpacity>
+          <View style={[styles.deactivateSettingsRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, styles.deactivateSettingsText, largerText && styles.largeLabel, isRtl && styles.rtlText]}>
+                {accountPaused ? "Account deactivated" : "Deactivate account"}
+              </Text>
+              <Text style={[styles.helperText, styles.deactivateSettingsCopy, largerText && styles.largeHelperText, isRtl && styles.rtlText]}>
+                {accountPaused
+                  ? `Paused for ${accountPauseTimeline}. You can return whenever you feel ready.`
+                  : "Take a temporary break from NSN. Your profile and local settings stay saved."}
+              </Text>
+              {accountPaused ? (
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={reactivateAccount}
+                  style={[styles.deactivatePrimaryButton, styles.reactivateButton]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Reactivate account"
+                >
+                  <Text style={styles.reactivateButtonText}>Reactivate account</Text>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.pauseTimelineGrid}>
+                  {accountPauseTimelineOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      activeOpacity={0.82}
+                      onPress={() => deactivateAccount(option.value)}
+                      style={styles.pauseTimelineButton}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Deactivate account for ${option.label}`}
+                      accessibilityHint={screenReaderHints ? option.copy : undefined}
+                    >
+                      <Text style={styles.pauseTimelineLabel}>{option.label}</Text>
+                      <Text style={styles.pauseTimelineCopy}>{option.copy}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.78}
+            onPress={showDeleteAccountNotice}
+            accessibilityRole="button"
+            accessibilityLabel="Delete account"
+            style={[styles.actionRow, styles.destructiveSettingsRow, isRtl && styles.rtlRow]}
+          >
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, styles.destructiveSettingsText, largerText && styles.largeLabel, isRtl && styles.rtlText]}>Delete account</Text>
+              <Text style={[styles.helperText, styles.destructiveSettingsCopy, largerText && styles.largeHelperText, isRtl && styles.rtlText]}>
+                Permanent account deletion, once accounts exist.
+              </Text>
+            </View>
+            <Text style={styles.destructiveSettingsAction}>Delete</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </ScreenContainer>
   );
@@ -3500,6 +4045,9 @@ const styles = StyleSheet.create({
     backgroundColor: nsnColors.background,
   },
   container: {
+    width: "100%",
+    maxWidth: 980,
+    alignSelf: "center",
     padding: 20,
     paddingBottom: 36,
   },
@@ -3569,6 +4117,33 @@ const styles = StyleSheet.create({
     fontSize: 19,
     lineHeight: 26,
   },
+  settingsGroup: {
+    gap: 8,
+    marginTop: 14,
+  },
+  settingsModeGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  settingsModeButton: {
+    flexGrow: 1,
+    flexBasis: 260,
+    minHeight: 76,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    padding: 14,
+    justifyContent: "center",
+  },
+  subsectionTitle: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+    marginLeft: 4,
+  },
   settingRow: {
     minHeight: 72,
     flexDirection: "row",
@@ -3594,6 +4169,85 @@ const styles = StyleSheet.create({
   },
   dayActionText: {
     color: "#3949DB",
+  },
+  deactivateSettingsRow: {
+    minHeight: 92,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    backgroundColor: "rgba(247,200,91,0.14)",
+  },
+  deactivateSettingsText: {
+    color: "#9A6A00",
+  },
+  deactivateSettingsCopy: {
+    color: "#7C5A00",
+  },
+  pauseTimelineGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 12,
+  },
+  pauseTimelineButton: {
+    flexGrow: 1,
+    flexBasis: 150,
+    minHeight: 60,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(212,169,30,0.7)",
+    backgroundColor: "#FFF7D8",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  pauseTimelineLabel: {
+    color: "#7C5A00",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
+  pauseTimelineCopy: {
+    color: "#7C5A00",
+    fontSize: 11,
+    fontWeight: "700",
+    lineHeight: 15,
+    marginTop: 2,
+  },
+  deactivatePrimaryButton: {
+    alignSelf: "flex-start",
+    minHeight: 38,
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+  },
+  reactivateButton: {
+    backgroundColor: "#FFF7D8",
+    borderWidth: 1,
+    borderColor: "#D4A91E",
+  },
+  reactivateButtonText: {
+    color: "#7C5A00",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  destructiveSettingsRow: {
+    backgroundColor: "rgba(226,61,90,0.08)",
+  },
+  destructiveSettingsText: {
+    color: "#E23D5A",
+  },
+  destructiveSettingsCopy: {
+    color: "#B83A50",
+  },
+  destructiveSettingsAction: {
+    color: "#E23D5A",
+    fontSize: 13,
+    fontWeight: "900",
   },
   largeSettingRow: {
     minHeight: 86,
@@ -3877,5 +4531,94 @@ const styles = StyleSheet.create({
   largeHelperText: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  brandThemeBlock: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    gap: 10,
+  },
+  brandThemeGrid: {
+    gap: 10,
+  },
+  brandThemeOption: {
+    minHeight: 74,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    padding: 12,
+  },
+  brandThemeMark: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+  },
+  brandThemeMarkActive: {
+    borderColor: "rgba(255,255,255,0.65)",
+    backgroundColor: "rgba(255,255,255,0.16)",
+  },
+  brandThemeMarkText: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  comfortModeGrid: {
+    gap: 10,
+  },
+  comfortModeButton: {
+    minHeight: 68,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  comfortModeTitle: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  comfortModeCopy: {
+    color: nsnColors.muted,
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 3,
+  },
+  blurLevelGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  blurLevelButton: {
+    minHeight: 40,
+    flex: 1,
+    minWidth: "30%",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  disabledOption: { opacity: 0.45 },
+  blurLevelText: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  blurLevelTextActive: {
+    color: "#FFFFFF",
   },
 });

@@ -34,7 +34,7 @@ export default function TransportationPreferenceScreen() {
       <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <TouchableOpacity
           activeOpacity={0.75}
-          onPress={() => router.back()}
+          onPress={() => router.replace({ pathname: "/(tabs)/profile", params: { menu: "preferences" } })}
           style={[styles.backButton, isDay && styles.dayIconButton]}
           accessibilityRole="button"
           accessibilityLabel={backLabel}

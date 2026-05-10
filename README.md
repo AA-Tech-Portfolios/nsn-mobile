@@ -40,9 +40,9 @@ Core principles:
 - Event detail pages with expectations and meeting point.
 - Group chat prototype for meetup conversations.
 - Profile, vibes, photo controls, and privacy settings.
-- Settings for language, translation language, accessibility, and timezone.
+- Settings for language, translation language, and accessibility.
 - Light/day and dark/night visual themes.
-- Region-based timezone picker with curated cities and world capital loading.
+- Sydney/North Shore local time and weather context using Australia/Sydney.
 
 ## Tech Stack
 
