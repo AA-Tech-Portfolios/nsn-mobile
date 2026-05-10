@@ -2926,6 +2926,7 @@ export default function SettingsScreen() {
   const [revealAfterRsvp, setRevealAfterRsvp] = useState(true);
   const [friendsOfFriendsOnly, setFriendsOfFriendsOnly] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<SettingsDropdownName | null>(null);
+  const [quickJumpSearch, setQuickJumpSearch] = useState("");
   const [appLanguageSearch, setAppLanguageSearch] = useState("");
   const [translationLanguageSearch, setTranslationLanguageSearch] = useState("");
   const [appLanguageRegionBase, setAppLanguageRegionBase] = useState<string | null>(null);
@@ -3001,6 +3002,10 @@ export default function SettingsScreen() {
       : []),
     { id: "generalSettings", label: "Account" },
   ];
+  const normalizedQuickJumpSearch = quickJumpSearch.trim().toLocaleLowerCase();
+  const filteredQuickJumpOptions = normalizedQuickJumpSearch
+    ? quickJumpOptions.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch))
+    : quickJumpOptions;
   const extraAccessibilityCopy = appLanguageBase === "Hebrew"
     ? {
         largerTouchTargets: "אזורי לחיצה גדולים",
@@ -3374,20 +3379,36 @@ export default function SettingsScreen() {
           {copy.subtitle}
         </Text>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.quickJumpRow, isRtl && styles.rtlRow]}>
-          {quickJumpOptions.map((option) => (
-            <TouchableOpacity
-              key={option.id}
-              activeOpacity={0.78}
-              onPress={() => jumpToSection(option.id)}
-              accessibilityRole="button"
-              accessibilityLabel={`Jump to ${option.label}`}
-              style={[styles.quickJumpButton, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
-            >
-              <Text style={[styles.quickJumpText, isDay && styles.dayActionText, contrastTextStyle]}>{option.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View style={[styles.quickJumpBlock, isDay && styles.dayQuickJumpBlock, highContrast && styles.highContrastCard]}>
+          <View style={styles.quickJumpHeader}>
+            <Text style={[styles.quickJumpTitle, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Jump to section</Text>
+            <TextInput
+              value={quickJumpSearch}
+              onChangeText={setQuickJumpSearch}
+              placeholder="Search sections..."
+              placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
+              style={[styles.quickJumpSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText, isRtl && styles.rtlSearchInput]}
+              accessibilityLabel="Search settings sections"
+            />
+          </View>
+          <View style={[styles.quickJumpRow, isRtl && styles.rtlRow]}>
+            {filteredQuickJumpOptions.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                activeOpacity={0.78}
+                onPress={() => jumpToSection(option.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Jump to ${option.label}`}
+                style={[styles.quickJumpButton, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+              >
+                <Text style={[styles.quickJumpText, isDay && styles.dayActionText, contrastTextStyle]}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+            {filteredQuickJumpOptions.length === 0 && (
+              <Text style={[styles.noResultsText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>No matching section</Text>
+            )}
+          </View>
+        </View>
 
         <Text onLayout={registerSectionLayout("settingsView")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Settings view
@@ -4197,7 +4218,47 @@ const styles = StyleSheet.create({
   daySubtitle: {
     color: "#3B4A63",
   },
+  quickJumpBlock: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    padding: 12,
+    gap: 10,
+    marginTop: 4,
+  },
+  dayQuickJumpBlock: {
+    backgroundColor: "#DCEEFF",
+    borderColor: "#B8C9E6",
+  },
+  quickJumpHeader: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 10,
+  },
+  quickJumpTitle: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  quickJumpSearchInput: {
+    flexGrow: 1,
+    flexBasis: 220,
+    minHeight: 38,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#314666",
+    color: nsnColors.text,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 12,
+    fontSize: 13,
+    fontWeight: "700",
+  },
   quickJumpRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     paddingBottom: 2,
   },
