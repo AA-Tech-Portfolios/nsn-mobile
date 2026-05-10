@@ -19,7 +19,7 @@ SoftHello focuses on safety through design, not punishment. The product should r
 | Level | Name | Meaning | MVP Treatment |
 |---|---|---|---|
 | Level 0 | Unverified | New or incomplete account. | Can browse limited content but cannot meet in person. |
-| Level 1 | Contact Verified | Email and/or phone verified. | Can create a basic profile and send low-risk interactions. |
+| Level 1 | Contact Verified | Email or phone verified; at least one contact method is required. | Can create a basic profile and send low-risk interactions. |
 | Level 2 | Real Person Verified | Live selfie or equivalent human check. | Required before in-person meeting eligibility. |
 | Level 3 | Identity Verified | Optional ID verification confirming name and age. | Post-MVP unless required for a specific high-trust flow. |
 

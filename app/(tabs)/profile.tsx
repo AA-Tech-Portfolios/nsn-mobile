@@ -1525,7 +1525,7 @@ export default function ProfileScreen() {
     {
       level: "Contact Verified",
       title: "Level 1",
-      meaning: "Email and phone saved locally in this pilot.",
+      meaning: "Email or phone saved locally in this pilot.",
       treatment: "Can create a basic profile and use low-risk interactions.",
       active: reviewVerificationLevel === "Contact Verified",
     },
@@ -2866,7 +2866,7 @@ export default function ProfileScreen() {
             <View style={styles.verificationReviewList}>
               <View style={[styles.verificationInputGroup, isDay && styles.daySoftOption]}>
                 <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Level 1: Contact Verified</Text>
-                <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Add both contact details to model contact verification.</Text>
+                <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Add an email or phone number to model contact verification.</Text>
                 <View style={styles.verificationContactGrid}>
                   <TextInput
                     value={draftContactEmail}

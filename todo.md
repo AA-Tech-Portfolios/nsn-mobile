@@ -9,18 +9,57 @@
 - [x] Configure bottom tab navigation for Home, Meetups, Chats, Notifications, and Profile
 - [x] Generate and install a custom NSN app icon and update app branding configuration
 
+## Checkpoint - NSN onboarding and profile privacy polish
+
+- [x] Complete the 5-stage local/mock NSN onboarding flow: welcome, about you, meeting comfort, privacy visibility, and review
+- [x] Add 18+ age validation and preferred age range safeguards so under-18 and unrealistic ranges are blocked locally
+- [x] Add Comfort Mode, Warm Up Mode, and Open Mode with profile preview visibility presets that users can still adjust manually
+- [x] Add profile privacy controls for blur photo, blur level, private profile, local area, age, preferred age range, gender, interests, comfort, about me, and vibes
+- [x] Add first name/nickname, optional middle name, optional last name, initials/full-name display settings, and gender preference controls
+- [x] Add Simple/Detailed profile layouts and Contained/Wide profile width settings using the shared NSN/SoftHello theme system
+- [x] Add local User menu submenus for Edit menu, Privacy guide, User preferences, Profile layout, Width settings, Notifications, Block & report, and Settings & Privacy
+- [x] Add local user preference areas for transportation, location, food, hobbies/interests, contact preference, saved places, and meetup shortcuts
+- [x] Add temporary deactivate account controls above Delete account in Settings & Privacy
+- [x] Capture checkpoint screenshots for Home, Meetups, Chats, Alerts, Profile, Settings & Privacy, and onboarding stages
+
+## Next Focus
+
+### Alpha readiness
+
+- [ ] Review checkpoint screenshots for layout regressions on desktop and mobile
+- [ ] Add an alpha tester walkthrough covering onboarding, profile privacy, comfort modes, and meetup joining
+- [ ] Decide which prototype-only account actions should stay visible, be labelled as local-only, or be hidden until auth exists
+- [ ] Create first release tag when ready: `v0.1.0 - Trust Foundations`
+
+### Safety and trust
+
+- [ ] Add Community Guidelines
+- [ ] Add 18+ compliance copy and safeguards beyond local age entry
+- [ ] Decide real verification provider strategy before claiming production verification
+- [ ] Complete safety, privacy, legal, and regional compliance specification before emergency feature implementation
+
+### Meetup flow
+
+- [ ] Add gentle RSVP states such as coming, interested, deciding later, or needing encouragement
+- [ ] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, or first-time attendee
+- [ ] Add pre-meetup readiness checklist covering location, host, plan, safety, and exit options
+- [ ] Add lightweight transportation options with nearby stops, estimated travel time, suggested arrival windows, and links out to maps
+
+### Profile and settings polish
+
+- [ ] Continue button behaviour audit across Profile, Settings & Privacy, and modal menus
+- [ ] Add interactive tutorials for privacy, preview visibility, and comfort modes
+- [ ] Review translations with real users or native speakers before treating each language as complete
+
 ## Upcoming
 
 ### Community and Trust
 
 - [ ] Add Guides to help first-comers establish themselves in the community
-- [ ] Add Community Guidelines
-- [ ] Add 18+ compliance flow and safeguards
 - [ ] Gather user feedback from testing sessions
 
 ### Emergency and Safety
 
-- [ ] Complete safety, privacy, legal, and regional compliance specification before emergency feature implementation
 - [ ] Add optional trusted contact setup for meetups
 - [ ] Add discreet emergency help action from active meetup chats and event details
 - [ ] Add optional check-in timer with "I'm safe" confirmation and escalation if the user does not respond
@@ -34,10 +73,9 @@
 - [ ] Add interactive tutorials
 - [x] Add localisation options
 - [x] Add timezone search and expanded timezone picker
-- [x] Add profile display layout preference for clean profile vs full shortcut rows
-- [ ] Implement onboarding steps 2-5 beyond the current "Step 1 of 5" screen
-- [ ] Add user age and preferred age range to onboarding and profile preferences, while keeping 18+ safeguards separate from matching preferences
-- [ ] Review translations with real users or native speakers before treating each language as complete
+- [x] Add profile display layout preference for Simple/Detailed layouts and Contained/Wide widths
+- [x] Implement onboarding steps 2-5 beyond the original "Step 1 of 5" screen
+- [x] Add user age and preferred age range to onboarding and profile preferences, while keeping 18+ safeguards separate from matching preferences
 - [ ] Research Celtic language support, starting with Welsh, Irish, and Scottish Gaelic, and only ship languages after native-speaker or community review
 - [ ] Keep endangered-language support community-led instead of adding broad picker entries without active users or native review
 - [ ] Plan later Indian language expansion, prioritising Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi and Nepali after translation review
@@ -45,8 +83,8 @@
 - [ ] Add toggle animations when switching between Day and Night settings, including alternatives to the current circular glow
 - [ ] Fix buttons and standardise button behaviour across the app
 - [x] Allow profiles to blur their images for privacy
-- [x] Add Comfort Mode and Open Mode profile visibility controls
-- [x] Add Location Preference, Transportation Method, Food Preferences, Hobbies & Interests, Saved Places, and Settings & Privacy profile areas
+- [x] Add Comfort Mode, Warm Up Mode, and Open Mode profile visibility controls
+- [x] Add Location Preference, Transportation Method, Contact Preference, Food Preferences, Hobbies & Interests, Saved Places, and Settings & Privacy profile areas
 
 ### Matching and Discovery
 
@@ -77,6 +115,7 @@
 - [ ] Add conversation starter cards for low-pressure chats and meetups
 - [ ] Add mutual pre-meetup consent for optional 1-1 chats between members
 - [ ] Add mutual consent flow for revealing blurred profile pictures when both members feel ready
+- [x] Add local Contact Preference options for in-person, text, email, phone, and video comfort
 - [ ] Unlock phone or video call preferences after a meetup, with users choosing the contact mode they are comfortable with
 
 ### Exit and Chat Lifecycle
@@ -95,6 +134,7 @@
 
 ### Repository Presentation
 
+- [x] Capture checkpoint screenshots for core tabs, Settings & Privacy, and onboarding stages
 - [ ] Add README screenshots or mockups for the home screen, blur settings, profile privacy, and meetups page
 
 ### Wellbeing and Icebreakers
@@ -109,7 +149,6 @@
 
 - [x] Clarify product split between SoftHello global release and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
 - [x] Define separate brand systems: SoftHello should use the soft purple global identity, while North Shore Nights can keep the local light-blue/dark-blue Australian design direction
-- [ ] Create first release tag when ready: `v0.1.0 - Trust Foundations`
 - [ ] Post-pilot: evaluate transition toward SoftHello branding based on demand, testing, and regional expansion
 - [ ] Remove AI Expo related settings as the app develops
 - [ ] Add optional donation button

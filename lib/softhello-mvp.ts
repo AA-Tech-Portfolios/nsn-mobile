@@ -84,7 +84,7 @@ export function canChatPrivately(level: SoftHelloVerificationLevel) {
 }
 
 export function deriveVerificationLevel(evidence: TrustEvidence): SoftHelloVerificationLevel {
-  const hasContactDetails = Boolean(evidence.contactEmail?.trim() && evidence.contactPhone?.trim());
+  const hasContactDetails = Boolean(evidence.contactEmail?.trim() || evidence.contactPhone?.trim());
   const hasIdentityProof = Boolean(evidence.identitySelfieUri && evidence.hasIdentityDocument);
 
   if (hasContactDetails && hasIdentityProof) {

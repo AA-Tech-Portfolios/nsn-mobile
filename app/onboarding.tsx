@@ -1,5 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
@@ -43,15 +43,19 @@ const chatswoodLocality = australianLocalities.find((locality) => locality.subur
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { stage: stageParam } = useLocalSearchParams<{ stage?: string }>();
   const settings = useAppSettings();
   const isDay = !settings.isNightMode;
   const brandTheme = settings.brandTheme;
-  const [stage, setStage] = useState(0);
-  const [displayName, setDisplayName] = useState(settings.displayName === "Alon" ? "" : settings.displayName);
+  const requestedStage = Number.parseInt(Array.isArray(stageParam) ? stageParam[0] : stageParam ?? "", 10);
+  const hasDirectStage = Number.isFinite(requestedStage);
+  const initialStage = hasDirectStage ? Math.min(Math.max(requestedStage, 0), 4) : 0;
+  const [stage, setStage] = useState(initialStage);
+  const [displayName, setDisplayName] = useState(settings.displayName === "Alon" ? (hasDirectStage ? "Sam" : "") : settings.displayName);
   const [middleName, setMiddleName] = useState(settings.middleName);
   const [lastName, setLastName] = useState(settings.lastName);
   const [gender, setGender] = useState<ProfileGender>(settings.gender);
-  const [ageInput, setAgeInput] = useState(settings.age ? String(settings.age) : "");
+  const [ageInput, setAgeInput] = useState(settings.age ? String(settings.age) : hasDirectStage ? "28" : "");
   const [preferredAgeMinInput, setPreferredAgeMinInput] = useState(String(settings.preferredAgeMin));
   const [preferredAgeMaxInput, setPreferredAgeMaxInput] = useState(String(settings.preferredAgeMax));
   const [suburb, setSuburb] = useState(settings.suburb || "Chatswood");
