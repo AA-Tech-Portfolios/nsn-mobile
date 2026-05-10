@@ -36,6 +36,12 @@ const profileTranslations = {
   English: {
     addPhoto: "Add photo",
     editPhoto: "Edit photo",
+    addProfilePhotoLabel: "Add profile photo",
+    editProfilePhotoLabel: "Edit profile photo",
+    profilePhotoOptionsHint: "Opens profile photo options",
+    photoPermissionTitle: "Permission needed",
+    profilePhotoPermissionCopy: "Please allow photo access to choose a profile picture.",
+    identitySelfiePermissionCopy: "Please allow photo access to add an identity selfie.",
     changePhoto: "Change photo",
     choosePhoto: "Choose photo",
     removePhoto: "Remove photo",
@@ -44,8 +50,16 @@ const profileTranslations = {
     edit: "Edit",
     save: "Save",
     saved: "Saved ✓",
+    saveName: "Save name",
+    editName: "Edit name",
+    saveAbout: "Save about me",
+    editAbout: "Edit about me",
+    selectOrDeselectHint: "Double tap to select or deselect",
     trustStatus: "Trust status",
     reviewSettings: "Review settings",
+    profileMenuHint: "Opens profile shortcuts, layout, width, and settings links.",
+    trustStatusHint: "Opens contact, selfie, and ID fields used for trust status.",
+    opensSectionHint: "Opens section",
     verificationReviewTitle: "Confirm your details",
     verificationReviewCopy: "Review the profile details used for trust and in-person meetup safety.",
     verificationName: "Name",
@@ -59,6 +73,8 @@ const profileTranslations = {
     photoAdded: "Photo added",
     photoMissing: "Can be added later",
     confirmDetails: "Confirm details",
+    defaultMemberName: "NSN member",
+    notSet: "Not set",
     comfortProfile: "Comfort profile",
     noComfortPreferences: "No comfort preferences set yet.",
     vibeLimitMessage: "Let's keep this calm. What 5 vibes feel most like you?",
@@ -233,6 +249,20 @@ const profileTranslations = {
     save: "保存",
     saved: "保存済み ✓",
     trustStatus: "信頼ステータス",
+    reviewSettings: "設定を確認",
+    verificationReviewTitle: "詳細を確認",
+    verificationReviewCopy: "信頼と対面ミートアップの安全に使われるプロフィール情報を確認します。",
+    verificationName: "名前",
+    verificationSuburb: "地域",
+    verificationAge: "年齢確認",
+    verificationPhoto: "プロフィール写真",
+    verificationContact: "連絡先ステータス",
+    verificationTransport: "到着方法",
+    ageConfirmed: "18歳以上確認済み",
+    ageMissing: "確認が必要",
+    photoAdded: "写真追加済み",
+    photoMissing: "後で追加できます",
+    confirmDetails: "詳細を確認",
     comfortProfile: "安心プロフィール",
     noComfortPreferences: "安心の好みはまだ設定されていません。",
     vibeLimitMessage: "落ち着いて選びましょう。あなたらしい雰囲気を5つ選ぶなら？",
@@ -253,6 +283,20 @@ const profileTranslations = {
     save: "저장",
     saved: "저장됨 ✓",
     trustStatus: "신뢰 상태",
+    reviewSettings: "설정 확인",
+    verificationReviewTitle: "정보 확인",
+    verificationReviewCopy: "신뢰와 대면 모임 안전에 사용되는 프로필 정보를 확인하세요.",
+    verificationName: "이름",
+    verificationSuburb: "지역",
+    verificationAge: "나이 확인",
+    verificationPhoto: "프로필 사진",
+    verificationContact: "연락처 상태",
+    verificationTransport: "도착 방법",
+    ageConfirmed: "만 18세 이상 확인됨",
+    ageMissing: "확인 필요",
+    photoAdded: "사진 추가됨",
+    photoMissing: "나중에 추가 가능",
+    confirmDetails: "정보 확인",
     comfortProfile: "편안함 프로필",
     noComfortPreferences: "아직 편안함 선호가 설정되지 않았어요.",
     vibeLimitMessage: "차분하게 골라봐요. 나와 가장 닮은 분위기 5가지는 무엇인가요?",
@@ -551,6 +595,27 @@ const visibilityModeTranslations = {
     comfortCopy: "התמונה שלך נשארת מטושטשת עד שתבחר לפתוח.",
     openCopy: "התמונה שלך גלויה מההתחלה.",
   },
+  Chinese: {
+    title: "资料可见性",
+    comfortMode: "舒适模式",
+    openMode: "开放模式",
+    comfortCopy: "你的照片会保持模糊，直到你选择公开。",
+    openCopy: "你的照片从一开始就会显示。",
+  },
+  Japanese: {
+    title: "プロフィールの表示",
+    comfortMode: "コンフォートモード",
+    openMode: "オープンモード",
+    comfortCopy: "自分で公開するまで、写真はぼかされたままです。",
+    openCopy: "写真は最初から表示されます。",
+  },
+  Korean: {
+    title: "프로필 공개",
+    comfortMode: "컴포트 모드",
+    openMode: "오픈 모드",
+    comfortCopy: "직접 공개하기 전까지 사진은 흐리게 유지돼요.",
+    openCopy: "사진이 처음부터 표시돼요.",
+  },
   Russian: {
     title: "Видимость профиля",
     comfortMode: "Комфортный режим",
@@ -637,6 +702,19 @@ const profileMenuTranslations = {
     wide: "Wide screen",
     wideCopy: "Stretch profile sections across the screen.",
   },
+  Chinese: {
+    menuTitle: "资料快捷入口",
+    layoutTitle: "资料布局",
+    clean: "简洁资料",
+    cleanCopy: "把快捷入口移到这个菜单里。",
+    expanded: "完整资料",
+    expandedCopy: "把快捷入口显示为列表行。",
+    widthTitle: "屏幕宽度",
+    contained: "居中显示",
+    containedCopy: "让资料区域舒适地居中显示。",
+    wide: "宽屏显示",
+    wideCopy: "让资料区域横向铺开。",
+  },
   Hebrew: {
     menuTitle: "קיצורי פרופיל",
     layoutTitle: "תצוגת פרופיל",
@@ -649,6 +727,32 @@ const profileMenuTranslations = {
     containedCopy: "להשאיר את אזורי הפרופיל ממורכזים בנוחות.",
     wide: "מסך רחב",
     wideCopy: "למתוח את אזורי הפרופיל לרוחב המסך.",
+  },
+  Japanese: {
+    menuTitle: "プロフィールショートカット",
+    layoutTitle: "プロフィールレイアウト",
+    clean: "シンプルプロフィール",
+    cleanCopy: "ショートカットをこのメニューに移動します。",
+    expanded: "フルプロフィール",
+    expandedCopy: "ショートカットを行として表示します。",
+    widthTitle: "画面幅",
+    contained: "中央寄せ",
+    containedCopy: "プロフィールセクションを見やすく中央に配置します。",
+    wide: "ワイド画面",
+    wideCopy: "プロフィールセクションを画面幅いっぱいに広げます。",
+  },
+  Korean: {
+    menuTitle: "프로필 바로가기",
+    layoutTitle: "프로필 레이아웃",
+    clean: "깔끔한 프로필",
+    cleanCopy: "바로가기를 이 메뉴로 이동합니다.",
+    expanded: "전체 프로필",
+    expandedCopy: "바로가기를 행으로 표시합니다.",
+    widthTitle: "화면 너비",
+    contained: "가운데 정렬",
+    containedCopy: "프로필 섹션을 편안하게 가운데에 둡니다.",
+    wide: "넓은 화면",
+    wideCopy: "프로필 섹션을 화면 전체로 넓힙니다.",
   },
 } as const;
 
@@ -669,9 +773,11 @@ const profileVerificationTranslations = {
     selfieMissing: "Needs selfie",
     selfieAdded: "Selfie added",
     addSelfie: "Add selfie",
+    selfieHint: "Adds or replaces the selfie used for identity verification.",
     idDocument: "Government ID",
     idMissing: "Needs ID check",
     idProvided: "ID provided",
+    idDocumentHint: "Toggles whether a government ID has been provided.",
     contact: "Current trust status",
     transport: "Arrival method",
     ageConfirmed: "18 or older confirmed",
@@ -679,6 +785,97 @@ const profileVerificationTranslations = {
     photoAdded: "Photo added",
     photoMissing: "Can be added later",
     confirmDetails: "Save trust settings",
+    confirmDetailsHint: "Saves trust settings and updates your current verification status.",
+  },
+  Chinese: {
+    reviewSettings: "检查设置",
+    title: "确认你的资料",
+    copy: "检查用于信任状态和线下聚会安全的资料。",
+    name: "姓名",
+    suburb: "本地区域",
+    age: "年龄确认",
+    photo: "资料照片",
+    email: "邮箱地址",
+    emailPlaceholder: "you@example.com",
+    phone: "电话号码",
+    phonePlaceholder: "+61 400 000 000",
+    selfie: "人脸识别自拍",
+    selfieMissing: "需要自拍",
+    selfieAdded: "已添加自拍",
+    addSelfie: "添加自拍",
+    selfieHint: "添加或替换用于身份验证的自拍。",
+    idDocument: "政府身份证件",
+    idMissing: "需要证件检查",
+    idProvided: "已提供证件",
+    idDocumentHint: "切换是否已提供政府身份证件。",
+    contact: "当前信任状态",
+    transport: "到达方式",
+    ageConfirmed: "已确认年满 18 岁",
+    ageMissing: "需要确认",
+    photoAdded: "已添加照片",
+    photoMissing: "可以稍后添加",
+    confirmDetails: "保存信任设置",
+    confirmDetailsHint: "保存信任设置并更新你当前的验证状态。",
+  },
+  Japanese: {
+    reviewSettings: "設定を確認",
+    title: "詳細を確認",
+    copy: "信頼ステータスと対面ミートアップの安全に使われるプロフィール情報を確認します。",
+    name: "名前",
+    suburb: "地域",
+    age: "年齢確認",
+    photo: "プロフィール写真",
+    email: "メールアドレス",
+    emailPlaceholder: "you@example.com",
+    phone: "電話番号",
+    phonePlaceholder: "+61 400 000 000",
+    selfie: "顔認証用セルフィー",
+    selfieMissing: "セルフィーが必要",
+    selfieAdded: "セルフィー追加済み",
+    addSelfie: "セルフィーを追加",
+    selfieHint: "本人確認に使うセルフィーを追加または置き換えます。",
+    idDocument: "政府発行ID",
+    idMissing: "ID確認が必要",
+    idProvided: "ID提供済み",
+    idDocumentHint: "政府発行IDが提供済みかどうかを切り替えます。",
+    contact: "現在の信頼ステータス",
+    transport: "到着方法",
+    ageConfirmed: "18歳以上確認済み",
+    ageMissing: "確認が必要",
+    photoAdded: "写真追加済み",
+    photoMissing: "後で追加できます",
+    confirmDetails: "信頼設定を保存",
+    confirmDetailsHint: "信頼設定を保存し、現在の確認ステータスを更新します。",
+  },
+  Korean: {
+    reviewSettings: "설정 확인",
+    title: "정보 확인",
+    copy: "신뢰 상태와 대면 모임 안전에 사용되는 프로필 정보를 확인하세요.",
+    name: "이름",
+    suburb: "지역",
+    age: "나이 확인",
+    photo: "프로필 사진",
+    email: "이메일 주소",
+    emailPlaceholder: "you@example.com",
+    phone: "전화번호",
+    phonePlaceholder: "+61 400 000 000",
+    selfie: "얼굴 인식 셀피",
+    selfieMissing: "셀피 필요",
+    selfieAdded: "셀피 추가됨",
+    addSelfie: "셀피 추가",
+    selfieHint: "신원 확인에 사용할 셀피를 추가하거나 교체합니다.",
+    idDocument: "정부 발급 신분증",
+    idMissing: "신분증 확인 필요",
+    idProvided: "신분증 제공됨",
+    idDocumentHint: "정부 발급 신분증 제공 여부를 전환합니다.",
+    contact: "현재 신뢰 상태",
+    transport: "도착 방법",
+    ageConfirmed: "만 18세 이상 확인됨",
+    ageMissing: "확인 필요",
+    photoAdded: "사진 추가됨",
+    photoMissing: "나중에 추가 가능",
+    confirmDetails: "신뢰 설정 저장",
+    confirmDetailsHint: "신뢰 설정을 저장하고 현재 인증 상태를 업데이트합니다.",
   },
   Hebrew: {
     reviewSettings: "סקירת הגדרות",
@@ -741,11 +938,13 @@ export default function ProfileScreen() {
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const copy = profileTranslations[appLanguageBase as keyof typeof profileTranslations] ?? profileTranslations.English;
+  const profileCopy = { ...profileTranslations.English, ...copy, rows: { ...profileTranslations.English.rows, ...copy.rows } };
   const vibeCopy = profileVibeTranslations[appLanguageBase] ?? {};
   const comfortCopy = comfortPreferenceTranslations[appLanguageBase] ?? {};
   const visibilityCopy = visibilityModeTranslations[appLanguageBase as keyof typeof visibilityModeTranslations] ?? visibilityModeTranslations.English;
   const profileMenuCopy = profileMenuTranslations[appLanguageBase as keyof typeof profileMenuTranslations] ?? profileMenuTranslations.English;
   const profileVerificationCopy = profileVerificationTranslations[appLanguageBase as keyof typeof profileVerificationTranslations] ?? profileVerificationTranslations.English;
+  const profileVerificationA11yCopy = { ...profileVerificationTranslations.English, ...profileVerificationCopy };
   const profilePreferenceCopy = getProfilePreferenceCopy(appLanguageBase);
   const visibilityModeCopy = visibilityPreference === "Blurred" ? visibilityCopy.comfortCopy : visibilityCopy.openCopy;
   const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
@@ -803,7 +1002,7 @@ export default function ProfileScreen() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
-      Alert.alert("Permission needed", "Please allow photo access to choose a profile picture.");
+      Alert.alert(profileCopy.photoPermissionTitle, profileCopy.profilePhotoPermissionCopy);
       return;
     }
 
@@ -872,7 +1071,7 @@ export default function ProfileScreen() {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (!permission.granted) {
-      Alert.alert("Permission needed", "Please allow photo access to add an identity selfie.");
+      Alert.alert(profileCopy.photoPermissionTitle, profileCopy.identitySelfiePermissionCopy);
       return;
     }
 
@@ -982,7 +1181,7 @@ export default function ProfileScreen() {
             style={[styles.settingsButton, isDay && styles.dayIconButton]}
             accessibilityRole="button"
             accessibilityLabel={copy.rows.settings}
-            accessibilityHint={screenReaderHints ? "Opens profile shortcuts, layout, width, and settings links." : undefined}
+            accessibilityHint={screenReaderHints ? profileCopy.profileMenuHint : undefined}
           >
             <IconSymbol name="more" color={isDay ? "#0B1220" : nsnColors.text} size={23} />
           </TouchableOpacity>
@@ -1078,10 +1277,10 @@ export default function ProfileScreen() {
             accessibilityRole="button"
             accessibilityLabel={
               profilePhotoUri
-                ? "Edit profile photo"
-                : "Add profile photo"
+                ? profileCopy.editProfilePhotoLabel
+                : profileCopy.addProfilePhotoLabel
             }
-            accessibilityHint="Opens profile photo options"
+            accessibilityHint={profileCopy.profilePhotoOptionsHint}
           >
             {profilePhotoUri ? (
               <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} blurRadius={blurProfilePhoto ? 12 : 0} />
@@ -1097,7 +1296,7 @@ export default function ProfileScreen() {
             style={[styles.photoButton, isDay && styles.dayPhotoButton]} 
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel={ profilePhotoUri ? "Edit profile photo" : "Add profile photo"}  
+            accessibilityLabel={profilePhotoUri ? profileCopy.editProfilePhotoLabel : profileCopy.addProfilePhotoLabel}
           >
             <Text style={[styles.photoButtonText, isDay && styles.dayPhotoButtonText]}>
               {profilePhotoUri ? copy.editPhoto : copy.addPhoto}
@@ -1201,8 +1400,8 @@ export default function ProfileScreen() {
               accessibilityRole="button"
               accessibilityLabel={
                 isEditingName
-                  ? "Save name"
-                  : "Edit name"
+                  ? profileCopy.saveName
+                  : profileCopy.editName
               }
             >
 
@@ -1243,7 +1442,7 @@ export default function ProfileScreen() {
                 
                 accessibilityHint={
                   isEditingVibes
-                    ? "Double tap to select or deselect"
+                    ? profileCopy.selectOrDeselectHint
                     : undefined
                 }
 
@@ -1266,8 +1465,8 @@ export default function ProfileScreen() {
             accessibilityRole="button"
             accessibilityLabel={
               isEditingAbout
-                ? "Save about me"
-                : "Edit about me"
+                ? profileCopy.saveAbout
+                : profileCopy.editAbout
             }
 
             style={styles.editText}
@@ -1358,7 +1557,7 @@ export default function ProfileScreen() {
             onPress={openVerificationReview}
             style={[styles.reviewSettingsButton, isRtl && styles.rtlRow]}
             accessibilityRole="button"
-            accessibilityHint={screenReaderHints ? "Opens contact, selfie, and ID fields used for trust status." : undefined}
+            accessibilityHint={screenReaderHints ? profileCopy.trustStatusHint : undefined}
           >
             <Text style={styles.reviewSettingsText}>{profileVerificationCopy.reviewSettings}</Text>
           </TouchableOpacity>
@@ -1371,7 +1570,7 @@ export default function ProfileScreen() {
                 key={row.key}
                 accessibilityRole="button"
                 accessibilityLabel={getRowLabel(row.key)}
-                accessibilityHint="Opens section"
+                accessibilityHint={profileCopy.opensSectionHint}
                 activeOpacity={0.78}
                 onPress={() => router.push(row.route as any)}
                 style={[styles.row, index < expandedProfileRows.length - 1 && styles.rowBorder, isDay && index < expandedProfileRows.length - 1 && styles.dayRowBorder]}
@@ -1393,8 +1592,8 @@ export default function ProfileScreen() {
             <Text style={[styles.verificationReviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.copy}</Text>
             <View style={styles.verificationReviewList}>
               {[
-                { label: profileVerificationCopy.name, value: displayName || "NSN member" },
-                { label: profileVerificationCopy.suburb, value: suburb || "Not set" },
+                { label: profileVerificationCopy.name, value: displayName || profileCopy.defaultMemberName },
+                { label: profileVerificationCopy.suburb, value: suburb || profileCopy.notSet },
                 { label: profileVerificationCopy.age, value: ageConfirmed ? profileVerificationCopy.ageConfirmed : profileVerificationCopy.ageMissing },
                 { label: profileVerificationCopy.photo, value: profilePhotoUri ? profileVerificationCopy.photoAdded : profileVerificationCopy.photoMissing },
                 { label: profileVerificationCopy.contact, value: getVerificationLevelLabel(deriveVerificationLevel({ contactEmail: draftContactEmail, contactPhone: draftContactPhone, identitySelfieUri: draftIdentitySelfieUri, hasIdentityDocument: draftHasIdentityDocument }), appLanguageBase) },
@@ -1428,20 +1627,20 @@ export default function ProfileScreen() {
                   style={[styles.verificationInput, isDay && styles.dayInput, isRtl && styles.rtlInput]}
                 />
               </View>
-              <TouchableOpacity activeOpacity={0.82} onPress={pickIdentitySelfie} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Adds or replaces the selfie used for identity verification." : undefined}>
+              <TouchableOpacity activeOpacity={0.82} onPress={pickIdentitySelfie} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? profileVerificationA11yCopy.selfieHint : undefined}>
                 <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.selfie}</Text>
                 <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
                   {draftIdentitySelfieUri ? profileVerificationCopy.selfieAdded : profileVerificationCopy.addSelfie}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.82} onPress={() => setDraftHasIdentityDocument((current) => !current)} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Toggles whether a government ID has been provided." : undefined}>
+              <TouchableOpacity activeOpacity={0.82} onPress={() => setDraftHasIdentityDocument((current) => !current)} style={[styles.verificationReviewRow, isDay && styles.daySoftOption, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? profileVerificationA11yCopy.idDocumentHint : undefined}>
                 <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{profileVerificationCopy.idDocument}</Text>
                 <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
                   {draftHasIdentityDocument ? profileVerificationCopy.idProvided : profileVerificationCopy.idMissing}
                 </Text>
               </TouchableOpacity>
             </View>
-            <TouchableOpacity activeOpacity={0.86} onPress={confirmVerificationDetails} style={styles.confirmReviewButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Saves trust settings and updates your current verification status." : undefined}>
+            <TouchableOpacity activeOpacity={0.86} onPress={confirmVerificationDetails} style={styles.confirmReviewButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? profileVerificationA11yCopy.confirmDetailsHint : undefined}>
               <Text style={styles.confirmReviewText}>{profileVerificationCopy.confirmDetails}</Text>
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.82} onPress={() => setIsVerificationReviewOpen(false)} style={[styles.secondaryReviewButton, isDay && styles.daySoftOption]}>

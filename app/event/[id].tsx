@@ -27,6 +27,9 @@ const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"])
 
 const savePlaceTranslations = {
   English: { save: "Save place", saved: "Saved", savedMessage: "Place saved", removedMessage: "Place removed" },
+  Chinese: { save: "收藏地点", saved: "已收藏", savedMessage: "地点已收藏", removedMessage: "地点已移除" },
+  Japanese: { save: "場所を保存", saved: "保存済み", savedMessage: "場所を保存しました", removedMessage: "場所を削除しました" },
+  Korean: { save: "장소 저장", saved: "저장됨", savedMessage: "장소가 저장됨", removedMessage: "장소가 제거됨" },
   Arabic: { save: "حفظ المكان", saved: "محفوظ", savedMessage: "تم حفظ المكان", removedMessage: "تمت إزالة المكان" },
   Hebrew: { save: "שמירת מקום", saved: "נשמר", savedMessage: "המקום נשמר", removedMessage: "המקום הוסר" },
   Russian: { save: "Сохранить место", saved: "Сохранено", savedMessage: "Место сохранено", removedMessage: "Место удалено" },
@@ -35,17 +38,26 @@ const savePlaceTranslations = {
 
 const eventActionTranslations = {
   English: {
+    goBack: "Go back",
+    goBackHint: "Returns to the previous screen.",
     shareTitle: "Share event",
     shareMessage: (title: string, venue: string, time: string) => `I found this NSN meetup: ${title} at ${venue}, ${time}.`,
     shareError: "This event could not be shared right now.",
     copiedMessage: "Event details copied to clipboard.",
+    savePlaceHint: "Saves this venue to your saved places.",
+    removeSavedPlaceHint: "Removes this venue from your saved places.",
+    shareHint: "Shares this meetup with someone else, or copies a share message on web.",
+    moreHint: "Opens event options such as pin, hide, and saved places.",
     moreTitle: "Event options",
     moreCopy: "Tune how this meetup appears for you.",
     pin: "Pin event",
     unpin: "Unpin event",
+    pinHint: "Changes whether this event is prioritised for you.",
     hide: "Hide from Home",
     unhide: "Show on Home",
+    hideHint: "Changes whether this event appears on Home.",
     viewSavedPlaces: "View saved places",
+    viewSavedPlacesHint: "Opens your saved places list.",
     close: "Close",
     pinnedMessage: "Event pinned",
     unpinnedMessage: "Event unpinned",
@@ -70,6 +82,60 @@ const eventActionTranslations = {
     hiddenMessage: "האירוע הוסתר מהבית",
     unhiddenMessage: "האירוע יוצג בבית",
   },
+  Chinese: {
+    shareTitle: "分享活动",
+    shareMessage: (title: string, venue: string, time: string) => `我发现了这个 NSN 聚会：${title}，地点 ${venue}，时间 ${time}。`,
+    shareError: "现在无法分享此活动。",
+    copiedMessage: "活动详情已复制到剪贴板。",
+    moreTitle: "活动选项",
+    moreCopy: "调整此聚会对你的显示方式。",
+    pin: "置顶活动",
+    unpin: "取消置顶",
+    hide: "从首页隐藏",
+    unhide: "在首页显示",
+    viewSavedPlaces: "查看收藏地点",
+    close: "关闭",
+    pinnedMessage: "活动已置顶",
+    unpinnedMessage: "已取消置顶",
+    hiddenMessage: "活动已从首页隐藏",
+    unhiddenMessage: "活动已在首页显示",
+  },
+  Japanese: {
+    shareTitle: "イベントを共有",
+    shareMessage: (title: string, venue: string, time: string) => `NSNのミートアップを見つけました：${title}、${venue}、${time}。`,
+    shareError: "現在このイベントを共有できません。",
+    copiedMessage: "イベント詳細をクリップボードにコピーしました。",
+    moreTitle: "イベントオプション",
+    moreCopy: "このミートアップの表示方法を調整します。",
+    pin: "イベントをピン留め",
+    unpin: "ピン留めを解除",
+    hide: "ホームから非表示",
+    unhide: "ホームに表示",
+    viewSavedPlaces: "保存済みの場所を見る",
+    close: "閉じる",
+    pinnedMessage: "イベントをピン留めしました",
+    unpinnedMessage: "ピン留めを解除しました",
+    hiddenMessage: "イベントをホームから非表示にしました",
+    unhiddenMessage: "イベントをホームに表示しました",
+  },
+  Korean: {
+    shareTitle: "이벤트 공유",
+    shareMessage: (title: string, venue: string, time: string) => `NSN 모임을 찾았어요: ${title}, ${venue}, ${time}.`,
+    shareError: "지금은 이 이벤트를 공유할 수 없어요.",
+    copiedMessage: "이벤트 정보가 클립보드에 복사됐어요.",
+    moreTitle: "이벤트 옵션",
+    moreCopy: "이 모임이 표시되는 방식을 조정하세요.",
+    pin: "이벤트 고정",
+    unpin: "고정 해제",
+    hide: "홈에서 숨기기",
+    unhide: "홈에 표시",
+    viewSavedPlaces: "저장한 장소 보기",
+    close: "닫기",
+    pinnedMessage: "이벤트가 고정됨",
+    unpinnedMessage: "이벤트 고정 해제됨",
+    hiddenMessage: "이벤트가 홈에서 숨겨짐",
+    unhiddenMessage: "이벤트가 홈에 표시됨",
+  },
 } as const;
 
 const verificationWindowTranslations = {
@@ -89,6 +155,9 @@ const verificationWindowTranslations = {
     confirm: "Review in profile",
     editProfile: "Edit profile",
     close: "Close",
+    defaultMemberName: "NSN member",
+    confirmHint: "Confirms these details for this meetup check.",
+    editProfileHint: "Opens Profile to update trust, contact, and profile details.",
     verifiedTitle: "Details confirmed",
     verifiedCopy: "You are ready for in-person meetups.",
   },
@@ -111,6 +180,63 @@ const verificationWindowTranslations = {
     verifiedTitle: "הפרטים אושרו",
     verifiedCopy: "אפשר להצטרף למפגשים פנים אל פנים.",
   },
+  Chinese: {
+    title: "确认你的资料",
+    copy: "线下聚会前，NSN 会请你确认其他成员用于安全判断的基本信息。",
+    displayName: "姓名",
+    suburb: "本地区域",
+    age: "年龄确认",
+    photo: "资料照片",
+    contact: "联系方式状态",
+    transport: "到达方式",
+    ageConfirmed: "已确认年满18岁",
+    ageMissing: "需要确认",
+    photoAdded: "已添加照片",
+    photoMissing: "可以稍后添加",
+    confirm: "在资料中检查",
+    editProfile: "编辑资料",
+    close: "关闭",
+    verifiedTitle: "资料已确认",
+    verifiedCopy: "你已准备好参加线下聚会。",
+  },
+  Japanese: {
+    title: "詳細を確認",
+    copy: "対面ミートアップの前に、NSNは他のメンバーが安全のために頼る基本情報の確認をお願いします。",
+    displayName: "名前",
+    suburb: "地域",
+    age: "年齢確認",
+    photo: "プロフィール写真",
+    contact: "連絡先ステータス",
+    transport: "到着方法",
+    ageConfirmed: "18歳以上確認済み",
+    ageMissing: "確認が必要",
+    photoAdded: "写真追加済み",
+    photoMissing: "後で追加できます",
+    confirm: "プロフィールで確認",
+    editProfile: "プロフィール編集",
+    close: "閉じる",
+    verifiedTitle: "詳細を確認しました",
+    verifiedCopy: "対面ミートアップの準備ができています。",
+  },
+  Korean: {
+    title: "정보 확인",
+    copy: "대면 모임 전에 NSN은 다른 멤버들이 안전을 위해 참고하는 기본 정보를 확인해요.",
+    displayName: "이름",
+    suburb: "지역",
+    age: "나이 확인",
+    photo: "프로필 사진",
+    contact: "연락처 상태",
+    transport: "도착 방법",
+    ageConfirmed: "만 18세 이상 확인됨",
+    ageMissing: "확인 필요",
+    photoAdded: "사진 추가됨",
+    photoMissing: "나중에 추가 가능",
+    confirm: "프로필에서 확인",
+    editProfile: "프로필 편집",
+    close: "닫기",
+    verifiedTitle: "정보 확인됨",
+    verifiedCopy: "대면 모임에 참여할 준비가 됐어요.",
+  },
 } as const;
 
 const noiseGuideTranslations = {
@@ -132,9 +258,66 @@ const noiseGuideTranslations = {
       Lively: { icon: "🔊", label: "תוסס", copy: "יותר אנרגיה" },
     },
   },
+  Chinese: {
+    title: "噪音水平",
+    copy: "这描述场地的声音水平，和社交上是否需要多说话分开。",
+    levels: {
+      Quiet: { icon: "🔇", label: "安静", copy: "低噪音" },
+      Balanced: { icon: "🌿", label: "适中", copy: "中等噪音" },
+      Lively: { icon: "🔊", label: "热闹", copy: "更有活力" },
+    },
+  },
+  Japanese: {
+    title: "騒音レベル",
+    copy: "会話への社会的プレッシャーとは別に、会場の音量を示します。",
+    levels: {
+      Quiet: { icon: "🔇", label: "静か", copy: "低い騒音" },
+      Balanced: { icon: "🌿", label: "ほどよい", copy: "中程度の騒音" },
+      Lively: { icon: "🔊", label: "にぎやか", copy: "より活気あり" },
+    },
+  },
+  Korean: {
+    title: "소음 수준",
+    copy: "말해야 한다는 사회적 부담과 별개로, 장소의 실제 소리 수준을 나타냅니다.",
+    levels: {
+      Quiet: { icon: "🔇", label: "조용함", copy: "낮은 소음" },
+      Balanced: { icon: "🌿", label: "적당함", copy: "중간 소음" },
+      Lively: { icon: "🔊", label: "활기참", copy: "더 에너지 있음" },
+    },
+  },
 } as const;
 
 const detailEventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
+  Chinese: {
+    "picnic-easy-hangout": { title: "野餐 — 轻松相处", category: "户外", people: "2–4 位成员", description: "带些零食，坐下来放松。不需要一直聊天。", tone: "适中", weather: "受天气影响" },
+    "beach-day-chill-vibes": { title: "海边日 — 放松氛围", category: "户外", people: "3–6 位成员", description: "阳光、海边和好相处的人。自带毛巾。", tone: "适中", weather: "受天气影响" },
+    "library-calm-study": { title: "图书馆安静学习", category: "室内", people: "2–5 位成员", description: "安静的桌边时间，轻松聊天休息和温和重置。", tone: "安静", weather: "适合雨天" },
+    "coffee-lane-cove": { title: "咖啡 — 轻松打招呼", category: "美食", people: "2–4 位成员", description: "喝杯咖啡，找个舒服的位置，需要时随时离开。", tone: "适中", weather: "有室内备用" },
+    "harbour-walk-waverton": { title: "海港散步 — 轻松节奏", category: "活动", people: "3–6 位成员", description: "慢慢散步，有安静时刻和小范围聊天的空间。", tone: "适中", weather: "受天气影响" },
+    "board-games-coffee": { title: "桌游 + 咖啡", category: "室内", people: "3–5 位成员", description: "简单游戏、热饮和轻松的聊天开场。", tone: "适中", weather: "适合雨天" },
+    "ramen-small-table": { title: "拉面 — 小桌", category: "美食", people: "3–5 位成员", description: "热乎的食物、简单介绍，不必有压力待到很晚。", tone: "适中", weather: "适合雨天" },
+    "quiet-music-listening": { title: "安静音乐聆听", category: "室内", people: "2–5 位成员", description: "分享几首平静的歌，只按舒服的程度聊天。", tone: "安静", weather: "有室内备用" },
+  },
+  Japanese: {
+    "picnic-easy-hangout": { title: "ピクニック — 気楽な集まり", category: "屋外", people: "2–4人", description: "軽食を持って、座って、リラックス。ずっと話す必要はありません。", tone: "ほどよい", weather: "天気次第" },
+    "beach-day-chill-vibes": { title: "ビーチデー — ゆったりした雰囲気", category: "屋外", people: "3–6人", description: "太陽、海、気楽な時間。タオルを持参してください。", tone: "ほどよい", weather: "天気次第" },
+    "library-calm-study": { title: "図書館で静かな勉強", category: "屋内", people: "2–5人", description: "静かなテーブル時間、軽い会話休憩、やさしいリセット。", tone: "静か", weather: "雨でも安心" },
+    "coffee-lane-cove": { title: "コーヒー — 気軽にこんにちは", category: "食事", people: "2–4人", description: "コーヒーを飲み、居心地よく座り、必要ならいつでも帰れます。", tone: "ほどよい", weather: "屋内の予備案あり" },
+    "harbour-walk-waverton": { title: "ハーバー散歩 — ゆっくりペース", category: "アクティブ", people: "3–6人", description: "静かな時間と横並びの会話ができる、ゆっくりした散歩。", tone: "ほどよい", weather: "天気次第" },
+    "board-games-coffee": { title: "ボードゲーム + コーヒー", category: "屋内", people: "3–5人", description: "シンプルなゲーム、温かい飲み物、気軽な会話のきっかけ。", tone: "ほどよい", weather: "雨でも安心" },
+    "ramen-small-table": { title: "ラーメン — 小さなテーブル", category: "食事", people: "3–5人", description: "温かい食事、簡単な自己紹介、遅くまで残るプレッシャーなし。", tone: "ほどよい", weather: "雨でも安心" },
+    "quiet-music-listening": { title: "静かな音楽を聴く", category: "屋内", people: "2–5人", description: "落ち着いた曲をいくつか共有し、心地よい分だけ話します。", tone: "静か", weather: "屋内の予備案あり" },
+  },
+  Korean: {
+    "picnic-easy-hangout": { title: "피크닉 — 편안한 시간", category: "야외", people: "2–4명", description: "간식을 가져와 앉아서 쉬어요. 계속 말해야 할 부담은 없어요.", tone: "적당함", weather: "날씨 영향 있음" },
+    "beach-day-chill-vibes": { title: "해변의 날 — 여유로운 분위기", category: "야외", people: "3–6명", description: "햇살, 바다, 좋은 사람들. 수건을 가져오세요.", tone: "적당함", weather: "날씨 영향 있음" },
+    "library-calm-study": { title: "도서관 차분한 스터디", category: "실내", people: "2–5명", description: "조용한 테이블 시간, 가벼운 대화 휴식, 부드러운 리셋.", tone: "조용함", weather: "비 오는 날 적합" },
+    "coffee-lane-cove": { title: "커피 — 부담 없는 인사", category: "음식", people: "2–4명", description: "커피를 마시고 편한 곳에 앉아 필요하면 언제든 떠날 수 있어요.", tone: "적당함", weather: "실내 대안 있음" },
+    "harbour-walk-waverton": { title: "하버 산책 — 쉬운 속도", category: "활동", people: "3–6명", description: "조용한 순간과 옆자리 대화가 가능한 느린 산책.", tone: "적당함", weather: "날씨 영향 있음" },
+    "board-games-coffee": { title: "보드게임 + 커피", category: "실내", people: "3–5명", description: "간단한 게임, 따뜻한 음료, 쉬운 대화 시작점.", tone: "적당함", weather: "비 오는 날 적합" },
+    "ramen-small-table": { title: "라멘 — 작은 테이블", category: "음식", people: "3–5명", description: "따뜻한 음식, 간단한 소개, 늦게까지 있어야 한다는 부담 없음.", tone: "적당함", weather: "비 오는 날 적합" },
+    "quiet-music-listening": { title: "조용한 음악 감상", category: "실내", people: "2–5명", description: "차분한 노래 몇 곡을 공유하고 편한 만큼만 이야기해요.", tone: "조용함", weather: "실내 대안 있음" },
+  },
   Hebrew: {
     "picnic-easy-hangout": {
       title: "פיקניק — מפגש קליל",
@@ -230,9 +413,143 @@ const eventTranslations = {
     weatherAffectedCopy: "Weather may affect this plan, so check the backup option before heading out.",
     weatherFriendlyCopy: "This event has a weather-friendly plan.",
     genericMeetingCopy: (venue: string) => `Meet near ${venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`,
+    meetingSafety: "Meeting safety",
     softExitTitle: "You can change your mind",
     softExitCopy: "It is okay to skip this meetup if it does not feel like your pace today. You can find another group, step back from the chat, or come back later.",
     verifyBeforeMeeting: "Verify before meeting",
+    openMeetupChat: "Open Meetup Chat",
+    openMeetupChatHint: "Opens the meetup group chat.",
+    joinHint: "Joins this meetup.",
+    verifyBeforeMeetingHint: "Opens verification details required before meeting in person.",
+    postEventCheckIn: "Private post-event check-in",
+    feedbackSaved: "Feedback saved privately for this meetup.",
+    feedbackPrompt: "After the meetup, note how it felt. This is never a public rating.",
+    feedbackGood: "Good",
+    feedbackMixed: "Mixed",
+    feedbackUnsafe: "Unsafe",
+  },
+  Chinese: {
+    title: "电影夜 —\n观看 + 聊天",
+    category: "室内",
+    tone: "☽ 安静",
+    date: "5月24日，星期六 · 晚上7:00",
+    people: "2–4 位成员",
+    description: "先看电影，之后如果感觉合适再轻松聊天。适合低压力聚会。",
+    weatherTitle: "☀ 天气更新",
+    weatherCopy: "预计晚上有雨。这是室内聚会。",
+    whatToExpect: "可以期待什么",
+    lowPressure: "低压力",
+    lowPressureCopy: "不强迫聊天",
+    sharedExperience: "共同体验",
+    sharedExperienceCopy: "一起观看",
+    flexible: "灵活",
+    flexibleCopy: "感觉合适再聊天",
+    meetingPoint: "集合点",
+    meetingCopy: "晚上6:50在 Event Cinemas 售票处见。我们会一起入座。",
+    join: "加入聚会",
+    spotsLeft: "剩余 3 个名额",
+    today: "今天",
+    tonight: "今晚",
+    genericDescriptionSuffix: "加入前会有清晰预期的低压力聚会。",
+    weatherAffectedCopy: "天气可能影响这个计划，出发前请查看备用方案。",
+    weatherFriendlyCopy: "此活动已有适合天气的计划。",
+    genericMeetingCopy: (venue: string) => `开始前约10分钟在 ${venue} 附近见。主持人可以在聊天中分享更安静的准确地点。`,
+    meetingSafety: "聚会安全",
+    softExitTitle: "你可以改变主意",
+    softExitCopy: "如果今天感觉不适合自己的节奏，可以跳过这次聚会。你可以找另一个小组、从聊天中退一步，或稍后再回来。",
+    verifyBeforeMeeting: "见面前验证",
+    openMeetupChat: "打开聚会聊天",
+    openMeetupChatHint: "打开聚会群聊。",
+    joinHint: "加入此聚会。",
+    verifyBeforeMeetingHint: "打开线下见面前所需的验证详情。",
+    postEventCheckIn: "私密会后反馈",
+    feedbackSaved: "此聚会的反馈已私密保存。",
+    feedbackPrompt: "聚会后记录你的感受。这绝不是公开评分。",
+    feedbackGood: "很好",
+    feedbackMixed: "一般",
+    feedbackUnsafe: "不安全",
+  },
+  Japanese: {
+    title: "映画ナイト —\n観る + 話す",
+    category: "屋内",
+    tone: "☽ 静か",
+    date: "5月24日（土）· 19:00",
+    people: "2–4人",
+    description: "まず映画を観て、よければ後で少し話します。低プレッシャーなミートアップにぴったりです。",
+    weatherTitle: "☀ 天気の更新",
+    weatherCopy: "夜に雨が予想されています。これは屋内ミートアップです。",
+    whatToExpect: "期待できること",
+    lowPressure: "低プレッシャー",
+    lowPressureCopy: "無理に話さなくてOK",
+    sharedExperience: "共有体験",
+    sharedExperienceCopy: "一緒に観る",
+    flexible: "柔軟",
+    flexibleCopy: "よければ後で話す",
+    meetingPoint: "集合場所",
+    meetingCopy: "18:50に Event Cinemas のチケットカウンターで会いましょう。一緒に席へ向かいます。",
+    join: "ミートアップに参加",
+    spotsLeft: "残り3枠",
+    today: "今日",
+    tonight: "今夜",
+    genericDescriptionSuffix: "参加前に期待値が分かる、低プレッシャーなミートアップです。",
+    weatherAffectedCopy: "天気がこの予定に影響する場合があります。出発前に予備案を確認してください。",
+    weatherFriendlyCopy: "このイベントには天気に対応した予定があります。",
+    genericMeetingCopy: (venue: string) => `開始約10分前に ${venue} の近くで会いましょう。主催者がチャットでより静かな正確な場所を共有できます。`,
+    meetingSafety: "ミートアップの安全",
+    softExitTitle: "気が変わっても大丈夫",
+    softExitCopy: "今日の自分のペースに合わないなら、このミートアップを休んでも大丈夫です。別のグループを探したり、チャットから少し離れたり、後で戻ることもできます。",
+    verifyBeforeMeeting: "会う前に確認",
+    openMeetupChat: "ミートアップチャットを開く",
+    openMeetupChatHint: "ミートアップのグループチャットを開きます。",
+    joinHint: "このミートアップに参加します。",
+    verifyBeforeMeetingHint: "対面前に必要な確認情報を開きます。",
+    postEventCheckIn: "非公開のイベント後チェックイン",
+    feedbackSaved: "このミートアップのフィードバックを非公開で保存しました。",
+    feedbackPrompt: "ミートアップ後に感じたことを記録できます。公開評価ではありません。",
+    feedbackGood: "良かった",
+    feedbackMixed: "普通",
+    feedbackUnsafe: "不安だった",
+  },
+  Korean: {
+    title: "영화 밤 —\n보기 + 대화",
+    category: "실내",
+    tone: "☽ 조용함",
+    date: "5월 24일 토요일 · 오후 7:00",
+    people: "2–4명",
+    description: "먼저 영화를 보고, 괜찮으면 이후에 가볍게 대화해요. 부담 없는 모임에 좋아요.",
+    weatherTitle: "☀ 날씨 업데이트",
+    weatherCopy: "저녁에 비가 예상돼요. 이 모임은 실내 모임입니다.",
+    whatToExpect: "기대할 수 있는 것",
+    lowPressure: "낮은 부담",
+    lowPressureCopy: "억지 대화 없음",
+    sharedExperience: "함께하는 경험",
+    sharedExperienceCopy: "같이 보기",
+    flexible: "유연함",
+    flexibleCopy: "괜찮으면 이후 대화",
+    meetingPoint: "만나는 지점",
+    meetingCopy: "오후 6:50에 Event Cinemas 매표소에서 만나요. 함께 자리를 잡을게요.",
+    join: "모임 참여",
+    spotsLeft: "3자리 남음",
+    today: "오늘",
+    tonight: "오늘 밤",
+    genericDescriptionSuffix: "참여 전 기대가 명확한 부담 없는 모임입니다.",
+    weatherAffectedCopy: "날씨가 이 계획에 영향을 줄 수 있으니 출발 전 대안을 확인하세요.",
+    weatherFriendlyCopy: "이 이벤트에는 날씨에 맞춘 계획이 있어요.",
+    genericMeetingCopy: (venue: string) => `시작 약 10분 전에 ${venue} 근처에서 만나요. 주최자가 채팅에서 더 조용한 정확한 장소를 공유할 수 있어요.`,
+    meetingSafety: "모임 안전",
+    softExitTitle: "마음이 바뀌어도 괜찮아요",
+    softExitCopy: "오늘 내 속도와 맞지 않으면 이 모임을 건너뛰어도 괜찮아요. 다른 그룹을 찾거나, 채팅에서 잠시 물러나거나, 나중에 돌아올 수 있어요.",
+    verifyBeforeMeeting: "만나기 전 인증",
+    openMeetupChat: "모임 채팅 열기",
+    openMeetupChatHint: "모임 그룹 채팅을 엽니다.",
+    joinHint: "이 모임에 참여합니다.",
+    verifyBeforeMeetingHint: "대면 전에 필요한 인증 정보를 엽니다.",
+    postEventCheckIn: "비공개 모임 후 체크인",
+    feedbackSaved: "이 모임의 피드백이 비공개로 저장됐어요.",
+    feedbackPrompt: "모임 후 느낌을 기록하세요. 공개 평점이 아니에요.",
+    feedbackGood: "좋음",
+    feedbackMixed: "보통",
+    feedbackUnsafe: "불안함",
   },
   Arabic: {
     title: "ليلة فيلم —\nمشاهدة + دردشة",
@@ -406,6 +723,9 @@ export default function EventDetailsScreen() {
   const actionCopy = eventActionTranslations[appLanguageBase as keyof typeof eventActionTranslations] ?? eventActionTranslations.English;
   const verificationCopy = verificationWindowTranslations[appLanguageBase as keyof typeof verificationWindowTranslations] ?? verificationWindowTranslations.English;
   const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
+  const eventCopy = { ...eventTranslations.English, ...copy };
+  const eventActionCopy = { ...eventActionTranslations.English, ...actionCopy };
+  const eventVerificationCopy = { ...verificationWindowTranslations.English, ...verificationCopy };
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
@@ -536,7 +856,7 @@ export default function EventDetailsScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.topBar, isRtl && styles.rtlRow]}>
-          <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.iconButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel="Go back" accessibilityHint={screenReaderHints ? "Returns to the previous screen." : undefined}>
+          <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.iconButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={eventActionCopy.goBack} accessibilityHint={screenReaderHints ? eventActionCopy.goBackHint : undefined}>
             <IconSymbol name="chevron.left" color={iconColor} size={26} />
           </TouchableOpacity>
           <View style={styles.topActions}>
@@ -545,7 +865,7 @@ export default function EventDetailsScreen() {
               onPress={toggleSavedPlace}
               accessibilityRole="button"
               accessibilityLabel={isPlaceSaved ? saveCopy.saved : saveCopy.save}
-              accessibilityHint={screenReaderHints ? (isPlaceSaved ? "Removes this venue from your saved places." : "Saves this venue to your saved places.") : undefined}
+              accessibilityHint={screenReaderHints ? (isPlaceSaved ? eventActionCopy.removeSavedPlaceHint : eventActionCopy.savePlaceHint) : undefined}
               style={[styles.iconButton, isDay && styles.dayIconButton, isPlaceSaved && styles.savedIconButton]}
             >
               <IconSymbol name={isPlaceSaved ? "bookmark" : "bookmark.border"} color={isPlaceSaved ? nsnColors.day : iconColor} size={22} />
@@ -555,7 +875,7 @@ export default function EventDetailsScreen() {
               onPress={shareEvent}
               accessibilityRole="button"
               accessibilityLabel={actionCopy.shareTitle}
-              accessibilityHint={screenReaderHints ? "Shares this meetup with someone else, or copies a share message on web." : undefined}
+              accessibilityHint={screenReaderHints ? eventActionCopy.shareHint : undefined}
               style={[styles.iconButton, isDay && styles.dayIconButton]}
             >
               <IconSymbol name="share" color={iconColor} size={22} />
@@ -565,7 +885,7 @@ export default function EventDetailsScreen() {
               onPress={() => setIsMoreMenuOpen(true)}
               accessibilityRole="button"
               accessibilityLabel={actionCopy.moreTitle}
-              accessibilityHint={screenReaderHints ? "Opens event options such as pin, hide, and saved places." : undefined}
+              accessibilityHint={screenReaderHints ? eventActionCopy.moreHint : undefined}
               style={[styles.iconButton, isDay && styles.dayIconButton, (isEventPinned || isEventHidden) && styles.activeMoreButton]}
             >
               <IconSymbol name="more" color={iconColor} size={23} />
@@ -579,11 +899,11 @@ export default function EventDetailsScreen() {
               <Text style={[styles.actionSheetTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{actionCopy.moreTitle}</Text>
               <Text style={[styles.actionSheetCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{actionCopy.moreCopy}</Text>
               <View style={styles.actionList}>
-                <TouchableOpacity activeOpacity={0.82} onPress={togglePinnedEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Changes whether this event is prioritized for you." : undefined}>
+                <TouchableOpacity activeOpacity={0.82} onPress={togglePinnedEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? eventActionCopy.pinHint : undefined}>
                   <IconSymbol name="pin" color={isEventPinned ? nsnColors.day : iconColor} size={20} />
                   <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isEventPinned ? actionCopy.unpin : actionCopy.pin}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity activeOpacity={0.82} onPress={toggleHiddenEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Changes whether this event appears on Home." : undefined}>
+                <TouchableOpacity activeOpacity={0.82} onPress={toggleHiddenEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? eventActionCopy.hideHint : undefined}>
                   <IconSymbol name={isEventHidden ? "visibility" : "visibility.off"} color={isEventHidden ? "#2F80ED" : nsnColors.danger} size={20} />
                   <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isEventHidden ? actionCopy.unhide : actionCopy.hide}</Text>
                 </TouchableOpacity>
@@ -595,7 +915,7 @@ export default function EventDetailsScreen() {
                   }}
                   style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
                   accessibilityRole="button"
-                  accessibilityHint={screenReaderHints ? "Opens your saved places list." : undefined}
+                  accessibilityHint={screenReaderHints ? eventActionCopy.viewSavedPlacesHint : undefined}
                 >
                   <IconSymbol name="bookmark" color={nsnColors.day} size={20} />
                   <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{actionCopy.viewSavedPlaces}</Text>
@@ -615,7 +935,7 @@ export default function EventDetailsScreen() {
               <Text style={[styles.actionSheetCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{verificationCopy.copy}</Text>
               <View style={styles.verificationList}>
                 {[
-                  { label: verificationCopy.displayName, value: displayName || "NSN member" },
+                  { label: verificationCopy.displayName, value: displayName || eventVerificationCopy.defaultMemberName },
                   { label: verificationCopy.suburb, value: suburb || event.venue },
                   { label: verificationCopy.age, value: ageConfirmed ? verificationCopy.ageConfirmed : verificationCopy.ageMissing },
                   { label: verificationCopy.photo, value: profilePhotoUri ? verificationCopy.photoAdded : verificationCopy.photoMissing },
@@ -629,7 +949,7 @@ export default function EventDetailsScreen() {
                 ))}
               </View>
               <View style={styles.verificationActions}>
-              <TouchableOpacity activeOpacity={0.82} onPress={confirmVerificationDetails} style={styles.confirmVerificationButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Confirms these details for this meetup check." : undefined}>
+              <TouchableOpacity activeOpacity={0.82} onPress={confirmVerificationDetails} style={styles.confirmVerificationButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? eventVerificationCopy.confirmHint : undefined}>
                   <Text style={styles.confirmVerificationText}>{verificationCopy.confirm}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -640,7 +960,7 @@ export default function EventDetailsScreen() {
                   }}
                   style={[styles.secondaryVerificationButton, isDay && styles.dayActionRow]}
                   accessibilityRole="button"
-                  accessibilityHint={screenReaderHints ? "Opens Profile to update trust, contact, and profile details." : undefined}
+                  accessibilityHint={screenReaderHints ? eventVerificationCopy.editProfileHint : undefined}
                 >
                   <Text style={[styles.secondaryVerificationText, isDay && styles.dayText]}>{verificationCopy.editProfile}</Text>
                 </TouchableOpacity>
@@ -674,7 +994,7 @@ export default function EventDetailsScreen() {
           onPress={toggleSavedPlace}
           style={[styles.savePlaceButton, isDay && styles.daySavePlaceButton, isRtl && styles.rtlRow]}
           accessibilityRole="button"
-          accessibilityHint={screenReaderHints ? (isPlaceSaved ? "Removes this venue from saved places." : "Saves this venue so you can find it later.") : undefined}
+          accessibilityHint={screenReaderHints ? (isPlaceSaved ? eventActionCopy.removeSavedPlaceHint : eventActionCopy.savePlaceHint) : undefined}
         >
           <IconSymbol name={isPlaceSaved ? "bookmark" : "bookmark.border"} color={isPlaceSaved ? nsnColors.day : iconColor} size={20} />
           <Text style={[styles.savePlaceText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isPlaceSaved ? saveCopy.saved : saveCopy.save}</Text>
@@ -726,8 +1046,8 @@ export default function EventDetailsScreen() {
 
         <View style={[styles.safetyPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
-            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meeting safety</Text>
-            <Text style={[styles.verificationChip, canMeet && styles.verificationChipReady]}>
+            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCopy.meetingSafety}</Text>
+            <Text style={[styles.verificationChip, isDay && styles.dayVerificationChip, canMeet && styles.verificationChipReady, isDay && canMeet && styles.dayVerificationChipReady]}>
               {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
           </View>
@@ -744,29 +1064,29 @@ export default function EventDetailsScreen() {
           onPress={handleJoin}
           style={[styles.joinButton, !canMeet && styles.joinButtonLocked]}
           accessibilityRole="button"
-          accessibilityHint={screenReaderHints ? (hasJoined ? "Opens the meetup group chat." : canMeet ? "Joins this meetup." : "Opens verification details required before meeting in person.") : undefined}
+          accessibilityHint={screenReaderHints ? (hasJoined ? eventCopy.openMeetupChatHint : canMeet ? eventCopy.joinHint : eventCopy.verifyBeforeMeetingHint) : undefined}
         >
           <Text style={styles.joinText}>
-            {hasJoined ? "Open Meetup Chat" : canMeet ? copy.join : "verifyBeforeMeeting" in copy ? copy.verifyBeforeMeeting : "Verify before meeting"}
+            {hasJoined ? eventCopy.openMeetupChat : canMeet ? copy.join : eventCopy.verifyBeforeMeeting}
           </Text>
         </TouchableOpacity>
         <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{copy.spotsLeft}</Text>
 
         {hasJoined ? (
           <View style={[styles.feedbackPanel, isDay && styles.dayCard]}>
-            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText]}>Private post-event check-in</Text>
+            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText]}>{eventCopy.postEventCheckIn}</Text>
             <Text style={[styles.safetyCopy, isDay && styles.dayMutedText]}>
-              {existingFeedback ? "Feedback saved privately for this meetup." : "After the meetup, note how it felt. This is never a public rating."}
+              {existingFeedback ? eventCopy.feedbackSaved : eventCopy.feedbackPrompt}
             </Text>
             <View style={styles.feedbackActions}>
               <TouchableOpacity activeOpacity={0.82} onPress={() => saveFeedback("Good", true)} style={styles.feedbackButton}>
-                <Text style={styles.feedbackButtonText}>Good</Text>
+                <Text style={styles.feedbackButtonText}>{eventCopy.feedbackGood}</Text>
               </TouchableOpacity>
               <TouchableOpacity activeOpacity={0.82} onPress={() => saveFeedback("Mixed", false)} style={styles.feedbackButton}>
-                <Text style={styles.feedbackButtonText}>Mixed</Text>
+                <Text style={styles.feedbackButtonText}>{eventCopy.feedbackMixed}</Text>
               </TouchableOpacity>
               <TouchableOpacity activeOpacity={0.82} onPress={() => saveFeedback("Unsafe", false)} style={[styles.feedbackButton, styles.feedbackButtonDanger]}>
-                <Text style={styles.feedbackButtonText}>Unsafe</Text>
+                <Text style={styles.feedbackButtonText}>{eventCopy.feedbackUnsafe}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -861,6 +1181,8 @@ const styles = StyleSheet.create({
   safetyCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
   verificationChip: { color: nsnColors.warning, borderColor: "rgba(247,200,91,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
   verificationChipReady: { color: nsnColors.green, borderColor: "rgba(114,214,126,0.45)" },
+  dayVerificationChip: { color: "#7C5A00", backgroundColor: "#FFF7D8", borderColor: "#D4A91E" },
+  dayVerificationChipReady: { color: "#0F6B2F", backgroundColor: "#E8F8EE", borderColor: "#55A96E" },
   joinButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary },
   joinButtonLocked: { backgroundColor: "#3A4358" },
   joinText: { color: nsnColors.text, fontSize: 16, fontWeight: "800" },

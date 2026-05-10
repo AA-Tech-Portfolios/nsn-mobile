@@ -21,7 +21,9 @@ export default function TransportationPreferenceScreen() {
   const router = useRouter();
   const { appLanguage, isNightMode, saveSoftHelloMvpState, transportationMethod } = useAppSettings();
   const isDay = !isNightMode;
-  const copy = getProfilePreferenceCopy(getLanguageBase(appLanguage)).transportation;
+  const preferenceCopy = getProfilePreferenceCopy(getLanguageBase(appLanguage));
+  const copy = preferenceCopy.transportation;
+  const backLabel = preferenceCopy.back ?? getProfilePreferenceCopy("English").back;
 
   const saveTransportationMethod = async (nextMethod: TransportationMethod) => {
     await saveSoftHelloMvpState({ transportationMethod: nextMethod });
@@ -35,7 +37,7 @@ export default function TransportationPreferenceScreen() {
           onPress={() => router.back()}
           style={[styles.backButton, isDay && styles.dayIconButton]}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={backLabel}
         >
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>

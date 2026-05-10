@@ -64,6 +64,7 @@ type SettingsCopy = {
   restartOnboardingAction?: string;
   searchLanguage?: string;
   noLanguageFound?: string;
+  goBack?: string;
 };
 
 const englishCopy: SettingsCopy = {
@@ -122,6 +123,7 @@ const englishCopy: SettingsCopy = {
   restartOnboardingAction: "Start",
   searchLanguage: "Search local languages...",
   noLanguageFound: "No language found",
+  goBack: "Go back",
 };
 
 const settingsTranslations: Record<string, SettingsCopy> = {
@@ -2845,7 +2847,28 @@ export default function SettingsScreen() {
         clearBorders: "גבולות ברורים",
         clearBordersCopy: "חזק את קווי ההפרדה סביב כרטיסים ותפריטים.",
       }
-    : {
+      : appLanguageBase === "Chinese"
+        ? {
+        softSurfaces: "柔和界面",
+        softSurfacesCopy: "柔化面板和边框，让界面更安静。",
+        clearBorders: "清晰边框",
+        clearBordersCopy: "加强卡片和菜单轮廓，方便区分内容。",
+      }
+      : appLanguageBase === "Japanese"
+        ? {
+        softSurfaces: "やわらかい面",
+        softSurfacesCopy: "パネルと境界線をやわらげ、画面をより落ち着かせます。",
+        clearBorders: "はっきりした境界線",
+        clearBordersCopy: "カードやメニューの輪郭を強め、区切りを分かりやすくします。",
+      }
+      : appLanguageBase === "Korean"
+        ? {
+        softSurfaces: "부드러운 표면",
+        softSurfacesCopy: "패널과 테두리를 부드럽게 해 화면을 더 차분하게 만듭니다.",
+        clearBorders: "선명한 테두리",
+        clearBordersCopy: "카드와 메뉴 윤곽을 강화해 구분을 더 명확하게 합니다.",
+      }
+      : {
         softSurfaces: "Soft surfaces",
         softSurfacesCopy: "Soften panels and borders so screens feel calmer.",
         clearBorders: "Clear borders",
@@ -2869,7 +2892,46 @@ export default function SettingsScreen() {
         slowerTransitions: "מעברים איטיים יותר",
         slowerTransitionsCopy: "האט שינויי מצב כמו יום ולילה כדי שיהיה יותר זמן להתמצא.",
       }
-    : {
+      : appLanguageBase === "Chinese"
+        ? {
+        largerTouchTargets: "更大的点击区域",
+        largerTouchTargetsCopy: "放大按钮和可点击区域，让操作更稳妥。",
+        reduceTransparency: "减少透明度",
+        reduceTransparencyCopy: "使用更实的背景来提升可读性。",
+        boldText: "加粗界面文字",
+        boldTextCopy: "加强界面标签字重，方便快速浏览。",
+        simplifiedInterface: "简化界面",
+        simplifiedInterfaceCopy: "减少次要细节，让页面更平静、更容易理解。",
+        slowerTransitions: "放慢过渡",
+        slowerTransitionsCopy: "放慢日间和夜间等模式切换，留出更多适应时间。",
+      }
+      : appLanguageBase === "Japanese"
+        ? {
+        largerTouchTargets: "タッチ範囲を大きく",
+        largerTouchTargetsCopy: "ボタンやタップ範囲を大きくして、安心して押しやすくします。",
+        reduceTransparency: "透明度を下げる",
+        reduceTransparencyCopy: "より不透明な面を使い、読みやすさを高めます。",
+        boldText: "インターフェース文字を太く",
+        boldTextCopy: "ラベルの太さを強め、画面を見つけやすくします。",
+        simplifiedInterface: "シンプルなインターフェース",
+        simplifiedInterfaceCopy: "二次的な情報を減らし、画面を落ち着いて分かりやすくします。",
+        slowerTransitions: "遷移をゆっくりに",
+        slowerTransitionsCopy: "昼/夜モードなどの切り替えをゆっくりにして、把握しやすくします。",
+      }
+      : appLanguageBase === "Korean"
+        ? {
+        largerTouchTargets: "더 큰 터치 영역",
+        largerTouchTargetsCopy: "버튼과 탭 영역을 키워 더 자신 있게 누를 수 있게 합니다.",
+        reduceTransparency: "투명도 줄이기",
+        reduceTransparencyCopy: "더 단단한 배경을 사용해 읽기 쉽게 만듭니다.",
+        boldText: "인터페이스 글자 굵게",
+        boldTextCopy: "라벨 굵기를 강화해 화면을 더 쉽게 훑어볼 수 있게 합니다.",
+        simplifiedInterface: "간소화된 인터페이스",
+        simplifiedInterfaceCopy: "부가 정보를 줄여 화면을 더 차분하고 이해하기 쉽게 만듭니다.",
+        slowerTransitions: "전환 속도 늦추기",
+        slowerTransitionsCopy: "낮/밤 모드 같은 전환을 느리게 해 적응할 시간을 더 줍니다.",
+      }
+      : {
         largerTouchTargets: "Larger touch targets",
         largerTouchTargetsCopy: "Make buttons and tap areas larger so they are easier to press confidently.",
         reduceTransparency: "Reduce transparency",
@@ -3023,7 +3085,7 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator
       >
-        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel="Go back">
+        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={copy.goBack ?? englishCopy.goBack}>
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 

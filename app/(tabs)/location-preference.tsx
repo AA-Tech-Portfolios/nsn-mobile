@@ -13,6 +13,7 @@ const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"])
 
 const copyByLanguage = {
   English: {
+    back: "Go back",
     title: "Location Preference",
     copy: "Keep your local area and what you are here for up to date.",
     suburbLabel: "Suburb or local area",
@@ -48,6 +49,45 @@ const copyByLanguage = {
     saved: "נשמר",
     currentSummary: "העדפה נוכחית",
   },
+  Chinese: {
+    back: "返回",
+    title: "位置偏好",
+    copy: "保持你的本地区域和来这里的目的为最新状态。",
+    suburbLabel: "郊区或本地区域",
+    suburbPlaceholder: "Chatswood",
+    recognised: "已识别：",
+    chooseSuggestion: "选择一个建议来确认你的本地区域。",
+    intentLabel: "我来这里是为了",
+    save: "保存偏好",
+    saved: "已保存",
+    currentSummary: "当前偏好",
+  },
+  Japanese: {
+    back: "戻る",
+    title: "場所の設定",
+    copy: "地域とここで探していることを最新の状態に保ちます。",
+    suburbLabel: "郊外または地域",
+    suburbPlaceholder: "Chatswood",
+    recognised: "認識済み:",
+    chooseSuggestion: "候補を選んで地域を確認してください。",
+    intentLabel: "ここで探しているもの",
+    save: "設定を保存",
+    saved: "保存しました",
+    currentSummary: "現在の設定",
+  },
+  Korean: {
+    back: "뒤로",
+    title: "위치 선호",
+    copy: "내 지역과 이곳에서 찾고 있는 목적을 최신 상태로 유지하세요.",
+    suburbLabel: "교외 또는 지역",
+    suburbPlaceholder: "Chatswood",
+    recognised: "인식됨:",
+    chooseSuggestion: "추천 항목을 선택해 지역을 확인하세요.",
+    intentLabel: "이곳에 온 목적",
+    save: "선호 저장",
+    saved: "저장됨",
+    currentSummary: "현재 선호",
+  },
   Russian: {
     title: "Предпочтение локации",
     copy: "Обновите район и то, зачем вы здесь.",
@@ -76,8 +116,11 @@ const copyByLanguage = {
 
 const intentLabels: Record<string, Record<SoftHelloIntent, string>> = {
   Arabic: { Friends: "أصدقاء", Dating: "مواعدة", Both: "كلاهما", Exploring: "استكشاف" },
+  Chinese: { Friends: "交朋友", Dating: "约会", Both: "两者皆可", Exploring: "探索" },
   Hebrew: { Friends: "חברים", Dating: "דייטינג", Both: "גם וגם", Exploring: "לחקור" },
   Russian: { Friends: "Друзья", Dating: "Свидания", Both: "Оба", Exploring: "Исследую" },
+  Japanese: { Friends: "友達", Dating: "デート", Both: "両方", Exploring: "探索中" },
+  Korean: { Friends: "친구", Dating: "데이트", Both: "둘 다", Exploring: "탐색 중" },
   Spanish: { Friends: "Amistad", Dating: "Citas", Both: "Ambos", Exploring: "Explorar" },
 };
 
@@ -103,6 +146,7 @@ export default function LocationPreferenceScreen() {
   const { appLanguage, intent, isNightMode, saveSoftHelloMvpState, suburb } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = copyByLanguage[appLanguageBase as keyof typeof copyByLanguage] ?? copyByLanguage.English;
+  const locationCopy = { ...copyByLanguage.English, ...copy };
   const localIntentLabels = intentLabels[appLanguageBase] ?? {};
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(appLanguageBase);
@@ -159,7 +203,7 @@ export default function LocationPreferenceScreen() {
           onPress={() => router.back()}
           style={[styles.backButton, isDay && styles.dayIconButton]}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={locationCopy.back}
         >
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>

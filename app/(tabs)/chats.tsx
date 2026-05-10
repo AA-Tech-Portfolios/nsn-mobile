@@ -18,6 +18,7 @@ import {
   type SafetyReportReason,
   type SafetyReportRoute,
 } from "@/lib/softhello-mvp";
+import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 
 type ChatMessage = (typeof chatSeed)[number];
 type SoftExitChoice = "stepBack" | "skipToday";
@@ -141,6 +142,44 @@ const directChatSeedByPerson: Record<string, ChatMessage[]> = {
   ],
 };
 
+const directChatMessageTranslations: Record<string, Record<string, string>> = {
+  Chinese: {
+    "maya-direct-1": "你好，如果聚会前有任何问题，我很乐意帮忙。",
+    "alon-direct-1": "你好，很高兴在这里认识你。",
+    "james-direct-1": "你好，你也会去电影夜吗？",
+  },
+  Japanese: {
+    "maya-direct-1": "こんにちは。ミートアップ前に質問があれば、いつでもどうぞ。",
+    "alon-direct-1": "こんにちは、ここで会えてうれしいです。",
+    "james-direct-1": "こんにちは。映画ナイトにも参加しますか？",
+  },
+  Korean: {
+    "maya-direct-1": "안녕하세요. 모임 전에 궁금한 점이 있으면 도와드릴게요.",
+    "alon-direct-1": "안녕하세요, 여기서 만나서 반가워요.",
+    "james-direct-1": "안녕하세요, 영화 밤에도 가시나요?",
+  },
+  Hebrew: {
+    "maya-direct-1": "היי, אשמח לעזור אם יש לך שאלות לפני המפגש.",
+    "alon-direct-1": "היי, נעים להכיר אותך כאן.",
+    "james-direct-1": "היי, גם את/ה מגיע/ה לערב הסרט?",
+  },
+};
+
+const localizeDirectMessages = (messagesByPerson: Record<string, ChatMessage[]>, languageBase: string) => {
+  const translatedDirectMessages = directChatMessageTranslations[languageBase];
+  if (!translatedDirectMessages) return messagesByPerson;
+
+  return Object.fromEntries(
+    Object.entries(messagesByPerson).map(([personId, messages]) => [
+      personId,
+      messages.map((message) => ({
+        ...message,
+        text: translatedDirectMessages[message.id] ?? message.text,
+      })),
+    ])
+  ) as Record<string, ChatMessage[]>;
+};
+
 const reportFlowCopy: ReportFlowCopy = {
   targetTitle: "Who is this about?",
   routeTitle: "Where should this go?",
@@ -173,6 +212,42 @@ const arrivalUpdateCopy: ArrivalUpdateCopy = {
 };
 
 const safetyReasonTranslations: Record<string, Partial<Record<SafetyReportReason, { label: string; copy: string }>>> = {
+  Chinese: {
+    "Safety threat": { label: "安全威胁", copy: "即时风险、胁迫、跟踪、威胁或不安全的线下行为。" },
+    Harassment: { label: "骚扰", copy: "反复的不受欢迎联系、恐吓、性压力或辱骂消息。" },
+    "Underage risk": { label: "未成年人风险", copy: "有人可能未满18岁，或试图让未成年人参与。" },
+    Impersonation: { label: "冒充他人", copy: "假装成他人、使用被盗信息，或误导身份。" },
+    Fraud: { label: "欺诈", copy: "索要钱款、诈骗、钓鱼、勒索或可疑链接。" },
+    "Fake profile": { label: "虚假资料", copy: "资料、照片或行为看起来不真实。" },
+    Spam: { label: "垃圾信息", copy: "推广消息、重复联系或无关链接。" },
+    "Hate or discrimination": { label: "仇恨或歧视", copy: "针对身份、文化、宗教、残障、性别或性取向的攻击。" },
+    "Privacy concern": { label: "隐私问题", copy: "未经同意分享私人信息、截图或个人细节。" },
+    Other: { label: "其他", copy: "还有其他感觉不对、需要审核的情况。" },
+  },
+  Japanese: {
+    "Safety threat": { label: "安全上の脅威", copy: "差し迫った危険、強要、つきまとい、脅し、不安全なミートアップ行動。" },
+    Harassment: { label: "ハラスメント", copy: "望まない連絡の繰り返し、威圧、性的な圧力、攻撃的なメッセージ。" },
+    "Underage risk": { label: "未成年のリスク", copy: "18歳未満の可能性、または未成年を巻き込もうとしている可能性。" },
+    Impersonation: { label: "なりすまし", copy: "他人のふり、盗まれた情報の使用、誤解を招く本人情報。" },
+    Fraud: { label: "詐欺", copy: "金銭要求、詐欺、フィッシング、脅迫、不審なリンク。" },
+    "Fake profile": { label: "偽プロフィール", copy: "プロフィール情報、写真、行動が本物らしく見えない。" },
+    Spam: { label: "スパム", copy: "宣伝、繰り返しの連絡、関係のないリンク。" },
+    "Hate or discrimination": { label: "憎悪または差別", copy: "属性、文化、宗教、障がい、性別、性的指向を対象にした攻撃。" },
+    "Privacy concern": { label: "プライバシーの懸念", copy: "同意なく個人情報、スクリーンショット、私的な詳細を共有している。" },
+    Other: { label: "その他", copy: "他に違和感があり、確認が必要なこと。" },
+  },
+  Korean: {
+    "Safety threat": { label: "안전 위협", copy: "즉각적인 위험, 강요, 스토킹, 협박 또는 안전하지 않은 모임 행동." },
+    Harassment: { label: "괴롭힘", copy: "반복적인 원치 않는 연락, 위협, 성적 압박 또는 모욕적인 메시지." },
+    "Underage risk": { label: "미성년자 위험", copy: "누군가 만 18세 미만이거나 미성년자를 참여시키려는 경우." },
+    Impersonation: { label: "사칭", copy: "다른 사람인 척하거나 도용된 정보, 오해를 부르는 신원 사용." },
+    Fraud: { label: "사기", copy: "금전 요구, 사기, 피싱, 협박 또는 의심스러운 링크." },
+    "Fake profile": { label: "가짜 프로필", copy: "프로필 정보, 사진 또는 행동이 진짜처럼 보이지 않음." },
+    Spam: { label: "스팸", copy: "홍보 메시지, 반복 연락 또는 관련 없는 링크." },
+    "Hate or discrimination": { label: "혐오 또는 차별", copy: "정체성, 문화, 종교, 장애, 성별 또는 성적 지향을 향한 공격." },
+    "Privacy concern": { label: "개인정보 우려", copy: "동의 없이 개인 정보, 스크린샷 또는 사적인 내용을 공유." },
+    Other: { label: "기타", copy: "그 밖에 이상하게 느껴져 검토가 필요한 내용." },
+  },
   Hebrew: {
     "Safety threat": { label: "איום בטיחותי", copy: "סיכון מיידי, כפייה, מעקב, איומים או התנהגות לא בטוחה במפגש." },
     Harassment: { label: "הטרדה", copy: "פנייה חוזרת לא רצויה, הפחדה, לחץ מיני או הודעות פוגעניות." },
@@ -188,6 +263,51 @@ const safetyReasonTranslations: Record<string, Partial<Record<SafetyReportReason
 };
 
 const reportFlowTranslations = {
+  Chinese: {
+    targetTitle: "这是关于谁？",
+    routeTitle: "发送到哪里？",
+    hostRole: "主持人",
+    memberRole: "成员",
+    chatRole: "群组",
+    reportToHost: "先报告给主持人",
+    reportToHostCopy: "当问题涉及另一名成员，且主持人可能介入时使用。",
+    appReview: "提交给应用审核",
+    appReviewCopy: "用于主持人问题、紧急升级，或报告给主持人没有帮助时。",
+    cancelWindow: "你可以在10分钟内取消这条报告。",
+    cancelReport: "取消报告",
+    reportCancelled: "报告已取消",
+    reportSaved: "报告已保存",
+  },
+  Japanese: {
+    targetTitle: "これは誰についてですか？",
+    routeTitle: "どこに送りますか？",
+    hostRole: "主催者",
+    memberRole: "メンバー",
+    chatRole: "グループ",
+    reportToHost: "まず主催者に報告",
+    reportToHostCopy: "別のメンバーに関する懸念で、主催者が対応できそうな場合に使います。",
+    appReview: "アプリ審査に送信",
+    appReviewCopy: "主催者の問題、緊急のエスカレーション、または主催者への報告で解決しない場合に使います。",
+    cancelWindow: "この報告は10分間キャンセルできます。",
+    cancelReport: "報告をキャンセル",
+    reportCancelled: "報告をキャンセルしました",
+    reportSaved: "報告を保存しました",
+  },
+  Korean: {
+    targetTitle: "누구에 대한 내용인가요?",
+    routeTitle: "어디로 보낼까요?",
+    hostRole: "주최자",
+    memberRole: "멤버",
+    chatRole: "그룹",
+    reportToHost: "먼저 주최자에게 신고",
+    reportToHostCopy: "다른 멤버에 대한 우려이고 주최자가 도와줄 수 있을 때 사용하세요.",
+    appReview: "앱 검토로 제출",
+    appReviewCopy: "주최자 문제, 긴급 신고, 또는 주최자에게 신고해도 도움이 되지 않을 때 사용하세요.",
+    cancelWindow: "이 신고는 10분 동안 취소할 수 있어요.",
+    cancelReport: "신고 취소",
+    reportCancelled: "신고가 취소됨",
+    reportSaved: "신고가 저장됨",
+  },
   Hebrew: {
     targetTitle: "על מי הדיווח?",
     routeTitle: "לאן לשלוח את זה?",
@@ -220,6 +340,48 @@ const arrivalUpdateTranslations = {
       changedMind: { label: "שיניתי את דעתי", message: "סליחה, שיניתי את דעתי ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
     } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
   },
+  Chinese: {
+    title: "到达更新",
+    runningLate: "会迟到",
+    cannotMakeIt: "无法参加",
+    cannotMakeItReasonTitle: "为什么无法参加？",
+    runningLateMessage: (method: string) => `快速更新：我会迟到。我会通过${method}到达，会继续更新。`,
+    cannotMakeItReasons: {
+      unwell: { label: "身体不适", message: "抱歉，我今天身体不舒服，不能参加了。希望聚会顺利。" },
+      work: { label: "工作临时有事", message: "抱歉，工作上临时有事，我今天不能参加了。希望聚会顺利。" },
+      appointment: { label: "有预约", message: "抱歉，我有一个预约，今天不能参加了。希望聚会顺利。" },
+      somethingCameUp: { label: "临时有事", message: "抱歉，临时有事，我今天不能参加了。希望聚会顺利。" },
+      changedMind: { label: "改变主意", message: "抱歉，我改变主意了，今天不能参加。希望聚会顺利。" },
+    } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
+  },
+  Japanese: {
+    title: "到着の更新",
+    runningLate: "遅れています",
+    cannotMakeIt: "参加できません",
+    cannotMakeItReasonTitle: "参加できない理由は？",
+    runningLateMessage: (method: string) => `短い更新：少し遅れています。${method}で向かっているので、また知らせます。`,
+    cannotMakeItReasons: {
+      unwell: { label: "体調不良", message: "すみません、今日は体調が悪く参加できません。ミートアップがうまくいきますように。" },
+      work: { label: "仕事が入った", message: "すみません、仕事が入って今日は参加できません。ミートアップがうまくいきますように。" },
+      appointment: { label: "予定がある", message: "すみません、予定があり今日は参加できません。ミートアップがうまくいきますように。" },
+      somethingCameUp: { label: "急用ができた", message: "すみません、急用ができて今日は参加できません。ミートアップがうまくいきますように。" },
+      changedMind: { label: "気が変わった", message: "すみません、気が変わったので今日は参加しません。ミートアップがうまくいきますように。" },
+    } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
+  },
+  Korean: {
+    title: "도착 업데이트",
+    runningLate: "늦는 중",
+    cannotMakeIt: "참석 불가",
+    cannotMakeItReasonTitle: "왜 참석할 수 없나요?",
+    runningLateMessage: (method: string) => `간단 업데이트: 제가 늦고 있어요. ${method}(으)로 가는 중이라 계속 알려드릴게요.`,
+    cannotMakeItReasons: {
+      unwell: { label: "몸이 좋지 않음", message: "죄송해요, 오늘 몸이 좋지 않아 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요." },
+      work: { label: "일이 생김", message: "죄송해요, 일이 생겨 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요." },
+      appointment: { label: "예약/약속", message: "죄송해요, 다른 약속이 있어 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요." },
+      somethingCameUp: { label: "급한 일이 생김", message: "죄송해요, 급한 일이 생겨 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요." },
+      changedMind: { label: "마음이 바뀜", message: "죄송해요, 마음이 바뀌어 오늘 참석하지 않으려 해요. 모임이 잘 진행되길 바라요." },
+    } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
+  },
 } satisfies Record<string, ArrivalUpdateCopy>;
 
 const memberBlockTranslations = {
@@ -244,6 +406,39 @@ const memberBlockTranslations = {
     unblockedMemberSaved: "חסימת החבר/ה בוטלה",
     blockedMemberCopy: (name: string) => `לא תקבל/י אינטראקציה ישירה מ-${name}.`,
     unblockedMemberCopy: (name: string) => `אינטראקציה ישירה עם ${name} מותרת שוב.`,
+  },
+  Chinese: {
+    blockMember: "屏蔽成员",
+    blockMemberCopy: "选择一名成员，私下停止直接互动。",
+    unblockMember: "取消屏蔽成员",
+    unblockMemberCopy: "允许再次与这名成员直接互动。",
+    chooseMember: "选择成员",
+    blockedMemberSaved: "已私下屏蔽成员",
+    unblockedMemberSaved: "已取消屏蔽成员",
+    blockedMemberCopy: (name: string) => `你将不会收到来自 ${name} 的直接互动。`,
+    unblockedMemberCopy: (name: string) => `已再次允许与 ${name} 直接互动。`,
+  },
+  Japanese: {
+    blockMember: "メンバーをブロック",
+    blockMemberCopy: "メンバーを選び、直接のやり取りを非公開で停止します。",
+    unblockMember: "メンバーのブロックを解除",
+    unblockMemberCopy: "このメンバーとの直接のやり取りを再び許可します。",
+    chooseMember: "メンバーを選択",
+    blockedMemberSaved: "メンバーを非公開でブロックしました",
+    unblockedMemberSaved: "メンバーのブロックを解除しました",
+    blockedMemberCopy: (name: string) => `${name} からの直接のやり取りは届きません。`,
+    unblockedMemberCopy: (name: string) => `${name} との直接のやり取りが再び許可されました。`,
+  },
+  Korean: {
+    blockMember: "멤버 차단",
+    blockMemberCopy: "직접 상호작용을 비공개로 중단할 멤버를 선택하세요.",
+    unblockMember: "멤버 차단 해제",
+    unblockMemberCopy: "이 멤버와의 직접 상호작용을 다시 허용합니다.",
+    chooseMember: "멤버 선택",
+    blockedMemberSaved: "멤버가 비공개로 차단됨",
+    unblockedMemberSaved: "멤버 차단 해제됨",
+    blockedMemberCopy: (name: string) => `${name}님의 직접 상호작용을 받지 않아요.`,
+    unblockedMemberCopy: (name: string) => `${name}님과의 직접 상호작용이 다시 허용됐어요.`,
   },
 } satisfies Record<string, MemberBlockCopy>;
 
@@ -272,6 +467,42 @@ const chatMenuTranslations = {
     host: "מארח/ת",
     member: "חבר/ה",
   },
+  Chinese: {
+    title: "聚会聊天",
+    current: "当前聊天",
+    openLabel: "选择聚会聊天",
+    landingTitle: "选择聊天",
+    landingCopy: "选择聚会群组或已验证成员，打开合适的对话。",
+    meetupGroups: "聚会群组",
+    people: "成员",
+    privateChat: "私聊",
+    host: "主持人",
+    member: "成员",
+  },
+  Japanese: {
+    title: "ミートアップチャット",
+    current: "現在のチャット",
+    openLabel: "ミートアップチャットを選択",
+    landingTitle: "チャットを選択",
+    landingCopy: "ミートアップグループまたは確認済みの人を選んで、適切な会話を開きます。",
+    meetupGroups: "ミートアップグループ",
+    people: "人",
+    privateChat: "個別チャット",
+    host: "主催者",
+    member: "メンバー",
+  },
+  Korean: {
+    title: "모임 채팅",
+    current: "현재 채팅",
+    openLabel: "모임 채팅 선택",
+    landingTitle: "채팅 선택",
+    landingCopy: "모임 그룹이나 인증된 사람을 선택해 알맞은 대화를 여세요.",
+    meetupGroups: "모임 그룹",
+    people: "사람들",
+    privateChat: "개인 채팅",
+    host: "주최자",
+    member: "멤버",
+  },
 } satisfies Record<string, ChatMenuCopy>;
 
 const chatEventTitleTranslations: Record<string, Record<string, string>> = {
@@ -286,10 +517,51 @@ const chatEventTitleTranslations: Record<string, Record<string, string>> = {
     "ramen-small-table": "ראמן — שולחן קטן",
     "quiet-music-listening": "האזנה למוזיקה שקטה",
   },
+  Chinese: {
+    "picnic-easy-hangout": "野餐 — 轻松相处",
+    "beach-day-chill-vibes": "海边日 — 放松氛围",
+    "library-calm-study": "图书馆安静学习",
+    "coffee-lane-cove": "咖啡 — 轻松打招呼",
+    "harbour-walk-waverton": "海港散步 — 轻松节奏",
+    "movie-night-watch-chat": "电影夜 — 观看 + 聊天",
+    "board-games-coffee": "桌游 + 咖啡",
+    "ramen-small-table": "拉面 — 小桌",
+    "quiet-music-listening": "安静音乐聆听",
+  },
+  Japanese: {
+    "picnic-easy-hangout": "ピクニック — 気楽な集まり",
+    "beach-day-chill-vibes": "ビーチデー — ゆったりした雰囲気",
+    "library-calm-study": "図書館で静かな勉強",
+    "coffee-lane-cove": "コーヒー — 気軽にこんにちは",
+    "harbour-walk-waverton": "ハーバー散歩 — ゆっくりペース",
+    "movie-night-watch-chat": "映画ナイト — 観る + 話す",
+    "board-games-coffee": "ボードゲーム + コーヒー",
+    "ramen-small-table": "ラーメン — 小さなテーブル",
+    "quiet-music-listening": "静かな音楽を聴く",
+  },
+  Korean: {
+    "picnic-easy-hangout": "피크닉 — 편안한 시간",
+    "beach-day-chill-vibes": "해변의 날 — 여유로운 분위기",
+    "library-calm-study": "도서관 차분한 스터디",
+    "coffee-lane-cove": "커피 — 부담 없는 인사",
+    "harbour-walk-waverton": "하버 산책 — 쉬운 속도",
+    "movie-night-watch-chat": "영화 밤 — 보기 + 대화",
+    "board-games-coffee": "보드게임 + 커피",
+    "ramen-small-table": "라멘 — 작은 테이블",
+    "quiet-music-listening": "조용한 음악 감상",
+  },
 };
 
 const getChatMemberLabel = (event: EventItem, languageBase: string) =>
-  languageBase === "Hebrew" ? event.people.replace("people", "אנשים") : event.people;
+  languageBase === "Hebrew"
+    ? event.people.replace("people", "אנשים")
+    : languageBase === "Chinese"
+      ? event.people.replace("people", "位成员")
+      : languageBase === "Japanese"
+        ? event.people.replace("people", "人")
+        : languageBase === "Korean"
+          ? event.people.replace("people", "명")
+      : event.people;
 
 const chatTranslations = {
   English: {
@@ -335,6 +607,11 @@ const chatTranslations = {
     trustRequiredTitle: "Contact Verified required",
     trustRequiredCopy: "Private chats open only when both people have verified contact details.",
     reviewSettings: "Review Trust status",
+    reviewTrustStatusHint: "Opens Profile so you can review and add contact verification details.",
+    backToChatChooserHint: "Returns to the chat chooser.",
+    openChatListHint: "Opens the list of meetup groups and people you can chat with.",
+    safetyOptionsHint: "Opens private safety, report, and block options for this chat.",
+    softExitHint: "Opens gentle options for stepping back from this meetup chat.",
     softExitPresets: {
       stepBack: "Thanks, I am going to step back for now.",
       skipToday: "I am not able to make it today, but I appreciate the invite.",
@@ -756,6 +1033,21 @@ const chatTrustGateTranslations = {
     trustRequiredCopy: "Private chats open only when both people have verified contact details.",
     reviewSettings: "Review Trust status",
   },
+  Japanese: {
+    trustRequiredTitle: "連絡先認証が必要です",
+    trustRequiredCopy: "両方の人が連絡先を認証すると、プライベートチャットが利用できます。",
+    reviewSettings: "信頼ステータスを確認",
+  },
+  Korean: {
+    trustRequiredTitle: "연락처 인증이 필요해요",
+    trustRequiredCopy: "두 사람 모두 연락처를 인증하면 개인 채팅을 사용할 수 있어요.",
+    reviewSettings: "신뢰 상태 확인",
+  },
+  Chinese: {
+    trustRequiredTitle: "需要联系方式验证",
+    trustRequiredCopy: "只有双方都验证联系方式后，私人聊天才会开放。",
+    reviewSettings: "查看信任状态",
+  },
   Hebrew: {
     trustRequiredTitle: "נדרש אימות קשר",
     trustRequiredCopy: "צ'אטים פרטיים נפתחים רק כששני האנשים אימתו פרטי קשר.",
@@ -824,6 +1116,7 @@ export default function ChatsScreen() {
   const router = useRouter();
   const {
     isNightMode,
+    appLanguage,
     translationLanguage,
     contactEmail,
     contactPhone,
@@ -836,19 +1129,22 @@ export default function ChatsScreen() {
     screenReaderHints,
     saveSoftHelloMvpState,
   } = useAppSettings();
+  const appLanguageBase = getLanguageBase(appLanguage);
   const translationLanguageBase = getLanguageBase(translationLanguage);
   const isDay = !isNightMode;
-  const isRtl = rtlLanguages.has(translationLanguageBase);
-  const copy = chatTranslations[translationLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
-  const trustGateCopy = chatTrustGateTranslations[translationLanguageBase as keyof typeof chatTrustGateTranslations] ?? chatTrustGateTranslations.English;
-  const localizedReportFlowCopy = reportFlowTranslations[translationLanguageBase as keyof typeof reportFlowTranslations] ?? reportFlowCopy;
+  const isRtl = rtlLanguages.has(appLanguageBase);
+  const copy = chatTranslations[appLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
+  const chatCopy = { ...chatTranslations.English, ...copy };
+  const trustGateCopy = chatTrustGateTranslations[appLanguageBase as keyof typeof chatTrustGateTranslations] ?? chatTrustGateTranslations.English;
+  const localizedReportFlowCopy = reportFlowTranslations[appLanguageBase as keyof typeof reportFlowTranslations] ?? reportFlowCopy;
   const localizedArrivalUpdateCopy =
-    arrivalUpdateTranslations[translationLanguageBase as keyof typeof arrivalUpdateTranslations] ?? arrivalUpdateCopy;
-  const localizedSafetyReasons = safetyReasonTranslations[translationLanguageBase] ?? {};
-  const memberBlockCopy = memberBlockTranslations[translationLanguageBase as keyof typeof memberBlockTranslations] ?? memberBlockTranslations.English;
-  const chatMenuCopy = chatMenuTranslations[translationLanguageBase as keyof typeof chatMenuTranslations] ?? chatMenuTranslations.English;
-  const chatEventTitleCopy = chatEventTitleTranslations[translationLanguageBase] ?? {};
+    arrivalUpdateTranslations[appLanguageBase as keyof typeof arrivalUpdateTranslations] ?? arrivalUpdateCopy;
+  const localizedSafetyReasons = safetyReasonTranslations[appLanguageBase] ?? {};
+  const memberBlockCopy = memberBlockTranslations[appLanguageBase as keyof typeof memberBlockTranslations] ?? memberBlockTranslations.English;
+  const chatMenuCopy = chatMenuTranslations[appLanguageBase as keyof typeof chatMenuTranslations] ?? chatMenuTranslations.English;
+  const chatEventTitleCopy = chatEventTitleTranslations[appLanguageBase] ?? {};
   const translatedMessages = chatMessageTranslations[translationLanguageBase as keyof typeof chatMessageTranslations];
+  const transportationOptionsCopy = getProfilePreferenceCopy(appLanguageBase).transportation.options ?? {};
   const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
   const canUsePrivateChats = canChatPrivately(effectiveVerificationLevel);
   const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
@@ -873,12 +1169,12 @@ export default function ChatsScreen() {
   const softExitMessage = softExitChoice ? copy.softExitPresets[softExitChoice] : null;
   const selectedChat = allEvents.find((event) => event.id === selectedChatId) ?? allEvents.find((event) => event.id === "movie-night-watch-chat") ?? allEvents[0]!;
   const selectedChatTitle = chatEventTitleCopy[selectedChat.id] ?? selectedChat.title;
-  const selectedChatMembers = selectedChat.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(selectedChat, translationLanguageBase);
+  const selectedChatMembers = selectedChat.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(selectedChat, appLanguageBase);
   const groupChatTargets: ChatTarget[] = allEvents.map((event) => ({
     id: `group-${event.id}`,
     type: "group",
     title: chatEventTitleCopy[event.id] ?? event.title,
-    subtitle: `${event.venue} · ${event.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(event, translationLanguageBase)}`,
+    subtitle: `${event.venue} · ${event.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(event, appLanguageBase)}`,
     emoji: event.emoji,
     tone: event.imageTone,
     eventId: event.id,
@@ -903,7 +1199,7 @@ export default function ChatsScreen() {
   const eventId = selectedChat.id;
   const activeMessages =
     selectedChatTarget?.type === "person"
-      ? directMessagesByPerson[selectedChatTarget.personId] ?? []
+      ? localizeDirectMessages(directMessagesByPerson, appLanguageBase)[selectedChatTarget.personId] ?? []
       : messages;
   const hostUserId = "maya-host";
   const isHostBlocked = blockedUserIds.includes(hostUserId);
@@ -923,16 +1219,16 @@ export default function ChatsScreen() {
             <View style={styles.eventAvatar}><Text style={styles.eventEmoji}>💬</Text></View>
             <View style={styles.headerText}>
               <Text style={[styles.title, isDay && styles.dayTitle]}>{trustGateCopy.trustRequiredTitle}</Text>
-              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{getVerificationLevelLabel(effectiveVerificationLevel, translationLanguageBase)}</Text>
+              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}</Text>
             </View>
           </View>
           <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
             <Text style={[styles.trustGateTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredTitle}</Text>
             <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredCopy}</Text>
             <Text style={[styles.trustGateStatus, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
-              {getVerificationLevelLabel(effectiveVerificationLevel, translationLanguageBase)}
+              {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
-            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.trustGateButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Opens Profile so you can review and add contact verification details." : undefined}>
+            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.trustGateButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? chatCopy.reviewTrustStatusHint : undefined}>
               <Text style={styles.trustGateButtonText}>{trustGateCopy.reviewSettings}</Text>
             </TouchableOpacity>
           </View>
@@ -966,7 +1262,7 @@ export default function ChatsScreen() {
   };
 
   const sendRunningLateUpdate = () => {
-    sendArrivalUpdate(localizedArrivalUpdateCopy.runningLateMessage(transportationMethod));
+    sendArrivalUpdate(localizedArrivalUpdateCopy.runningLateMessage(transportationOptionsCopy[transportationMethod]?.label ?? transportationMethod));
   };
 
   const sendCannotMakeItUpdate = async (reason: CannotMakeItReason) => {
@@ -1146,7 +1442,7 @@ export default function ChatsScreen() {
             style={styles.iconButton}
             accessibilityRole="button"
             accessibilityLabel={chatMenuCopy.openLabel}
-            accessibilityHint={screenReaderHints ? "Returns to the chat chooser." : undefined}
+            accessibilityHint={screenReaderHints ? chatCopy.backToChatChooserHint : undefined}
           >
             <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
           </TouchableOpacity>
@@ -1160,7 +1456,7 @@ export default function ChatsScreen() {
             style={styles.chatPickerButton}
             accessibilityRole="button"
             accessibilityLabel={chatMenuCopy.openLabel}
-            accessibilityHint={screenReaderHints ? "Opens the list of meetup groups and people you can chat with." : undefined}
+            accessibilityHint={screenReaderHints ? chatCopy.openChatListHint : undefined}
           >
             <View style={[styles.eventAvatar, { backgroundColor: activeChatTone }]}><Text style={selectedChatTarget.type === "person" ? styles.eventInitial : styles.eventEmoji}>{activeChatEmoji}</Text></View>
             <View style={styles.headerText}>
@@ -1181,7 +1477,7 @@ export default function ChatsScreen() {
             style={styles.iconButton}
             accessibilityRole="button"
             accessibilityLabel={copy.safetyTitle}
-            accessibilityHint={screenReaderHints ? "Opens private safety, report, and block options for this chat." : undefined}
+            accessibilityHint={screenReaderHints ? chatCopy.safetyOptionsHint : undefined}
           >
             <IconSymbol name="more" color={isDay ? "#0B1220" : nsnColors.text} size={21} />
           </TouchableOpacity>
@@ -1196,7 +1492,7 @@ export default function ChatsScreen() {
               style={styles.iconButton}
               accessibilityRole="button"
               accessibilityLabel={copy.softExitTitle}
-              accessibilityHint={screenReaderHints ? "Opens gentle options for stepping back from this meetup chat." : undefined}
+              accessibilityHint={screenReaderHints ? chatCopy.softExitHint : undefined}
             >
               <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={21} />
             </TouchableOpacity>
