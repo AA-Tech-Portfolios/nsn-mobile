@@ -1,5 +1,5 @@
-import { Alert, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity } from "react-native";
-import { useState } from "react";
+import { Alert, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent } from "react-native";
+import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
@@ -32,6 +32,23 @@ const accountPauseTimelineOptions: { value: AccountPauseTimeline; label: string;
   { value: "One month", label: "One month", copy: "Take a longer break from discovery." },
   { value: "Until I return", label: "Until I return", copy: "Stay deactivated until you choose to come back." },
 ];
+
+type SettingsSectionJumpId =
+  | "settingsView"
+  | "batteryPerformance"
+  | "generalPrivacy"
+  | "profileVisibility"
+  | "profilePreview"
+  | "nameDisplay"
+  | "photoBlur"
+  | "gender"
+  | "notifications"
+  | "locationDiscovery"
+  | "safetyContact"
+  | "accessibility"
+  | "appearance"
+  | "language"
+  | "generalSettings";
 
 type SettingsCopy = {
   title: string;
@@ -2801,6 +2818,8 @@ const accessibilityTranslations: Record<string, Required<Pick<SettingsCopy, "acc
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const sectionOffsets = useRef<Partial<Record<SettingsSectionJumpId, number>>>({});
   const {
     isNightMode,
     accountPaused,
@@ -2961,6 +2980,27 @@ export default function SettingsScreen() {
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
   const contrastMutedStyle = highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
   const accessibilityCopy = accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
+  const quickJumpOptions: { id: SettingsSectionJumpId; label: string }[] = [
+    { id: "settingsView", label: "View" },
+    { id: "batteryPerformance", label: "Battery" },
+    { id: "generalPrivacy", label: "Privacy" },
+    { id: "profileVisibility", label: "Visibility" },
+    { id: "profilePreview", label: "Preview" },
+    ...(isAdvancedSettings
+      ? [
+          { id: "nameDisplay" as const, label: "Names" },
+          ...(comfortMode !== "Open Mode" ? [{ id: "photoBlur" as const, label: "Photo blur" }] : []),
+          { id: "gender" as const, label: "Gender" },
+          { id: "notifications" as const, label: "Notifications" },
+          { id: "locationDiscovery" as const, label: "Location" },
+          { id: "safetyContact" as const, label: "Safety" },
+          { id: "accessibility" as const, label: "Accessibility" },
+          { id: "appearance" as const, label: "Appearance" },
+          { id: "language" as const, label: "Language" },
+        ]
+      : []),
+    { id: "generalSettings", label: "Account" },
+  ];
   const extraAccessibilityCopy = appLanguageBase === "Hebrew"
     ? {
         largerTouchTargets: "אזורי לחיצה גדולים",
@@ -3052,6 +3092,18 @@ export default function SettingsScreen() {
   const setAndSaveBatterySaver = (value: boolean) => {
     setBatterySaver(value);
     saveSoftHelloMvpState({ batterySaver: value });
+  };
+  const registerSectionLayout = (id: SettingsSectionJumpId) => (event: LayoutChangeEvent) => {
+    sectionOffsets.current[id] = event.nativeEvent.layout.y;
+  };
+  const jumpToSection = (id: SettingsSectionJumpId) => {
+    const y = sectionOffsets.current[id];
+    if (typeof y !== "number") return;
+
+    scrollViewRef.current?.scrollTo({
+      y: Math.max(0, y - 8),
+      animated: !batterySaver && !reduceMotion,
+    });
   };
   const saveBooleanPrivacy = (key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView", value: boolean) => {
     if (key === "showSuburbArea") setShowSuburbArea(value);
@@ -3302,6 +3354,7 @@ export default function SettingsScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView
+        ref={scrollViewRef}
         style={[styles.screen, isDay && styles.dayContainer]}
         contentContainerStyle={[
           styles.container,
@@ -3321,7 +3374,22 @@ export default function SettingsScreen() {
           {copy.subtitle}
         </Text>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.quickJumpRow, isRtl && styles.rtlRow]}>
+          {quickJumpOptions.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              activeOpacity={0.78}
+              onPress={() => jumpToSection(option.id)}
+              accessibilityRole="button"
+              accessibilityLabel={`Jump to ${option.label}`}
+              style={[styles.quickJumpButton, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+            >
+              <Text style={[styles.quickJumpText, isDay && styles.dayActionText, contrastTextStyle]}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        <Text onLayout={registerSectionLayout("settingsView")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Settings view
         </Text>
         <View style={styles.settingsModeGrid}>
@@ -3343,7 +3411,7 @@ export default function SettingsScreen() {
           })}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("batteryPerformance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.batteryPerformance ?? englishCopy.batteryPerformance}
         </Text>
         <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3365,7 +3433,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("generalPrivacy")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           General privacy
         </Text>
         <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3387,7 +3455,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("profileVisibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Profile visibility
         </Text>
         <View style={styles.comfortModeGrid}>
@@ -3462,7 +3530,7 @@ export default function SettingsScreen() {
 
         {isAdvancedSettings ? (
           <>
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("nameDisplay")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Name display
         </Text>
         <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3502,7 +3570,7 @@ export default function SettingsScreen() {
 
         {comfortMode !== "Open Mode" ? (
           <>
-          <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          <Text onLayout={registerSectionLayout("photoBlur")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
             Photo blur level
           </Text>
           <View style={styles.blurLevelGrid}>
@@ -3523,7 +3591,7 @@ export default function SettingsScreen() {
           </>
         ) : null}
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("gender")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Gender
         </Text>
         <View style={styles.blurLevelGrid}>
@@ -3546,41 +3614,43 @@ export default function SettingsScreen() {
           </>
         ) : null}
 
-        <ProfileVisibilityPreview
-          displayName={displayName}
-          middleName={middleName}
-          lastName={lastName}
-          suburb={suburb}
-          age={age}
-          preferredAgeMin={preferredAgeMin}
-          preferredAgeMax={preferredAgeMax}
-          gender={gender}
-          middleNameDisplay={middleNameDisplay}
-          lastNameDisplay={lastNameDisplay}
-          interests={hobbiesInterests}
-          comfortPreferences={comfortPreferences}
-          contactPreferences={contactPreferences}
-          comfortMode={comfortMode}
-          profilePhotoUri={profilePhotoUri}
-          privateProfile={privateProfile}
-          blurProfilePhoto={blurProfilePhoto}
-          blurLevel={blurLevel}
-          warmUpLowerBlur={warmUpLowerBlur}
-          showSuburbArea={showSuburbArea}
-          showMiddleName={showMiddleName}
-          showLastName={showLastName}
-          showAge={showAge}
-          showPreferredAgeRange={showPreferredAgeRange}
-          showGender={showGender}
-          showInterests={showInterests}
-          showComfortPreferences={showComfortPreferences}
-          minimalProfileView={minimalProfileView}
-          isDay={isDay}
-        />
+        <View onLayout={registerSectionLayout("profilePreview")}>
+          <ProfileVisibilityPreview
+            displayName={displayName}
+            middleName={middleName}
+            lastName={lastName}
+            suburb={suburb}
+            age={age}
+            preferredAgeMin={preferredAgeMin}
+            preferredAgeMax={preferredAgeMax}
+            gender={gender}
+            middleNameDisplay={middleNameDisplay}
+            lastNameDisplay={lastNameDisplay}
+            interests={hobbiesInterests}
+            comfortPreferences={comfortPreferences}
+            contactPreferences={contactPreferences}
+            comfortMode={comfortMode}
+            profilePhotoUri={profilePhotoUri}
+            privateProfile={privateProfile}
+            blurProfilePhoto={blurProfilePhoto}
+            blurLevel={blurLevel}
+            warmUpLowerBlur={warmUpLowerBlur}
+            showSuburbArea={showSuburbArea}
+            showMiddleName={showMiddleName}
+            showLastName={showLastName}
+            showAge={showAge}
+            showPreferredAgeRange={showPreferredAgeRange}
+            showGender={showGender}
+            showInterests={showInterests}
+            showComfortPreferences={showComfortPreferences}
+            minimalProfileView={minimalProfileView}
+            isDay={isDay}
+          />
+        </View>
 
         {isAdvancedSettings ? (
           <>
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("notifications")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.notifications ?? englishCopy.notifications}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3602,7 +3672,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("locationDiscovery")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.locationDiscovery ?? englishCopy.locationDiscovery}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3624,7 +3694,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("safetyContact")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.safetyContact ?? englishCopy.safetyContact}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3664,7 +3734,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
+        <Text onLayout={registerSectionLayout("accessibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {allAccessibilityRows.map((row, index) => (
             <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, largerTouchTargets && styles.accessibleSettingRow, isRtl && styles.rtlRow, index < allAccessibilityRows.length - 1 && styles.rowDivider, isDay && index < allAccessibilityRows.length - 1 && styles.dayRowDivider, highContrast && index < allAccessibilityRows.length - 1 && styles.highContrastDivider]}>
@@ -3684,7 +3754,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("appearance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.appearance ?? englishCopy.appearance}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3808,7 +3878,7 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.translations}</Text>
+        <Text onLayout={registerSectionLayout("language")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.translations}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           <View style={[styles.dropdownRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider]}>
             <View style={styles.settingCopy}>
@@ -3995,7 +4065,7 @@ export default function SettingsScreen() {
           </>
         ) : null}
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("generalSettings")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           General settings
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -4126,6 +4196,30 @@ const styles = StyleSheet.create({
   },
   daySubtitle: {
     color: "#3B4A63",
+  },
+  quickJumpRow: {
+    gap: 8,
+    paddingBottom: 2,
+  },
+  quickJumpButton: {
+    minHeight: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 13,
+  },
+  dayQuickJumpButton: {
+    backgroundColor: "#DCEEFF",
+    borderColor: "#B8C9E6",
+  },
+  quickJumpText: {
+    color: "#7786FF",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
   },
   card: {
     borderRadius: 18,
