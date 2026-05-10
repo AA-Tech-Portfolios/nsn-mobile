@@ -29,6 +29,8 @@ export type SettingsCopySource = {
   allowMessageRequestsCopy?: string;
   safetyCheckIns?: string;
   safetyCheckInsCopy?: string;
+  batterySaver?: string;
+  batterySaverCopy?: string;
 };
 
 export type AccessibilityCopySource = {
@@ -57,6 +59,7 @@ export type SettingsControlState = {
   showDistanceInMeetups: boolean;
   allowMessageRequests: boolean;
   safetyCheckIns: boolean;
+  batterySaver: boolean;
   largerText: boolean;
   highContrast: boolean;
   reduceMotion: boolean;
@@ -78,6 +81,7 @@ export type SettingsControlActions = {
   setShowDistanceInMeetups: (value: boolean) => void;
   setAllowMessageRequests: (value: boolean) => void;
   setSafetyCheckIns: (value: boolean) => void;
+  setBatterySaver: (value: boolean) => void;
   setLargerText: (value: boolean) => void;
   setHighContrast: (value: boolean) => void;
   setReduceMotion: (value: boolean) => void;
@@ -97,6 +101,7 @@ export type SettingsToggleSections = {
   notificationRows: SettingsToggleRow[];
   locationRows: SettingsToggleRow[];
   safetyRows: SettingsToggleRow[];
+  performanceRows: SettingsToggleRow[];
   accessibilityRows: SettingsToggleRow[];
 };
 
@@ -218,6 +223,15 @@ export function createSettingsToggleSections({
         copy: copy.safetyCheckInsCopy ?? englishCopy.safetyCheckInsCopy ?? "",
         value: state.safetyCheckIns,
         onValueChange: actions.setSafetyCheckIns,
+      },
+    ],
+    performanceRows: [
+      {
+        key: "batterySaver",
+        label: copy.batterySaver ?? englishCopy.batterySaver ?? "",
+        copy: copy.batterySaverCopy ?? englishCopy.batterySaverCopy ?? "",
+        value: state.batterySaver,
+        onValueChange: actions.setBatterySaver,
       },
     ],
     accessibilityRows: [

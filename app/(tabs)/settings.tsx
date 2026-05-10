@@ -84,6 +84,9 @@ type SettingsCopy = {
   allowMessageRequestsCopy?: string;
   safetyCheckIns?: string;
   safetyCheckInsCopy?: string;
+  batteryPerformance?: string;
+  batterySaver?: string;
+  batterySaverCopy?: string;
   restartOnboarding?: string;
   restartOnboardingCopy?: string;
   restartOnboardingAction?: string;
@@ -143,6 +146,9 @@ const englishCopy: SettingsCopy = {
   allowMessageRequestsCopy: "Let people message before you join the same meetup.",
   safetyCheckIns: "Safety check-ins",
   safetyCheckInsCopy: "Enable gentle check-in prompts around joined meetups.",
+  batteryPerformance: "Battery & Performance",
+  batterySaver: "Battery saver",
+  batterySaverCopy: "Reduce animations, weather refresh, and haptics when you want NSN to use less power.",
   restartOnboarding: "Restart NSN onboarding",
   restartOnboardingCopy: "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
   restartOnboardingAction: "Start",
@@ -2843,6 +2849,8 @@ export default function SettingsScreen() {
     contactPreferences,
     profilePhotoUri,
     settingsPrivacyMode,
+    batterySaver,
+    setBatterySaver,
     largerText,
     setLargerText,
     highContrast,
@@ -3041,6 +3049,10 @@ export default function SettingsScreen() {
     setPrivateProfile(value);
     saveSoftHelloMvpState({ privateProfile: value });
   };
+  const setAndSaveBatterySaver = (value: boolean) => {
+    setBatterySaver(value);
+    saveSoftHelloMvpState({ batterySaver: value });
+  };
   const saveBooleanPrivacy = (key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView", value: boolean) => {
     if (key === "showSuburbArea") setShowSuburbArea(value);
     if (key === "showInterests") setShowInterests(value);
@@ -3162,7 +3174,7 @@ export default function SettingsScreen() {
     setOpenDropdown(null);
   };
 
-  const { privacyRows, notificationRows, locationRows, safetyRows, accessibilityRows } = createSettingsToggleSections({
+  const { privacyRows, notificationRows, locationRows, safetyRows, performanceRows, accessibilityRows } = createSettingsToggleSections({
     copy,
     englishCopy,
     accessibilityCopy,
@@ -3181,6 +3193,7 @@ export default function SettingsScreen() {
       showDistanceInMeetups,
       allowMessageRequests,
       safetyCheckIns,
+      batterySaver,
       largerText,
       highContrast,
       reduceMotion,
@@ -3201,6 +3214,7 @@ export default function SettingsScreen() {
       setShowDistanceInMeetups,
       setAllowMessageRequests,
       setSafetyCheckIns,
+      setBatterySaver: setAndSaveBatterySaver,
       setLargerText,
       setHighContrast,
       setReduceMotion,
@@ -3327,6 +3341,28 @@ export default function SettingsScreen() {
               </TouchableOpacity>
             );
           })}
+        </View>
+
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          {copy.batteryPerformance ?? englishCopy.batteryPerformance}
+        </Text>
+        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          {performanceRows.map((row) => (
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow]}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+              </View>
+              <Switch
+                value={row.value}
+                onValueChange={row.onValueChange}
+                accessibilityLabel={row.label}
+                accessibilityHint={screenReaderHints ? row.copy : undefined}
+                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+              />
+            </View>
+          ))}
         </View>
 
         <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>

@@ -192,6 +192,7 @@ type OnboardingSnapshot = {
   profileShortcutLayout?: ProfileShortcutLayout;
   profileWidthPreference?: ProfileWidthPreference;
   settingsPrivacyMode?: SettingsPrivacyMode;
+  batterySaver?: boolean;
   appLanguage?: string;
   translationLanguage?: string;
   brandThemeId?: BrandThemeId;
@@ -321,6 +322,8 @@ type AppSettings = {
   setProfileWidthPreference: (value: ProfileWidthPreference) => void;
   settingsPrivacyMode: SettingsPrivacyMode;
   setSettingsPrivacyMode: (value: SettingsPrivacyMode) => void;
+  batterySaver: boolean;
+  setBatterySaver: (value: boolean) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
   saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
   resetOnboarding: () => Promise<void>;
@@ -434,6 +437,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [profileShortcutLayout, setProfileShortcutLayout] = useState<ProfileShortcutLayout>("Clean");
   const [profileWidthPreference, setProfileWidthPreference] = useState<ProfileWidthPreference>("Contained");
   const [settingsPrivacyMode, setSettingsPrivacyMode] = useState<SettingsPrivacyMode>("Basic");
+  const [batterySaver, setBatterySaver] = useState(false);
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
@@ -527,6 +531,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
         setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
         setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
+        setBatterySaver(Boolean(snapshot.batterySaver));
         setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
         setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
         setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
@@ -600,6 +605,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
     setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
     setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
+    setBatterySaver(Boolean(snapshot.batterySaver));
     setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
@@ -678,6 +684,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       profileShortcutLayout,
       profileWidthPreference,
       settingsPrivacyMode,
+      batterySaver,
       appLanguage,
       translationLanguage,
       brandThemeId,
@@ -770,6 +777,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
     if (snapshot.profileWidthPreference !== undefined) setProfileWidthPreference(snapshot.profileWidthPreference);
     if (snapshot.settingsPrivacyMode !== undefined) setSettingsPrivacyMode(snapshot.settingsPrivacyMode);
+    if (snapshot.batterySaver !== undefined) setBatterySaver(snapshot.batterySaver);
     if (snapshot.appLanguage !== undefined) setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     if (snapshot.translationLanguage !== undefined) setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     if (snapshot.brandThemeId !== undefined) setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
@@ -916,6 +924,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setProfileWidthPreference,
         settingsPrivacyMode,
         setSettingsPrivacyMode,
+        batterySaver,
+        setBatterySaver,
         completeOnboarding,
         saveSoftHelloMvpState,
         resetOnboarding,

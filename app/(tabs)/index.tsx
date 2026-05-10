@@ -785,7 +785,7 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, appLanguage, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -817,6 +817,7 @@ export default function HomeScreen() {
     return categoryFilteredEvents.filter((event) => event.noiseLevel === noiseLevelPreference);
   }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, noiseLevelPreference, pinnedEventIds, showHiddenEvents]);
   const isDay = !isNightMode;
+  const effectiveReduceMotion = reduceMotion || batterySaver;
   const [now, setNow] = useState(new Date());
 
   const selectNoiseLevelPreference = (preference: NoiseLevelPreference) => {
@@ -842,9 +843,9 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-  const timer = setInterval(() => { setNow(new Date()); }, 1000); // updates every second
+  const timer = setInterval(() => { setNow(new Date()); }, batterySaver ? 60 * 1000 : 1000);
 
-  return () => clearInterval(timer);}, []
+  return () => clearInterval(timer);}, [batterySaver]
   );
 
 
@@ -939,9 +940,10 @@ export default function HomeScreen() {
 
   fetchWeather();
 
-  const timer = setInterval(fetchWeather, 15 * 60 * 1000);
+  const weatherRefreshMs = batterySaver ? 60 * 60 * 1000 : 15 * 60 * 1000;
+  const timer = setInterval(fetchWeather, weatherRefreshMs);
 
-  return () => clearInterval(timer);}, [timezone]
+  return () => clearInterval(timer);}, [batterySaver, timezone]
 
     );
 
@@ -960,7 +962,7 @@ export default function HomeScreen() {
   const modePulse = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-      if (reduceMotion) {
+      if (effectiveReduceMotion) {
         weatherFloat.setValue(0);
         return;
       }
@@ -983,10 +985,10 @@ export default function HomeScreen() {
       weatherAnimation.start();
 
       return () => weatherAnimation.stop();
-    }, [reduceMotion, weatherFloat]);
+    }, [effectiveReduceMotion, weatherFloat]);
 
     useEffect(() => {
-      if (reduceMotion) {
+      if (effectiveReduceMotion) {
         modeTransition.setValue(isDay ? 1 : 0);
         modePulse.setValue(0);
         return;
@@ -1016,7 +1018,7 @@ export default function HomeScreen() {
           }),
         ]),
       ]).start();
-    }, [isDay, modePulse, modeTransition, reduceMotion, slowerTransitions]);
+    }, [effectiveReduceMotion, isDay, modePulse, modeTransition, slowerTransitions]);
 
     const animatedScreenColor = modeTransition.interpolate({
       inputRange: [0, 1],

@@ -39,6 +39,8 @@ const copy: SettingsCopySource = {
   allowMessageRequestsCopy: "Allow new requests.",
   safetyCheckIns: "Safety check-ins",
   safetyCheckInsCopy: "Enable safety prompts.",
+  batterySaver: "Battery saver",
+  batterySaverCopy: "Reduce motion and background refresh.",
 };
 
 const accessibilityCopy: AccessibilityCopySource = {
@@ -67,6 +69,7 @@ const state: SettingsControlState = {
   showDistanceInMeetups: true,
   allowMessageRequests: false,
   safetyCheckIns: true,
+  batterySaver: false,
   largerText: false,
   highContrast: false,
   reduceMotion: false,
@@ -89,6 +92,7 @@ function createActions() {
     setShowDistanceInMeetups: vi.fn(),
     setAllowMessageRequests: vi.fn(),
     setSafetyCheckIns: vi.fn(),
+    setBatterySaver: vi.fn(),
     setLargerText: vi.fn(),
     setHighContrast: vi.fn(),
     setReduceMotion: vi.fn(),
@@ -111,6 +115,7 @@ describe("settings controls", () => {
       ...sections.notificationRows,
       ...sections.locationRows,
       ...sections.safetyRows,
+      ...sections.performanceRows,
       ...sections.accessibilityRows,
     ];
 
@@ -129,6 +134,7 @@ describe("settings controls", () => {
       "showDistanceInMeetups",
       "allowMessageRequests",
       "safetyCheckIns",
+      "batterySaver",
       "largerText",
       "highContrast",
       "reduceMotion",
@@ -153,6 +159,7 @@ describe("settings controls", () => {
     expect(actions.setShowDistanceInMeetups).toHaveBeenCalledWith(false);
     expect(actions.setAllowMessageRequests).toHaveBeenCalledWith(true);
     expect(actions.setSafetyCheckIns).toHaveBeenCalledWith(false);
+    expect(actions.setBatterySaver).toHaveBeenCalledWith(true);
     expect(actions.setLargerText).toHaveBeenCalledWith(true);
     expect(actions.setHighContrast).toHaveBeenCalledWith(true);
     expect(actions.setReduceMotion).toHaveBeenCalledWith(true);
