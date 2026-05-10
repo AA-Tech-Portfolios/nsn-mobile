@@ -21,6 +21,8 @@ export type SettingsCopySource = {
   chatNotificationsCopy?: string;
   quietNotifications?: string;
   quietNotificationsCopy?: string;
+  notificationSnoozed?: string;
+  notificationSnoozedCopy?: string;
   useApproximateLocation?: string;
   useApproximateLocationCopy?: string;
   showDistanceInMeetups?: string;
@@ -31,6 +33,8 @@ export type SettingsCopySource = {
   safetyCheckInsCopy?: string;
   batterySaver?: string;
   batterySaverCopy?: string;
+  lowLightMode?: string;
+  lowLightModeCopy?: string;
 };
 
 export type AccessibilityCopySource = {
@@ -55,11 +59,13 @@ export type SettingsControlState = {
   weatherAlerts: boolean;
   chatNotifications: boolean;
   quietNotifications: boolean;
+  notificationSnoozed: boolean;
   useApproximateLocation: boolean;
   showDistanceInMeetups: boolean;
   allowMessageRequests: boolean;
   safetyCheckIns: boolean;
   batterySaver: boolean;
+  lowLightMode: boolean;
   largerText: boolean;
   highContrast: boolean;
   reduceMotion: boolean;
@@ -77,11 +83,13 @@ export type SettingsControlActions = {
   setWeatherAlerts: (value: boolean) => void;
   setChatNotifications: (value: boolean) => void;
   setQuietNotifications: (value: boolean) => void;
+  setNotificationSnoozed: (value: boolean) => void;
   setUseApproximateLocation: (value: boolean) => void;
   setShowDistanceInMeetups: (value: boolean) => void;
   setAllowMessageRequests: (value: boolean) => void;
   setSafetyCheckIns: (value: boolean) => void;
   setBatterySaver: (value: boolean) => void;
+  setLowLightMode: (value: boolean) => void;
   setLargerText: (value: boolean) => void;
   setHighContrast: (value: boolean) => void;
   setReduceMotion: (value: boolean) => void;
@@ -192,6 +200,13 @@ export function createSettingsToggleSections({
         value: state.quietNotifications,
         onValueChange: actions.setQuietNotifications,
       },
+      {
+        key: "notificationSnoozed",
+        label: copy.notificationSnoozed ?? englishCopy.notificationSnoozed ?? "",
+        copy: copy.notificationSnoozedCopy ?? englishCopy.notificationSnoozedCopy ?? "",
+        value: state.notificationSnoozed,
+        onValueChange: actions.setNotificationSnoozed,
+      },
     ],
     locationRows: [
       {
@@ -232,6 +247,13 @@ export function createSettingsToggleSections({
         copy: copy.batterySaverCopy ?? englishCopy.batterySaverCopy ?? "",
         value: state.batterySaver,
         onValueChange: actions.setBatterySaver,
+      },
+      {
+        key: "lowLightMode",
+        label: copy.lowLightMode ?? englishCopy.lowLightMode ?? "",
+        copy: copy.lowLightModeCopy ?? englishCopy.lowLightModeCopy ?? "",
+        value: state.lowLightMode,
+        onValueChange: actions.setLowLightMode,
       },
     ],
     accessibilityRows: [

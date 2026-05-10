@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
-import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, useAppSettings } from "@/lib/app-settings";
+import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -31,6 +31,17 @@ const accountPauseTimelineOptions: { value: AccountPauseTimeline; label: string;
   { value: "One week", label: "One week", copy: "Step away for a calmer week." },
   { value: "One month", label: "One month", copy: "Take a longer break from discovery." },
   { value: "Until I return", label: "Until I return", copy: "Stay deactivated until you choose to come back." },
+];
+const lowLightLevelOptions: { value: LowLightLevel; label: string; copy: string }[] = [
+  { value: "Gentle", label: "Gentle", copy: "A light dim for bright rooms." },
+  { value: "Medium", label: "Medium", copy: "Balanced dimming for evening use." },
+  { value: "Deep", label: "Deep", copy: "The softest screen for darker rooms." },
+];
+const notificationSnoozeOptions: { value: NotificationSnoozePreset; label: string; copy: string }[] = [
+  { value: "1 hour", label: "1 hour", copy: "Pause routine pings briefly." },
+  { value: "Tonight", label: "Tonight", copy: "Keep the rest of today quiet." },
+  { value: "24 hours", label: "24 hours", copy: "Take a full-day notification break." },
+  { value: "Until I turn it back on", label: "Until I turn it back on", copy: "Stay snoozed until you return here." },
 ];
 
 type SettingsSectionJumpId =
@@ -91,6 +102,11 @@ type SettingsCopy = {
   chatNotificationsCopy?: string;
   quietNotifications?: string;
   quietNotificationsCopy?: string;
+  notificationSnoozed?: string;
+  notificationSnoozedCopy?: string;
+  notificationSnoozeDuration?: string;
+  notificationSnoozeDurationCopy?: string;
+  notificationSnoozeSafetyNote?: string;
   locationDiscovery?: string;
   useApproximateLocation?: string;
   useApproximateLocationCopy?: string;
@@ -104,6 +120,10 @@ type SettingsCopy = {
   batteryPerformance?: string;
   batterySaver?: string;
   batterySaverCopy?: string;
+  lowLightMode?: string;
+  lowLightModeCopy?: string;
+  lowLightLevel?: string;
+  lowLightLevelCopy?: string;
   restartOnboarding?: string;
   restartOnboardingCopy?: string;
   restartOnboardingAction?: string;
@@ -153,6 +173,11 @@ const englishCopy: SettingsCopy = {
   chatNotificationsCopy: "Notify me when meetup group chats have new messages.",
   quietNotifications: "Quiet notifications",
   quietNotificationsCopy: "Keep notification tone gentle and avoid attention-heavy alerts.",
+  notificationSnoozed: "Snooze notifications",
+  notificationSnoozedCopy: "Pause non-safety notifications for a set time.",
+  notificationSnoozeDuration: "Snooze duration",
+  notificationSnoozeDurationCopy: "Safety check-ins can still appear while routine notifications are snoozed.",
+  notificationSnoozeSafetyNote: "Safety check-ins stay controlled by Safety & Contact.",
   locationDiscovery: "Location & Discovery",
   useApproximateLocation: "Use approximate location",
   useApproximateLocationCopy: "Show nearby options without sharing a precise location.",
@@ -166,6 +191,10 @@ const englishCopy: SettingsCopy = {
   batteryPerformance: "Battery & Performance",
   batterySaver: "Battery saver",
   batterySaverCopy: "Reduce animations, weather refresh, and haptics when you want NSN to use less power.",
+  lowLightMode: "Low light mode",
+  lowLightModeCopy: "Dim bright surfaces for softer viewing in darker rooms.",
+  lowLightLevel: "Brightness level",
+  lowLightLevelCopy: "Choose how much Low light mode dims the app.",
   restartOnboarding: "Restart NSN onboarding",
   restartOnboardingCopy: "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
   restartOnboardingAction: "Start",
@@ -2870,6 +2899,10 @@ export default function SettingsScreen() {
     settingsPrivacyMode,
     batterySaver,
     setBatterySaver,
+    lowLightMode,
+    setLowLightMode,
+    lowLightLevel,
+    setLowLightLevel,
     largerText,
     setLargerText,
     highContrast,
@@ -2896,6 +2929,10 @@ export default function SettingsScreen() {
     setChatNotifications,
     quietNotifications,
     setQuietNotifications,
+    notificationSnoozed,
+    setNotificationSnoozed,
+    notificationSnoozePreset,
+    setNotificationSnoozePreset,
     useApproximateLocation,
     setUseApproximateLocation,
     showDistanceInMeetups,
@@ -3098,6 +3135,22 @@ export default function SettingsScreen() {
     setBatterySaver(value);
     saveSoftHelloMvpState({ batterySaver: value });
   };
+  const setAndSaveLowLightMode = (value: boolean) => {
+    setLowLightMode(value);
+    saveSoftHelloMvpState({ lowLightMode: value });
+  };
+  const saveLowLightLevel = (value: LowLightLevel) => {
+    setLowLightLevel(value);
+    saveSoftHelloMvpState({ lowLightLevel: value });
+  };
+  const setAndSaveNotificationSnoozed = (value: boolean) => {
+    setNotificationSnoozed(value);
+    saveSoftHelloMvpState({ notificationSnoozed: value });
+  };
+  const saveNotificationSnoozePreset = (value: NotificationSnoozePreset) => {
+    setNotificationSnoozePreset(value);
+    saveSoftHelloMvpState({ notificationSnoozePreset: value, notificationSnoozed: true });
+  };
   const registerSectionLayout = (id: SettingsSectionJumpId) => (event: LayoutChangeEvent) => {
     sectionOffsets.current[id] = event.nativeEvent.layout.y;
   };
@@ -3246,11 +3299,13 @@ export default function SettingsScreen() {
       weatherAlerts,
       chatNotifications,
       quietNotifications,
+      notificationSnoozed,
       useApproximateLocation,
       showDistanceInMeetups,
       allowMessageRequests,
       safetyCheckIns,
       batterySaver,
+      lowLightMode,
       largerText,
       highContrast,
       reduceMotion,
@@ -3267,11 +3322,13 @@ export default function SettingsScreen() {
       setWeatherAlerts,
       setChatNotifications,
       setQuietNotifications,
+      setNotificationSnoozed: setAndSaveNotificationSnoozed,
       setUseApproximateLocation,
       setShowDistanceInMeetups,
       setAllowMessageRequests,
       setSafetyCheckIns,
       setBatterySaver: setAndSaveBatterySaver,
+      setLowLightMode: setAndSaveLowLightMode,
       setLargerText,
       setHighContrast,
       setReduceMotion,
@@ -3436,8 +3493,8 @@ export default function SettingsScreen() {
           {copy.batteryPerformance ?? englishCopy.batteryPerformance}
         </Text>
         <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {performanceRows.map((row) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow]}>
+          {performanceRows.map((row, index) => (
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.rowDivider, isDay && (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.dayRowDivider, highContrast && (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.highContrastDivider]}>
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
@@ -3452,6 +3509,41 @@ export default function SettingsScreen() {
               />
             </View>
           ))}
+          {lowLightMode ? (
+            <View style={styles.performanceLevelRow}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+                  {copy.lowLightLevel ?? englishCopy.lowLightLevel}
+                </Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  {copy.lowLightLevelCopy ?? englishCopy.lowLightLevelCopy}
+                </Text>
+                <View style={[styles.lowLightLevelGrid, isRtl && styles.rtlRow]}>
+                  {lowLightLevelOptions.map((option) => {
+                    const active = lowLightLevel === option.value;
+
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.82}
+                        onPress={() => saveLowLightLevel(option.value)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={`${option.label} low light level`}
+                        accessibilityHint={screenReaderHints ? option.copy : undefined}
+                        style={[styles.lowLightLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                      >
+                        <Text style={[styles.lowLightLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>
+                          {option.label}
+                        </Text>
+                        <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </View>
+          ) : null}
         </View>
 
         <Text onLayout={registerSectionLayout("generalPrivacy")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
@@ -3676,7 +3768,7 @@ export default function SettingsScreen() {
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {notificationRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < notificationRows.length - 1 && styles.rowDivider, isDay && index < notificationRows.length - 1 && styles.dayRowDivider, highContrast && index < notificationRows.length - 1 && styles.highContrastDivider]}>
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.rowDivider, isDay && (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.dayRowDivider, highContrast && (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.highContrastDivider]}>
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
@@ -3691,6 +3783,44 @@ export default function SettingsScreen() {
               />
             </View>
           ))}
+          {notificationSnoozed ? (
+            <View style={styles.notificationSnoozeRow}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+                  {copy.notificationSnoozeDuration ?? englishCopy.notificationSnoozeDuration}
+                </Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  {copy.notificationSnoozeDurationCopy ?? englishCopy.notificationSnoozeDurationCopy}
+                </Text>
+                <View style={[styles.snoozeOptionGrid, isRtl && styles.rtlRow]}>
+                  {notificationSnoozeOptions.map((option) => {
+                    const active = notificationSnoozePreset === option.value;
+
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.82}
+                        onPress={() => saveNotificationSnoozePreset(option.value)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={`${option.label} notification snooze`}
+                        accessibilityHint={screenReaderHints ? option.copy : undefined}
+                        style={[styles.snoozeOptionButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                      >
+                        <Text style={[styles.snoozeOptionTitle, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>
+                          {option.label}
+                        </Text>
+                        <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  {copy.notificationSnoozeSafetyNote ?? englishCopy.notificationSnoozeSafetyNote}
+                </Text>
+              </View>
+            </View>
+          ) : null}
         </View>
 
         <Text onLayout={registerSectionLayout("locationDiscovery")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
@@ -4461,6 +4591,14 @@ const styles = StyleSheet.create({
   settingCopy: {
     flex: 1,
   },
+  performanceLevelRow: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  notificationSnoozeRow: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
   rtlRow: {
     flexDirection: "row-reverse",
   },
@@ -4801,6 +4939,59 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 10,
+  },
+  lowLightLevelGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 12,
+  },
+  lowLightLevelButton: {
+    minHeight: 66,
+    flexGrow: 1,
+    flexBasis: 150,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  lowLightLevelText: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  snoozeOptionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 12,
+  },
+  snoozeOptionButton: {
+    minHeight: 72,
+    flexGrow: 1,
+    flexBasis: 170,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  snoozeOptionTitle: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  snoozeSafetyNote: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    lineHeight: 16,
+    marginTop: 10,
   },
   disabledOption: { opacity: 0.45 },
   blurLevelText: {

@@ -127,6 +127,8 @@ export type ProfileGender = "Not specified" | "Male" | "Female" | "Other";
 export type ProfileNameDisplayMode = "Hidden" | "Initial" | "Full";
 export type SettingsPrivacyMode = "Basic" | "Advanced";
 export type AccountPauseTimeline = "A few days" | "One week" | "One month" | "Until I return";
+export type LowLightLevel = "Gentle" | "Medium" | "Deep";
+export type NotificationSnoozePreset = "1 hour" | "Tonight" | "24 hours" | "Until I turn it back on";
 export type DietaryPreference =
   | "No preference"
   | "Vegetarian"
@@ -193,6 +195,10 @@ type OnboardingSnapshot = {
   profileWidthPreference?: ProfileWidthPreference;
   settingsPrivacyMode?: SettingsPrivacyMode;
   batterySaver?: boolean;
+  lowLightMode?: boolean;
+  lowLightLevel?: LowLightLevel;
+  notificationSnoozed?: boolean;
+  notificationSnoozePreset?: NotificationSnoozePreset;
   appLanguage?: string;
   translationLanguage?: string;
   brandThemeId?: BrandThemeId;
@@ -324,6 +330,10 @@ type AppSettings = {
   setSettingsPrivacyMode: (value: SettingsPrivacyMode) => void;
   batterySaver: boolean;
   setBatterySaver: (value: boolean) => void;
+  lowLightMode: boolean;
+  setLowLightMode: (value: boolean) => void;
+  lowLightLevel: LowLightLevel;
+  setLowLightLevel: (value: LowLightLevel) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
   saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
   resetOnboarding: () => Promise<void>;
@@ -357,6 +367,10 @@ type AppSettings = {
   setChatNotifications: (value: boolean) => void;
   quietNotifications: boolean;
   setQuietNotifications: (value: boolean) => void;
+  notificationSnoozed: boolean;
+  setNotificationSnoozed: (value: boolean) => void;
+  notificationSnoozePreset: NotificationSnoozePreset;
+  setNotificationSnoozePreset: (value: NotificationSnoozePreset) => void;
   useApproximateLocation: boolean;
   setUseApproximateLocation: (value: boolean) => void;
   showDistanceInMeetups: boolean;
@@ -438,6 +452,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [profileWidthPreference, setProfileWidthPreference] = useState<ProfileWidthPreference>("Contained");
   const [settingsPrivacyMode, setSettingsPrivacyMode] = useState<SettingsPrivacyMode>("Basic");
   const [batterySaver, setBatterySaver] = useState(false);
+  const [lowLightMode, setLowLightMode] = useState(false);
+  const [lowLightLevel, setLowLightLevel] = useState<LowLightLevel>("Medium");
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
@@ -453,6 +469,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [weatherAlerts, setWeatherAlerts] = useState(true);
   const [chatNotifications, setChatNotifications] = useState(true);
   const [quietNotifications, setQuietNotifications] = useState(false);
+  const [notificationSnoozed, setNotificationSnoozed] = useState(false);
+  const [notificationSnoozePreset, setNotificationSnoozePreset] = useState<NotificationSnoozePreset>("Tonight");
   const [useApproximateLocation, setUseApproximateLocation] = useState(true);
   const [showDistanceInMeetups, setShowDistanceInMeetups] = useState(true);
   const [allowMessageRequests, setAllowMessageRequests] = useState(false);
@@ -532,6 +550,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
         setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
         setBatterySaver(Boolean(snapshot.batterySaver));
+        setLowLightMode(Boolean(snapshot.lowLightMode));
+        setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
+        setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
+        setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
         setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
         setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
         setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
@@ -606,6 +628,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
     setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
     setBatterySaver(Boolean(snapshot.batterySaver));
+    setLowLightMode(Boolean(snapshot.lowLightMode));
+    setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
+    setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
+    setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
     setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
@@ -685,6 +711,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       profileWidthPreference,
       settingsPrivacyMode,
       batterySaver,
+      lowLightMode,
+      lowLightLevel,
+      notificationSnoozed,
+      notificationSnoozePreset,
       appLanguage,
       translationLanguage,
       brandThemeId,
@@ -778,6 +808,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.profileWidthPreference !== undefined) setProfileWidthPreference(snapshot.profileWidthPreference);
     if (snapshot.settingsPrivacyMode !== undefined) setSettingsPrivacyMode(snapshot.settingsPrivacyMode);
     if (snapshot.batterySaver !== undefined) setBatterySaver(snapshot.batterySaver);
+    if (snapshot.lowLightMode !== undefined) setLowLightMode(snapshot.lowLightMode);
+    if (snapshot.lowLightLevel !== undefined) setLowLightLevel(snapshot.lowLightLevel);
+    if (snapshot.notificationSnoozed !== undefined) setNotificationSnoozed(snapshot.notificationSnoozed);
+    if (snapshot.notificationSnoozePreset !== undefined) setNotificationSnoozePreset(snapshot.notificationSnoozePreset);
     if (snapshot.appLanguage !== undefined) setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     if (snapshot.translationLanguage !== undefined) setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     if (snapshot.brandThemeId !== undefined) setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
@@ -926,6 +960,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setSettingsPrivacyMode,
         batterySaver,
         setBatterySaver,
+        lowLightMode,
+        setLowLightMode,
+        lowLightLevel,
+        setLowLightLevel,
         completeOnboarding,
         saveSoftHelloMvpState,
         resetOnboarding,
@@ -959,6 +997,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setChatNotifications,
         quietNotifications,
         setQuietNotifications,
+        notificationSnoozed,
+        setNotificationSnoozed,
+        notificationSnoozePreset,
+        setNotificationSnoozePreset,
         useApproximateLocation,
         setUseApproximateLocation,
         showDistanceInMeetups,
