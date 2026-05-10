@@ -8,7 +8,6 @@
 - [x] Add Meetups and Notifications placeholder screens matching the NSN visual system
 - [x] Configure bottom tab navigation for Home, Meetups, Chats, Notifications, and Profile
 - [x] Generate and install a custom NSN app icon and update app branding configuration
-- [x] Validate TypeScript, app startup health, and core local flows
 
 ## Upcoming
 
@@ -21,7 +20,7 @@
 
 ### Emergency and Safety
 
-- [ ] Plan emergency safety features for later, with careful privacy, legal, and regional review before implementation
+- [ ] Complete safety, privacy, legal, and regional compliance specification before emergency feature implementation
 - [ ] Add optional trusted contact setup for meetups
 - [ ] Add discreet emergency help action from active meetup chats and event details
 - [ ] Add optional check-in timer with "I'm safe" confirmation and escalation if the user does not respond
@@ -108,12 +107,13 @@
 
 ### Brand and Operations
 
-- [x] Clarify product split between future/global release context and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
-- [x] Define separate brand systems: future/global directions should stay out of NSN screens, while North Shore Nights keeps the local light-blue/dark-blue Australian design direction
-- [ ] Revisit global product naming only outside the active NSN pilot
 - [x] Clarify product split between SoftHello global release and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
 - [x] Define separate brand systems: SoftHello should use the soft purple global identity, while North Shore Nights can keep the local light-blue/dark-blue Australian design direction
 - [ ] Create first release tag when ready: `v0.1.0 - Trust Foundations`
-- [ ] Rename project to a global name
+- [ ] Post-pilot: evaluate transition toward SoftHello branding based on demand, testing, and regional expansion
 - [ ] Remove AI Expo related settings as the app develops
 - [ ] Add optional donation button
+
+## Release Notes
+
+- 2026-05-10: Validated TypeScript, app startup health, and core local flows during pilot setup.
