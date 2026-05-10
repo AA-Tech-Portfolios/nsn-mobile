@@ -1,8 +1,8 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { getLanguageBase, timezoneOptions, timezoneRegions, type NoiseLevelPreference, type TimezoneRegion, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
@@ -75,32 +75,6 @@ const appLocaleMap: Record<string, string> = {
   "Spanish (Spain)": "es-ES",
   Yiddish: "yi",
 };
-const timezoneRegionTranslations: Record<string, Partial<Record<TimezoneRegion | "All", string>>> = {
-  Arabic: {
-    All: "الكل",
-    UTC: "UTC",
-    Oceania: "أوقيانوسيا",
-    Asia: "آسيا",
-    "Middle East": "الشرق الأوسط",
-    Africa: "أفريقيا",
-    Europe: "أوروبا",
-    "North America": "أمريكا الشمالية",
-    "Central America": "أمريكا الوسطى",
-    "South America": "أمريكا الجنوبية",
-  },
-  Hebrew: {
-    All: "הכל",
-    UTC: "UTC",
-    Oceania: "אוקיאניה",
-    Asia: "אסיה",
-    "Middle East": "המזרח התיכון",
-    Africa: "אפריקה",
-    Europe: "אירופה",
-    "North America": "צפון אמריקה",
-    "Central America": "מרכז אמריקה",
-    "South America": "דרום אמריקה",
-  },
-};
 const filterKeys = ["All", "Outdoor", "Indoor", "Food", "Active"] as const;
 type EventFilter = (typeof filterKeys)[number];
 const noiseFilterKeys: NoiseLevelPreference[] = ["Any", ...noiseLevelOptions];
@@ -114,6 +88,36 @@ const noiseGuideTranslations = {
       Quiet: { icon: "🔇", label: "Quiet", copy: "Low noise" },
       Balanced: { icon: "🌿", label: "Balanced", copy: "Moderate noise" },
       Lively: { icon: "🔊", label: "Lively", copy: "More energy" },
+    },
+  },
+  Chinese: {
+    title: "噪音水平指南",
+    copy: "按场地的实际声音水平筛选，和预期聊天多少分开考虑。",
+    filters: { Any: "全部", Quiet: "安静", Balanced: "适中", Lively: "热闹" },
+    levels: {
+      Quiet: { icon: "🔇", label: "安静", copy: "低噪音" },
+      Balanced: { icon: "🌿", label: "适中", copy: "中等噪音" },
+      Lively: { icon: "🔊", label: "热闹", copy: "更有活力" },
+    },
+  },
+  Japanese: {
+    title: "騒音レベルガイド",
+    copy: "会話量の期待とは別に、場所そのものの音量で絞り込めます。",
+    filters: { Any: "すべて", Quiet: "静か", Balanced: "ほどよい", Lively: "にぎやか" },
+    levels: {
+      Quiet: { icon: "🔇", label: "静か", copy: "低い騒音" },
+      Balanced: { icon: "🌿", label: "ほどよい", copy: "中程度の騒音" },
+      Lively: { icon: "🔊", label: "にぎやか", copy: "より活気あり" },
+    },
+  },
+  Korean: {
+    title: "소음 수준 안내",
+    copy: "예상 대화량과 별개로, 장소의 실제 소리 수준으로 필터링하세요.",
+    filters: { Any: "전체", Quiet: "조용함", Balanced: "적당함", Lively: "활기참" },
+    levels: {
+      Quiet: { icon: "🔇", label: "조용함", copy: "낮은 소음" },
+      Balanced: { icon: "🌿", label: "적당함", copy: "중간 소음" },
+      Lively: { icon: "🔊", label: "활기참", copy: "더 에너지 있음" },
     },
   },
   Arabic: {
@@ -187,6 +191,39 @@ const eventLivePreviews: Record<string, { photo: string; place: string; pulse: s
 };
 
 const eventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
+  Chinese: {
+    "picnic-easy-hangout": { title: "野餐 — 轻松相处", category: "户外", people: "2–4 位成员", description: "带些零食，坐下来放松。不需要一直聊天。", tone: "适中", weather: "受天气影响" },
+    "beach-day-chill-vibes": { title: "海边日 — 放松氛围", category: "户外", people: "3–6 位成员", description: "阳光、海边和好相处的人。自带毛巾。", tone: "适中", weather: "受天气影响" },
+    "library-calm-study": { title: "图书馆安静学习", category: "室内", people: "2–5 位成员", description: "安静的桌边时间，轻松聊天休息和温和重置。", tone: "安静", weather: "适合雨天" },
+    "coffee-lane-cove": { title: "咖啡 — 轻松打招呼", category: "美食", people: "2–4 位成员", description: "喝杯咖啡，找个舒服的位置，需要时随时离开。", tone: "适中", weather: "有室内备用" },
+    "harbour-walk-waverton": { title: "海港散步 — 轻松节奏", category: "活动", people: "3–6 位成员", description: "慢慢散步，有安静时刻和小范围聊天的空间。", tone: "适中", weather: "受天气影响" },
+    "movie-night-watch-chat": { title: "电影夜 — 观看 + 聊天", category: "室内", people: "2–4 位成员", description: "先看电影，之后如果感觉合适再轻松聊天。", tone: "安静", weather: "有室内备用" },
+    "board-games-coffee": { title: "桌游 + 咖啡", category: "室内", people: "3–5 位成员", description: "简单游戏、热饮和轻松的聊天开场。", tone: "适中", weather: "适合雨天" },
+    "ramen-small-table": { title: "拉面 — 小桌", category: "美食", people: "3–5 位成员", description: "热乎的食物、简单介绍，不必有压力待到很晚。", tone: "适中", weather: "适合雨天" },
+    "quiet-music-listening": { title: "安静音乐聆听", category: "室内", people: "2–5 位成员", description: "分享几首平静的歌，只按舒服的程度聊天。", tone: "安静", weather: "有室内备用" },
+  },
+  Japanese: {
+    "picnic-easy-hangout": { title: "ピクニック — 気楽な集まり", category: "屋外", people: "2–4人", description: "軽食を持って、座って、リラックス。ずっと話す必要はありません。", tone: "ほどよい", weather: "天気次第" },
+    "beach-day-chill-vibes": { title: "ビーチデー — ゆったりした雰囲気", category: "屋外", people: "3–6人", description: "太陽、海、気楽な時間。タオルを持参してください。", tone: "ほどよい", weather: "天気次第" },
+    "library-calm-study": { title: "図書館で静かな勉強", category: "屋内", people: "2–5人", description: "静かなテーブル時間、軽い会話休憩、やさしいリセット。", tone: "静か", weather: "雨でも安心" },
+    "coffee-lane-cove": { title: "コーヒー — 気軽にこんにちは", category: "食事", people: "2–4人", description: "コーヒーを飲み、居心地よく座り、必要ならいつでも帰れます。", tone: "ほどよい", weather: "屋内の予備案あり" },
+    "harbour-walk-waverton": { title: "ハーバー散歩 — ゆっくりペース", category: "アクティブ", people: "3–6人", description: "静かな時間と横並びの会話ができる、ゆっくりした散歩。", tone: "ほどよい", weather: "天気次第" },
+    "movie-night-watch-chat": { title: "映画ナイト — 観る + 話す", category: "屋内", people: "2–4人", description: "まず映画を観て、よければ後で少し話します。", tone: "静か", weather: "屋内の予備案あり" },
+    "board-games-coffee": { title: "ボードゲーム + コーヒー", category: "屋内", people: "3–5人", description: "シンプルなゲーム、温かい飲み物、気軽な会話のきっかけ。", tone: "ほどよい", weather: "雨でも安心" },
+    "ramen-small-table": { title: "ラーメン — 小さなテーブル", category: "食事", people: "3–5人", description: "温かい食事、簡単な自己紹介、遅くまで残るプレッシャーなし。", tone: "ほどよい", weather: "雨でも安心" },
+    "quiet-music-listening": { title: "静かな音楽を聴く", category: "屋内", people: "2–5人", description: "落ち着いた曲をいくつか共有し、心地よい分だけ話します。", tone: "静か", weather: "屋内の予備案あり" },
+  },
+  Korean: {
+    "picnic-easy-hangout": { title: "피크닉 — 편안한 시간", category: "야외", people: "2–4명", description: "간식을 가져와 앉아서 쉬어요. 계속 말해야 할 부담은 없어요.", tone: "적당함", weather: "날씨 영향 있음" },
+    "beach-day-chill-vibes": { title: "해변의 날 — 여유로운 분위기", category: "야외", people: "3–6명", description: "햇살, 바다, 좋은 사람들. 수건을 가져오세요.", tone: "적당함", weather: "날씨 영향 있음" },
+    "library-calm-study": { title: "도서관 차분한 스터디", category: "실내", people: "2–5명", description: "조용한 테이블 시간, 가벼운 대화 휴식, 부드러운 리셋.", tone: "조용함", weather: "비 오는 날 적합" },
+    "coffee-lane-cove": { title: "커피 — 부담 없는 인사", category: "음식", people: "2–4명", description: "커피를 마시고 편한 곳에 앉아 필요하면 언제든 떠날 수 있어요.", tone: "적당함", weather: "실내 대안 있음" },
+    "harbour-walk-waverton": { title: "하버 산책 — 쉬운 속도", category: "활동", people: "3–6명", description: "조용한 순간과 옆자리 대화가 가능한 느린 산책.", tone: "적당함", weather: "날씨 영향 있음" },
+    "movie-night-watch-chat": { title: "영화 밤 — 보기 + 대화", category: "실내", people: "2–4명", description: "먼저 영화를 보고, 괜찮으면 이후에 가볍게 대화해요.", tone: "조용함", weather: "실내 대안 있음" },
+    "board-games-coffee": { title: "보드게임 + 커피", category: "실내", people: "3–5명", description: "간단한 게임, 따뜻한 음료, 쉬운 대화 시작점.", tone: "적당함", weather: "비 오는 날 적합" },
+    "ramen-small-table": { title: "라멘 — 작은 테이블", category: "음식", people: "3–5명", description: "따뜻한 음식, 간단한 소개, 늦게까지 있어야 한다는 부담 없음.", tone: "적당함", weather: "비 오는 날 적합" },
+    "quiet-music-listening": { title: "조용한 음악 감상", category: "실내", people: "2–5명", description: "차분한 노래 몇 곡을 공유하고 편한 만큼만 이야기해요.", tone: "조용함", weather: "실내 대안 있음" },
+  },
   Hebrew: {
     "picnic-easy-hangout": {
       title: "פיקניק — מפגש קליל",
@@ -335,15 +372,6 @@ const homeTranslations = {
     afternoon: "☀️ Good afternoon",
     evening: "🌙 Good evening",
     change: "Change",
-    timezone: "Timezone",
-    done: "Done",
-    allRegions: "All",
-    detectAutomatically: "Detect automatically",
-    detectAutomaticallyCopy: "Use this device's timezone when it matches a supported city.",
-    searchTimezones: "Search city, country, or timezone",
-    noTimezonesFound: "No matching timezones found.",
-    loadingCapitals: "Loading world capitals...",
-    worldCapitalAutoTimezone: "World capital · auto weather timezone",
     weatherUpdate: "Weather update",
     loadingWeather: (city: string) => `Loading ${city} weather...`,
     rainLikely: (city: string, temp: number) => `☔ Rain likely today • ${city} ${temp}°C • Indoor alternatives recommended.`,
@@ -363,6 +391,23 @@ const homeTranslations = {
     clickForMore: "Click here for more info...",
     dayVsNightMore: "Day events are brighter and activity-friendly. Night events lean calmer, indoors, and easier to leave when your social battery is low.",
     weatherAdaptiveMore: "Outdoor events can carry backup plans. If rain or heat gets in the way, NSN can suggest indoor alternatives before you commit.",
+    searchEvents: "Search events",
+    searchEventsCopy: "Search events by suburb, activity, time, group size, or vibe.",
+    searchEventsHint: "Shows a temporary search options message.",
+    changeEventView: "Change event view and filters",
+    changeEventViewCopy: "Choose how events are shown: compact view, comfortable view, nearby, small groups only, weather-safe, or map/list view.",
+    changeEventViewHint: "Shows a temporary view and filter options message.",
+    dismissMessage: "Dismiss message",
+    ok: "OK",
+    eveningSuggestion: "Evening suggestion",
+    eveningSuggestionCopy: "It looks like evening where you are. Switch to Night mode?",
+    daytimeSuggestion: "Daytime suggestion",
+    daytimeSuggestionCopy: "It looks like daytime where you are. Switch to Day mode?",
+    switch: "Switch",
+    switchToNightMode: "Switch to Night mode",
+    switchToDayMode: "Switch to Day mode",
+    dismissThemeSuggestion: "Dismiss theme suggestion",
+    notNow: "Not now",
   },
   Arabic: {
     subtitle: "لقاءات بلا ضغط حول نورث شور.",
@@ -372,13 +417,6 @@ const homeTranslations = {
     afternoon: "☀️ مساء الخير",
     evening: "🌙 مساء هادئ",
     change: "تغيير",
-    timezone: "المنطقة الزمنية",
-    done: "تم",
-    allRegions: "الكل",
-    detectAutomatically: "اكتشاف تلقائي",
-    detectAutomaticallyCopy: "استخدم المنطقة الزمنية لهذا الجهاز عندما تطابق مدينة مدعومة.",
-    loadingCapitals: "جارٍ تحميل عواصم العالم...",
-    worldCapitalAutoTimezone: "عاصمة عالمية · منطقة زمنية تلقائية للطقس",
     weatherUpdate: "تحديث الطقس",
     loadingWeather: (city: string) => `جارٍ تحميل طقس ${city}...`,
     rainLikely: (city: string, temp: number) => `☔ المطر محتمل اليوم • ${city} ${temp}°C • نوصي ببدائل داخلية.`,
@@ -405,13 +443,6 @@ const homeTranslations = {
     afternoon: "☀️ 下午好",
     evening: "🌙 晚上好",
     change: "更改",
-    timezone: "时区",
-    done: "完成",
-    allRegions: "全部",
-    detectAutomatically: "自动检测",
-    detectAutomaticallyCopy: "当设备时区匹配支持城市时使用它。",
-    loadingCapitals: "正在加载世界首都...",
-    worldCapitalAutoTimezone: "世界首都 · 自动天气时区",
     weatherUpdate: "天气更新",
     loadingWeather: (city: string) => `正在加载 ${city} 天气...`,
     rainLikely: (city: string, temp: number) => `☔ 今天可能下雨 • ${city} ${temp}°C • 建议选择室内替代方案。`,
@@ -422,6 +453,8 @@ const homeTranslations = {
     dayEvents: "☀️ 白天活动",
     eveningEvents: "🌙 夜间活动",
     seeAll: "查看全部",
+    hideHidden: "隐藏已隐藏",
+    createMeetup: "创建聚会",
     dayVsNight: "白天与夜晚",
     dayVsNightCopy: "在合适的时间找到合适的氛围。",
     weatherAdaptive: "适应天气",
@@ -429,6 +462,23 @@ const homeTranslations = {
     clickForMore: "点击查看更多...",
     dayVsNightMore: "白天活动更明亮、更适合活动。夜晚活动更安静、偏室内，也更容易在社交能量低时离开。",
     weatherAdaptiveMore: "户外活动可以有备用方案。如果下雨或太热，NSN 可以在你确认前建议室内选择。",
+    searchEvents: "搜索活动",
+    searchEventsCopy: "按郊区、活动、时间、人数或氛围搜索活动。",
+    searchEventsHint: "显示临时搜索选项消息。",
+    changeEventView: "更改活动视图和筛选",
+    changeEventViewCopy: "选择活动显示方式：紧凑视图、舒适视图、附近、小团体优先、天气安全或地图/列表视图。",
+    changeEventViewHint: "显示临时视图和筛选选项消息。",
+    dismissMessage: "关闭消息",
+    ok: "好的",
+    eveningSuggestion: "夜晚建议",
+    eveningSuggestionCopy: "你所在的位置看起来已到晚上。切换到夜间模式？",
+    daytimeSuggestion: "白天建议",
+    daytimeSuggestionCopy: "你所在的位置看起来是白天。切换到日间模式？",
+    switch: "切换",
+    switchToNightMode: "切换到夜间模式",
+    switchToDayMode: "切换到日间模式",
+    dismissThemeSuggestion: "关闭模式建议",
+    notNow: "暂不",
   },
   French: {
     subtitle: "Rencontres sans pression autour de la North Shore.",
@@ -438,13 +488,6 @@ const homeTranslations = {
     afternoon: "☀️ Bon après-midi",
     evening: "🌙 Bonsoir",
     change: "Changer",
-    timezone: "Fuseau horaire",
-    done: "Terminé",
-    allRegions: "Tout",
-    detectAutomatically: "Détecter automatiquement",
-    detectAutomaticallyCopy: "Utiliser le fuseau de cet appareil quand il correspond à une ville prise en charge.",
-    loadingCapitals: "Chargement des capitales du monde...",
-    worldCapitalAutoTimezone: "Capitale mondiale · fuseau météo automatique",
     weatherUpdate: "Météo",
     loadingWeather: (city: string) => `Chargement de la météo de ${city}...`,
     rainLikely: (city: string, temp: number) => `☔ Pluie probable aujourd'hui • ${city} ${temp}°C • Alternatives intérieures recommandées.`,
@@ -471,13 +514,6 @@ const homeTranslations = {
     afternoon: "☀️ Guten Tag",
     evening: "🌙 Guten Abend",
     change: "Ändern",
-    timezone: "Zeitzone",
-    done: "Fertig",
-    allRegions: "Alle",
-    detectAutomatically: "Automatisch erkennen",
-    detectAutomaticallyCopy: "Die Zeitzone dieses Geräts verwenden, wenn sie zu einer unterstützten Stadt passt.",
-    loadingCapitals: "Welt-Hauptstädte werden geladen...",
-    worldCapitalAutoTimezone: "Welt-Hauptstadt · automatische Wetter-Zeitzone",
     weatherUpdate: "Wetter-Update",
     loadingWeather: (city: string) => `${city}-Wetter wird geladen...`,
     rainLikely: (city: string, temp: number) => `☔ Heute wahrscheinlich Regen • ${city} ${temp}°C • Innenalternativen empfohlen.`,
@@ -504,15 +540,6 @@ const homeTranslations = {
     afternoon: "☀️ צהריים טובים",
     evening: "🌙 ערב טוב",
     change: "שנה",
-    timezone: "אזור זמן",
-    done: "סיום",
-    allRegions: "הכל",
-    detectAutomatically: "זיהוי אוטומטי",
-    detectAutomaticallyCopy: "השתמש באזור הזמן של המכשיר כשהוא מתאים לעיר נתמכת.",
-    searchTimezones: "חיפוש עיר, מדינה או אזור זמן",
-    noTimezonesFound: "לא נמצאו אזורי זמן תואמים.",
-    loadingCapitals: "טוען ערי בירה בעולם...",
-    worldCapitalAutoTimezone: "עיר בירה עולמית · אזור זמן אוטומטי למזג אוויר",
     weatherUpdate: "עדכון מזג אוויר",
     loadingWeather: (city: string) => `טוען מזג אוויר עבור ${city}...`,
     rainLikely: (city: string, temp: number) => `☔ סביר גשם היום • ${city} ${temp}°C • מומלצות חלופות מקורות.`,
@@ -541,13 +568,6 @@ const homeTranslations = {
     afternoon: "☀️ こんにちは",
     evening: "🌙 こんばんは",
     change: "変更",
-    timezone: "タイムゾーン",
-    done: "完了",
-    allRegions: "すべて",
-    detectAutomatically: "自動検出",
-    detectAutomaticallyCopy: "対応している都市と一致する場合、このデバイスのタイムゾーンを使います。",
-    loadingCapitals: "世界の首都を読み込み中...",
-    worldCapitalAutoTimezone: "世界の首都 · 天気用自動タイムゾーン",
     weatherUpdate: "天気の更新",
     loadingWeather: (city: string) => `${city} の天気を読み込み中...`,
     rainLikely: (city: string, temp: number) => `☔ 今日は雨の可能性 • ${city} ${temp}°C • 屋内の代替案がおすすめです。`,
@@ -558,6 +578,8 @@ const homeTranslations = {
     dayEvents: "☀️ 昼のイベント",
     eveningEvents: "🌙 夜のイベント",
     seeAll: "すべて見る",
+    hideHidden: "非表示を隠す",
+    createMeetup: "ミートアップを作成",
     dayVsNight: "昼と夜",
     dayVsNightCopy: "ちょうどよい時間に、ちょうどよい雰囲気を。",
     weatherAdaptive: "天気に対応",
@@ -565,6 +587,23 @@ const homeTranslations = {
     clickForMore: "詳しく見る...",
     dayVsNightMore: "昼のイベントは明るく活動向きです。夜のイベントはより落ち着き、屋内寄りで、社交エネルギーが低い時にも離れやすいです。",
     weatherAdaptiveMore: "屋外イベントにはバックアップ案を持たせられます。雨や暑さが気になる場合、参加前に屋内案を提案できます。",
+    searchEvents: "イベントを検索",
+    searchEventsCopy: "郊外、活動、時間、人数、雰囲気でイベントを検索できます。",
+    searchEventsHint: "一時的な検索オプションメッセージを表示します。",
+    changeEventView: "イベント表示とフィルターを変更",
+    changeEventViewCopy: "コンパクト表示、ゆったり表示、近く、小人数のみ、天気対応、地図/リスト表示を選べます。",
+    changeEventViewHint: "一時的な表示・フィルターオプションメッセージを表示します。",
+    dismissMessage: "メッセージを閉じる",
+    ok: "了解",
+    eveningSuggestion: "夜の提案",
+    eveningSuggestionCopy: "現在地は夜の時間帯のようです。夜モードに切り替えますか？",
+    daytimeSuggestion: "昼の提案",
+    daytimeSuggestionCopy: "現在地は昼の時間帯のようです。昼モードに切り替えますか？",
+    switch: "切り替え",
+    switchToNightMode: "夜モードに切り替え",
+    switchToDayMode: "昼モードに切り替え",
+    dismissThemeSuggestion: "モード提案を閉じる",
+    notNow: "今はしない",
   },
   Korean: {
     subtitle: "노스쇼어 주변의 부담 없는 모임.",
@@ -574,13 +613,6 @@ const homeTranslations = {
     afternoon: "☀️ 좋은 오후",
     evening: "🌙 좋은 저녁",
     change: "변경",
-    timezone: "시간대",
-    done: "완료",
-    allRegions: "전체",
-    detectAutomatically: "자동 감지",
-    detectAutomaticallyCopy: "지원 도시와 맞으면 이 기기의 시간대를 사용합니다.",
-    loadingCapitals: "세계 수도를 불러오는 중...",
-    worldCapitalAutoTimezone: "세계 수도 · 자동 날씨 시간대",
     weatherUpdate: "날씨 업데이트",
     loadingWeather: (city: string) => `${city} 날씨를 불러오는 중...`,
     rainLikely: (city: string, temp: number) => `☔ 오늘 비 가능성 • ${city} ${temp}°C • 실내 대안을 추천해요.`,
@@ -591,6 +623,8 @@ const homeTranslations = {
     dayEvents: "☀️ 낮 이벤트",
     eveningEvents: "🌙 저녁 이벤트",
     seeAll: "모두 보기",
+    hideHidden: "숨긴 항목 숨기기",
+    createMeetup: "모임 만들기",
     dayVsNight: "낮과 밤",
     dayVsNightCopy: "맞는 시간에 맞는 분위기를 찾아요.",
     weatherAdaptive: "날씨에 맞춤",
@@ -598,6 +632,23 @@ const homeTranslations = {
     clickForMore: "더 보기...",
     dayVsNightMore: "낮 이벤트는 더 밝고 활동적이에요. 밤 이벤트는 더 차분하고 실내 중심이며, 사회적 에너지가 낮을 때 떠나기 쉬워요.",
     weatherAdaptiveMore: "야외 이벤트에는 백업 계획을 둘 수 있어요. 비나 더위가 방해되면 참여 전에 실내 대안을 제안할 수 있어요.",
+    searchEvents: "이벤트 검색",
+    searchEventsCopy: "교외, 활동, 시간, 그룹 크기 또는 분위기로 이벤트를 검색하세요.",
+    searchEventsHint: "임시 검색 옵션 메시지를 표시합니다.",
+    changeEventView: "이벤트 보기 및 필터 변경",
+    changeEventViewCopy: "컴팩트 보기, 편안한 보기, 근처, 소규모만, 날씨 안전, 지도/목록 보기를 선택하세요.",
+    changeEventViewHint: "임시 보기 및 필터 옵션 메시지를 표시합니다.",
+    dismissMessage: "메시지 닫기",
+    ok: "확인",
+    eveningSuggestion: "저녁 제안",
+    eveningSuggestionCopy: "현재 위치가 저녁 시간처럼 보여요. 밤 모드로 전환할까요?",
+    daytimeSuggestion: "낮 제안",
+    daytimeSuggestionCopy: "현재 위치가 낮 시간처럼 보여요. 낮 모드로 전환할까요?",
+    switch: "전환",
+    switchToNightMode: "밤 모드로 전환",
+    switchToDayMode: "낮 모드로 전환",
+    dismissThemeSuggestion: "모드 제안 닫기",
+    notNow: "나중에",
   },
   Russian: {
     subtitle: "Встречи без давления вокруг North Shore.",
@@ -607,13 +658,6 @@ const homeTranslations = {
     afternoon: "☀️ Добрый день",
     evening: "🌙 Добрый вечер",
     change: "Изменить",
-    timezone: "Часовой пояс",
-    done: "Готово",
-    allRegions: "Все",
-    detectAutomatically: "Определить автоматически",
-    detectAutomaticallyCopy: "Использовать часовой пояс устройства, если он совпадает с поддерживаемым городом.",
-    loadingCapitals: "Загружаем столицы мира...",
-    worldCapitalAutoTimezone: "Мировая столица · авточасовой пояс для погоды",
     weatherUpdate: "Погода",
     loadingWeather: (city: string) => `Загружаем погоду для ${city}...`,
     rainLikely: (city: string, temp: number) => `☔ Сегодня вероятен дождь • ${city} ${temp}°C • Рекомендуем варианты в помещении.`,
@@ -640,13 +684,6 @@ const homeTranslations = {
     afternoon: "☀️ Buenas tardes",
     evening: "🌙 Buenas noches",
     change: "Cambiar",
-    timezone: "Zona horaria",
-    done: "Listo",
-    allRegions: "Todo",
-    detectAutomatically: "Detectar automáticamente",
-    detectAutomaticallyCopy: "Usar la zona horaria de este dispositivo cuando coincida con una ciudad compatible.",
-    loadingCapitals: "Cargando capitales del mundo...",
-    worldCapitalAutoTimezone: "Capital mundial · zona horaria automática para el clima",
     weatherUpdate: "Actualización del clima",
     loadingWeather: (city: string) => `Cargando clima de ${city}...`,
     rainLikely: (city: string, temp: number) => `☔ Probable lluvia hoy • ${city} ${temp}°C • Recomendamos alternativas interiores.`,
@@ -666,79 +703,6 @@ const homeTranslations = {
     weatherAdaptiveMore: "Los eventos al aire libre pueden tener un plan alternativo. Si llueve o hace mucho calor, NSN puede sugerir opciones interiores.",
   },
 } as const;
-
-type RestCountry = {
-  cca2?: string;
-  capital?: string[];
-  capitalInfo?: { latlng?: number[] };
-  name?: { common?: string };
-  region?: string;
-  subregion?: string;
-  timezones?: string[];
-};
-
-const normalizeIdPart = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
-const parseUtcOffsetMinutes = (value?: string) => {
-  if (!value || value === "UTC") {
-    return 0;
-  }
-
-  const match = value.match(/^UTC([+-])(\d{2}):?(\d{2})?$/);
-
-  if (!match) {
-    return 0;
-  }
-
-  const sign = match[1] === "-" ? -1 : 1;
-  const hours = Number(match[2]);
-  const minutes = Number(match[3] ?? "0");
-
-  return sign * (hours * 60 + minutes);
-};
-
-const mapCountryRegionToTimezoneRegion = (region?: string, subregion?: string): TimezoneRegion => {
-  if (region === "Africa") {
-    return "Africa";
-  }
-
-  if (region === "Europe") {
-    return "Europe";
-  }
-
-  if (region === "Oceania") {
-    return "Oceania";
-  }
-
-  if (region === "Asia") {
-    return subregion === "Western Asia" ? "Middle East" : "Asia";
-  }
-
-  if (region === "Americas") {
-    if (subregion?.includes("South")) {
-      return "South America";
-    }
-
-    if (subregion?.includes("Central") || subregion === "Caribbean") {
-      return "Central America";
-    }
-
-    return "North America";
-  }
-
-  return "UTC";
-};
-
-const getTimezoneNow = (date: Date, option: TimezoneSetting) =>
-  option.utcOffsetMinutes === undefined ? date : new Date(date.getTime() + option.utcOffsetMinutes * 60 * 1000);
-
-const getDisplayTimeZone = (option: TimezoneSetting) => (option.utcOffsetMinutes === undefined ? option.timeZone : "UTC");
 
 function HeaderActionButton({
   accessibilityLabel,
@@ -797,9 +761,10 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, setTimezone, appLanguage, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, appLanguage, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
+  const homeCopy = { ...homeTranslations.English, ...copy };
   const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const locale = appLocaleMap[appLanguage] ?? appLocaleMap[appLanguageBase] ?? "en-AU";
@@ -829,51 +794,6 @@ export default function HomeScreen() {
   }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, noiseLevelPreference, pinnedEventIds, showHiddenEvents]);
   const isDay = !isNightMode;
   const [now, setNow] = useState(new Date());
-  const [isTimezonePickerOpen, setIsTimezonePickerOpen] = useState(false);
-  const [worldCapitalOptions, setWorldCapitalOptions] = useState<TimezoneSetting[]>([]);
-  const [isLoadingCapitals, setIsLoadingCapitals] = useState(false);
-  const [capitalLoadError, setCapitalLoadError] = useState<string | null>(null);
-  const timezonePickerRegions = ["All", ...timezoneRegions] as const;
-  const [selectedTimezoneRegion, setSelectedTimezoneRegion] = useState<TimezoneRegion | "All">("All");
-  const [timezoneSearch, setTimezoneSearch] = useState("");
-  const allTimezoneOptions = useMemo(() => {
-    const curatedKeys = new Set(timezoneOptions.map((option) => `${option.city}|${option.country}`.toLowerCase()));
-    const capitals = worldCapitalOptions.filter((option) => !curatedKeys.has(`${option.city}|${option.country}`.toLowerCase()));
-
-    return [...timezoneOptions, ...capitals].sort((a, b) => a.label.localeCompare(b.label));
-  }, [worldCapitalOptions]);
-  const normalizedTimezoneSearch = timezoneSearch.trim().toLowerCase();
-  const regionTimezoneOptions = allTimezoneOptions.filter((option) => {
-    const matchesRegion = selectedTimezoneRegion === "All" || option.region === selectedTimezoneRegion;
-
-    if (!matchesRegion) {
-      return false;
-    }
-
-    if (!normalizedTimezoneSearch) {
-      return true;
-    }
-
-    return [option.label, option.city, option.country, option.region, option.timeZone, option.utcOffset]
-      .join(" ")
-      .toLowerCase()
-      .includes(normalizedTimezoneSearch);
-  });
-
-  const detectTimezone = () => {
-    const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const detectedOption = allTimezoneOptions.find((option) => option.timeZone === detectedTimeZone);
-
-    if (detectedOption) {
-      setTimezone(detectedOption);
-      setSelectedTimezoneRegion(detectedOption.region);
-    } else {
-      setTimezone(timezoneOptions[0]);
-      setSelectedTimezoneRegion("UTC");
-    }
-
-    setIsTimezonePickerOpen(false);
-  };
 
   const selectNoiseLevelPreference = (preference: NoiseLevelPreference) => {
     saveSoftHelloMvpState({ noiseLevelPreference: preference });
@@ -881,17 +801,17 @@ export default function HomeScreen() {
 
   const showSearchPlaceholder = useCallback(() => {
     setHeaderPlaceholder({
-      title: "Search events",
-      copy: "Search events by suburb, activity, time, group size, or vibe.",
+      title: homeCopy.searchEvents,
+      copy: homeCopy.searchEventsCopy,
     });
-  }, []);
+  }, [homeCopy.searchEvents, homeCopy.searchEventsCopy]);
 
   const showViewFilterPlaceholder = useCallback(() => {
     setHeaderPlaceholder({
-      title: "Change event view and filters",
-      copy: "Choose how events are shown: compact view, comfortable view, nearby, small groups only, weather-safe, or map/list view.",
+      title: homeCopy.changeEventView,
+      copy: homeCopy.changeEventViewCopy,
     });
-  }, []);
+  }, [homeCopy.changeEventView, homeCopy.changeEventViewCopy]);
 
   const switchToSuggestedTheme = (suggestedMode: "day" | "night") => {
     setIsNightMode(suggestedMode === "night");
@@ -903,96 +823,19 @@ export default function HomeScreen() {
   return () => clearInterval(timer);}, []
   );
 
-  useEffect(() => {
-    if (!isTimezonePickerOpen || worldCapitalOptions.length > 0 || isLoadingCapitals) {
-      return;
-    }
 
-    let isMounted = true;
-
-    async function fetchWorldCapitals() {
-      try {
-        setIsLoadingCapitals(true);
-        setCapitalLoadError(null);
-
-        const response = await fetch(
-          "https://restcountries.com/v3.1/all?fields=name,capital,capitalInfo,timezones,region,subregion,cca2"
-        );
-
-        if (!response.ok) {
-          throw new Error("Capital list request failed");
-        }
-
-        const countries = (await response.json()) as RestCountry[];
-        const capitalOptions = countries
-          .flatMap((country) => {
-            const capital = country.capital?.[0];
-            const countryName = country.name?.common;
-            const [latitude, longitude] = country.capitalInfo?.latlng ?? [];
-
-            if (!capital || !countryName || latitude === undefined || longitude === undefined) {
-              return [];
-            }
-
-            const utcOffset = country.timezones?.[0] ?? "UTC";
-            const idCountryPart = country.cca2?.toLowerCase() ?? normalizeIdPart(countryName);
-
-            return [
-              {
-                id: `capital-${idCountryPart}-${normalizeIdPart(capital)}`,
-                label: capital,
-                city: capital,
-                country: countryName,
-                region: mapCountryRegionToTimezoneRegion(country.region, country.subregion),
-                timeZone: "UTC",
-                utcOffset,
-                utcOffsetMinutes: parseUtcOffsetMinutes(utcOffset),
-                usesAutoTimezone: true,
-                latitude,
-                longitude,
-              } satisfies TimezoneSetting,
-            ];
-          })
-          .sort((a, b) => a.label.localeCompare(b.label));
-
-        if (isMounted) {
-          setWorldCapitalOptions(capitalOptions);
-        }
-      } catch (error) {
-        console.log("World capitals fetch failed:", error);
-
-        if (isMounted) {
-          setCapitalLoadError("World capitals could not load right now. Curated cities are still available.");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingCapitals(false);
-        }
-      }
-    }
-
-    fetchWorldCapitals();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isLoadingCapitals, isTimezonePickerOpen, worldCapitalOptions.length]);
-
-  const timezoneNow = getTimezoneNow(now, timezone);
-  const displayTimeZone = getDisplayTimeZone(timezone);
-
-  const formattedDate = timezoneNow.toLocaleDateString(locale, {
+  const formattedDate = now.toLocaleDateString(locale, {
   weekday: "long",
   day: "numeric",
   month: "long",
-  timeZone: displayTimeZone,
+  timeZone: timezone.timeZone,
 }
   );
 
-  const formattedTime = timezoneNow.toLocaleTimeString(locale, {
+  const formattedTime = now.toLocaleTimeString(locale, {
   hour: "2-digit",
   minute: "2-digit",
-  timeZone: displayTimeZone,
+  timeZone: timezone.timeZone,
 }
 
   );
@@ -1002,8 +845,8 @@ export default function HomeScreen() {
     new Intl.DateTimeFormat(locale, {
       hour: "numeric",
       hour12: false,
-      timeZone: displayTimeZone,
-    }).format(timezoneNow)
+      timeZone: timezone.timeZone,
+    }).format(now)
   );
 
   const greeting =
@@ -1013,22 +856,22 @@ export default function HomeScreen() {
     ? copy.afternoon
     : copy.evening;
 
-  const localHour = now.getHours();
+  const localHour = hour;
   const localTimeSuggestedMode = localHour >= 18 || localHour < 6 ? "night" : "day";
   const shouldShowThemeSuggestion = localTimeSuggestedMode !== mode && dismissedThemeSuggestion !== localTimeSuggestedMode;
   const themeSuggestion =
     localTimeSuggestedMode === "night"
       ? {
           icon: "🌙",
-          title: "Evening suggestion",
-          copy: "It looks like evening where you are. Switch to Night mode?",
-          button: "Switch",
+          title: homeCopy.eveningSuggestion,
+          copy: homeCopy.eveningSuggestionCopy,
+          button: homeCopy.switch,
         }
       : {
           icon: "☀️",
-          title: "Daytime suggestion",
-          copy: "It looks like daytime where you are. Switch to Day mode?",
-          button: "Switch",
+          title: homeCopy.daytimeSuggestion,
+          copy: homeCopy.daytimeSuggestionCopy,
+          button: homeCopy.switch,
         };
 
   // ===== WEATHER =====
@@ -1054,7 +897,7 @@ export default function HomeScreen() {
       setWeather({ temperature: null, rainChance: null });
 
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.usesAutoTimezone ? "auto" : timezone.timeZone)}&forecast_days=1`
+        `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.timeZone)}&forecast_days=1`
       );
 
       const data = await response.json();
@@ -1189,16 +1032,16 @@ export default function HomeScreen() {
           <View style={[styles.headerActions, isRtl && styles.rtlRow]}>
             <HeaderActionButton
               onPress={showSearchPlaceholder}
-              accessibilityLabel="Search events"
-              accessibilityHint="Shows a temporary search options message."
+              accessibilityLabel={homeCopy.searchEvents}
+              accessibilityHint={homeCopy.searchEventsHint}
               isDay={isDay}
             >
               <IconSymbol name="magnifyingglass" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
             </HeaderActionButton>
             <HeaderActionButton
               onPress={showViewFilterPlaceholder}
-              accessibilityLabel="Change event view and filters"
-              accessibilityHint="Shows a temporary view and filter options message."
+              accessibilityLabel={homeCopy.changeEventView}
+              accessibilityHint={homeCopy.changeEventViewHint}
               isDay={isDay}
             >
               <IconSymbol name="ellipsis" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
@@ -1223,10 +1066,10 @@ export default function HomeScreen() {
               activeOpacity={0.78}
               onPress={() => setHeaderPlaceholder(null)}
               accessibilityRole="button"
-              accessibilityLabel="Dismiss message"
+              accessibilityLabel={homeCopy.dismissMessage}
               style={[styles.headerPlaceholderDismiss, isDay && styles.dayHeaderPlaceholderDismiss]}
             >
-              <Text style={[styles.headerPlaceholderDismissText, isDay && styles.dayMutedText]}>OK</Text>
+              <Text style={[styles.headerPlaceholderDismissText, isDay && styles.dayMutedText]}>{homeCopy.ok}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -1251,7 +1094,7 @@ export default function HomeScreen() {
                   activeOpacity={0.82}
                   onPress={() => switchToSuggestedTheme(localTimeSuggestedMode)}
                   accessibilityRole="button"
-                  accessibilityLabel={localTimeSuggestedMode === "night" ? "Switch to Night mode" : "Switch to Day mode"}
+                  accessibilityLabel={localTimeSuggestedMode === "night" ? homeCopy.switchToNightMode : homeCopy.switchToDayMode}
                   style={styles.themeSuggestionSwitch}
                 >
                   <Text style={styles.themeSuggestionSwitchText}>{themeSuggestion.button}</Text>
@@ -1260,10 +1103,10 @@ export default function HomeScreen() {
                   activeOpacity={0.78}
                   onPress={() => setDismissedThemeSuggestion(localTimeSuggestedMode)}
                   accessibilityRole="button"
-                  accessibilityLabel="Dismiss theme suggestion"
+                  accessibilityLabel={homeCopy.dismissThemeSuggestion}
                   style={[styles.themeSuggestionDismiss, isDay && styles.dayThemeSuggestionDismiss]}
                 >
-                  <Text style={[styles.themeSuggestionDismissText, isDay && styles.dayMutedText]}>Not now</Text>
+                  <Text style={[styles.themeSuggestionDismissText, isDay && styles.dayMutedText]}>{homeCopy.notNow}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1275,102 +1118,7 @@ export default function HomeScreen() {
             <Text style={[styles.dateText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{greeting} • {formattedDate} • {formattedTime}</Text>
             <Text style={[styles.locationText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>📍 {timezone.label}, {timezone.country}</Text>
           </View>
-          <TouchableOpacity activeOpacity={0.75} onPress={() => setIsTimezonePickerOpen(true)}>
-            <Text style={[styles.changeText, isDay ? styles.dayLinkText : null]}>{copy.change}</Text>
-          </TouchableOpacity>
         </View>
-
-        <Modal
-          animationType="fade"
-          transparent
-          visible={isTimezonePickerOpen}
-          onRequestClose={() => setIsTimezonePickerOpen(false)}
-        >
-          <View style={styles.modalBackdrop}>
-            <View style={[styles.timezoneSheet, isDay && styles.dayTimezoneSheet]}>
-              <View style={[styles.timezoneHeader, isRtl && styles.rtlRow]}>
-                <Text style={[styles.timezoneTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.timezone}</Text>
-                <TouchableOpacity activeOpacity={0.75} onPress={() => setIsTimezonePickerOpen(false)}>
-                  <Text style={[styles.changeText, isDay && styles.dayLinkText]}>{copy.done}</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity
-                activeOpacity={0.78}
-                onPress={detectTimezone}
-                style={[styles.autoTimezoneButton, isDay && styles.dayTimezoneOption]}
-              >
-                <Text style={[styles.timezoneOptionLabel, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.detectAutomatically}</Text>
-                <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.detectAutomaticallyCopy}</Text>
-              </TouchableOpacity>
-
-              <TextInput
-                value={timezoneSearch}
-                onChangeText={setTimezoneSearch}
-                placeholder={"searchTimezones" in copy ? copy.searchTimezones : "Search city, country, or timezone"}
-                placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
-                style={[styles.timezoneSearchInput, isDay && styles.dayTimezoneSearchInput, isRtl && styles.rtlText]}
-                selectionColor={nsnColors.primary}
-              />
-
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.timezoneRegionRow, isRtl && styles.rtlRow]}>
-                {timezonePickerRegions.map((region) => {
-                  const active = selectedTimezoneRegion === region;
-                  const regionLabel = timezoneRegionTranslations[appLanguageBase]?.[region] ?? (region === "All" ? copy.allRegions : region);
-
-                  return (
-                    <TouchableOpacity
-                      key={region}
-                      activeOpacity={0.78}
-                      onPress={() => setSelectedTimezoneRegion(region)}
-                      style={[styles.timezoneRegionPill, isDay && styles.dayTimezoneRegionPill, active && styles.timezoneRegionPillActive]}
-                    >
-                      <Text style={[styles.timezoneRegionText, isDay && styles.dayMutedText, active && styles.timezoneRegionTextActive]}>{regionLabel}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-
-              <ScrollView style={styles.timezoneList} nestedScrollEnabled showsVerticalScrollIndicator>
-              {isLoadingCapitals ? (
-                <Text style={[styles.timezoneStatusText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.loadingCapitals}</Text>
-              ) : null}
-              {capitalLoadError ? (
-                <Text style={[styles.timezoneStatusText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{capitalLoadError}</Text>
-              ) : null}
-              {regionTimezoneOptions.length === 0 ? (
-                <Text style={[styles.timezoneStatusText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  {"noTimezonesFound" in copy ? copy.noTimezonesFound : "No matching timezones found."}
-                </Text>
-              ) : null}
-              {regionTimezoneOptions.map((option) => {
-                const selected = option.id === timezone.id;
-
-                return (
-                  <TouchableOpacity
-                    key={option.id}
-                    activeOpacity={0.78}
-                    onPress={() => {
-                      setTimezone(option);
-                      setIsTimezonePickerOpen(false);
-                    }}
-                    style={[styles.timezoneOption, isDay && styles.dayTimezoneOption, selected && styles.timezoneOptionActive, isRtl && styles.rtlRow]}
-                  >
-                    <View style={isRtl && styles.rtlBlock}>
-                      <Text style={[styles.timezoneOptionLabel, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{option.label}</Text>
-                      <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{option.country} · {option.utcOffset}</Text>
-                      <Text style={[styles.timezoneOptionMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                        {option.usesAutoTimezone ? copy.worldCapitalAutoTimezone : option.timeZone}
-                      </Text>
-                    </View>
-                    <Text style={[styles.timezoneCheck, selected && styles.timezoneCheckActive]}>{selected ? "✓" : ""}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
 
         <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
           <View style={isRtl && styles.rtlBlock}>
@@ -1502,8 +1250,6 @@ const styles = StyleSheet.create({
   dayPillTextActive: { color: "#FFFFFF", },
   dayScreen: { backgroundColor: "#EAF4FF" },
   dayText: { color: "#111111", },
-  dayTimezoneOption: { borderColor: "#B8C9E6" },
-  dayTimezoneSheet: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   dayNoiseLevelItem: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
   dayNoiseLevelItemActive: { backgroundColor: "#EEF7FF", borderColor: nsnColors.primary },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24 },
@@ -1549,27 +1295,6 @@ const styles = StyleSheet.create({
   dateText: { color: nsnColors.text, fontSize: 13, lineHeight: 19 },
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   changeText: { color: "#96A5FF", fontSize: 12, fontWeight: "700" },
-  modalBackdrop: { flex: 1, justifyContent: "center", backgroundColor: "rgba(0,0,0,0.45)", padding: 16 },
-  timezoneSheet: { width: "100%", maxWidth: 920, maxHeight: "88%", alignSelf: "center", borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, padding: 16, gap: 10 },
-  timezoneHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 },
-  timezoneTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "800", lineHeight: 24 },
-  autoTimezoneButton: { minHeight: 62, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, justifyContent: "center" },
-  timezoneSearchInput: { minHeight: 46, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", color: nsnColors.text, paddingHorizontal: 13, fontSize: 14, fontWeight: "700" },
-  dayTimezoneSearchInput: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6", color: "#0B1220" },
-  timezoneRegionRow: { gap: 8, paddingVertical: 2 },
-  timezoneRegionPill: { minHeight: 34, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, alignItems: "center", justifyContent: "center" },
-  dayTimezoneRegionPill: { borderColor: "#B8C9E6", backgroundColor: "#EAF4FF" },
-  timezoneRegionPillActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
-  timezoneRegionText: { color: nsnColors.muted, fontSize: 12, fontWeight: "800" },
-  timezoneRegionTextActive: { color: nsnColors.text },
-  timezoneList: { maxHeight: 520 },
-  timezoneOption: { minHeight: 58, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  timezoneOptionActive: { borderColor: nsnColors.primary },
-  timezoneOptionLabel: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
-  timezoneOptionMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
-  timezoneStatusText: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, paddingHorizontal: 4, paddingVertical: 8 },
-  timezoneCheck: { width: 24, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "right" },
-  timezoneCheckActive: { color: nsnColors.primary },
   weatherCard: { minHeight: 72, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#1B3566", marginBottom: 12 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },

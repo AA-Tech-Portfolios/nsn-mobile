@@ -32,7 +32,9 @@ export default function HobbiesInterestsScreen() {
   const router = useRouter();
   const { appLanguage, hobbiesInterests, isNightMode, saveSoftHelloMvpState } = useAppSettings();
   const isDay = !isNightMode;
-  const copy = getProfilePreferenceCopy(getLanguageBase(appLanguage)).hobbies;
+  const preferenceCopy = getProfilePreferenceCopy(getLanguageBase(appLanguage));
+  const copy = preferenceCopy.hobbies;
+  const backLabel = preferenceCopy.back ?? getProfilePreferenceCopy("English").back;
 
   const toggleInterest = async (interest: string) => {
     const nextInterests = hobbiesInterests.includes(interest)
@@ -45,7 +47,7 @@ export default function HobbiesInterestsScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel="Go back">
+        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={backLabel}>
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 

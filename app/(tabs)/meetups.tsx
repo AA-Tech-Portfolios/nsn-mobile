@@ -70,6 +70,9 @@ const meetupsTranslations = {
     trustRequiredTitle: "Contact Verified required",
     trustRequiredCopy: "Meetups and private chats open once both people have verified contact details.",
     reviewSettings: "Review Trust status",
+    reviewTrustStatusHint: "Opens Profile so you can add contact details for chat access.",
+    nextMeetupHint: "Opens the next meetup details and safety information.",
+    eventDetailsHint: (title: string) => `Opens details for ${title}.`,
   },
   Arabic: {
     title: "لقاءاتي",
@@ -181,6 +184,21 @@ const meetupsTrustGateTranslations = {
     trustRequiredCopy: "Meetups and private chats open once both people have verified contact details.",
     reviewSettings: "Review Trust status",
   },
+  Japanese: {
+    trustRequiredTitle: "連絡先認証が必要です",
+    trustRequiredCopy: "両方の人が連絡先を認証すると、ミートアップとプライベートチャットが利用できます。",
+    reviewSettings: "信頼ステータスを確認",
+  },
+  Korean: {
+    trustRequiredTitle: "연락처 인증이 필요해요",
+    trustRequiredCopy: "두 사람 모두 연락처를 인증하면 모임과 개인 채팅을 사용할 수 있어요.",
+    reviewSettings: "신뢰 상태 확인",
+  },
+  Chinese: {
+    trustRequiredTitle: "需要联系方式验证",
+    trustRequiredCopy: "只有双方都验证联系方式后，聚会和私人聊天才会开放。",
+    reviewSettings: "查看信任状态",
+  },
   Hebrew: {
     trustRequiredTitle: "נדרש אימות קשר",
     trustRequiredCopy: "מפגשים וצ'אטים פרטיים נפתחים כששני האנשים אימתו פרטי קשר.",
@@ -190,11 +208,13 @@ const meetupsTrustGateTranslations = {
 
 export default function MeetupsScreen() {
   const router = useRouter();
-  const { contactEmail, contactPhone, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage } = useAppSettings();
+  const { appLanguage, contactEmail, contactPhone, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage } = useAppSettings();
+  const appLanguageBase = getLanguageBase(appLanguage);
   const translationLanguageBase = getLanguageBase(translationLanguage);
   const isDay = !isNightMode;
-  const copy = meetupsTranslations[translationLanguageBase as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
-  const trustGateCopy = meetupsTrustGateTranslations[translationLanguageBase as keyof typeof meetupsTrustGateTranslations] ?? meetupsTrustGateTranslations.English;
+  const copy = meetupsTranslations[appLanguageBase as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
+  const meetupCopy = { ...meetupsTranslations.English, ...copy };
+  const trustGateCopy = meetupsTrustGateTranslations[appLanguageBase as keyof typeof meetupsTrustGateTranslations] ?? meetupsTrustGateTranslations.English;
   const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
   const canUseMeetups = canChatPrivately(effectiveVerificationLevel);
 
@@ -208,8 +228,8 @@ export default function MeetupsScreen() {
           <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
             <Text style={[styles.gateTitle, isDay && styles.dayTitle]}>{trustGateCopy.trustRequiredTitle}</Text>
             <Text style={[styles.gateCopy, isDay && styles.dayMutedText]}>{trustGateCopy.trustRequiredCopy}</Text>
-            <Text style={[styles.gateStatus, isDay && styles.dayAccentText]}>{getVerificationLevelLabel(effectiveVerificationLevel, translationLanguageBase)}</Text>
-            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.gateButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Opens Profile so you can add contact details for chat access." : undefined}>
+            <Text style={[styles.gateStatus, isDay && styles.dayAccentText]}>{getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}</Text>
+            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.gateButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? meetupCopy.reviewTrustStatusHint : undefined}>
               <Text style={styles.gateButtonText}>{trustGateCopy.reviewSettings}</Text>
             </TouchableOpacity>
           </View>
@@ -219,7 +239,7 @@ export default function MeetupsScreen() {
           <Text style={[styles.summaryLabel, isDay && styles.dayAccentText]}>{copy.next}</Text>
           <Text style={[styles.summaryTitle, isDay && styles.dayTitle]}>{copy.summaryTitle}</Text>
           <Text style={[styles.summaryCopy, isDay && styles.dayMutedText]}>{copy.summaryCopy}</Text>
-          <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/event/movie-night-watch-chat")} style={styles.summaryButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? "Opens the next meetup details and safety information." : undefined}>
+          <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/event/movie-night-watch-chat")} style={styles.summaryButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? meetupCopy.nextMeetupHint : undefined}>
             <Text style={styles.summaryButtonText}>{copy.details}</Text>
           </TouchableOpacity>
         </View> : null}
@@ -230,7 +250,7 @@ export default function MeetupsScreen() {
             const localizedEvent = meetupEventTranslations[translationLanguageBase]?.[event.id] ?? event;
 
             return (
-            <TouchableOpacity key={event.id} activeOpacity={0.85} style={[styles.meetupCard, isDay && styles.dayCard]} onPress={() => router.push(`/event/${event.id}`)} accessibilityRole="button" accessibilityHint={screenReaderHints ? `Opens details for ${localizedEvent.title}.` : undefined}>
+            <TouchableOpacity key={event.id} activeOpacity={0.85} style={[styles.meetupCard, isDay && styles.dayCard]} onPress={() => router.push(`/event/${event.id}`)} accessibilityRole="button" accessibilityHint={screenReaderHints ? meetupCopy.eventDetailsHint(localizedEvent.title) : undefined}>
               <View style={[styles.emojiBox, { backgroundColor: event.imageTone }]}><Text style={styles.emoji}>{event.emoji}</Text></View>
               <View style={styles.cardBody}>
                 <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedEvent.title}</Text>

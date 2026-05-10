@@ -37,6 +37,9 @@ const onboardingTranslations = {
     step: "Step 1 of 5 - Your local setup",
     title: "Nice to meet you.",
     copy: "Set up a calm NSN profile for local North Shore plans, friendships, dating, or simply exploring at your own pace.",
+    logoLabel: "NSN logo",
+    suburbPlaceholder: "Chatswood",
+    namePlaceholder: "Sam",
     ageConfirm: "I confirm I am 18 or older",
     adultsOnly: "North Shore Nights is for adults only.",
     suburbLabel: "Suburb or local area",
@@ -56,9 +59,138 @@ const onboardingTranslations = {
     enter: "Enter NSN",
     permissionTitle: "Permission needed",
     permissionCopy: "Please allow photo access to choose a profile picture, or continue without one.",
+    nameNotAllowed: nameNotAllowedMessage,
     intents: {} as Partial<Record<SoftHelloIntent, string>>,
     comfortOptions: {} as Partial<Record<SoftHelloComfortPreference, string>>,
     visibilityOptions: {} as Partial<Record<SoftHelloVisibility, { title: string; copy: string }>>,
+  },
+  Chinese: {
+    tagline: "本地相识，轻松前行。",
+    step: "第 1 步，共 5 步 - 本地设置",
+    title: "很高兴认识你。",
+    copy: "为 North Shore 本地计划、友谊、约会，或按自己节奏探索，设置一个平静的 NSN 资料。",
+    logoLabel: "NSN 标志",
+    suburbPlaceholder: "Chatswood",
+    namePlaceholder: "Sam",
+    ageConfirm: "我确认自己已满18岁",
+    adultsOnly: "North Shore Nights 仅限成年人使用。",
+    suburbLabel: "郊区或本地区域",
+    recognised: "已识别：",
+    chooseSuggestion: "选择一个建议以确认你的本地区域。",
+    hereFor: "你来这里是为了什么？",
+    nameLabel: "姓名或昵称",
+    photoLabel: "可选照片",
+    photoSelected: "已选择照片",
+    photoLater: "你可以稍后添加",
+    photoCopy: "资料照片可以保持模糊，直到你准备好再显示。",
+    changePhoto: "更改",
+    addPhoto: "添加",
+    visibilityLabel: "可见性偏好",
+    comfortLabel: "舒适偏好",
+    comfortCopy: "这些会影响活动推荐，但不会隐藏其他所有内容。",
+    enter: "进入 NSN",
+    permissionTitle: "需要权限",
+    permissionCopy: "请允许照片访问以选择资料照片，或不添加照片继续。",
+    nameNotAllowed: "抱歉，这个名字不可用，请换一个名字。",
+    intents: {
+      Friends: "交朋友",
+      Dating: "约会",
+      Both: "两者皆可",
+      Exploring: "探索",
+    },
+    comfortOptions: {
+      "Small groups": "小团体",
+      "Text-first": "先文字聊天",
+      Quiet: "安静",
+      "Flexible pace": "灵活节奏",
+      "Indoor backup": "室内备用方案",
+    },
+    visibilityOptions: {
+      Blurred: { title: "舒适模式", copy: "先保持私密。只在你选择时显示。" },
+      Visible: { title: "开放模式", copy: "从一开始就清晰显示你的照片。" },
+    },
+  },
+  Japanese: {
+    tagline: "近くで出会い、やさしく進む。",
+    step: "ステップ 1/5 - 地元の設定",
+    title: "はじめまして。",
+    copy: "North Shore の予定、友達づくり、デート、または自分のペースでの探索のために、落ち着いた NSN プロフィールを設定しましょう。",
+    logoLabel: "NSN ロゴ",
+    suburbPlaceholder: "Chatswood",
+    namePlaceholder: "Sam",
+    ageConfirm: "18歳以上であることを確認します",
+    adultsOnly: "North Shore Nights は成人向けです。",
+    suburbLabel: "郊外または地域",
+    recognised: "認識済み:",
+    chooseSuggestion: "候補を選んで地域を確認してください。",
+    hereFor: "ここに来た目的は？",
+    nameLabel: "名前またはニックネーム",
+    photoLabel: "任意の写真",
+    photoSelected: "写真を選択しました",
+    photoLater: "後で追加できます",
+    photoCopy: "準備ができるまで、プロフィール写真はぼかしたままにできます。",
+    changePhoto: "変更",
+    addPhoto: "追加",
+    visibilityLabel: "表示の希望",
+    comfortLabel: "安心できる希望",
+    comfortCopy: "イベント提案に反映されますが、他の選択肢をすべて隠すわけではありません。",
+    enter: "NSN に入る",
+    permissionTitle: "権限が必要です",
+    permissionCopy: "プロフィール写真を選ぶには写真へのアクセスを許可してください。写真なしでも続行できます。",
+    nameNotAllowed: "すみません、この名前は使えません。別の名前を選んでください。",
+    intents: { Friends: "友達", Dating: "デート", Both: "両方", Exploring: "探索" },
+    comfortOptions: {
+      "Small groups": "少人数",
+      "Text-first": "まずテキスト",
+      Quiet: "静か",
+      "Flexible pace": "柔軟なペース",
+      "Indoor backup": "屋内の予備案",
+    },
+    visibilityOptions: {
+      Blurred: { title: "コンフォートモード", copy: "最初は非公開。表示するタイミングは自分で選べます。" },
+      Visible: { title: "オープンモード", copy: "最初から写真をはっきり表示します。" },
+    },
+  },
+  Korean: {
+    tagline: "가까이 만나고, 천천히 움직여요.",
+    step: "1/5단계 - 지역 설정",
+    title: "반가워요.",
+    copy: "North Shore의 약속, 친구, 데이트, 또는 내 속도에 맞춘 탐색을 위해 차분한 NSN 프로필을 설정하세요.",
+    logoLabel: "NSN 로고",
+    suburbPlaceholder: "Chatswood",
+    namePlaceholder: "Sam",
+    ageConfirm: "만 18세 이상임을 확인합니다",
+    adultsOnly: "North Shore Nights는 성인만 사용할 수 있어요.",
+    suburbLabel: "교외 또는 지역",
+    recognised: "인식됨:",
+    chooseSuggestion: "추천 항목을 선택해 지역을 확인하세요.",
+    hereFor: "무엇을 위해 오셨나요?",
+    nameLabel: "이름 또는 닉네임",
+    photoLabel: "선택 사진",
+    photoSelected: "사진 선택됨",
+    photoLater: "나중에 추가할 수 있어요",
+    photoCopy: "준비될 때까지 프로필 사진을 흐리게 둘 수 있어요.",
+    changePhoto: "변경",
+    addPhoto: "추가",
+    visibilityLabel: "공개 방식",
+    comfortLabel: "편안함 선호",
+    comfortCopy: "이 설정은 이벤트 추천에 반영되지만 다른 선택지를 모두 숨기지는 않아요.",
+    enter: "NSN 시작하기",
+    permissionTitle: "권한이 필요해요",
+    permissionCopy: "프로필 사진을 선택하려면 사진 접근을 허용하거나, 사진 없이 계속하세요.",
+    nameNotAllowed: "죄송해요, 이 이름은 사용할 수 없어요. 다른 이름을 선택해 주세요.",
+    intents: { Friends: "친구", Dating: "데이트", Both: "둘 다", Exploring: "탐색" },
+    comfortOptions: {
+      "Small groups": "소규모 그룹",
+      "Text-first": "문자 먼저",
+      Quiet: "조용함",
+      "Flexible pace": "유연한 속도",
+      "Indoor backup": "실내 대안",
+    },
+    visibilityOptions: {
+      Blurred: { title: "컴포트 모드", copy: "처음에는 비공개로 시작하고, 원할 때만 공개하세요." },
+      Visible: { title: "오픈 모드", copy: "처음부터 사진을 선명하게 보여줘요." },
+    },
   },
   Hebrew: {
     tagline: "לפגוש אנשים, בלי לחץ.",
@@ -114,11 +246,12 @@ const chatswoodLocality = australianLocalities.find((locality) => locality.subur
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { appLanguage, completeOnboarding, isNightMode } = useAppSettings();
+  const { appLanguage, completeOnboarding, isNightMode, translationLanguage } = useAppSettings();
   const isDay = !isNightMode;
   const appLanguageBase = getLanguageBase(appLanguage);
   const isRtl = rtlLanguages.has(appLanguageBase);
   const copy = onboardingTranslations[appLanguageBase as keyof typeof onboardingTranslations] ?? onboardingTranslations.English;
+  const onboardingCopy = { ...onboardingTranslations.English, ...copy };
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [suburb, setSuburb] = useState("Chatswood");
   const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(chatswoodLocality);
@@ -193,7 +326,7 @@ export default function OnboardingScreen() {
   const finishOnboarding = async () => {
     if (!canContinue) {
       if (displayName.trim().length > 0 && !isAllowedDisplayName(displayName)) {
-        setNameError(nameNotAllowedMessage);
+        setNameError(onboardingCopy.nameNotAllowed);
       }
 
       return;
@@ -218,6 +351,8 @@ export default function OnboardingScreen() {
       transportationMethod: "Public transport",
       dietaryPreferences: ["No preference"],
       hobbiesInterests: ["Coffee", "Movies", "Walks"],
+      appLanguage,
+      translationLanguage,
     });
 
     router.replace("/(tabs)");
@@ -227,7 +362,7 @@ export default function OnboardingScreen() {
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
       <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.brandLockup}>
-          <View style={[styles.logoMark, isDay && styles.dayLogoMark]} accessibilityRole="image" accessibilityLabel="NSN logo">
+          <View style={[styles.logoMark, isDay && styles.dayLogoMark]} accessibilityRole="image" accessibilityLabel={onboardingCopy.logoLabel}>
             <Text style={[styles.logoText, isDay && styles.dayLogoText]}>NSN</Text>
             <View style={[styles.logoSignal, isDay && styles.dayLogoSignal]} />
           </View>
@@ -266,7 +401,7 @@ export default function OnboardingScreen() {
             <TextInput
               value={suburb}
               onChangeText={updateSuburb}
-              placeholder="Chatswood"
+              placeholder={onboardingCopy.suburbPlaceholder}
               placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
               style={[styles.input, isDay && styles.dayInput, isRtl && styles.rtlInput]}
             />
@@ -339,10 +474,10 @@ export default function OnboardingScreen() {
               }}
               onBlur={() => {
                 if (displayName.trim().length > 0 && !isAllowedDisplayName(displayName)) {
-                  setNameError(nameNotAllowedMessage);
+                  setNameError(onboardingCopy.nameNotAllowed);
                 }
               }}
-              placeholder="Sam"
+              placeholder={onboardingCopy.namePlaceholder}
               placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
               style={[styles.input, isDay && styles.dayInput, isRtl && styles.rtlInput]}
             />

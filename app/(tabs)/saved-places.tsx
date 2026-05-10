@@ -11,6 +11,7 @@ const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"])
 
 const savedPlacesTranslations = {
   English: {
+    goBack: "Go back",
     title: "Saved Places",
     subtitle: "Your favourite cafés, parks, libraries and quiet meetup spots will appear here.",
     emptyTitle: "No saved places yet",
@@ -233,6 +234,7 @@ export default function SavedPlacesScreen() {
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
   const fallbackCopy = savedPlacesTranslations.English;
+  const goBackLabel = "goBack" in copy ? copy.goBack : fallbackCopy.goBack;
   const savedFromLabel = "savedFrom" in copy ? copy.savedFrom : fallbackCopy.savedFrom;
   const removeLabel = "remove" in copy ? copy.remove : fallbackCopy.remove;
 
@@ -243,7 +245,7 @@ export default function SavedPlacesScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView style={[styles.container, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel="Go back">
+        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={goBackLabel}>
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 
