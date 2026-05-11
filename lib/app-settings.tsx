@@ -251,6 +251,7 @@ type OnboardingSnapshot = {
   notificationSnoozed?: boolean;
   notificationSnoozePreset?: NotificationSnoozePreset;
   timezone?: TimezoneSetting;
+  timeContextMode?: TimeContextMode;
   appLanguage?: string;
   translationLanguage?: string;
   brandThemeId?: BrandThemeId;
@@ -265,6 +266,8 @@ export type TimezoneSetting = {
   latitude: number;
   longitude: number;
 };
+
+export type TimeContextMode = "Automatic device time" | "Use selected suburb/local area" | "Manual city/suburb override";
 
 export type WeatherSnapshot = {
   temperature: number | null;
@@ -310,6 +313,9 @@ const normalizeTimezoneSetting = (value?: TimezoneSetting | null) => {
   if (!value) return defaultNsnTimezone;
   return australianLocalAreas.find((area) => area.id === value.id) ?? value;
 };
+
+const normalizeTimeContextMode = (value?: TimeContextMode | null): TimeContextMode =>
+  value === "Automatic device time" || value === "Manual city/suburb override" ? value : "Use selected suburb/local area";
 
 const getWeatherCategory = (temperature: number | null, rainChance: number | null): WeatherSnapshot["category"] => {
   if (temperature === null || rainChance === null) return "unknown";
@@ -538,6 +544,8 @@ type AppSettings = {
   setClearBorders: (value: boolean) => void;
   timezone: TimezoneSetting;
   setTimezone: (value: TimezoneSetting) => void;
+  timeContextMode: TimeContextMode;
+  setTimeContextMode: (value: TimeContextMode) => void;
   weather: WeatherSnapshot;
   liveWeatherAlert: LiveWeatherAlert | null;
 };
@@ -639,6 +647,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [softSurfaces, setSoftSurfaces] = useState(false);
   const [clearBorders, setClearBorders] = useState(false);
   const [timezone, setTimezone] = useState<TimezoneSetting>(defaultNsnTimezone);
+  const [timeContextMode, setTimeContextMode] = useState<TimeContextMode>("Use selected suburb/local area");
   const [weather, setWeather] = useState<WeatherSnapshot>({ temperature: null, rainChance: null, category: "unknown" });
   const [liveWeatherAlert, setLiveWeatherAlert] = useState<LiveWeatherAlert | null>(null);
   const previousWeather = useRef<WeatherSnapshot | null>(null);
@@ -729,6 +738,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
         setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
         setTimezone(normalizeTimezoneSetting(snapshot.timezone));
+        setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
         setBlurProfilePhoto(snapshot.blurProfilePhoto ?? (snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("NSN onboarding could not load:", error);
@@ -819,6 +829,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
     setTimezone(normalizeTimezoneSetting(snapshot.timezone));
+    setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
     setBlurProfilePhoto(snapshot.blurProfilePhoto ?? snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -836,6 +847,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           homeVisibleSections: normalizeHomeVisibleSections(snapshot.homeVisibleSections),
           homeSectionOrder: normalizeHomeSectionOrder(snapshot.homeSectionOrder),
           timezone: normalizeTimezoneSetting(snapshot.timezone),
+          timeContextMode: normalizeTimeContextMode(snapshot.timeContextMode),
           hasCompletedOnboarding: true,
         } satisfies OnboardingSnapshot)
       );
@@ -918,12 +930,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       translationLanguage,
       brandThemeId,
       timezone,
+      timeContextMode,
       ...snapshot,
     };
     nextSnapshot.appLanguage = normalizeNsnLanguage(nextSnapshot.appLanguage);
     nextSnapshot.translationLanguage = normalizeNsnLanguage(nextSnapshot.translationLanguage);
     nextSnapshot.brandThemeId = normalizeBrandThemeId(nextSnapshot.brandThemeId);
     nextSnapshot.timezone = normalizeTimezoneSetting(nextSnapshot.timezone);
+    nextSnapshot.timeContextMode = normalizeTimeContextMode(nextSnapshot.timeContextMode);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
@@ -1040,6 +1054,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.translationLanguage !== undefined) setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     if (snapshot.brandThemeId !== undefined) setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
     if (snapshot.timezone !== undefined) setTimezone(normalizeTimezoneSetting(snapshot.timezone));
+    if (snapshot.timeContextMode !== undefined) setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
@@ -1368,6 +1383,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setClearBorders,
         timezone,
         setTimezone,
+        timeContextMode,
+        setTimeContextMode,
         weather,
         liveWeatherAlert,
       }}

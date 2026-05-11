@@ -906,7 +906,7 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -1128,17 +1128,17 @@ export default function HomeScreen() {
 
 
   const formattedDate = now.toLocaleDateString(locale, {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  timeZone: timezone.timeZone,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    ...(timeContextMode === "Automatic device time" ? {} : { timeZone: timezone.timeZone }),
 }
   );
 
   const formattedTime = now.toLocaleTimeString(locale, {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: timezone.timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    ...(timeContextMode === "Automatic device time" ? {} : { timeZone: timezone.timeZone }),
 }
 
   );
@@ -1148,7 +1148,7 @@ export default function HomeScreen() {
     new Intl.DateTimeFormat(locale, {
       hour: "numeric",
       hour12: false,
-      timeZone: timezone.timeZone,
+      ...(timeContextMode === "Automatic device time" ? {} : { timeZone: timezone.timeZone }),
     }).format(now)
   );
 
@@ -1308,15 +1308,30 @@ export default function HomeScreen() {
 
       if (sectionKey === "weather") {
         return homeVisibleSections.weather ? (
-          <TouchableOpacity key={sectionKey} activeOpacity={0.86} style={[styles.weatherCard, styles.dashboardCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
-            <View style={isRtl && styles.rtlBlock}>
-              <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherUpdate}</Text>
-              <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{weatherMessage}</Text>
+          <View key={sectionKey} style={styles.dashboardPair}>
+            <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, styles.dashboardCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
+              <View style={[styles.weatherBody, isRtl && styles.rtlBlock]}>
+                <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherUpdate}</Text>
+                <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{weatherMessage}</Text>
+              </View>
+              <Animated.Text style={[styles.weatherIcon, { transform: [{ translateY: weatherFloat }] }]}>
+                {weatherIcon}
+              </Animated.Text>
+            </TouchableOpacity>
+            <View style={[styles.todayCard, styles.dashboardCard, isDay && styles.dayCard]}>
+              <View style={[styles.sectionTitleRow, isRtl && styles.rtlRow]}>
+                <IconSymbol name="calendar" color={isDay ? "#284E92" : "#C7B07A"} size={17} />
+                <Text style={[styles.todayTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Today</Text>
+              </View>
+              <Text style={[styles.todayDate, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{formattedDate}</Text>
+              <Text style={[styles.todayCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                {localTimeSuggestedMode === "night" ? "Evening-friendly meetup window" : "Daytime local context"}
+              </Text>
+              <Text style={[styles.todayNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                No calendar sync yet - prototype only.
+              </Text>
             </View>
-            <Animated.Text style={[styles.weatherIcon, { transform: [{ translateY: weatherFloat }] }]}>
-              {weatherIcon}
-            </Animated.Text>
-          </TouchableOpacity>
+          </View>
         ) : null;
       }
 
@@ -1469,6 +1484,36 @@ export default function HomeScreen() {
             <Text style={[styles.subtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.subtitle}</Text>
           </View>
           <View style={[styles.headerActions, isRtl && styles.rtlRow]}>
+            <HeaderActionButton
+              onPress={showSearchPlaceholder}
+              accessibilityLabel="Search NSN"
+              accessibilityHint="Search North Shore suburbs and prototype meetups."
+              isDay={isDay}
+            >
+              <IconSymbol name="magnifyingglass" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
+            </HeaderActionButton>
+            <View style={[styles.headerModeToggle, isDay && styles.dayModeToggle, isRtl && styles.rtlRow]} accessibilityRole="tablist" accessibilityLabel="Day and Night mode">
+              <TouchableOpacity
+                activeOpacity={0.86}
+                onPress={() => setIsNightMode(false)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: mode === "day" }}
+                accessibilityLabel="Switch to Day mode"
+                style={[styles.headerModeToggleOption, mode === "day" && styles.modeToggleDayActive]}
+              >
+                <Animated.Text style={[styles.headerModeToggleIcon, isDay && mode !== "day" && styles.dayModeToggleText, mode === "day" && styles.modeToggleDayActiveText, mode === "day" && { transform: [{ scale: modeIconScale }] }]}>☀</Animated.Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.86}
+                onPress={() => setIsNightMode(true)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: mode === "night" }}
+                accessibilityLabel="Switch to Night mode"
+                style={[styles.headerModeToggleOption, mode === "night" && styles.modeToggleNightActive]}
+              >
+                <Animated.Text style={[styles.headerModeToggleIcon, isDay && mode !== "night" && styles.dayModeToggleText, mode === "night" && { transform: [{ scale: modeIconScale }] }]}>☾</Animated.Text>
+              </TouchableOpacity>
+            </View>
             <HeaderActionButton
               onPress={showViewFilterPlaceholder}
               accessibilityLabel="Open Home Preferences"
@@ -1687,7 +1732,7 @@ export default function HomeScreen() {
                       accessibilityRole="switch"
                       accessibilityState={{ checked: homeVisibleSections[key] }}
                       accessibilityLabel={homeSectionLabels[key]}
-                      style={[styles.homeSectionToggle, homeVisibleSections[key] && styles.homeSectionToggleActive]}
+                      style={[styles.homeSectionToggle, isDay && styles.daySectionToggle, homeVisibleSections[key] && styles.homeSectionToggleActive]}
                     >
                       <IconSymbol name={homeSectionIcons[key]} color={homeVisibleSections[key] ? "#FFFFFF" : isDay ? "#445E93" : nsnColors.muted} size={15} />
                       <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeVisibleSections[key] && styles.homeControlChipTextActive]}>
@@ -1785,17 +1830,6 @@ export default function HomeScreen() {
                       </TouchableOpacity>
                     );
                   })}
-                </View>
-                <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
-                  <TouchableOpacity
-                    activeOpacity={0.82}
-                    onPress={closeHomePanel}
-                    accessibilityRole="button"
-                    accessibilityLabel="Done with layout preferences"
-                    style={[styles.homeControlChip, styles.homeDoneChip, isDay && styles.dayLocationResultButton]}
-                  >
-                    <Text style={[styles.homeControlChipText, styles.homeDoneChipText]}>Done</Text>
-                  </TouchableOpacity>
                 </View>
               </>
             ) : null}
@@ -1963,31 +1997,6 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        <View style={[styles.modeToggle, isDay && styles.dayModeToggle, isRtl && styles.rtlRow]}>
-          <TouchableOpacity
-            activeOpacity={0.86}
-            onPress={() => setIsNightMode(false)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: mode === "day" }}
-            accessibilityLabel={copy.day}
-            style={[styles.modeToggleOption, mode === "day" && styles.modeToggleDayActive]}
-          >
-            <Animated.Text style={[styles.modeToggleIcon, isDay && mode !== "day" && styles.dayModeToggleText, mode === "day" && { transform: [{ scale: modeIconScale }] }]}>☀</Animated.Text>
-            <Text style={[styles.modeToggleText, mode === "day" && styles.modeToggleTextActive, isDay && mode !== "day" && styles.dayModeToggleText]}>{copy.day}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.86}
-            onPress={() => setIsNightMode(true)}
-            accessibilityRole="button"
-            accessibilityState={{ selected: mode === "night" }}
-            accessibilityLabel={copy.night}
-            style={[styles.modeToggleOption, mode === "night" && styles.modeToggleNightActive]}
-          >
-            <Animated.Text style={[styles.modeToggleIcon, isDay && mode !== "night" && styles.dayModeToggleText, mode === "night" && { transform: [{ scale: modeIconScale }] }]}>☾</Animated.Text>
-            <Text style={[styles.modeToggleText, mode === "night" && styles.modeToggleTextActive, isDay && mode !== "night" && styles.dayModeToggleText]}>{copy.night}</Text>
-          </TouchableOpacity>
-        </View>
-
         {shouldShowThemeSuggestion ? (
           <View style={[styles.themeSuggestionCard, isDay && styles.dayThemeSuggestionCard, isRtl && styles.rtlRow]}>
             <Text style={styles.themeSuggestionIcon}>{themeSuggestion.icon}</Text>
@@ -2022,27 +2031,6 @@ export default function HomeScreen() {
         <View style={styles.homeSectionFlow}>
           {homeSectionOrder.map((sectionKey) => renderHomeSection(sectionKey))}
         </View>
-        {false ? (
-          <>
-        <View style={[styles.contextRow, isRtl && styles.rtlRow]}>
-          <View style={isRtl && styles.rtlBlock}>
-            <Text style={[styles.dateText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{greeting} • {formattedDate} • {formattedTime}</Text>
-            <Text style={[styles.locationText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>📍 {timezone.label}, {timezone.country}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
-          <View style={isRtl && styles.rtlBlock}>
-            <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherUpdate}</Text>
-            <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{weatherMessage}</Text>
-          </View>
-          <Animated.Text style={[styles.weatherIcon, { transform: [{ translateY: weatherFloat }] }, ]}
->
-{weatherIcon}
-</Animated.Text>
-        </TouchableOpacity>
-          </>
-        ) : null}
       
         {homeViewMode === "Comfortable" || showHomeControls ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filterRow, isRtl && styles.rtlRow]}>
@@ -2060,129 +2048,6 @@ export default function HomeScreen() {
             );
           })}
         </ScrollView>
-        ) : null}
-
-        {false ? (
-        <View style={[styles.noiseGuideCard, isDay && styles.dayCard]}>
-          <View style={[styles.noiseGuideHeader, isRtl && styles.rtlRow]}>
-            <View style={isRtl && styles.rtlBlock}>
-              <Text style={[styles.noiseGuideTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{noiseCopy.title}</Text>
-              <Text style={[styles.noiseGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{noiseCopy.copy}</Text>
-            </View>
-          </View>
-          <View style={[styles.noiseLevelRow, isRtl && styles.rtlRow]}>
-            {noiseLevelOptions.map((level) => {
-              const levelCopy = noiseCopy.levels[level];
-              const active = noiseLevelPreference === level;
-
-              return (
-                <TouchableOpacity
-                  key={level}
-                  activeOpacity={0.82}
-                  onPress={() => selectNoiseLevelPreference(level)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={`${levelCopy.label} noise preference`}
-                  style={[styles.noiseLevelItem, active && styles.noiseLevelItemActive, isDay && styles.dayNoiseLevelItem, active && isDay && styles.dayNoiseLevelItemActive]}
-                >
-                  <Text style={styles.noiseLevelIcon}>{levelCopy.icon}</Text>
-                  <Text style={[styles.noiseLevelTitle, isDay && styles.dayHeadingText, active && styles.noiseLevelTitleActive, isRtl && styles.rtlText]}>{levelCopy.label}</Text>
-                  <Text style={[styles.noiseLevelCopy, isDay && styles.dayMutedText, active && styles.noiseLevelCopyActive, isRtl && styles.rtlText]}>{levelCopy.copy}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.noiseFilterRow, isRtl && styles.rtlRow]}>
-            {noiseFilterKeys.map((filter) => (
-              <Pill
-                key={filter}
-                label={noiseCopy.filters[filter]}
-                active={noiseLevelPreference === filter}
-                isDay={isDay}
-                onPress={() => selectNoiseLevelPreference(filter)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-        ) : null}
-
-        {false ? (
-          <>
-        <View style={[styles.sectionHeader, isRtl && styles.rtlRow]}>
-          <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]}>
-            {isMeetupSearch ? "Matching meetups" : mode === "day" ? copy.dayEvents : copy.eveningEvents}
-          </Text>
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={showLayoutPreferencesPanel}
-            accessibilityRole="button"
-            accessibilityLabel="View event layout preferences"
-          >
-            <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null, isRtl && styles.rtlText]}>
-              ⚙ View preferences
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.cardStack, homeLayoutDensity === "Compact" && styles.cardStackCompact, homeLayoutDensity === "Spacious" && styles.cardStackSpacious]}>
-          {homeEventLayout === "Map" && !isMeetupSearch ? (
-            <View style={[styles.mapPreviewCard, isDay && styles.dayLocationResultButton, isRtl && styles.rtlRow]}>
-              <IconSymbol name="location" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
-              <View style={styles.headerPlaceholderBody}>
-                <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Map view prototype</Text>
-                <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Showing recommended local meetups in a compact list until map pins are connected.
-                </Text>
-              </View>
-            </View>
-          ) : null}
-          {homeCardLayout === "Horizontal cards" ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.horizontalEventScroller, isRtl && styles.rtlRow]}>
-              {displayedEvents.map((event, index) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  isDay={isDay}
-                  appLanguageBase={appLanguageBase}
-                  density={homeLayoutDensity}
-                  cardLayout={homeCardLayout}
-                  visualMode={homeEventVisualMode}
-                  featured={index === 0}
-                />
-              ))}
-            </ScrollView>
-          ) : (
-            <View
-              style={[
-                styles.eventLayoutStack,
-                homeCardLayout === "Boxed grid" && styles.eventLayoutGrid,
-                homeCardLayout === "Layered cards" && styles.eventLayoutLayered,
-                homeCardLayout === "Magazine" && styles.eventLayoutMagazine,
-              ]}
-            >
-              {displayedEvents.map((event, index) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  isDay={isDay}
-                  appLanguageBase={appLanguageBase}
-                  density={homeLayoutDensity}
-                  cardLayout={homeCardLayout}
-                  visualMode={homeEventVisualMode}
-                  featured={index === 0}
-                />
-              ))}
-            </View>
-          )}
-          {hasNoMeetupSearchResults || hasNoFilteredEvents ? (
-            <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
-              <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups right now.</Text>
-              <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Try relaxing a filter - NSN is still an early prototype.
-              </Text>
-            </View>
-          ) : null}
-        </View>
-          </>
         ) : null}
 
         {homeViewMode === "Comfortable" ? (
@@ -2248,8 +2113,11 @@ const styles = StyleSheet.create({
   contentSpacious: { paddingTop: 14, paddingBottom: 34 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   headerTitle: { flex: 1, minWidth: 0 },
-  headerActions: { flexShrink: 0, flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 12 },
+  headerActions: { flexShrink: 0, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end", gap: 8, marginLeft: 12 },
   headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#38527C", backgroundColor: "#12264B" },
+  headerModeToggle: { height: 42, flexDirection: "row", gap: 4, borderRadius: 21, padding: 4, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#38527C" },
+  headerModeToggleOption: { width: 34, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  headerModeToggleIcon: { color: "#FFFFFF", fontSize: 16, fontWeight: "900", lineHeight: 20 },
   localDashboardHeader: { alignItems: "center", justifyContent: "center", borderRadius: 26, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#0F2340", paddingHorizontal: 20, paddingVertical: 24, marginBottom: 18 },
   dayLocalDashboardHeader: { backgroundColor: "#F4F7F8", borderColor: "#B7C7DD" },
   localDashboardBody: { alignItems: "center", minWidth: 0 },
@@ -2270,24 +2138,24 @@ const styles = StyleSheet.create({
   daySummaryChip: { borderColor: "#C5D0DA", backgroundColor: "#E6EDF1", color: "#53677A" },
   homeSummaryAdjustButton: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
   homeSummaryAdjustText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
-  homeCollapseButton: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
-  homeControlsCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", padding: 14, marginBottom: 12, gap: 14 },
+  homeCollapseButton: { minHeight: 34, borderRadius: 17, borderWidth: 1, borderColor: "#7890B8", backgroundColor: "rgba(31,78,154,0.18)", paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
+  homeControlsCard: { borderRadius: 20, borderWidth: 1, borderColor: "#38527C", backgroundColor: "rgba(16,33,58,0.94)", padding: 15, marginBottom: 14, gap: 15 },
   homeControlGroup: { gap: 6 },
   homeControlGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   homeControlRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  homeControlChip: { minHeight: 36, borderRadius: 12, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#101D31", paddingHorizontal: 12, alignItems: "center", justifyContent: "center" },
-  homeControlChipActive: { borderColor: "#9BB4E4", backgroundColor: "#284E92" },
-  homeControlChipText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  homeControlChip: { minHeight: 38, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "#101D31", paddingHorizontal: 12, alignItems: "center", justifyContent: "center" },
+  homeControlChipActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
+  homeControlChipText: { color: "#C7D3EA", fontSize: 12, fontWeight: "900", lineHeight: 16 },
   homeControlChipTextActive: { color: "#FFFFFF" },
   homeDensityRow: { flexDirection: "row", gap: 10 },
   homeDensityCard: { flex: 1, minHeight: 92, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 11, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
-  homeDensityCardActive: { borderColor: "#9BB4E4", backgroundColor: "#284E92" },
+  homeDensityCardActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
   homeDensityIcon: { color: nsnColors.muted, fontSize: 30, fontWeight: "900", lineHeight: 34 },
   homeDensityTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center", marginTop: 3 },
   homeDensityCopy: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, textAlign: "center", marginTop: 2 },
   layoutPreferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   layoutPreferenceCard: { flexGrow: 1, flexBasis: 138, minHeight: 130, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 12 },
-  layoutPreferenceCardActive: { borderColor: "#9BB4E4", backgroundColor: "#284E92" },
+  layoutPreferenceCardActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
   layoutPreferenceIcon: { color: nsnColors.muted, fontSize: 18, fontWeight: "900", lineHeight: 22, marginTop: 4 },
   layoutPreferenceTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center", marginTop: 7 },
   layoutPreferenceCopy: { color: nsnColors.muted, fontSize: 10, fontWeight: "800", lineHeight: 14, textAlign: "center", marginTop: 1 },
@@ -2315,17 +2183,16 @@ const styles = StyleSheet.create({
   layoutPreviewLayerFront: { top: 20, transform: [{ rotate: "-4deg" }] },
   layoutPreviewMagazineLead: { width: 22, height: 29 },
   layoutPreviewMagazineSide: { width: 15, height: 29 },
-  homeDoneChip: { minHeight: 48, minWidth: 118, marginLeft: "auto", backgroundColor: "#163F8D", borderColor: "#C6D7FF", borderWidth: 2, paddingHorizontal: 22 },
-  homeDoneChipText: { color: "#FFFFFF" },
   homeSectionToggleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingTop: 2 },
   homeSectionOrderList: { gap: 8, paddingTop: 2 },
-  homeSectionOrderItem: { minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, paddingHorizontal: 8, paddingVertical: 7 },
-  homeSectionOrderItemActive: { borderColor: "#38527C" },
+  homeSectionOrderItem: { minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "#101D31", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, paddingHorizontal: 8, paddingVertical: 7 },
+  homeSectionOrderItemActive: { borderColor: "#8DA7D8", backgroundColor: "rgba(33,75,149,0.18)" },
   homeSectionToggle: { minHeight: 34, flex: 1, borderRadius: 12, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 10, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center" },
-  homeSectionToggleActive: { borderColor: "#9BB4E4", backgroundColor: "#284E92" },
+  daySectionToggle: { backgroundColor: "#E8EDF2", borderColor: "#9FB4CE" },
+  homeSectionToggleActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
   homeSectionMoveControls: { flexDirection: "row", gap: 6 },
-  homeSectionMoveButton: { width: 34, height: 34, borderRadius: 12, borderWidth: 1, borderColor: "#38527C", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
-  disabledMoveButton: { opacity: 0.42 },
+  homeSectionMoveButton: { width: 34, height: 34, borderRadius: 12, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" },
+  disabledMoveButton: { opacity: 0.56 },
   homeUpdateNotice: { color: "#A8B7DA", fontSize: 11, fontWeight: "900", lineHeight: 15 },
   dayHeaderPlaceholderCard: { borderColor: "#C5D0DA", backgroundColor: "#F4F7F8" },
   headerPlaceholderBody: { flex: 1, minWidth: 0 },
@@ -2377,6 +2244,7 @@ const styles = StyleSheet.create({
   modeToggleIcon: { color: "#FFFFFF", fontSize: 18, fontWeight: "900", lineHeight: 22 },
   modeToggleText: { color: nsnColors.muted, fontWeight: "900", fontSize: 13 },
   modeToggleTextActive: { color: "#FFFFFF" },
+  modeToggleDayActiveText: { color: "#1B2233" },
   dayModeToggleText: { color: "#53677A" },
   segmented: { flexDirection: "row", borderRadius: 24, padding: 4, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#2A3C59", marginBottom: 16 },
   segmentedDay: { backgroundColor: "#DDE6EC", borderColor: "#C5D0DA", },
@@ -2407,10 +2275,17 @@ const styles = StyleSheet.create({
   dashboardCard: { flexGrow: 1, flexBasis: 280 },
   dashboardWideCard: { flexGrow: 2, flexBasis: 520 },
   homeMajorSection: { gap: 10, borderRadius: 22, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.035)", padding: 12 },
-  weatherCard: { minHeight: 92, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 20, paddingHorizontal: 18, paddingVertical: 16, backgroundColor: "#102B4E", borderWidth: 1, borderColor: "#38527C" },
+  dashboardPair: { flexGrow: 1, flexBasis: 520, flexDirection: "row", flexWrap: "wrap", gap: 14 },
+  weatherCard: { minHeight: 78, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: "#102B4E", borderWidth: 1, borderColor: "#38527C" },
+  weatherBody: { flex: 1, minWidth: 0 },
   weatherTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
-  weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, maxWidth: 290 },
-  weatherIcon: { fontSize: 32 },
+  weatherCopy: { color: "#C7D3EA", fontSize: 12, lineHeight: 18, maxWidth: 290 },
+  weatherIcon: { fontSize: 28 },
+  todayCard: { minHeight: 78, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
+  todayTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  todayDate: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19, marginTop: 7 },
+  todayCopy: { color: "#C7D3EA", fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 3 },
+  todayNote: { color: "#9FB0CD", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 5 },
   filterRow: { gap: 8, paddingBottom: 18, paddingTop: 4 },
   noiseGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
   noiseGuideHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 },

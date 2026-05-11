@@ -39,6 +39,14 @@
 - [ ] Decide which prototype-only account actions should stay visible after tester walkthrough, be backed by real auth, or be hidden before alpha
 - [ ] Create first release tag when ready: `v0.1.0 - Trust Foundations`
 
+### Deferred Home polish ideas
+
+- [ ] After alpha readiness, consider optional Home widgets that users can add, remove, or reorder without becoming core NSN features
+- [ ] Explore an optional photo/gallery widget for local memories, venue previews, or saved-place inspiration
+- [ ] Explore optional local-only/single-player mini-game widgets such as Snake, Solitaire, or a simple platformer
+- [ ] Keep mini-games local-first and opt-in, with no social pressure or meetup matching dependency
+- [ ] Continue future suburb/locality API or maintained-dataset refinement so Home time, weather, and local prompts can reflect selected areas more accurately
+
 ### Safety and trust
 
 - [ ] Add Community Guidelines

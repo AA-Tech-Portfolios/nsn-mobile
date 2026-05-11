@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
-import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, useAppSettings } from "@/lib/app-settings";
+import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, type TimeContextMode, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -36,6 +36,11 @@ const lowLightLevelOptions: { value: LowLightLevel; label: string; copy: string 
   { value: "Gentle", label: "Gentle", copy: "A light dim for bright rooms." },
   { value: "Medium", label: "Medium", copy: "Balanced dimming for evening use." },
   { value: "Deep", label: "Deep", copy: "The softest screen for darker rooms." },
+];
+const timeContextModeOptions: { value: TimeContextMode; label: string; copy: string }[] = [
+  { value: "Automatic device time", label: "Automatic device time", copy: "Use the clock from this device for local prompts." },
+  { value: "Use selected suburb/local area", label: "Selected local area", copy: "Use the suburb or North Shore area selected in NSN." },
+  { value: "Manual city/suburb override", label: "Manual override", copy: "Prototype: falls back to the selected local area until city search is connected." },
 ];
 const notificationSnoozeOptions: { value: NotificationSnoozePreset; label: string; copy: string }[] = [
   { value: "1 hour", label: "1 hour", copy: "Pause routine pings briefly." },
@@ -148,6 +153,9 @@ type SettingsCopy = {
   useApproximateLocationCopy?: string;
   showDistanceInMeetups?: string;
   showDistanceInMeetupsCopy?: string;
+  timeLocalContext?: string;
+  timeLocalContextCopy?: string;
+  timeLocalContextPrototypeNote?: string;
   safetyContact?: string;
   allowMessageRequests?: string;
   allowMessageRequestsCopy?: string;
@@ -221,6 +229,9 @@ const englishCopy: SettingsCopy = {
   useApproximateLocationCopy: "Show nearby options without sharing a precise location.",
   showDistanceInMeetups: "Show distance in meetups",
   showDistanceInMeetupsCopy: "Display approximate distance on event and meetup cards.",
+  timeLocalContext: "Time & local context",
+  timeLocalContextCopy: "Choose how NSN decides local time for the Home greeting, Day/Night mode, and local prompts.",
+  timeLocalContextPrototypeNote: "Prototype only: selected-area and manual override both use local saved fallback data for now.",
   safetyContact: "Safety & Contact",
   allowMessageRequests: "Allow message requests",
   allowMessageRequestsCopy: "Let people message before you join the same meetup.",
@@ -2979,6 +2990,8 @@ export default function SettingsScreen() {
     setUseApproximateLocation,
     showDistanceInMeetups,
     setShowDistanceInMeetups,
+    timeContextMode,
+    setTimeContextMode,
     allowMessageRequests,
     setAllowMessageRequests,
     safetyCheckIns,
@@ -3233,6 +3246,11 @@ export default function SettingsScreen() {
   const saveNotificationSnoozePreset = (value: NotificationSnoozePreset) => {
     setNotificationSnoozePreset(value);
     saveSoftHelloMvpState({ notificationSnoozePreset: value, notificationSnoozed: true });
+  };
+  const saveTimeContextMode = (value: TimeContextMode) => {
+    setTimeContextMode(value);
+    saveSoftHelloMvpState({ timeContextMode: value });
+    showRecentlyChanged("timeContextMode");
   };
   const registerSectionLayout = (id: SettingsSectionJumpId) => (event: LayoutChangeEvent) => {
     sectionOffsets.current[id] = event.nativeEvent.layout.y;
@@ -3969,6 +3987,39 @@ export default function SettingsScreen() {
               />
             </View>
           ))}
+          <View style={[styles.timeContextBlock, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+              {copy.timeLocalContext ?? englishCopy.timeLocalContext}
+            </Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              {copy.timeLocalContextCopy ?? englishCopy.timeLocalContextCopy}
+            </Text>
+            {renderSettingMeta("timeContextMode")}
+            <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
+              {timeContextModeOptions.map((option) => {
+                const active = timeContextMode === option.value;
+
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    activeOpacity={0.82}
+                    onPress={() => saveTimeContextMode(option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: active }}
+                    accessibilityLabel={`${option.label} time context`}
+                    accessibilityHint={screenReaderHints ? option.copy : undefined}
+                    style={[styles.timeContextOption, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
+                  >
+                    <Text style={[styles.timeContextOptionTitle, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
+                    <Text style={[styles.timeContextOptionCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              {copy.timeLocalContextPrototypeNote ?? englishCopy.timeLocalContextPrototypeNote}
+            </Text>
+          </View>
         </View>
 
         <Text onLayout={registerSectionLayout("safetyContact")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
@@ -4847,6 +4898,47 @@ const styles = StyleSheet.create({
   notificationSnoozeRow: {
     paddingHorizontal: 18,
     paddingVertical: 14,
+  },
+  timeContextBlock: {
+    borderTopWidth: 1,
+    borderTopColor: nsnColors.border,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  timeContextGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 12,
+  },
+  timeContextOption: {
+    minHeight: 78,
+    flexGrow: 1,
+    flexBasis: 190,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#4D6794",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  timeContextOptionActive: {
+    borderColor: "#D2E0FF",
+    backgroundColor: "#214B95",
+  },
+  timeContextOptionTitle: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
+  timeContextOptionCopy: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "700",
+    lineHeight: 15,
+    marginTop: 3,
   },
   rtlRow: {
     flexDirection: "row-reverse",
