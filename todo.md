@@ -91,6 +91,10 @@
 - [ ] Add venue metadata for dietary safety, quiet seating, alcohol-free comfort, and cafe suitability
 - [ ] Define age-appropriate handling for alcohol-related event preferences and labels
 - [ ] Gather user feedback on whether food and beverage categories feel calm, useful, and not overwhelming
+- [ ] Add interest-based recommendations that use hobbies, genres, and comfort modifiers without turning NSN into a quiz
+- [ ] Connect richer preference matching across interests, food, social energy, communication, and group size
+- [ ] Expand the interest taxonomy after tester feedback on categories, wording, and missing local activities
+- [ ] Gather user feedback on whether Hobbies & Interests feels useful, calm, and not profile-heavy
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 - [ ] Add interactive tutorials for privacy, preview visibility, and comfort modes
 - [ ] Review translations with real users or native speakers before treating each language as complete

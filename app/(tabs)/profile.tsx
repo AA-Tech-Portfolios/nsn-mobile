@@ -38,6 +38,22 @@ import {
   type FoodBeveragePreference,
   type FoodPreferenceGroupId,
 } from "@/lib/preferences/food-preferences";
+import {
+  defaultInterestComfortTagsByInterest,
+  defaultInterestPreferenceIds,
+  getInterestCategorySelectedCount,
+  getInterestComfortTagLabels,
+  getInterestOptionsByCategory,
+  getInterestPreference,
+  getInterestPreferenceLabels,
+  getSelectedInterestLabels,
+  interestCategories,
+  interestComfortTags,
+  searchInterestPreferences,
+  type InterestCategoryId,
+  type InterestComfortTagId,
+  type InterestPreference,
+} from "@/lib/preferences/interests";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
@@ -57,7 +73,7 @@ const rows = [
 const settingsRow = { icon: "settings", key: "settings", route: "/settings" } as const;
 type ProfileShortcutRow = (typeof rows)[number] | typeof settingsRow;
 type ProfileShortcutKey = ProfileShortcutRow["key"];
-type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "comfortTrust" | "foodBeverage" | "display" | "layout" | "width" | "notifications" | "blockReport";
+type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "comfortTrust" | "foodBeverage" | "hobbiesInterests" | "display" | "layout" | "width" | "notifications" | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
 const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
@@ -1065,6 +1081,8 @@ export default function ProfileScreen() {
     hobbiesInterests,
     transportationMethod,
     foodBeveragePreferenceIds,
+    interestPreferenceIds,
+    interestComfortTagsByInterest,
   } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const isDay = !isNightMode;
@@ -1135,6 +1153,12 @@ export default function ProfileScreen() {
     foodPreferenceGroups.filter((group) => group.defaultOpen).map((group) => group.id)
   );
   const [showAllFoodPreferenceGroups, setShowAllFoodPreferenceGroups] = useState<FoodPreferenceGroupId[]>([]);
+  const [interestPreferenceSearch, setInterestPreferenceSearch] = useState("");
+  const [openInterestCategories, setOpenInterestCategories] = useState<InterestCategoryId[]>(
+    interestCategories.filter((category) => category.defaultOpen).map((category) => category.id)
+  );
+  const [showAllInterestCategories, setShowAllInterestCategories] = useState<InterestCategoryId[]>([]);
+  const [activeInterestComfortId, setActiveInterestComfortId] = useState<string | null>(null);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
   const [draftContactEmail, setDraftContactEmail] = useState(contactEmail);
   const [draftContactPhone, setDraftContactPhone] = useState(contactPhone);
@@ -1584,6 +1608,62 @@ export default function ProfileScreen() {
     );
   };
 
+  const toggleInterestPreference = async (preferenceId: string) => {
+    const isSelected = interestPreferenceIds.includes(preferenceId);
+    const nextPreferences = isSelected
+      ? interestPreferenceIds.filter((item) => item !== preferenceId)
+      : [...interestPreferenceIds, preferenceId];
+    const nextComfortTags = { ...interestComfortTagsByInterest };
+
+    if (isSelected) {
+      delete nextComfortTags[preferenceId];
+    } else if (!nextComfortTags[preferenceId]) {
+      nextComfortTags[preferenceId] = ["open-to-this"];
+    }
+
+    const nextHobbiesInterests = getInterestPreferenceLabels(nextPreferences);
+
+    await saveSoftHelloMvpState({
+      interestPreferenceIds: nextPreferences,
+      interestComfortTagsByInterest: nextComfortTags,
+      hobbiesInterests: nextHobbiesInterests,
+    });
+
+    if (!isSelected) {
+      setActiveInterestComfortId(preferenceId);
+    } else if (activeInterestComfortId === preferenceId) {
+      setActiveInterestComfortId(nextPreferences[0] ?? null);
+    }
+  };
+
+  const toggleInterestCategory = (categoryId: InterestCategoryId) => {
+    setOpenInterestCategories((current) =>
+      current.includes(categoryId) ? current.filter((item) => item !== categoryId) : [...current, categoryId]
+    );
+  };
+
+  const toggleInterestCategoryLimit = (categoryId: InterestCategoryId) => {
+    setShowAllInterestCategories((current) =>
+      current.includes(categoryId) ? current.filter((item) => item !== categoryId) : [...current, categoryId]
+    );
+  };
+
+  const toggleInterestComfortTag = async (interestId: string, tagId: InterestComfortTagId) => {
+    const currentTags = (interestComfortTagsByInterest[interestId] ?? ["open-to-this"]) as InterestComfortTagId[];
+    const nextTags = currentTags.includes(tagId)
+      ? currentTags.filter((item) => item !== tagId)
+      : tagId === "not-for-me"
+        ? ["not-for-me" as InterestComfortTagId]
+        : [...currentTags.filter((item) => item !== "not-for-me"), tagId];
+
+    await saveSoftHelloMvpState({
+      interestComfortTagsByInterest: {
+        ...interestComfortTagsByInterest,
+        [interestId]: nextTags,
+      },
+    });
+  };
+
   const toggleVerifiedButPrivate = async () => {
     await saveSoftHelloMvpState({ verifiedButPrivate: !verifiedButPrivate });
   };
@@ -1670,6 +1750,8 @@ export default function ProfileScreen() {
       photoRecordingComfortPreferences: ["Ask me first", "No public posting without permission", "Prefer no screenshots of chats/profile"],
       verifiedButPrivate: true,
       foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
+      interestPreferenceIds: defaultInterestPreferenceIds,
+      interestComfortTagsByInterest: defaultInterestComfortTagsByInterest,
     });
     setShowProfileMenu(false);
   };
@@ -1752,6 +1834,50 @@ export default function ProfileScreen() {
           <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>Optional 18+</Text>
         ) : group ? (
           <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>{group.title}</Text>
+        ) : null}
+      </TouchableOpacity>
+    );
+  };
+  const selectedInterestPreferenceLabels = useMemo(
+    () => getSelectedInterestLabels(interestPreferenceIds, 8),
+    [interestPreferenceIds]
+  );
+  const selectedInterestPreferenceOptions = useMemo(
+    () => interestPreferenceIds.map(getInterestPreference).filter((option): option is InterestPreference => Boolean(option)),
+    [interestPreferenceIds]
+  );
+  const interestPreferenceSearchResults = useMemo(
+    () => searchInterestPreferences(interestPreferenceSearch),
+    [interestPreferenceSearch]
+  );
+  const activeInterestForComfort =
+    selectedInterestPreferenceOptions.find((option) => option.id === activeInterestComfortId) ?? selectedInterestPreferenceOptions[0] ?? null;
+
+  const renderInterestPreferenceChip = (option: InterestPreference) => {
+    const active = interestPreferenceIds.includes(option.id);
+    const category = interestCategories.find((item) => item.id === option.category);
+    const comfortLabels = active ? getInterestComfortTagLabels(interestComfortTagsByInterest[option.id]) : [];
+    const meta = comfortLabels.length
+      ? comfortLabels.slice(0, 2).join(", ")
+      : option.genres?.length
+        ? option.genres.slice(0, 2).join(", ")
+        : category?.title;
+
+    return (
+      <TouchableOpacity
+        key={option.id}
+        accessibilityRole="button"
+        accessibilityLabel={`Hobby and interest preference ${option.label}`}
+        accessibilityState={{ selected: active }}
+        activeOpacity={0.78}
+        onPress={() => toggleInterestPreference(option.id)}
+        style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+      >
+        <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+          {active ? `Selected: ${option.label}` : option.label}
+        </Text>
+        {meta ? (
+          <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={1}>{meta}</Text>
         ) : null}
       </TouchableOpacity>
     );
@@ -1966,17 +2092,19 @@ export default function ProfileScreen() {
             ? "Comfort & trust"
             : profileMenuPanel === "foodBeverage"
               ? "Food & beverage"
-              : profileMenuPanel === "display"
-                ? "Display & layout"
-                : profileMenuPanel === "layout"
-                  ? "Profile layout"
-                  : profileMenuPanel === "width"
-                    ? "Width settings"
-                    : profileMenuPanel === "notifications"
-                      ? "Notifications"
-                      : profileMenuPanel === "blockReport"
-                        ? "Block & report"
-                        : "Profile controls";
+              : profileMenuPanel === "hobbiesInterests"
+                ? "Hobbies & interests"
+                : profileMenuPanel === "display"
+                  ? "Display & layout"
+                  : profileMenuPanel === "layout"
+                    ? "Profile layout"
+                    : profileMenuPanel === "width"
+                      ? "Width settings"
+                      : profileMenuPanel === "notifications"
+                        ? "Notifications"
+                        : profileMenuPanel === "blockReport"
+                          ? "Block & report"
+                          : "Profile controls";
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -2164,7 +2292,7 @@ export default function ProfileScreen() {
                       { icon: "person.fill" as const, title: "Photo", copy: "Add, replace, or remove your profile photo.", action: () => { setShowProfileMenu(false); setShowPhotoMenu(true); } },
                       { icon: "calendar" as const, title: "Age, range & gender", copy: "Edit age, preferred age range, and optional gender.", action: () => { setShowProfileMenu(false); router.push("/settings" as any); } },
                       { icon: "location" as const, title: "Local area", copy: "Change your suburb or hide it from preview.", action: () => { setShowProfileMenu(false); setIsEditingSuburb(true); } },
-                      { icon: "interests" as const, title: "Interests", copy: "Choose first-meetup interests shown in preview.", action: () => { setShowProfileMenu(false); router.push("/hobbies-interests" as any); } },
+                      { icon: "interests" as const, title: "Interests", copy: "Choose first-meetup interests shown in preview.", action: () => setProfileMenuPanel("hobbiesInterests") },
                       { icon: "group" as const, title: "My vibes", copy: "Update the quick feel for your social style.", action: () => { setShowProfileMenu(false); setIsEditingVibes(true); } },
                       { icon: "visibility" as const, title: "Comfort preferences", copy: "Adjust small groups, text-first and quiet preferences.", action: () => { setShowProfileMenu(false); router.push("/settings" as any); } },
                     ].map((item) => (
@@ -2271,11 +2399,32 @@ export default function ProfileScreen() {
                       <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{foodBeveragePreferenceIds.length} selected</Text>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      onPress={() => setProfileMenuPanel("hobbiesInterests")}
+                      style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Hobbies and interests preferences"
+                    >
+                      <IconSymbol name="interests" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Hobbies & interests</Text>
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
+                          Activities, genres, local exploring, and comfort-aware tags.
+                        </Text>
+                        {selectedInterestPreferenceLabels.length ? (
+                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]} numberOfLines={1}>
+                            {selectedInterestPreferenceLabels.join(", ")}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{interestPreferenceIds.length} selected</Text>
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                    </TouchableOpacity>
                     {[
                       { icon: "transport" as const, label: getRowLabel("transportation"), route: "/transportation-preference" },
                       { icon: "contact" as const, label: getRowLabel("contactPreference"), route: "/contact-preference" },
                       { icon: "explore" as const, label: getRowLabel("locationPreference"), route: "/location-preference" },
-                      { icon: "interests" as const, label: getRowLabel("hobbiesInterests"), route: "/hobbies-interests" },
                     ].map((item) => (
                       <TouchableOpacity
                         key={item.route}
@@ -2436,6 +2585,191 @@ export default function ProfileScreen() {
                         Dietary preferences help with meetup suggestions, but users should still confirm ingredients with venues.
                       </Text>
                     </View>
+                  </>
+                ) : null}
+                {profileMenuPanel === "hobbiesInterests" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("preferences")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to user preferences">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
+                    </TouchableOpacity>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Hobbies & interests</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Interests help NSN suggest comfortable activities and conversation starters. This is a local prototype preference layer, not a dating quiz or production matching engine.
+                      </Text>
+                    </View>
+                    <View style={styles.foodPreferenceSearchWrap}>
+                      <IconSymbol name="magnifyingglass" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <TextInput
+                        value={interestPreferenceSearch}
+                        onChangeText={setInterestPreferenceSearch}
+                        placeholder="Search anime, horror, walking..."
+                        placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                        style={[styles.foodPreferenceSearchInput, isDay && styles.dayTitle]}
+                        accessibilityLabel="Search hobbies and interests"
+                        selectionColor="#7786FF"
+                        underlineColorAndroid="transparent"
+                      />
+                      {interestPreferenceSearch ? (
+                        <TouchableOpacity
+                          activeOpacity={0.78}
+                          onPress={() => setInterestPreferenceSearch("")}
+                          accessibilityRole="button"
+                          accessibilityLabel="Clear hobbies and interests search"
+                          style={styles.foodPreferenceClearButton}
+                        >
+                          <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={16} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                    <View style={[styles.foodPreferenceSummary, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Selected</Text>
+                      {selectedInterestPreferenceLabels.length ? (
+                        <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+                          {selectedInterestPreferenceLabels.map((label, index) => (
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                          ))}
+                          {interestPreferenceIds.length > selectedInterestPreferenceLabels.length ? (
+                            <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
+                              +{interestPreferenceIds.length - selectedInterestPreferenceLabels.length} more
+                            </Text>
+                          ) : null}
+                        </View>
+                      ) : (
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>No hobbies or interests selected yet.</Text>
+                      )}
+                    </View>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Comfort modifiers</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Mark how each selected interest feels. These labels are prototype comfort signals for future matching and event planning.
+                      </Text>
+                      {activeInterestForComfort ? (
+                        <>
+                          <View style={[styles.foodPreferenceSummaryChipRow, styles.interestComfortTargetRow, isRtl && styles.rtlRow]}>
+                            {selectedInterestPreferenceOptions.slice(0, 8).map((option) => {
+                              const active = activeInterestForComfort.id === option.id;
+
+                              return (
+                                <TouchableOpacity
+                                  key={option.id}
+                                  activeOpacity={0.78}
+                                  onPress={() => setActiveInterestComfortId(option.id)}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`Edit comfort tags for ${option.label}`}
+                                  accessibilityState={{ selected: active }}
+                                  style={[styles.interestComfortTargetChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+                                >
+                                  <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                                    {active ? `Editing: ${option.label}` : option.label}
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                          <View style={[styles.foodPreferenceChipGrid, styles.interestComfortTagGrid, isRtl && styles.rtlRow]}>
+                            {interestComfortTags.map((tag) => {
+                              const active = (interestComfortTagsByInterest[activeInterestForComfort.id] ?? []).includes(tag.id);
+
+                              return (
+                                <TouchableOpacity
+                                  key={tag.id}
+                                  activeOpacity={0.78}
+                                  onPress={() => toggleInterestComfortTag(activeInterestForComfort.id, tag.id)}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`${tag.label} for ${activeInterestForComfort.label}`}
+                                  accessibilityState={{ selected: active }}
+                                  style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+                                >
+                                  <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                                    {active ? `Selected: ${tag.label}` : tag.label}
+                                  </Text>
+                                  <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={1}>{tag.copy}</Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                        </>
+                      ) : (
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                          Select an interest below to add comfort modifiers.
+                        </Text>
+                      )}
+                    </View>
+                    {interestPreferenceSearch.trim() ? (
+                      <View style={styles.foodPreferenceAccordionStack}>
+                        <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Search results</Text>
+                        {interestPreferenceSearchResults.length ? (
+                          <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                            {interestPreferenceSearchResults.map(renderInterestPreferenceChip)}
+                          </View>
+                        ) : (
+                          <View style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No matching interest yet</Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                              Try another activity, genre, category, or local place.
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    ) : (
+                      <View style={styles.foodPreferenceAccordionStack}>
+                        {interestCategories.map((category) => {
+                          const options = getInterestOptionsByCategory(category.id);
+                          const selectedCount = getInterestCategorySelectedCount(interestPreferenceIds, category.id);
+                          const isOpen = openInterestCategories.includes(category.id);
+                          const showAll = showAllInterestCategories.includes(category.id);
+                          const visibleLimit = category.defaultVisible ?? 8;
+                          const visibleOptions = showAll
+                            ? options
+                            : options.filter((option, index) => index < visibleLimit || interestPreferenceIds.includes(option.id));
+                          const hiddenCount = options.length - visibleOptions.length;
+
+                          return (
+                            <View key={category.id} style={[styles.foodPreferenceGroup, isDay && styles.daySoftOption]}>
+                              <TouchableOpacity
+                                activeOpacity={0.78}
+                                onPress={() => toggleInterestCategory(category.id)}
+                                style={[styles.foodPreferenceGroupHeader, isRtl && styles.rtlRow]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${category.title} interest group`}
+                                accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
+                              >
+                                <View style={styles.profileLayoutBody}>
+                                  <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{category.title}</Text>
+                                  <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{category.copy}</Text>
+                                </View>
+                                <View style={[styles.foodPreferenceGroupHeaderMeta, isRtl && styles.rtlRow]}>
+                                  {selectedCount ? <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{selectedCount} selected</Text> : null}
+                                  <IconSymbol name={isOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                                </View>
+                              </TouchableOpacity>
+                              {isOpen ? (
+                                <>
+                                  <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                                    {visibleOptions.map(renderInterestPreferenceChip)}
+                                  </View>
+                                  {hiddenCount > 0 || showAll ? (
+                                    <TouchableOpacity
+                                      activeOpacity={0.78}
+                                      onPress={() => toggleInterestCategoryLimit(category.id)}
+                                      style={[styles.foodPreferenceShowMoreButton, isDay && styles.daySoftOption]}
+                                      accessibilityRole="button"
+                                      accessibilityLabel={showAll ? `Show fewer ${category.title} options` : `Show more ${category.title} options`}
+                                    >
+                                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>
+                                        {showAll ? "Show fewer" : `Show ${hiddenCount} more`}
+                                      </Text>
+                                    </TouchableOpacity>
+                                  ) : null}
+                                </>
+                              ) : null}
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
                   </>
                 ) : null}
                 {profileMenuPanel === "comfortTrust" ? (
@@ -3819,6 +4153,11 @@ export default function ProfileScreen() {
                     return;
                   }
 
+                  if (row.key === "hobbiesInterests") {
+                    openProfileOptionsPanel("hobbiesInterests");
+                    return;
+                  }
+
                   router.push(row.route as any);
                 }}
                 style={[styles.row, index < expandedProfileRows.length - 1 && styles.rowBorder, isDay && index < expandedProfileRows.length - 1 && styles.dayRowBorder]}
@@ -3977,6 +4316,9 @@ const styles = StyleSheet.create({
   foodPreferenceChipText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   foodPreferenceChipMeta: { color: nsnColors.muted, fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 1 },
   foodPreferenceShowMoreButton: { alignSelf: "flex-start", minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, marginLeft: 10, marginBottom: 10 },
+  interestComfortTargetRow: { marginTop: 10, marginBottom: 8 },
+  interestComfortTargetChip: { minHeight: 34, maxWidth: "100%", borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, paddingVertical: 7, justifyContent: "center" },
+  interestComfortTagGrid: { paddingHorizontal: 0, paddingBottom: 0, marginTop: 2 },
   alphaGuideCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
   alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },

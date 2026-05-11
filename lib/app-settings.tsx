@@ -13,6 +13,7 @@ import {
 import type { NoiseLevel } from "./nsn-data";
 import { getBrandTheme, normalizeBrandThemeId, type BrandThemeId } from "./brand-theme";
 import { defaultFoodBeveragePreferenceIds, normalizeFoodBeveragePreferenceIds } from "./preferences/food-preferences";
+import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds, normalizeInterestComfortTagsByInterest, normalizeInterestPreferenceIds } from "./preferences/interests";
 
 export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
 
@@ -351,6 +352,8 @@ type OnboardingSnapshot = {
   dietaryPreferences: DietaryPreference[];
   foodBeveragePreferenceIds?: string[];
   hobbiesInterests: string[];
+  interestPreferenceIds?: string[];
+  interestComfortTagsByInterest?: Record<string, string[]>;
   profileShortcutLayout?: ProfileShortcutLayout;
   profileWidthPreference?: ProfileWidthPreference;
   settingsPrivacyMode?: SettingsPrivacyMode;
@@ -614,6 +617,10 @@ type AppSettings = {
   setFoodBeveragePreferenceIds: (value: string[]) => void;
   hobbiesInterests: string[];
   setHobbiesInterests: (value: string[]) => void;
+  interestPreferenceIds: string[];
+  setInterestPreferenceIds: (value: string[]) => void;
+  interestComfortTagsByInterest: Record<string, string[]>;
+  setInterestComfortTagsByInterest: (value: Record<string, string[]>) => void;
   profileShortcutLayout: ProfileShortcutLayout;
   setProfileShortcutLayout: (value: ProfileShortcutLayout) => void;
   profileWidthPreference: ProfileWidthPreference;
@@ -794,6 +801,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
   const [foodBeveragePreferenceIds, setFoodBeveragePreferenceIds] = useState<string[]>(defaultFoodBeveragePreferenceIds);
   const [hobbiesInterests, setHobbiesInterests] = useState<string[]>(["Coffee", "Movies", "Walks"]);
+  const [interestPreferenceIds, setInterestPreferenceIds] = useState<string[]>(defaultInterestPreferenceIds);
+  const [interestComfortTagsByInterest, setInterestComfortTagsByInterest] = useState<Record<string, string[]>>(defaultInterestComfortTagsByInterest);
   const [profileShortcutLayout, setProfileShortcutLayout] = useState<ProfileShortcutLayout>("Clean");
   const [profileWidthPreference, setProfileWidthPreference] = useState<ProfileWidthPreference>("Contained");
   const [settingsPrivacyMode, setSettingsPrivacyMode] = useState<SettingsPrivacyMode>("Basic");
@@ -924,6 +933,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
         setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
         setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
+        const storedInterestPreferenceIds = normalizeInterestPreferenceIds(snapshot.interestPreferenceIds);
+        setInterestPreferenceIds(storedInterestPreferenceIds);
+        setInterestComfortTagsByInterest(normalizeInterestComfortTagsByInterest(snapshot.interestComfortTagsByInterest, storedInterestPreferenceIds));
         setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
         setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
         setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
@@ -1037,6 +1049,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextFoodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds);
     setFoodBeveragePreferenceIds(nextFoodBeveragePreferenceIds);
     setHobbiesInterests(snapshot.hobbiesInterests);
+    const nextInterestPreferenceIds = normalizeInterestPreferenceIds(snapshot.interestPreferenceIds);
+    const nextInterestComfortTagsByInterest = normalizeInterestComfortTagsByInterest(snapshot.interestComfortTagsByInterest, nextInterestPreferenceIds);
+    setInterestPreferenceIds(nextInterestPreferenceIds);
+    setInterestComfortTagsByInterest(nextInterestComfortTagsByInterest);
     setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
     setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
     setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
@@ -1098,6 +1114,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           photoRecordingComfortPreferences: nextPhotoRecordingComfortPreferences,
           verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
           foodBeveragePreferenceIds: nextFoodBeveragePreferenceIds,
+          interestPreferenceIds: nextInterestPreferenceIds,
+          interestComfortTagsByInterest: nextInterestComfortTagsByInterest,
           showWeekday: snapshot.showWeekday ?? true,
           timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
           clockDisplayStyle: normalizeClockDisplayStyle(snapshot.clockDisplayStyle),
@@ -1172,6 +1190,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       dietaryPreferences,
       foodBeveragePreferenceIds,
       hobbiesInterests,
+      interestPreferenceIds,
+      interestComfortTagsByInterest,
       profileShortcutLayout,
       profileWidthPreference,
       settingsPrivacyMode,
@@ -1231,6 +1251,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.photoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(nextSnapshot.photoRecordingComfortPreferences);
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
     nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(nextSnapshot.foodBeveragePreferenceIds);
+    nextSnapshot.interestPreferenceIds = normalizeInterestPreferenceIds(nextSnapshot.interestPreferenceIds);
+    nextSnapshot.interestComfortTagsByInterest = normalizeInterestComfortTagsByInterest(nextSnapshot.interestComfortTagsByInterest, nextSnapshot.interestPreferenceIds);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
@@ -1318,6 +1340,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
     if (snapshot.foodBeveragePreferenceIds !== undefined) setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
+    if (snapshot.interestPreferenceIds !== undefined) {
+      const nextInterestIds = normalizeInterestPreferenceIds(snapshot.interestPreferenceIds);
+      setInterestPreferenceIds(nextInterestIds);
+      setInterestComfortTagsByInterest(normalizeInterestComfortTagsByInterest(nextSnapshot.interestComfortTagsByInterest, nextInterestIds));
+    } else if (snapshot.interestComfortTagsByInterest !== undefined) {
+      setInterestComfortTagsByInterest(normalizeInterestComfortTagsByInterest(snapshot.interestComfortTagsByInterest, nextSnapshot.interestPreferenceIds));
+    }
     if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
     if (snapshot.profileWidthPreference !== undefined) setProfileWidthPreference(snapshot.profileWidthPreference);
     if (snapshot.settingsPrivacyMode !== undefined) setSettingsPrivacyMode(snapshot.settingsPrivacyMode);
@@ -1615,6 +1644,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setFoodBeveragePreferenceIds,
         hobbiesInterests,
         setHobbiesInterests,
+        interestPreferenceIds,
+        setInterestPreferenceIds,
+        interestComfortTagsByInterest,
+        setInterestComfortTagsByInterest,
         profileShortcutLayout,
         setProfileShortcutLayout,
         profileWidthPreference,

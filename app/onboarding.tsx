@@ -10,6 +10,7 @@ import { defaultPhotoRecordingComfortPreferences, useAppSettings } from "@/lib/a
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
 import { defaultFoodBeveragePreferenceIds } from "@/lib/preferences/food-preferences";
+import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds } from "@/lib/preferences/interests";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { defaultComfortPreferences, type SoftHelloComfortPreference } from "@/lib/softhello-mvp";
 
@@ -268,6 +269,8 @@ export default function OnboardingScreen() {
       dietaryPreferences: ["No preference"],
       foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
       hobbiesInterests: interests,
+      interestPreferenceIds: defaultInterestPreferenceIds,
+      interestComfortTagsByInterest: defaultInterestComfortTagsByInterest,
       appLanguage: settings.appLanguage,
       translationLanguage: settings.translationLanguage,
       brandThemeId: settings.brandThemeId,
