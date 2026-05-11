@@ -975,7 +975,7 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, dateFormatPreference, timeFormatPreference, clockDisplayStyle, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, dateFormatPreference, showWeekday, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -995,7 +995,8 @@ export default function HomeScreen() {
   const [nsnSearchQuery, setNsnSearchQuery] = useState("");
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null);
-  const [mapZoomLevel, setMapZoomLevel] = useState(1);
+  const [mapZoomLevel, setMapZoomLevel] = useState(0);
+  const [mapFocusMode, setMapFocusMode] = useState<"area" | "event">("area");
   const showHomeControls = openHomePanel === "filters";
   const showCustomiseHome = openHomePanel === "customize";
   const showNsnSearch = openHomePanel === "search";
@@ -1055,7 +1056,7 @@ export default function HomeScreen() {
   const buttonOutlineStyle = cardOutlineStyle === "Minimal" ? styles.buttonOutlineMinimal : cardOutlineStyle === "Standard" ? styles.buttonOutlineStandard : styles.buttonOutlineStrong;
   const dayButtonOutlineStyle = cardOutlineStyle === "Minimal" ? styles.dayButtonOutlineMinimal : cardOutlineStyle === "Standard" ? styles.dayButtonOutlineStandard : styles.dayButtonOutlineStrong;
   const outlinedButtonStyle = [buttonOutlineStyle, isDay && dayButtonOutlineStyle];
-  const mapZoomScale = 1 + (mapZoomLevel - 1) * 0.12;
+  const mapZoomScale = 0.9 + mapZoomLevel * 0.12 + (mapFocusMode === "event" ? 0.08 : 0);
 
   const selectNoiseLevelPreference = (preference: NoiseLevelPreference) => {
     saveSoftHelloMvpState({ noiseLevelPreference: preference });
@@ -1159,18 +1160,22 @@ export default function HomeScreen() {
 
     const nextIndex = selectedMapEventIndex < 0 ? 0 : (selectedMapEventIndex + 1) % displayedEvents.length;
     setHighlightedEventId(displayedEvents[nextIndex].id);
+    setMapFocusMode("event");
+    setMapZoomLevel(2);
   };
 
   const zoomInMap = () => {
-    setMapZoomLevel((level) => Math.min(3, level + 1));
+    setMapZoomLevel((level) => Math.min(4, level + 1));
   };
 
   const zoomOutMap = () => {
-    setMapZoomLevel((level) => Math.max(1, level - 1));
+    setMapFocusMode("area");
+    setMapZoomLevel((level) => Math.max(0, level - 1));
   };
 
-  const resetMapView = () => {
-    setMapZoomLevel(1);
+  const focusSelectedMapEvent = () => {
+    setMapFocusMode("event");
+    setMapZoomLevel(2);
   };
 
   const renderPrototypeMapCanvas = () => (
@@ -1183,6 +1188,8 @@ export default function HomeScreen() {
         <View style={[styles.prototypeMapRoad, styles.prototypeMapRoadSecondary, isDay && styles.dayPrototypeMapRoad]} />
         <View style={[styles.prototypeMapRoad, styles.prototypeMapRoadTertiary, isDay && styles.dayPrototypeMapRoad]} />
         <View style={[styles.prototypeMapRoad, styles.prototypeMapRoadHarbour, isDay && styles.dayPrototypeMapRoad]} />
+        <Text style={[styles.prototypeMapCityLabel, isDay && styles.dayPrototypeMapRoadLabel]}>Sydney</Text>
+        <Text style={[styles.prototypeMapNorthLabel, isDay && styles.dayPrototypeMapRoadLabel]}>North Shore</Text>
         {(selectedMapDetails?.roads ?? ["Pacific Hwy", "Victoria Ave", "Harbour foreshore"]).map((road, index) => (
           <Text key={road} style={[styles.prototypeMapRoadLabel, index === 1 && styles.prototypeMapRoadLabelSecond, index === 2 && styles.prototypeMapRoadLabelThird, isDay && styles.dayPrototypeMapRoadLabel]} numberOfLines={1}>
             {road}
@@ -1197,34 +1204,43 @@ export default function HomeScreen() {
           <IconSymbol name="location" color="#FFFFFF" size={16} />
         </View>
       </View>
+      <View pointerEvents="none" style={[styles.prototypeMapVenueBadge, isDay && styles.dayPrototypeMapArea]}>
+        <Text style={[styles.prototypeMapVenueKicker, isDay && styles.dayMutedText]}>Selected event</Text>
+        <Text style={[styles.prototypeMapVenueName, isDay && styles.dayHeadingText]} numberOfLines={1}>
+          {selectedMapEvent?.venue ?? selectedMapDetails?.suburb ?? timezone.label}
+        </Text>
+        <Text style={[styles.prototypeMapVenueSuburb, isDay && styles.dayMutedText]} numberOfLines={1}>
+          {selectedMapDetails?.suburb ?? timezone.city}
+        </Text>
+      </View>
       <View style={styles.prototypeMapZoomControls}>
         <TouchableOpacity
           activeOpacity={0.78}
           onPress={zoomInMap}
-          disabled={mapZoomLevel >= 3}
+          disabled={mapZoomLevel >= 4}
           accessibilityRole="button"
           accessibilityLabel="Zoom in"
-          accessibilityState={{ disabled: mapZoomLevel >= 3 }}
-          style={[styles.prototypeMapZoomButton, isDay && styles.dayPrototypeMapZoomButton, mapZoomLevel >= 3 && styles.disabledMoveButton]}
+          accessibilityState={{ disabled: mapZoomLevel >= 4 }}
+          style={[styles.prototypeMapZoomButton, isDay && styles.dayPrototypeMapZoomButton, mapZoomLevel >= 4 && styles.disabledMoveButton]}
         >
           <Text style={[styles.prototypeMapZoomText, isDay && styles.dayPrototypeMapZoomText]}>+</Text>
         </TouchableOpacity>
         <TouchableOpacity
           activeOpacity={0.78}
           onPress={zoomOutMap}
-          disabled={mapZoomLevel <= 1}
+          disabled={mapZoomLevel <= 0 && mapFocusMode === "area"}
           accessibilityRole="button"
           accessibilityLabel="Zoom out"
-          accessibilityState={{ disabled: mapZoomLevel <= 1 }}
-          style={[styles.prototypeMapZoomButton, isDay && styles.dayPrototypeMapZoomButton, mapZoomLevel <= 1 && styles.disabledMoveButton]}
+          accessibilityState={{ disabled: mapZoomLevel <= 0 && mapFocusMode === "area" }}
+          style={[styles.prototypeMapZoomButton, isDay && styles.dayPrototypeMapZoomButton, mapZoomLevel <= 0 && mapFocusMode === "area" && styles.disabledMoveButton]}
         >
           <Text style={[styles.prototypeMapZoomText, isDay && styles.dayPrototypeMapZoomText]}>{"\u2212"}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           activeOpacity={0.78}
-          onPress={resetMapView}
+          onPress={focusSelectedMapEvent}
           accessibilityRole="button"
-          accessibilityLabel="Reset map view"
+          accessibilityLabel="Recenter on selected event location"
           style={[styles.prototypeMapZoomButton, styles.prototypeMapResetButton, isDay && styles.dayPrototypeMapZoomButton]}
         >
           <IconSymbol name="location" color={isDay ? "#284E92" : "#FFFFFF"} size={14} />
@@ -1318,12 +1334,24 @@ export default function HomeScreen() {
     locale,
     timeZone: localTimeZone,
     dateFormatPreference,
+    showWeekday,
   });
   const formattedTime = formatPreferredTime(now, {
     locale,
     timeZone: localTimeZone,
     timeFormatPreference,
   });
+  const clockParts = new Intl.DateTimeFormat("en-AU", {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+    ...(localTimeZone ? { timeZone: localTimeZone } : {}),
+  }).formatToParts(now);
+  const clockHour = Number(clockParts.find((part) => part.type === "hour")?.value ?? now.getHours());
+  const clockMinute = Number(clockParts.find((part) => part.type === "minute")?.value ?? now.getMinutes());
+  const analogHourRotation = `${(clockHour % 12) * 30 + clockMinute * 0.5}deg`;
+  const analogMinuteRotation = `${clockMinute * 6}deg`;
+  const shouldShowDigitalClock = clockDisplayStyle !== "Analog" || showDigitalTimeWithAnalog;
 
   // ===== LIVE TIME =====
   const getHourForTimeZone = (timeZone?: string) =>
@@ -1346,13 +1374,20 @@ export default function HomeScreen() {
     : copy.evening;
 
   const localHour = dayNightModePreference === "Follow system/device time" ? deviceHour : dayNightModePreference === "Follow selected suburb/local time" ? selectedLocalHour : hour;
-  const localTimeSuggestedMode = localHour >= 18 || localHour < 6 ? "night" : "day";
+  const timeZoneName = new Intl.DateTimeFormat("en-AU", {
+    timeZone: timezone.timeZone,
+    timeZoneName: "short",
+  }).formatToParts(now).find((part) => part.type === "timeZoneName")?.value ?? "";
+  const selectedLocalMonth = Number(new Intl.DateTimeFormat("en-AU", { month: "numeric", timeZone: timezone.timeZone }).format(now));
+  const isSydneyDaylightSaving = timezone.timeZone === "Australia/Sydney" && (/DT|Daylight/i.test(timeZoneName) || selectedLocalMonth >= 10 || selectedLocalMonth <= 3);
+  const nightStartHour = isSydneyDaylightSaving ? 19 : 18;
+  const localTimeSuggestedMode = localHour >= nightStartHour || localHour < 6 ? "night" : "day";
   const dayNightModeCopy =
     dayNightModePreference === "Manual toggle"
-      ? "Manual Day/Night"
+      ? "Manual mode"
       : dayNightModePreference === "Follow system/device time"
         ? "Following device time"
-        : `Following ${timezone.label} time`;
+        : "Following Sydney local time";
   const shouldShowThemeSuggestion = suggestNightModeInEvenings && localTimeSuggestedMode !== mode && dismissedThemeSuggestion !== localTimeSuggestedMode;
   const themeSuggestion =
     localTimeSuggestedMode === "night"
@@ -1390,6 +1425,29 @@ export default function HomeScreen() {
     : weather.temperature >= 28
     ? `Warm weather • ${timezone.city} ${temperatureLabel} • Choose shade and water-friendly plans.`
     : `Good meetup weather • ${timezone.city} ${temperatureLabel} • Rain chance ${weather.rainChance}%.`;
+
+  const weatherStatus =
+    weather.temperature === null || weather.rainChance === null || temperatureLabel === null
+      ? copy.loadingWeather(timezone.city)
+      : weather.rainChance >= 70
+        ? "Rain likely today"
+        : weather.rainChance >= 35
+          ? "Slight rain possible"
+          : weather.temperature >= 28
+            ? "Warm and mostly clear"
+            : "Good for low-pressure meetups";
+  const weatherTemperature = temperatureLabel ?? "--";
+  const weatherRainChance = weather.rainChance === null ? "--" : `${weather.rainChance}% rain`;
+  const weatherAdvice =
+    weather.temperature === null || weather.rainChance === null || temperatureLabel === null
+      ? "Live weather is loading for the selected local area."
+      : weather.rainChance >= 70
+        ? "Indoor alternatives recommended."
+        : weather.rainChance >= 35
+          ? "We will keep you updated."
+          : weather.temperature >= 28
+            ? "Choose shade and water-friendly plans."
+            : `${timezone.city} looks meetup-friendly.`;
 
   const weatherIcon =
   weather.rainChance === null
@@ -1515,10 +1573,18 @@ export default function HomeScreen() {
         return homeVisibleSections.weather ? (
           <View key={sectionKey} style={styles.localContextGroup}>
             <View style={styles.dashboardPair}>
-            <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, styles.dashboardCard, isDay && styles.dayCard, outlinedCardStyle, isRtl && styles.rtlRow]}>
+            <TouchableOpacity activeOpacity={0.86} accessibilityHint={weatherMessage} style={[styles.weatherCard, styles.dashboardCard, isDay && styles.dayCard, outlinedCardStyle, isRtl && styles.rtlRow]}>
               <View style={[styles.weatherBody, isRtl && styles.rtlBlock]}>
-                <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherUpdate}</Text>
-                <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{weatherMessage}</Text>
+                <View style={[styles.weatherTitleRow, isRtl && styles.rtlRow]}>
+                  <IconSymbol name="weather" color={isDay ? "#284E92" : "#C7B07A"} size={16} />
+                  <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherUpdate}</Text>
+                </View>
+                <Text style={[styles.weatherStatus, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{weatherStatus}</Text>
+                <View style={[styles.weatherMetricRow, isRtl && styles.rtlRow]}>
+                  <Text style={[styles.weatherMetric, isDay && styles.dayMutedText]}>{weatherTemperature}</Text>
+                  <Text style={[styles.weatherMetric, isDay && styles.dayMutedText]}>{weatherRainChance}</Text>
+                </View>
+                <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{weatherAdvice}</Text>
               </View>
               <Animated.Text style={[styles.weatherIcon, { transform: [{ translateY: weatherFloat }] }]}>
                 {weatherIcon}
@@ -1878,11 +1944,14 @@ export default function HomeScreen() {
             <View style={[styles.localTimePill, isDay && styles.dayLocalTimePill]}>
               {clockDisplayStyle === "Analog" ? (
                 <View style={[styles.analogClock, isDay && styles.dayAnalogClock]}>
-                  <View style={[styles.analogHandHour, isDay && styles.dayAnalogHand]} />
-                  <View style={[styles.analogHandMinute, isDay && styles.dayAnalogHand]} />
+                  <View style={styles.analogClockDot} />
+                  <View style={[styles.analogHand, styles.analogHandHour, isDay && styles.dayAnalogHand, { transform: [{ rotate: analogHourRotation }] }]} />
+                  <View style={[styles.analogHand, styles.analogHandMinute, isDay && styles.dayAnalogHand, { transform: [{ rotate: analogMinuteRotation }] }]} />
                 </View>
               ) : null}
-              <Text style={[styles.localTimeText, isDay && styles.dayHeadingText]}>{formattedTime}</Text>
+              {shouldShowDigitalClock ? (
+                <Text style={[styles.localTimeText, isDay && styles.dayHeadingText]}>{formattedTime}</Text>
+              ) : null}
             </View>
             <Text style={[styles.localDateText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{dayNightModeCopy}</Text>
           </View>
@@ -2557,10 +2626,10 @@ const styles = StyleSheet.create({
   dayText: { color: "#1E252C", },
   dayNoiseLevelItem: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   dayNoiseLevelItemActive: { backgroundColor: "#DFE8EF", borderColor: "#6F87A1" },
-  content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 30 },
-  contentCompact: { paddingTop: 6, paddingBottom: 18 },
-  contentSpacious: { paddingTop: 14, paddingBottom: 34 },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 112 },
+  contentCompact: { paddingTop: 6, paddingBottom: 96 },
+  contentSpacious: { paddingTop: 14, paddingBottom: 126 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 },
   headerTitle: { flex: 1, minWidth: 0 },
   headerActions: { flexShrink: 0, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end", gap: 9, marginLeft: 12 },
   headerActionsCompact: { gap: 6 },
@@ -2582,14 +2651,16 @@ const styles = StyleSheet.create({
   greetingText: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35, textAlign: "center" },
   localMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 7 },
   localMetaText: { color: nsnColors.muted, fontSize: 14, fontWeight: "800", lineHeight: 19, textAlign: "center" },
-  localTimePill: { alignSelf: "center", flexDirection: "row", gap: 8, borderRadius: 18, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 16, paddingVertical: 9, alignItems: "center", marginTop: 14 },
+  localTimePill: { alignSelf: "center", minHeight: 46, flexDirection: "row", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 14, paddingVertical: 8, alignItems: "center", justifyContent: "center", marginTop: 14 },
   dayLocalTimePill: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
   localTimeText: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 23 },
   localDateText: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 7, textAlign: "center" },
-  analogClock: { width: 18, height: 18, borderRadius: 9, borderWidth: 1.5, borderColor: "#C7B07A", alignItems: "center", justifyContent: "center" },
+  analogClock: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: "#C7B07A", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.035)" },
   dayAnalogClock: { borderColor: "#284E92" },
-  analogHandHour: { position: "absolute", width: 2, height: 5, borderRadius: 1, backgroundColor: "#FFFFFF", top: 4, transform: [{ rotate: "30deg" }] },
-  analogHandMinute: { position: "absolute", width: 2, height: 7, borderRadius: 1, backgroundColor: "#FFFFFF", top: 3, transform: [{ rotate: "100deg" }] },
+  analogClockDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#C7B07A", zIndex: 2 },
+  analogHand: { position: "absolute", left: 15, bottom: 15, width: 2, borderRadius: 1, backgroundColor: "#FFFFFF" },
+  analogHandHour: { height: 9 },
+  analogHandMinute: { height: 12 },
   dayAnalogHand: { backgroundColor: "#284E92" },
   headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
@@ -2707,14 +2778,14 @@ const styles = StyleSheet.create({
   locationResultTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   locationResultMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, marginTop: 2 },
   activeLocationResultText: { color: nsnColors.text },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 9 },
-  nsnLogoMark: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#1590C9", alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1, borderColor: "rgba(255,255,255,0.22)" },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  nsnLogoMark: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#1590C9", alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1.25, borderColor: "rgba(255,255,255,0.28)" },
   dayNsnLogoMark: { borderColor: "#B7C7DD" },
-  nsnLogoMoon: { position: "absolute", left: 7, top: 2, color: "#FFE074", fontSize: 14, fontWeight: "900", lineHeight: 18 },
-  nsnLogoText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900", lineHeight: 14, marginTop: 7 },
-  logo: { color: nsnColors.text, fontSize: 25, fontWeight: "800", letterSpacing: -0.4, lineHeight: 32 },
+  nsnLogoMoon: { position: "absolute", left: 8, top: 2, color: "#FFE074", fontSize: 16, fontWeight: "900", lineHeight: 20 },
+  nsnLogoText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 15, marginTop: 8 },
+  logo: { color: nsnColors.text, fontSize: 27, fontWeight: "900", letterSpacing: 0, lineHeight: 33 },
   moon: { color: nsnColors.day },
-  subtitle: { color: nsnColors.muted, fontSize: 13, lineHeight: 18 },
+  subtitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 2 },
   bellButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   bellText: { color: nsnColors.text, fontSize: 20 },
   modeToggle: { alignSelf: "center", flexDirection: "row", gap: 6, borderRadius: 999, padding: 5, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#38527C", marginBottom: 16 },
@@ -2752,27 +2823,31 @@ const styles = StyleSheet.create({
   dateText: { color: nsnColors.text, fontSize: 13, lineHeight: 19 },
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   changeText: { color: "#A8B7DA", fontSize: 12, fontWeight: "700" },
-  homeSectionFlow: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 12, marginBottom: 8 },
-  localContextGroup: { flexGrow: 1, flexShrink: 1, flexBasis: 420, alignSelf: "stretch", gap: 12 },
+  homeSectionFlow: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 12, marginBottom: 8, width: "100%" },
+  localContextGroup: { flexGrow: 1, flexShrink: 1, flexBasis: 440, alignSelf: "stretch", gap: 12, minWidth: 0 },
   dashboardCard: { flexGrow: 1, flexShrink: 1, flexBasis: 210 },
   dashboardUtilityCard: { flexGrow: 1, flexShrink: 1, flexBasis: "100%" },
-  dashboardWideCard: { flexGrow: 1.45, flexShrink: 1, flexBasis: 560 },
+  dashboardWideCard: { flexGrow: 1.6, flexShrink: 1, flexBasis: 560, minWidth: 0 },
   homeMajorSection: { alignSelf: "stretch", gap: 12, borderRadius: 20, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.045)", padding: 14 },
   dashboardPair: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  weatherCard: { minHeight: 92, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 20, paddingHorizontal: 15, paddingVertical: 13, backgroundColor: "#102B4E", borderWidth: 1, borderColor: "#38527C" },
+  weatherCard: { minHeight: 100, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 20, paddingHorizontal: 15, paddingVertical: 12, backgroundColor: "#102B4E", borderWidth: 1, borderColor: "#38527C" },
   weatherBody: { flex: 1, minWidth: 0 },
-  weatherTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
-  weatherCopy: { color: "#C7D3EA", fontSize: 12, lineHeight: 18, maxWidth: 290 },
-  weatherIcon: { fontSize: 28 },
+  weatherTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19 },
+  weatherStatus: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginTop: 5 },
+  weatherMetricRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
+  weatherMetric: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15, borderRadius: 999, borderWidth: 1, borderColor: "#4D6794", paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden" },
+  weatherCopy: { color: "#C7D3EA", fontSize: 11, lineHeight: 16, maxWidth: 290, marginTop: 5 },
+  weatherIcon: { fontSize: 28, marginLeft: 8 },
   todayCard: { minHeight: 92, borderRadius: 20, paddingHorizontal: 15, paddingVertical: 13, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
   todayTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   todayDate: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19, marginTop: 7 },
   todayCopy: { color: "#C7D3EA", fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 3 },
   todayNote: { color: "#9FB0CD", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 5 },
-  locationMapCard: { minHeight: 284, flexGrow: 1, borderRadius: 20, padding: 14, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
+  locationMapCard: { minHeight: 304, flexGrow: 1, borderRadius: 20, padding: 14, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
   locationMapTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  prototypeMapCanvas: { minHeight: 160, flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#102B4E", overflow: "hidden", marginTop: 10, marginBottom: 10 },
-  prototypeMapContent: { flex: 1, minHeight: 160 },
+  prototypeMapCanvas: { minHeight: 176, flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#102B4E", overflow: "hidden", marginTop: 10, marginBottom: 10 },
+  prototypeMapContent: { flex: 1, minHeight: 176 },
   dayPrototypeMapCanvas: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
   prototypeMapRoad: { position: "absolute", backgroundColor: "rgba(199,211,234,0.25)", borderRadius: 999 },
   dayPrototypeMapRoad: { backgroundColor: "rgba(86,103,122,0.28)" },
@@ -2789,11 +2864,17 @@ const styles = StyleSheet.create({
   prototypeMapRoadLabelSecond: { left: 104, top: 18 },
   prototypeMapRoadLabelThird: { left: 128, bottom: 20, top: undefined },
   dayPrototypeMapRoadLabel: { color: "rgba(45,59,82,0.78)" },
+  prototypeMapCityLabel: { position: "absolute", right: 34, bottom: 38, color: "rgba(245,247,255,0.7)", fontSize: 10, fontWeight: "900" },
+  prototypeMapNorthLabel: { position: "absolute", left: 18, top: 74, color: "rgba(245,247,255,0.76)", fontSize: 10, fontWeight: "900" },
   prototypeMapPin: { position: "absolute", marginLeft: -15, marginTop: -15, width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: "#FFFFFF", backgroundColor: "#214B95", alignItems: "center", justifyContent: "center" },
   dayPrototypeMapPin: { backgroundColor: "#284E92" },
   prototypeMapArea: { position: "absolute", left: 10, bottom: 9, maxWidth: "62%", borderRadius: 12, backgroundColor: "rgba(8,17,31,0.72)", paddingHorizontal: 9, paddingVertical: 5 },
   dayPrototypeMapArea: { backgroundColor: "rgba(255,255,255,0.72)" },
   prototypeMapAreaText: { color: nsnColors.text, fontSize: 10, fontWeight: "900", lineHeight: 14 },
+  prototypeMapVenueBadge: { position: "absolute", left: 10, top: 10, maxWidth: "58%", borderRadius: 13, backgroundColor: "rgba(8,17,31,0.78)", paddingHorizontal: 10, paddingVertical: 7 },
+  prototypeMapVenueKicker: { color: "#A8B7DA", fontSize: 8, fontWeight: "900", lineHeight: 11, textTransform: "uppercase" },
+  prototypeMapVenueName: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  prototypeMapVenueSuburb: { color: "#C7D3EA", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 1 },
   prototypeMapZoomControls: { position: "absolute", top: 10, right: 10, gap: 6 },
   prototypeMapZoomButton: { width: 34, height: 34, borderRadius: 12, borderWidth: 1, borderColor: "#7890B8", backgroundColor: "rgba(8,17,31,0.82)", alignItems: "center", justifyContent: "center" },
   dayPrototypeMapZoomButton: { borderColor: "#6F87A1", backgroundColor: "rgba(255,255,255,0.9)" },

@@ -45,12 +45,16 @@
 - [ ] Explore an optional photo/gallery widget for local memories, venue previews, or saved-place inspiration
 - [ ] Explore optional local-only/single-player mini-game widgets such as Snake, Solitaire, or a simple platformer
 - [ ] Keep mini-games local-first and opt-in, with no social pressure or meetup matching dependency
+- [ ] Add real Sydney/OpenStreetMap integration with proper attribution and no paid map-key dependency
+- [ ] Add richer map search and event location routing, including selected-event focus and transport-aware handoff
 - [ ] Refine richer event-location map behaviour with multiple pins, selected-event syncing, travel context, and external map handoff options
 - [ ] Add richer live map integration with real Sydney/North Shore tiles, multiple pins, transport context, and external map handoff
 - [ ] Broaden localization and regional unit options beyond the current prototype date/time/unit preferences
+- [ ] Broaden regional/date/time/unit localization for more countries, calendars, weather units, and accessibility expectations
 - [ ] Expand distance unit handling across meetups, profile, saved places, and transportation views
 - [ ] Add currency display preference support when paid events, donations, or pricing features are introduced
 - [ ] Broaden regional support beyond the current suburb/local area fallback logic
+- [ ] Add better suburb/locality dataset/API integration for accurate local time, weather, routing, and search matching
 - [ ] Broaden Home module layout customization beyond simple ordering into dashboard, grid, magazine, and boxed module presets
 - [ ] Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
 - [ ] Explore optional header control density preferences with live preview, per-device defaults, and larger accessibility targets
@@ -73,6 +77,7 @@
 ### Profile and settings polish
 
 - [ ] Continue button behaviour audit across Profile, Settings & Privacy, and modal menus
+- [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 - [ ] Add interactive tutorials for privacy, preview visibility, and comfort modes
 - [ ] Review translations with real users or native speakers before treating each language as complete
 
@@ -155,7 +160,7 @@
 
 ### Media and Web
 
-- [ ] Add drag-and-drop image uploads for the web version
+- [ ] Decide whether optional gallery and mini-game widgets remain deferred Home modules or move into a separate experimental area
 
 ### Repository Presentation
 

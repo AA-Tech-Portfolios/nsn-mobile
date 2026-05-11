@@ -29,7 +29,7 @@ const rows = [
 const settingsRow = { icon: "settings", key: "settings", route: "/settings" } as const;
 type ProfileShortcutRow = (typeof rows)[number] | typeof settingsRow;
 type ProfileShortcutKey = ProfileShortcutRow["key"];
-type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "layout" | "width" | "notifications" | "blockReport";
+type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "display" | "layout" | "width" | "notifications" | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
 const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
@@ -1013,7 +1013,10 @@ export default function ProfileScreen() {
     homeHeaderControlsDensity,
     homeEventVisualMode,
     dateFormatPreference,
+    showWeekday,
     timeFormatPreference,
+    clockDisplayStyle,
+    showDigitalTimeWithAnalog,
     temperatureUnitPreference,
     dayNightModePreference,
     cardOutlineStyle,
@@ -1150,6 +1153,11 @@ export default function ProfileScreen() {
     }
   }, [age, gender, isEditingAge, preferredAgeMax, preferredAgeMin]);
 
+  const saveProfilePhotoPreview = (uri: string | null) => {
+    setProfilePhotoUri(uri);
+    saveSoftHelloMvpState({ profilePhotoUri: uri });
+  };
+
   const pickProfilePhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -1166,9 +1174,28 @@ export default function ProfileScreen() {
     });
 
     if (!result.canceled) {
-      setProfilePhotoUri(result.assets[0].uri);
+      saveProfilePhotoPreview(result.assets[0].uri);
     }
   };
+
+  const handleProfilePhotoDrop = (event: any) => {
+    event.preventDefault?.();
+    const file = event.dataTransfer?.files?.[0] ?? event.nativeEvent?.dataTransfer?.files?.[0];
+
+    if (!file || typeof file.type !== "string" || !file.type.startsWith("image/")) return;
+
+    const createObjectUrl = globalThis.URL?.createObjectURL;
+    if (!createObjectUrl) return;
+
+    saveProfilePhotoPreview(createObjectUrl(file));
+  };
+
+  const photoDropZoneProps = Platform.OS === "web"
+    ? ({
+        onDragOver: (event: any) => event.preventDefault?.(),
+        onDrop: handleProfilePhotoDrop,
+      } as any)
+    : {};
 
   const handleAvatarPress = () => {
     setShowPhotoMenu(!showPhotoMenu);
@@ -1635,6 +1662,7 @@ export default function ProfileScreen() {
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
                     {[
                       { icon: "interests" as const, title: "User preferences", copy: "Contact style, transport, location, food, and hobbies.", panel: "preferences" as const },
+                      { icon: "visibility" as const, title: "Display & layout", copy: `${homeEventLayout} events, ${homeLayoutDensity.toLowerCase()} Home density.`, panel: "display" as const },
                       { icon: "group" as const, title: "Profile layout", copy: isCleanProfile ? "Simple layout selected." : "Detailed layout selected.", panel: "layout" as const },
                       { icon: "share" as const, title: "Width settings", copy: isWideProfile ? "Wide width selected." : "Contained width selected.", panel: "width" as const },
                     ].map((item) => (
@@ -1808,6 +1836,131 @@ export default function ProfileScreen() {
                         <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       </TouchableOpacity>
                     ))}
+                  </>
+                ) : null}
+                {profileMenuPanel === "display" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("main")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to profile menu">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Display & layout</Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Home and event display</Text>
+                    <View style={styles.profileDisplayGrid}>
+                      <View style={styles.profileDisplayGroup}>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Event layout</Text>
+                        <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                          {profileEventLayoutOptions.map((option) => {
+                            const active = homeEventLayout === option;
+
+                            return (
+                              <TouchableOpacity
+                                key={option}
+                                activeOpacity={0.82}
+                                onPress={() => updateProfileDisplayPreference({ homeEventLayout: option })}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
+                                accessibilityLabel={`${option} event layout`}
+                                style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                              >
+                                <IconSymbol name={option === "Map" ? "location" : "calendar"} color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
+                                <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                      <View style={styles.profileDisplayGroup}>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Event visuals</Text>
+                        <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                          {profileEventVisualModeOptions.map((option) => {
+                            const active = homeEventVisualMode === option;
+
+                            return (
+                              <TouchableOpacity
+                                key={option}
+                                activeOpacity={0.82}
+                                onPress={() => updateProfileDisplayPreference({ homeEventVisualMode: option })}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
+                                accessibilityLabel={`${option} event display`}
+                                style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                              >
+                                <IconSymbol name={option === "Preview image" ? "preview" : "experience"} color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
+                                <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                      <View style={styles.profileDisplayGroup}>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Home density</Text>
+                        <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                          {profileHomeLayoutDensityOptions.map((option) => {
+                            const active = homeLayoutDensity === option;
+
+                            return (
+                              <TouchableOpacity
+                                key={option}
+                                activeOpacity={0.82}
+                                onPress={() => updateProfileDisplayPreference({ homeLayoutDensity: option })}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
+                                accessibilityLabel={`${option} Home density`}
+                                style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                              >
+                                <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                      <View style={styles.profileDisplayGroup}>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Header controls</Text>
+                        <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                          {profileHeaderControlsDensityOptions.map((option) => {
+                            const active = homeHeaderControlsDensity === option;
+
+                            return (
+                              <TouchableOpacity
+                                key={option}
+                                activeOpacity={0.82}
+                                onPress={() => updateProfileDisplayPreference({ homeHeaderControlsDensity: option })}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: active }}
+                                accessibilityLabel={`${option} header controls`}
+                                style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                              >
+                                <IconSymbol name="settings" color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
+                                <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                      <View style={styles.profileDisplayGroup}>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Regional formats</Text>
+                        <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          {dateFormatPreference} · {showWeekday ? "weekday on" : "weekday off"} · {timeFormatPreference}
+                        </Text>
+                        <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          {clockDisplayStyle}{clockDisplayStyle === "Analog" && showDigitalTimeWithAnalog ? " + digital" : ""} · {temperatureUnitPreference} · {cardOutlineStyle} outlines
+                        </Text>
+                        <TouchableOpacity
+                          activeOpacity={0.82}
+                          onPress={() => {
+                            setShowProfileMenu(false);
+                            router.push({ pathname: "/settings", params: { section: "regionalFormats" } } as never);
+                          }}
+                          accessibilityRole="button"
+                          accessibilityLabel="View regional format preferences"
+                          accessibilityHint={screenReaderHints ? "Opens Settings to adjust date, time, clock and unit display." : undefined}
+                          style={[styles.profileDisplayChip, styles.profileDisplayActionChip, isDay && styles.daySoftOption]}
+                        >
+                          <IconSymbol name="settings" color={isDay ? "#445E93" : "#A8B7DA"} size={14} />
+                          <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>View preferences</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </>
                 ) : null}
                 {profileMenuPanel === "notifications" ? (
@@ -2159,6 +2312,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
+        {false ? (
         <View style={[styles.profileDisplayCard, isDay && styles.dayCard, clearBorders && styles.clearBorderCard]}>
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
             <View style={[styles.profileDisplayTitleRow, isRtl && styles.rtlRow]}>
@@ -2285,6 +2439,7 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
+        ) : null}
 
         <View
           style={[
@@ -2370,7 +2525,7 @@ export default function ProfileScreen() {
       <TouchableOpacity
         style={styles.photoMenuItem}
         onPress={() => {
-          setProfilePhotoUri(null);
+          saveProfilePhotoPreview(null);
           setShowPhotoMenu(false);
         }}
       >
@@ -2386,6 +2541,26 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   </View>
 )}
+          <TouchableOpacity
+            {...photoDropZoneProps}
+            activeOpacity={0.82}
+            onPress={pickProfilePhoto}
+            style={[styles.photoDropZone, isDay && styles.daySoftOption]}
+            accessibilityRole="button"
+            accessibilityLabel="Choose or drop a profile photo"
+            accessibilityHint="Tap to choose a photo. On web, you can also drag and drop an image here."
+          >
+            <IconSymbol name="add" color={isDay ? "#445E93" : "#C7B07A"} size={18} />
+            <View style={styles.photoDropZoneCopy}>
+              <Text style={[styles.photoDropZoneTitle, isDay && styles.dayTitle]}>Profile photo preview</Text>
+              <Text style={[styles.photoDropZoneText, isDay && styles.dayMutedText]}>
+                Drag and drop a photo, or tap to choose one.
+              </Text>
+              <Text style={[styles.photoDropZoneNote, isDay && styles.dayMutedText]}>
+                Preview only - no photo is uploaded yet.
+              </Text>
+            </View>
+          </TouchableOpacity>
           <View style={styles.nameRow}>
             {isEditingName ? (
               <TextInput
@@ -3081,7 +3256,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 30 },
+  content: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 112 },
   contentWide: { maxWidth: "100%" },
   softHelloContent: { alignItems: "stretch", paddingBottom: 42 },
   rtlInput: { textAlign: "right", writingDirection: "rtl" },
@@ -3147,6 +3322,11 @@ const styles = StyleSheet.create({
   dayPhotoButton: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   photoButtonText: { color: "#7786FF", fontSize: 12, fontWeight: "800" },
   dayPhotoButtonText: { color: "#445E93" },
+  photoDropZone: { width: "100%", maxWidth: 380, minHeight: 78, borderRadius: 16, borderWidth: 1, borderStyle: "dashed", borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 13, paddingVertical: 11, marginTop: 4 },
+  photoDropZoneCopy: { flex: 1, minWidth: 0 },
+  photoDropZoneTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  photoDropZoneText: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 1 },
+  photoDropZoneNote: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, marginTop: 3, textTransform: "uppercase" },
   identitySummary: { alignItems: "center", gap: 6, marginTop: 2, marginBottom: 4, width: "100%" },
   identitySummaryRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
   identitySummaryText: { color: nsnColors.muted, fontSize: 13, fontWeight: "800", lineHeight: 19, textAlign: "center" },

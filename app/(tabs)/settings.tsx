@@ -52,7 +52,7 @@ const cardOutlineOptions: { value: CardOutlineStyle; label: string; copy: string
   { value: "Standard", label: "Standard", copy: "Balanced NSN card borders." },
   { value: "Strong", label: "Strong", copy: "Bolder outlined cards with the current dashboard character." },
 ];
-const dateFormatOptions: DateFormatPreference[] = ["Device / locale", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD", "YY/MM/DD"];
+const dateFormatOptions: DateFormatPreference[] = ["Device / locale", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD", "YY/MM/DD", "DD.MM.YYYY", "DD-MM-YYYY", "YYYY-MM-DD"];
 const timeFormatOptions: TimeFormatPreference[] = ["Device / locale", "12-hour clock", "24-hour clock"];
 const clockDisplayOptions: ClockDisplayStyle[] = ["Digital", "Analog"];
 const temperatureUnitOptions: TemperatureUnitPreference[] = ["Device / locale", "Celsius", "Fahrenheit"];
@@ -3025,8 +3025,10 @@ export default function SettingsScreen() {
     timeContextMode,
     setTimeContextMode,
     dateFormatPreference,
+    showWeekday,
     timeFormatPreference,
     clockDisplayStyle,
+    showDigitalTimeWithAnalog,
     temperatureUnitPreference,
     distanceUnitPreference,
     currencyDisplayPreference,
@@ -3296,8 +3298,10 @@ export default function SettingsScreen() {
   const saveRegionalPreference = (
     snapshot: Partial<{
       dateFormatPreference: DateFormatPreference;
+      showWeekday: boolean;
       timeFormatPreference: TimeFormatPreference;
       clockDisplayStyle: ClockDisplayStyle;
+      showDigitalTimeWithAnalog: boolean;
       temperatureUnitPreference: TemperatureUnitPreference;
       distanceUnitPreference: DistanceUnitPreference;
       currencyDisplayPreference: CurrencyDisplayPreference;
@@ -4146,6 +4150,42 @@ export default function SettingsScreen() {
               </View>
             </View>
           ))}
+          <View style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Show weekday</Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Include labels like Mon or Tuesday before dates when you want extra context.
+              </Text>
+              {renderSettingMeta("showWeekday")}
+            </View>
+            <Switch
+              value={showWeekday}
+              onValueChange={(value) => saveRegionalPreference({ showWeekday: value })}
+              accessibilityLabel="Show weekday"
+              accessibilityHint={screenReaderHints ? "Toggles weekday labels on dates throughout the prototype." : undefined}
+              trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
+              thumbColor={showWeekday ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+            />
+          </View>
+          <View style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Show digital time with analog clock</Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Keep the numeric time beside the analog clock when both are useful.
+              </Text>
+              {renderSettingMeta("showDigitalTimeWithAnalog")}
+            </View>
+            <Switch
+              value={showDigitalTimeWithAnalog}
+              onValueChange={(value) => saveRegionalPreference({ showDigitalTimeWithAnalog: value })}
+              disabled={clockDisplayStyle !== "Analog"}
+              accessibilityLabel="Show digital time with analog clock"
+              accessibilityState={{ disabled: clockDisplayStyle !== "Analog" }}
+              accessibilityHint={screenReaderHints ? "Only applies when Clock display is set to Analog." : undefined}
+              trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
+              thumbColor={showDigitalTimeWithAnalog ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+            />
+          </View>
           <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
             {copy.regionalFormatsPrototypeNote ?? englishCopy.regionalFormatsPrototypeNote}
           </Text>
@@ -4724,7 +4764,7 @@ const styles = StyleSheet.create({
     maxWidth: 980,
     alignSelf: "center",
     padding: 20,
-    paddingBottom: 36,
+    paddingBottom: 112,
   },
   dayContainer: {
     backgroundColor: "#E8EDF2",

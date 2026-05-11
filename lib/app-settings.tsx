@@ -135,7 +135,7 @@ export type HomeLayoutDensity = "Compact" | "Comfortable" | "Spacious";
 export type HomeHeaderControlsDensity = "Compact" | "Comfortable" | "Spacious";
 export type HomeCardLayout = "Vertical list" | "Horizontal cards" | "Boxed grid" | "Layered cards" | "Magazine";
 export type HomeEventVisualMode = "Emoji/Icon" | "Preview image";
-export type DateFormatPreference = "Device / locale" | "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY/MM/DD" | "YY/MM/DD";
+export type DateFormatPreference = "Device / locale" | "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY/MM/DD" | "YY/MM/DD" | "DD.MM.YYYY" | "DD-MM-YYYY" | "YYYY-MM-DD";
 export type TimeFormatPreference = "Device / locale" | "12-hour clock" | "24-hour clock";
 export type ClockDisplayStyle = "Digital" | "Analog";
 export type TemperatureUnitPreference = "Device / locale" | "Celsius" | "Fahrenheit";
@@ -210,7 +210,15 @@ const normalizeHomeHeaderControlsDensity = (value?: HomeHeaderControlsDensity | 
   value === "Compact" || value === "Spacious" ? value : "Comfortable";
 
 const normalizeDateFormatPreference = (value?: DateFormatPreference | null): DateFormatPreference =>
-  value === "DD/MM/YYYY" || value === "MM/DD/YYYY" || value === "YYYY/MM/DD" || value === "YY/MM/DD" ? value : "Device / locale";
+  value === "DD/MM/YYYY" ||
+  value === "MM/DD/YYYY" ||
+  value === "YYYY/MM/DD" ||
+  value === "YY/MM/DD" ||
+  value === "DD.MM.YYYY" ||
+  value === "DD-MM-YYYY" ||
+  value === "YYYY-MM-DD"
+    ? value
+    : "Device / locale";
 
 const normalizeTimeFormatPreference = (value?: TimeFormatPreference | null): TimeFormatPreference =>
   value === "12-hour clock" || value === "24-hour clock" ? value : "Device / locale";
@@ -306,8 +314,10 @@ type OnboardingSnapshot = {
   timezone?: TimezoneSetting;
   timeContextMode?: TimeContextMode;
   dateFormatPreference?: DateFormatPreference;
+  showWeekday?: boolean;
   timeFormatPreference?: TimeFormatPreference;
   clockDisplayStyle?: ClockDisplayStyle;
+  showDigitalTimeWithAnalog?: boolean;
   temperatureUnitPreference?: TemperatureUnitPreference;
   distanceUnitPreference?: DistanceUnitPreference;
   currencyDisplayPreference?: CurrencyDisplayPreference;
@@ -611,10 +621,14 @@ type AppSettings = {
   setTimeContextMode: (value: TimeContextMode) => void;
   dateFormatPreference: DateFormatPreference;
   setDateFormatPreference: (value: DateFormatPreference) => void;
+  showWeekday: boolean;
+  setShowWeekday: (value: boolean) => void;
   timeFormatPreference: TimeFormatPreference;
   setTimeFormatPreference: (value: TimeFormatPreference) => void;
   clockDisplayStyle: ClockDisplayStyle;
   setClockDisplayStyle: (value: ClockDisplayStyle) => void;
+  showDigitalTimeWithAnalog: boolean;
+  setShowDigitalTimeWithAnalog: (value: boolean) => void;
   temperatureUnitPreference: TemperatureUnitPreference;
   setTemperatureUnitPreference: (value: TemperatureUnitPreference) => void;
   distanceUnitPreference: DistanceUnitPreference;
@@ -729,8 +743,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [timezone, setTimezone] = useState<TimezoneSetting>(defaultNsnTimezone);
   const [timeContextMode, setTimeContextMode] = useState<TimeContextMode>("Use selected suburb/local area");
   const [dateFormatPreference, setDateFormatPreference] = useState<DateFormatPreference>("Device / locale");
+  const [showWeekday, setShowWeekday] = useState(false);
   const [timeFormatPreference, setTimeFormatPreference] = useState<TimeFormatPreference>("Device / locale");
   const [clockDisplayStyle, setClockDisplayStyle] = useState<ClockDisplayStyle>("Digital");
+  const [showDigitalTimeWithAnalog, setShowDigitalTimeWithAnalog] = useState(false);
   const [temperatureUnitPreference, setTemperatureUnitPreference] = useState<TemperatureUnitPreference>("Device / locale");
   const [distanceUnitPreference, setDistanceUnitPreference] = useState<DistanceUnitPreference>("Device / locale");
   const [currencyDisplayPreference, setCurrencyDisplayPreference] = useState<CurrencyDisplayPreference>("Device / locale");
@@ -829,8 +845,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTimezone(normalizeTimezoneSetting(snapshot.timezone));
         setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
         setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+        setShowWeekday(Boolean(snapshot.showWeekday));
         setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
         setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+        setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
         setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
         setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
         setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
@@ -929,8 +947,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setTimezone(normalizeTimezoneSetting(snapshot.timezone));
     setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
     setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+    setShowWeekday(Boolean(snapshot.showWeekday));
     setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
     setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+    setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
     setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
     setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
     setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
@@ -956,8 +976,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           timezone: normalizeTimezoneSetting(snapshot.timezone),
           timeContextMode: normalizeTimeContextMode(snapshot.timeContextMode),
           dateFormatPreference: normalizeDateFormatPreference(snapshot.dateFormatPreference),
+          showWeekday: Boolean(snapshot.showWeekday),
           timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
           clockDisplayStyle: normalizeClockDisplayStyle(snapshot.clockDisplayStyle),
+          showDigitalTimeWithAnalog: Boolean(snapshot.showDigitalTimeWithAnalog),
           temperatureUnitPreference: normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference),
           distanceUnitPreference: normalizeDistanceUnitPreference(snapshot.distanceUnitPreference),
           currencyDisplayPreference: normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference),
@@ -1048,8 +1070,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       timezone,
       timeContextMode,
       dateFormatPreference,
+      showWeekday,
       timeFormatPreference,
       clockDisplayStyle,
+      showDigitalTimeWithAnalog,
       temperatureUnitPreference,
       distanceUnitPreference,
       currencyDisplayPreference,
@@ -1063,8 +1087,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.timezone = normalizeTimezoneSetting(nextSnapshot.timezone);
     nextSnapshot.timeContextMode = normalizeTimeContextMode(nextSnapshot.timeContextMode);
     nextSnapshot.dateFormatPreference = normalizeDateFormatPreference(nextSnapshot.dateFormatPreference);
+    nextSnapshot.showWeekday = Boolean(nextSnapshot.showWeekday);
     nextSnapshot.timeFormatPreference = normalizeTimeFormatPreference(nextSnapshot.timeFormatPreference);
     nextSnapshot.clockDisplayStyle = normalizeClockDisplayStyle(nextSnapshot.clockDisplayStyle);
+    nextSnapshot.showDigitalTimeWithAnalog = Boolean(nextSnapshot.showDigitalTimeWithAnalog);
     nextSnapshot.temperatureUnitPreference = normalizeTemperatureUnitPreference(nextSnapshot.temperatureUnitPreference);
     nextSnapshot.distanceUnitPreference = normalizeDistanceUnitPreference(nextSnapshot.distanceUnitPreference);
     nextSnapshot.currencyDisplayPreference = normalizeCurrencyDisplayPreference(nextSnapshot.currencyDisplayPreference);
@@ -1194,8 +1220,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.timezone !== undefined) setTimezone(normalizeTimezoneSetting(snapshot.timezone));
     if (snapshot.timeContextMode !== undefined) setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
     if (snapshot.dateFormatPreference !== undefined) setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+    if (snapshot.showWeekday !== undefined) setShowWeekday(Boolean(snapshot.showWeekday));
     if (snapshot.timeFormatPreference !== undefined) setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
     if (snapshot.clockDisplayStyle !== undefined) setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+    if (snapshot.showDigitalTimeWithAnalog !== undefined) setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
     if (snapshot.temperatureUnitPreference !== undefined) setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
     if (snapshot.distanceUnitPreference !== undefined) setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
     if (snapshot.currencyDisplayPreference !== undefined) setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
@@ -1535,10 +1563,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTimeContextMode,
         dateFormatPreference,
         setDateFormatPreference,
+        showWeekday,
+        setShowWeekday,
         timeFormatPreference,
         setTimeFormatPreference,
         clockDisplayStyle,
         setClockDisplayStyle,
+        showDigitalTimeWithAnalog,
+        setShowDigitalTimeWithAnalog,
         temperatureUnitPreference,
         setTemperatureUnitPreference,
         distanceUnitPreference,

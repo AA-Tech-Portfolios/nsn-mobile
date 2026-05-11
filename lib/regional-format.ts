@@ -4,6 +4,7 @@ type DateContext = {
   locale: string;
   timeZone?: string;
   dateFormatPreference: DateFormatPreference;
+  showWeekday: boolean;
 };
 
 type TimeContext = {
@@ -15,12 +16,15 @@ type TimeContext = {
 const pad2 = (value: number) => String(value).padStart(2, "0");
 
 export function formatPreferredDate(date: Date, context: DateContext) {
+  const timeZone = context.timeZone ? { timeZone: context.timeZone } : {};
+
   if (context.dateFormatPreference === "Device / locale") {
     return date.toLocaleDateString(context.locale, {
-      weekday: "long",
+      ...(context.showWeekday ? { weekday: "short" as const } : {}),
       day: "numeric",
       month: "long",
-      ...(context.timeZone ? { timeZone: context.timeZone } : {}),
+      year: "numeric",
+      ...timeZone,
     });
   }
 
@@ -28,17 +32,26 @@ export function formatPreferredDate(date: Date, context: DateContext) {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-    ...(context.timeZone ? { timeZone: context.timeZone } : {}),
+    ...timeZone,
   }).formatToParts(date);
   const day = parts.find((part) => part.type === "day")?.value ?? pad2(date.getDate());
   const month = parts.find((part) => part.type === "month")?.value ?? pad2(date.getMonth() + 1);
   const year = parts.find((part) => part.type === "year")?.value ?? String(date.getFullYear());
   const shortYear = year.slice(-2);
+  const weekday = context.showWeekday
+    ? `${new Intl.DateTimeFormat(context.locale, {
+        weekday: "short",
+        ...timeZone,
+      }).format(date)} `
+    : "";
 
-  if (context.dateFormatPreference === "MM/DD/YYYY") return `${month}/${day}/${year}`;
-  if (context.dateFormatPreference === "YYYY/MM/DD") return `${year}/${month}/${day}`;
-  if (context.dateFormatPreference === "YY/MM/DD") return `${shortYear}/${month}/${day}`;
-  return `${day}/${month}/${year}`;
+  if (context.dateFormatPreference === "MM/DD/YYYY") return `${weekday}${month}/${day}/${year}`;
+  if (context.dateFormatPreference === "YYYY/MM/DD") return `${weekday}${year}/${month}/${day}`;
+  if (context.dateFormatPreference === "YY/MM/DD") return `${weekday}${shortYear}/${month}/${day}`;
+  if (context.dateFormatPreference === "DD.MM.YYYY") return `${weekday}${day}.${month}.${year}`;
+  if (context.dateFormatPreference === "DD-MM-YYYY") return `${weekday}${day}-${month}-${year}`;
+  if (context.dateFormatPreference === "YYYY-MM-DD") return `${weekday}${year}-${month}-${day}`;
+  return `${weekday}${day}/${month}/${year}`;
 }
 
 export function formatPreferredTime(date: Date, context: TimeContext) {
