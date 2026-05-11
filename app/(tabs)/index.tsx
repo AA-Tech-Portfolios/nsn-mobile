@@ -3,11 +3,11 @@ import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, Tex
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
-import { getLanguageBase, type NoiseLevelPreference, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { allEvents, dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
-import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, searchNsnEvents, searchNsnSydneyLocalAreas } from "@/lib/nsn-search";
+import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAreaSuggestion, searchNsnEvents, searchNsnSydneyLocalAreas } from "@/lib/nsn-search";
 import { prioritizeEventsForComfort } from "@/lib/softhello-mvp";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -850,13 +850,15 @@ export default function HomeScreen() {
   const displayedEvents = normalizedNsnSearchQuery ? matchingMeetups : activeEvents;
   const hasNoSearchResults = Boolean(normalizedNsnSearchQuery) && matchingLocalAreas.length === 0 && matchingMeetups.length === 0;
 
-  const chooseLocalArea = (area: TimezoneSetting) => {
+  const chooseLocalArea = (area: NsnLocalAreaSuggestion) => {
     saveSoftHelloMvpState({ timezone: area, suburb: area.label });
     setNsnSearchQuery(area.label);
     setShowNsnSearch(false);
     setHeaderPlaceholder({
-      title: `Local area set to ${area.label}`,
-      copy: `Weather, local time, and nearby prompts now use the closest Sydney/North Shore prototype point for ${area.label}.`,
+      title: `${area.resultType} set to ${area.label}`,
+      copy: area.resultType === "Region"
+        ? "Region selected for prototype browsing. Weather and local prompts use a nearby Sydney fallback point."
+        : `Weather, local time, and nearby prompts now use the closest Sydney prototype point for ${area.label}.`,
     });
   };
   const detectLocalArea = async () => {
@@ -1149,7 +1151,7 @@ export default function HomeScreen() {
                   Search NSN
                 </Text>
                 <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Search for a North Shore suburb or a low-pressure meetup idea like coffee, walks, board games, or Chatswood.
+                  Search for a suburb, region, or low-pressure meetup idea like coffee, walks, board games, Inner West, or Chatswood.
                 </Text>
               </View>
               <TouchableOpacity
@@ -1189,9 +1191,19 @@ export default function HomeScreen() {
                 {detectingLocation ? "Detecting local area..." : "Use current location"}
               </Text>
             </TouchableOpacity>
+            {!normalizedNsnSearchQuery ? (
+              <View style={[styles.searchPromptCard, isDay && styles.dayLocationResultButton]}>
+                <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+                  Search for a suburb, region, or activity to personalise NSN.
+                </Text>
+                <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  Try CBD, St. Ives, Parra, Northern Beaches, coffee, or board games.
+                </Text>
+              </View>
+            ) : null}
             {matchingLocalAreas.length > 0 ? (
               <View style={styles.searchResultGroup}>
-                <Text style={[styles.searchResultGroupTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Matching suburbs</Text>
+                <Text style={[styles.searchResultGroupTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Matching suburbs and regions</Text>
                 <View style={styles.searchResultStack}>
                   {matchingLocalAreas.map((area) => {
                     const active = area.id === timezone.id;
@@ -1207,9 +1219,9 @@ export default function HomeScreen() {
                       >
                         <View style={[styles.searchResultTopLine, isRtl && styles.rtlRow]}>
                           <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, active && styles.activeLocationResultText, isRtl && styles.rtlText]}>{area.label}</Text>
-                          <Text style={[styles.searchResultBadge, active && styles.activeSearchResultBadge]}>Suburb</Text>
+                          <Text style={[styles.searchResultBadge, active && styles.activeSearchResultBadge]}>{area.resultType}</Text>
                         </View>
-                        <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, active && styles.activeLocationResultText, isRtl && styles.rtlText]}>{area.country}</Text>
+                        <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, active && styles.activeLocationResultText, isRtl && styles.rtlText]}>{area.label} - {area.region}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -1247,7 +1259,7 @@ export default function HomeScreen() {
               <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
                 <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups yet.</Text>
                 <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Try another suburb or activity - NSN is still an early local prototype.
+                  Try another suburb, region, or activity — NSN is still an early local prototype.
                 </Text>
               </View>
             ) : null}
@@ -1382,7 +1394,7 @@ export default function HomeScreen() {
             <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
               <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups yet.</Text>
               <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Try another suburb or activity - NSN is still an early local prototype.
+                Try another suburb, region, or activity — NSN is still an early local prototype.
               </Text>
             </View>
           ) : null}
@@ -1471,7 +1483,8 @@ const styles = StyleSheet.create({
   searchResultBadge: { flexShrink: 0, borderRadius: 8, borderWidth: 1, borderColor: "#24426F", color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, paddingHorizontal: 7, paddingVertical: 2 },
   activeSearchResultBadge: { borderColor: nsnColors.day, color: nsnColors.text },
   searchEmptyCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
-  locationResultButton: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
+  searchPromptCard: { borderRadius: 14, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 11, paddingVertical: 10 },
+  locationResultButton: { borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, paddingVertical: 8 },
   meetupSearchResultButton: { backgroundColor: "rgba(255,255,255,0.035)" },
   dayLocationResultButton: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },
   activeLocationResultButton: { borderColor: nsnColors.day, backgroundColor: "#172A5C" },

@@ -1,61 +1,76 @@
 import type { TimezoneSetting } from "@/lib/app-settings";
 import type { EventItem } from "@/lib/nsn-data";
+import { sydneyLocalities, type SydneyLocality } from "./sydney-localities";
 
-export const nsnSydneyLocalAreas: TimezoneSetting[] = [
-  { id: "nsn-chatswood", label: "Chatswood", city: "Chatswood", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7969, longitude: 151.1833 },
-  { id: "nsn-st-ives", label: "St Ives", city: "St Ives", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7291, longitude: 151.1593 },
-  { id: "nsn-hornsby", label: "Hornsby", city: "Hornsby", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7039, longitude: 151.0997 },
-  { id: "nsn-turramurra", label: "Turramurra", city: "Turramurra", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7314, longitude: 151.1287 },
-  { id: "nsn-pymble", label: "Pymble", city: "Pymble", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7434, longitude: 151.1417 },
-  { id: "nsn-gordon", label: "Gordon", city: "Gordon", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7569, longitude: 151.1517 },
-  { id: "nsn-killara", label: "Killara", city: "Killara", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7666, longitude: 151.1622 },
-  { id: "nsn-lindfield", label: "Lindfield", city: "Lindfield", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7756, longitude: 151.1689 },
-  { id: "nsn-roseville", label: "Roseville", city: "Roseville", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7841, longitude: 151.1783 },
-  { id: "nsn-artarmon", label: "Artarmon", city: "Artarmon", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8088, longitude: 151.1844 },
-  { id: "nsn-lane-cove", label: "Lane Cove", city: "Lane Cove", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8152, longitude: 151.1667 },
-  { id: "nsn-north-sydney", label: "North Sydney", city: "North Sydney", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.839, longitude: 151.2071 },
-  { id: "nsn-crows-nest", label: "Crows Nest", city: "Crows Nest", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8258, longitude: 151.2016 },
-  { id: "nsn-neutral-bay", label: "Neutral Bay", city: "Neutral Bay", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8319, longitude: 151.219 },
-  { id: "nsn-mosman", label: "Mosman", city: "Mosman", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8276, longitude: 151.2446 },
-  { id: "nsn-wahroonga", label: "Wahroonga", city: "Wahroonga", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7181, longitude: 151.1156 },
-  { id: "nsn-waitara", label: "Waitara", city: "Waitara", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7105, longitude: 151.103 },
-  { id: "nsn-asquith", label: "Asquith", city: "Asquith", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.6879, longitude: 151.1086 },
-  { id: "nsn-thornleigh", label: "Thornleigh", city: "Thornleigh", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7312, longitude: 151.0789 },
-  { id: "nsn-pennant-hills", label: "Pennant Hills", city: "Pennant Hills", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7378, longitude: 151.0732 },
-  { id: "nsn-epping", label: "Epping", city: "Epping", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7727, longitude: 151.0818 },
-  { id: "nsn-macquarie-park", label: "Macquarie Park", city: "Macquarie Park", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.7756, longitude: 151.1179 },
-  { id: "nsn-ryde", label: "Ryde", city: "Ryde", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8136, longitude: 151.1066 },
-  { id: "nsn-st-leonards", label: "St Leonards", city: "St Leonards", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8223, longitude: 151.1939 },
-  { id: "nsn-willoughby", label: "Willoughby", city: "Willoughby", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8014, longitude: 151.1994 },
-  { id: "nsn-cammeray", label: "Cammeray", city: "Cammeray", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8216, longitude: 151.2122 },
-  { id: "nsn-cremorne", label: "Cremorne", city: "Cremorne", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8286, longitude: 151.2266 },
-  { id: "nsn-waverton", label: "Waverton", city: "Waverton", country: "Sydney / North Shore", timeZone: "Australia/Sydney", latitude: -33.8388, longitude: 151.1961 },
-  { id: "nsn-manly", label: "Manly", city: "Manly", country: "Sydney / Northern Beaches", timeZone: "Australia/Sydney", latitude: -33.7969, longitude: 151.2855 },
-  { id: "nsn-sydney-cbd", label: "Sydney CBD", city: "Sydney CBD", country: "Sydney", timeZone: "Australia/Sydney", latitude: -33.8688, longitude: 151.2093 },
-];
+export type NsnLocalAreaSuggestion = TimezoneSetting & {
+  region: SydneyLocality["region"];
+  resultType: SydneyLocality["kind"];
+  aliases: string[];
+};
+
+const toSearchToken = (value: string) =>
+  value
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/\./g, "")
+    .replace(/\s+/g, " ");
 
 export function normalizeNsnSearchQuery(query: string) {
-  return query.trim().toLocaleLowerCase();
+  return toSearchToken(query);
 }
 
-export function searchNsnSydneyLocalAreas(query: string, limit = 6) {
-  const normalized = normalizeNsnSearchQuery(query);
-  const areas = normalized
-    ? nsnSydneyLocalAreas.filter((area) =>
-        `${area.label} ${area.city} ${area.country}`.toLocaleLowerCase().includes(normalized)
-      )
-    : nsnSydneyLocalAreas;
+const localityToSuggestion = (locality: SydneyLocality): NsnLocalAreaSuggestion => ({
+  id: `nsn-${locality.id}`,
+  label: locality.displayName,
+  city: locality.displayName,
+  country: locality.region,
+  timeZone: "Australia/Sydney",
+  latitude: locality.latitude,
+  longitude: locality.longitude,
+  region: locality.region,
+  resultType: locality.kind,
+  aliases: locality.aliases ?? [],
+});
 
-  return areas.slice(0, limit);
+const getLocalitySearchText = (locality: SydneyLocality) =>
+  [locality.displayName, locality.region, locality.kind, ...(locality.aliases ?? [])].map(toSearchToken).join(" ");
+
+export function searchNsnSydneyLocalAreas(query: string, limit = 7) {
+  const normalized = normalizeNsnSearchQuery(query);
+
+  if (!normalized) {
+    return [];
+  }
+
+  const exactMatches: SydneyLocality[] = [];
+  const partialMatches: SydneyLocality[] = [];
+
+  for (const locality of sydneyLocalities) {
+    const tokens = [locality.displayName, locality.region, ...(locality.aliases ?? [])].map(toSearchToken);
+    const isExact = tokens.some((token) => token === normalized);
+    const isPartial = getLocalitySearchText(locality).includes(normalized);
+
+    if (isExact) {
+      exactMatches.push(locality);
+    } else if (isPartial) {
+      partialMatches.push(locality);
+    }
+  }
+
+  return [...exactMatches, ...partialMatches].slice(0, limit).map(localityToSuggestion);
 }
 
 export function findNearestNsnSydneyLocalArea(latitude: number, longitude: number) {
-  return nsnSydneyLocalAreas.reduce((nearest, area) => {
-    const nearestDistance = Math.hypot(nearest.latitude - latitude, nearest.longitude - longitude);
-    const areaDistance = Math.hypot(area.latitude - latitude, area.longitude - longitude);
+  const localitiesOnly = sydneyLocalities.filter((locality) => locality.kind === "Suburb");
 
-    return areaDistance < nearestDistance ? area : nearest;
-  }, nsnSydneyLocalAreas[0]);
+  return localityToSuggestion(
+    localitiesOnly.reduce((nearest, locality) => {
+      const nearestDistance = Math.hypot(nearest.latitude - latitude, nearest.longitude - longitude);
+      const localityDistance = Math.hypot(locality.latitude - latitude, locality.longitude - longitude);
+
+      return localityDistance < nearestDistance ? locality : nearest;
+    }, localitiesOnly[0])
+  );
 }
 
 export function matchesNsnEventSearch(event: EventItem, query: string, localizedEvent?: Partial<EventItem>) {
@@ -77,7 +92,7 @@ export function matchesNsnEventSearch(event: EventItem, query: string, localized
     searchableEvent.noiseLevel,
     searchableEvent.weather,
     searchableEvent.tags.join(" "),
-  ].join(" ").toLocaleLowerCase();
+  ].map(toSearchToken).join(" ");
 
   return haystack.includes(normalized);
 }

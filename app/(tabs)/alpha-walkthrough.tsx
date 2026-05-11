@@ -19,9 +19,9 @@ const walkthroughSteps = [
     icon: "low-pressure",
   },
   {
-    title: "Search suburbs and meetups",
+    title: "Search suburbs, regions, and meetups",
     eyebrow: "For alpha testing",
-    copy: "Use Search NSN on Home to look up a nearby Sydney or North Shore suburb, or try meetup ideas like coffee, walks, board games, or Chatswood. Selecting a suburb updates the prototype local area.",
+    copy: "Use Search NSN on Home to look up a Sydney suburb, broader region, or meetup idea like coffee, walks, board games, Inner West, or Chatswood. Selecting a suburb or region updates the prototype local area.",
     actionLabel: "Open Home",
     route: "/(tabs)",
     icon: "location",
@@ -77,7 +77,7 @@ export default function AlphaWalkthroughScreen() {
   const step = walkthroughSteps[stepIndex];
   const progressText = `Step ${stepIndex + 1} of ${walkthroughSteps.length}`;
   const localAreaCopy = useMemo(
-    () => (suburb ? `Current local area: ${suburb}. You can change it from Search NSN on Home or from Profile.` : "No local area is set yet. Search NSN on Home is the first place to try."),
+    () => (suburb ? `Current local area: ${suburb}. You can change it from Search NSN on Home or from Profile.` : "No local area is set yet. Search NSN on Home can find a suburb, region, or activity."),
     [suburb]
   );
   const canGoBack = stepIndex > 0;
