@@ -1015,6 +1015,8 @@ export default function ProfileScreen() {
     dateFormatPreference,
     timeFormatPreference,
     temperatureUnitPreference,
+    dayNightModePreference,
+    cardOutlineStyle,
     screenReaderHints,
     softSurfaces,
     clearBorders,
@@ -2265,6 +2267,9 @@ export default function ProfileScreen() {
               <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Regional formats</Text>
               <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                 {dateFormatPreference} · {timeFormatPreference} · {temperatureUnitPreference}
+              </Text>
+              <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                {dayNightModePreference} · {cardOutlineStyle} outlines
               </Text>
               <TouchableOpacity
                 activeOpacity={0.82}

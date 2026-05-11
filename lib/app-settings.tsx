@@ -141,6 +141,8 @@ export type ClockDisplayStyle = "Digital" | "Analog";
 export type TemperatureUnitPreference = "Device / locale" | "Celsius" | "Fahrenheit";
 export type DistanceUnitPreference = "Device / locale" | "Kilometres" | "Miles";
 export type CurrencyDisplayPreference = "Device / locale" | "AUD" | "USD" | "EUR" | "GBP";
+export type DayNightModePreference = "Manual toggle" | "Follow system/device time" | "Follow selected suburb/local time";
+export type CardOutlineStyle = "Minimal" | "Standard" | "Strong";
 export type HomeVisibleSections = {
   weather: boolean;
   map: boolean;
@@ -225,6 +227,12 @@ const normalizeDistanceUnitPreference = (value?: DistanceUnitPreference | null):
 const normalizeCurrencyDisplayPreference = (value?: CurrencyDisplayPreference | null): CurrencyDisplayPreference =>
   value === "AUD" || value === "USD" || value === "EUR" || value === "GBP" ? value : "Device / locale";
 
+const normalizeDayNightModePreference = (value?: DayNightModePreference | null): DayNightModePreference =>
+  value === "Follow system/device time" || value === "Follow selected suburb/local time" ? value : "Manual toggle";
+
+const normalizeCardOutlineStyle = (value?: CardOutlineStyle | null): CardOutlineStyle =>
+  value === "Minimal" || value === "Standard" ? value : "Strong";
+
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
   accountPaused?: boolean;
@@ -303,6 +311,8 @@ type OnboardingSnapshot = {
   temperatureUnitPreference?: TemperatureUnitPreference;
   distanceUnitPreference?: DistanceUnitPreference;
   currencyDisplayPreference?: CurrencyDisplayPreference;
+  dayNightModePreference?: DayNightModePreference;
+  cardOutlineStyle?: CardOutlineStyle;
   appLanguage?: string;
   translationLanguage?: string;
   brandThemeId?: BrandThemeId;
@@ -611,6 +621,10 @@ type AppSettings = {
   setDistanceUnitPreference: (value: DistanceUnitPreference) => void;
   currencyDisplayPreference: CurrencyDisplayPreference;
   setCurrencyDisplayPreference: (value: CurrencyDisplayPreference) => void;
+  dayNightModePreference: DayNightModePreference;
+  setDayNightModePreference: (value: DayNightModePreference) => void;
+  cardOutlineStyle: CardOutlineStyle;
+  setCardOutlineStyle: (value: CardOutlineStyle) => void;
   weather: WeatherSnapshot;
   liveWeatherAlert: LiveWeatherAlert | null;
 };
@@ -720,6 +734,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [temperatureUnitPreference, setTemperatureUnitPreference] = useState<TemperatureUnitPreference>("Device / locale");
   const [distanceUnitPreference, setDistanceUnitPreference] = useState<DistanceUnitPreference>("Device / locale");
   const [currencyDisplayPreference, setCurrencyDisplayPreference] = useState<CurrencyDisplayPreference>("Device / locale");
+  const [dayNightModePreference, setDayNightModePreference] = useState<DayNightModePreference>("Manual toggle");
+  const [cardOutlineStyle, setCardOutlineStyle] = useState<CardOutlineStyle>("Strong");
   const [weather, setWeather] = useState<WeatherSnapshot>({ temperature: null, rainChance: null, category: "unknown" });
   const [liveWeatherAlert, setLiveWeatherAlert] = useState<LiveWeatherAlert | null>(null);
   const previousWeather = useRef<WeatherSnapshot | null>(null);
@@ -818,6 +834,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
         setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
         setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
+        setDayNightModePreference(normalizeDayNightModePreference(snapshot.dayNightModePreference));
+        setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
         setBlurProfilePhoto(snapshot.blurProfilePhoto ?? (snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("NSN onboarding could not load:", error);
@@ -916,6 +934,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
     setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
     setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
+    setDayNightModePreference(normalizeDayNightModePreference(snapshot.dayNightModePreference));
+    setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
     setBlurProfilePhoto(snapshot.blurProfilePhoto ?? snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -941,6 +961,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           temperatureUnitPreference: normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference),
           distanceUnitPreference: normalizeDistanceUnitPreference(snapshot.distanceUnitPreference),
           currencyDisplayPreference: normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference),
+          dayNightModePreference: normalizeDayNightModePreference(snapshot.dayNightModePreference),
+          cardOutlineStyle: normalizeCardOutlineStyle(snapshot.cardOutlineStyle),
           hasCompletedOnboarding: true,
         } satisfies OnboardingSnapshot)
       );
@@ -1031,6 +1053,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       temperatureUnitPreference,
       distanceUnitPreference,
       currencyDisplayPreference,
+      dayNightModePreference,
+      cardOutlineStyle,
       ...snapshot,
     };
     nextSnapshot.appLanguage = normalizeNsnLanguage(nextSnapshot.appLanguage);
@@ -1044,6 +1068,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.temperatureUnitPreference = normalizeTemperatureUnitPreference(nextSnapshot.temperatureUnitPreference);
     nextSnapshot.distanceUnitPreference = normalizeDistanceUnitPreference(nextSnapshot.distanceUnitPreference);
     nextSnapshot.currencyDisplayPreference = normalizeCurrencyDisplayPreference(nextSnapshot.currencyDisplayPreference);
+    nextSnapshot.dayNightModePreference = normalizeDayNightModePreference(nextSnapshot.dayNightModePreference);
+    nextSnapshot.cardOutlineStyle = normalizeCardOutlineStyle(nextSnapshot.cardOutlineStyle);
     nextSnapshot.homeHeaderControlsDensity = normalizeHomeHeaderControlsDensity(nextSnapshot.homeHeaderControlsDensity);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
@@ -1173,6 +1199,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.temperatureUnitPreference !== undefined) setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
     if (snapshot.distanceUnitPreference !== undefined) setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
     if (snapshot.currencyDisplayPreference !== undefined) setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
+    if (snapshot.dayNightModePreference !== undefined) setDayNightModePreference(normalizeDayNightModePreference(snapshot.dayNightModePreference));
+    if (snapshot.cardOutlineStyle !== undefined) setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
@@ -1517,6 +1545,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setDistanceUnitPreference,
         currencyDisplayPreference,
         setCurrencyDisplayPreference,
+        dayNightModePreference,
+        setDayNightModePreference,
+        cardOutlineStyle,
+        setCardOutlineStyle,
         weather,
         liveWeatherAlert,
       }}

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
-import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type ClockDisplayStyle, type CurrencyDisplayPreference, type DateFormatPreference, type DistanceUnitPreference, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, type TemperatureUnitPreference, type TimeContextMode, type TimeFormatPreference, useAppSettings } from "@/lib/app-settings";
+import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type CardOutlineStyle, type ClockDisplayStyle, type CurrencyDisplayPreference, type DateFormatPreference, type DayNightModePreference, type DistanceUnitPreference, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, type TemperatureUnitPreference, type TimeContextMode, type TimeFormatPreference, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -41,6 +41,16 @@ const timeContextModeOptions: { value: TimeContextMode; label: string; copy: str
   { value: "Automatic device time", label: "Automatic device time", copy: "Use the clock from this device for local prompts." },
   { value: "Use selected suburb/local area", label: "Selected local area", copy: "Use the suburb or North Shore area selected in NSN." },
   { value: "Manual city/suburb override", label: "Manual override", copy: "Prototype: falls back to the selected local area until city search is connected." },
+];
+const dayNightModeOptions: { value: DayNightModePreference; label: string; copy: string }[] = [
+  { value: "Manual toggle", label: "Manual toggle", copy: "Use the header toggle until you change it again." },
+  { value: "Follow system/device time", label: "Follow device time", copy: "Automatically switches using this device's current hour." },
+  { value: "Follow selected suburb/local time", label: "Follow selected local time", copy: "Automatically switches using the selected NSN suburb or local area." },
+];
+const cardOutlineOptions: { value: CardOutlineStyle; label: string; copy: string }[] = [
+  { value: "Minimal", label: "Minimal", copy: "Softer borders and lighter separation." },
+  { value: "Standard", label: "Standard", copy: "Balanced NSN card borders." },
+  { value: "Strong", label: "Strong", copy: "Bolder outlined cards with the current dashboard character." },
 ];
 const dateFormatOptions: DateFormatPreference[] = ["Device / locale", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD", "YY/MM/DD"];
 const timeFormatOptions: TimeFormatPreference[] = ["Device / locale", "12-hour clock", "24-hour clock"];
@@ -167,6 +177,10 @@ type SettingsCopy = {
   regionalFormats?: string;
   regionalFormatsCopy?: string;
   regionalFormatsPrototypeNote?: string;
+  dayNightMode?: string;
+  dayNightModeCopy?: string;
+  cardOutlineStyle?: string;
+  cardOutlineStyleCopy?: string;
   safetyContact?: string;
   allowMessageRequests?: string;
   allowMessageRequestsCopy?: string;
@@ -246,6 +260,10 @@ const englishCopy: SettingsCopy = {
   regionalFormats: "Time, date & units",
   regionalFormatsCopy: "Start from this device's locale, or override how NSN displays shared event times, weather, and future pricing.",
   regionalFormatsPrototypeNote: "Event data stays standardized internally; NSN formats labels for each viewer to reduce date and time ambiguity.",
+  dayNightMode: "Day/Night behaviour",
+  dayNightModeCopy: "Choose whether the dashboard follows your manual toggle, this device's clock, or the selected NSN local area.",
+  cardOutlineStyle: "Card outline style",
+  cardOutlineStyleCopy: "Adjust how strongly NSN outlines cards, panels, and local context modules.",
   safetyContact: "Safety & Contact",
   allowMessageRequests: "Allow message requests",
   allowMessageRequestsCopy: "Let people message before you join the same meetup.",
@@ -3012,6 +3030,8 @@ export default function SettingsScreen() {
     temperatureUnitPreference,
     distanceUnitPreference,
     currencyDisplayPreference,
+    dayNightModePreference,
+    cardOutlineStyle,
     allowMessageRequests,
     setAllowMessageRequests,
     safetyCheckIns,
@@ -3281,10 +3301,15 @@ export default function SettingsScreen() {
       temperatureUnitPreference: TemperatureUnitPreference;
       distanceUnitPreference: DistanceUnitPreference;
       currencyDisplayPreference: CurrencyDisplayPreference;
+      dayNightModePreference: DayNightModePreference;
     }>
   ) => {
     saveSoftHelloMvpState(snapshot);
     showRecentlyChanged(Object.keys(snapshot)[0] ?? "regionalFormats");
+  };
+  const saveCardOutlineStyle = (value: CardOutlineStyle) => {
+    saveSoftHelloMvpState({ cardOutlineStyle: value });
+    showRecentlyChanged("cardOutlineStyle");
   };
   const registerSectionLayout = (id: SettingsSectionJumpId) => (event: LayoutChangeEvent) => {
     sectionOffsets.current[id] = event.nativeEvent.layout.y;
@@ -4023,6 +4048,36 @@ export default function SettingsScreen() {
           ))}
           <View style={[styles.timeContextBlock, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
             <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+              {copy.dayNightMode ?? englishCopy.dayNightMode}
+            </Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              {copy.dayNightModeCopy ?? englishCopy.dayNightModeCopy}
+            </Text>
+            {renderSettingMeta("dayNightModePreference")}
+            <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
+              {dayNightModeOptions.map((option) => {
+                const active = dayNightModePreference === option.value;
+
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    activeOpacity={0.82}
+                    onPress={() => saveRegionalPreference({ dayNightModePreference: option.value })}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: active }}
+                    accessibilityLabel={`${option.label} Day Night behaviour`}
+                    accessibilityHint={screenReaderHints ? option.copy : undefined}
+                    style={[styles.timeContextOption, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
+                  >
+                    <Text style={[styles.timeContextOptionTitle, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
+                    <Text style={[styles.timeContextOptionCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+          <View style={[styles.timeContextBlock, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
               {copy.timeLocalContext ?? englishCopy.timeLocalContext}
             </Text>
             <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
@@ -4222,6 +4277,36 @@ export default function SettingsScreen() {
               />
             </View>
           ))}
+          <View style={[styles.timeContextBlock, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+              {copy.cardOutlineStyle ?? englishCopy.cardOutlineStyle}
+            </Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              {copy.cardOutlineStyleCopy ?? englishCopy.cardOutlineStyleCopy}
+            </Text>
+            {renderSettingMeta("cardOutlineStyle")}
+            <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
+              {cardOutlineOptions.map((option) => {
+                const active = cardOutlineStyle === option.value;
+
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    activeOpacity={0.82}
+                    onPress={() => saveCardOutlineStyle(option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: active }}
+                    accessibilityLabel={`${option.label} card outline style`}
+                    accessibilityHint={screenReaderHints ? option.copy : undefined}
+                    style={[styles.timeContextOption, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
+                  >
+                    <Text style={[styles.timeContextOptionTitle, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
+                    <Text style={[styles.timeContextOptionCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
           <View style={[styles.dropdownRow, isRtl && styles.rtlRow]}>
             <View style={styles.settingCopy}>
               <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
