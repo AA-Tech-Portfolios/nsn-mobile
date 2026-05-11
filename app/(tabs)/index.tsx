@@ -1,5 +1,5 @@
 import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { Animated, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
@@ -464,6 +464,82 @@ function LayoutPreviewIcon({ layout, active, isDay }: { layout: HomeCardLayout; 
   );
 }
 
+function getPrototypeSceneKind(event: EventItem) {
+  if (event.id.includes("picnic")) return "picnic";
+  if (event.id.includes("beach")) return "beach";
+  if (event.id.includes("movie")) return "movie";
+  if (event.id.includes("board") || event.id.includes("coffee")) return "cafe";
+  return "local";
+}
+
+function EventPrototypeScene({ event, place, isDay }: { event: EventItem; place?: string; isDay?: boolean }) {
+  const kind = getPrototypeSceneKind(event);
+  const sceneStyle =
+    kind === "picnic"
+      ? styles.prototypePicnicScene
+      : kind === "beach"
+        ? styles.prototypeBeachScene
+        : kind === "movie"
+          ? styles.prototypeMovieScene
+          : kind === "cafe"
+            ? styles.prototypeCafeScene
+            : styles.prototypeLocalScene;
+
+  return (
+    <View style={[styles.prototypeEventScene, sceneStyle, isDay && styles.dayPrototypeEventSceneFrame]} accessible={false}>
+      {kind === "picnic" ? (
+        <>
+          <View style={styles.prototypeSceneSky} />
+          <View style={styles.prototypePicnicGrass} />
+          <View style={styles.prototypePicnicBlanket} />
+          <View style={[styles.prototypePerson, styles.prototypePicnicPersonOne]} />
+          <View style={[styles.prototypePerson, styles.prototypePicnicPersonTwo]} />
+          <View style={styles.prototypePicnicBasket} />
+        </>
+      ) : null}
+      {kind === "beach" ? (
+        <>
+          <View style={styles.prototypeBeachSky} />
+          <View style={styles.prototypeBeachWater} />
+          <View style={styles.prototypeBeachSand} />
+          <View style={styles.prototypeBeachSun} />
+          <View style={[styles.prototypeBeachUmbrella, styles.prototypeBeachUmbrellaTop]} />
+          <View style={[styles.prototypeBeachUmbrella, styles.prototypeBeachUmbrellaStem]} />
+        </>
+      ) : null}
+      {kind === "movie" ? (
+        <>
+          <View style={styles.prototypeMovieWall} />
+          <View style={styles.prototypeMovieScreen} />
+          <View style={[styles.prototypeMovieSeatRow, styles.prototypeMovieSeatRowBack]} />
+          <View style={[styles.prototypeMovieSeatRow, styles.prototypeMovieSeatRowFront]} />
+          <View style={styles.prototypeMovieGlow} />
+        </>
+      ) : null}
+      {kind === "cafe" ? (
+        <>
+          <View style={styles.prototypeCafeTable} />
+          <View style={styles.prototypeCafeMug} />
+          <View style={styles.prototypeCafeMugHandle} />
+          <View style={styles.prototypeCafeBoard} />
+          {[0, 1, 2, 3].map((tile) => (
+            <View key={tile} style={[styles.prototypeCafeTile, tile % 2 === 0 && styles.prototypeCafeTileAlt, { left: 18 + tile * 10 }]} />
+          ))}
+        </>
+      ) : null}
+      {kind === "local" ? (
+        <>
+          <View style={styles.prototypeLocalGlow} />
+          <Text style={styles.prototypeLocalEmoji}>{event.emoji}</Text>
+        </>
+      ) : null}
+      <View style={styles.prototypeEventSceneLabel}>
+        <Text style={styles.prototypeEventSceneLabelText} numberOfLines={1}>{place ?? event.venue}</Text>
+      </View>
+    </View>
+  );
+}
+
 function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference, density, cardLayout, visualMode, cardOutlineStyle, featured, highlighted, onHighlight }: { event: EventItem; isDay?: boolean; appLanguageBase: string; locale: string; timeFormatPreference: ReturnType<typeof useAppSettings>["timeFormatPreference"]; density: HomeLayoutDensity; cardLayout: HomeCardLayout; visualMode: HomeEventVisualMode; cardOutlineStyle: CardOutlineStyle; featured?: boolean; highlighted?: boolean; onHighlight?: (eventId: string) => void }) {
   const router = useRouter();
   const isRtl = rtlLanguages.has(appLanguageBase);
@@ -472,7 +548,7 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
   const eventNoise = noiseCopy.levels[event.noiseLevel];
   const livePreview = eventLivePreviews[event.id];
   const isCompactLayout = cardLayout === "Horizontal cards" || cardLayout === "Boxed grid";
-  const shouldUsePreviewImage = visualMode === "Preview image" && Boolean(livePreview);
+  const shouldUsePreviewImage = visualMode === "Preview image";
   const eventTime = formatEventTimeLabel(event.time, { locale, timeFormatPreference });
   const eventOutlineStyle =
     cardOutlineStyle === "Minimal"
@@ -524,13 +600,8 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
         cardLayout === "Magazine" && featured && styles.eventImageMagazineFeatured,
         { backgroundColor: event.imageTone },
       ]}>
-        {shouldUsePreviewImage && livePreview ? (
-          <>
-            <Image source={{ uri: livePreview.photo }} style={styles.eventPreviewPhoto} />
-            <View style={styles.eventPreviewOverlay}>
-              <Text style={styles.eventPreviewPlace} numberOfLines={1}>{livePreview.place}</Text>
-            </View>
-          </>
+        {shouldUsePreviewImage ? (
+          <EventPrototypeScene event={event} place={livePreview?.place} isDay={isDay} />
         ) : (
           <Text style={[styles.eventEmoji, density === "Compact" && styles.eventEmojiCompact]}>{event.emoji}</Text>
         )}
@@ -548,7 +619,7 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
         </View>
         <View style={[styles.eventMetaRow, isRtl && styles.rtlRow]}>
           <IconSymbol name="group" color={isDay ? "#53677A" : nsnColors.muted} size={12} />
-          <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{localizedEvent.people}  ·  {eventTime}</Text>
+          <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{localizedEvent.people}{"  \u00B7  "}{eventTime}</Text>
         </View>
         <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={density === "Spacious" ? 3 : density === "Compact" ? 1 : 2}>{localizedEvent.description}</Text>
         <View style={[styles.eventTags, density === "Compact" && styles.eventTagsCompact, isRtl && styles.rtlRow]}>
@@ -981,7 +1052,7 @@ function HeaderActionButton({
 export default function HomeScreen() {
   const router = useRouter();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, dateFormatPreference, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -1009,6 +1080,14 @@ export default function HomeScreen() {
   const showCustomiseHome = openHomePanel === "customize";
   const showNsnSearch = openHomePanel === "search";
   const showLayoutPreferences = openHomePanel === "preferences";
+  const hasOpenHomePanel = showHomeControls || showCustomiseHome || showNsnSearch || showLayoutPreferences || Boolean(headerPlaceholder);
+  const shouldLockDashboardScroll =
+    Platform.OS === "web" &&
+    viewportWidth >= 900 &&
+    viewportHeight >= 720 &&
+    homeViewMode === "Essential" &&
+    !hasOpenHomePanel;
+  const lockedDashboardHeight = Math.max(0, viewportHeight - 82);
 
   const baseEvents = useMemo(() => {
     const hiddenIds = new Set(hiddenEventIds);
@@ -1350,9 +1429,9 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-  const timer = setInterval(() => { setNow(new Date()); }, batterySaver ? 60 * 1000 : 1000);
+  const timer = setInterval(() => { setNow(new Date()); }, batterySaver && clockDisplayStyle !== "Analog" ? 60 * 1000 : 1000);
 
-  return () => clearInterval(timer);}, [batterySaver]
+  return () => clearInterval(timer);}, [batterySaver, clockDisplayStyle]
   );
 
   useEffect(() => {
@@ -1362,9 +1441,9 @@ export default function HomeScreen() {
 
   const localTimeZone = timeContextMode === "Automatic device time" ? undefined : timezone.timeZone;
   const formattedDate = formatPreferredDate(now, {
-    locale,
-    timeZone: localTimeZone,
-    dateFormatPreference,
+    locale: "en-AU",
+    timeZone: timezone.timeZone,
+    dateFormatPreference: "Device / locale",
     showWeekday: true,
   });
   const formattedTime = formatPreferredTime(now, {
@@ -1375,13 +1454,16 @@ export default function HomeScreen() {
   const clockParts = new Intl.DateTimeFormat("en-AU", {
     hour: "numeric",
     minute: "numeric",
+    second: "numeric",
     hour12: false,
     ...(localTimeZone ? { timeZone: localTimeZone } : {}),
   }).formatToParts(now);
   const clockHour = Number(clockParts.find((part) => part.type === "hour")?.value ?? now.getHours());
   const clockMinute = Number(clockParts.find((part) => part.type === "minute")?.value ?? now.getMinutes());
-  const analogHourRotation = `${(clockHour % 12) * 30 + clockMinute * 0.5}deg`;
-  const analogMinuteRotation = `${clockMinute * 6}deg`;
+  const clockSecond = Number(clockParts.find((part) => part.type === "second")?.value ?? now.getSeconds());
+  const analogHourRotation = `${(clockHour % 12) * 30 + clockMinute * 0.5 + clockSecond / 120}deg`;
+  const analogMinuteRotation = `${clockMinute * 6 + clockSecond * 0.1}deg`;
+  const analogSecondRotation = `${clockSecond * 6}deg`;
   const shouldShowDigitalClock = clockDisplayStyle !== "Analog" || showDigitalTimeWithAnalog;
 
   // ===== LIVE TIME =====
@@ -1413,12 +1495,6 @@ export default function HomeScreen() {
   const isSydneyDaylightSaving = timezone.timeZone === "Australia/Sydney" && (/DT|Daylight/i.test(timeZoneName) || selectedLocalMonth >= 10 || selectedLocalMonth <= 3);
   const nightStartHour = isSydneyDaylightSaving ? 19 : 18;
   const localTimeSuggestedMode = localHour >= nightStartHour || localHour < 6 ? "night" : "day";
-  const dayNightModeCopy =
-    dayNightModePreference === "Manual toggle"
-      ? "Manual mode"
-      : dayNightModePreference === "Follow system/device time"
-        ? "Following device time"
-        : "Following Sydney local time";
   const shouldShowThemeSuggestion = suggestNightModeInEvenings && localTimeSuggestedMode !== mode && dismissedThemeSuggestion !== localTimeSuggestedMode;
   const themeSuggestion =
     localTimeSuggestedMode === "night"
@@ -1663,7 +1739,7 @@ export default function HomeScreen() {
                   {selectedMapEventCopy?.title ?? "Local area"}
                 </Text>
                 <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
-                  {selectedMapEvent ? `${selectedMapEvent.venue}, ${selectedMapDetails?.suburb ?? timezone.label} â€¢ ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
+                  {selectedMapEvent ? `${selectedMapEvent.venue}, ${selectedMapDetails?.suburb ?? timezone.label} • ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
                 </Text>
                 <View style={[styles.locationMapActions, isRtl && styles.rtlRow]}>
                   <TouchableOpacity
@@ -1877,14 +1953,23 @@ export default function HomeScreen() {
           ]}
         />
         <ScrollView
-          style={styles.scrollSurface}
+          style={[
+            styles.scrollSurface,
+            shouldLockDashboardScroll && styles.scrollSurfaceLocked,
+            shouldLockDashboardScroll && { maxHeight: lockedDashboardHeight },
+          ]}
+          scrollEnabled={!shouldLockDashboardScroll}
+          bounces={!shouldLockDashboardScroll}
           contentContainerStyle={[
             styles.content,
             effectiveHomeLayoutDensity === "Compact" && styles.contentCompact,
             effectiveHomeLayoutDensity === "Spacious" && styles.contentSpacious,
             shouldAutoFitDashboard && styles.contentAutoFit,
+            shouldLockDashboardScroll && styles.contentLockedDashboard,
+            shouldLockDashboardScroll && { minHeight: lockedDashboardHeight, maxHeight: lockedDashboardHeight },
           ]}
-          showsVerticalScrollIndicator={false}
+          showsVerticalScrollIndicator={!shouldLockDashboardScroll}
+          keyboardShouldPersistTaps="handled"
         >
         <View style={[styles.header, isRtl && styles.rtlRow]}>
           <View style={[styles.headerTitle, isRtl && styles.rtlBlock]}>
@@ -1990,21 +2075,38 @@ export default function HomeScreen() {
               <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={15} />
               <Text style={[styles.localMetaText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{timezone.label}, {timezone.country}</Text>
             </View>
-            <View style={[styles.localTimePill, isDay && styles.dayLocalTimePill]}>
+            <View
+              style={[styles.localTimePill, isDay && styles.dayLocalTimePill]}
+              accessible
+              accessibilityRole="text"
+              accessibilityLabel={`Current time: ${formattedTime}`}
+            >
               {clockDisplayStyle === "Analog" ? (
-                <View style={[styles.analogClock, isDay && styles.dayAnalogClock]}>
-                  <View style={styles.analogClockDot} />
-                  <View style={[styles.analogHand, styles.analogHandHour, isDay && styles.dayAnalogHand, { transform: [{ rotate: analogHourRotation }] }]} />
-                  <View style={[styles.analogHand, styles.analogHandMinute, isDay && styles.dayAnalogHand, { transform: [{ rotate: analogMinuteRotation }] }]} />
+                <View style={[styles.analogClock, isDay && styles.dayAnalogClock]} accessible={false}>
+                  <View style={[styles.analogClockTick, styles.analogClockTickTop, isDay && styles.dayAnalogClockTick]} />
+                  <View style={[styles.analogClockTick, styles.analogClockTickRight, isDay && styles.dayAnalogClockTick]} />
+                  <View style={[styles.analogClockTick, styles.analogClockTickBottom, isDay && styles.dayAnalogClockTick]} />
+                  <View style={[styles.analogClockTick, styles.analogClockTickLeft, isDay && styles.dayAnalogClockTick]} />
+                  <Text style={[styles.analogClockNumber, styles.analogClockNumber12, isDay && styles.dayAnalogClockNumber]}>12</Text>
+                  <Text style={[styles.analogClockNumber, styles.analogClockNumber3, isDay && styles.dayAnalogClockNumber]}>3</Text>
+                  <Text style={[styles.analogClockNumber, styles.analogClockNumber6, isDay && styles.dayAnalogClockNumber]}>6</Text>
+                  <Text style={[styles.analogClockNumber, styles.analogClockNumber9, isDay && styles.dayAnalogClockNumber]}>9</Text>
+                  <View style={[styles.analogHandRail, { transform: [{ rotate: analogHourRotation }] }]}>
+                    <View style={[styles.analogHandStem, styles.analogHandHour, isDay && styles.dayAnalogHand]} />
+                  </View>
+                  <View style={[styles.analogHandRail, { transform: [{ rotate: analogMinuteRotation }] }]}>
+                    <View style={[styles.analogHandStem, styles.analogHandMinute, isDay && styles.dayAnalogHand]} />
+                  </View>
+                  <View style={[styles.analogHandRail, { transform: [{ rotate: analogSecondRotation }] }]}>
+                    <View style={[styles.analogHandStem, styles.analogHandSecond]} />
+                  </View>
+                  <View style={[styles.analogClockDot, isDay && styles.dayAnalogClockDot]} />
                 </View>
               ) : null}
               {shouldShowDigitalClock ? (
                 <Text style={[styles.localTimeText, isDay && styles.dayHeadingText]}>{formattedTime}</Text>
               ) : null}
             </View>
-            {dayNightModePreference !== "Manual toggle" ? (
-              <Text style={[styles.localDateText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{dayNightModeCopy}</Text>
-            ) : null}
           </View>
         </View>
 
@@ -2032,6 +2134,13 @@ export default function HomeScreen() {
 
         {showHomeControls || showCustomiseHome || showLayoutPreferences ? (
           <View style={[styles.homeControlsCard, isDay && styles.dayHeaderPlaceholderCard, outlinedCardStyle]}>
+            <ScrollView
+              style={styles.homeControlsPanelScroll}
+              contentContainerStyle={styles.homeControlsPanelContent}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator
+            >
             <View style={[styles.locationSearchHeader, isRtl && styles.rtlRow]}>
               <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
                 <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
@@ -2390,6 +2499,7 @@ export default function HomeScreen() {
                 </View>
               </>
             ) : null}
+            </ScrollView>
           </View>
         ) : null}
 
@@ -2652,6 +2762,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#0B1626" },
   animatedScreen: { flex: 1 },
   scrollSurface: { flex: 1, backgroundColor: "transparent" },
+  scrollSurfaceLocked: { overflow: "hidden" },
   modeGlow: { position: "absolute", top: -58, alignSelf: "center", width: 230, height: 230, borderRadius: 115 },
   dayBellButton: {backgroundColor: "#F4F7F8", },
   dayBellText: { color: "#0B1220", },
@@ -2684,6 +2795,7 @@ const styles = StyleSheet.create({
   contentCompact: { paddingTop: 6, paddingBottom: 96 },
   contentSpacious: { paddingTop: 14, paddingBottom: 126 },
   contentAutoFit: { paddingTop: 8, paddingBottom: 92 },
+  contentLockedDashboard: { overflow: "hidden", paddingBottom: 78 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 },
   headerTitle: { flex: 1, minWidth: 0 },
   headerActions: { flexShrink: 0, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end", gap: 9, marginLeft: 12 },
@@ -2707,16 +2819,31 @@ const styles = StyleSheet.create({
   greetingText: { color: nsnColors.text, fontSize: 27, fontWeight: "900", lineHeight: 33, textAlign: "center" },
   localMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 5 },
   localMetaText: { color: nsnColors.muted, fontSize: 14, fontWeight: "800", lineHeight: 19, textAlign: "center" },
-  localTimePill: { alignSelf: "center", minHeight: 42, flexDirection: "row", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 14, paddingVertical: 7, alignItems: "center", justifyContent: "center", marginTop: 10 },
+  localTimePill: { alignSelf: "center", minHeight: 42, flexDirection: "row", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 12, paddingVertical: 7, alignItems: "center", justifyContent: "center", marginTop: 10 },
   dayLocalTimePill: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
   localTimeText: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 23 },
   localDateText: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 7, textAlign: "center" },
-  analogClock: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: "#C7B07A", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.035)" },
-  dayAnalogClock: { borderColor: "#284E92" },
-  analogClockDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: "#C7B07A", zIndex: 2 },
-  analogHand: { position: "absolute", left: 15, bottom: 15, width: 2, borderRadius: 1, backgroundColor: "#FFFFFF" },
-  analogHandHour: { height: 9 },
-  analogHandMinute: { height: 12 },
+  analogClock: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: "#C7B07A", alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC" },
+  dayAnalogClock: { borderColor: "#284E92", backgroundColor: "#FFFFFF" },
+  analogClockNumber: { position: "absolute", color: "#3F4754", fontSize: 10, fontWeight: "900", lineHeight: 12 },
+  dayAnalogClockNumber: { color: "#284E92" },
+  analogClockNumber12: { top: 5, alignSelf: "center" },
+  analogClockNumber3: { right: 6, top: 25 },
+  analogClockNumber6: { bottom: 4, alignSelf: "center" },
+  analogClockNumber9: { left: 7, top: 25 },
+  analogClockTick: { position: "absolute", borderRadius: 2, backgroundColor: "#3F4754" },
+  dayAnalogClockTick: { backgroundColor: "#284E92" },
+  analogClockTickTop: { top: 3, width: 3, height: 10 },
+  analogClockTickRight: { right: 3, width: 10, height: 3 },
+  analogClockTickBottom: { bottom: 3, width: 3, height: 10 },
+  analogClockTickLeft: { left: 3, width: 10, height: 3 },
+  analogClockDot: { position: "absolute", width: 9, height: 9, borderRadius: 5, borderWidth: 2, borderColor: "#D8342A", backgroundColor: "#FFFFFF", zIndex: 5 },
+  dayAnalogClockDot: { backgroundColor: "#FFFFFF", borderColor: "#D8342A" },
+  analogHandRail: { position: "absolute", left: 0, top: 0, width: 64, height: 64 },
+  analogHandStem: { position: "absolute", left: 30, bottom: 31, borderRadius: 999, backgroundColor: "#3F4754" },
+  analogHandHour: { width: 5, height: 18 },
+  analogHandMinute: { width: 3, height: 25 },
+  analogHandSecond: { left: 30.5, width: 2, height: 27, backgroundColor: "#D8342A" },
   dayAnalogHand: { backgroundColor: "#284E92" },
   headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
@@ -2729,6 +2856,8 @@ const styles = StyleSheet.create({
   homeSummaryAdjustText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   homeCollapseButton: { minHeight: 34, borderRadius: 17, borderWidth: 1, borderColor: "#7890B8", backgroundColor: "rgba(31,78,154,0.18)", paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
   homeControlsCard: { borderRadius: 20, borderWidth: 1, borderColor: "#38527C", backgroundColor: "rgba(16,33,58,0.94)", padding: 15, marginBottom: 14, gap: 12 },
+  homeControlsPanelScroll: { maxHeight: 560 },
+  homeControlsPanelContent: { gap: 12, paddingBottom: 2 },
   defaultDashboardButton: { minHeight: 54, borderRadius: 16, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.14)", paddingHorizontal: 12, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 10 },
   defaultDashboardTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   defaultDashboardCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, marginTop: 1 },
@@ -3006,6 +3135,43 @@ const styles = StyleSheet.create({
   eventImageWide: { width: "100%", height: 82, marginBottom: 10 },
   eventImageMagazineFeatured: { width: 116 },
   eventEmoji: { fontSize: 34 },
+  prototypeEventScene: { flex: 1, alignSelf: "stretch", width: "100%", height: "100%", minHeight: 82, borderRadius: 14, overflow: "hidden", backgroundColor: "#102743" },
+  dayPrototypeEventSceneFrame: { borderWidth: 1, borderColor: "rgba(255,255,255,0.52)" },
+  prototypePicnicScene: { backgroundColor: "#8CC1D7" },
+  prototypeBeachScene: { backgroundColor: "#7ABDD8" },
+  prototypeMovieScene: { backgroundColor: "#151A2A" },
+  prototypeCafeScene: { backgroundColor: "#7D5A3A" },
+  prototypeLocalScene: { backgroundColor: "#203B64", alignItems: "center", justifyContent: "center" },
+  prototypeSceneSky: { position: "absolute", left: 0, right: 0, top: 0, height: "48%", backgroundColor: "#86B9D2" },
+  prototypePicnicGrass: { position: "absolute", left: -8, right: -8, bottom: -10, height: "64%", borderTopLeftRadius: 46, borderTopRightRadius: 42, backgroundColor: "#5D8F53" },
+  prototypePicnicBlanket: { position: "absolute", left: 14, right: 16, bottom: 18, height: 24, borderRadius: 6, backgroundColor: "#D34B45", transform: [{ rotate: "-8deg" }] },
+  prototypePerson: { position: "absolute", width: 14, height: 14, borderRadius: 7, backgroundColor: "#F2C49D", borderWidth: 2, borderColor: "#25334A" },
+  prototypePicnicPersonOne: { left: 18, bottom: 46 },
+  prototypePicnicPersonTwo: { right: 18, bottom: 42 },
+  prototypePicnicBasket: { position: "absolute", left: 36, bottom: 28, width: 15, height: 11, borderRadius: 4, backgroundColor: "#C78A42", borderWidth: 1, borderColor: "rgba(70,43,25,0.5)" },
+  prototypeBeachSky: { position: "absolute", left: 0, right: 0, top: 0, height: "36%", backgroundColor: "#8BC6DE" },
+  prototypeBeachWater: { position: "absolute", left: -10, right: -6, top: "30%", height: "35%", borderRadius: 34, backgroundColor: "#4A91B8" },
+  prototypeBeachSand: { position: "absolute", left: -10, right: -8, bottom: -12, height: "47%", borderTopLeftRadius: 44, borderTopRightRadius: 34, backgroundColor: "#D8BD7A" },
+  prototypeBeachSun: { position: "absolute", right: 12, top: 9, width: 16, height: 16, borderRadius: 8, backgroundColor: "#FFD36F" },
+  prototypeBeachUmbrella: { position: "absolute", backgroundColor: "#CF4C4A" },
+  prototypeBeachUmbrellaTop: { left: 19, bottom: 36, width: 34, height: 16, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
+  prototypeBeachUmbrellaStem: { left: 35, bottom: 16, width: 3, height: 28, borderRadius: 2, backgroundColor: "#644936" },
+  prototypeMovieWall: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, backgroundColor: "#141B2C" },
+  prototypeMovieScreen: { position: "absolute", left: 12, right: 12, top: 13, height: 31, borderRadius: 4, backgroundColor: "#E8EEF7" },
+  prototypeMovieGlow: { position: "absolute", left: 22, right: 22, top: 40, height: 20, borderRadius: 18, backgroundColor: "rgba(98,139,201,0.32)" },
+  prototypeMovieSeatRow: { position: "absolute", left: 8, right: 8, height: 10, borderRadius: 6, backgroundColor: "#633B49" },
+  prototypeMovieSeatRowBack: { bottom: 25, opacity: 0.74 },
+  prototypeMovieSeatRowFront: { bottom: 11, backgroundColor: "#8E3F4B" },
+  prototypeCafeTable: { position: "absolute", left: -10, right: -10, bottom: -24, height: "72%", borderTopLeftRadius: 48, borderTopRightRadius: 48, backgroundColor: "#9A6A42" },
+  prototypeCafeMug: { position: "absolute", left: 17, top: 18, width: 21, height: 18, borderRadius: 8, backgroundColor: "#F2E7D2", borderWidth: 2, borderColor: "#6B4A32" },
+  prototypeCafeMugHandle: { position: "absolute", left: 34, top: 23, width: 10, height: 9, borderRadius: 5, borderWidth: 2, borderColor: "#F2E7D2" },
+  prototypeCafeBoard: { position: "absolute", right: 12, bottom: 24, width: 38, height: 28, borderRadius: 6, backgroundColor: "#214B95", transform: [{ rotate: "6deg" }] },
+  prototypeCafeTile: { position: "absolute", bottom: 33, width: 8, height: 8, borderRadius: 2, backgroundColor: "#D8E6FF", transform: [{ rotate: "6deg" }] },
+  prototypeCafeTileAlt: { backgroundColor: "#C7B07A" },
+  prototypeLocalGlow: { position: "absolute", width: 62, height: 62, borderRadius: 31, backgroundColor: "rgba(199,176,122,0.18)" },
+  prototypeLocalEmoji: { fontSize: 32 },
+  prototypeEventSceneLabel: { position: "absolute", left: 6, right: 6, bottom: 6, minHeight: 20, borderRadius: 9, backgroundColor: "rgba(2,8,20,0.72)", alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
+  prototypeEventSceneLabelText: { color: "#FFFFFF", fontSize: 9, fontWeight: "900", lineHeight: 12 },
   eventPreviewPhoto: { width: "100%", height: "100%", resizeMode: "cover" },
   eventPreviewOverlay: { position: "absolute", left: 6, right: 6, bottom: 6, minHeight: 20, borderRadius: 9, backgroundColor: "rgba(2,8,20,0.72)", alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
   eventPreviewPlace: { color: "#FFFFFF", fontSize: 9, fontWeight: "900", lineHeight: 12 },
