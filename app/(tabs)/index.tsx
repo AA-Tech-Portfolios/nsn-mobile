@@ -1,8 +1,9 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
+import * as Location from "expo-location";
 
-import { getLanguageBase, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
+import { australianLocalAreas, findNearestAustralianLocalArea, getLanguageBase, type NoiseLevelPreference, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
@@ -785,7 +786,7 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, appLanguage, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -799,6 +800,9 @@ export default function HomeScreen() {
   const [expandedInsight, setExpandedInsight] = useState<"day-night" | "weather" | null>(null);
   const [dismissedThemeSuggestion, setDismissedThemeSuggestion] = useState<"day" | "night" | null>(null);
   const [headerPlaceholder, setHeaderPlaceholder] = useState<{ title: string; copy: string } | null>(null);
+  const [showLocationSearch, setShowLocationSearch] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
+  const [detectingLocation, setDetectingLocation] = useState(false);
   const activeEvents = useMemo(() => {
     const hiddenIds = new Set(hiddenEventIds);
     const pinnedIds = new Set(pinnedEventIds);
@@ -817,6 +821,7 @@ export default function HomeScreen() {
     return categoryFilteredEvents.filter((event) => event.noiseLevel === noiseLevelPreference);
   }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, noiseLevelPreference, pinnedEventIds, showHiddenEvents]);
   const isDay = !isNightMode;
+  const effectiveReduceMotion = reduceMotion || batterySaver;
   const [now, setNow] = useState(new Date());
 
   const selectNoiseLevelPreference = (preference: NoiseLevelPreference) => {
@@ -824,11 +829,56 @@ export default function HomeScreen() {
   };
 
   const showSearchPlaceholder = useCallback(() => {
+    setHeaderPlaceholder(null);
+    setShowLocationSearch(true);
+  }, []);
+
+  const filteredLocalAreas = useMemo(() => {
+    const normalized = locationSearch.trim().toLocaleLowerCase();
+    if (!normalized) return australianLocalAreas;
+
+    return australianLocalAreas.filter((area) =>
+      `${area.label} ${area.city} ${area.country}`.toLocaleLowerCase().includes(normalized)
+    );
+  }, [locationSearch]);
+
+  const chooseLocalArea = (area: TimezoneSetting) => {
+    saveSoftHelloMvpState({ timezone: area, suburb: area.label });
+    setLocationSearch(area.label);
+    setShowLocationSearch(false);
     setHeaderPlaceholder({
-      title: homeCopy.searchEvents,
-      copy: homeCopy.searchEventsCopy,
+      title: `Local area set to ${area.label}`,
+      copy: `Weather, local time, and nearby prompts now use ${area.country}.`,
     });
-  }, [homeCopy.searchEvents, homeCopy.searchEventsCopy]);
+  };
+  const detectLocalArea = async () => {
+    setDetectingLocation(true);
+
+    try {
+      const permission = await Location.requestForegroundPermissionsAsync();
+
+      if (permission.status !== "granted") {
+        setHeaderPlaceholder({
+          title: "Location permission not enabled",
+          copy: "You can still choose your city or suburb manually from the list.",
+        });
+        return;
+      }
+
+      const lastKnownLocation = await Location.getLastKnownPositionAsync({ maxAge: 10 * 60 * 1000 });
+      const currentLocation = lastKnownLocation ?? await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const nearestArea = findNearestAustralianLocalArea(currentLocation.coords.latitude, currentLocation.coords.longitude);
+      chooseLocalArea(nearestArea);
+    } catch (error) {
+      console.log("Location detection failed:", error);
+      setHeaderPlaceholder({
+        title: "Location could not be detected",
+        copy: "Try again in a moment, or choose your local area manually.",
+      });
+    } finally {
+      setDetectingLocation(false);
+    }
+  };
 
   const showViewFilterPlaceholder = useCallback(() => {
     setHeaderPlaceholder({
@@ -842,9 +892,9 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-  const timer = setInterval(() => { setNow(new Date()); }, 1000); // updates every second
+  const timer = setInterval(() => { setNow(new Date()); }, batterySaver ? 60 * 1000 : 1000);
 
-  return () => clearInterval(timer);}, []
+  return () => clearInterval(timer);}, [batterySaver]
   );
 
 
@@ -899,11 +949,6 @@ export default function HomeScreen() {
         };
 
   // ===== WEATHER =====
-  const [weather, setWeather] = useState({
-    temperature: null as number | null,
-    rainChance: null as number | null,
-  });
-
   const weatherMessage =
   weather.temperature === null || weather.rainChance === null
     ? copy.loadingWeather(timezone.city)
@@ -914,36 +959,6 @@ export default function HomeScreen() {
     : weather.temperature >= 28
     ? copy.warmDay(timezone.city, weather.temperature)
     : copy.goodWeather(timezone.city, weather.temperature, weather.rainChance);
-
-  useEffect(() => {
-  async function fetchWeather() {
-    try {
-      setWeather({ temperature: null, rainChance: null });
-
-      const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.timeZone)}&forecast_days=1`
-      );
-
-      const data = await response.json();
-      const currentHourIndex = data.hourly.time?.findIndex((time: string) => time === data.current.time) ?? 0;
-      const rainChance = data.hourly.precipitation_probability?.[currentHourIndex >= 0 ? currentHourIndex : 0] ?? null;
-
-      setWeather({
-        temperature: Math.round(data.current.temperature_2m),
-        rainChance,
-      });
-    } catch (error) {
-      console.log("Weather fetch failed:", error);
-    }
-  }
-
-  fetchWeather();
-
-  const timer = setInterval(fetchWeather, 15 * 60 * 1000);
-
-  return () => clearInterval(timer);}, [timezone]
-
-    );
 
   const weatherIcon =
   weather.rainChance === null
@@ -960,7 +975,7 @@ export default function HomeScreen() {
   const modePulse = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-      if (reduceMotion) {
+      if (effectiveReduceMotion) {
         weatherFloat.setValue(0);
         return;
       }
@@ -983,10 +998,10 @@ export default function HomeScreen() {
       weatherAnimation.start();
 
       return () => weatherAnimation.stop();
-    }, [reduceMotion, weatherFloat]);
+    }, [effectiveReduceMotion, weatherFloat]);
 
     useEffect(() => {
-      if (reduceMotion) {
+      if (effectiveReduceMotion) {
         modeTransition.setValue(isDay ? 1 : 0);
         modePulse.setValue(0);
         return;
@@ -1016,7 +1031,7 @@ export default function HomeScreen() {
           }),
         ]),
       ]).start();
-    }, [isDay, modePulse, modeTransition, reduceMotion, slowerTransitions]);
+    }, [effectiveReduceMotion, isDay, modePulse, modeTransition, slowerTransitions]);
 
     const animatedScreenColor = modeTransition.interpolate({
       inputRange: [0, 1],
@@ -1056,8 +1071,8 @@ export default function HomeScreen() {
           <View style={[styles.headerActions, isRtl && styles.rtlRow]}>
             <HeaderActionButton
               onPress={showSearchPlaceholder}
-              accessibilityLabel={homeCopy.searchEvents}
-              accessibilityHint={homeCopy.searchEventsHint}
+              accessibilityLabel="Search local area"
+              accessibilityHint="Choose the Australian suburb or city used for live weather."
               isDay={isDay}
             >
               <IconSymbol name="magnifyingglass" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
@@ -1095,6 +1110,75 @@ export default function HomeScreen() {
             >
               <Text style={[styles.headerPlaceholderDismissText, isDay && styles.dayMutedText]}>{homeCopy.ok}</Text>
             </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {showLocationSearch ? (
+          <View style={[styles.locationSearchCard, isDay && styles.dayHeaderPlaceholderCard]}>
+            <View style={[styles.locationSearchHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
+                <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+                  Search Australian local area
+                </Text>
+                <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  Choose the suburb or city used for live weather, local time, and nearby prompts.
+                </Text>
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={() => setShowLocationSearch(false)}
+                accessibilityRole="button"
+                accessibilityLabel={homeCopy.dismissMessage}
+                style={[styles.headerPlaceholderDismiss, isDay && styles.dayHeaderPlaceholderDismiss]}
+              >
+                <Text style={[styles.headerPlaceholderDismissText, isDay && styles.dayMutedText]}>{homeCopy.ok}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={[styles.locationInputWrap, isDay && styles.dayLocationInputWrap, isRtl && styles.rtlRow]}>
+              <IconSymbol name="magnifyingglass" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
+              <TextInput
+                value={locationSearch}
+                onChangeText={setLocationSearch}
+                placeholder="Newcastle, Wollongong, Canberra..."
+                placeholderTextColor={isDay ? "#6B7890" : nsnColors.muted}
+                autoCapitalize="words"
+                autoCorrect={false}
+                style={[styles.locationInput, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+              />
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={detectLocalArea}
+              disabled={detectingLocation}
+              accessibilityRole="button"
+              accessibilityLabel="Use current location"
+              accessibilityHint="Requests permission and detects the closest supported Australian local area."
+              style={[styles.detectLocationButton, detectingLocation && styles.detectLocationButtonDisabled]}
+            >
+              <IconSymbol name="location" color={nsnColors.text} size={18} />
+              <Text style={styles.detectLocationButtonText}>
+                {detectingLocation ? "Detecting local area..." : "Use current location"}
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.locationResultGrid}>
+              {filteredLocalAreas.map((area) => {
+                const active = area.id === timezone.id;
+
+                return (
+                  <TouchableOpacity
+                    key={area.id}
+                    activeOpacity={0.82}
+                    onPress={() => chooseLocalArea(area)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Use ${area.label} as local area`}
+                    style={[styles.locationResultButton, active && styles.activeLocationResultButton, isDay && styles.dayLocationResultButton, isDay && active && styles.dayActiveLocationResultButton]}
+                  >
+                    <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, active && styles.activeLocationResultText]}>{area.label}</Text>
+                    <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, active && styles.activeLocationResultText]}>{area.country}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
         ) : null}
 
@@ -1289,6 +1373,22 @@ const styles = StyleSheet.create({
   headerPlaceholderDismiss: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 13, alignItems: "center", justifyContent: "center" },
   dayHeaderPlaceholderDismiss: { borderColor: "#B8C9E6" },
   headerPlaceholderDismissText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900" },
+  locationSearchCard: { borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", padding: 14, marginBottom: 12, gap: 12 },
+  locationSearchHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  locationInputWrap: { minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
+  dayLocationInputWrap: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },
+  locationInput: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "700", paddingVertical: 8 },
+  detectLocationButton: { minHeight: 42, borderRadius: 14, backgroundColor: nsnColors.primary, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
+  detectLocationButtonDisabled: { opacity: 0.72 },
+  detectLocationButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  locationResultGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  locationResultButton: { minWidth: 128, flexGrow: 1, flexBasis: "30%", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
+  dayLocationResultButton: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },
+  activeLocationResultButton: { borderColor: nsnColors.day, backgroundColor: "#172A5C" },
+  dayActiveLocationResultButton: { borderColor: "#3949DB", backgroundColor: "#DCE7FF" },
+  locationResultTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  locationResultMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, marginTop: 2 },
+  activeLocationResultText: { color: nsnColors.text },
   logo: { color: nsnColors.text, fontSize: 25, fontWeight: "800", letterSpacing: -0.4, lineHeight: 32 },
   moon: { color: nsnColors.day },
   subtitle: { color: nsnColors.muted, fontSize: 13, lineHeight: 18 },

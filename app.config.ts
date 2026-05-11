@@ -51,7 +51,8 @@ const config: ExpoConfig = {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
     "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to detect your local area for weather, timezone, and nearby meetup prompts."
       }
   },
   android: {
@@ -86,6 +87,12 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    [
+      "expo-location",
+      {
+        locationWhenInUsePermission: "Allow $(PRODUCT_NAME) to detect your local area for weather, timezone, and nearby meetup prompts.",
+      },
+    ],
     [
       "expo-audio",
       {

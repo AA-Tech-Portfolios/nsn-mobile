@@ -1,9 +1,9 @@
-import { Alert, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity } from "react-native";
-import { useState } from "react";
-import { useRouter } from "expo-router";
+import { Alert, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
-import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, useAppSettings } from "@/lib/app-settings";
+import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -32,6 +32,34 @@ const accountPauseTimelineOptions: { value: AccountPauseTimeline; label: string;
   { value: "One month", label: "One month", copy: "Take a longer break from discovery." },
   { value: "Until I return", label: "Until I return", copy: "Stay deactivated until you choose to come back." },
 ];
+const lowLightLevelOptions: { value: LowLightLevel; label: string; copy: string }[] = [
+  { value: "Gentle", label: "Gentle", copy: "A light dim for bright rooms." },
+  { value: "Medium", label: "Medium", copy: "Balanced dimming for evening use." },
+  { value: "Deep", label: "Deep", copy: "The softest screen for darker rooms." },
+];
+const notificationSnoozeOptions: { value: NotificationSnoozePreset; label: string; copy: string }[] = [
+  { value: "1 hour", label: "1 hour", copy: "Pause routine pings briefly." },
+  { value: "Tonight", label: "Tonight", copy: "Keep the rest of today quiet." },
+  { value: "24 hours", label: "24 hours", copy: "Take a full-day notification break." },
+  { value: "Until I turn it back on", label: "Until I turn it back on", copy: "Stay snoozed until you return here." },
+];
+
+type SettingsSectionJumpId =
+  | "settingsView"
+  | "batteryPerformance"
+  | "generalPrivacy"
+  | "profileVisibility"
+  | "profilePreview"
+  | "nameDisplay"
+  | "photoBlur"
+  | "gender"
+  | "notifications"
+  | "locationDiscovery"
+  | "safetyContact"
+  | "accessibility"
+  | "appearance"
+  | "language"
+  | "generalSettings";
 
 type SettingsCopy = {
   title: string;
@@ -74,6 +102,11 @@ type SettingsCopy = {
   chatNotificationsCopy?: string;
   quietNotifications?: string;
   quietNotificationsCopy?: string;
+  notificationSnoozed?: string;
+  notificationSnoozedCopy?: string;
+  notificationSnoozeDuration?: string;
+  notificationSnoozeDurationCopy?: string;
+  notificationSnoozeSafetyNote?: string;
   locationDiscovery?: string;
   useApproximateLocation?: string;
   useApproximateLocationCopy?: string;
@@ -84,6 +117,13 @@ type SettingsCopy = {
   allowMessageRequestsCopy?: string;
   safetyCheckIns?: string;
   safetyCheckInsCopy?: string;
+  batteryPerformance?: string;
+  batterySaver?: string;
+  batterySaverCopy?: string;
+  lowLightMode?: string;
+  lowLightModeCopy?: string;
+  lowLightLevel?: string;
+  lowLightLevelCopy?: string;
   restartOnboarding?: string;
   restartOnboardingCopy?: string;
   restartOnboardingAction?: string;
@@ -133,6 +173,11 @@ const englishCopy: SettingsCopy = {
   chatNotificationsCopy: "Notify me when meetup group chats have new messages.",
   quietNotifications: "Quiet notifications",
   quietNotificationsCopy: "Keep notification tone gentle and avoid attention-heavy alerts.",
+  notificationSnoozed: "Snooze notifications",
+  notificationSnoozedCopy: "Pause non-safety notifications for a set time.",
+  notificationSnoozeDuration: "Snooze duration",
+  notificationSnoozeDurationCopy: "Safety check-ins can still appear while routine notifications are snoozed.",
+  notificationSnoozeSafetyNote: "Safety check-ins stay controlled by Safety & Contact.",
   locationDiscovery: "Location & Discovery",
   useApproximateLocation: "Use approximate location",
   useApproximateLocationCopy: "Show nearby options without sharing a precise location.",
@@ -143,6 +188,13 @@ const englishCopy: SettingsCopy = {
   allowMessageRequestsCopy: "Let people message before you join the same meetup.",
   safetyCheckIns: "Safety check-ins",
   safetyCheckInsCopy: "Enable gentle check-in prompts around joined meetups.",
+  batteryPerformance: "Battery & Performance",
+  batterySaver: "Battery saver",
+  batterySaverCopy: "Reduce animations, weather refresh, and haptics when you want NSN to use less power.",
+  lowLightMode: "Low light mode",
+  lowLightModeCopy: "Dim bright surfaces for softer viewing in darker rooms.",
+  lowLightLevel: "Brightness level",
+  lowLightLevelCopy: "Choose how much Low light mode dims the app.",
   restartOnboarding: "Restart NSN onboarding",
   restartOnboardingCopy: "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
   restartOnboardingAction: "Start",
@@ -2795,6 +2847,10 @@ const accessibilityTranslations: Record<string, Required<Pick<SettingsCopy, "acc
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { section: requestedSection } = useLocalSearchParams<{ section?: string | string[] }>();
+  const scrollViewRef = useRef<ScrollView | null>(null);
+  const sectionOffsets = useRef<Partial<Record<SettingsSectionJumpId, number>>>({});
+  const handledRequestedSection = useRef(false);
   const {
     isNightMode,
     accountPaused,
@@ -2843,6 +2899,12 @@ export default function SettingsScreen() {
     contactPreferences,
     profilePhotoUri,
     settingsPrivacyMode,
+    batterySaver,
+    setBatterySaver,
+    lowLightMode,
+    setLowLightMode,
+    lowLightLevel,
+    setLowLightLevel,
     largerText,
     setLargerText,
     highContrast,
@@ -2869,6 +2931,10 @@ export default function SettingsScreen() {
     setChatNotifications,
     quietNotifications,
     setQuietNotifications,
+    notificationSnoozed,
+    setNotificationSnoozed,
+    notificationSnoozePreset,
+    setNotificationSnoozePreset,
     useApproximateLocation,
     setUseApproximateLocation,
     showDistanceInMeetups,
@@ -2899,6 +2965,7 @@ export default function SettingsScreen() {
   const [revealAfterRsvp, setRevealAfterRsvp] = useState(true);
   const [friendsOfFriendsOnly, setFriendsOfFriendsOnly] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<SettingsDropdownName | null>(null);
+  const [quickJumpSearch, setQuickJumpSearch] = useState("");
   const [appLanguageSearch, setAppLanguageSearch] = useState("");
   const [translationLanguageSearch, setTranslationLanguageSearch] = useState("");
   const [appLanguageRegionBase, setAppLanguageRegionBase] = useState<string | null>(null);
@@ -2953,6 +3020,31 @@ export default function SettingsScreen() {
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
   const contrastMutedStyle = highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
   const accessibilityCopy = accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
+  const quickJumpOptions: { id: SettingsSectionJumpId; label: string }[] = [
+    { id: "settingsView", label: "View" },
+    { id: "batteryPerformance", label: "Battery" },
+    { id: "generalPrivacy", label: "Privacy" },
+    { id: "profileVisibility", label: "Visibility" },
+    { id: "profilePreview", label: "Preview" },
+    ...(isAdvancedSettings
+      ? [
+          { id: "nameDisplay" as const, label: "Names" },
+          ...(comfortMode !== "Open Mode" ? [{ id: "photoBlur" as const, label: "Photo blur" }] : []),
+          { id: "gender" as const, label: "Gender" },
+          { id: "notifications" as const, label: "Notifications" },
+          { id: "locationDiscovery" as const, label: "Location" },
+          { id: "safetyContact" as const, label: "Safety" },
+          { id: "accessibility" as const, label: "Accessibility" },
+          { id: "appearance" as const, label: "Appearance" },
+          { id: "language" as const, label: "Language" },
+        ]
+      : []),
+    { id: "generalSettings", label: "Account" },
+  ];
+  const normalizedQuickJumpSearch = quickJumpSearch.trim().toLocaleLowerCase();
+  const filteredQuickJumpOptions = normalizedQuickJumpSearch
+    ? quickJumpOptions.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch))
+    : quickJumpOptions;
   const extraAccessibilityCopy = appLanguageBase === "Hebrew"
     ? {
         largerTouchTargets: "אזורי לחיצה גדולים",
@@ -3041,6 +3133,56 @@ export default function SettingsScreen() {
     setPrivateProfile(value);
     saveSoftHelloMvpState({ privateProfile: value });
   };
+  const setAndSaveBatterySaver = (value: boolean) => {
+    setBatterySaver(value);
+    saveSoftHelloMvpState({ batterySaver: value });
+  };
+  const setAndSaveLowLightMode = (value: boolean) => {
+    setLowLightMode(value);
+    saveSoftHelloMvpState({ lowLightMode: value });
+  };
+  const saveLowLightLevel = (value: LowLightLevel) => {
+    setLowLightLevel(value);
+    saveSoftHelloMvpState({ lowLightLevel: value });
+  };
+  const setAndSaveNotificationSnoozed = (value: boolean) => {
+    setNotificationSnoozed(value);
+    saveSoftHelloMvpState({ notificationSnoozed: value });
+  };
+  const saveNotificationSnoozePreset = (value: NotificationSnoozePreset) => {
+    setNotificationSnoozePreset(value);
+    saveSoftHelloMvpState({ notificationSnoozePreset: value, notificationSnoozed: true });
+  };
+  const registerSectionLayout = (id: SettingsSectionJumpId) => (event: LayoutChangeEvent) => {
+    sectionOffsets.current[id] = event.nativeEvent.layout.y;
+  };
+  const jumpToSection = (id: SettingsSectionJumpId) => {
+    const y = sectionOffsets.current[id];
+    if (typeof y !== "number") return;
+
+    scrollViewRef.current?.scrollTo({
+      y: Math.max(0, y - 8),
+      animated: !batterySaver && !reduceMotion,
+    });
+  };
+  const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
+  useEffect(() => {
+    if (normalizedRequestedSection !== "notifications") {
+      handledRequestedSection.current = false;
+      return;
+    }
+
+    if (!isAdvancedSettings) {
+      saveSoftHelloMvpState({ settingsPrivacyMode: "Advanced" });
+      return;
+    }
+
+    if (handledRequestedSection.current) return;
+    handledRequestedSection.current = true;
+
+    const timer = setTimeout(() => jumpToSection("notifications"), 350);
+    return () => clearTimeout(timer);
+  }, [isAdvancedSettings, normalizedRequestedSection, saveSoftHelloMvpState]);
   const saveBooleanPrivacy = (key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView", value: boolean) => {
     if (key === "showSuburbArea") setShowSuburbArea(value);
     if (key === "showInterests") setShowInterests(value);
@@ -3162,7 +3304,7 @@ export default function SettingsScreen() {
     setOpenDropdown(null);
   };
 
-  const { privacyRows, notificationRows, locationRows, safetyRows, accessibilityRows } = createSettingsToggleSections({
+  const { privacyRows, notificationRows, locationRows, safetyRows, performanceRows, accessibilityRows } = createSettingsToggleSections({
     copy,
     englishCopy,
     accessibilityCopy,
@@ -3177,10 +3319,13 @@ export default function SettingsScreen() {
       weatherAlerts,
       chatNotifications,
       quietNotifications,
+      notificationSnoozed,
       useApproximateLocation,
       showDistanceInMeetups,
       allowMessageRequests,
       safetyCheckIns,
+      batterySaver,
+      lowLightMode,
       largerText,
       highContrast,
       reduceMotion,
@@ -3197,10 +3342,13 @@ export default function SettingsScreen() {
       setWeatherAlerts,
       setChatNotifications,
       setQuietNotifications,
+      setNotificationSnoozed: setAndSaveNotificationSnoozed,
       setUseApproximateLocation,
       setShowDistanceInMeetups,
       setAllowMessageRequests,
       setSafetyCheckIns,
+      setBatterySaver: setAndSaveBatterySaver,
+      setLowLightMode: setAndSaveLowLightMode,
       setLargerText,
       setHighContrast,
       setReduceMotion,
@@ -3288,6 +3436,7 @@ export default function SettingsScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView
+        ref={scrollViewRef}
         style={[styles.screen, isDay && styles.dayContainer]}
         contentContainerStyle={[
           styles.container,
@@ -3307,7 +3456,38 @@ export default function SettingsScreen() {
           {copy.subtitle}
         </Text>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <View style={[styles.quickJumpBlock, isDay && styles.dayQuickJumpBlock, highContrast && styles.highContrastCard]}>
+          <View style={styles.quickJumpHeader}>
+            <Text style={[styles.quickJumpTitle, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Jump to section</Text>
+            <TextInput
+              value={quickJumpSearch}
+              onChangeText={setQuickJumpSearch}
+              placeholder="Search sections..."
+              placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
+              style={[styles.quickJumpSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText, isRtl && styles.rtlSearchInput]}
+              accessibilityLabel="Search settings sections"
+            />
+          </View>
+          <View style={[styles.quickJumpRow, isRtl && styles.rtlRow]}>
+            {filteredQuickJumpOptions.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                activeOpacity={0.78}
+                onPress={() => jumpToSection(option.id)}
+                accessibilityRole="button"
+                accessibilityLabel={`Jump to ${option.label}`}
+                style={[styles.quickJumpButton, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+              >
+                <Text style={[styles.quickJumpText, isDay && styles.dayActionText, contrastTextStyle]}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+            {filteredQuickJumpOptions.length === 0 && (
+              <Text style={[styles.noResultsText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>No matching section</Text>
+            )}
+          </View>
+        </View>
+
+        <Text onLayout={registerSectionLayout("settingsView")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Settings view
         </Text>
         <View style={styles.settingsModeGrid}>
@@ -3329,7 +3509,64 @@ export default function SettingsScreen() {
           })}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("batteryPerformance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          {copy.batteryPerformance ?? englishCopy.batteryPerformance}
+        </Text>
+        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          {performanceRows.map((row, index) => (
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.rowDivider, isDay && (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.dayRowDivider, highContrast && (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.highContrastDivider]}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+              </View>
+              <Switch
+                value={row.value}
+                onValueChange={row.onValueChange}
+                accessibilityLabel={row.label}
+                accessibilityHint={screenReaderHints ? row.copy : undefined}
+                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+              />
+            </View>
+          ))}
+          {lowLightMode ? (
+            <View style={styles.performanceLevelRow}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+                  {copy.lowLightLevel ?? englishCopy.lowLightLevel}
+                </Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  {copy.lowLightLevelCopy ?? englishCopy.lowLightLevelCopy}
+                </Text>
+                <View style={[styles.lowLightLevelGrid, isRtl && styles.rtlRow]}>
+                  {lowLightLevelOptions.map((option) => {
+                    const active = lowLightLevel === option.value;
+
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.82}
+                        onPress={() => saveLowLightLevel(option.value)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={`${option.label} low light level`}
+                        accessibilityHint={screenReaderHints ? option.copy : undefined}
+                        style={[styles.lowLightLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                      >
+                        <Text style={[styles.lowLightLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>
+                          {option.label}
+                        </Text>
+                        <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </View>
+          ) : null}
+        </View>
+
+        <Text onLayout={registerSectionLayout("generalPrivacy")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           General privacy
         </Text>
         <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3351,7 +3588,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("profileVisibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Profile visibility
         </Text>
         <View style={styles.comfortModeGrid}>
@@ -3426,7 +3663,7 @@ export default function SettingsScreen() {
 
         {isAdvancedSettings ? (
           <>
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("nameDisplay")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Name display
         </Text>
         <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3466,7 +3703,7 @@ export default function SettingsScreen() {
 
         {comfortMode !== "Open Mode" ? (
           <>
-          <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          <Text onLayout={registerSectionLayout("photoBlur")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
             Photo blur level
           </Text>
           <View style={styles.blurLevelGrid}>
@@ -3487,7 +3724,7 @@ export default function SettingsScreen() {
           </>
         ) : null}
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("gender")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Gender
         </Text>
         <View style={styles.blurLevelGrid}>
@@ -3510,46 +3747,48 @@ export default function SettingsScreen() {
           </>
         ) : null}
 
-        <ProfileVisibilityPreview
-          displayName={displayName}
-          middleName={middleName}
-          lastName={lastName}
-          suburb={suburb}
-          age={age}
-          preferredAgeMin={preferredAgeMin}
-          preferredAgeMax={preferredAgeMax}
-          gender={gender}
-          middleNameDisplay={middleNameDisplay}
-          lastNameDisplay={lastNameDisplay}
-          interests={hobbiesInterests}
-          comfortPreferences={comfortPreferences}
-          contactPreferences={contactPreferences}
-          comfortMode={comfortMode}
-          profilePhotoUri={profilePhotoUri}
-          privateProfile={privateProfile}
-          blurProfilePhoto={blurProfilePhoto}
-          blurLevel={blurLevel}
-          warmUpLowerBlur={warmUpLowerBlur}
-          showSuburbArea={showSuburbArea}
-          showMiddleName={showMiddleName}
-          showLastName={showLastName}
-          showAge={showAge}
-          showPreferredAgeRange={showPreferredAgeRange}
-          showGender={showGender}
-          showInterests={showInterests}
-          showComfortPreferences={showComfortPreferences}
-          minimalProfileView={minimalProfileView}
-          isDay={isDay}
-        />
+        <View onLayout={registerSectionLayout("profilePreview")}>
+          <ProfileVisibilityPreview
+            displayName={displayName}
+            middleName={middleName}
+            lastName={lastName}
+            suburb={suburb}
+            age={age}
+            preferredAgeMin={preferredAgeMin}
+            preferredAgeMax={preferredAgeMax}
+            gender={gender}
+            middleNameDisplay={middleNameDisplay}
+            lastNameDisplay={lastNameDisplay}
+            interests={hobbiesInterests}
+            comfortPreferences={comfortPreferences}
+            contactPreferences={contactPreferences}
+            comfortMode={comfortMode}
+            profilePhotoUri={profilePhotoUri}
+            privateProfile={privateProfile}
+            blurProfilePhoto={blurProfilePhoto}
+            blurLevel={blurLevel}
+            warmUpLowerBlur={warmUpLowerBlur}
+            showSuburbArea={showSuburbArea}
+            showMiddleName={showMiddleName}
+            showLastName={showLastName}
+            showAge={showAge}
+            showPreferredAgeRange={showPreferredAgeRange}
+            showGender={showGender}
+            showInterests={showInterests}
+            showComfortPreferences={showComfortPreferences}
+            minimalProfileView={minimalProfileView}
+            isDay={isDay}
+          />
+        </View>
 
         {isAdvancedSettings ? (
           <>
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("notifications")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.notifications ?? englishCopy.notifications}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {notificationRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < notificationRows.length - 1 && styles.rowDivider, isDay && index < notificationRows.length - 1 && styles.dayRowDivider, highContrast && index < notificationRows.length - 1 && styles.highContrastDivider]}>
+            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.rowDivider, isDay && (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.dayRowDivider, highContrast && (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.highContrastDivider]}>
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
@@ -3564,9 +3803,47 @@ export default function SettingsScreen() {
               />
             </View>
           ))}
+          {notificationSnoozed ? (
+            <View style={styles.notificationSnoozeRow}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+                  {copy.notificationSnoozeDuration ?? englishCopy.notificationSnoozeDuration}
+                </Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  {copy.notificationSnoozeDurationCopy ?? englishCopy.notificationSnoozeDurationCopy}
+                </Text>
+                <View style={[styles.snoozeOptionGrid, isRtl && styles.rtlRow]}>
+                  {notificationSnoozeOptions.map((option) => {
+                    const active = notificationSnoozePreset === option.value;
+
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.82}
+                        onPress={() => saveNotificationSnoozePreset(option.value)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={`${option.label} notification snooze`}
+                        accessibilityHint={screenReaderHints ? option.copy : undefined}
+                        style={[styles.snoozeOptionButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                      >
+                        <Text style={[styles.snoozeOptionTitle, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>
+                          {option.label}
+                        </Text>
+                        <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  {copy.notificationSnoozeSafetyNote ?? englishCopy.notificationSnoozeSafetyNote}
+                </Text>
+              </View>
+            </View>
+          ) : null}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("locationDiscovery")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.locationDiscovery ?? englishCopy.locationDiscovery}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3588,7 +3865,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("safetyContact")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.safetyContact ?? englishCopy.safetyContact}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3628,7 +3905,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
+        <Text onLayout={registerSectionLayout("accessibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {allAccessibilityRows.map((row, index) => (
             <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, largerTouchTargets && styles.accessibleSettingRow, isRtl && styles.rtlRow, index < allAccessibilityRows.length - 1 && styles.rowDivider, isDay && index < allAccessibilityRows.length - 1 && styles.dayRowDivider, highContrast && index < allAccessibilityRows.length - 1 && styles.highContrastDivider]}>
@@ -3648,7 +3925,7 @@ export default function SettingsScreen() {
           ))}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("appearance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.appearance ?? englishCopy.appearance}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -3772,7 +4049,7 @@ export default function SettingsScreen() {
           )}
         </View>
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.translations}</Text>
+        <Text onLayout={registerSectionLayout("language")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.translations}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           <View style={[styles.dropdownRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider]}>
             <View style={styles.settingCopy}>
@@ -3959,7 +4236,7 @@ export default function SettingsScreen() {
           </>
         ) : null}
 
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text onLayout={registerSectionLayout("generalSettings")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           General settings
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -4090,6 +4367,70 @@ const styles = StyleSheet.create({
   },
   daySubtitle: {
     color: "#3B4A63",
+  },
+  quickJumpBlock: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    padding: 12,
+    gap: 10,
+    marginTop: 4,
+  },
+  dayQuickJumpBlock: {
+    backgroundColor: "#DCEEFF",
+    borderColor: "#B8C9E6",
+  },
+  quickJumpHeader: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 10,
+  },
+  quickJumpTitle: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  quickJumpSearchInput: {
+    flexGrow: 1,
+    flexBasis: 220,
+    minHeight: 38,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#314666",
+    color: nsnColors.text,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 12,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  quickJumpRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingBottom: 2,
+  },
+  quickJumpButton: {
+    minHeight: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 13,
+  },
+  dayQuickJumpButton: {
+    backgroundColor: "#DCEEFF",
+    borderColor: "#B8C9E6",
+  },
+  quickJumpText: {
+    color: "#7786FF",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
   },
   card: {
     borderRadius: 18,
@@ -4269,6 +4610,14 @@ const styles = StyleSheet.create({
   },
   settingCopy: {
     flex: 1,
+  },
+  performanceLevelRow: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  notificationSnoozeRow: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
   },
   rtlRow: {
     flexDirection: "row-reverse",
@@ -4610,6 +4959,59 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 10,
+  },
+  lowLightLevelGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 12,
+  },
+  lowLightLevelButton: {
+    minHeight: 66,
+    flexGrow: 1,
+    flexBasis: 150,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  lowLightLevelText: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  snoozeOptionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 12,
+  },
+  snoozeOptionButton: {
+    minHeight: 72,
+    flexGrow: 1,
+    flexBasis: 170,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  snoozeOptionTitle: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  snoozeSafetyNote: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    lineHeight: 16,
+    marginTop: 10,
   },
   disabledOption: { opacity: 0.45 },
   blurLevelText: {

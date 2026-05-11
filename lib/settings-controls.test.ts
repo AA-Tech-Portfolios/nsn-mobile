@@ -31,6 +31,8 @@ const copy: SettingsCopySource = {
   chatNotificationsCopy: "Notify for chat updates.",
   quietNotifications: "Quiet notifications",
   quietNotificationsCopy: "Reduce notification volume.",
+  notificationSnoozed: "Snooze notifications",
+  notificationSnoozedCopy: "Pause non-safety notifications.",
   useApproximateLocation: "Approximate location",
   useApproximateLocationCopy: "Use a nearby area.",
   showDistanceInMeetups: "Show distance",
@@ -39,6 +41,10 @@ const copy: SettingsCopySource = {
   allowMessageRequestsCopy: "Allow new requests.",
   safetyCheckIns: "Safety check-ins",
   safetyCheckInsCopy: "Enable safety prompts.",
+  batterySaver: "Battery saver",
+  batterySaverCopy: "Reduce motion and background refresh.",
+  lowLightMode: "Low light mode",
+  lowLightModeCopy: "Dim bright surfaces.",
 };
 
 const accessibilityCopy: AccessibilityCopySource = {
@@ -63,10 +69,13 @@ const state: SettingsControlState = {
   weatherAlerts: true,
   chatNotifications: true,
   quietNotifications: false,
+  notificationSnoozed: false,
   useApproximateLocation: true,
   showDistanceInMeetups: true,
   allowMessageRequests: false,
   safetyCheckIns: true,
+  batterySaver: false,
+  lowLightMode: false,
   largerText: false,
   highContrast: false,
   reduceMotion: false,
@@ -85,10 +94,13 @@ function createActions() {
     setWeatherAlerts: vi.fn(),
     setChatNotifications: vi.fn(),
     setQuietNotifications: vi.fn(),
+    setNotificationSnoozed: vi.fn(),
     setUseApproximateLocation: vi.fn(),
     setShowDistanceInMeetups: vi.fn(),
     setAllowMessageRequests: vi.fn(),
     setSafetyCheckIns: vi.fn(),
+    setBatterySaver: vi.fn(),
+    setLowLightMode: vi.fn(),
     setLargerText: vi.fn(),
     setHighContrast: vi.fn(),
     setReduceMotion: vi.fn(),
@@ -111,6 +123,7 @@ describe("settings controls", () => {
       ...sections.notificationRows,
       ...sections.locationRows,
       ...sections.safetyRows,
+      ...sections.performanceRows,
       ...sections.accessibilityRows,
     ];
 
@@ -125,10 +138,13 @@ describe("settings controls", () => {
       "weatherAlerts",
       "chatNotifications",
       "quietNotifications",
+      "notificationSnoozed",
       "useApproximateLocation",
       "showDistanceInMeetups",
       "allowMessageRequests",
       "safetyCheckIns",
+      "batterySaver",
+      "lowLightMode",
       "largerText",
       "highContrast",
       "reduceMotion",
@@ -149,10 +165,13 @@ describe("settings controls", () => {
     expect(actions.setWeatherAlerts).toHaveBeenCalledWith(false);
     expect(actions.setChatNotifications).toHaveBeenCalledWith(false);
     expect(actions.setQuietNotifications).toHaveBeenCalledWith(true);
+    expect(actions.setNotificationSnoozed).toHaveBeenCalledWith(true);
     expect(actions.setUseApproximateLocation).toHaveBeenCalledWith(false);
     expect(actions.setShowDistanceInMeetups).toHaveBeenCalledWith(false);
     expect(actions.setAllowMessageRequests).toHaveBeenCalledWith(true);
     expect(actions.setSafetyCheckIns).toHaveBeenCalledWith(false);
+    expect(actions.setBatterySaver).toHaveBeenCalledWith(true);
+    expect(actions.setLowLightMode).toHaveBeenCalledWith(true);
     expect(actions.setLargerText).toHaveBeenCalledWith(true);
     expect(actions.setHighContrast).toHaveBeenCalledWith(true);
     expect(actions.setReduceMotion).toHaveBeenCalledWith(true);

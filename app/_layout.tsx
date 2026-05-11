@@ -6,7 +6,7 @@ import { StatusBar } from "expo-status-bar";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Platform } from "react-native";
+import { Platform, View } from "react-native";
 import "@/lib/_core/nativewind-pressable";
 import { ThemeProvider } from "@/lib/theme-provider";
 import {
@@ -94,6 +94,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="oauth/callback" />
           </Stack>
+          <LowLightOverlay />
           <StatusBar style="auto" />
         </QueryClientProvider>
       </trpc.Provider>
@@ -150,4 +151,31 @@ function OnboardingGate() {
   }, [hasCompletedOnboarding, isOnboardingLoaded, routeGroup, router]);
 
   return null;
+}
+
+function LowLightOverlay() {
+  const { lowLightMode, lowLightLevel, isNightMode } = useAppSettings();
+
+  if (!lowLightMode) {
+    return null;
+  }
+
+  const opacityByLevel = isNightMode
+    ? { Gentle: 0.08, Medium: 0.14, Deep: 0.2 }
+    : { Gentle: 0.12, Medium: 0.2, Deep: 0.28 };
+
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        backgroundColor: "#020814",
+        opacity: opacityByLevel[lowLightLevel],
+      }}
+    />
+  );
 }
