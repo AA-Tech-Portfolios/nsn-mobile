@@ -1,5 +1,5 @@
 import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
@@ -548,7 +548,8 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
   const eventNoise = noiseCopy.levels[event.noiseLevel];
   const livePreview = eventLivePreviews[event.id];
   const isCompactLayout = cardLayout === "Horizontal cards" || cardLayout === "Boxed grid";
-  const shouldUsePreviewImage = visualMode === "Preview image";
+  const shouldUsePreviewImage = visualMode === "Preview image" && Boolean(livePreview?.photo);
+  const shouldUsePrototypeFallback = visualMode === "Preview image" && !livePreview?.photo;
   const eventTime = formatEventTimeLabel(event.time, { locale, timeFormatPreference });
   const eventOutlineStyle =
     cardOutlineStyle === "Minimal"
@@ -600,7 +601,14 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
         cardLayout === "Magazine" && featured && styles.eventImageMagazineFeatured,
         { backgroundColor: event.imageTone },
       ]}>
-        {shouldUsePreviewImage ? (
+        {shouldUsePreviewImage && livePreview ? (
+          <>
+            <Image source={{ uri: livePreview.photo }} style={styles.eventPreviewPhoto} />
+            <View style={styles.eventPreviewOverlay}>
+              <Text style={styles.eventPreviewPlace} numberOfLines={1}>{livePreview.place}</Text>
+            </View>
+          </>
+        ) : shouldUsePrototypeFallback ? (
           <EventPrototypeScene event={event} place={livePreview?.place} isDay={isDay} />
         ) : (
           <Text style={[styles.eventEmoji, density === "Compact" && styles.eventEmojiCompact]}>{event.emoji}</Text>
@@ -2083,10 +2091,11 @@ export default function HomeScreen() {
             >
               {clockDisplayStyle === "Analog" ? (
                 <View style={[styles.analogClock, isDay && styles.dayAnalogClock]} accessible={false}>
-                  <View style={[styles.analogClockTick, styles.analogClockTickTop, isDay && styles.dayAnalogClockTick]} />
-                  <View style={[styles.analogClockTick, styles.analogClockTickRight, isDay && styles.dayAnalogClockTick]} />
-                  <View style={[styles.analogClockTick, styles.analogClockTickBottom, isDay && styles.dayAnalogClockTick]} />
-                  <View style={[styles.analogClockTick, styles.analogClockTickLeft, isDay && styles.dayAnalogClockTick]} />
+                  {Array.from({ length: 12 }).map((_, tickIndex) => (
+                    <View key={tickIndex} style={[styles.analogClockTickRail, { transform: [{ rotate: `${tickIndex * 30}deg` }] }]}>
+                      <View style={[styles.analogClockTick, tickIndex % 3 === 0 && styles.analogClockHourTick, isDay && styles.dayAnalogClockTick]} />
+                    </View>
+                  ))}
                   <Text style={[styles.analogClockNumber, styles.analogClockNumber12, isDay && styles.dayAnalogClockNumber]}>12</Text>
                   <Text style={[styles.analogClockNumber, styles.analogClockNumber3, isDay && styles.dayAnalogClockNumber]}>3</Text>
                   <Text style={[styles.analogClockNumber, styles.analogClockNumber6, isDay && styles.dayAnalogClockNumber]}>6</Text>
@@ -2819,31 +2828,29 @@ const styles = StyleSheet.create({
   greetingText: { color: nsnColors.text, fontSize: 27, fontWeight: "900", lineHeight: 33, textAlign: "center" },
   localMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 5 },
   localMetaText: { color: nsnColors.muted, fontSize: 14, fontWeight: "800", lineHeight: 19, textAlign: "center" },
-  localTimePill: { alignSelf: "center", minHeight: 42, flexDirection: "row", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 12, paddingVertical: 7, alignItems: "center", justifyContent: "center", marginTop: 10 },
+  localTimePill: { alignSelf: "center", minHeight: 42, flexDirection: "row", gap: 12, borderRadius: 28, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 12, paddingVertical: 9, alignItems: "center", justifyContent: "center", marginTop: 10 },
   dayLocalTimePill: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
   localTimeText: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 23 },
   localDateText: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 7, textAlign: "center" },
-  analogClock: { width: 64, height: 64, borderRadius: 32, borderWidth: 3, borderColor: "#C7B07A", alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC" },
+  analogClock: { width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: "#C7B07A", alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC" },
   dayAnalogClock: { borderColor: "#284E92", backgroundColor: "#FFFFFF" },
-  analogClockNumber: { position: "absolute", color: "#3F4754", fontSize: 10, fontWeight: "900", lineHeight: 12 },
+  analogClockNumber: { position: "absolute", color: "#3F4754", fontSize: 16, fontWeight: "900", lineHeight: 19, zIndex: 2 },
   dayAnalogClockNumber: { color: "#284E92" },
-  analogClockNumber12: { top: 5, alignSelf: "center" },
-  analogClockNumber3: { right: 6, top: 25 },
-  analogClockNumber6: { bottom: 4, alignSelf: "center" },
-  analogClockNumber9: { left: 7, top: 25 },
-  analogClockTick: { position: "absolute", borderRadius: 2, backgroundColor: "#3F4754" },
+  analogClockNumber12: { top: 8, alignSelf: "center" },
+  analogClockNumber3: { right: 10, top: 38 },
+  analogClockNumber6: { bottom: 7, alignSelf: "center" },
+  analogClockNumber9: { left: 10, top: 38 },
+  analogClockTickRail: { position: "absolute", left: 0, top: 0, width: 96, height: 96, alignItems: "center" },
+  analogClockTick: { width: 3, height: 9, borderRadius: 2, backgroundColor: "#3F4754", marginTop: 7 },
+  analogClockHourTick: { width: 5, height: 15, marginTop: 5 },
   dayAnalogClockTick: { backgroundColor: "#284E92" },
-  analogClockTickTop: { top: 3, width: 3, height: 10 },
-  analogClockTickRight: { right: 3, width: 10, height: 3 },
-  analogClockTickBottom: { bottom: 3, width: 3, height: 10 },
-  analogClockTickLeft: { left: 3, width: 10, height: 3 },
-  analogClockDot: { position: "absolute", width: 9, height: 9, borderRadius: 5, borderWidth: 2, borderColor: "#D8342A", backgroundColor: "#FFFFFF", zIndex: 5 },
+  analogClockDot: { position: "absolute", width: 13, height: 13, borderRadius: 7, borderWidth: 3, borderColor: "#D8342A", backgroundColor: "#FFFFFF", zIndex: 5 },
   dayAnalogClockDot: { backgroundColor: "#FFFFFF", borderColor: "#D8342A" },
-  analogHandRail: { position: "absolute", left: 0, top: 0, width: 64, height: 64 },
-  analogHandStem: { position: "absolute", left: 30, bottom: 31, borderRadius: 999, backgroundColor: "#3F4754" },
-  analogHandHour: { width: 5, height: 18 },
-  analogHandMinute: { width: 3, height: 25 },
-  analogHandSecond: { left: 30.5, width: 2, height: 27, backgroundColor: "#D8342A" },
+  analogHandRail: { position: "absolute", left: 0, top: 0, width: 96, height: 96, zIndex: 3 },
+  analogHandStem: { position: "absolute", left: 45, bottom: 47, borderRadius: 999, backgroundColor: "#3F4754" },
+  analogHandHour: { left: 44.5, width: 7, height: 29 },
+  analogHandMinute: { left: 45.5, width: 5, height: 39 },
+  analogHandSecond: { left: 47, width: 2, height: 41, backgroundColor: "#D8342A" },
   dayAnalogHand: { backgroundColor: "#284E92" },
   headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
