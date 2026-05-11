@@ -375,10 +375,17 @@ const eventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "
   },
 };
 
-function Pill({ label, active, isDay, onPress }: { label: string; active?: boolean; isDay?: boolean; onPress: () => void }) {
+function Pill({ label, active, isDay, onPress, accessibilityLabel }: { label: string; active?: boolean; isDay?: boolean; onPress: () => void; accessibilityLabel?: string }) {
   return (
-    <TouchableOpacity activeOpacity={0.78} onPress={onPress} style={[styles.pill, active && styles.pillActive, isDay && styles.dayPill, isDay && active && styles.dayPillActive, ]}>
-      <Text style={[styles.pillText, active && styles.pillTextActive, isDay && styles.dayPillText, isDay && active && styles.dayPillTextActive, ]}>{label}</Text>
+    <TouchableOpacity
+      activeOpacity={0.78}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: Boolean(active) }}
+      accessibilityLabel={accessibilityLabel ?? label}
+      style={[styles.pill, active && styles.pillActive, isDay && styles.dayPill, isDay && active && styles.dayPillActive, ]}
+    >
+      <Text style={[styles.pillText, active && styles.pillTextActive, isDay && styles.dayPillText, isDay && active && styles.dayPillTextActive, ]}>{active ? "✓ " : ""}{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -1901,6 +1908,24 @@ export default function HomeScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+          {!isMeetupSearch ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.eventCategoryFilterRow, isRtl && styles.rtlRow]}>
+              {copy.filters.map((filter, index) => {
+                const filterKey = filterKeys[index];
+
+                return (
+                  <Pill
+                    key={filterKey}
+                    label={filter}
+                    active={activeFilter === filterKey}
+                    isDay={isDay}
+                    accessibilityLabel={`${filter} event category filter`}
+                    onPress={() => setActiveFilter(filterKey)}
+                  />
+                );
+              })}
+            </ScrollView>
+          ) : null}
           <View style={[styles.cardStack, effectiveHomeLayoutDensity === "Compact" && styles.cardStackCompact, effectiveHomeLayoutDensity === "Spacious" && styles.cardStackSpacious]}>
             {homeEventLayout === "Map" && !isMeetupSearch ? (
               <View style={[styles.mapPreviewCard, isDay && styles.dayLocationResultButton, outlinedCardStyle, isRtl && styles.rtlRow]}>
@@ -1935,9 +1960,11 @@ export default function HomeScreen() {
             )}
             {hasNoMeetupSearchResults || hasNoFilteredEvents ? (
               <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
-                <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups right now.</Text>
+                <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+                  {hasNoFilteredEvents && activeFilter !== "All" ? "No matching meetups in this category yet." : "No matching meetups right now."}
+                </Text>
                 <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Try relaxing a filter - NSN is still an early prototype.
+                  {hasNoFilteredEvents && activeFilter !== "All" ? "Try another filter — NSN is still an early prototype." : "Try relaxing a filter - NSN is still an early prototype."}
                 </Text>
               </View>
             ) : null}
@@ -2711,24 +2738,6 @@ export default function HomeScreen() {
           {homeSectionOrder.map((sectionKey) => renderHomeSection(sectionKey))}
         </View>
       
-        {homeViewMode === "Comfortable" || showHomeControls ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filterRow, isRtl && styles.rtlRow]}>
-          {copy.filters.map((filter, index) => {
-            const filterKey = filterKeys[index];
-
-            return (
-              <Pill
-                key={filterKey}
-                label={filter}
-                active={activeFilter === filterKey}
-                isDay={isDay}
-                onPress={() => setActiveFilter(filterKey)}
-              />
-            );
-          })}
-        </ScrollView>
-        ) : null}
-
         {homeViewMode === "Comfortable" ? (
           <>
         <TouchableOpacity activeOpacity={0.88} onPress={() => router.push("/(tabs)/events")} style={[styles.createMeetupButton, outlinedButtonStyle, isRtl && styles.rtlRow]}>
@@ -3086,7 +3095,6 @@ const styles = StyleSheet.create({
   locationMapActionText: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15 },
   locationMapPrimaryAction: { backgroundColor: "#214B95", borderColor: "#D2E0FF" },
   locationMapPrimaryActionText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900", lineHeight: 15 },
-  filterRow: { gap: 8, paddingBottom: 18, paddingTop: 4 },
   noiseGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
   noiseGuideHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 },
   noiseGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
@@ -3100,6 +3108,7 @@ const styles = StyleSheet.create({
   noiseLevelCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, textAlign: "center" },
   noiseLevelCopyActive: { color: nsnColors.text },
   noiseFilterRow: { gap: 8 },
+  eventCategoryFilterRow: { gap: 8, paddingTop: 6, paddingBottom: 8, paddingRight: 4 },
   pill: { height: 34, paddingHorizontal: 16, borderRadius: 17, backgroundColor: "#101D31", borderWidth: 1, borderColor: "#2A3C59", alignItems: "center", justifyContent: "center" },
   pillActive: { backgroundColor: "#284E92", borderColor: "#9BB4E4" },
   pillText: { color: nsnColors.muted, fontWeight: "700", fontSize: 12 },

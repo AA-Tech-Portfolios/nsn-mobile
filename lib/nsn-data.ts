@@ -143,7 +143,7 @@ export const eveningEvents: EventItem[] = [
     weather: "Rain friendly",
     imageTone: "#3B2D15",
     emoji: "🎲",
-    tags: ["Indoor", "Balanced"],
+    tags: ["Indoor", "Food", "Balanced"],
   },
   {
     id: "ramen-small-table",
