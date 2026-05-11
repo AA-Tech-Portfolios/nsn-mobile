@@ -83,10 +83,10 @@ export default function FoodPreferencesScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayContainer: { backgroundColor: "#EAF4FF" },
+  dayContainer: { backgroundColor: "#E8EDF2" },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 34, gap: 16 },
   backButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
-  dayIconButton: { backgroundColor: "#DCEEFF" },
+  dayIconButton: { backgroundColor: "#EEF3F4" },
   headerCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
   title: { color: nsnColors.text, fontSize: 26, fontWeight: "900", lineHeight: 32 },
   copy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 6 },
@@ -94,11 +94,11 @@ const styles = StyleSheet.create({
   sectionTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
   optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   chip: { minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
-  dayChip: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayChip: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   chipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   chipText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
-  dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   dayTitle: { color: "#0B1220" },
-  dayMutedText: { color: "#3B4A63" },
+  dayMutedText: { color: "#53677A" },
   activeText: { color: "#FFFFFF" },
 });

@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 12,
   },
-  dayCard: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayCard: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   header: { flexDirection: "row", alignItems: "center", gap: 12 },
   avatar: {
     width: 64,
@@ -196,5 +196,5 @@ const styles = StyleSheet.create({
   detail: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   copy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
   dayTitle: { color: "#0B1220" },
-  dayMuted: { color: "#3B4A63" },
+  dayMuted: { color: "#53677A" },
 });

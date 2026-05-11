@@ -523,8 +523,15 @@ export default function EventsScreen() {
                 <Text style={[styles.sheetTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.sheetTitle}</Text>
                 <Text style={[styles.sheetSubtitle, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.sheetSubtitle}</Text>
               </View>
-              <TouchableOpacity activeOpacity={0.75} onPress={resetCreator} style={[styles.closeButton, isDay && styles.dayCloseButton]}>
-                <Text style={[styles.closeText, isDay && styles.dayTitle]}>×</Text>
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={resetCreator}
+                accessibilityRole="button"
+                accessibilityLabel={copy.close}
+                style={[styles.closeButton, isDay && styles.dayCloseButton]}
+              >
+                <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
+                <Text style={[styles.closeText, isDay && styles.daySubtitle]}>{copy.close}</Text>
               </TouchableOpacity>
             </View>
 
@@ -672,7 +679,7 @@ function LabeledInput({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+        placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
         multiline={multiline}
         textAlignVertical={multiline ? "top" : "center"}
         style={[styles.input, multiline && styles.textArea, isDay && styles.dayInput, isRtl && styles.rtlInput]}
@@ -691,7 +698,7 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 32 },
 
   dayContainer: {
-    backgroundColor: "#EAF4FF",
+    backgroundColor: "#E8EDF2",
   },
   rtlRow: { flexDirection: "row-reverse" },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
@@ -714,7 +721,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   daySubtitle: {
-    color: "#3B4A63",
+    color: "#53677A",
   },
   dayText: {
     color: "#111827",
@@ -769,8 +776,8 @@ const styles = StyleSheet.create({
   },
   reviewSettingsText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   dayCard: {
-    backgroundColor: "#DCEEFF",
-    borderColor: "#B8C9E6",
+    backgroundColor: "#EEF3F4",
+    borderColor: "#C5D0DA",
   },
 
   cardTitle: {
@@ -807,17 +814,19 @@ const styles = StyleSheet.create({
   sheetTitle: { color: nsnColors.text, fontSize: 26, fontWeight: "900", lineHeight: 32 },
   sheetSubtitle: { color: nsnColors.muted, fontSize: 14, lineHeight: 20, marginTop: 3 },
   closeButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    minHeight: 36,
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    gap: 5,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: nsnColors.surface,
     borderWidth: 1,
     borderColor: nsnColors.border,
   },
-  dayCloseButton: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
-  closeText: { color: nsnColors.text, fontSize: 28, lineHeight: 32, fontWeight: "700" },
+  dayCloseButton: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
+  closeText: { color: nsnColors.muted, fontSize: 12, lineHeight: 16, fontWeight: "900" },
   formStack: { gap: 14 },
   label: { color: nsnColors.text, fontSize: 13, lineHeight: 18, fontWeight: "800", marginBottom: 7 },
   input: {
@@ -830,7 +839,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     paddingHorizontal: 14,
   },
-  dayInput: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6", color: "#0B1220" },
+  dayInput: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA", color: "#0B1220" },
   textArea: { minHeight: 104, paddingTop: 13, lineHeight: 20 },
   inlineFields: { flexDirection: "row", gap: 10 },
   inlineField: { flex: 1 },
@@ -845,7 +854,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  dayNoiseOption: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  dayNoiseOption: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   noiseOptionActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   noiseOptionText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", marginBottom: 0 },
   noiseOptionTextActive: { color: nsnColors.text },
@@ -857,12 +866,12 @@ const styles = StyleSheet.create({
     backgroundColor: nsnColors.surfaceRaised,
     overflow: "hidden",
   },
-  dayMapPanel: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayMapPanel: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   mapGrid: {
     height: 92,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0B1D35",
+    backgroundColor: "#10213A",
     borderBottomWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
   },
@@ -883,7 +892,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     gap: 10,
   },
-  dayPlaceOption: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  dayPlaceOption: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   placeOptionActive: { borderColor: nsnColors.primary },
   placeCopy: { flex: 1 },
   placeName: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
@@ -902,12 +911,12 @@ const styles = StyleSheet.create({
   saveButtonText: { color: nsnColors.text, fontSize: 16, fontWeight: "900" },
   modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(2,8,20,0.42)", padding: 16 },
   verificationSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
-  dayModalSheet: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  dayModalSheet: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   sheetReviewTitle: { color: nsnColors.text, fontSize: 20, fontWeight: "900", lineHeight: 26 },
   sheetReviewCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 12 },
   reviewList: { gap: 8 },
   reviewRow: { minHeight: 56, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 9 },
-  dayReviewRow: { backgroundColor: "#EAF4FF", borderColor: "#B8C9E6" },
+  dayReviewRow: { backgroundColor: "#E8EDF2", borderColor: "#C5D0DA" },
   reviewLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, marginBottom: 2 },
   reviewValue: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   confirmReviewButton: { minHeight: 48, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: 12 },

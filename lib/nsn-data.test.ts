@@ -29,8 +29,8 @@ describe("NSN prototype data", () => {
   });
 
   it("uses a dark, high-contrast NSN palette", () => {
-    expect(nsnColors.background).toBe("#020814");
+    expect(nsnColors.background).toBe("#0B1626");
     expect(nsnColors.text).toBe("#F5F7FF");
-    expect(nsnColors.primary).toBe("#3848FF");
+    expect(nsnColors.primary).toBe("#536C9E");
   });
 });

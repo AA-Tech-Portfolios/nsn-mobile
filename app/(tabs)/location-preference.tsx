@@ -227,7 +227,7 @@ export default function LocationPreferenceScreen() {
               value={draftSuburb}
               onChangeText={updateSuburb}
               placeholder={copy.suburbPlaceholder}
-              placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+              placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
               style={[styles.input, isDay && styles.dayInput, isRtl && styles.rtlInput]}
             />
             {selectedLocality ? (
@@ -312,10 +312,10 @@ export default function LocationPreferenceScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayContainer: { backgroundColor: "#EAF4FF" },
+  dayContainer: { backgroundColor: "#E8EDF2" },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 34, gap: 16 },
   backButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
-  dayIconButton: { backgroundColor: "#DCEEFF" },
+  dayIconButton: { backgroundColor: "#EEF3F4" },
   headerCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
   title: { color: nsnColors.text, fontSize: 26, fontWeight: "900", lineHeight: 32 },
   copy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 6 },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   formStack: { gap: 18 },
   label: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginBottom: 8 },
   input: { minHeight: 50, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, paddingHorizontal: 14, fontSize: 15, fontWeight: "700" },
-  dayInput: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6", color: "#0B1220" },
+  dayInput: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA", color: "#0B1220" },
   localityStatus: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 7 },
   localityList: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, overflow: "hidden", marginTop: 10 },
   localityOption: { minHeight: 58, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: nsnColors.border },
@@ -337,16 +337,16 @@ const styles = StyleSheet.create({
   localityCheckActive: { color: nsnColors.primary },
   optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   intentOption: { minHeight: 44, minWidth: "47%", flexGrow: 1, alignItems: "center", justifyContent: "center", borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 12, paddingVertical: 10 },
-  dayChoice: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayChoice: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   choiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   choiceText: { color: nsnColors.muted, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
   choiceTextActive: { color: "#FFFFFF" },
   primaryButton: { minHeight: 52, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary, paddingHorizontal: 18 },
   primaryButtonDisabled: { opacity: 0.45 },
   primaryButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900", lineHeight: 20 },
-  dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   dayTitle: { color: "#0B1220" },
-  dayMutedText: { color: "#3B4A63" },
+  dayMutedText: { color: "#53677A" },
   rtlRow: { flexDirection: "row-reverse" },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
   rtlInput: { textAlign: "right", writingDirection: "rtl" },

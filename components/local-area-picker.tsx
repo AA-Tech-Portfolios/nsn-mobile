@@ -38,12 +38,12 @@ export function LocalAreaPicker({
   return (
     <View style={styles.container}>
       <View style={[styles.inputWrap, isDay && styles.dayInputWrap, isRtl && styles.rtlRow]}>
-        <IconSymbol name="magnifyingglass" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
+        <IconSymbol name="magnifyingglass" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
         <TextInput
           value={query}
           onChangeText={onQueryChange}
           placeholder={placeholder}
-          placeholderTextColor={isDay ? "#6B7890" : nsnColors.muted}
+          placeholderTextColor={isDay ? "#63758A" : nsnColors.muted}
           autoCapitalize="none"
           autoCorrect={false}
           autoFocus={autoFocus}
@@ -102,24 +102,24 @@ export function LocalAreaPicker({
 const styles = StyleSheet.create({
   container: { gap: 12 },
   inputWrap: { minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
-  dayInputWrap: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },
+  dayInputWrap: { backgroundColor: "#F7FBFF", borderColor: "#C5D0DA" },
   input: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "700", paddingVertical: 8 },
   dayHeadingText: { color: "#0B1220" },
-  dayMutedText: { color: "#3B4A63" },
-  promptCard: { borderRadius: 14, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 11, paddingVertical: 10 },
+  dayMutedText: { color: "#53677A" },
+  promptCard: { borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 11, paddingVertical: 10 },
   fallbackNote: { color: nsnColors.muted, fontSize: 10, lineHeight: 14, marginTop: 7 },
   resultGroup: { gap: 7 },
   resultGroupTitle: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   resultStack: { gap: 8 },
   resultTopLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   resultButton: { borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, paddingVertical: 8 },
-  dayResultButton: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },
+  dayResultButton: { backgroundColor: "#F7FBFF", borderColor: "#C5D0DA" },
   activeResultButton: { borderColor: nsnColors.day, backgroundColor: "#172A5C" },
-  dayActiveResultButton: { borderColor: "#3949DB", backgroundColor: "#DCE7FF" },
+  dayActiveResultButton: { borderColor: "#445E93", backgroundColor: "#DFE8EF" },
   resultTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   resultMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, marginTop: 2 },
   activeResultText: { color: nsnColors.text },
-  resultBadge: { flexShrink: 0, borderRadius: 8, borderWidth: 1, borderColor: "#24426F", color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, paddingHorizontal: 7, paddingVertical: 2 },
+  resultBadge: { flexShrink: 0, borderRadius: 8, borderWidth: 1, borderColor: "#2A3C59", color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, paddingHorizontal: 7, paddingVertical: 2 },
   activeResultBadge: { borderColor: nsnColors.day, color: nsnColors.text },
   emptyCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
   rtlRow: { flexDirection: "row-reverse" },

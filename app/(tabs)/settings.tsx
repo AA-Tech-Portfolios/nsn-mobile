@@ -3561,7 +3561,7 @@ export default function SettingsScreen() {
                 accessibilityLabel={`Jump to ${option.label}`}
                 style={[styles.quickJumpButton, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
               >
-                <IconSymbol name={jumpIconBySection[option.id]} size={14} color={isDay ? "#3949DB" : "#9BA5FF"} />
+                <IconSymbol name={jumpIconBySection[option.id]} size={14} color={isDay ? "#445E93" : "#A8B7DA"} />
                 <Text style={[styles.quickJumpText, isDay && styles.dayActionText, contrastTextStyle]}>{option.label}</Text>
               </TouchableOpacity>
             ))}
@@ -3611,7 +3611,7 @@ export default function SettingsScreen() {
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
                 accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
@@ -3671,7 +3671,7 @@ export default function SettingsScreen() {
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
                 accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
@@ -3743,7 +3743,7 @@ export default function SettingsScreen() {
                     onValueChange={onToggleChange(row.label, row.onChange)}
                     accessibilityLabel={row.label}
                     accessibilityHint={screenReaderHints ? row.copy : undefined}
-                    trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                    trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
                     thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
                   />
                 </View>
@@ -3892,7 +3892,7 @@ export default function SettingsScreen() {
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
                 accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
@@ -3956,7 +3956,7 @@ export default function SettingsScreen() {
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
                 accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
@@ -3983,7 +3983,7 @@ export default function SettingsScreen() {
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
                 accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
@@ -4022,7 +4022,7 @@ export default function SettingsScreen() {
                 onValueChange={onToggleChange(row.label, row.onValueChange)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
@@ -4084,7 +4084,7 @@ export default function SettingsScreen() {
                 onValueChange={onToggleChange(row.label, row.onValueChange)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
-                trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
+                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
             </View>
@@ -4509,7 +4509,7 @@ const styles = StyleSheet.create({
     paddingBottom: 36,
   },
   dayContainer: {
-    backgroundColor: "#EAF4FF",
+    backgroundColor: "#E8EDF2",
   },
   backButton: {
     width: 42,
@@ -4521,7 +4521,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dayIconButton: {
-    backgroundColor: "#DCEEFF",
+    backgroundColor: "#EEF3F4",
   },
   title: {
     color: nsnColors.text,
@@ -4546,7 +4546,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   daySubtitle: {
-    color: "#3B4A63",
+    color: "#53677A",
   },
   quickJumpBlock: {
     borderRadius: 18,
@@ -4558,8 +4558,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   dayQuickJumpBlock: {
-    backgroundColor: "#DCEEFF",
-    borderColor: "#B8C9E6",
+    backgroundColor: "#EEF3F4",
+    borderColor: "#C5D0DA",
   },
   quickJumpHeader: {
     flexDirection: "row",
@@ -4605,8 +4605,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
   },
   dayQuickJumpButton: {
-    backgroundColor: "#DCEEFF",
-    borderColor: "#B8C9E6",
+    backgroundColor: "#EEF3F4",
+    borderColor: "#C5D0DA",
   },
   quickJumpText: {
     color: "#7786FF",
@@ -4621,11 +4621,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   dayCard: {
-    backgroundColor: "#DCEEFF",
-    borderColor: "#B8C9E6",
+    backgroundColor: "#EEF3F4",
+    borderColor: "#C5D0DA",
   },
   highContrastCard: {
-    borderColor: "#3848FF",
+    borderColor: "#536C9E",
     borderWidth: 2,
   },
   sectionTitle: {
@@ -4691,7 +4691,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   dayActionText: {
-    color: "#3949DB",
+    color: "#445E93",
   },
   deactivateSettingsRow: {
     minHeight: 92,
@@ -4785,10 +4785,10 @@ const styles = StyleSheet.create({
     borderBottomColor: nsnColors.border,
   },
   dayRowDivider: {
-    borderBottomColor: "#B8C9E6",
+    borderBottomColor: "#C5D0DA",
   },
   highContrastDivider: {
-    borderBottomColor: "#3848FF",
+    borderBottomColor: "#536C9E",
   },
   settingCopy: {
     flex: 1,
@@ -4816,7 +4816,7 @@ const styles = StyleSheet.create({
   dayPrototypeBadge: {
     borderColor: "#9AADE8",
     backgroundColor: "#EDF2FF",
-    color: "#3949DB",
+    color: "#445E93",
   },
   destructivePrototypeBadge: {
     borderColor: "rgba(226,61,90,0.45)",
@@ -4891,11 +4891,11 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
   },
   dayDropdownButton: {
-    backgroundColor: "#EAF4FF",
-    borderColor: "#B8C9E6",
+    backgroundColor: "#E8EDF2",
+    borderColor: "#C5D0DA",
   },
   highContrastButton: {
-    borderColor: "#3848FF",
+    borderColor: "#536C9E",
     borderWidth: 2,
   },
   dropdownText: {
@@ -4919,7 +4919,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#314666",
     borderRadius: 14,
-    backgroundColor: "#0B1D35",
+    backgroundColor: "#10213A",
   },
   dayDropdownMenu: {
     borderColor: "#8EACD6",
@@ -4954,7 +4954,7 @@ const styles = StyleSheet.create({
   dayLanguageSearchInput: {
     borderColor: "#8EACD6",
     color: "#0B1220",
-    backgroundColor: "#EAF4FF",
+    backgroundColor: "#E8EDF2",
   },
   dropdownOption: {
     minHeight: 50,
@@ -5248,11 +5248,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: nsnColors.border,
-    backgroundColor: "#0B1D35",
+    backgroundColor: "#10213A",
     padding: 20,
   },
   dayConfirmDialog: {
-    borderColor: "#B8C9E6",
+    borderColor: "#C5D0DA",
     backgroundColor: "#F7FBFF",
   },
   confirmTitle: {
@@ -5289,7 +5289,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.04)",
   },
   confirmPrimaryButton: {
-    backgroundColor: "#3949DB",
+    backgroundColor: "#445E93",
   },
   confirmDestructiveButton: {
     backgroundColor: "#B83A50",

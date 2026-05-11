@@ -115,7 +115,7 @@ export default function AlphaWalkthroughScreen() {
         <View style={[styles.stepCard, isDay && styles.dayCard]}>
           <View style={[styles.stepHeader, isRtl && styles.rtlRow]}>
             <View style={[styles.stepIcon, isDay && styles.dayIconBubble]}>
-              <IconSymbol name={step.icon} color={isDay ? "#3949DB" : nsnColors.day} size={24} />
+              <IconSymbol name={step.icon} color={isDay ? "#445E93" : nsnColors.day} size={24} />
             </View>
             <View style={styles.stepHeaderCopy}>
               <Text style={[styles.stepEyebrow, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>{step.eyebrow}</Text>
@@ -195,17 +195,17 @@ export default function AlphaWalkthroughScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayContainer: { backgroundColor: "#EAF4FF" },
+  dayContainer: { backgroundColor: "#E8EDF2" },
   content: { width: "100%", maxWidth: 720, alignSelf: "center", padding: 20, paddingBottom: 36 },
   backButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)", marginBottom: 12 },
-  dayIconButton: { backgroundColor: "#DCEEFF" },
+  dayIconButton: { backgroundColor: "#EEF3F4" },
   title: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35 },
   dayTitle: { color: "#0B1220" },
   subtitle: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 6, marginBottom: 16 },
-  dayMutedText: { color: "#3B4A63" },
-  dayAccentText: { color: "#3949DB" },
+  dayMutedText: { color: "#53677A" },
+  dayAccentText: { color: "#445E93" },
   progressCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 14, marginBottom: 12 },
-  dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   progressText: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
   progressTrack: { height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.08)", overflow: "hidden" },
   dayProgressTrack: { backgroundColor: "#C7D8F0" },
@@ -224,14 +224,14 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "900", lineHeight: 18 },
   stepList: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 },
   stepPill: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
-  dayStepPill: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayStepPill: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   stepPillActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   stepPillText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900" },
-  dayStepPillText: { color: "#3B4A63" },
+  dayStepPillText: { color: "#53677A" },
   stepPillTextActive: { color: "#FFFFFF" },
   navRow: { flexDirection: "row", gap: 10, marginTop: 16 },
   navButton: { flex: 1, minHeight: 44, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
-  dayNavButton: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayNavButton: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   nextButton: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   disabledButton: { opacity: 0.45 },
   navButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900" },

@@ -26,20 +26,20 @@ export const appPalettes: AppPalette[] = [
   {
     id: "midnight",
     label: "Midnight NSN",
-    description: "Deep navy with indigo and teal accents.",
-    swatches: ["#020814", "#071426", "#3848FF", "#18C8D1", "#FFE5A3"],
+    description: "Dusk navy, slate blue, and restrained harbour-light accents.",
+    swatches: ["#0B1626", "#0F1B2C", "#536C9E", "#7CAAC9", "#C7B07A"],
   },
   {
     id: "ocean",
     label: "Ocean Calm",
     description: "Blue, aqua, and soft sky tones.",
-    swatches: ["#052033", "#0E3A5B", "#2F80ED", "#22C8D8", "#DCEEFF"],
+    swatches: ["#0B2234", "#173A55", "#4F79A8", "#7CAAC9", "#E6EDF1"],
   },
   {
     id: "forest",
     label: "Forest Social",
     description: "Evergreen surfaces with warm friendly highlights.",
-    swatches: ["#071B14", "#123326", "#2F8F5B", "#72D67E", "#FFE5A3"],
+    swatches: ["#071B14", "#123326", "#2F8F5B", "#72D67E", "#C7B07A"],
   },
   {
     id: "sunset",
@@ -132,6 +132,7 @@ export type NotificationSnoozePreset = "1 hour" | "Tonight" | "24 hours" | "Unti
 export type HomeViewMode = "Essential" | "Comfortable";
 export type HomeEventLayout = "List" | "Map";
 export type HomeLayoutDensity = "Compact" | "Comfortable" | "Spacious";
+export type HomeCardLayout = "Vertical list" | "Horizontal cards" | "Boxed grid" | "Layered cards" | "Magazine";
 export type HomeVisibleSections = {
   weather: boolean;
   noiseGuide: boolean;
@@ -228,6 +229,7 @@ type OnboardingSnapshot = {
   homeWeatherSafeOnly?: boolean;
   homeEventLayout?: HomeEventLayout;
   homeLayoutDensity?: HomeLayoutDensity;
+  homeCardLayout?: HomeCardLayout;
   homeVisibleSections?: HomeVisibleSections;
   notificationSnoozed?: boolean;
   notificationSnoozePreset?: NotificationSnoozePreset;
@@ -449,6 +451,8 @@ type AppSettings = {
   setHomeEventLayout: (value: HomeEventLayout) => void;
   homeLayoutDensity: HomeLayoutDensity;
   setHomeLayoutDensity: (value: HomeLayoutDensity) => void;
+  homeCardLayout: HomeCardLayout;
+  setHomeCardLayout: (value: HomeCardLayout) => void;
   homeVisibleSections: HomeVisibleSections;
   setHomeVisibleSections: (value: HomeVisibleSections) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
@@ -579,6 +583,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [homeWeatherSafeOnly, setHomeWeatherSafeOnly] = useState(false);
   const [homeEventLayout, setHomeEventLayout] = useState<HomeEventLayout>("List");
   const [homeLayoutDensity, setHomeLayoutDensity] = useState<HomeLayoutDensity>("Comfortable");
+  const [homeCardLayout, setHomeCardLayout] = useState<HomeCardLayout>("Vertical list");
   const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(defaultHomeVisibleSections);
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
@@ -687,6 +692,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
         setHomeEventLayout(snapshot.homeEventLayout ?? "List");
         setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
+        setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
         setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
         setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
         setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
@@ -773,6 +779,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
     setHomeEventLayout(snapshot.homeEventLayout ?? "List");
     setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
+    setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
     setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
     setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
     setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
@@ -865,6 +872,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       homeWeatherSafeOnly,
       homeEventLayout,
       homeLayoutDensity,
+      homeCardLayout,
       homeVisibleSections,
       notificationSnoozed,
       notificationSnoozePreset,
@@ -971,6 +979,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.homeWeatherSafeOnly !== undefined) setHomeWeatherSafeOnly(snapshot.homeWeatherSafeOnly);
     if (snapshot.homeEventLayout !== undefined) setHomeEventLayout(snapshot.homeEventLayout);
     if (snapshot.homeLayoutDensity !== undefined) setHomeLayoutDensity(snapshot.homeLayoutDensity);
+    if (snapshot.homeCardLayout !== undefined) setHomeCardLayout(snapshot.homeCardLayout);
     if (snapshot.homeVisibleSections !== undefined) {
       const nextSections = normalizeHomeVisibleSections(snapshot.homeVisibleSections);
       setHomeVisibleSections(nextSections);
@@ -1240,6 +1249,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeEventLayout,
         homeLayoutDensity,
         setHomeLayoutDensity,
+        homeCardLayout,
+        setHomeCardLayout,
         homeVisibleSections,
         setHomeVisibleSections,
         completeOnboarding,

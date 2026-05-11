@@ -1011,7 +1011,7 @@ export default function EventDetailsScreen() {
 
         <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
           <View style={[styles.weatherIconWrap, isDay && styles.dayMetaIconWrap]}>
-            <IconSymbol name="weather" color={isDay ? "#3B4A63" : "#7FA9FF"} size={24} />
+            <IconSymbol name="weather" color={isDay ? "#53677A" : "#8FAFD1"} size={24} />
           </View>
           <View style={[styles.weatherCopyBlock, isRtl && styles.rtlBlock]}>
             <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherTitle}</Text>
@@ -1021,7 +1021,7 @@ export default function EventDetailsScreen() {
 
         <View style={[styles.noiseGuideCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
           <View style={[styles.noiseIconWrap, isDay && styles.dayMetaIconWrap]}>
-            <IconSymbol name={event.noiseLevel === "Quiet" ? "volume.off" : "volume"} color={isDay ? "#3B4A63" : "#7FA9FF"} size={22} />
+            <IconSymbol name={event.noiseLevel === "Quiet" ? "volume.off" : "volume"} color={isDay ? "#53677A" : "#8FAFD1"} size={22} />
           </View>
           <View style={[styles.noiseCopyBlock, isRtl && styles.rtlBlock]}>
             <Text style={[styles.noiseTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{noiseCopy.title}: {eventNoise.label}</Text>
@@ -1032,17 +1032,17 @@ export default function EventDetailsScreen() {
         <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
         <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
           <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <IconSymbol name="low-pressure" color={isDay ? "#3B4A63" : "#7FA9FF"} size={20} />
+            <IconSymbol name="low-pressure" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
             <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.lowPressure}</Text>
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.lowPressureCopy}</Text>
           </View>
           <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <IconSymbol name="experience" color={isDay ? "#3B4A63" : "#7FA9FF"} size={20} />
+            <IconSymbol name="experience" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
             <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.sharedExperience}</Text>
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.sharedExperienceCopy}</Text>
           </View>
           <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <IconSymbol name="flexible" color={isDay ? "#3B4A63" : "#7FA9FF"} size={20} />
+            <IconSymbol name="flexible" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
             <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.flexible}</Text>
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.flexibleCopy}</Text>
           </View>
@@ -1107,18 +1107,18 @@ export default function EventDetailsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayScreen: { backgroundColor: "#EAF4FF" },
-  dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayScreen: { backgroundColor: "#E8EDF2" },
+  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   dayHeadingText: { color: "#0B1220" },
-  dayIconButton: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
-  dayMeetingPanel: { borderColor: "#B8C9E6" },
-  dayMetaIconWrap: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
-  dayMutedText: { color: "#3B4A63" },
-  dayPanel: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
-  dayQuietChip: { color: "#3B4A63", backgroundColor: "#EAF4FF" },
+  dayIconButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
+  dayMeetingPanel: { borderColor: "#C5D0DA" },
+  dayMetaIconWrap: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
+  dayMutedText: { color: "#53677A" },
+  dayPanel: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
+  dayQuietChip: { color: "#53677A", backgroundColor: "#E8EDF2" },
   dayText: { color: "#0B1220" },
-  dayActionSheet: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
-  dayActionRow: { backgroundColor: "#EAF4FF", borderColor: "#B8C9E6" },
+  dayActionSheet: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
+  dayActionRow: { backgroundColor: "#E8EDF2", borderColor: "#C5D0DA" },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   topActions: { flexDirection: "row", gap: 8 },
@@ -1129,8 +1129,8 @@ const styles = StyleSheet.create({
   savedIconButton: { borderColor: "rgba(247,200,91,0.68)", backgroundColor: "rgba(247,200,91,0.12)" },
   activeMoreButton: { borderColor: "rgba(47,128,237,0.52)", backgroundColor: "rgba(47,128,237,0.12)" },
   modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(2,8,20,0.42)", padding: 16 },
-  actionSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#071426", padding: 16 },
-  verificationSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#071426", padding: 16 },
+  actionSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0F1B2C", padding: 16 },
+  verificationSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0F1B2C", padding: 16 },
   actionSheetTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 },
   actionSheetCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginTop: 3, marginBottom: 12 },
   actionList: { gap: 8 },
@@ -1156,7 +1156,7 @@ const styles = StyleSheet.create({
   quietChip: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", backgroundColor: "rgba(255,255,255,0.06)", paddingHorizontal: 13, paddingVertical: 7, borderRadius: 14, overflow: "hidden" },
   metaStack: { gap: 8, marginBottom: 12 },
   savePlaceButton: { minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", marginBottom: 14 },
-  daySavePlaceButton: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  daySavePlaceButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   savePlaceText: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   metaIconWrap: { width: 32, height: 32, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(148,163,184,0.18)" },
@@ -1168,7 +1168,7 @@ const styles = StyleSheet.create({
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },
   weatherIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
   weatherIcon: { fontSize: 28 },
-  noiseGuideCard: { minHeight: 74, flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 13, marginBottom: 16 },
+  noiseGuideCard: { minHeight: 74, flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 13, marginBottom: 16 },
   noiseIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
   noiseIcon: { fontSize: 21, lineHeight: 24 },
   noiseCopyBlock: { flex: 1 },
@@ -1177,16 +1177,16 @@ const styles = StyleSheet.create({
   sectionTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 23, marginBottom: 10 },
   expectGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   expectCard: { width: "48%", minHeight: 82, borderRadius: 16, padding: 13, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border },
-  expectIcon: { color: "#7FA9FF", fontSize: 18, marginBottom: 4 },
+  expectIcon: { color: "#8FAFD1", fontSize: 18, marginBottom: 4 },
   expectTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 18 },
   expectCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 1 },
   meetingPanel: { borderTopWidth: 1, borderColor: nsnColors.border, paddingTop: 14, marginTop: 2, marginBottom: 18 },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   softExitCard: { borderRadius: 18, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: nsnColors.border, padding: 15, marginBottom: 18 },
-  daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   softExitTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, marginBottom: 4 },
   softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
-  safetyPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 14, marginBottom: 14 },
+  safetyPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
   safetyHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 6 },
   safetyTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   safetyCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
@@ -1198,7 +1198,7 @@ const styles = StyleSheet.create({
   joinButtonLocked: { backgroundColor: "#3A4358" },
   joinText: { color: nsnColors.text, fontSize: 16, fontWeight: "800" },
   spotsText: { color: nsnColors.muted, textAlign: "center", marginTop: 10, fontSize: 13, lineHeight: 19 },
-  feedbackPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 14, marginTop: 14 },
+  feedbackPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginTop: 14 },
   feedbackActions: { flexDirection: "row", gap: 8, marginTop: 12 },
   feedbackButton: { flex: 1, minHeight: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: nsnColors.border },
   feedbackButtonDanger: { borderColor: "rgba(255,119,119,0.45)" },
