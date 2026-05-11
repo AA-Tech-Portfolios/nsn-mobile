@@ -27,17 +27,18 @@ import {
   type BackgroundWorkPreference,
   type BackgroundWorkRhythmPreference,
   type CommunicationPreference,
-  type ContactPreference,
   type GroupSizePreference,
+  type LocationComfortPreference,
   type LifeContextCurrentStatePreference,
   type LifeContextFieldPreference,
   type LifeContextLearningPreference,
+  type MeetupContactPreference,
   type NsnComfortMode,
   type PhotoRecordingComfortPreference,
   type PhysicalContactComfortPreference,
   type SocialEnergyPreference,
   type SoftHelloIntent,
-  type TransportationMethod,
+  type TransportationPreference,
   useAppSettings,
 } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
@@ -64,6 +65,13 @@ import {
   type InterestComfortTagId,
   type InterestPreference,
 } from "@/lib/preferences/interests";
+import {
+  locationComfortPreferenceDetails,
+  meetupContactPreferenceDetails,
+  transportationMethodByPreference,
+  transportationPreferenceDetails,
+  type PreferenceOptionDetail,
+} from "@/lib/preferences/preference-panel-options";
 
 type PreferenceSection = "overview" | "comfort" | "background" | "food" | "interests" | "transport" | "contact" | "location";
 
@@ -116,28 +124,12 @@ const compactPanelBySection: Record<PreferenceSection, string> = {
   background: "backgroundCommunity",
   food: "foodBeverage",
   interests: "hobbiesInterests",
-  transport: "preferences",
-  contact: "preferences",
-  location: "preferences",
+  transport: "transportPreferences",
+  contact: "contactPreferencePanel",
+  location: "locationPreferencePanel",
 };
 
 const comfortModes: NsnComfortMode[] = ["Comfort Mode", "Warm Up Mode", "Open Mode"];
-const transportOptions: Array<{ value: TransportationMethod; icon: string; copy: string }> = [
-  { value: "Driving", icon: "🚗", copy: "I may need parking or a clear meeting point." },
-  { value: "Public transport", icon: "🚆", copy: "Train, bus, metro, light rail, or ferry feels easiest." },
-  { value: "Walking", icon: "🚶", copy: "I am nearby and arriving on foot." },
-  { value: "Cycling", icon: "🚲", copy: "I may need somewhere reasonable to lock up." },
-  { value: "Rideshare", icon: "🚙", copy: "A pickup or drop-off friendly spot helps." },
-  { value: "Getting dropped off", icon: "🤝", copy: "Someone else is helping me get there." },
-  { value: "Not sure yet", icon: "🧭", copy: "I will decide closer to the meetup." },
-];
-const contactOptions: Array<{ value: ContactPreference; icon: string; copy: string }> = [
-  { value: "In person", icon: "👋", copy: "I prefer rapport to build naturally at the meetup." },
-  { value: "Text", icon: "💬", copy: "A low-pressure message first feels useful." },
-  { value: "Email", icon: "✉️", copy: "Slower, more considered notes work best." },
-  { value: "Phone", icon: "☎️", copy: "A quick call can help me feel clearer." },
-  { value: "Video", icon: "🎥", copy: "A short video hello can help before an in-person plan." },
-];
 const intentOptions: SoftHelloIntent[] = ["Friends", "Dating", "Both", "Exploring"];
 
 const normalizePreferenceSection = (section?: string | string[]): PreferenceSection => {
@@ -185,6 +177,9 @@ export default function UserPreferencesScreen() {
     interestPreferenceIds,
     interestComfortTagsByInterest,
     transportationMethod,
+    transportationPreferences,
+    meetupContactPreferences,
+    locationComfortPreferences,
     contactPreferences,
     suburb,
     intent,
@@ -380,12 +375,27 @@ export default function UserPreferencesScreen() {
     await saveSoftHelloMvpState({ lifeContextLearningVisibility: preference });
   };
 
-  const toggleContactPreference = async (preference: ContactPreference) => {
-    const nextPreferences = contactPreferences.includes(preference)
-      ? contactPreferences.filter((item) => item !== preference)
-      : [...contactPreferences, preference];
+  const toggleTransportationPreference = async (preference: TransportationPreference) => {
+    const isSelected = transportationPreferences.includes(preference);
+    const nextPreferences = toggleBackgroundListItem(transportationPreferences, preference);
+    const mappedMethod = transportationMethodByPreference[preference];
 
-    await saveSoftHelloMvpState({ contactPreferences: nextPreferences.length ? nextPreferences : ["Text"] });
+    await saveSoftHelloMvpState({
+      transportationPreferences: nextPreferences,
+      ...(mappedMethod && !isSelected ? { transportationMethod: mappedMethod } : {}),
+    });
+  };
+
+  const toggleMeetupContactPreference = async (preference: MeetupContactPreference) => {
+    const nextPreferences = toggleBackgroundListItem(meetupContactPreferences, preference);
+
+    await saveSoftHelloMvpState({ meetupContactPreferences: nextPreferences });
+  };
+
+  const toggleLocationComfortPreference = async (preference: LocationComfortPreference) => {
+    const nextPreferences = toggleBackgroundListItem(locationComfortPreferences, preference);
+
+    await saveSoftHelloMvpState({ locationComfortPreferences: nextPreferences });
   };
 
   const toggleFoodGroup = (groupId: FoodPreferenceGroupId) => {
@@ -477,6 +487,24 @@ export default function UserPreferencesScreen() {
     </View>
   );
 
+  const renderPreferenceDetailChip = <T extends string>(
+    option: PreferenceOptionDetail<T>,
+    selectedValues: T[],
+    onPress: (value: T) => void
+  ) =>
+    renderChip({
+      key: option.value,
+      label: option.value,
+      icon: option.icon,
+      active: selectedValues.includes(option.value),
+      onPress: () => onPress(option.value),
+      meta: option.copy,
+      wide: true,
+    });
+
+  const getPreferenceSummary = (values: string[], fallback: string, limit = 3) =>
+    values.length ? `${values.slice(0, limit).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}` : fallback;
+
   const backgroundSelectedCount =
     lifeContextCurrentStates.length +
     lifeContextFields.length +
@@ -501,9 +529,9 @@ export default function UserPreferencesScreen() {
     { section: "comfort" as const, title: "Comfort & trust", icon: "🛡️", copy: `${comfortMode} / ${socialEnergyPreference} energy / ${groupSizePreference}`, meta: "Visibility, contact, verification, and consent." },
     { section: "food" as const, title: "Food & beverage", icon: "🍽️", copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
     { section: "interests" as const, title: "Hobbies & interests", icon: "🎨", copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.join(", ") || "Activities, genres, and comfort-aware tags." },
-    { section: "transport" as const, title: "Transportation method", icon: "🚆", copy: transportationMethod, meta: "Arrival comfort and meeting point notes." },
-    { section: "contact" as const, title: "Contact preference", icon: "💬", copy: contactPreferences.join(", ") || "Text", meta: "How you prefer pre-meetup communication." },
-    { section: "location" as const, title: "Location preference", icon: "📍", copy: suburb || "Sydney North Shore", meta: "Local area, radius, and profile location privacy." },
+    { section: "transport" as const, title: "Transportation method", icon: "🚆", copy: getPreferenceSummary(transportationPreferences, transportationMethod), meta: "Arrival comfort, route access, and travel pressure." },
+    { section: "contact" as const, title: "Contact preference", icon: "💬", copy: getPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"), meta: "How you prefer pre-meetup communication." },
+    { section: "location" as const, title: "Location preference", icon: "📍", copy: getPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"), meta: "Local area, venue comfort, and location privacy." },
     { section: "background" as const, title: "Work, study & life context", icon: "ðŸŒ±", copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary || "Broad work, study, learning, and volunteering context with visibility controls." },
   ];
 
@@ -1011,64 +1039,95 @@ export default function UserPreferencesScreen() {
         ) : null}
 
         {activeSection === "transport" ? (
-          <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
-            {transportOptions.map((option) => {
-              const active = transportationMethod === option.value;
-
-              return (
-                <TouchableOpacity key={option.value} activeOpacity={0.82} onPress={() => saveSoftHelloMvpState({ transportationMethod: option.value })} style={[styles.optionCard, isWide && styles.optionCardWide, isDay && styles.dayCard, active && styles.optionCardActive]} accessibilityRole="button" accessibilityState={{ selected: active }} accessibilityLabel={`${active ? "Selected: " : ""}${option.value}`}>
-                  <Text style={styles.optionEmoji}>{option.icon}</Text>
-                  <View style={styles.cardBody}>
-                    <Text style={[styles.optionTitle, isDay && styles.dayTitle, active && styles.activeText]}>{active ? "Selected: " : ""}{option.value}</Text>
-                    <Text style={[styles.optionCopy, isDay && styles.dayMutedText, active && styles.activeText]}>{option.copy}</Text>
+          <View style={styles.sectionStack}>
+            {renderSectionCard("Transportation Method", "Choose how you usually prefer to get to meetups. This helps NSN suggest easier, lower-pressure plans.", "🚆", (
+              <>
+                {renderSummary(transportationPreferences, "No travel preferences selected yet.")}
+                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                  Current arrival method: {transportationMethod}. Travel preferences are used locally in this prototype and are not route guarantees.
+                </Text>
+              </>
+            ))}
+            <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+              {["Transport method", "Travel comfort"].map((group) =>
+                renderSectionCard(group, group === "Transport method" ? "How you are most likely to arrive." : "Route, timing, and accessibility comfort.", group === "Transport method" ? "🧭" : "🌿", (
+                  <View style={styles.chipGrid}>
+                    {transportationPreferenceDetails
+                      .filter((option) => option.group === group)
+                      .map((option) => renderPreferenceDetailChip(option, transportationPreferences, toggleTransportationPreference))}
                   </View>
-                </TouchableOpacity>
-              );
-            })}
+                ))
+              )}
+            </View>
           </View>
         ) : null}
 
         {activeSection === "contact" ? (
-          <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
-            {contactOptions.map((option) => {
-              const active = contactPreferences.includes(option.value);
-
-              return (
-                <TouchableOpacity key={option.value} activeOpacity={0.82} onPress={() => toggleContactPreference(option.value)} style={[styles.optionCard, isWide && styles.optionCardWide, isDay && styles.dayCard, active && styles.optionCardActive]} accessibilityRole="button" accessibilityState={{ selected: active }} accessibilityLabel={`${active ? "Selected: " : ""}${option.value}`}>
-                  <Text style={styles.optionEmoji}>{option.icon}</Text>
-                  <View style={styles.cardBody}>
-                    <Text style={[styles.optionTitle, isDay && styles.dayTitle, active && styles.activeText]}>{active ? "Selected: " : ""}{option.value}</Text>
-                    <Text style={[styles.optionCopy, isDay && styles.dayMutedText, active && styles.activeText]}>{option.copy}</Text>
+          <View style={styles.sectionStack}>
+            {renderSectionCard("Contact Preference", "Let others know how you like to communicate before and around meetups.", "💬", (
+              <>
+                {renderSummary(meetupContactPreferences, "No meetup contact preferences selected yet.")}
+                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                  These preferences are guidance only and do not force how others communicate.
+                </Text>
+              </>
+            ))}
+            <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+              {["Communication style", "Timing and pace"].map((group) =>
+                renderSectionCard(group, group === "Communication style" ? "Chat, calls, reminders, and planning clarity." : "Pace and timing expectations that keep plans low-pressure.", group === "Communication style" ? "📝" : "⏰", (
+                  <View style={styles.chipGrid}>
+                    {meetupContactPreferenceDetails
+                      .filter((option) => option.group === group)
+                      .map((option) => renderPreferenceDetailChip(option, meetupContactPreferences, toggleMeetupContactPreference))}
                   </View>
-                </TouchableOpacity>
-              );
-            })}
+                ))
+              )}
+            </View>
           </View>
         ) : null}
 
         {activeSection === "location" ? (
-          <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
-            {renderSectionCard("Local area", "Your suburb or local area is used as a gentle prototype signal for nearby plans.", "📍", (
+          <View style={styles.sectionStack}>
+            {renderSectionCard("Location Preference", "Choose the kinds of places and local areas that feel easiest for meetups.", "📍", (
               <>
-                <Text style={[styles.locationValue, isDay && styles.dayTitle]}>{suburb || "Sydney North Shore"}</Text>
-                <TouchableOpacity activeOpacity={0.78} onPress={() => router.push("/location-preference" as never)} style={[styles.showMoreButton, isDay && styles.dayChip]} accessibilityRole="button" accessibilityLabel="Open local area editor">
-                  <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>Open local area editor</Text>
-                </TouchableOpacity>
+                {renderSummary(locationComfortPreferences, "No location comfort preferences selected yet.")}
+                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                  NSN recommends sharing broad location context first. Avoid sharing exact home, work, school, or routine locations.
+                </Text>
               </>
             ))}
-            {renderSectionCard("I am here for", "Keep intent lightweight and changeable.", "🧭", (
-              <View style={styles.chipGrid}>
-                {intentOptions.map((option) => renderChip({ key: option, label: option, active: intent === option, onPress: () => saveSoftHelloMvpState({ intent: option }) }))}
-              </View>
-            ))}
-            {renderSectionCard("Location privacy and discovery", "These controls are prototype preference signals for local area display and nearby suggestions.", "🗺️", (
-              <View style={styles.chipGrid}>
-                {renderChip({ key: "show-area", label: "Show suburb/local area", active: showSuburbArea, onPress: () => saveSoftHelloMvpState({ showSuburbArea: !showSuburbArea }), wide: true })}
-                {renderChip({ key: "approximate", label: "Use approximate location", active: useApproximateLocation, onPress: () => setUseApproximateLocation(!useApproximateLocation), wide: true })}
-                {renderChip({ key: "distance", label: "Show distance in meetups", active: showDistanceInMeetups, onPress: () => setShowDistanceInMeetups(!showDistanceInMeetups), wide: true })}
-                {renderChip({ key: "nearby", label: "Prefer nearby meetups", active: homeNearbyOnly, onPress: () => saveSoftHelloMvpState({ homeNearbyOnly: !homeNearbyOnly }), wide: true })}
-              </View>
-            ))}
+            <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+              {renderSectionCard("Local area", "Your suburb or local area is used as a gentle prototype signal for nearby plans.", "📍", (
+                <>
+                  <Text style={[styles.locationValue, isDay && styles.dayTitle]}>{suburb || "Sydney North Shore"}</Text>
+                  <TouchableOpacity activeOpacity={0.78} onPress={() => router.push("/location-preference" as never)} style={[styles.showMoreButton, isDay && styles.dayChip]} accessibilityRole="button" accessibilityLabel="Open local area editor">
+                    <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>Open local area editor</Text>
+                  </TouchableOpacity>
+                </>
+              ))}
+              {renderSectionCard("I am here for", "Keep intent lightweight and changeable.", "🧭", (
+                <View style={styles.chipGrid}>
+                  {intentOptions.map((option) => renderChip({ key: option, label: option, active: intent === option, onPress: () => saveSoftHelloMvpState({ intent: option }) }))}
+                </View>
+              ))}
+              {renderSectionCard("Location privacy and discovery", "These controls are prototype preference signals for local area display and nearby suggestions.", "🗺️", (
+                <View style={styles.chipGrid}>
+                  {renderChip({ key: "show-area", label: "Show suburb/local area", active: showSuburbArea, onPress: () => saveSoftHelloMvpState({ showSuburbArea: !showSuburbArea }), wide: true })}
+                  {renderChip({ key: "approximate", label: "Use approximate location", active: useApproximateLocation, onPress: () => setUseApproximateLocation(!useApproximateLocation), wide: true })}
+                  {renderChip({ key: "distance", label: "Show distance in meetups", active: showDistanceInMeetups, onPress: () => setShowDistanceInMeetups(!showDistanceInMeetups), wide: true })}
+                  {renderChip({ key: "nearby", label: "Prefer nearby meetups", active: homeNearbyOnly, onPress: () => saveSoftHelloMvpState({ homeNearbyOnly: !homeNearbyOnly }), wide: true })}
+                </View>
+              ))}
+              {["Area comfort", "Venue comfort", "Time comfort", "Location privacy"].map((group) =>
+                renderSectionCard(group, group === "Location privacy" ? "Broad sharing controls for safer local context." : "Venue and area signals for easier meetup suggestions.", group === "Location privacy" ? "🔒" : "🌿", (
+                  <View style={styles.chipGrid}>
+                    {locationComfortPreferenceDetails
+                      .filter((option) => option.group === group)
+                      .map((option) => renderPreferenceDetailChip(option, locationComfortPreferences, toggleLocationComfortPreference))}
+                  </View>
+                ))
+              )}
+            </View>
           </View>
         ) : null}
 
@@ -1096,6 +1155,7 @@ const styles = StyleSheet.create({
   title: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 34 },
   copy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   prototypeBadge: { alignSelf: "flex-start", borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 16, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: "rgba(255,255,255,0.05)" },
+  sectionStack: { gap: 14 },
   sectionNav: { gap: 9, paddingVertical: 2 },
   sectionNavWide: { flexDirection: "row", flexWrap: "wrap" },
   navPill: { minHeight: 38, borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 13 },

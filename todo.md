@@ -22,6 +22,7 @@
 - [x] Add temporary deactivate account controls above Delete account in Settings & Privacy
 - [x] Complete Settings & Privacy prototype safety polish with jump-chip icons, local update indicators, prototype badges, disabled coming-soon states, and account action confirmations
 - [x] Add Profile User Options drawer and move Comfort & trust into User Preferences
+- [x] Add mobile drawer and desktop full-view panels for Transportation Method, Contact Preference, and Location Preference
 - [x] Add alpha tester walkthrough covering NSN purpose, local prototype scope, comfort/privacy settings, meetup browsing, alerts, profile review, and demo-only safety language
 - [x] Refine Home search into compact Search NSN suburb and meetup matching for the Sydney/North Shore prototype
 - [x] Improve Search NSN autocomplete with Sydney locality data, region matching, aliases, and no default suburb list
@@ -82,6 +83,8 @@
 - [ ] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, or first-time attendee
 - [ ] Add pre-meetup readiness checklist covering location, host, plan, safety, and exit options
 - [ ] Add lightweight transportation options with nearby stops, estimated travel time, suggested arrival windows, and links out to maps
+- [ ] Add route-aware recommendations that combine transport comfort, local area preference, venue accessibility, and selected event timing
+- [ ] Add stronger venue accessibility metadata for step-free routes, parking, lighting, quietness, and public transport proximity
 
 ### Profile and settings polish
 
@@ -100,6 +103,8 @@
 - [ ] Gather user feedback on whether Hobbies & Interests feels useful, calm, and not profile-heavy
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 - [ ] Add interactive tutorials for privacy, preview visibility, and comfort modes
+- [ ] Refine local area and suburb APIs so Location Preference can stay broad without relying on exact addresses
+- [ ] Gather tester feedback on contact preference wording, reply pace, and whether communication guidance reduces pressure
 - [ ] Review translations with real users or native speakers before treating each language as complete
 
 ## Upcoming

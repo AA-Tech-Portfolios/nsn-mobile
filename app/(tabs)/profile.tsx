@@ -11,6 +11,9 @@ import {
   backgroundWorkOptions,
   backgroundWorkRhythmOptions,
   communicationPreferenceOptions,
+  defaultLocationComfortPreferences,
+  defaultMeetupContactPreferences,
+  defaultTransportationPreferences,
   getLifeContextFreshnessLabel,
   getLanguageBase,
   groupSizePreferenceOptions,
@@ -32,15 +35,18 @@ import {
   type HomeEventVisualMode,
   type HomeHeaderControlsDensity,
   type HomeLayoutDensity,
+  type LocationComfortPreference,
   type ProfileGender,
   type ProfileShortcutLayout,
   type ProfileWidthPreference,
   type LifeContextCurrentStatePreference,
   type LifeContextFieldPreference,
   type LifeContextLearningPreference,
+  type MeetupContactPreference,
   type PhotoRecordingComfortPreference,
   type PhysicalContactComfortPreference,
   type SocialEnergyPreference,
+  type TransportationPreference,
   useAppSettings,
 } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
@@ -75,6 +81,13 @@ import {
   type InterestComfortTagId,
   type InterestPreference,
 } from "@/lib/preferences/interests";
+import {
+  locationComfortPreferenceDetails,
+  meetupContactPreferenceDetails,
+  transportationMethodByPreference,
+  transportationPreferenceDetails,
+  type PreferenceOptionDetail,
+} from "@/lib/preferences/preference-panel-options";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
@@ -94,7 +107,23 @@ const rows = [
 const settingsRow = { icon: "settings", key: "settings", route: "/settings" } as const;
 type ProfileShortcutRow = (typeof rows)[number] | typeof settingsRow;
 type ProfileShortcutKey = ProfileShortcutRow["key"];
-type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "comfortTrust" | "backgroundCommunity" | "foodBeverage" | "hobbiesInterests" | "display" | "layout" | "width" | "notifications" | "blockReport";
+type ProfileMenuPanel =
+  | "main"
+  | "edit"
+  | "privacy"
+  | "preferences"
+  | "comfortTrust"
+  | "backgroundCommunity"
+  | "foodBeverage"
+  | "hobbiesInterests"
+  | "transportPreferences"
+  | "contactPreferencePanel"
+  | "locationPreferencePanel"
+  | "display"
+  | "layout"
+  | "width"
+  | "notifications"
+  | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
 const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
@@ -1117,6 +1146,9 @@ export default function ProfileScreen() {
     timezone,
     hobbiesInterests,
     transportationMethod,
+    transportationPreferences,
+    meetupContactPreferences,
+    locationComfortPreferences,
     foodBeveragePreferenceIds,
     interestPreferenceIds,
     interestComfortTagsByInterest,
@@ -1246,8 +1278,16 @@ export default function ProfileScreen() {
 
   const openPreferenceDestination = useCallback(
     (
-      panel: "preferences" | "comfortTrust" | "backgroundCommunity" | "foodBeverage" | "hobbiesInterests",
-      section: "overview" | "comfort" | "background" | "food" | "interests"
+      panel:
+        | "preferences"
+        | "comfortTrust"
+        | "backgroundCommunity"
+        | "foodBeverage"
+        | "hobbiesInterests"
+        | "transportPreferences"
+        | "contactPreferencePanel"
+        | "locationPreferencePanel",
+      section: "overview" | "comfort" | "background" | "food" | "interests" | "transport" | "contact" | "location"
     ) => {
       if (shouldOpenFullPreferenceView) {
         openFullPreferenceView(section);
@@ -1278,6 +1318,18 @@ export default function ProfileScreen() {
 
     if (menu === "hobbiesInterests") {
       openProfileOptionsPanel("hobbiesInterests");
+    }
+
+    if (menu === "transportPreferences") {
+      openProfileOptionsPanel("transportPreferences");
+    }
+
+    if (menu === "contactPreferencePanel") {
+      openProfileOptionsPanel("contactPreferencePanel");
+    }
+
+    if (menu === "locationPreferencePanel") {
+      openProfileOptionsPanel("locationPreferencePanel");
     }
   }, [menu, openProfileOptionsPanel]);
 
@@ -1753,6 +1805,25 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ lifeContextLearningVisibility: preference });
   };
 
+  const toggleTransportationPreference = async (preference: TransportationPreference) => {
+    const isSelected = transportationPreferences.includes(preference);
+    const nextPreferences = toggleBackgroundListItem(transportationPreferences, preference);
+    const mappedMethod = transportationMethodByPreference[preference];
+
+    await saveSoftHelloMvpState({
+      transportationPreferences: nextPreferences,
+      ...(mappedMethod && !isSelected ? { transportationMethod: mappedMethod } : {}),
+    });
+  };
+
+  const toggleMeetupContactPreference = async (preference: MeetupContactPreference) => {
+    await saveSoftHelloMvpState({ meetupContactPreferences: toggleBackgroundListItem(meetupContactPreferences, preference) });
+  };
+
+  const toggleLocationComfortPreference = async (preference: LocationComfortPreference) => {
+    await saveSoftHelloMvpState({ locationComfortPreferences: toggleBackgroundListItem(locationComfortPreferences, preference) });
+  };
+
   const toggleFoodBeveragePreference = async (preferenceId: string) => {
     const nextPreferences = foodBeveragePreferenceIds.includes(preferenceId)
       ? foodBeveragePreferenceIds.filter((item) => item !== preferenceId)
@@ -1909,6 +1980,9 @@ export default function ProfileScreen() {
       hobbiesInterests: ["Coffee", "Movies", "Walks", "Dinner"],
       comfortPreferences: ["Small groups", "Text-first", "Quiet"],
       contactPreferences: ["Text"],
+      transportationPreferences: defaultTransportationPreferences,
+      meetupContactPreferences: defaultMeetupContactPreferences,
+      locationComfortPreferences: defaultLocationComfortPreferences,
       socialEnergyPreference: "Calm",
       communicationPreferences: ["Low-message mode", "Details only"],
       groupSizePreference: "Small groups only",
@@ -2019,6 +2093,51 @@ export default function ProfileScreen() {
       </TouchableOpacity>
     );
   };
+
+  const getCompactPreferenceSummary = (values: string[], fallback: string, limit = 3) =>
+    values.length ? `${values.slice(0, limit).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}` : fallback;
+
+  const renderDrawerPreferenceChip = <T extends string,>(
+    option: PreferenceOptionDetail<T>,
+    selectedValues: T[],
+    onPress: (value: T) => void | Promise<void>
+  ) => {
+    const active = selectedValues.includes(option.value);
+
+    return (
+      <TouchableOpacity
+        key={option.value}
+        accessibilityRole="button"
+        accessibilityLabel={`${option.value} preference`}
+        accessibilityState={{ selected: active }}
+        activeOpacity={0.78}
+        onPress={() => onPress(option.value)}
+        style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+      >
+        <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+          {active ? "Selected: " : ""}{option.icon ? `${option.icon} ` : ""}{option.value}
+        </Text>
+        <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={2}>{option.copy}</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderDrawerPreferenceGroup = <T extends string,>(
+    title: string,
+    copy: string,
+    options: PreferenceOptionDetail<T>[],
+    selectedValues: T[],
+    onPress: (value: T) => void | Promise<void>
+  ) => (
+    <View key={title} style={[styles.foodPreferenceGroup, isDay && styles.daySoftOption]}>
+      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{title}</Text>
+      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{copy}</Text>
+      <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+        {options.map((option) => renderDrawerPreferenceChip(option, selectedValues, onPress))}
+      </View>
+    </View>
+  );
+
   const selectedInterestPreferenceLabels = useMemo(
     () => getSelectedInterestLabels(interestPreferenceIds, 8),
     [interestPreferenceIds]
@@ -2401,17 +2520,23 @@ export default function ProfileScreen() {
               ? "Food & beverage"
               : profileMenuPanel === "hobbiesInterests"
                 ? "Hobbies & interests"
-                : profileMenuPanel === "display"
-                  ? "Display & layout"
-                  : profileMenuPanel === "layout"
-                    ? "Profile layout"
-                    : profileMenuPanel === "width"
-                      ? "Width settings"
-                      : profileMenuPanel === "notifications"
-                        ? "Notifications"
-                        : profileMenuPanel === "blockReport"
-                          ? "Block & report"
-                          : "Profile controls";
+                : profileMenuPanel === "transportPreferences"
+                  ? "Transportation Method"
+                  : profileMenuPanel === "contactPreferencePanel"
+                    ? "Contact Preference"
+                    : profileMenuPanel === "locationPreferencePanel"
+                      ? "Location Preference"
+                      : profileMenuPanel === "display"
+                        ? "Display & layout"
+                        : profileMenuPanel === "layout"
+                          ? "Profile layout"
+                          : profileMenuPanel === "width"
+                            ? "Width settings"
+                            : profileMenuPanel === "notifications"
+                              ? "Notifications"
+                              : profileMenuPanel === "blockReport"
+                                ? "Block & report"
+                                : "Profile controls";
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -2770,30 +2895,32 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     {[
-                      { icon: "transport" as const, label: getRowLabel("transportation"), route: "/transportation-preference" },
-                      { icon: "contact" as const, label: getRowLabel("contactPreference"), route: "/contact-preference" },
-                      { icon: "explore" as const, label: getRowLabel("locationPreference"), route: "/location-preference" },
+                      {
+                        icon: "transport" as const,
+                        label: getRowLabel("transportation"),
+                        copy: getCompactPreferenceSummary(transportationPreferences, transportationMethod),
+                        panel: "transportPreferences" as const,
+                        section: "transport" as const,
+                      },
+                      {
+                        icon: "contact" as const,
+                        label: getRowLabel("contactPreference"),
+                        copy: getCompactPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"),
+                        panel: "contactPreferencePanel" as const,
+                        section: "contact" as const,
+                      },
+                      {
+                        icon: "explore" as const,
+                        label: getRowLabel("locationPreference"),
+                        copy: getCompactPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"),
+                        panel: "locationPreferencePanel" as const,
+                        section: "location" as const,
+                      },
                     ].map((item) => (
                       <TouchableOpacity
-                        key={item.route}
+                        key={item.section}
                         activeOpacity={0.78}
-                        onPress={() => {
-                          setShowProfileMenu(false);
-                          if (shouldOpenFullPreferenceView && item.route === "/transportation-preference") {
-                            openFullPreferenceView("transport");
-                            return;
-                          }
-                          if (shouldOpenFullPreferenceView && item.route === "/contact-preference") {
-                            openFullPreferenceView("contact");
-                            return;
-                          }
-                          if (shouldOpenFullPreferenceView && item.route === "/location-preference") {
-                            openFullPreferenceView("location");
-                            return;
-                          }
-
-                          router.push(item.route as any);
-                        }}
+                        onPress={() => openPreferenceDestination(item.panel, item.section)}
                         style={styles.profileMenuItem}
                         accessibilityRole="button"
                         accessibilityLabel={item.label}
@@ -2801,6 +2928,9 @@ export default function ProfileScreen() {
                         <IconSymbol name={item.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                         <View style={styles.profileMenuItemBody}>
                           <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.label}</Text>
+                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]} numberOfLines={1}>
+                            {item.copy}
+                          </Text>
                         </View>
                         <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       </TouchableOpacity>
@@ -3365,6 +3495,199 @@ export default function ProfileScreen() {
                         })}
                       </View>
                     )}
+                  </>
+                ) : null}
+                {profileMenuPanel === "transportPreferences" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("preferences")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to user preferences">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
+                    </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("transport")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Transportation Method">
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop transport preference layout.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>🚆 Transportation Method</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Choose how you usually prefer to get to meetups. This helps NSN suggest easier, lower-pressure plans.
+                      </Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Current arrival method: {transportationMethod}.
+                      </Text>
+                    </View>
+                    <View style={[styles.foodPreferenceSummary, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Selected</Text>
+                      {transportationPreferences.length ? (
+                        <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+                          {transportationPreferences.slice(0, 8).map((label) => (
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                          ))}
+                          {transportationPreferences.length > 8 ? (
+                            <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{transportationPreferences.length - 8} more</Text>
+                          ) : null}
+                        </View>
+                      ) : (
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>No travel preferences selected yet.</Text>
+                      )}
+                    </View>
+                    {renderDrawerPreferenceGroup(
+                      "Transport method",
+                      "Walking, public transport, driving, cycling, and arrival support.",
+                      transportationPreferenceDetails.filter((option) => option.group === "Transport method"),
+                      transportationPreferences,
+                      toggleTransportationPreference
+                    )}
+                    {renderDrawerPreferenceGroup(
+                      "Travel comfort",
+                      "Short trips, lighting, night travel, and route accessibility.",
+                      transportationPreferenceDetails.filter((option) => option.group === "Travel comfort"),
+                      transportationPreferences,
+                      toggleTransportationPreference
+                    )}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Prototype note</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Travel preferences are used locally in this prototype and are not route guarantees.
+                      </Text>
+                    </View>
+                  </>
+                ) : null}
+                {profileMenuPanel === "contactPreferencePanel" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("preferences")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to user preferences">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
+                    </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("contact")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Contact Preference">
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop contact preference layout.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>💬 Contact Preference</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Let others know how you like to communicate before and around meetups.
+                      </Text>
+                    </View>
+                    <View style={[styles.foodPreferenceSummary, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Selected</Text>
+                      {meetupContactPreferences.length ? (
+                        <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+                          {meetupContactPreferences.slice(0, 8).map((label) => (
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                          ))}
+                          {meetupContactPreferences.length > 8 ? (
+                            <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{meetupContactPreferences.length - 8} more</Text>
+                          ) : null}
+                        </View>
+                      ) : (
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>No meetup contact preferences selected yet.</Text>
+                      )}
+                    </View>
+                    {renderDrawerPreferenceGroup(
+                      "Communication style",
+                      "Chat, direct messages, voice calls, reminders, and clear-plan preferences.",
+                      meetupContactPreferenceDetails.filter((option) => option.group === "Communication style"),
+                      meetupContactPreferences,
+                      toggleMeetupContactPreference
+                    )}
+                    {renderDrawerPreferenceGroup(
+                      "Timing and pace",
+                      "Reply rhythm, planning ahead, and low-pressure response expectations.",
+                      meetupContactPreferenceDetails.filter((option) => option.group === "Timing and pace"),
+                      meetupContactPreferences,
+                      toggleMeetupContactPreference
+                    )}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Prototype note</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        These preferences are guidance only and do not force how others communicate.
+                      </Text>
+                    </View>
+                  </>
+                ) : null}
+                {profileMenuPanel === "locationPreferencePanel" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("preferences")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to user preferences">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
+                    </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("location")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Location Preference">
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop location preference layout.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>📍 Location Preference</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Choose the kinds of places and local areas that feel easiest for meetups.
+                      </Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Selected local area: {suburb || "Sydney North Shore"}.
+                      </Text>
+                    </View>
+                    <View style={[styles.foodPreferenceSummary, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Selected</Text>
+                      {locationComfortPreferences.length ? (
+                        <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+                          {locationComfortPreferences.slice(0, 8).map((label) => (
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                          ))}
+                          {locationComfortPreferences.length > 8 ? (
+                            <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{locationComfortPreferences.length - 8} more</Text>
+                          ) : null}
+                        </View>
+                      ) : (
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>No location comfort preferences selected yet.</Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.82}
+                      onPress={() => {
+                        setShowProfileMenu(false);
+                        router.push("/location-preference" as any);
+                      }}
+                      style={[styles.profileLayoutOption, isDay && styles.daySoftOption]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Open local area editor"
+                    >
+                      <View style={styles.profileLayoutBody}>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Open local area editor</Text>
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Adjust selected suburb or regional context.</Text>
+                      </View>
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                    </TouchableOpacity>
+                    {["Area comfort", "Venue comfort", "Time comfort", "Location privacy"].map((group) =>
+                      renderDrawerPreferenceGroup(
+                        group,
+                        group === "Location privacy"
+                          ? "Share broad context first and avoid exact home, work, school, or routine locations."
+                          : "Local area and venue signals that keep meetups easier.",
+                        locationComfortPreferenceDetails.filter((option) => option.group === group),
+                        locationComfortPreferences,
+                        toggleLocationComfortPreference
+                      )
+                    )}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Prototype note</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        NSN recommends sharing broad location context first. Avoid sharing exact home, work, school, or routine locations.
+                      </Text>
+                    </View>
                   </>
                 ) : null}
                 {profileMenuPanel === "comfortTrust" ? (
@@ -4785,18 +5108,18 @@ export default function ProfileScreen() {
                     return;
                   }
 
-                  if (row.key === "transportation" && shouldOpenFullPreferenceView) {
-                    openFullPreferenceView("transport");
+                  if (row.key === "transportation") {
+                    openPreferenceDestination("transportPreferences", "transport");
                     return;
                   }
 
-                  if (row.key === "contactPreference" && shouldOpenFullPreferenceView) {
-                    openFullPreferenceView("contact");
+                  if (row.key === "contactPreference") {
+                    openPreferenceDestination("contactPreferencePanel", "contact");
                     return;
                   }
 
-                  if (row.key === "locationPreference" && shouldOpenFullPreferenceView) {
-                    openFullPreferenceView("location");
+                  if (row.key === "locationPreference") {
+                    openPreferenceDestination("locationPreferencePanel", "location");
                     return;
                   }
 

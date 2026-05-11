@@ -125,6 +125,68 @@ export type ProfileWidthPreference = "Contained" | "Wide";
 export type NoiseLevelPreference = "Any" | NoiseLevel;
 export type TransportationMethod = "Driving" | "Public transport" | "Walking" | "Cycling" | "Rideshare" | "Getting dropped off" | "Not sure yet";
 export type ContactPreference = "In person" | "Text" | "Email" | "Phone" | "Video";
+export type TransportationPreference =
+  | "Walking"
+  | "Public transport"
+  | "Train"
+  | "Metro"
+  | "Bus"
+  | "Ferry"
+  | "Light rail"
+  | "Driving"
+  | "Parking needed"
+  | "Rideshare / taxi"
+  | "Cycling"
+  | "Carpool okay"
+  | "Prefer nearby only"
+  | "Avoid long travel"
+  | "Step-free / accessible routes preferred"
+  | "Short trips only"
+  | "Comfortable travelling at night"
+  | "Prefer daytime travel"
+  | "Prefer well-lit routes"
+  | "Prefer close to public transport";
+export type MeetupContactPreference =
+  | "In-app chat"
+  | "Details only"
+  | "Low-message mode"
+  | "Chat before meetup"
+  | "Group chat okay"
+  | "Direct messages okay"
+  | "Voice call okay"
+  | "No voice calls"
+  | "Reminders only"
+  | "Prefer clear plans"
+  | "Prefer short messages"
+  | "Okay with check-ins"
+  | "Slow replies are okay"
+  | "Reply when I can"
+  | "Same-day messages okay"
+  | "Prefer planning ahead"
+  | "Last-minute plans okay"
+  | "No pressure to reply quickly";
+export type LocationComfortPreference =
+  | "Near my selected suburb"
+  | "North Shore preferred"
+  | "Sydney CBD okay"
+  | "Northern Beaches okay"
+  | "Inner West okay"
+  | "Close to public transport"
+  | "Parking nearby"
+  | "Indoor venues"
+  | "Outdoor venues"
+  | "Quiet venues"
+  | "Well-lit areas"
+  | "Familiar places"
+  | "Easy exit / easy to leave"
+  | "Avoid crowded venues"
+  | "Avoid loud bars"
+  | "Prefer daytime locations"
+  | "Comfortable with evening locations"
+  | "Do not show exact location"
+  | "Share suburb only"
+  | "Share region only"
+  | "Ask before sharing location";
 export type SocialEnergyPreference = "Calm" | "Balanced" | "Social" | "Lively";
 export type CommunicationPreference = "Chat before meetup" | "Details only" | "Voice okay" | "In-person first" | "Low-message mode" | "Reminders only";
 export type GroupSizePreference = "1:1" | "2-3 people" | "4-6 people" | "Small groups only" | "Flexible";
@@ -453,6 +515,75 @@ export const defaultHomeVisibleSections: HomeVisibleSections = {
 
 export const defaultHomeSectionOrder: HomeSectionOrderKey[] = ["weather", "map", "recommendedEvents", "dayEvents", "nightEvents", "search", "noiseGuide"];
 
+export const transportationPreferenceOptions: TransportationPreference[] = [
+  "Walking",
+  "Public transport",
+  "Train",
+  "Metro",
+  "Bus",
+  "Ferry",
+  "Light rail",
+  "Driving",
+  "Parking needed",
+  "Rideshare / taxi",
+  "Cycling",
+  "Carpool okay",
+  "Prefer nearby only",
+  "Avoid long travel",
+  "Step-free / accessible routes preferred",
+  "Short trips only",
+  "Comfortable travelling at night",
+  "Prefer daytime travel",
+  "Prefer well-lit routes",
+  "Prefer close to public transport",
+];
+export const defaultTransportationPreferences: TransportationPreference[] = ["Public transport", "Walking", "Prefer nearby only"];
+export const meetupContactPreferenceOptions: MeetupContactPreference[] = [
+  "In-app chat",
+  "Details only",
+  "Low-message mode",
+  "Chat before meetup",
+  "Group chat okay",
+  "Direct messages okay",
+  "Voice call okay",
+  "No voice calls",
+  "Reminders only",
+  "Prefer clear plans",
+  "Prefer short messages",
+  "Okay with check-ins",
+  "Slow replies are okay",
+  "Reply when I can",
+  "Same-day messages okay",
+  "Prefer planning ahead",
+  "Last-minute plans okay",
+  "No pressure to reply quickly",
+];
+export const defaultMeetupContactPreferences: MeetupContactPreference[] = ["Details only", "Low-message mode", "Reminders only"];
+export const locationComfortPreferenceOptions: LocationComfortPreference[] = [
+  "Near my selected suburb",
+  "North Shore preferred",
+  "Sydney CBD okay",
+  "Northern Beaches okay",
+  "Inner West okay",
+  "Close to public transport",
+  "Parking nearby",
+  "Indoor venues",
+  "Outdoor venues",
+  "Quiet venues",
+  "Well-lit areas",
+  "Familiar places",
+  "Easy exit / easy to leave",
+  "Avoid crowded venues",
+  "Avoid loud bars",
+  "Prefer daytime locations",
+  "Comfortable with evening locations",
+  "Do not show exact location",
+  "Share suburb only",
+  "Share region only",
+  "Ask before sharing location",
+];
+export const defaultLocationComfortPreferences: LocationComfortPreference[] = ["North Shore preferred", "Quiet venues", "Share suburb only"];
+
 const normalizeHomeVisibleSections = (value?: Partial<HomeVisibleSections> | null): HomeVisibleSections => ({
   ...defaultHomeVisibleSections,
   ...(value ?? {}),
@@ -546,6 +677,11 @@ const normalizeBackgroundPreferenceList = <T extends string>(value: T[] | null |
   return filtered.includes("Prefer not to say" as T) ? (["Prefer not to say"] as T[]) : filtered;
 };
 
+const normalizeSelectablePreferenceList = <T extends string>(value: T[] | null | undefined, options: T[], fallback: T[]): T[] => {
+  const filtered = Array.from(new Set((value ?? []).filter((preference): preference is T => options.includes(preference))));
+  return filtered.length ? filtered : fallback;
+};
+
 const normalizeLifeContextUpdatedAt = (value?: string | null) => {
   if (!value) return null;
   const timestamp = Date.parse(value);
@@ -628,6 +764,9 @@ type OnboardingSnapshot = {
   hiddenEventIds: string[];
   noiseLevelPreference?: NoiseLevelPreference;
   contactPreferences?: ContactPreference[];
+  transportationPreferences?: TransportationPreference[];
+  meetupContactPreferences?: MeetupContactPreference[];
+  locationComfortPreferences?: LocationComfortPreference[];
   socialEnergyPreference?: SocialEnergyPreference;
   communicationPreferences?: CommunicationPreference[];
   groupSizePreference?: GroupSizePreference;
@@ -902,6 +1041,12 @@ type AppSettings = {
   setTransportationMethod: (value: TransportationMethod) => void;
   contactPreferences: ContactPreference[];
   setContactPreferences: (value: ContactPreference[]) => void;
+  transportationPreferences: TransportationPreference[];
+  setTransportationPreferences: (value: TransportationPreference[]) => void;
+  meetupContactPreferences: MeetupContactPreference[];
+  setMeetupContactPreferences: (value: MeetupContactPreference[]) => void;
+  locationComfortPreferences: LocationComfortPreference[];
+  setLocationComfortPreferences: (value: LocationComfortPreference[]) => void;
   socialEnergyPreference: SocialEnergyPreference;
   setSocialEnergyPreference: (value: SocialEnergyPreference) => void;
   communicationPreferences: CommunicationPreference[];
@@ -1148,6 +1293,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
+  const [transportationPreferences, setTransportationPreferences] = useState<TransportationPreference[]>(defaultTransportationPreferences);
+  const [meetupContactPreferences, setMeetupContactPreferences] = useState<MeetupContactPreference[]>(defaultMeetupContactPreferences);
+  const [locationComfortPreferences, setLocationComfortPreferences] = useState<LocationComfortPreference[]>(defaultLocationComfortPreferences);
   const [foodBeveragePreferenceIds, setFoodBeveragePreferenceIds] = useState<string[]>(defaultFoodBeveragePreferenceIds);
   const [hobbiesInterests, setHobbiesInterests] = useState<string[]>(["Coffee", "Movies", "Walks"]);
   const [interestPreferenceIds, setInterestPreferenceIds] = useState<string[]>(defaultInterestPreferenceIds);
@@ -1295,6 +1443,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setLifeContextLastUpdatedAt(normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt));
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
+        setTransportationPreferences(normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences));
+        setMeetupContactPreferences(normalizeSelectablePreferenceList(snapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences));
+        setLocationComfortPreferences(normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences));
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
         setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
         setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
@@ -1444,6 +1595,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setLifeContextLastUpdatedAt(nextLifeContextLastUpdatedAt);
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
+    const nextTransportationPreferences = normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences);
+    const nextMeetupContactPreferences = normalizeSelectablePreferenceList(snapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences);
+    const nextLocationComfortPreferences = normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences);
+    setTransportationPreferences(nextTransportationPreferences);
+    setMeetupContactPreferences(nextMeetupContactPreferences);
+    setLocationComfortPreferences(nextLocationComfortPreferences);
     setDietaryPreferences(snapshot.dietaryPreferences);
     const nextFoodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds);
     setFoodBeveragePreferenceIds(nextFoodBeveragePreferenceIds);
@@ -1528,6 +1685,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           lifeContextLearningVisibility: nextLifeContextLearningVisibility,
           lifeContextLastUpdatedAt: nextLifeContextLastUpdatedAt,
           verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
+          transportationPreferences: nextTransportationPreferences,
+          meetupContactPreferences: nextMeetupContactPreferences,
+          locationComfortPreferences: nextLocationComfortPreferences,
           foodBeveragePreferenceIds: nextFoodBeveragePreferenceIds,
           interestPreferenceIds: nextInterestPreferenceIds,
           interestComfortTagsByInterest: nextInterestComfortTagsByInterest,
@@ -1618,6 +1778,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       lifeContextLastUpdatedAt,
       verifiedButPrivate,
       transportationMethod,
+      transportationPreferences,
+      meetupContactPreferences,
+      locationComfortPreferences,
       dietaryPreferences,
       foodBeveragePreferenceIds,
       hobbiesInterests,
@@ -1707,6 +1870,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       lifeContextTouched && snapshot.lifeContextLastUpdatedAt === undefined ? new Date().toISOString() : nextSnapshot.lifeContextLastUpdatedAt
     );
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
+    nextSnapshot.transportationPreferences = normalizeSelectablePreferenceList(nextSnapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences);
+    nextSnapshot.meetupContactPreferences = normalizeSelectablePreferenceList(nextSnapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences);
+    nextSnapshot.locationComfortPreferences = normalizeSelectablePreferenceList(nextSnapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences);
     nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(nextSnapshot.foodBeveragePreferenceIds);
     nextSnapshot.interestPreferenceIds = normalizeInterestPreferenceIds(nextSnapshot.interestPreferenceIds);
     nextSnapshot.interestComfortTagsByInterest = normalizeInterestComfortTagsByInterest(nextSnapshot.interestComfortTagsByInterest, nextSnapshot.interestPreferenceIds);
@@ -1810,6 +1976,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.lifeContextLastUpdatedAt !== undefined || lifeContextTouched) setLifeContextLastUpdatedAt(nextSnapshot.lifeContextLastUpdatedAt ?? null);
     if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
+    if (snapshot.transportationPreferences !== undefined) setTransportationPreferences(normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences));
+    if (snapshot.meetupContactPreferences !== undefined) setMeetupContactPreferences(normalizeSelectablePreferenceList(snapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences));
+    if (snapshot.locationComfortPreferences !== undefined) setLocationComfortPreferences(normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences));
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
     if (snapshot.foodBeveragePreferenceIds !== undefined) setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
@@ -2143,6 +2312,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setVerifiedButPrivate,
         transportationMethod,
         setTransportationMethod,
+        transportationPreferences,
+        setTransportationPreferences,
+        meetupContactPreferences,
+        setMeetupContactPreferences,
+        locationComfortPreferences,
+        setLocationComfortPreferences,
         dietaryPreferences,
         setDietaryPreferences,
         foodBeveragePreferenceIds,
