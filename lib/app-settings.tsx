@@ -202,6 +202,53 @@ export type BackgroundCommunityPreference =
   | "Faith/community groups"
   | "Community gardens"
   | "Prefer not to say";
+export type LifeContextCurrentStatePreference =
+  | "Working"
+  | "Studying"
+  | "Volunteering"
+  | "Freelancing"
+  | "Looking for work"
+  | "Taking a break"
+  | "Caring responsibilities"
+  | "Retired"
+  | "Building a project"
+  | "Exploring something new"
+  | "Prefer not to say";
+export type LifeContextFieldPreference =
+  | "Technology"
+  | "Design"
+  | "Hospitality"
+  | "Retail"
+  | "Healthcare"
+  | "Education"
+  | "Creative work"
+  | "Trades"
+  | "Finance"
+  | "Community services"
+  | "Admin"
+  | "Research"
+  | "Media"
+  | "Business"
+  | "Science"
+  | "Student"
+  | "Other"
+  | "Prefer not to say";
+export type LifeContextLearningPreference =
+  | "Coding"
+  | "Design"
+  | "Psychology"
+  | "Languages"
+  | "Small business"
+  | "Creative writing"
+  | "Community work"
+  | "Music"
+  | "Art"
+  | "Health"
+  | "Teaching"
+  | "AI"
+  | "Science"
+  | "History"
+  | "Volunteering";
 export type ProfileGender = "Not specified" | "Male" | "Female" | "Other";
 export type ProfileNameDisplayMode = "Hidden" | "Initial" | "Full";
 export type SettingsPrivacyMode = "Basic" | "Advanced";
@@ -331,6 +378,56 @@ export const backgroundCommunityOptions: BackgroundCommunityPreference[] = [
   "Community gardens",
   "Prefer not to say",
 ];
+export const lifeContextCurrentStateOptions: LifeContextCurrentStatePreference[] = [
+  "Working",
+  "Studying",
+  "Volunteering",
+  "Freelancing",
+  "Looking for work",
+  "Taking a break",
+  "Caring responsibilities",
+  "Retired",
+  "Building a project",
+  "Exploring something new",
+  "Prefer not to say",
+];
+export const lifeContextFieldOptions: LifeContextFieldPreference[] = [
+  "Technology",
+  "Design",
+  "Hospitality",
+  "Retail",
+  "Healthcare",
+  "Education",
+  "Creative work",
+  "Trades",
+  "Finance",
+  "Community services",
+  "Admin",
+  "Research",
+  "Media",
+  "Business",
+  "Science",
+  "Student",
+  "Other",
+  "Prefer not to say",
+];
+export const lifeContextLearningOptions: LifeContextLearningPreference[] = [
+  "Coding",
+  "Design",
+  "Psychology",
+  "Languages",
+  "Small business",
+  "Creative writing",
+  "Community work",
+  "Music",
+  "Art",
+  "Health",
+  "Teaching",
+  "AI",
+  "Science",
+  "History",
+  "Volunteering",
+];
 
 export type DietaryPreference =
   | "No preference"
@@ -449,6 +546,41 @@ const normalizeBackgroundPreferenceList = <T extends string>(value: T[] | null |
   return filtered.includes("Prefer not to say" as T) ? (["Prefer not to say"] as T[]) : filtered;
 };
 
+const normalizeLifeContextUpdatedAt = (value?: string | null) => {
+  if (!value) return null;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) ? value : null;
+};
+
+export const getLifeContextFreshnessLabel = (updatedAt?: string | null, now = new Date()) => {
+  const normalized = normalizeLifeContextUpdatedAt(updatedAt);
+
+  if (!normalized) {
+    return { label: "Not updated yet", stale: false };
+  }
+
+  const updatedDate = new Date(normalized);
+  const dayMs = 24 * 60 * 60 * 1000;
+  const diffDays = Math.max(0, Math.floor((now.getTime() - updatedDate.getTime()) / dayMs));
+
+  if (diffDays < 45) {
+    return {
+      label: `Current as of ${new Intl.DateTimeFormat("en-AU", { month: "long", year: "numeric" }).format(updatedDate)}`,
+      stale: false,
+    };
+  }
+
+  if (diffDays < 180) {
+    const months = Math.max(1, Math.floor(diffDays / 30));
+    return {
+      label: `Last updated ${months} month${months === 1 ? "" : "s"} ago`,
+      stale: false,
+    };
+  }
+
+  return { label: "May be outdated", stale: true };
+};
+
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
   accountPaused?: boolean;
@@ -509,6 +641,13 @@ type OnboardingSnapshot = {
   backgroundWorkVisibility?: BackgroundVisibilityPreference;
   backgroundCommunityPreferences?: BackgroundCommunityPreference[];
   backgroundCommunityVisibility?: BackgroundVisibilityPreference;
+  lifeContextCurrentStates?: LifeContextCurrentStatePreference[];
+  lifeContextCurrentVisibility?: BackgroundVisibilityPreference;
+  lifeContextFields?: LifeContextFieldPreference[];
+  lifeContextFieldVisibility?: BackgroundVisibilityPreference;
+  lifeContextLearningInterests?: LifeContextLearningPreference[];
+  lifeContextLearningVisibility?: BackgroundVisibilityPreference;
+  lifeContextLastUpdatedAt?: string | null;
   verifiedButPrivate?: boolean;
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
@@ -789,6 +928,20 @@ type AppSettings = {
   setBackgroundCommunityPreferences: (value: BackgroundCommunityPreference[]) => void;
   backgroundCommunityVisibility: BackgroundVisibilityPreference;
   setBackgroundCommunityVisibility: (value: BackgroundVisibilityPreference) => void;
+  lifeContextCurrentStates: LifeContextCurrentStatePreference[];
+  setLifeContextCurrentStates: (value: LifeContextCurrentStatePreference[]) => void;
+  lifeContextCurrentVisibility: BackgroundVisibilityPreference;
+  setLifeContextCurrentVisibility: (value: BackgroundVisibilityPreference) => void;
+  lifeContextFields: LifeContextFieldPreference[];
+  setLifeContextFields: (value: LifeContextFieldPreference[]) => void;
+  lifeContextFieldVisibility: BackgroundVisibilityPreference;
+  setLifeContextFieldVisibility: (value: BackgroundVisibilityPreference) => void;
+  lifeContextLearningInterests: LifeContextLearningPreference[];
+  setLifeContextLearningInterests: (value: LifeContextLearningPreference[]) => void;
+  lifeContextLearningVisibility: BackgroundVisibilityPreference;
+  setLifeContextLearningVisibility: (value: BackgroundVisibilityPreference) => void;
+  lifeContextLastUpdatedAt: string | null;
+  setLifeContextLastUpdatedAt: (value: string | null) => void;
   verifiedButPrivate: boolean;
   setVerifiedButPrivate: (value: boolean) => void;
   dietaryPreferences: DietaryPreference[];
@@ -985,6 +1138,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [backgroundWorkVisibility, setBackgroundWorkVisibility] = useState<BackgroundVisibilityPreference>("Private");
   const [backgroundCommunityPreferences, setBackgroundCommunityPreferences] = useState<BackgroundCommunityPreference[]>([]);
   const [backgroundCommunityVisibility, setBackgroundCommunityVisibility] = useState<BackgroundVisibilityPreference>("Private");
+  const [lifeContextCurrentStates, setLifeContextCurrentStates] = useState<LifeContextCurrentStatePreference[]>([]);
+  const [lifeContextCurrentVisibility, setLifeContextCurrentVisibility] = useState<BackgroundVisibilityPreference>("Private");
+  const [lifeContextFields, setLifeContextFields] = useState<LifeContextFieldPreference[]>([]);
+  const [lifeContextFieldVisibility, setLifeContextFieldVisibility] = useState<BackgroundVisibilityPreference>("Private");
+  const [lifeContextLearningInterests, setLifeContextLearningInterests] = useState<LifeContextLearningPreference[]>([]);
+  const [lifeContextLearningVisibility, setLifeContextLearningVisibility] = useState<BackgroundVisibilityPreference>("Matched/shared visibility only");
+  const [lifeContextLastUpdatedAt, setLifeContextLastUpdatedAt] = useState<string | null>(null);
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
@@ -1126,6 +1286,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setBackgroundWorkVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility));
         setBackgroundCommunityPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions));
         setBackgroundCommunityVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility));
+        setLifeContextCurrentStates(normalizeBackgroundPreferenceList(snapshot.lifeContextCurrentStates, lifeContextCurrentStateOptions));
+        setLifeContextCurrentVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextCurrentVisibility));
+        setLifeContextFields(normalizeBackgroundPreferenceList(snapshot.lifeContextFields, lifeContextFieldOptions));
+        setLifeContextFieldVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextFieldVisibility));
+        setLifeContextLearningInterests(normalizeBackgroundPreferenceList(snapshot.lifeContextLearningInterests, lifeContextLearningOptions));
+        setLifeContextLearningVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only"));
+        setLifeContextLastUpdatedAt(normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt));
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
@@ -1246,6 +1413,15 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextBackgroundWorkVisibility = normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility);
     const nextBackgroundCommunityPreferences = normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions);
     const nextBackgroundCommunityVisibility = normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility);
+    const nextLifeContextCurrentStates = normalizeBackgroundPreferenceList(snapshot.lifeContextCurrentStates, lifeContextCurrentStateOptions);
+    const nextLifeContextCurrentVisibility = normalizeBackgroundVisibilityPreference(snapshot.lifeContextCurrentVisibility);
+    const nextLifeContextFields = normalizeBackgroundPreferenceList(snapshot.lifeContextFields, lifeContextFieldOptions);
+    const nextLifeContextFieldVisibility = normalizeBackgroundVisibilityPreference(snapshot.lifeContextFieldVisibility);
+    const nextLifeContextLearningInterests = normalizeBackgroundPreferenceList(snapshot.lifeContextLearningInterests, lifeContextLearningOptions);
+    const nextLifeContextLearningVisibility = normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only");
+    const nextLifeContextLastUpdatedAt =
+      normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt) ??
+      (nextLifeContextCurrentStates.length || nextLifeContextFields.length || nextLifeContextLearningInterests.length ? new Date().toISOString() : null);
     setSocialEnergyPreference(nextSocialEnergyPreference);
     setCommunicationPreferences(nextCommunicationPreferences);
     setGroupSizePreference(nextGroupSizePreference);
@@ -1259,6 +1435,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setBackgroundWorkVisibility(nextBackgroundWorkVisibility);
     setBackgroundCommunityPreferences(nextBackgroundCommunityPreferences);
     setBackgroundCommunityVisibility(nextBackgroundCommunityVisibility);
+    setLifeContextCurrentStates(nextLifeContextCurrentStates);
+    setLifeContextCurrentVisibility(nextLifeContextCurrentVisibility);
+    setLifeContextFields(nextLifeContextFields);
+    setLifeContextFieldVisibility(nextLifeContextFieldVisibility);
+    setLifeContextLearningInterests(nextLifeContextLearningInterests);
+    setLifeContextLearningVisibility(nextLifeContextLearningVisibility);
+    setLifeContextLastUpdatedAt(nextLifeContextLastUpdatedAt);
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
     setDietaryPreferences(snapshot.dietaryPreferences);
@@ -1337,6 +1520,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           backgroundWorkVisibility: nextBackgroundWorkVisibility,
           backgroundCommunityPreferences: nextBackgroundCommunityPreferences,
           backgroundCommunityVisibility: nextBackgroundCommunityVisibility,
+          lifeContextCurrentStates: nextLifeContextCurrentStates,
+          lifeContextCurrentVisibility: nextLifeContextCurrentVisibility,
+          lifeContextFields: nextLifeContextFields,
+          lifeContextFieldVisibility: nextLifeContextFieldVisibility,
+          lifeContextLearningInterests: nextLifeContextLearningInterests,
+          lifeContextLearningVisibility: nextLifeContextLearningVisibility,
+          lifeContextLastUpdatedAt: nextLifeContextLastUpdatedAt,
           verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
           foodBeveragePreferenceIds: nextFoodBeveragePreferenceIds,
           interestPreferenceIds: nextInterestPreferenceIds,
@@ -1419,6 +1609,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       backgroundWorkVisibility,
       backgroundCommunityPreferences,
       backgroundCommunityVisibility,
+      lifeContextCurrentStates,
+      lifeContextCurrentVisibility,
+      lifeContextFields,
+      lifeContextFieldVisibility,
+      lifeContextLearningInterests,
+      lifeContextLearningVisibility,
+      lifeContextLastUpdatedAt,
       verifiedButPrivate,
       transportationMethod,
       dietaryPreferences,
@@ -1463,6 +1660,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       cardOutlineStyle,
       ...snapshot,
     };
+    const lifeContextTouched =
+      snapshot.lifeContextCurrentStates !== undefined ||
+      snapshot.lifeContextCurrentVisibility !== undefined ||
+      snapshot.lifeContextFields !== undefined ||
+      snapshot.lifeContextFieldVisibility !== undefined ||
+      snapshot.lifeContextLearningInterests !== undefined ||
+      snapshot.lifeContextLearningVisibility !== undefined;
+
     nextSnapshot.appLanguage = normalizeNsnLanguage(nextSnapshot.appLanguage);
     nextSnapshot.translationLanguage = normalizeNsnLanguage(nextSnapshot.translationLanguage);
     nextSnapshot.brandThemeId = normalizeBrandThemeId(nextSnapshot.brandThemeId);
@@ -1492,6 +1697,15 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.backgroundWorkVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.backgroundWorkVisibility);
     nextSnapshot.backgroundCommunityPreferences = normalizeBackgroundPreferenceList(nextSnapshot.backgroundCommunityPreferences, backgroundCommunityOptions);
     nextSnapshot.backgroundCommunityVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.backgroundCommunityVisibility);
+    nextSnapshot.lifeContextCurrentStates = normalizeBackgroundPreferenceList(nextSnapshot.lifeContextCurrentStates, lifeContextCurrentStateOptions);
+    nextSnapshot.lifeContextCurrentVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.lifeContextCurrentVisibility);
+    nextSnapshot.lifeContextFields = normalizeBackgroundPreferenceList(nextSnapshot.lifeContextFields, lifeContextFieldOptions);
+    nextSnapshot.lifeContextFieldVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.lifeContextFieldVisibility);
+    nextSnapshot.lifeContextLearningInterests = normalizeBackgroundPreferenceList(nextSnapshot.lifeContextLearningInterests, lifeContextLearningOptions);
+    nextSnapshot.lifeContextLearningVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only");
+    nextSnapshot.lifeContextLastUpdatedAt = normalizeLifeContextUpdatedAt(
+      lifeContextTouched && snapshot.lifeContextLastUpdatedAt === undefined ? new Date().toISOString() : nextSnapshot.lifeContextLastUpdatedAt
+    );
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
     nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(nextSnapshot.foodBeveragePreferenceIds);
     nextSnapshot.interestPreferenceIds = normalizeInterestPreferenceIds(nextSnapshot.interestPreferenceIds);
@@ -1587,6 +1801,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.backgroundWorkVisibility !== undefined) setBackgroundWorkVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility));
     if (snapshot.backgroundCommunityPreferences !== undefined) setBackgroundCommunityPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions));
     if (snapshot.backgroundCommunityVisibility !== undefined) setBackgroundCommunityVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility));
+    if (snapshot.lifeContextCurrentStates !== undefined) setLifeContextCurrentStates(normalizeBackgroundPreferenceList(snapshot.lifeContextCurrentStates, lifeContextCurrentStateOptions));
+    if (snapshot.lifeContextCurrentVisibility !== undefined) setLifeContextCurrentVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextCurrentVisibility));
+    if (snapshot.lifeContextFields !== undefined) setLifeContextFields(normalizeBackgroundPreferenceList(snapshot.lifeContextFields, lifeContextFieldOptions));
+    if (snapshot.lifeContextFieldVisibility !== undefined) setLifeContextFieldVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextFieldVisibility));
+    if (snapshot.lifeContextLearningInterests !== undefined) setLifeContextLearningInterests(normalizeBackgroundPreferenceList(snapshot.lifeContextLearningInterests, lifeContextLearningOptions));
+    if (snapshot.lifeContextLearningVisibility !== undefined) setLifeContextLearningVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility));
+    if (snapshot.lifeContextLastUpdatedAt !== undefined || lifeContextTouched) setLifeContextLastUpdatedAt(nextSnapshot.lifeContextLastUpdatedAt ?? null);
     if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
@@ -1904,6 +2125,20 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setBackgroundCommunityPreferences,
         backgroundCommunityVisibility,
         setBackgroundCommunityVisibility,
+        lifeContextCurrentStates,
+        setLifeContextCurrentStates,
+        lifeContextCurrentVisibility,
+        setLifeContextCurrentVisibility,
+        lifeContextFields,
+        setLifeContextFields,
+        lifeContextFieldVisibility,
+        setLifeContextFieldVisibility,
+        lifeContextLearningInterests,
+        setLifeContextLearningInterests,
+        lifeContextLearningVisibility,
+        setLifeContextLearningVisibility,
+        lifeContextLastUpdatedAt,
+        setLifeContextLastUpdatedAt,
         verifiedButPrivate,
         setVerifiedButPrivate,
         transportationMethod,

@@ -11,8 +11,12 @@ import {
   backgroundWorkOptions,
   backgroundWorkRhythmOptions,
   communicationPreferenceOptions,
+  getLifeContextFreshnessLabel,
   getLanguageBase,
   groupSizePreferenceOptions,
+  lifeContextCurrentStateOptions,
+  lifeContextFieldOptions,
+  lifeContextLearningOptions,
   photoRecordingComfortOptions,
   physicalContactComfortOptions,
   socialEnergyOptions,
@@ -31,6 +35,9 @@ import {
   type ProfileGender,
   type ProfileShortcutLayout,
   type ProfileWidthPreference,
+  type LifeContextCurrentStatePreference,
+  type LifeContextFieldPreference,
+  type LifeContextLearningPreference,
   type PhotoRecordingComfortPreference,
   type PhysicalContactComfortPreference,
   type SocialEnergyPreference,
@@ -1076,6 +1083,13 @@ export default function ProfileScreen() {
     backgroundWorkVisibility,
     backgroundCommunityPreferences,
     backgroundCommunityVisibility,
+    lifeContextCurrentStates,
+    lifeContextCurrentVisibility,
+    lifeContextFields,
+    lifeContextFieldVisibility,
+    lifeContextLearningInterests,
+    lifeContextLearningVisibility,
+    lifeContextLastUpdatedAt,
     verifiedButPrivate,
     verificationLevel,
     profileShortcutLayout,
@@ -1693,6 +1707,18 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ backgroundCommunityPreferences: toggleBackgroundListItem(backgroundCommunityPreferences, preference) });
   };
 
+  const toggleLifeContextCurrentState = async (preference: LifeContextCurrentStatePreference) => {
+    await saveSoftHelloMvpState({ lifeContextCurrentStates: toggleBackgroundListItem(lifeContextCurrentStates, preference) });
+  };
+
+  const toggleLifeContextField = async (preference: LifeContextFieldPreference) => {
+    await saveSoftHelloMvpState({ lifeContextFields: toggleBackgroundListItem(lifeContextFields, preference) });
+  };
+
+  const toggleLifeContextLearningInterest = async (preference: LifeContextLearningPreference) => {
+    await saveSoftHelloMvpState({ lifeContextLearningInterests: toggleBackgroundListItem(lifeContextLearningInterests, preference) });
+  };
+
   const updateBackgroundVisibility = async (
     key: "backgroundStudyVisibility" | "backgroundWorkVisibility" | "backgroundCommunityVisibility",
     preference: BackgroundVisibilityPreference
@@ -1708,6 +1734,23 @@ export default function ProfileScreen() {
     }
 
     await saveSoftHelloMvpState({ backgroundCommunityVisibility: preference });
+  };
+
+  const updateLifeContextVisibility = async (
+    key: "lifeContextCurrentVisibility" | "lifeContextFieldVisibility" | "lifeContextLearningVisibility",
+    preference: BackgroundVisibilityPreference
+  ) => {
+    if (key === "lifeContextCurrentVisibility") {
+      await saveSoftHelloMvpState({ lifeContextCurrentVisibility: preference });
+      return;
+    }
+
+    if (key === "lifeContextFieldVisibility") {
+      await saveSoftHelloMvpState({ lifeContextFieldVisibility: preference });
+      return;
+    }
+
+    await saveSoftHelloMvpState({ lifeContextLearningVisibility: preference });
   };
 
   const toggleFoodBeveragePreference = async (preferenceId: string) => {
@@ -1879,6 +1922,13 @@ export default function ProfileScreen() {
       backgroundWorkVisibility: "Private",
       backgroundCommunityPreferences: [],
       backgroundCommunityVisibility: "Private",
+      lifeContextCurrentStates: [],
+      lifeContextCurrentVisibility: "Private",
+      lifeContextFields: [],
+      lifeContextFieldVisibility: "Private",
+      lifeContextLearningInterests: [],
+      lifeContextLearningVisibility: "Matched/shared visibility only",
+      lifeContextLastUpdatedAt: null,
       verifiedButPrivate: true,
       foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
       interestPreferenceIds: defaultInterestPreferenceIds,
@@ -1983,6 +2033,7 @@ export default function ProfileScreen() {
   );
   const activeInterestForComfort =
     selectedInterestPreferenceOptions.find((option) => option.id === activeInterestComfortId) ?? selectedInterestPreferenceOptions[0] ?? null;
+  const lifeContextFreshness = useMemo(() => getLifeContextFreshnessLabel(lifeContextLastUpdatedAt), [lifeContextLastUpdatedAt]);
 
   const renderInterestPreferenceChip = (option: InterestPreference) => {
     const active = interestPreferenceIds.includes(option.id);
@@ -2204,7 +2255,34 @@ export default function ProfileScreen() {
   );
 
   const lowerFirstBackgroundLabel = (value: string) => value.charAt(0).toLowerCase() + value.slice(1);
+  const joinBackgroundPreview = (values: string[]) => values.length <= 1 ? values[0] : `${values[0]} and ${values[1]}`;
+  const visibleLifeContextState = lifeContextCurrentVisibility === "Visible on profile preview"
+    ? lifeContextCurrentStates.filter((item) => item !== "Prefer not to say")
+    : [];
+  const visibleLifeContextFields = lifeContextFieldVisibility === "Visible on profile preview"
+    ? lifeContextFields.filter((item) => item !== "Prefer not to say" && item !== "Other")
+    : [];
+  const visibleLifeContextLearning = lifeContextLearningVisibility === "Visible on profile preview"
+    ? lifeContextLearningInterests
+    : [];
+  const primaryLifeContextState = visibleLifeContextState[0];
+  const primaryLifeContextField = visibleLifeContextFields[0];
   const backgroundCommunityProfileLines = [
+    primaryLifeContextField
+      ? primaryLifeContextField === "Student" || visibleLifeContextState.includes("Studying")
+        ? primaryLifeContextField === "Student" ? "Currently studying" : `Studying ${lowerFirstBackgroundLabel(primaryLifeContextField)}`
+        : visibleLifeContextState.includes("Working")
+          ? `Works in ${lowerFirstBackgroundLabel(primaryLifeContextField)}`
+          : visibleLifeContextState.includes("Volunteering")
+            ? `Volunteers in ${lowerFirstBackgroundLabel(primaryLifeContextField)}`
+            : `Background in ${lowerFirstBackgroundLabel(primaryLifeContextField)}`
+      : "",
+    primaryLifeContextState && !["Working", "Studying", "Volunteering"].includes(primaryLifeContextState)
+      ? primaryLifeContextState
+      : "",
+    visibleLifeContextLearning.length
+      ? `Interested in ${joinBackgroundPreview(visibleLifeContextLearning.slice(0, 2).map(lowerFirstBackgroundLabel))}`
+      : "",
     backgroundStudyVisibility === "Visible on profile preview" && backgroundStudyAreas.length
       ? `Studies ${lowerFirstBackgroundLabel(backgroundStudyAreas[0])}`
       : "",
@@ -2221,6 +2299,9 @@ export default function ProfileScreen() {
       : "",
   ].filter(Boolean);
   const backgroundCommunitySelectedCount =
+    lifeContextCurrentStates.length +
+    lifeContextFields.length +
+    lifeContextLearningInterests.length +
     backgroundStudyStatuses.length +
     backgroundStudyAreas.length +
     backgroundWorkPreferences.length +
@@ -2268,9 +2349,9 @@ export default function ProfileScreen() {
     <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
       <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
         <View style={styles.profileLayoutBody}>
-          <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Background & community</Text>
+          <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Work, study & life context</Text>
           <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Optional broad context for study, work, and volunteering.
+            Share what you're doing, learning, or interested in - only if you want to.
           </Text>
         </View>
         <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>{backgroundCommunitySelectedCount ? `${backgroundCommunitySelectedCount} selected` : "Private"}</Text>
@@ -2287,6 +2368,10 @@ export default function ProfileScreen() {
         </Text>
       )}
       <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+        {lifeContextFreshness.label}
+        {lifeContextFreshness.stale ? " - review when it feels useful." : ""}
+      </Text>
+      <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
         Avoid exact workplaces, schools, organisations, schedules, or daily routines unless you are comfortable.
       </Text>
       <TouchableOpacity
@@ -2294,7 +2379,7 @@ export default function ProfileScreen() {
         onPress={() => openPreferenceDestination("backgroundCommunity", "background")}
         style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
         accessibilityRole="button"
-        accessibilityLabel="Manage Background and community in User Options"
+        accessibilityLabel="Manage Work, study and life context in User Options"
       >
         <Text style={styles.reviewSettingsText}>Manage in User Options</Text>
       </TouchableOpacity>
@@ -2311,7 +2396,7 @@ export default function ProfileScreen() {
         : profileMenuPanel === "comfortTrust"
           ? "Comfort & trust"
           : profileMenuPanel === "backgroundCommunity"
-            ? "Background & community"
+            ? "Work, study & life context"
             : profileMenuPanel === "foodBeverage"
               ? "Food & beverage"
               : profileMenuPanel === "hobbiesInterests"
@@ -2432,7 +2517,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
                     {[
-                      { icon: "sliders" as const, title: "User preferences", copy: "Comfort & trust, background, communication, transport, food, and hobbies.", panel: "preferences" as const },
+                      { icon: "sliders" as const, title: "User preferences", copy: "Comfort & trust, life context, communication, transport, food, and hobbies.", panel: "preferences" as const },
                       { icon: "layout" as const, title: "Display & layout", copy: `${homeEventLayout} events, ${homeLayoutDensity.toLowerCase()} Home density.`, panel: "display" as const },
                       { icon: "group" as const, title: "Profile layout", copy: isCleanProfile ? "Simple layout selected." : "Detailed layout selected.", panel: "layout" as const },
                       { icon: "resize" as const, title: "Width settings", copy: isWideProfile ? "Wide width selected." : "Contained width selected.", panel: "width" as const },
@@ -2626,17 +2711,17 @@ export default function ProfileScreen() {
                       onPress={() => openPreferenceDestination("backgroundCommunity", "background")}
                       style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
                       accessibilityRole="button"
-                      accessibilityLabel="Background and community preferences"
+                      accessibilityLabel="Work, study and life context preferences"
                     >
                       <IconSymbol name="badge" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
                       <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Background & community</Text>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Work, study & life context</Text>
                         <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
-                          Optional study, work, and volunteering context with visibility controls.
+                          Optional work, study, learning, and volunteering context with visibility controls.
                         </Text>
                       </View>
                       <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>
-                        {backgroundStudyAreas.length + backgroundWorkPreferences.length + backgroundCommunityPreferences.length} selected
+                        {backgroundCommunitySelectedCount} selected
                       </Text>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -2729,23 +2814,100 @@ export default function ProfileScreen() {
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
                     </TouchableOpacity>
                     {shouldOpenFullPreferenceView ? (
-                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("background")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Background and community">
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("background")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Work, study and life context">
                         <View style={styles.profileLayoutBody}>
                           <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
-                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop background preference layout.</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop life context preference layout.</Text>
                         </View>
                         <IconSymbol name="resize" color="#FFFFFF" size={20} />
                       </TouchableOpacity>
                     ) : null}
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
-                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Background & community</Text>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Work, study & life context</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Share light context about study, work, or volunteering if it helps others understand your interests. You control what appears publicly.
+                        Share what you're doing, learning, or interested in - only if you want to.
+                      </Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        {lifeContextFreshness.label}
+                        {lifeContextFreshness.stale ? " - review when it feels useful." : ""}
                       </Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         NSN recommends broad context first. Avoid exact workplaces, schools, schedules, or routines unless you are comfortable.
                       </Text>
                     </View>
+                    {[
+                      {
+                        title: "Current context",
+                        visibilityKey: "lifeContextCurrentVisibility" as const,
+                        visibility: lifeContextCurrentVisibility,
+                        options: lifeContextCurrentStateOptions,
+                        selected: lifeContextCurrentStates,
+                        toggle: toggleLifeContextCurrentState,
+                      },
+                      {
+                        title: "Broad field or area",
+                        visibilityKey: "lifeContextFieldVisibility" as const,
+                        visibility: lifeContextFieldVisibility,
+                        options: lifeContextFieldOptions,
+                        selected: lifeContextFields,
+                        toggle: toggleLifeContextField,
+                      },
+                      {
+                        title: "Interested in / learning about",
+                        visibilityKey: "lifeContextLearningVisibility" as const,
+                        visibility: lifeContextLearningVisibility,
+                        options: lifeContextLearningOptions,
+                        selected: lifeContextLearningInterests,
+                        toggle: toggleLifeContextLearningInterest,
+                      },
+                    ].map((section) => (
+                      <View key={section.title} style={[styles.foodPreferenceGroup, isDay && styles.daySoftOption]}>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{section.title}</Text>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Visibility</Text>
+                        <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                          {backgroundVisibilityOptions.map((option) => {
+                            const active = section.visibility === option;
+
+                            return (
+                              <TouchableOpacity
+                                key={`${section.title}-${option}`}
+                                activeOpacity={0.78}
+                                onPress={() => updateLifeContextVisibility(section.visibilityKey, option)}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${section.title} visibility ${option}`}
+                                accessibilityState={{ selected: active }}
+                                style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+                              >
+                                <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                                  {active ? `Selected: ${option}` : option}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                        <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                          {section.options.map((option) => {
+                            const active = section.selected.includes(option as never);
+
+                            return (
+                              <TouchableOpacity
+                                key={option}
+                                activeOpacity={0.78}
+                                onPress={() => section.toggle(option as never)}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${section.title} ${option}`}
+                                accessibilityState={{ selected: active }}
+                                style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+                              >
+                                <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                                  {active ? `Selected: ${option}` : option}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    ))}
                     {[
                       {
                         title: "Study",

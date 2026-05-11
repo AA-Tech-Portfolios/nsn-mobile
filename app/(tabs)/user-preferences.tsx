@@ -12,7 +12,11 @@ import {
   backgroundWorkOptions,
   backgroundWorkRhythmOptions,
   communicationPreferenceOptions,
+  getLifeContextFreshnessLabel,
   groupSizePreferenceOptions,
+  lifeContextCurrentStateOptions,
+  lifeContextFieldOptions,
+  lifeContextLearningOptions,
   photoRecordingComfortOptions,
   physicalContactComfortOptions,
   socialEnergyOptions,
@@ -25,6 +29,9 @@ import {
   type CommunicationPreference,
   type ContactPreference,
   type GroupSizePreference,
+  type LifeContextCurrentStatePreference,
+  type LifeContextFieldPreference,
+  type LifeContextLearningPreference,
   type NsnComfortMode,
   type PhotoRecordingComfortPreference,
   type PhysicalContactComfortPreference,
@@ -73,8 +80,8 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
   },
   background: {
     icon: "ðŸŒ±",
-    title: "Background & community",
-    copy: "Share light context about study, work, or volunteering if it helps others understand your interests. You control what appears publicly.",
+    title: "Work, study & life context",
+    copy: "Share what you're doing, learning, or interested in - only if you want to. Keep it broad, optional, and privacy-controlled.",
   },
   food: {
     icon: "🍽️",
@@ -166,6 +173,13 @@ export default function UserPreferencesScreen() {
     backgroundWorkVisibility,
     backgroundCommunityPreferences,
     backgroundCommunityVisibility,
+    lifeContextCurrentStates,
+    lifeContextCurrentVisibility,
+    lifeContextFields,
+    lifeContextFieldVisibility,
+    lifeContextLearningInterests,
+    lifeContextLearningVisibility,
+    lifeContextLastUpdatedAt,
     verifiedButPrivate,
     foodBeveragePreferenceIds,
     interestPreferenceIds,
@@ -214,6 +228,7 @@ export default function UserPreferencesScreen() {
   const foodSearchResults = useMemo(() => searchFoodBeveragePreferences(foodSearch), [foodSearch]);
   const interestSearchResults = useMemo(() => searchInterestPreferences(interestSearch), [interestSearch]);
   const activeMeta = preferenceSections[activeSection];
+  const lifeContextFreshness = useMemo(() => getLifeContextFreshnessLabel(lifeContextLastUpdatedAt), [lifeContextLastUpdatedAt]);
 
   const showSection = (nextSection: PreferenceSection) => {
     setActiveSection(nextSection);
@@ -319,6 +334,18 @@ export default function UserPreferencesScreen() {
     await saveSoftHelloMvpState({ backgroundCommunityPreferences: toggleBackgroundListItem(backgroundCommunityPreferences, preference) });
   };
 
+  const toggleLifeContextCurrentState = async (preference: LifeContextCurrentStatePreference) => {
+    await saveSoftHelloMvpState({ lifeContextCurrentStates: toggleBackgroundListItem(lifeContextCurrentStates, preference) });
+  };
+
+  const toggleLifeContextField = async (preference: LifeContextFieldPreference) => {
+    await saveSoftHelloMvpState({ lifeContextFields: toggleBackgroundListItem(lifeContextFields, preference) });
+  };
+
+  const toggleLifeContextLearningInterest = async (preference: LifeContextLearningPreference) => {
+    await saveSoftHelloMvpState({ lifeContextLearningInterests: toggleBackgroundListItem(lifeContextLearningInterests, preference) });
+  };
+
   const updateBackgroundVisibility = async (
     key: "backgroundStudyVisibility" | "backgroundWorkVisibility" | "backgroundCommunityVisibility",
     preference: BackgroundVisibilityPreference
@@ -334,6 +361,23 @@ export default function UserPreferencesScreen() {
     }
 
     await saveSoftHelloMvpState({ backgroundCommunityVisibility: preference });
+  };
+
+  const updateLifeContextVisibility = async (
+    key: "lifeContextCurrentVisibility" | "lifeContextFieldVisibility" | "lifeContextLearningVisibility",
+    preference: BackgroundVisibilityPreference
+  ) => {
+    if (key === "lifeContextCurrentVisibility") {
+      await saveSoftHelloMvpState({ lifeContextCurrentVisibility: preference });
+      return;
+    }
+
+    if (key === "lifeContextFieldVisibility") {
+      await saveSoftHelloMvpState({ lifeContextFieldVisibility: preference });
+      return;
+    }
+
+    await saveSoftHelloMvpState({ lifeContextLearningVisibility: preference });
   };
 
   const toggleContactPreference = async (preference: ContactPreference) => {
@@ -434,12 +478,18 @@ export default function UserPreferencesScreen() {
   );
 
   const backgroundSelectedCount =
+    lifeContextCurrentStates.length +
+    lifeContextFields.length +
+    lifeContextLearningInterests.length +
     backgroundStudyStatuses.length +
     backgroundStudyAreas.length +
     backgroundWorkPreferences.length +
     backgroundWorkRhythms.length +
     backgroundCommunityPreferences.length;
   const backgroundOverviewSummary = [
+    lifeContextCurrentStates.length ? `Context: ${lifeContextCurrentStates.slice(0, 2).join(", ")}` : "",
+    lifeContextFields.length ? `Fields: ${lifeContextFields.slice(0, 2).join(", ")}` : "",
+    lifeContextLearningInterests.length ? `Learning: ${lifeContextLearningInterests.slice(0, 2).join(", ")}` : "",
     backgroundStudyAreas.length ? `Study: ${backgroundStudyAreas.slice(0, 2).join(", ")}` : "",
     backgroundWorkPreferences.length ? `Work: ${backgroundWorkPreferences.slice(0, 2).join(", ")}` : "",
     backgroundCommunityPreferences.length ? `Community: ${backgroundCommunityPreferences.slice(0, 2).join(", ")}` : "",
@@ -454,7 +504,7 @@ export default function UserPreferencesScreen() {
     { section: "transport" as const, title: "Transportation method", icon: "🚆", copy: transportationMethod, meta: "Arrival comfort and meeting point notes." },
     { section: "contact" as const, title: "Contact preference", icon: "💬", copy: contactPreferences.join(", ") || "Text", meta: "How you prefer pre-meetup communication." },
     { section: "location" as const, title: "Location preference", icon: "📍", copy: suburb || "Sydney North Shore", meta: "Local area, radius, and profile location privacy." },
-    { section: "background" as const, title: "Background & community", icon: "ðŸŒ±", copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary || "Broad study, work, and volunteering context with visibility controls." },
+    { section: "background" as const, title: "Work, study & life context", icon: "ðŸŒ±", copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary || "Broad work, study, learning, and volunteering context with visibility controls." },
   ];
 
   return (
@@ -580,20 +630,108 @@ export default function UserPreferencesScreen() {
         {activeSection === "background" ? (
           <View style={styles.preferenceStack}>
             <View style={[styles.searchCard, isDay && styles.dayCard]}>
-              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Privacy-first sharing</Text>
+              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Work, study & life context</Text>
               <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                NSN recommends sharing broad context first. Avoid posting exact workplaces, schools, schedules, or daily routines unless you are comfortable.
+                Share what you're doing, learning, or interested in - only if you want to. NSN recommends broad context first, not exact workplaces, schools, schedules, or daily routines.
+              </Text>
+              <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                {lifeContextFreshness.label}
+                {lifeContextFreshness.stale ? " - a gentle review might help keep this accurate." : ""}
               </Text>
               {renderSummary(
                 [
+                  ...lifeContextCurrentStates.slice(0, 3),
+                  ...lifeContextFields.slice(0, 3),
+                  ...lifeContextLearningInterests.slice(0, 3),
                   ...backgroundStudyAreas.slice(0, 3),
                   ...backgroundWorkPreferences.slice(0, 3),
                   ...backgroundCommunityPreferences.slice(0, 3),
                 ],
-                "No background context selected yet. Everything stays private by default."
+                "No life context selected yet. Everything stays private by default."
               )}
             </View>
             <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+              {renderSectionCard("Current context", "Choose one or more broad current states. This should feel like gentle conversation context, not an occupation requirement.", "ðŸ§­", (
+                <>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundVisibilityOptions.map((option) =>
+                      renderChip({
+                        key: `life-current-${option}`,
+                        label: option,
+                        active: lifeContextCurrentVisibility === option,
+                        onPress: () => updateLifeContextVisibility("lifeContextCurrentVisibility", option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Current state</Text>
+                  <View style={styles.chipGrid}>
+                    {lifeContextCurrentStateOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: lifeContextCurrentStates.includes(option),
+                        onPress: () => toggleLifeContextCurrentState(option),
+                      })
+                    )}
+                  </View>
+                </>
+              ))}
+              {renderSectionCard("Broad field or area", "Use broad categories only. NSN does not ask for exact employers, schools, organisations, or schedules in this prototype.", "ðŸ’¼", (
+                <>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundVisibilityOptions.map((option) =>
+                      renderChip({
+                        key: `life-field-${option}`,
+                        label: option,
+                        active: lifeContextFieldVisibility === option,
+                        onPress: () => updateLifeContextVisibility("lifeContextFieldVisibility", option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Broad categories</Text>
+                  <View style={styles.chipGrid}>
+                    {lifeContextFieldOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: lifeContextFields.includes(option),
+                        onPress: () => toggleLifeContextField(option),
+                      })
+                    )}
+                  </View>
+                </>
+              ))}
+              {renderSectionCard("Interested in / learning about", "Share curiosity or learning topics that could become easy conversation starters.", "âœ¨", (
+                <>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundVisibilityOptions.map((option) =>
+                      renderChip({
+                        key: `life-learning-${option}`,
+                        label: option,
+                        active: lifeContextLearningVisibility === option,
+                        onPress: () => updateLifeContextVisibility("lifeContextLearningVisibility", option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Learning topics</Text>
+                  <View style={styles.chipGrid}>
+                    {lifeContextLearningOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: lifeContextLearningInterests.includes(option),
+                        onPress: () => toggleLifeContextLearningInterest(option),
+                      })
+                    )}
+                  </View>
+                </>
+              ))}
               {renderSectionCard("Study", "Use broad study context only. School or university names are not required and should stay private unless you choose otherwise later.", "ðŸ“š", (
                 <>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
@@ -699,7 +837,7 @@ export default function UserPreferencesScreen() {
               ))}
               {renderSectionCard("Prototype matching notes", "Later, this can help suggest study groups, volunteering meetups, or shared industry conversation starters. No production recommendation engine is implied yet.", "ðŸ§­", (
                 <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                  Background context should stay optional, broad, and easy to hide. Tester feedback will decide whether this feels useful and safe.
+                  Work, study, and life context should stay optional, broad, and easy to hide. Tester feedback will decide whether this feels useful and safe.
                 </Text>
               ))}
             </View>
