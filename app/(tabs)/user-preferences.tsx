@@ -446,7 +446,7 @@ export default function UserPreferencesScreen() {
       icon: option.icon,
       active: foodBeveragePreferenceIds.includes(option.id),
       onPress: () => toggleFoodPreference(option.id),
-      meta: option.ageSensitive ? "Age-appropriate only" : undefined,
+      meta: option.ageSensitive ? "Age-appropriate only" : option.subgroup,
     });
 
   const renderInterestChip = (option: InterestPreference) =>

@@ -21,6 +21,7 @@ export type FoodBeveragePreference = {
   eventKeywords?: string[];
   ageSensitive?: boolean;
   icon?: string;
+  subgroup?: string;
 };
 
 export type FoodPreferenceGroup = {
@@ -89,8 +90,8 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
     id: "snacks",
     title: "Snacks",
     icon: "🥨",
-    copy: "Simple snacks for picnics, movie nights, games, or quiet catchups.",
-    defaultVisible: 8,
+    copy: "Simple snacks, including confectionery/lollies, for picnics, movie nights, games, or quiet catchups.",
+    defaultVisible: 12,
   },
   {
     id: "nonAlcoholicDrinks",
@@ -132,6 +133,9 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
     defaultVisible: 7,
   },
 ];
+
+const confectionerySubgroup = "Confectionery / lollies";
+const confectioneryAliases = ["confectionery", "lollies", "candy", "sweets"];
 
 export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "australian", label: "Australian", group: "cuisines", eventKeywords: ["australian", "pub", "picnic"] },
@@ -225,7 +229,17 @@ export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "nuts", label: "Nuts", group: "snacks", eventKeywords: ["nuts", "trail mix"] },
   { id: "chips-crisps", label: "Chips/crisps", group: "snacks", aliases: ["crisps"], eventKeywords: ["chips", "crisps", "movie"] },
   { id: "pretzels", label: "Pretzels", group: "snacks", eventKeywords: ["pretzel", "pretzels"] },
-  { id: "snack-chocolate", label: "Chocolate", group: "snacks", eventKeywords: ["chocolate", "movie"] },
+  { id: "snack-chocolate", label: "Chocolate", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "choc"], eventKeywords: ["chocolate", "movie", "confectionery", "lollies"] },
+  { id: "lollies", label: "Lollies", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "mixed lollies"], eventKeywords: ["lollies", "candy", "sweets", "movie", "picnic"] },
+  { id: "gummies", label: "Gummies", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "gummy lollies", "gummy candy"], eventKeywords: ["gummies", "gummy", "lollies", "candy"] },
+  { id: "sour-lollies", label: "Sour lollies", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "sour candy", "sour sweets", "sour gummies"], eventKeywords: ["sour lollies", "sour candy", "sour sweets"] },
+  { id: "hard-candy", label: "Hard candy", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "hard lollies", "boiled lollies", "hard sweets"], eventKeywords: ["hard candy", "hard lollies", "boiled lollies"] },
+  { id: "jelly-beans", label: "Jelly beans", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "jellybeans"], eventKeywords: ["jelly beans", "jellybeans", "lollies"] },
+  { id: "liquorice", label: "Liquorice", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "licorice"], eventKeywords: ["liquorice", "licorice", "lollies"] },
+  { id: "marshmallows", label: "Marshmallows", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "marshmallow"], eventKeywords: ["marshmallow", "marshmallows", "picnic"] },
+  { id: "chocolate-bars", label: "Chocolate bars", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "choc bars", "candy bars", "chocolate sweets"], eventKeywords: ["chocolate bars", "choc bars", "candy bars"] },
+  { id: "mints", label: "Mints", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "mint lollies", "breath mints"], eventKeywords: ["mints", "mint lollies"] },
+  { id: "sugar-free-sweets", label: "Sugar-free sweets", group: "snacks", subgroup: confectionerySubgroup, aliases: [...confectioneryAliases, "sugar free", "sugar-free", "sugar-free lollies", "sugar-free candy"], eventKeywords: ["sugar-free sweets", "sugar free sweets", "sugar-free lollies"] },
   { id: "biscuits", label: "Biscuits", group: "snacks", aliases: ["cookies"], eventKeywords: ["biscuits", "cookies"] },
   { id: "trail-mix", label: "Trail mix", group: "snacks", eventKeywords: ["trail mix", "nuts", "picnic"] },
 
@@ -260,6 +274,7 @@ export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "no-seafood", label: "No seafood", group: "dietaryNeeds", eventKeywords: ["no seafood"] },
   { id: "no-pork", label: "No pork", group: "dietaryNeeds", eventKeywords: ["no pork"] },
   { id: "low-sugar", label: "Low sugar", group: "dietaryNeeds", eventKeywords: ["low sugar"] },
+  { id: "sugar-free", label: "Sugar-free", group: "dietaryNeeds", aliases: ["sugar free", "no sugar"], eventKeywords: ["sugar-free", "sugar free"] },
   { id: "allergy-aware-venues", label: "Allergy-aware venues", group: "dietaryNeeds", aliases: ["allergy", "allergies"], eventKeywords: ["allergy", "allergy-aware"] },
 
   { id: "avoid-spicy-food", label: "Avoid spicy food", group: "avoidances", aliases: ["no spice", "not spicy"], eventKeywords: ["mild", "low spice"] },
@@ -318,7 +333,7 @@ export function searchFoodBeveragePreferences(query: string) {
   if (!normalizedQuery) return [];
 
   return foodBeveragePreferenceOptions.filter((option) => {
-    const searchable = normalizeSearchValue([option.label, option.id, option.group, ...(option.aliases ?? [])].join(" "));
+    const searchable = normalizeSearchValue([option.label, option.id, option.group, option.subgroup ?? "", ...(option.aliases ?? [])].join(" "));
     return searchable.includes(normalizedQuery);
   });
 }

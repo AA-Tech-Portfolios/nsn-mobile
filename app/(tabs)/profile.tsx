@@ -2013,8 +2013,8 @@ export default function ProfileScreen() {
         </Text>
         {option.ageSensitive ? (
           <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>Optional 18+</Text>
-        ) : group ? (
-          <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>{group.title}</Text>
+        ) : option.subgroup || group ? (
+          <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>{option.subgroup ?? group?.title}</Text>
         ) : null}
       </TouchableOpacity>
     );
