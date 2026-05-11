@@ -133,6 +133,7 @@ export type HomeViewMode = "Essential" | "Comfortable";
 export type HomeEventLayout = "List" | "Map";
 export type HomeLayoutDensity = "Compact" | "Comfortable" | "Spacious";
 export type HomeCardLayout = "Vertical list" | "Horizontal cards" | "Boxed grid" | "Layered cards" | "Magazine";
+export type HomeEventVisualMode = "Emoji/Icon" | "Preview image";
 export type HomeVisibleSections = {
   weather: boolean;
   noiseGuide: boolean;
@@ -176,6 +177,9 @@ const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSe
   const ordered = (value ?? []).filter((key): key is HomeSectionOrderKey => validKeys.has(key));
   return [...ordered, ...sectionKeys.filter((key) => !ordered.includes(key))];
 };
+
+const normalizeHomeEventVisualMode = (value?: HomeEventVisualMode | null): HomeEventVisualMode =>
+  value === "Preview image" ? "Preview image" : "Emoji/Icon";
 
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
@@ -240,6 +244,7 @@ type OnboardingSnapshot = {
   homeEventLayout?: HomeEventLayout;
   homeLayoutDensity?: HomeLayoutDensity;
   homeCardLayout?: HomeCardLayout;
+  homeEventVisualMode?: HomeEventVisualMode;
   homeVisibleSections?: HomeVisibleSections;
   homeSectionOrder?: HomeSectionOrderKey[];
   suggestNightModeInEvenings?: boolean;
@@ -465,6 +470,8 @@ type AppSettings = {
   setHomeLayoutDensity: (value: HomeLayoutDensity) => void;
   homeCardLayout: HomeCardLayout;
   setHomeCardLayout: (value: HomeCardLayout) => void;
+  homeEventVisualMode: HomeEventVisualMode;
+  setHomeEventVisualMode: (value: HomeEventVisualMode) => void;
   homeVisibleSections: HomeVisibleSections;
   setHomeVisibleSections: (value: HomeVisibleSections) => void;
   homeSectionOrder: HomeSectionOrderKey[];
@@ -600,6 +607,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [homeEventLayout, setHomeEventLayout] = useState<HomeEventLayout>("List");
   const [homeLayoutDensity, setHomeLayoutDensity] = useState<HomeLayoutDensity>("Comfortable");
   const [homeCardLayout, setHomeCardLayout] = useState<HomeCardLayout>("Vertical list");
+  const [homeEventVisualMode, setHomeEventVisualMode] = useState<HomeEventVisualMode>("Emoji/Icon");
   const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(defaultHomeVisibleSections);
   const [homeSectionOrder, setHomeSectionOrder] = useState<HomeSectionOrderKey[]>(defaultHomeSectionOrder);
   const [isNightMode, setIsNightMode] = useState(false);
@@ -711,6 +719,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeEventLayout(snapshot.homeEventLayout ?? "List");
         setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
         setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
+        setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
         setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
         setHomeSectionOrder(normalizeHomeSectionOrder(snapshot.homeSectionOrder));
         setSuggestNightModeInEvenings(Boolean(snapshot.suggestNightModeInEvenings));
@@ -800,6 +809,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHomeEventLayout(snapshot.homeEventLayout ?? "List");
     setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
     setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
+    setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
     setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
     setHomeSectionOrder(normalizeHomeSectionOrder(snapshot.homeSectionOrder));
     setSuggestNightModeInEvenings(Boolean(snapshot.suggestNightModeInEvenings));
@@ -822,6 +832,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           preferredAgeMax: nextAgeRange.max,
           appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
           translationLanguage: normalizeNsnLanguage(snapshot.translationLanguage),
+          homeEventVisualMode: normalizeHomeEventVisualMode(snapshot.homeEventVisualMode),
           homeVisibleSections: normalizeHomeVisibleSections(snapshot.homeVisibleSections),
           homeSectionOrder: normalizeHomeSectionOrder(snapshot.homeSectionOrder),
           timezone: normalizeTimezoneSetting(snapshot.timezone),
@@ -897,6 +908,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       homeEventLayout,
       homeLayoutDensity,
       homeCardLayout,
+      homeEventVisualMode,
       homeVisibleSections,
       homeSectionOrder,
       suggestNightModeInEvenings,
@@ -1006,6 +1018,11 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.homeEventLayout !== undefined) setHomeEventLayout(snapshot.homeEventLayout);
     if (snapshot.homeLayoutDensity !== undefined) setHomeLayoutDensity(snapshot.homeLayoutDensity);
     if (snapshot.homeCardLayout !== undefined) setHomeCardLayout(snapshot.homeCardLayout);
+    if (snapshot.homeEventVisualMode !== undefined) {
+      const nextVisualMode = normalizeHomeEventVisualMode(snapshot.homeEventVisualMode);
+      setHomeEventVisualMode(nextVisualMode);
+      nextSnapshot.homeEventVisualMode = nextVisualMode;
+    }
     if (snapshot.homeVisibleSections !== undefined) {
       const nextSections = normalizeHomeVisibleSections(snapshot.homeVisibleSections);
       setHomeVisibleSections(nextSections);
@@ -1283,6 +1300,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeLayoutDensity,
         homeCardLayout,
         setHomeCardLayout,
+        homeEventVisualMode,
+        setHomeEventVisualMode,
         homeVisibleSections,
         setHomeVisibleSections,
         homeSectionOrder,
