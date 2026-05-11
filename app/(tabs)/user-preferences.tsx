@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ComponentProps, type ReactNode, useEffect, useMemo, useState } from "react";
 import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -132,6 +132,19 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
     copy: "Keep your local area, discovery radius, and privacy signals easy to review.",
   },
 };
+
+const workStudySectionIcons: Record<string, ComponentProps<typeof IconSymbol>["name"]> = {
+  "Current context": "explore",
+  "Broad field or area": "badge",
+  "Interested in / learning about": "interests",
+  Study: "life-context",
+  Work: "badge",
+  "Volunteering & community": "group",
+  "Prototype matching notes": "explore",
+};
+
+const getPreferenceSectionIcon = (section: PreferenceSection, fallback: string) =>
+  section === "background" ? "🎓" : fallback;
 
 const compactPanelBySection: Record<PreferenceSection, string> = {
   overview: "preferences",
@@ -566,18 +579,28 @@ export default function UserPreferencesScreen() {
     );
   };
 
-  const renderSectionCard = (title: string, copy: string, icon: string, children: ReactNode) => (
-    <View key={title} style={[styles.card, isWide && styles.cardWide, isDay && styles.dayCard]}>
-      <View style={styles.cardHeader}>
-        <Text style={[styles.cardIcon]}>{icon}</Text>
-        <View style={styles.cardBody}>
-          <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{title}</Text>
-          <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy}</Text>
+  const renderSectionCard = (title: string, copy: string, icon: string, children: ReactNode) => {
+    const workStudyIcon = workStudySectionIcons[title];
+
+    return (
+      <View key={title} style={[styles.card, isWide && styles.cardWide, isDay && styles.dayCard]}>
+        <View style={styles.cardHeader}>
+          {workStudyIcon ? (
+            <View style={[styles.cardIconSymbol, isDay && styles.dayChip]}>
+              <IconSymbol name={workStudyIcon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+            </View>
+          ) : (
+            <Text style={[styles.cardIcon]}>{icon}</Text>
+          )}
+          <View style={styles.cardBody}>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{title}</Text>
+            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy}</Text>
+          </View>
         </View>
+        {children}
       </View>
-      {children}
-    </View>
-  );
+    );
+  };
 
   const renderSummary = (labels: string[], fallback: string) => (
     <View style={styles.summaryChips}>
@@ -660,7 +683,7 @@ export default function UserPreferencesScreen() {
         </View>
 
         <View style={[styles.headerCard, isDay && styles.dayCard]}>
-          <Text style={styles.headerIcon}>{activeMeta.icon}</Text>
+          <Text style={styles.headerIcon}>{getPreferenceSectionIcon(activeSection, activeMeta.icon)}</Text>
           <View style={styles.headerText}>
             <Text style={[styles.eyebrow, isDay && styles.dayMutedText]}>NSN preferences</Text>
             <Text style={[styles.title, isDay && styles.dayTitle]}>{activeMeta.title}</Text>
@@ -684,7 +707,7 @@ export default function UserPreferencesScreen() {
                 accessibilityLabel={`Open ${meta.title}`}
                 accessibilityState={{ selected: active }}
               >
-                <Text style={[styles.navPillText, isDay && styles.dayTitle, active && styles.activeText]}>{active ? "Selected: " : ""}{meta.icon} {meta.title}</Text>
+                <Text style={[styles.navPillText, isDay && styles.dayTitle, active && styles.activeText]}>{active ? "Selected: " : ""}{getPreferenceSectionIcon(item, meta.icon)} {meta.title}</Text>
               </TouchableOpacity>
             );
           })}
@@ -701,7 +724,7 @@ export default function UserPreferencesScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${item.title}`}
               >
-                <Text style={styles.overviewIcon}>{item.icon}</Text>
+                <Text style={styles.overviewIcon}>{getPreferenceSectionIcon(item.section, item.icon)}</Text>
                 <View style={styles.cardBody}>
                   <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{item.title}</Text>
                   <Text style={[styles.overviewValue, isDay && styles.dayTitle]}>{item.copy}</Text>
@@ -1359,6 +1382,7 @@ const styles = StyleSheet.create({
   cardWide: { width: "48%", minWidth: 360, flexGrow: 1 },
   cardHeader: { flexDirection: "row", alignItems: "flex-start", gap: 11 },
   cardIcon: { width: 34, fontSize: 24, lineHeight: 30, textAlign: "center" },
+  cardIconSymbol: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center" },
   cardBody: { flex: 1, minWidth: 0 },
   cardTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
   cardCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 2 },
