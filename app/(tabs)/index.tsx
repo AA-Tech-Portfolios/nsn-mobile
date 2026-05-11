@@ -918,6 +918,14 @@ export default function HomeScreen() {
   const shouldShowModeEvents =
     homeVisibleSections.recommendedEvents &&
     (isNightMode ? homeVisibleSections.nightEvents : homeVisibleSections.dayEvents);
+  const activeHomeFilterLabels = [
+    homeViewMode,
+    homeNearbyOnly ? "Nearby" : null,
+    homeSmallGroupsOnly ? "Small groups" : null,
+    homeWeatherSafeOnly ? "Weather-safe" : null,
+    homeEventLayout,
+  ].filter(Boolean);
+  const homeFilterSummary = activeHomeFilterLabels.join(" • ");
 
   const chooseLocalArea = (area: NsnLocalAreaSuggestion) => {
     saveSoftHelloMvpState({ timezone: area, suburb: area.label });
@@ -1204,6 +1212,27 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ) : null}
 
+        {!showHomeControls ? (
+          <View style={[styles.homeControlsSummaryCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}>
+            <IconSymbol name="settings" color={isDay ? "#3949DB" : nsnColors.day} size={19} />
+            <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
+              <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{homeFilterSummary}</Text>
+              <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Home filters are keeping this view calm.
+              </Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={() => setShowHomeControls(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Adjust Home filters"
+              style={[styles.homeSummaryAdjustButton, isDay && styles.dayHeaderPlaceholderDismiss]}
+            >
+              <Text style={[styles.homeSummaryAdjustText, isDay && styles.dayLinkText]}>Adjust</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         {showHomeControls ? (
           <View style={[styles.homeControlsCard, isDay && styles.dayHeaderPlaceholderCard]}>
             <View style={[styles.locationSearchHeader, isRtl && styles.rtlRow]}>
@@ -1214,8 +1243,20 @@ export default function HomeScreen() {
                 </Text>
               </View>
               {homeUpdateNotice ? <Text style={[styles.homeUpdateNotice, isDay && styles.dayLinkText]}>{homeUpdateNotice}</Text> : null}
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => setShowHomeControls(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Collapse Home filters"
+                style={[styles.homeCollapseButton, isDay && styles.dayHeaderPlaceholderDismiss]}
+              >
+                <IconSymbol name="chevron.up" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
+                <Text style={[styles.homeSummaryAdjustText, isDay && styles.dayMutedText]}>Close</Text>
+              </TouchableOpacity>
             </View>
-            <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
+            <View style={styles.homeControlGroup}>
+              <Text style={[styles.homeControlGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Primary view</Text>
+              <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
               {(["Essential", "Comfortable"] as const).map((option) => (
                 <TouchableOpacity
                   key={option}
@@ -1227,12 +1268,15 @@ export default function HomeScreen() {
                   style={[styles.homeControlChip, isDay && styles.dayLocationResultButton, homeViewMode === option && styles.homeControlChipActive]}
                 >
                   <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeViewMode === option && styles.homeControlChipTextActive]}>
-                    {homeViewMode === option ? "✓ " : ""}{option} view
+                    {homeViewMode === option ? "Selected: " : ""}{option} view
                   </Text>
                 </TouchableOpacity>
               ))}
+              </View>
             </View>
-            <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
+            <View style={styles.homeControlGroup}>
+              <Text style={[styles.homeControlGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Optional filters</Text>
+              <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
               {[
                 { label: "Nearby", value: homeNearbyOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeNearbyOnly: value }) },
                 { label: "Small groups only", value: homeSmallGroupsOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeSmallGroupsOnly: value }) },
@@ -1251,12 +1295,15 @@ export default function HomeScreen() {
                   style={[styles.homeControlChip, isDay && styles.dayLocationResultButton, filter.value && styles.homeControlChipActive]}
                 >
                   <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, filter.value && styles.homeControlChipTextActive]}>
-                    {filter.value ? "✓ " : ""}{filter.label}
+                    {filter.value ? "On: " : ""}{filter.label}
                   </Text>
                 </TouchableOpacity>
               ))}
+              </View>
             </View>
-            <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
+            <View style={styles.homeControlGroup}>
+              <Text style={[styles.homeControlGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Event display</Text>
+              <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
               {(["List", "Map"] as const).map((option) => (
                 <TouchableOpacity
                   key={option}
@@ -1268,10 +1315,13 @@ export default function HomeScreen() {
                   style={[styles.homeControlChip, isDay && styles.dayLocationResultButton, homeEventLayout === option && styles.homeControlChipActive]}
                 >
                   <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeEventLayout === option && styles.homeControlChipTextActive]}>
-                    {homeEventLayout === option ? "✓ " : ""}{option} view
+                    {homeEventLayout === option ? "Selected: " : ""}{option} view
                   </Text>
                 </TouchableOpacity>
               ))}
+              </View>
+            </View>
+            <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
               <TouchableOpacity
                 activeOpacity={0.82}
                 onPress={() => setShowCustomiseHome((current) => !current)}
@@ -1295,7 +1345,7 @@ export default function HomeScreen() {
                     style={[styles.homeSectionToggle, isDay && styles.dayLocationResultButton, homeVisibleSections[key] && styles.homeSectionToggleActive]}
                   >
                     <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeVisibleSections[key] && styles.homeControlChipTextActive]}>
-                      {homeVisibleSections[key] ? "✓ " : ""}{homeSectionLabels[key]}
+                      {homeVisibleSections[key] ? "On: " : ""}{homeSectionLabels[key]}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -1686,7 +1736,13 @@ const styles = StyleSheet.create({
   headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   homeSearchEntryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
-  homeControlsCard: { borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", padding: 14, marginBottom: 12, gap: 10 },
+  homeControlsSummaryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 14, paddingVertical: 11, marginBottom: 12 },
+  homeSummaryAdjustButton: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, alignItems: "center", justifyContent: "center" },
+  homeSummaryAdjustText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  homeCollapseButton: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
+  homeControlsCard: { borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", padding: 14, marginBottom: 12, gap: 14 },
+  homeControlGroup: { gap: 6 },
+  homeControlGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   homeControlRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   homeControlChip: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, alignItems: "center", justifyContent: "center" },
   homeControlChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },

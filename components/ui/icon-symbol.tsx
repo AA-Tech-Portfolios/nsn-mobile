@@ -11,6 +11,7 @@ const MAPPING = {
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
   "chevron.left": "chevron-left",
+  "chevron.up": "keyboard-arrow-up",
   calendar: "calendar-today",
   message: "chat-bubble-outline",
   bell: "notifications-none",
