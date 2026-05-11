@@ -3,12 +3,13 @@ import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, Tex
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
-import { getLanguageBase, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type HomeEventLayout, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { allEvents, dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
 import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAreaSuggestion, searchNsnEvents } from "@/lib/nsn-search";
+import { getComfortEventScore, isNearbyEvent, isSmallGroupEvent, isWeatherSafeEvent } from "@/lib/home-view-filters";
 import { prioritizeEventsForComfort } from "@/lib/softhello-mvp";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -82,6 +83,16 @@ const filterKeys = ["All", "Outdoor", "Indoor", "Food", "Active"] as const;
 type EventFilter = (typeof filterKeys)[number];
 const noiseFilterKeys: NoiseLevelPreference[] = ["Any", ...noiseLevelOptions];
 type HomeSearchMode = "areas" | "meetups";
+type HomeSectionKey = keyof HomeVisibleSections;
+
+const homeSectionLabels: Record<HomeSectionKey, string> = {
+  weather: "Weather update",
+  noiseGuide: "Noise level guide",
+  search: "Search NSN",
+  recommendedEvents: "Recommended events",
+  dayEvents: "Day events",
+  nightEvents: "Night events",
+};
 
 const noiseGuideTranslations = {
   English: {
@@ -789,7 +800,7 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeVisibleSections, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -803,11 +814,15 @@ export default function HomeScreen() {
   const [expandedInsight, setExpandedInsight] = useState<"day-night" | "weather" | null>(null);
   const [dismissedThemeSuggestion, setDismissedThemeSuggestion] = useState<"day" | "night" | null>(null);
   const [headerPlaceholder, setHeaderPlaceholder] = useState<{ title: string; copy: string } | null>(null);
+  const [showHomeControls, setShowHomeControls] = useState(false);
+  const [showCustomiseHome, setShowCustomiseHome] = useState(false);
+  const [homeUpdateNotice, setHomeUpdateNotice] = useState<string | null>(null);
   const [showNsnSearch, setShowNsnSearch] = useState(false);
   const [homeSearchMode, setHomeSearchMode] = useState<HomeSearchMode>("areas");
   const [nsnSearchQuery, setNsnSearchQuery] = useState("");
   const [detectingLocation, setDetectingLocation] = useState(false);
-  const activeEvents = useMemo(() => {
+
+  const baseEvents = useMemo(() => {
     const hiddenIds = new Set(hiddenEventIds);
     const pinnedIds = new Set(pinnedEventIds);
     const events = prioritizeEventsForComfort(isNightMode ? eveningEvents : dayEvents, comfortPreferences)
@@ -824,12 +839,60 @@ export default function HomeScreen() {
 
     return categoryFilteredEvents.filter((event) => event.noiseLevel === noiseLevelPreference);
   }, [activeFilter, comfortPreferences, hiddenEventIds, isNightMode, noiseLevelPreference, pinnedEventIds, showHiddenEvents]);
+
+  const activeEvents = useMemo(() => {
+    const selectedArea = `${timezone.label} ${timezone.city} ${timezone.country}`.toLocaleLowerCase();
+    let nextEvents = [...baseEvents];
+
+    if (homeSmallGroupsOnly) {
+      nextEvents = nextEvents.filter(isSmallGroupEvent);
+    }
+
+    if (homeWeatherSafeOnly) {
+      nextEvents = nextEvents.filter(isWeatherSafeEvent);
+    }
+
+    nextEvents.sort((a, b) => {
+      if (homeNearbyOnly) {
+        const nearbyDelta = Number(isNearbyEvent(b, selectedArea)) - Number(isNearbyEvent(a, selectedArea));
+        if (nearbyDelta !== 0) return nearbyDelta;
+      }
+
+      if (homeViewMode === "Comfortable") {
+        return getComfortEventScore(a) - getComfortEventScore(b);
+      }
+
+      return 0;
+    });
+
+    return nextEvents;
+  }, [baseEvents, homeNearbyOnly, homeSmallGroupsOnly, homeViewMode, homeWeatherSafeOnly, timezone.city, timezone.country, timezone.label]);
   const isDay = !isNightMode;
   const effectiveReduceMotion = reduceMotion || batterySaver;
   const [now, setNow] = useState(new Date());
 
   const selectNoiseLevelPreference = (preference: NoiseLevelPreference) => {
     saveSoftHelloMvpState({ noiseLevelPreference: preference });
+  };
+
+  const showPrototypeUpdate = (message = "Updated for this prototype") => {
+    setHomeUpdateNotice(message);
+    setTimeout(() => setHomeUpdateNotice(null), 1600);
+  };
+
+  const updateHomeViewMode = (value: HomeViewMode) => {
+    saveSoftHelloMvpState({ homeViewMode: value });
+    showPrototypeUpdate("Home view updated locally");
+  };
+
+  const updateHomeEventLayout = (value: HomeEventLayout) => {
+    saveSoftHelloMvpState({ homeEventLayout: value });
+    showPrototypeUpdate("Event view updated locally");
+  };
+
+  const updateHomeSection = (key: HomeSectionKey, value: boolean) => {
+    saveSoftHelloMvpState({ homeVisibleSections: { ...homeVisibleSections, [key]: value } });
+    showPrototypeUpdate("Home sections updated locally");
   };
 
   const showSearchPlaceholder = useCallback(() => {
@@ -848,8 +911,13 @@ export default function HomeScreen() {
     [appLanguageBase, nsnSearchQuery, searchableMeetups]
   );
   const isMeetupSearch = homeSearchMode === "meetups" && Boolean(normalizedNsnSearchQuery);
-  const displayedEvents = isMeetupSearch ? matchingMeetups : activeEvents;
+  const recommendedEventLimit = homeViewMode === "Essential" ? 3 : 5;
+  const displayedEvents = isMeetupSearch ? matchingMeetups : activeEvents.slice(0, recommendedEventLimit);
   const hasNoMeetupSearchResults = isMeetupSearch && matchingMeetups.length === 0;
+  const hasNoFilteredEvents = !isMeetupSearch && activeEvents.length === 0;
+  const shouldShowModeEvents =
+    homeVisibleSections.recommendedEvents &&
+    (isNightMode ? homeVisibleSections.nightEvents : homeVisibleSections.dayEvents);
 
   const chooseLocalArea = (area: NsnLocalAreaSuggestion) => {
     saveSoftHelloMvpState({ timezone: area, suburb: area.label });
@@ -892,11 +960,9 @@ export default function HomeScreen() {
   };
 
   const showViewFilterPlaceholder = useCallback(() => {
-    setHeaderPlaceholder({
-      title: homeCopy.changeEventView,
-      copy: homeCopy.changeEventViewCopy,
-    });
-  }, [homeCopy.changeEventView, homeCopy.changeEventViewCopy]);
+    setHeaderPlaceholder(null);
+    setShowHomeControls((current) => !current);
+  }, []);
 
   const switchToSuggestedTheme = (suggestedMode: "day" | "night") => {
     setIsNightMode(suggestedMode === "night");
@@ -1119,6 +1185,125 @@ export default function HomeScreen() {
           <IconSymbol name="chevron.right" color={isDay ? "#3B4A63" : nsnColors.muted} size={20} />
         </TouchableOpacity>
 
+        {homeVisibleSections.search && !showNsnSearch ? (
+          <TouchableOpacity
+            activeOpacity={0.84}
+            onPress={showSearchPlaceholder}
+            accessibilityRole="button"
+            accessibilityLabel="Open Search NSN"
+            accessibilityHint="Search suburbs, regions, and meetups."
+            style={[styles.homeSearchEntryCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}
+          >
+            <IconSymbol name="magnifyingglass" color={isDay ? "#3949DB" : nsnColors.day} size={20} />
+            <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
+              <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Search NSN</Text>
+              <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Find a suburb, region, or low-pressure meetup idea.
+              </Text>
+            </View>
+          </TouchableOpacity>
+        ) : null}
+
+        {showHomeControls ? (
+          <View style={[styles.homeControlsCard, isDay && styles.dayHeaderPlaceholderCard]}>
+            <View style={[styles.locationSearchHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
+                <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{homeCopy.changeEventView}</Text>
+                <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  Keep Home quiet, local, and easy to scan.
+                </Text>
+              </View>
+              {homeUpdateNotice ? <Text style={[styles.homeUpdateNotice, isDay && styles.dayLinkText]}>{homeUpdateNotice}</Text> : null}
+            </View>
+            <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
+              {(["Essential", "Comfortable"] as const).map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  activeOpacity={0.82}
+                  onPress={() => updateHomeViewMode(option)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: homeViewMode === option }}
+                  accessibilityLabel={`${option} view`}
+                  style={[styles.homeControlChip, isDay && styles.dayLocationResultButton, homeViewMode === option && styles.homeControlChipActive]}
+                >
+                  <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeViewMode === option && styles.homeControlChipTextActive]}>
+                    {homeViewMode === option ? "✓ " : ""}{option} view
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
+              {[
+                { label: "Nearby", value: homeNearbyOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeNearbyOnly: value }) },
+                { label: "Small groups only", value: homeSmallGroupsOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeSmallGroupsOnly: value }) },
+                { label: "Weather-safe", value: homeWeatherSafeOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeWeatherSafeOnly: value }) },
+              ].map((filter) => (
+                <TouchableOpacity
+                  key={filter.label}
+                  activeOpacity={0.82}
+                  onPress={() => {
+                    filter.update(!filter.value);
+                    showPrototypeUpdate("Filters updated locally");
+                  }}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: filter.value }}
+                  accessibilityLabel={filter.label}
+                  style={[styles.homeControlChip, isDay && styles.dayLocationResultButton, filter.value && styles.homeControlChipActive]}
+                >
+                  <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, filter.value && styles.homeControlChipTextActive]}>
+                    {filter.value ? "✓ " : ""}{filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
+              {(["List", "Map"] as const).map((option) => (
+                <TouchableOpacity
+                  key={option}
+                  activeOpacity={0.82}
+                  onPress={() => updateHomeEventLayout(option)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: homeEventLayout === option }}
+                  accessibilityLabel={`${option} event view`}
+                  style={[styles.homeControlChip, isDay && styles.dayLocationResultButton, homeEventLayout === option && styles.homeControlChipActive]}
+                >
+                  <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeEventLayout === option && styles.homeControlChipTextActive]}>
+                    {homeEventLayout === option ? "✓ " : ""}{option} view
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => setShowCustomiseHome((current) => !current)}
+                accessibilityRole="button"
+                accessibilityLabel="Customise Home sections"
+                style={[styles.homeControlChip, isDay && styles.dayLocationResultButton]}
+              >
+                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>{showCustomiseHome ? "Hide" : "Customise Home"}</Text>
+              </TouchableOpacity>
+            </View>
+            {showCustomiseHome ? (
+              <View style={styles.homeSectionToggleGrid}>
+                {(Object.keys(homeSectionLabels) as HomeSectionKey[]).map((key) => (
+                  <TouchableOpacity
+                    key={key}
+                    activeOpacity={0.82}
+                    onPress={() => updateHomeSection(key, !homeVisibleSections[key])}
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: homeVisibleSections[key] }}
+                    accessibilityLabel={homeSectionLabels[key]}
+                    style={[styles.homeSectionToggle, isDay && styles.dayLocationResultButton, homeVisibleSections[key] && styles.homeSectionToggleActive]}
+                  >
+                    <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeVisibleSections[key] && styles.homeControlChipTextActive]}>
+                      {homeVisibleSections[key] ? "✓ " : ""}{homeSectionLabels[key]}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
         {headerPlaceholder ? (
           <View
             style={[styles.headerPlaceholderCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}
@@ -1317,6 +1502,8 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
+        {homeVisibleSections.weather ? (
+          <>
         <View style={[styles.contextRow, isRtl && styles.rtlRow]}>
           <View style={isRtl && styles.rtlBlock}>
             <Text style={[styles.dateText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{greeting} • {formattedDate} • {formattedTime}</Text>
@@ -1334,7 +1521,10 @@ export default function HomeScreen() {
 {weatherIcon}
 </Animated.Text>
         </TouchableOpacity>
+          </>
+        ) : null}
       
+        {homeViewMode === "Comfortable" || showHomeControls ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filterRow, isRtl && styles.rtlRow]}>
           {copy.filters.map((filter, index) => {
             const filterKey = filterKeys[index];
@@ -1350,7 +1540,9 @@ export default function HomeScreen() {
             );
           })}
         </ScrollView>
+        ) : null}
 
+        {homeVisibleSections.noiseGuide ? (
         <View style={[styles.noiseGuideCard, isDay && styles.dayCard]}>
           <View style={[styles.noiseGuideHeader, isRtl && styles.rtlRow]}>
             <View style={isRtl && styles.rtlBlock}>
@@ -1389,7 +1581,10 @@ export default function HomeScreen() {
             ))}
           </ScrollView>
         </View>
+        ) : null}
 
+        {shouldShowModeEvents ? (
+          <>
         <View style={[styles.sectionHeader, isRtl && styles.rtlRow]}>
           <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]}>
             {isMeetupSearch ? "Matching meetups" : mode === "day" ? copy.dayEvents : copy.eveningEvents}
@@ -1401,17 +1596,32 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.cardStack}>
+          {homeEventLayout === "Map" && !isMeetupSearch ? (
+            <View style={[styles.mapPreviewCard, isDay && styles.dayLocationResultButton, isRtl && styles.rtlRow]}>
+              <IconSymbol name="location" color={isDay ? "#3949DB" : nsnColors.day} size={20} />
+              <View style={styles.headerPlaceholderBody}>
+                <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Map view prototype</Text>
+                <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  Showing recommended local meetups in a compact list until map pins are connected.
+                </Text>
+              </View>
+            </View>
+          ) : null}
           {displayedEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} />))}
-          {hasNoMeetupSearchResults ? (
+          {hasNoMeetupSearchResults || hasNoFilteredEvents ? (
             <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
-              <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups yet.</Text>
+              <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups right now.</Text>
               <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Try another suburb, region, or activity — NSN is still an early local prototype.
+                Try relaxing a filter - NSN is still an early prototype.
               </Text>
             </View>
           ) : null}
         </View>
+          </>
+        ) : null}
 
+        {homeViewMode === "Comfortable" ? (
+          <>
         <TouchableOpacity activeOpacity={0.88} onPress={() => router.push("/(tabs)/events")} style={[styles.createMeetupButton, isRtl && styles.rtlRow]}>
           <IconSymbol name="add" color={nsnColors.text} size={20} />
           <Text style={[styles.createMeetupButtonText, isRtl && styles.rtlText]}>
@@ -1439,6 +1649,8 @@ export default function HomeScreen() {
             ) : null}
           </TouchableOpacity>
         </View>
+          </>
+        ) : null}
       </ScrollView>
       </Animated.View>
     </ScreenContainer>
@@ -1473,6 +1685,17 @@ const styles = StyleSheet.create({
   headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  homeSearchEntryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  homeControlsCard: { borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", padding: 14, marginBottom: 12, gap: 10 },
+  homeControlRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  homeControlChip: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, alignItems: "center", justifyContent: "center" },
+  homeControlChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  homeControlChipText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  homeControlChipTextActive: { color: "#FFFFFF" },
+  homeSectionToggleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingTop: 2 },
+  homeSectionToggle: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, alignItems: "center", justifyContent: "center" },
+  homeSectionToggleActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  homeUpdateNotice: { color: "#96A5FF", fontSize: 11, fontWeight: "900", lineHeight: 15 },
   dayHeaderPlaceholderCard: { borderColor: "#B8C9E6", backgroundColor: "#F8FBFF" },
   headerPlaceholderBody: { flex: 1, minWidth: 0 },
   headerPlaceholderTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
@@ -1501,6 +1724,7 @@ const styles = StyleSheet.create({
   activeSearchResultBadge: { borderColor: nsnColors.day, color: nsnColors.text },
   searchEmptyCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
   searchPromptCard: { borderRadius: 14, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 11, paddingVertical: 10 },
+  mapPreviewCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 11, paddingVertical: 10 },
   locationResultButton: { borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, paddingVertical: 8 },
   meetupSearchResultButton: { backgroundColor: "rgba(255,255,255,0.035)" },
   dayLocationResultButton: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },

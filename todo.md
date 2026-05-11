@@ -25,6 +25,7 @@
 - [x] Refine Home search into compact Search NSN suburb and meetup matching for the Sydney/North Shore prototype
 - [x] Improve Search NSN autocomplete with Sydney locality data, region matching, aliases, and no default suburb list
 - [x] Refine Home/Profile local area editing with shared location picker and API-ready fallback lookup service
+- [x] Add Home view and filter controls for essential/comfortable layouts, nearby, small groups, weather-safe, map/list, and section visibility
 - [x] Capture checkpoint screenshots for Home, Meetups, Chats, Alerts, Profile, Settings & Privacy, and onboarding stages
 
 ## Next Focus
@@ -33,6 +34,7 @@
 
 - [ ] Review checkpoint screenshots for layout regressions on desktop and mobile
 - [ ] Create an alpha tester feedback checklist after the walkthrough has been exercised
+- [ ] Continue suburb/locality refinement with an API-backed or maintained Australian locality dataset
 - [ ] Decide which prototype-only account actions should stay visible after tester walkthrough, be backed by real auth, or be hidden before alpha
 - [ ] Create first release tag when ready: `v0.1.0 - Trust Foundations`
 

@@ -129,6 +129,16 @@ export type SettingsPrivacyMode = "Basic" | "Advanced";
 export type AccountPauseTimeline = "A few days" | "One week" | "One month" | "Until I return";
 export type LowLightLevel = "Gentle" | "Medium" | "Deep";
 export type NotificationSnoozePreset = "1 hour" | "Tonight" | "24 hours" | "Until I turn it back on";
+export type HomeViewMode = "Essential" | "Comfortable";
+export type HomeEventLayout = "List" | "Map";
+export type HomeVisibleSections = {
+  weather: boolean;
+  noiseGuide: boolean;
+  search: boolean;
+  recommendedEvents: boolean;
+  dayEvents: boolean;
+  nightEvents: boolean;
+};
 export type DietaryPreference =
   | "No preference"
   | "Vegetarian"
@@ -140,6 +150,20 @@ export type DietaryPreference =
   | "Nut allergy"
   | "Seafood allergy"
   | "Prefer non-alcohol venues";
+
+export const defaultHomeVisibleSections: HomeVisibleSections = {
+  weather: true,
+  noiseGuide: false,
+  search: true,
+  recommendedEvents: true,
+  dayEvents: true,
+  nightEvents: true,
+};
+
+const normalizeHomeVisibleSections = (value?: Partial<HomeVisibleSections> | null): HomeVisibleSections => ({
+  ...defaultHomeVisibleSections,
+  ...(value ?? {}),
+});
 
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
@@ -197,6 +221,12 @@ type OnboardingSnapshot = {
   batterySaver?: boolean;
   lowLightMode?: boolean;
   lowLightLevel?: LowLightLevel;
+  homeViewMode?: HomeViewMode;
+  homeNearbyOnly?: boolean;
+  homeSmallGroupsOnly?: boolean;
+  homeWeatherSafeOnly?: boolean;
+  homeEventLayout?: HomeEventLayout;
+  homeVisibleSections?: HomeVisibleSections;
   notificationSnoozed?: boolean;
   notificationSnoozePreset?: NotificationSnoozePreset;
   timezone?: TimezoneSetting;
@@ -405,6 +435,18 @@ type AppSettings = {
   setLowLightMode: (value: boolean) => void;
   lowLightLevel: LowLightLevel;
   setLowLightLevel: (value: LowLightLevel) => void;
+  homeViewMode: HomeViewMode;
+  setHomeViewMode: (value: HomeViewMode) => void;
+  homeNearbyOnly: boolean;
+  setHomeNearbyOnly: (value: boolean) => void;
+  homeSmallGroupsOnly: boolean;
+  setHomeSmallGroupsOnly: (value: boolean) => void;
+  homeWeatherSafeOnly: boolean;
+  setHomeWeatherSafeOnly: (value: boolean) => void;
+  homeEventLayout: HomeEventLayout;
+  setHomeEventLayout: (value: HomeEventLayout) => void;
+  homeVisibleSections: HomeVisibleSections;
+  setHomeVisibleSections: (value: HomeVisibleSections) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
   saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
   resetOnboarding: () => Promise<void>;
@@ -527,6 +569,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [batterySaver, setBatterySaver] = useState(false);
   const [lowLightMode, setLowLightMode] = useState(false);
   const [lowLightLevel, setLowLightLevel] = useState<LowLightLevel>("Medium");
+  const [homeViewMode, setHomeViewMode] = useState<HomeViewMode>("Essential");
+  const [homeNearbyOnly, setHomeNearbyOnly] = useState(false);
+  const [homeSmallGroupsOnly, setHomeSmallGroupsOnly] = useState(false);
+  const [homeWeatherSafeOnly, setHomeWeatherSafeOnly] = useState(false);
+  const [homeEventLayout, setHomeEventLayout] = useState<HomeEventLayout>("List");
+  const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(defaultHomeVisibleSections);
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
@@ -628,6 +676,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setBatterySaver(Boolean(snapshot.batterySaver));
         setLowLightMode(Boolean(snapshot.lowLightMode));
         setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
+        setHomeViewMode(snapshot.homeViewMode ?? "Essential");
+        setHomeNearbyOnly(Boolean(snapshot.homeNearbyOnly));
+        setHomeSmallGroupsOnly(Boolean(snapshot.homeSmallGroupsOnly));
+        setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
+        setHomeEventLayout(snapshot.homeEventLayout ?? "List");
+        setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
         setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
         setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
         setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
@@ -707,6 +761,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setBatterySaver(Boolean(snapshot.batterySaver));
     setLowLightMode(Boolean(snapshot.lowLightMode));
     setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
+    setHomeViewMode(snapshot.homeViewMode ?? "Essential");
+    setHomeNearbyOnly(Boolean(snapshot.homeNearbyOnly));
+    setHomeSmallGroupsOnly(Boolean(snapshot.homeSmallGroupsOnly));
+    setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
+    setHomeEventLayout(snapshot.homeEventLayout ?? "List");
+    setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
     setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
     setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
     setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
@@ -792,6 +852,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       batterySaver,
       lowLightMode,
       lowLightLevel,
+      homeViewMode,
+      homeNearbyOnly,
+      homeSmallGroupsOnly,
+      homeWeatherSafeOnly,
+      homeEventLayout,
+      homeVisibleSections,
       notificationSnoozed,
       notificationSnoozePreset,
       appLanguage,
@@ -891,6 +957,16 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.batterySaver !== undefined) setBatterySaver(snapshot.batterySaver);
     if (snapshot.lowLightMode !== undefined) setLowLightMode(snapshot.lowLightMode);
     if (snapshot.lowLightLevel !== undefined) setLowLightLevel(snapshot.lowLightLevel);
+    if (snapshot.homeViewMode !== undefined) setHomeViewMode(snapshot.homeViewMode);
+    if (snapshot.homeNearbyOnly !== undefined) setHomeNearbyOnly(snapshot.homeNearbyOnly);
+    if (snapshot.homeSmallGroupsOnly !== undefined) setHomeSmallGroupsOnly(snapshot.homeSmallGroupsOnly);
+    if (snapshot.homeWeatherSafeOnly !== undefined) setHomeWeatherSafeOnly(snapshot.homeWeatherSafeOnly);
+    if (snapshot.homeEventLayout !== undefined) setHomeEventLayout(snapshot.homeEventLayout);
+    if (snapshot.homeVisibleSections !== undefined) {
+      const nextSections = normalizeHomeVisibleSections(snapshot.homeVisibleSections);
+      setHomeVisibleSections(nextSections);
+      nextSnapshot.homeVisibleSections = nextSections;
+    }
     if (snapshot.notificationSnoozed !== undefined) setNotificationSnoozed(snapshot.notificationSnoozed);
     if (snapshot.notificationSnoozePreset !== undefined) setNotificationSnoozePreset(snapshot.notificationSnoozePreset);
     if (snapshot.appLanguage !== undefined) setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
@@ -1143,6 +1219,18 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setLowLightMode,
         lowLightLevel,
         setLowLightLevel,
+        homeViewMode,
+        setHomeViewMode,
+        homeNearbyOnly,
+        setHomeNearbyOnly,
+        homeSmallGroupsOnly,
+        setHomeSmallGroupsOnly,
+        homeWeatherSafeOnly,
+        setHomeWeatherSafeOnly,
+        homeEventLayout,
+        setHomeEventLayout,
+        homeVisibleSections,
+        setHomeVisibleSections,
         completeOnboarding,
         saveSoftHelloMvpState,
         resetOnboarding,
