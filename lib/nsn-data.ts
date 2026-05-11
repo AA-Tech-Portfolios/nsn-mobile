@@ -34,6 +34,7 @@ export type EventItem = {
   imageTone: string;
   emoji: string;
   tags: string[];
+  mediaComfortLabels?: string[];
 };
 
 export const dayEvents: EventItem[] = [
@@ -51,6 +52,7 @@ export const dayEvents: EventItem[] = [
     imageTone: "#19432D",
     emoji: "🧺",
     tags: ["Outdoor", "Balanced"],
+    mediaComfortLabels: ["Ask before photos", "Group photos by consent"],
   },
   {
     id: "beach-day-chill-vibes",
@@ -66,6 +68,7 @@ export const dayEvents: EventItem[] = [
     imageTone: "#1A4964",
     emoji: "🌊",
     tags: ["Outdoor", "Balanced"],
+    mediaComfortLabels: ["Ask before photos", "Venue photos okay"],
   },
   {
     id: "library-calm-study",
@@ -81,6 +84,7 @@ export const dayEvents: EventItem[] = [
     imageTone: "#29365E",
     emoji: "📚",
     tags: ["Indoor", "Quiet"],
+    mediaComfortLabels: ["Private meetup", "No public posting"],
   },
   {
     id: "coffee-lane-cove",
@@ -96,6 +100,7 @@ export const dayEvents: EventItem[] = [
     imageTone: "#5A3823",
     emoji: "☕",
     tags: ["Food", "Indoor", "Balanced"],
+    mediaComfortLabels: ["Ask before photos", "Private meetup"],
   },
   {
     id: "harbour-walk-waverton",
@@ -111,6 +116,7 @@ export const dayEvents: EventItem[] = [
     imageTone: "#1E4F55",
     emoji: "🚶",
     tags: ["Active", "Outdoor", "Balanced"],
+    mediaComfortLabels: ["Venue photos okay", "Ask before photos"],
   },
 ];
 
@@ -129,6 +135,7 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#281C45",
     emoji: "🍿",
     tags: ["Indoor", "Quiet"],
+    mediaComfortLabels: ["No filming", "Private meetup"],
   },
   {
     id: "board-games-coffee",
@@ -144,6 +151,7 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#3B2D15",
     emoji: "🎲",
     tags: ["Indoor", "Food", "Balanced"],
+    mediaComfortLabels: ["Ask before photos", "Private meetup"],
   },
   {
     id: "ramen-small-table",
@@ -159,6 +167,7 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#55331C",
     emoji: "🍜",
     tags: ["Food", "Indoor", "Balanced"],
+    mediaComfortLabels: ["Private meetup", "No public posting"],
   },
   {
     id: "quiet-music-listening",
@@ -174,6 +183,7 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#1F2B4A",
     emoji: "🎧",
     tags: ["Indoor", "Quiet"],
+    mediaComfortLabels: ["No filming", "Private meetup"],
   },
 ];
 

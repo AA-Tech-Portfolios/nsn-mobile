@@ -63,7 +63,8 @@
 
 ### Safety and trust
 
-- [ ] Add Community Guidelines
+- [ ] Add Community Guidelines, including photo/video consent expectations and no sharing private chats, profiles, or meetup details without consent
+- [ ] Add event media comfort labels and a future reporting flow for privacy, photo, video, or screenshot violations
 - [ ] Add 18+ compliance copy and safeguards beyond local age entry
 - [ ] Decide real verification provider strategy before claiming production verification
 - [ ] Decide the real verification provider and UX handoff for the verified-but-private trust state

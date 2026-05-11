@@ -126,6 +126,14 @@ export type ContactPreference = "In person" | "Text" | "Email" | "Phone" | "Vide
 export type SocialEnergyPreference = "Calm" | "Balanced" | "Social" | "Lively";
 export type CommunicationPreference = "Chat before meetup" | "Details only" | "Voice okay" | "In-person first" | "Low-message mode" | "Reminders only";
 export type GroupSizePreference = "1:1" | "2-3 people" | "4-6 people" | "Small groups only" | "Flexible";
+export type PhotoRecordingComfortPreference =
+  | "Ask me first"
+  | "No photos of me"
+  | "Group photos are okay"
+  | "Venue/event photos are okay"
+  | "No videos please"
+  | "No public posting without permission"
+  | "Prefer no screenshots of chats/profile";
 export type ProfileGender = "Not specified" | "Male" | "Female" | "Other";
 export type ProfileNameDisplayMode = "Hidden" | "Initial" | "Full";
 export type SettingsPrivacyMode = "Basic" | "Advanced";
@@ -167,6 +175,20 @@ export const communicationPreferenceOptions: CommunicationPreference[] = [
   "Reminders only",
 ];
 export const groupSizePreferenceOptions: GroupSizePreference[] = ["1:1", "2-3 people", "4-6 people", "Small groups only", "Flexible"];
+export const photoRecordingComfortOptions: PhotoRecordingComfortPreference[] = [
+  "Ask me first",
+  "No photos of me",
+  "Group photos are okay",
+  "Venue/event photos are okay",
+  "No videos please",
+  "No public posting without permission",
+  "Prefer no screenshots of chats/profile",
+];
+export const defaultPhotoRecordingComfortPreferences: PhotoRecordingComfortPreference[] = [
+  "Ask me first",
+  "No public posting without permission",
+  "Prefer no screenshots of chats/profile",
+];
 
 export type DietaryPreference =
   | "No preference"
@@ -267,6 +289,11 @@ const normalizeCommunicationPreferences = (value?: CommunicationPreference[] | n
 const normalizeGroupSizePreference = (value?: GroupSizePreference | null): GroupSizePreference =>
   value && groupSizePreferenceOptions.includes(value) ? value : "Small groups only";
 
+const normalizePhotoRecordingComfortPreferences = (value?: PhotoRecordingComfortPreference[] | null): PhotoRecordingComfortPreference[] => {
+  const filtered = (value ?? []).filter((preference): preference is PhotoRecordingComfortPreference => photoRecordingComfortOptions.includes(preference));
+  return filtered.length ? filtered : defaultPhotoRecordingComfortPreferences;
+};
+
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
   accountPaused?: boolean;
@@ -317,6 +344,7 @@ type OnboardingSnapshot = {
   socialEnergyPreference?: SocialEnergyPreference;
   communicationPreferences?: CommunicationPreference[];
   groupSizePreference?: GroupSizePreference;
+  photoRecordingComfortPreferences?: PhotoRecordingComfortPreference[];
   verifiedButPrivate?: boolean;
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
@@ -574,6 +602,8 @@ type AppSettings = {
   setCommunicationPreferences: (value: CommunicationPreference[]) => void;
   groupSizePreference: GroupSizePreference;
   setGroupSizePreference: (value: GroupSizePreference) => void;
+  photoRecordingComfortPreferences: PhotoRecordingComfortPreference[];
+  setPhotoRecordingComfortPreferences: (value: PhotoRecordingComfortPreference[]) => void;
   verifiedButPrivate: boolean;
   setVerifiedButPrivate: (value: boolean) => void;
   dietaryPreferences: DietaryPreference[];
@@ -754,6 +784,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [socialEnergyPreference, setSocialEnergyPreference] = useState<SocialEnergyPreference>("Calm");
   const [communicationPreferences, setCommunicationPreferences] = useState<CommunicationPreference[]>(["Low-message mode", "Details only"]);
   const [groupSizePreference, setGroupSizePreference] = useState<GroupSizePreference>("Small groups only");
+  const [photoRecordingComfortPreferences, setPhotoRecordingComfortPreferences] = useState<PhotoRecordingComfortPreference[]>(defaultPhotoRecordingComfortPreferences);
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
@@ -882,6 +913,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
         setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
         setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
+        setPhotoRecordingComfortPreferences(normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences));
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
@@ -988,9 +1020,11 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextSocialEnergyPreference = normalizeSocialEnergyPreference(snapshot.socialEnergyPreference);
     const nextCommunicationPreferences = normalizeCommunicationPreferences(snapshot.communicationPreferences);
     const nextGroupSizePreference = normalizeGroupSizePreference(snapshot.groupSizePreference);
+    const nextPhotoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences);
     setSocialEnergyPreference(nextSocialEnergyPreference);
     setCommunicationPreferences(nextCommunicationPreferences);
     setGroupSizePreference(nextGroupSizePreference);
+    setPhotoRecordingComfortPreferences(nextPhotoRecordingComfortPreferences);
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
     setDietaryPreferences(snapshot.dietaryPreferences);
@@ -1053,6 +1087,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           socialEnergyPreference: nextSocialEnergyPreference,
           communicationPreferences: nextCommunicationPreferences,
           groupSizePreference: nextGroupSizePreference,
+          photoRecordingComfortPreferences: nextPhotoRecordingComfortPreferences,
           verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
           showWeekday: snapshot.showWeekday ?? true,
           timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
@@ -1122,6 +1157,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       socialEnergyPreference,
       communicationPreferences,
       groupSizePreference,
+      photoRecordingComfortPreferences,
       verifiedButPrivate,
       transportationMethod,
       dietaryPreferences,
@@ -1182,6 +1218,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.socialEnergyPreference = normalizeSocialEnergyPreference(nextSnapshot.socialEnergyPreference);
     nextSnapshot.communicationPreferences = normalizeCommunicationPreferences(nextSnapshot.communicationPreferences);
     nextSnapshot.groupSizePreference = normalizeGroupSizePreference(nextSnapshot.groupSizePreference);
+    nextSnapshot.photoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(nextSnapshot.photoRecordingComfortPreferences);
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
@@ -1264,6 +1301,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.socialEnergyPreference !== undefined) setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
     if (snapshot.communicationPreferences !== undefined) setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
     if (snapshot.groupSizePreference !== undefined) setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
+    if (snapshot.photoRecordingComfortPreferences !== undefined) setPhotoRecordingComfortPreferences(normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences));
     if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
@@ -1553,6 +1591,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setCommunicationPreferences,
         groupSizePreference,
         setGroupSizePreference,
+        photoRecordingComfortPreferences,
+        setPhotoRecordingComfortPreferences,
         verifiedButPrivate,
         setVerifiedButPrivate,
         transportationMethod,

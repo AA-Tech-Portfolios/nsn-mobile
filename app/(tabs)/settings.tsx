@@ -10,6 +10,7 @@ import {
   groupSizePreferenceOptions,
   nsnLocalLanguageOptions,
   normalizeNsnLanguage,
+  photoRecordingComfortOptions,
   socialEnergyOptions,
   type AccountPauseTimeline,
   type CardOutlineStyle,
@@ -24,6 +25,7 @@ import {
   type NotificationSnoozePreset,
   type NsnBlurLevel,
   type NsnComfortMode,
+  type PhotoRecordingComfortPreference,
   type ProfileGender,
   type ProfileNameDisplayMode,
   type SettingsPrivacyMode,
@@ -125,6 +127,7 @@ const prototypeBadgeBySetting: Record<string, "Prototype" | "Demo" | "Coming soo
   socialEnergyPreference: "Prototype",
   communicationPreferences: "Prototype",
   groupSizePreference: "Prototype",
+  photoRecordingComfortPreferences: "Prototype",
   verifiedButPrivate: "Prototype",
 };
 const prototypeOnlyToggleKeys = new Set(["showFirstNameOnly", "sameAgeGroupsOnly", "revealAfterRsvp", "friendsOfFriendsOnly"]);
@@ -3076,6 +3079,7 @@ export default function SettingsScreen() {
     socialEnergyPreference,
     communicationPreferences,
     groupSizePreference,
+    photoRecordingComfortPreferences,
     verifiedButPrivate,
     profilePhotoUri,
     settingsPrivacyMode,
@@ -3666,6 +3670,14 @@ export default function SettingsScreen() {
     saveSoftHelloMvpState({ communicationPreferences: nextPreferences });
     showRecentlyChanged("communicationPreferences");
   };
+  const togglePhotoRecordingComfortPreference = (value: PhotoRecordingComfortPreference) => {
+    const nextPreferences = photoRecordingComfortPreferences.includes(value)
+      ? photoRecordingComfortPreferences.filter((item) => item !== value)
+      : [...photoRecordingComfortPreferences, value];
+
+    saveSoftHelloMvpState({ photoRecordingComfortPreferences: nextPreferences });
+    showRecentlyChanged("photoRecordingComfortPreferences");
+  };
   const saveVerifiedButPrivate = (value: boolean) => {
     saveSoftHelloMvpState({ verifiedButPrivate: value });
     showRecentlyChanged("verifiedButPrivate");
@@ -4208,6 +4220,35 @@ export default function SettingsScreen() {
             </View>
           </View>
 
+          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
+            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+            </Text>
+            <View style={styles.blurLevelGrid}>
+              {photoRecordingComfortOptions.map((option) => {
+                const active = photoRecordingComfortPreferences.includes(option);
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    activeOpacity={0.82}
+                    onPress={() => togglePhotoRecordingComfortPreference(option)}
+                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Photo and recording comfort ${option}`}
+                    accessibilityState={{ selected: active }}
+                  >
+                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Please don't screenshot or share someone's profile, chat, or meetup details without permission.
+            </Text>
+            {renderSettingMeta("photoRecordingComfortPreferences")}
+          </View>
+
           <View style={[styles.settingRow, styles.settingRowLast, isRtl && styles.rtlRow]}>
             <View style={styles.settingCopy}>
               <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Verified, but private</Text>
@@ -4335,6 +4376,7 @@ export default function SettingsScreen() {
             socialEnergyPreference={socialEnergyPreference}
             communicationPreferences={communicationPreferences}
             groupSizePreference={groupSizePreference}
+            photoRecordingComfortPreferences={photoRecordingComfortPreferences}
             verifiedButPrivate={verifiedButPrivate}
             comfortMode={comfortMode}
             profilePhotoUri={profilePhotoUri}

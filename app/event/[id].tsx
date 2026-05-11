@@ -4,7 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type PhotoRecordingComfortPreference, useAppSettings } from "@/lib/app-settings";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   canMeetInPerson,
@@ -24,6 +24,20 @@ import {
 } from "@/lib/softhello-mvp";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
+
+const getDetailMediaComfortLabels = (event: EventItem, photoRecordingComfortPreferences: PhotoRecordingComfortPreference[]) => {
+  const labels = [...(event.mediaComfortLabels ?? ["Ask before photos"])];
+
+  if (photoRecordingComfortPreferences.includes("Ask me first")) labels.push("Ask before photos");
+  if (photoRecordingComfortPreferences.includes("No photos of me")) labels.push("No photos of me");
+  if (photoRecordingComfortPreferences.includes("Group photos are okay")) labels.push("Group photos only if everyone agrees");
+  if (photoRecordingComfortPreferences.includes("Venue/event photos are okay")) labels.push("Venue photos okay");
+  if (photoRecordingComfortPreferences.includes("No videos please")) labels.push("No filming");
+  if (photoRecordingComfortPreferences.includes("No public posting without permission")) labels.push("No public posting");
+  if (photoRecordingComfortPreferences.includes("Prefer no screenshots of chats/profile")) labels.push("Prefer no screenshots");
+
+  return labels.filter((label, index, all) => all.indexOf(label) === index).slice(0, 5);
+};
 
 const savePlaceTranslations = {
   English: { save: "Save place", saved: "Saved", savedMessage: "Place saved", removedMessage: "Place removed" },
@@ -718,6 +732,7 @@ export default function EventDetailsScreen() {
     verificationLevel,
     eventMemberships,
     postEventFeedback,
+    photoRecordingComfortPreferences,
     savedPlaces,
     pinnedEventIds,
     hiddenEventIds,
@@ -749,6 +764,7 @@ export default function EventDetailsScreen() {
   const eventWeatherCopy = event.weather.includes("Weather")
     ? copy.weatherAffectedCopy
     : copy.weatherFriendlyCopy;
+  const mediaComfortLabels = getDetailMediaComfortLabels(event, photoRecordingComfortPreferences);
   const eventMeetingCopy = isMovieNight
     ? copy.meetingCopy
     : copy.genericMeetingCopy(event.venue);
@@ -1029,6 +1045,26 @@ export default function EventDetailsScreen() {
           </View>
         </View>
 
+        <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="visibility" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+          </View>
+          <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+          </Text>
+          <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+            {mediaComfortLabels.map((label) => (
+              <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
+            ))}
+          </View>
+          <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Please don't screenshot or share someone's profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention.
+          </Text>
+        </View>
+
         <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
         <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
           <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
@@ -1174,6 +1210,15 @@ const styles = StyleSheet.create({
   noiseCopyBlock: { flex: 1 },
   noiseTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   noiseDescription: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 2 },
+  mediaComfortCard: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 9, marginBottom: 16 },
+  mediaComfortHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  mediaComfortIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  mediaComfortTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  mediaComfortCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
+  mediaComfortChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  mediaComfortChip: { color: "#D2E0FF", borderColor: "rgba(124,170,201,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontSize: 11, fontWeight: "900", overflow: "hidden", backgroundColor: "rgba(124,170,201,0.1)" },
+  dayMediaComfortChip: { color: "#445E93", borderColor: "#9AADE8", backgroundColor: "#EDF2FF" },
+  mediaComfortNote: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, fontWeight: "700" },
   sectionTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 23, marginBottom: 10 },
   expectGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   expectCard: { width: "48%", minHeight: 82, borderRadius: 16, padding: 13, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border },

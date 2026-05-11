@@ -7,6 +7,7 @@ import {
   communicationPreferenceOptions,
   getLanguageBase,
   groupSizePreferenceOptions,
+  photoRecordingComfortOptions,
   socialEnergyOptions,
   type CommunicationPreference,
   type GroupSizePreference,
@@ -17,6 +18,7 @@ import {
   type ProfileGender,
   type ProfileShortcutLayout,
   type ProfileWidthPreference,
+  type PhotoRecordingComfortPreference,
   type SocialEnergyPreference,
   useAppSettings,
 } from "@/lib/app-settings";
@@ -1024,6 +1026,7 @@ export default function ProfileScreen() {
     socialEnergyPreference,
     communicationPreferences,
     groupSizePreference,
+    photoRecordingComfortPreferences,
     verifiedButPrivate,
     verificationLevel,
     profileShortcutLayout,
@@ -1499,6 +1502,14 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ communicationPreferences: nextPreferences });
   };
 
+  const togglePhotoRecordingComfortPreference = async (preference: PhotoRecordingComfortPreference) => {
+    const nextPreferences = photoRecordingComfortPreferences.includes(preference)
+      ? photoRecordingComfortPreferences.filter((item) => item !== preference)
+      : [...photoRecordingComfortPreferences, preference];
+
+    await saveSoftHelloMvpState({ photoRecordingComfortPreferences: nextPreferences });
+  };
+
   const toggleVerifiedButPrivate = async () => {
     await saveSoftHelloMvpState({ verifiedButPrivate: !verifiedButPrivate });
   };
@@ -1581,6 +1592,7 @@ export default function ProfileScreen() {
       socialEnergyPreference: "Calm",
       communicationPreferences: ["Low-message mode", "Details only"],
       groupSizePreference: "Small groups only",
+      photoRecordingComfortPreferences: ["Ask me first", "No public posting without permission", "Prefer no screenshots of chats/profile"],
       verifiedButPrivate: true,
     });
     setShowProfileMenu(false);
@@ -1744,6 +1756,36 @@ export default function ProfileScreen() {
             );
           })}
         </View>
+      </View>
+
+      <View style={styles.trustFoundationGroup}>
+        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+        <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+          Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+        </Text>
+        <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+          {photoRecordingComfortOptions.map((option) => {
+            const active = photoRecordingComfortPreferences.includes(option);
+
+            return (
+              <TouchableOpacity
+                key={option}
+                accessibilityRole="button"
+                accessibilityLabel={`Photo and recording comfort ${option}`}
+                accessibilityState={{ selected: active }}
+                activeOpacity={0.78}
+                onPress={() => togglePhotoRecordingComfortPreference(option)}
+              >
+                <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
+                  {active ? `Selected: ${option}` : option}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+          Please don't screenshot or share someone's profile, chat, or meetup details without permission.
+        </Text>
       </View>
 
       <TouchableOpacity
@@ -2887,6 +2929,7 @@ export default function ProfileScreen() {
               socialEnergyPreference={socialEnergyPreference}
               communicationPreferences={communicationPreferences}
               groupSizePreference={groupSizePreference}
+              photoRecordingComfortPreferences={photoRecordingComfortPreferences}
               verifiedButPrivate={verifiedButPrivate}
               comfortMode={comfortMode}
               profilePhotoUri={profilePhotoUri}

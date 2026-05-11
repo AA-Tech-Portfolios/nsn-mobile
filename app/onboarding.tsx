@@ -6,7 +6,7 @@ import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity
 import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
 import { ScreenContainer } from "@/components/screen-container";
 import type { NsnBlurLevel, NsnComfortMode, ProfileGender, SoftHelloIntent } from "@/lib/app-settings";
-import { useAppSettings } from "@/lib/app-settings";
+import { defaultPhotoRecordingComfortPreferences, useAppSettings } from "@/lib/app-settings";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
@@ -261,6 +261,7 @@ export default function OnboardingScreen() {
       socialEnergyPreference: "Calm",
       communicationPreferences: ["Low-message mode", "Details only"],
       groupSizePreference: "Small groups only",
+      photoRecordingComfortPreferences: defaultPhotoRecordingComfortPreferences,
       verifiedButPrivate: true,
       transportationMethod: "Public transport",
       dietaryPreferences: ["No preference"],
@@ -499,6 +500,7 @@ export default function OnboardingScreen() {
                 gender={gender}
                 interests={interests}
                 comfortPreferences={comfortPreferences}
+                photoRecordingComfortPreferences={defaultPhotoRecordingComfortPreferences}
                 comfortMode={comfortMode}
                 profilePhotoUri={profilePhotoUri}
                 privateProfile={privateProfile}
