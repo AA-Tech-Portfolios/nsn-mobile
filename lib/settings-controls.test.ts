@@ -33,6 +33,8 @@ const copy: SettingsCopySource = {
   quietNotificationsCopy: "Reduce notification volume.",
   notificationSnoozed: "Snooze notifications",
   notificationSnoozedCopy: "Pause non-safety notifications.",
+  suggestNightModeInEvenings: "Suggest Night mode in evenings",
+  suggestNightModeInEveningsCopy: "Show a quiet evening suggestion.",
   useApproximateLocation: "Approximate location",
   useApproximateLocationCopy: "Use a nearby area.",
   showDistanceInMeetups: "Show distance",
@@ -70,6 +72,7 @@ const state: SettingsControlState = {
   chatNotifications: true,
   quietNotifications: false,
   notificationSnoozed: false,
+  suggestNightModeInEvenings: false,
   useApproximateLocation: true,
   showDistanceInMeetups: true,
   allowMessageRequests: false,
@@ -95,6 +98,7 @@ function createActions() {
     setChatNotifications: vi.fn(),
     setQuietNotifications: vi.fn(),
     setNotificationSnoozed: vi.fn(),
+    setSuggestNightModeInEvenings: vi.fn(),
     setUseApproximateLocation: vi.fn(),
     setShowDistanceInMeetups: vi.fn(),
     setAllowMessageRequests: vi.fn(),
@@ -139,6 +143,7 @@ describe("settings controls", () => {
       "chatNotifications",
       "quietNotifications",
       "notificationSnoozed",
+      "suggestNightModeInEvenings",
       "useApproximateLocation",
       "showDistanceInMeetups",
       "allowMessageRequests",
@@ -166,6 +171,7 @@ describe("settings controls", () => {
     expect(actions.setChatNotifications).toHaveBeenCalledWith(false);
     expect(actions.setQuietNotifications).toHaveBeenCalledWith(true);
     expect(actions.setNotificationSnoozed).toHaveBeenCalledWith(true);
+    expect(actions.setSuggestNightModeInEvenings).toHaveBeenCalledWith(true);
     expect(actions.setUseApproximateLocation).toHaveBeenCalledWith(false);
     expect(actions.setShowDistanceInMeetups).toHaveBeenCalledWith(false);
     expect(actions.setAllowMessageRequests).toHaveBeenCalledWith(true);

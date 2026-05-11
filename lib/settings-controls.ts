@@ -23,6 +23,8 @@ export type SettingsCopySource = {
   quietNotificationsCopy?: string;
   notificationSnoozed?: string;
   notificationSnoozedCopy?: string;
+  suggestNightModeInEvenings?: string;
+  suggestNightModeInEveningsCopy?: string;
   useApproximateLocation?: string;
   useApproximateLocationCopy?: string;
   showDistanceInMeetups?: string;
@@ -60,6 +62,7 @@ export type SettingsControlState = {
   chatNotifications: boolean;
   quietNotifications: boolean;
   notificationSnoozed: boolean;
+  suggestNightModeInEvenings: boolean;
   useApproximateLocation: boolean;
   showDistanceInMeetups: boolean;
   allowMessageRequests: boolean;
@@ -84,6 +87,7 @@ export type SettingsControlActions = {
   setChatNotifications: (value: boolean) => void;
   setQuietNotifications: (value: boolean) => void;
   setNotificationSnoozed: (value: boolean) => void;
+  setSuggestNightModeInEvenings: (value: boolean) => void;
   setUseApproximateLocation: (value: boolean) => void;
   setShowDistanceInMeetups: (value: boolean) => void;
   setAllowMessageRequests: (value: boolean) => void;
@@ -206,6 +210,13 @@ export function createSettingsToggleSections({
         copy: copy.notificationSnoozedCopy ?? englishCopy.notificationSnoozedCopy ?? "",
         value: state.notificationSnoozed,
         onValueChange: actions.setNotificationSnoozed,
+      },
+      {
+        key: "suggestNightModeInEvenings",
+        label: copy.suggestNightModeInEvenings ?? englishCopy.suggestNightModeInEvenings ?? "",
+        copy: copy.suggestNightModeInEveningsCopy ?? englishCopy.suggestNightModeInEveningsCopy ?? "",
+        value: state.suggestNightModeInEvenings,
+        onValueChange: actions.setSuggestNightModeInEvenings,
       },
     ],
     locationRows: [

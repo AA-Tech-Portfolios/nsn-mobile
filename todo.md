@@ -20,6 +20,13 @@
 - [x] Add local User menu submenus for Edit menu, Privacy guide, User preferences, Profile layout, Width settings, Notifications, Block & report, and Settings & Privacy
 - [x] Add local user preference areas for transportation, location, food, hobbies/interests, contact preference, saved places, and meetup shortcuts
 - [x] Add temporary deactivate account controls above Delete account in Settings & Privacy
+- [x] Complete Settings & Privacy prototype safety polish with jump-chip icons, local update indicators, prototype badges, disabled coming-soon states, and account action confirmations
+- [x] Add alpha tester walkthrough covering NSN purpose, local prototype scope, comfort/privacy settings, meetup browsing, alerts, profile review, and demo-only safety language
+- [x] Refine Home search into compact Search NSN suburb and meetup matching for the Sydney/North Shore prototype
+- [x] Improve Search NSN autocomplete with Sydney locality data, region matching, aliases, and no default suburb list
+- [x] Refine Home/Profile local area editing with shared location picker and API-ready fallback lookup service
+- [x] Add Home view and filter controls for essential/comfortable layouts, nearby, small groups, weather-safe, map/list, and section visibility
+- [x] Refine NSN Home comfort themes, warmer filter controls, and Compact/Comfortable/Spacious layout density
 - [x] Capture checkpoint screenshots for Home, Meetups, Chats, Alerts, Profile, Settings & Privacy, and onboarding stages
 
 ## Next Focus
@@ -27,9 +34,31 @@
 ### Alpha readiness
 
 - [ ] Review checkpoint screenshots for layout regressions on desktop and mobile
-- [ ] Add an alpha tester walkthrough covering onboarding, profile privacy, comfort modes, and meetup joining
-- [ ] Decide which prototype-only account actions should stay visible, be labelled as local-only, or be hidden until auth exists
+- [ ] Create an alpha tester feedback checklist after the walkthrough has been exercised
+- [ ] Continue suburb/locality refinement with an API-backed or maintained Australian locality dataset
+- [ ] Decide which prototype-only account actions should stay visible after tester walkthrough, be backed by real auth, or be hidden before alpha
 - [ ] Create first release tag when ready: `v0.1.0 - Trust Foundations`
+
+### Deferred Home polish ideas
+
+- [ ] After alpha readiness, consider optional Home widgets that users can add, remove, or reorder without becoming core NSN features
+- [ ] Explore an optional photo/gallery widget for local memories, venue previews, or saved-place inspiration
+- [ ] Explore optional local-only/single-player mini-game widgets such as Snake, Solitaire, or a simple platformer
+- [ ] Keep mini-games local-first and opt-in, with no social pressure or meetup matching dependency
+- [ ] Add real Sydney/OpenStreetMap integration with proper attribution and no paid map-key dependency
+- [ ] Add richer map search and event location routing, including selected-event focus and transport-aware handoff
+- [ ] Refine richer event-location map behaviour with multiple pins, selected-event syncing, travel context, and external map handoff options
+- [ ] Add richer live map integration with real Sydney/North Shore tiles, multiple pins, transport context, and external map handoff
+- [ ] Broaden localization and regional unit options beyond the current prototype date/time/unit preferences
+- [ ] Broaden regional/date/time/unit localization for more countries, calendars, weather units, and accessibility expectations
+- [ ] Expand distance unit handling across meetups, profile, saved places, and transportation views
+- [ ] Add currency display preference support when paid events, donations, or pricing features are introduced
+- [ ] Broaden regional support beyond the current suburb/local area fallback logic
+- [ ] Add better suburb/locality dataset/API integration for accurate local time, weather, routing, and search matching
+- [ ] Broaden Home module layout customization beyond simple ordering into dashboard, grid, magazine, and boxed module presets
+- [ ] Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
+- [ ] Explore optional header control density preferences with live preview, per-device defaults, and larger accessibility targets
+- [ ] Continue future suburb/locality API or maintained-dataset refinement so Home time, weather, and local prompts can reflect selected areas more accurately
 
 ### Safety and trust
 
@@ -48,6 +77,7 @@
 ### Profile and settings polish
 
 - [ ] Continue button behaviour audit across Profile, Settings & Privacy, and modal menus
+- [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 - [ ] Add interactive tutorials for privacy, preview visibility, and comfort modes
 - [ ] Review translations with real users or native speakers before treating each language as complete
 
@@ -130,7 +160,7 @@
 
 ### Media and Web
 
-- [ ] Add drag-and-drop image uploads for the web version
+- [ ] Decide whether optional gallery and mini-game widgets remain deferred Home modules or move into a separate experimental area
 
 ### Repository Presentation
 

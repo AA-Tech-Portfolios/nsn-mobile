@@ -173,7 +173,7 @@ function LowLightOverlay() {
         right: 0,
         bottom: 0,
         left: 0,
-        backgroundColor: "#020814",
+        backgroundColor: "#0B1626",
         opacity: opacityByLevel[lowLightLevel],
       }}
     />

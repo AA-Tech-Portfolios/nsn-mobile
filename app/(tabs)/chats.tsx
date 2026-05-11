@@ -1223,8 +1223,12 @@ export default function ChatsScreen() {
             </View>
           </View>
           <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
+            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
             <Text style={[styles.trustGateTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredTitle}</Text>
             <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredCopy}</Text>
+            <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              This gate is a prototype state. No real verification provider or private messaging system is connected yet.
+            </Text>
             <Text style={[styles.trustGateStatus, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
               {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
@@ -1415,6 +1419,14 @@ export default function ChatsScreen() {
             <Text style={[styles.chatSelectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{chatMenuCopy.landingTitle}</Text>
             <Text style={[styles.chatSelectionCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.landingCopy}</Text>
 
+            <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
+              <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
+              <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>Demo conversations</Text>
+              <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
+                Try switching between group and private chats, sending a local message, and using soft-exit options. Reports, blocks, and private chats are prototype-only.
+              </Text>
+            </View>
+
             <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.meetupGroups}</Text>
             <View style={styles.chatSelectionList}>{groupChatTargets.map(renderChatTargetButton)}</View>
 
@@ -1512,6 +1524,12 @@ export default function ChatsScreen() {
         ) : null}
 
         <ScrollView style={styles.chat} contentContainerStyle={styles.chatContent} showsVerticalScrollIndicator={false} scrollEnabled={!chatMenuOpen}>
+          <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
+            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
+            <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
+              Messages stay in this prototype session. Try the tone, arrival updates, and soft exit controls without treating this as a live chat.
+            </Text>
+          </View>
           <View style={[styles.dayPill, isDay && styles.dayPillLight]}><Text style={[styles.dayPillText, isDay && styles.dayMutedText]}>{copy.today}</Text></View>
           <View style={[styles.systemNotice, isDay && styles.dayCard]}>
             <Text style={[styles.systemText, isDay && styles.dayTitle]}>{copy.joined}</Text>
@@ -1889,9 +1907,9 @@ export default function ChatsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background, paddingHorizontal: 18 },
-  dayContainer: { backgroundColor: "#EAF4FF" },
+  dayContainer: { backgroundColor: "#E8EDF2" },
   header: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 8, paddingBottom: 12, borderBottomWidth: 1, borderColor: nsnColors.border },
-  dayHeader: { borderColor: "#B8C9E6" },
+  dayHeader: { borderColor: "#C5D0DA" },
   eventAvatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#26133F", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.primary },
   eventEmoji: { fontSize: 22 },
   eventInitial: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
@@ -1900,8 +1918,8 @@ const styles = StyleSheet.create({
   title: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 21 },
   dayTitle: { color: "#0B1220" },
   subtitle: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
-  dayMutedText: { color: "#3B4A63" },
-  dayAccentText: { color: "#3949DB" },
+  dayMutedText: { color: "#53677A" },
+  dayAccentText: { color: "#445E93" },
   chatPickerChevron: { width: 20, color: nsnColors.muted, fontSize: 18, fontWeight: "900", lineHeight: 22, textAlign: "center" },
   iconButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   chatMenu: { maxHeight: 360, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginTop: 10, marginBottom: 8 },
@@ -1925,11 +1943,15 @@ const styles = StyleSheet.create({
   chatSelectionTitle: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35 },
   chatSelectionCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 4, marginBottom: 18 },
   chatSelectionList: { gap: 8, marginBottom: 18 },
+  alphaGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
+  alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
+  alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
   dayPill: { alignSelf: "center", backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 13, paddingVertical: 7, borderRadius: 15, marginBottom: 14 },
-  dayPillLight: { backgroundColor: "#DCEEFF" },
+  dayPillLight: { backgroundColor: "#EEF3F4" },
   dayPillText: { color: nsnColors.muted, fontSize: 12, fontWeight: "700" },
   systemNotice: { alignSelf: "center", width: "68%", borderRadius: 16, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, paddingVertical: 12, paddingHorizontal: 13, marginBottom: 18 },
-  dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   systemText: { color: nsnColors.text, textAlign: "center", fontSize: 12, lineHeight: 17 },
   systemSubtext: { color: nsnColors.muted, textAlign: "center", fontSize: 12, lineHeight: 17 },
   trustGateCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, marginTop: 16 },
@@ -1939,18 +1961,18 @@ const styles = StyleSheet.create({
   trustGateButton: { width: "100%", minHeight: 46, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10 },
   trustGateButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "center" },
   softExitPanel: { borderRadius: 18, backgroundColor: "#0D1B2F", borderWidth: 1, borderColor: "#2B4578", padding: 14, marginBottom: 18 },
-  daySoftExitPanel: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  daySoftExitPanel: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   softExitTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "800", lineHeight: 21, marginBottom: 4 },
   softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginBottom: 12 },
   softExitActions: { gap: 9 },
   softExitAction: { borderRadius: 14, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, paddingVertical: 10 },
-  daySoftExitAction: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  daySoftExitAction: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   softExitActionText: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 18 },
   softExitActionCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 1 },
   reportReasonStack: { gap: 8, paddingTop: 2, paddingBottom: 3 },
   reportReasonHeading: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, letterSpacing: 0, textTransform: "uppercase" },
   reportReasonButton: { borderRadius: 12, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingHorizontal: 11, paddingVertical: 9 },
-  dayReportReasonButton: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayReportReasonButton: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   reportReasonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   reportReasonCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   reportTargetGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -2003,13 +2025,13 @@ const styles = StyleSheet.create({
   cannotMakeItTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   cannotMakeItGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   cannotMakeItReasonButton: { flexGrow: 1, minWidth: 150, minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
-  dayCannotMakeItReasonButton: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayCannotMakeItReasonButton: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   cannotMakeItReasonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
   resumeButton: { minHeight: 40, borderRadius: 16, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, alignItems: "center", justifyContent: "center", marginBottom: 9 },
   resumeButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "800" },
   addButton: { position: "absolute", left: 0, bottom: 42, width: 40, height: 40, borderRadius: 20, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border },
   inputWrap: { marginLeft: 48, minHeight: 44, borderRadius: 22, backgroundColor: "#061121", borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "center", paddingLeft: 15, paddingRight: 5 },
-  dayInputWrap: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
+  dayInputWrap: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   input: { flex: 1, color: nsnColors.text, fontSize: 14, minHeight: 42 },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
   rtlInput: { paddingRight: 2, writingDirection: "rtl" },

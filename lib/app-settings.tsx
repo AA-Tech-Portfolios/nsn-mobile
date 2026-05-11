@@ -26,20 +26,20 @@ export const appPalettes: AppPalette[] = [
   {
     id: "midnight",
     label: "Midnight NSN",
-    description: "Deep navy with indigo and teal accents.",
-    swatches: ["#020814", "#071426", "#3848FF", "#18C8D1", "#FFE5A3"],
+    description: "Dusk navy, slate blue, and restrained harbour-light accents.",
+    swatches: ["#0B1626", "#0F1B2C", "#536C9E", "#7CAAC9", "#C7B07A"],
   },
   {
     id: "ocean",
     label: "Ocean Calm",
     description: "Blue, aqua, and soft sky tones.",
-    swatches: ["#052033", "#0E3A5B", "#2F80ED", "#22C8D8", "#DCEEFF"],
+    swatches: ["#0B2234", "#173A55", "#4F79A8", "#7CAAC9", "#E6EDF1"],
   },
   {
     id: "forest",
     label: "Forest Social",
     description: "Evergreen surfaces with warm friendly highlights.",
-    swatches: ["#071B14", "#123326", "#2F8F5B", "#72D67E", "#FFE5A3"],
+    swatches: ["#071B14", "#123326", "#2F8F5B", "#72D67E", "#C7B07A"],
   },
   {
     id: "sunset",
@@ -129,6 +129,30 @@ export type SettingsPrivacyMode = "Basic" | "Advanced";
 export type AccountPauseTimeline = "A few days" | "One week" | "One month" | "Until I return";
 export type LowLightLevel = "Gentle" | "Medium" | "Deep";
 export type NotificationSnoozePreset = "1 hour" | "Tonight" | "24 hours" | "Until I turn it back on";
+export type HomeViewMode = "Essential" | "Comfortable";
+export type HomeEventLayout = "List" | "Map";
+export type HomeLayoutDensity = "Compact" | "Comfortable" | "Spacious";
+export type HomeHeaderControlsDensity = "Compact" | "Comfortable" | "Spacious";
+export type HomeCardLayout = "Vertical list" | "Horizontal cards" | "Boxed grid" | "Layered cards" | "Magazine";
+export type HomeEventVisualMode = "Emoji/Icon" | "Preview image";
+export type DateFormatPreference = "Device / locale" | "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY/MM/DD" | "YY/MM/DD" | "DD.MM.YYYY" | "DD-MM-YYYY" | "YYYY-MM-DD";
+export type TimeFormatPreference = "Device / locale" | "12-hour clock" | "24-hour clock";
+export type ClockDisplayStyle = "Digital" | "Analog";
+export type TemperatureUnitPreference = "Device / locale" | "Celsius" | "Fahrenheit";
+export type DistanceUnitPreference = "Device / locale" | "Kilometres" | "Miles";
+export type CurrencyDisplayPreference = "Device / locale" | "AUD" | "USD" | "EUR" | "GBP";
+export type DayNightModePreference = "Manual toggle" | "Follow system/device time" | "Follow selected suburb/local time";
+export type CardOutlineStyle = "Minimal" | "Standard" | "Strong";
+export type HomeVisibleSections = {
+  weather: boolean;
+  map: boolean;
+  noiseGuide: boolean;
+  search: boolean;
+  recommendedEvents: boolean;
+  dayEvents: boolean;
+  nightEvents: boolean;
+};
+export type HomeSectionOrderKey = keyof HomeVisibleSections;
 export type DietaryPreference =
   | "No preference"
   | "Vegetarian"
@@ -140,6 +164,82 @@ export type DietaryPreference =
   | "Nut allergy"
   | "Seafood allergy"
   | "Prefer non-alcohol venues";
+
+export const defaultHomeVisibleSections: HomeVisibleSections = {
+  weather: true,
+  map: true,
+  noiseGuide: false,
+  search: false,
+  recommendedEvents: true,
+  dayEvents: true,
+  nightEvents: true,
+};
+
+export const defaultHomeSectionOrder: HomeSectionOrderKey[] = ["weather", "map", "recommendedEvents", "dayEvents", "nightEvents", "search", "noiseGuide"];
+
+const normalizeHomeVisibleSections = (value?: Partial<HomeVisibleSections> | null): HomeVisibleSections => ({
+  ...defaultHomeVisibleSections,
+  ...(value ?? {}),
+});
+
+const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSectionOrderKey[] => {
+  const sectionKeys = Object.keys(defaultHomeVisibleSections) as HomeSectionOrderKey[];
+  const validKeys = new Set(sectionKeys);
+  const ordered = (value ?? []).filter((key): key is HomeSectionOrderKey => validKeys.has(key));
+  const normalizedOrder = [...ordered];
+
+  sectionKeys
+    .filter((key) => !normalizedOrder.includes(key))
+    .forEach((key) => {
+      if (key === "map") {
+        const weatherIndex = normalizedOrder.indexOf("weather");
+        normalizedOrder.splice(weatherIndex >= 0 ? weatherIndex + 1 : normalizedOrder.length, 0, key);
+        return;
+      }
+
+      normalizedOrder.push(key);
+    });
+
+  return normalizedOrder;
+};
+
+const normalizeHomeEventVisualMode = (value?: HomeEventVisualMode | null): HomeEventVisualMode =>
+  value === "Emoji/Icon" ? "Emoji/Icon" : "Preview image";
+
+const normalizeHomeHeaderControlsDensity = (value?: HomeHeaderControlsDensity | null): HomeHeaderControlsDensity =>
+  value === "Compact" || value === "Spacious" ? value : "Comfortable";
+
+const normalizeDateFormatPreference = (value?: DateFormatPreference | null): DateFormatPreference =>
+  value === "DD/MM/YYYY" ||
+  value === "MM/DD/YYYY" ||
+  value === "YYYY/MM/DD" ||
+  value === "YY/MM/DD" ||
+  value === "DD.MM.YYYY" ||
+  value === "DD-MM-YYYY" ||
+  value === "YYYY-MM-DD"
+    ? value
+    : "Device / locale";
+
+const normalizeTimeFormatPreference = (value?: TimeFormatPreference | null): TimeFormatPreference =>
+  value === "12-hour clock" || value === "24-hour clock" ? value : "Device / locale";
+
+const normalizeClockDisplayStyle = (value?: ClockDisplayStyle | null): ClockDisplayStyle =>
+  value === "Analog" ? "Analog" : "Digital";
+
+const normalizeTemperatureUnitPreference = (value?: TemperatureUnitPreference | null): TemperatureUnitPreference =>
+  value === "Celsius" || value === "Fahrenheit" ? value : "Device / locale";
+
+const normalizeDistanceUnitPreference = (value?: DistanceUnitPreference | null): DistanceUnitPreference =>
+  value === "Kilometres" || value === "Miles" ? value : "Device / locale";
+
+const normalizeCurrencyDisplayPreference = (value?: CurrencyDisplayPreference | null): CurrencyDisplayPreference =>
+  value === "AUD" || value === "USD" || value === "EUR" || value === "GBP" ? value : "Device / locale";
+
+const normalizeDayNightModePreference = (value?: DayNightModePreference | null): DayNightModePreference =>
+  value === "Follow system/device time" || value === "Follow selected suburb/local time" ? value : "Manual toggle";
+
+const normalizeCardOutlineStyle = (value?: CardOutlineStyle | null): CardOutlineStyle =>
+  value === "Minimal" || value === "Standard" ? value : "Strong";
 
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
@@ -197,9 +297,32 @@ type OnboardingSnapshot = {
   batterySaver?: boolean;
   lowLightMode?: boolean;
   lowLightLevel?: LowLightLevel;
+  homeViewMode?: HomeViewMode;
+  homeNearbyOnly?: boolean;
+  homeSmallGroupsOnly?: boolean;
+  homeWeatherSafeOnly?: boolean;
+  homeEventLayout?: HomeEventLayout;
+  homeLayoutDensity?: HomeLayoutDensity;
+  homeHeaderControlsDensity?: HomeHeaderControlsDensity;
+  homeCardLayout?: HomeCardLayout;
+  homeEventVisualMode?: HomeEventVisualMode;
+  homeVisibleSections?: HomeVisibleSections;
+  homeSectionOrder?: HomeSectionOrderKey[];
+  suggestNightModeInEvenings?: boolean;
   notificationSnoozed?: boolean;
   notificationSnoozePreset?: NotificationSnoozePreset;
   timezone?: TimezoneSetting;
+  timeContextMode?: TimeContextMode;
+  dateFormatPreference?: DateFormatPreference;
+  showWeekday?: boolean;
+  timeFormatPreference?: TimeFormatPreference;
+  clockDisplayStyle?: ClockDisplayStyle;
+  showDigitalTimeWithAnalog?: boolean;
+  temperatureUnitPreference?: TemperatureUnitPreference;
+  distanceUnitPreference?: DistanceUnitPreference;
+  currencyDisplayPreference?: CurrencyDisplayPreference;
+  dayNightModePreference?: DayNightModePreference;
+  cardOutlineStyle?: CardOutlineStyle;
   appLanguage?: string;
   translationLanguage?: string;
   brandThemeId?: BrandThemeId;
@@ -214,6 +337,8 @@ export type TimezoneSetting = {
   latitude: number;
   longitude: number;
 };
+
+export type TimeContextMode = "Automatic device time" | "Use selected suburb/local area" | "Manual city/suburb override";
 
 export type WeatherSnapshot = {
   temperature: number | null;
@@ -258,6 +383,30 @@ export const australianLocalAreas: TimezoneSetting[] = [
 const normalizeTimezoneSetting = (value?: TimezoneSetting | null) => {
   if (!value) return defaultNsnTimezone;
   return australianLocalAreas.find((area) => area.id === value.id) ?? value;
+};
+
+const normalizeTimeContextMode = (value?: TimeContextMode | null): TimeContextMode =>
+  value === "Automatic device time" || value === "Manual city/suburb override" ? value : "Use selected suburb/local area";
+
+const getDefaultSydneyNightMode = () => {
+  const now = new Date();
+  const timeZone = defaultNsnTimezone.timeZone;
+  const hour = Number(
+    new Intl.DateTimeFormat("en-AU", {
+      hour: "numeric",
+      hour12: false,
+      timeZone,
+    }).format(now)
+  );
+  const timeZoneName = new Intl.DateTimeFormat("en-AU", {
+    timeZone,
+    timeZoneName: "short",
+  }).formatToParts(now).find((part) => part.type === "timeZoneName")?.value ?? "";
+  const month = Number(new Intl.DateTimeFormat("en-AU", { month: "numeric", timeZone }).format(now));
+  const isDaylightSaving = /DT|Daylight/i.test(timeZoneName) || month >= 10 || month <= 3;
+  const nightStartHour = isDaylightSaving ? 19 : 18;
+
+  return hour >= nightStartHour || hour < 6;
 };
 
 const getWeatherCategory = (temperature: number | null, rainChance: number | null): WeatherSnapshot["category"] => {
@@ -405,6 +554,28 @@ type AppSettings = {
   setLowLightMode: (value: boolean) => void;
   lowLightLevel: LowLightLevel;
   setLowLightLevel: (value: LowLightLevel) => void;
+  homeViewMode: HomeViewMode;
+  setHomeViewMode: (value: HomeViewMode) => void;
+  homeNearbyOnly: boolean;
+  setHomeNearbyOnly: (value: boolean) => void;
+  homeSmallGroupsOnly: boolean;
+  setHomeSmallGroupsOnly: (value: boolean) => void;
+  homeWeatherSafeOnly: boolean;
+  setHomeWeatherSafeOnly: (value: boolean) => void;
+  homeEventLayout: HomeEventLayout;
+  setHomeEventLayout: (value: HomeEventLayout) => void;
+  homeLayoutDensity: HomeLayoutDensity;
+  setHomeLayoutDensity: (value: HomeLayoutDensity) => void;
+  homeHeaderControlsDensity: HomeHeaderControlsDensity;
+  setHomeHeaderControlsDensity: (value: HomeHeaderControlsDensity) => void;
+  homeCardLayout: HomeCardLayout;
+  setHomeCardLayout: (value: HomeCardLayout) => void;
+  homeEventVisualMode: HomeEventVisualMode;
+  setHomeEventVisualMode: (value: HomeEventVisualMode) => void;
+  homeVisibleSections: HomeVisibleSections;
+  setHomeVisibleSections: (value: HomeVisibleSections) => void;
+  homeSectionOrder: HomeSectionOrderKey[];
+  setHomeSectionOrder: (value: HomeSectionOrderKey[]) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
   saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
   resetOnboarding: () => Promise<void>;
@@ -434,6 +605,8 @@ type AppSettings = {
   setMeetupReminders: (value: boolean) => void;
   weatherAlerts: boolean;
   setWeatherAlerts: (value: boolean) => void;
+  suggestNightModeInEvenings: boolean;
+  setSuggestNightModeInEvenings: (value: boolean) => void;
   chatNotifications: boolean;
   setChatNotifications: (value: boolean) => void;
   quietNotifications: boolean;
@@ -465,6 +638,28 @@ type AppSettings = {
   setClearBorders: (value: boolean) => void;
   timezone: TimezoneSetting;
   setTimezone: (value: TimezoneSetting) => void;
+  timeContextMode: TimeContextMode;
+  setTimeContextMode: (value: TimeContextMode) => void;
+  dateFormatPreference: DateFormatPreference;
+  setDateFormatPreference: (value: DateFormatPreference) => void;
+  showWeekday: boolean;
+  setShowWeekday: (value: boolean) => void;
+  timeFormatPreference: TimeFormatPreference;
+  setTimeFormatPreference: (value: TimeFormatPreference) => void;
+  clockDisplayStyle: ClockDisplayStyle;
+  setClockDisplayStyle: (value: ClockDisplayStyle) => void;
+  showDigitalTimeWithAnalog: boolean;
+  setShowDigitalTimeWithAnalog: (value: boolean) => void;
+  temperatureUnitPreference: TemperatureUnitPreference;
+  setTemperatureUnitPreference: (value: TemperatureUnitPreference) => void;
+  distanceUnitPreference: DistanceUnitPreference;
+  setDistanceUnitPreference: (value: DistanceUnitPreference) => void;
+  currencyDisplayPreference: CurrencyDisplayPreference;
+  setCurrencyDisplayPreference: (value: CurrencyDisplayPreference) => void;
+  dayNightModePreference: DayNightModePreference;
+  setDayNightModePreference: (value: DayNightModePreference) => void;
+  cardOutlineStyle: CardOutlineStyle;
+  setCardOutlineStyle: (value: CardOutlineStyle) => void;
   weather: WeatherSnapshot;
   liveWeatherAlert: LiveWeatherAlert | null;
 };
@@ -527,7 +722,18 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [batterySaver, setBatterySaver] = useState(false);
   const [lowLightMode, setLowLightMode] = useState(false);
   const [lowLightLevel, setLowLightLevel] = useState<LowLightLevel>("Medium");
-  const [isNightMode, setIsNightMode] = useState(false);
+  const [homeViewMode, setHomeViewMode] = useState<HomeViewMode>("Essential");
+  const [homeNearbyOnly, setHomeNearbyOnly] = useState(false);
+  const [homeSmallGroupsOnly, setHomeSmallGroupsOnly] = useState(false);
+  const [homeWeatherSafeOnly, setHomeWeatherSafeOnly] = useState(false);
+  const [homeEventLayout, setHomeEventLayout] = useState<HomeEventLayout>("List");
+  const [homeLayoutDensity, setHomeLayoutDensity] = useState<HomeLayoutDensity>("Compact");
+  const [homeHeaderControlsDensity, setHomeHeaderControlsDensity] = useState<HomeHeaderControlsDensity>("Comfortable");
+  const [homeCardLayout, setHomeCardLayout] = useState<HomeCardLayout>("Vertical list");
+  const [homeEventVisualMode, setHomeEventVisualMode] = useState<HomeEventVisualMode>("Preview image");
+  const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(defaultHomeVisibleSections);
+  const [homeSectionOrder, setHomeSectionOrder] = useState<HomeSectionOrderKey[]>(defaultHomeSectionOrder);
+  const [isNightMode, setIsNightMode] = useState(() => getDefaultSydneyNightMode());
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
@@ -540,6 +746,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [slowerTransitions, setSlowerTransitions] = useState(false);
   const [meetupReminders, setMeetupReminders] = useState(true);
   const [weatherAlerts, setWeatherAlerts] = useState(true);
+  const [suggestNightModeInEvenings, setSuggestNightModeInEvenings] = useState(false);
   const [chatNotifications, setChatNotifications] = useState(true);
   const [quietNotifications, setQuietNotifications] = useState(false);
   const [notificationSnoozed, setNotificationSnoozed] = useState(false);
@@ -555,6 +762,17 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [softSurfaces, setSoftSurfaces] = useState(false);
   const [clearBorders, setClearBorders] = useState(false);
   const [timezone, setTimezone] = useState<TimezoneSetting>(defaultNsnTimezone);
+  const [timeContextMode, setTimeContextMode] = useState<TimeContextMode>("Use selected suburb/local area");
+  const [dateFormatPreference, setDateFormatPreference] = useState<DateFormatPreference>("Device / locale");
+  const [showWeekday, setShowWeekday] = useState(true);
+  const [timeFormatPreference, setTimeFormatPreference] = useState<TimeFormatPreference>("Device / locale");
+  const [clockDisplayStyle, setClockDisplayStyle] = useState<ClockDisplayStyle>("Digital");
+  const [showDigitalTimeWithAnalog, setShowDigitalTimeWithAnalog] = useState(false);
+  const [temperatureUnitPreference, setTemperatureUnitPreference] = useState<TemperatureUnitPreference>("Device / locale");
+  const [distanceUnitPreference, setDistanceUnitPreference] = useState<DistanceUnitPreference>("Device / locale");
+  const [currencyDisplayPreference, setCurrencyDisplayPreference] = useState<CurrencyDisplayPreference>("Device / locale");
+  const [dayNightModePreference, setDayNightModePreference] = useState<DayNightModePreference>("Follow selected suburb/local time");
+  const [cardOutlineStyle, setCardOutlineStyle] = useState<CardOutlineStyle>("Strong");
   const [weather, setWeather] = useState<WeatherSnapshot>({ temperature: null, rainChance: null, category: "unknown" });
   const [liveWeatherAlert, setLiveWeatherAlert] = useState<LiveWeatherAlert | null>(null);
   const previousWeather = useRef<WeatherSnapshot | null>(null);
@@ -628,12 +846,35 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setBatterySaver(Boolean(snapshot.batterySaver));
         setLowLightMode(Boolean(snapshot.lowLightMode));
         setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
+        setHomeViewMode(snapshot.homeViewMode ?? "Essential");
+        setHomeNearbyOnly(Boolean(snapshot.homeNearbyOnly));
+        setHomeSmallGroupsOnly(Boolean(snapshot.homeSmallGroupsOnly));
+        setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
+        setHomeEventLayout(snapshot.homeEventLayout ?? "List");
+        setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Compact");
+        setHomeHeaderControlsDensity(normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity));
+        setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
+        setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
+        setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
+        setHomeSectionOrder(normalizeHomeSectionOrder(snapshot.homeSectionOrder));
+        setSuggestNightModeInEvenings(Boolean(snapshot.suggestNightModeInEvenings));
         setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
         setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
         setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
         setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
         setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
         setTimezone(normalizeTimezoneSetting(snapshot.timezone));
+        setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
+        setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+        setShowWeekday(snapshot.showWeekday ?? true);
+        setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
+        setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+        setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
+        setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
+        setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
+        setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
+        setDayNightModePreference(snapshot.dayNightModePreference ? normalizeDayNightModePreference(snapshot.dayNightModePreference) : "Follow selected suburb/local time");
+        setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
         setBlurProfilePhoto(snapshot.blurProfilePhoto ?? (snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("NSN onboarding could not load:", error);
@@ -707,12 +948,35 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setBatterySaver(Boolean(snapshot.batterySaver));
     setLowLightMode(Boolean(snapshot.lowLightMode));
     setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
+    setHomeViewMode(snapshot.homeViewMode ?? "Essential");
+    setHomeNearbyOnly(Boolean(snapshot.homeNearbyOnly));
+    setHomeSmallGroupsOnly(Boolean(snapshot.homeSmallGroupsOnly));
+    setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
+    setHomeEventLayout(snapshot.homeEventLayout ?? "List");
+    setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Compact");
+    setHomeHeaderControlsDensity(normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity));
+    setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
+    setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
+    setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
+    setHomeSectionOrder(normalizeHomeSectionOrder(snapshot.homeSectionOrder));
+    setSuggestNightModeInEvenings(Boolean(snapshot.suggestNightModeInEvenings));
     setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
     setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
     setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
     setTimezone(normalizeTimezoneSetting(snapshot.timezone));
+    setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
+    setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+    setShowWeekday(snapshot.showWeekday ?? true);
+    setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
+    setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+    setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
+    setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
+    setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
+    setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
+    setDayNightModePreference(snapshot.dayNightModePreference ? normalizeDayNightModePreference(snapshot.dayNightModePreference) : "Follow selected suburb/local time");
+    setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
     setBlurProfilePhoto(snapshot.blurProfilePhoto ?? snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -726,7 +990,22 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           preferredAgeMax: nextAgeRange.max,
           appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
           translationLanguage: normalizeNsnLanguage(snapshot.translationLanguage),
+          homeHeaderControlsDensity: normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity),
+          homeEventVisualMode: normalizeHomeEventVisualMode(snapshot.homeEventVisualMode),
+          homeVisibleSections: normalizeHomeVisibleSections(snapshot.homeVisibleSections),
+          homeSectionOrder: normalizeHomeSectionOrder(snapshot.homeSectionOrder),
           timezone: normalizeTimezoneSetting(snapshot.timezone),
+          timeContextMode: normalizeTimeContextMode(snapshot.timeContextMode),
+          dateFormatPreference: normalizeDateFormatPreference(snapshot.dateFormatPreference),
+          showWeekday: snapshot.showWeekday ?? true,
+          timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
+          clockDisplayStyle: normalizeClockDisplayStyle(snapshot.clockDisplayStyle),
+          showDigitalTimeWithAnalog: Boolean(snapshot.showDigitalTimeWithAnalog),
+          temperatureUnitPreference: normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference),
+          distanceUnitPreference: normalizeDistanceUnitPreference(snapshot.distanceUnitPreference),
+          currencyDisplayPreference: normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference),
+          dayNightModePreference: snapshot.dayNightModePreference ? normalizeDayNightModePreference(snapshot.dayNightModePreference) : "Follow selected suburb/local time",
+          cardOutlineStyle: normalizeCardOutlineStyle(snapshot.cardOutlineStyle),
           hasCompletedOnboarding: true,
         } satisfies OnboardingSnapshot)
       );
@@ -792,18 +1071,53 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       batterySaver,
       lowLightMode,
       lowLightLevel,
+      homeViewMode,
+      homeNearbyOnly,
+      homeSmallGroupsOnly,
+      homeWeatherSafeOnly,
+      homeEventLayout,
+      homeLayoutDensity,
+      homeHeaderControlsDensity,
+      homeCardLayout,
+      homeEventVisualMode,
+      homeVisibleSections,
+      homeSectionOrder,
+      suggestNightModeInEvenings,
       notificationSnoozed,
       notificationSnoozePreset,
       appLanguage,
       translationLanguage,
       brandThemeId,
       timezone,
+      timeContextMode,
+      dateFormatPreference,
+      showWeekday,
+      timeFormatPreference,
+      clockDisplayStyle,
+      showDigitalTimeWithAnalog,
+      temperatureUnitPreference,
+      distanceUnitPreference,
+      currencyDisplayPreference,
+      dayNightModePreference,
+      cardOutlineStyle,
       ...snapshot,
     };
     nextSnapshot.appLanguage = normalizeNsnLanguage(nextSnapshot.appLanguage);
     nextSnapshot.translationLanguage = normalizeNsnLanguage(nextSnapshot.translationLanguage);
     nextSnapshot.brandThemeId = normalizeBrandThemeId(nextSnapshot.brandThemeId);
     nextSnapshot.timezone = normalizeTimezoneSetting(nextSnapshot.timezone);
+    nextSnapshot.timeContextMode = normalizeTimeContextMode(nextSnapshot.timeContextMode);
+    nextSnapshot.dateFormatPreference = normalizeDateFormatPreference(nextSnapshot.dateFormatPreference);
+    nextSnapshot.showWeekday = Boolean(nextSnapshot.showWeekday);
+    nextSnapshot.timeFormatPreference = normalizeTimeFormatPreference(nextSnapshot.timeFormatPreference);
+    nextSnapshot.clockDisplayStyle = normalizeClockDisplayStyle(nextSnapshot.clockDisplayStyle);
+    nextSnapshot.showDigitalTimeWithAnalog = Boolean(nextSnapshot.showDigitalTimeWithAnalog);
+    nextSnapshot.temperatureUnitPreference = normalizeTemperatureUnitPreference(nextSnapshot.temperatureUnitPreference);
+    nextSnapshot.distanceUnitPreference = normalizeDistanceUnitPreference(nextSnapshot.distanceUnitPreference);
+    nextSnapshot.currencyDisplayPreference = normalizeCurrencyDisplayPreference(nextSnapshot.currencyDisplayPreference);
+    nextSnapshot.dayNightModePreference = normalizeDayNightModePreference(nextSnapshot.dayNightModePreference);
+    nextSnapshot.cardOutlineStyle = normalizeCardOutlineStyle(nextSnapshot.cardOutlineStyle);
+    nextSnapshot.homeHeaderControlsDensity = normalizeHomeHeaderControlsDensity(nextSnapshot.homeHeaderControlsDensity);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
@@ -891,12 +1205,51 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.batterySaver !== undefined) setBatterySaver(snapshot.batterySaver);
     if (snapshot.lowLightMode !== undefined) setLowLightMode(snapshot.lowLightMode);
     if (snapshot.lowLightLevel !== undefined) setLowLightLevel(snapshot.lowLightLevel);
+    if (snapshot.homeViewMode !== undefined) setHomeViewMode(snapshot.homeViewMode);
+    if (snapshot.homeNearbyOnly !== undefined) setHomeNearbyOnly(snapshot.homeNearbyOnly);
+    if (snapshot.homeSmallGroupsOnly !== undefined) setHomeSmallGroupsOnly(snapshot.homeSmallGroupsOnly);
+    if (snapshot.homeWeatherSafeOnly !== undefined) setHomeWeatherSafeOnly(snapshot.homeWeatherSafeOnly);
+    if (snapshot.homeEventLayout !== undefined) setHomeEventLayout(snapshot.homeEventLayout);
+    if (snapshot.homeLayoutDensity !== undefined) setHomeLayoutDensity(snapshot.homeLayoutDensity);
+    if (snapshot.homeHeaderControlsDensity !== undefined) {
+      const nextDensity = normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity);
+      setHomeHeaderControlsDensity(nextDensity);
+      nextSnapshot.homeHeaderControlsDensity = nextDensity;
+    }
+    if (snapshot.homeCardLayout !== undefined) setHomeCardLayout(snapshot.homeCardLayout);
+    if (snapshot.homeEventVisualMode !== undefined) {
+      const nextVisualMode = normalizeHomeEventVisualMode(snapshot.homeEventVisualMode);
+      setHomeEventVisualMode(nextVisualMode);
+      nextSnapshot.homeEventVisualMode = nextVisualMode;
+    }
+    if (snapshot.homeVisibleSections !== undefined) {
+      const nextSections = normalizeHomeVisibleSections(snapshot.homeVisibleSections);
+      setHomeVisibleSections(nextSections);
+      nextSnapshot.homeVisibleSections = nextSections;
+    }
+    if (snapshot.homeSectionOrder !== undefined) {
+      const nextOrder = normalizeHomeSectionOrder(snapshot.homeSectionOrder);
+      setHomeSectionOrder(nextOrder);
+      nextSnapshot.homeSectionOrder = nextOrder;
+    }
+    if (snapshot.suggestNightModeInEvenings !== undefined) setSuggestNightModeInEvenings(snapshot.suggestNightModeInEvenings);
     if (snapshot.notificationSnoozed !== undefined) setNotificationSnoozed(snapshot.notificationSnoozed);
     if (snapshot.notificationSnoozePreset !== undefined) setNotificationSnoozePreset(snapshot.notificationSnoozePreset);
     if (snapshot.appLanguage !== undefined) setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     if (snapshot.translationLanguage !== undefined) setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     if (snapshot.brandThemeId !== undefined) setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
     if (snapshot.timezone !== undefined) setTimezone(normalizeTimezoneSetting(snapshot.timezone));
+    if (snapshot.timeContextMode !== undefined) setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
+    if (snapshot.dateFormatPreference !== undefined) setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+    if (snapshot.showWeekday !== undefined) setShowWeekday(Boolean(snapshot.showWeekday));
+    if (snapshot.timeFormatPreference !== undefined) setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
+    if (snapshot.clockDisplayStyle !== undefined) setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+    if (snapshot.showDigitalTimeWithAnalog !== undefined) setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
+    if (snapshot.temperatureUnitPreference !== undefined) setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
+    if (snapshot.distanceUnitPreference !== undefined) setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
+    if (snapshot.currencyDisplayPreference !== undefined) setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
+    if (snapshot.dayNightModePreference !== undefined) setDayNightModePreference(normalizeDayNightModePreference(snapshot.dayNightModePreference));
+    if (snapshot.cardOutlineStyle !== undefined) setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
@@ -1143,6 +1496,28 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setLowLightMode,
         lowLightLevel,
         setLowLightLevel,
+        homeViewMode,
+        setHomeViewMode,
+        homeNearbyOnly,
+        setHomeNearbyOnly,
+        homeSmallGroupsOnly,
+        setHomeSmallGroupsOnly,
+        homeWeatherSafeOnly,
+        setHomeWeatherSafeOnly,
+        homeEventLayout,
+        setHomeEventLayout,
+        homeLayoutDensity,
+        setHomeLayoutDensity,
+        homeHeaderControlsDensity,
+        setHomeHeaderControlsDensity,
+        homeCardLayout,
+        setHomeCardLayout,
+        homeEventVisualMode,
+        setHomeEventVisualMode,
+        homeVisibleSections,
+        setHomeVisibleSections,
+        homeSectionOrder,
+        setHomeSectionOrder,
         completeOnboarding,
         saveSoftHelloMvpState,
         resetOnboarding,
@@ -1172,6 +1547,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setMeetupReminders,
         weatherAlerts,
         setWeatherAlerts,
+        suggestNightModeInEvenings,
+        setSuggestNightModeInEvenings,
         chatNotifications,
         setChatNotifications,
         quietNotifications,
@@ -1203,6 +1580,28 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setClearBorders,
         timezone,
         setTimezone,
+        timeContextMode,
+        setTimeContextMode,
+        dateFormatPreference,
+        setDateFormatPreference,
+        showWeekday,
+        setShowWeekday,
+        timeFormatPreference,
+        setTimeFormatPreference,
+        clockDisplayStyle,
+        setClockDisplayStyle,
+        showDigitalTimeWithAnalog,
+        setShowDigitalTimeWithAnalog,
+        temperatureUnitPreference,
+        setTemperatureUnitPreference,
+        distanceUnitPreference,
+        setDistanceUnitPreference,
+        currencyDisplayPreference,
+        setCurrencyDisplayPreference,
+        dayNightModePreference,
+        setDayNightModePreference,
+        cardOutlineStyle,
+        setCardOutlineStyle,
         weather,
         liveWeatherAlert,
       }}

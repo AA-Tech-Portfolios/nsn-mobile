@@ -83,8 +83,8 @@ export default function TabLayout() {
           height: (largerTouchTargets ? 76 : 66) + bottomPadding,
           paddingTop: largerTouchTargets ? 12 : 9,
           paddingBottom: bottomPadding,
-          backgroundColor: reduceTransparency ? (isDay ? "#FFFFFF" : "#020814") : isDay ? "#F4F9FF" : nsnColors.background,
-          borderTopColor: clearBorders ? (isDay ? "#6F8BB8" : "#5A6EA5") : softSurfaces ? (isDay ? "#D5E5F8" : "rgba(148,163,184,0.18)") : isDay ? "#B8C9E6" : nsnColors.border,
+          backgroundColor: reduceTransparency ? (isDay ? "#F4F7F8" : "#0B1626") : isDay ? "#E8EDF2" : nsnColors.background,
+          borderTopColor: clearBorders ? (isDay ? "#6F87A1" : "#5A6EA5") : softSurfaces ? (isDay ? "#DDE6EC" : "rgba(148,163,184,0.18)") : isDay ? "#C5D0DA" : nsnColors.border,
           borderTopWidth: clearBorders ? 1.5 : softSurfaces ? 0.6 : 0.8,
         },
       }}
@@ -137,6 +137,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="settings"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="alpha-walkthrough"
         options={{
           href: null,
         }}

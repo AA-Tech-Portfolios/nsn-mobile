@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     paddingBottom: 34,
   },
   dayContainer: {
-    backgroundColor: "#EAF4FF",
+    backgroundColor: "#E8EDF2",
   },
   backButton: {
     width: 42,
@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dayIconButton: {
-    backgroundColor: "#DCEEFF",
+    backgroundColor: "#EEF3F4",
   },
   title: {
     color: nsnColors.text,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   daySubtitle: {
-    color: "#3B4A63",
+    color: "#53677A",
   },
   rtlText: {
     textAlign: "right",
@@ -343,8 +343,8 @@ const styles = StyleSheet.create({
     padding: 18,
   },
   dayCard: {
-    backgroundColor: "#DCEEFF",
-    borderColor: "#B8C9E6",
+    backgroundColor: "#EEF3F4",
+    borderColor: "#C5D0DA",
   },
   emptyTitle: {
     color: nsnColors.text,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
   },
   dayPlaceIcon: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#B8C9E6",
+    borderColor: "#C5D0DA",
   },
   placeTitleBlock: {
     flex: 1,

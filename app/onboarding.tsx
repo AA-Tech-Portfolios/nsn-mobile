@@ -324,7 +324,7 @@ export default function OnboardingScreen() {
                   if (nameError) setNameError("");
                 }}
                 placeholder="Sam"
-                placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+                placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
                 style={[styles.input, isDay && styles.dayInput]}
               />
               {nameError ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{nameError}</Text> : null}
@@ -337,7 +337,7 @@ export default function OnboardingScreen() {
                     value={middleName}
                     onChangeText={setMiddleName}
                     placeholder="Leave blank"
-                    placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+                    placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
                     style={[styles.input, isDay && styles.dayInput]}
                   />
                 </View>
@@ -347,7 +347,7 @@ export default function OnboardingScreen() {
                     value={lastName}
                     onChangeText={setLastName}
                     placeholder="Leave blank"
-                    placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+                    placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
                     style={[styles.input, isDay && styles.dayInput]}
                   />
                 </View>
@@ -365,7 +365,7 @@ export default function OnboardingScreen() {
                   onChangeText={(value) => setAgeInput(value.replace(/[^0-9]/g, "").slice(0, 2))}
                   keyboardType="number-pad"
                   placeholder="28"
-                  placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
+                  placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
                   style={[styles.input, isDay && styles.dayInput]}
                 />
               </View>
@@ -398,7 +398,7 @@ export default function OnboardingScreen() {
 
             <View>
               <Text style={[styles.label, isDay && styles.dayTitle]}>Usual suburb or area</Text>
-              <TextInput value={suburb} onChangeText={updateSuburb} placeholder="Chatswood" placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft} style={[styles.input, isDay && styles.dayInput]} />
+              <TextInput value={suburb} onChangeText={updateSuburb} placeholder="Chatswood" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.input, isDay && styles.dayInput]} />
               {localitySuggestions.length ? (
                 <View style={[styles.localityList, isDay && styles.dayCard]}>
                   {localitySuggestions.map((locality) => (
@@ -595,7 +595,7 @@ function Summary({ label, value, isDay }: { label: string; value: string; isDay:
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayScreen: { backgroundColor: "#EAF4FF" },
+  dayScreen: { backgroundColor: "#E8EDF2" },
   content: { paddingHorizontal: 22, paddingTop: 22, paddingBottom: 36, gap: 16 },
   brandLockup: { alignItems: "center" },
   logoMark: { width: 92, height: 58, borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, alignItems: "center", justifyContent: "center", marginBottom: 12 },
@@ -608,13 +608,13 @@ const styles = StyleSheet.create({
   progressDotActive: { backgroundColor: nsnColors.primary },
   stepLabel: { color: nsnColors.cyan, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
   panel: { borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 18, gap: 10 },
-  dayPanel: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayPanel: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   title: { color: nsnColors.text, fontSize: 24, fontWeight: "900", lineHeight: 31 },
   copy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   formStack: { gap: 16 },
   label: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginBottom: 8 },
   input: { minHeight: 50, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, fontSize: 15, paddingHorizontal: 14 },
-  dayInput: { borderColor: "#B8C9E6", backgroundColor: "#FFFFFF", color: "#0B1220" },
+  dayInput: { borderColor: "#C5D0DA", backgroundColor: "#FFFFFF", color: "#0B1220" },
   twoColumn: { flexDirection: "row", gap: 12 },
   column: { flex: 1 },
   rangeRow: { minHeight: 50, flexDirection: "row", alignItems: "center", gap: 8 },
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
   localityName: { color: nsnColors.text, fontSize: 13, fontWeight: "800" },
   optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   choice: { minHeight: 42, minWidth: "47%", flex: 1, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
-  dayChoice: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6" },
+  dayChoice: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   choiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   choiceText: { color: nsnColors.muted, fontSize: 13, fontWeight: "900", textAlign: "center" },
   choiceTextActive: { color: "#FFFFFF" },
@@ -651,9 +651,9 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
   secondaryButton: { minHeight: 54, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
   secondaryButtonText: { color: nsnColors.text, fontSize: 14, fontWeight: "900" },
-  dayCard: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
+  dayCard: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   dayTitle: { color: "#0B1220" },
-  dayMutedText: { color: "#3B4A63" },
+  dayMutedText: { color: "#53677A" },
   dayAccentText: { color: nsnColors.primary },
   dayMessage: { color: "#7A5600" },
 });
