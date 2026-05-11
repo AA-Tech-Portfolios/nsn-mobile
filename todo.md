@@ -93,6 +93,7 @@
 - [ ] Gather user feedback on whether food and beverage categories feel calm, useful, and not overwhelming
 - [ ] Add interest-based recommendations that use hobbies, genres, and comfort modifiers without turning NSN into a quiz
 - [ ] Connect richer preference matching across interests, food, social energy, communication, and group size
+- [ ] Explore broad background-based suggestions for study groups, volunteering meetups, and shared industry conversation starters without exposing exact institutions or routines
 - [ ] Expand the interest taxonomy after tester feedback on categories, wording, and missing local activities
 - [ ] Gather user feedback on whether Hobbies & Interests feels useful, calm, and not profile-heavy
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
@@ -148,6 +149,7 @@
 - [ ] Add pre-meetup grounding screen with expectations, safety reminder, and backup plan
 - [ ] Add pre-meetup readiness checklist covering location, host, plan, safety, and exit options
 - [ ] Add event troubleshooting tools to help participants coordinate around busy work, study, and timetable constraints
+- [ ] Decide whether verified student, work, or volunteer status is ever needed, and keep exact institutions/employers private by default if added
 - [x] Add transportation preference and arrival update messages for running late or not making it
 - [ ] Add lightweight transportation options with nearby stops, estimated travel time, suggested arrival windows, and links out to maps
 - [ ] Add host templates for common meetup types
@@ -163,6 +165,8 @@
 - [ ] Add conversation starter cards for low-pressure chats and meetups
 - [ ] Add mutual pre-meetup consent for optional 1-1 chats between members
 - [ ] Add mutual consent flow for revealing blurred profile pictures when both members feel ready
+- [ ] Gather tester feedback on whether Background & community sharing feels safe, useful, and appropriately broad
+- [ ] Add stronger privacy controls for exact schools, workplaces, volunteer organisations, schedules, and routines before supporting those fields
 - [x] Add local Contact Preference options for in-person, text, email, phone, and video comfort
 - [ ] Unlock phone or video call preferences after a meetup, with users choosing the contact mode they are comfortable with
 

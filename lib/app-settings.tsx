@@ -142,6 +142,66 @@ export type PhysicalContactComfortPreference =
   | "Handshake okay"
   | "Hugs only if I offer"
   | "Prefer personal space";
+export type BackgroundVisibilityPreference =
+  | "Private"
+  | "Matched/shared visibility only"
+  | "Visible on profile preview"
+  | "Ask me first"
+  | "Prefer not to say";
+export type BackgroundStudyStatusPreference =
+  | "Currently studying"
+  | "Studied before"
+  | "Self-study / online learning"
+  | "Interested in study groups"
+  | "Prefer not to say";
+export type BackgroundStudyAreaPreference =
+  | "Technology"
+  | "Design"
+  | "Psychology"
+  | "Business"
+  | "Health"
+  | "Education"
+  | "Arts"
+  | "Trades"
+  | "Languages"
+  | "Science"
+  | "Writing"
+  | "Other";
+export type BackgroundWorkPreference =
+  | "Technology"
+  | "Hospitality"
+  | "Retail"
+  | "Healthcare"
+  | "Education"
+  | "Creative work"
+  | "Trades"
+  | "Admin"
+  | "Finance"
+  | "Community services"
+  | "Freelance"
+  | "Student work"
+  | "Not currently working"
+  | "Prefer not to say";
+export type BackgroundWorkRhythmPreference =
+  | "Weekdays"
+  | "Weekends"
+  | "Shift work"
+  | "Remote/hybrid"
+  | "Flexible"
+  | "Prefer not to say";
+export type BackgroundCommunityPreference =
+  | "Animal welfare"
+  | "Environmental cleanup"
+  | "Community events"
+  | "Food relief"
+  | "Mental health support"
+  | "Youth support"
+  | "Aged care"
+  | "Disability support"
+  | "Local clubs"
+  | "Faith/community groups"
+  | "Community gardens"
+  | "Prefer not to say";
 export type ProfileGender = "Not specified" | "Male" | "Female" | "Other";
 export type ProfileNameDisplayMode = "Hidden" | "Initial" | "Full";
 export type SettingsPrivacyMode = "Basic" | "Advanced";
@@ -205,6 +265,72 @@ export const physicalContactComfortOptions: PhysicalContactComfortPreference[] =
   "Prefer personal space",
 ];
 export const defaultPhysicalContactComfortPreferences: PhysicalContactComfortPreference[] = ["Ask first", "Prefer personal space"];
+export const backgroundVisibilityOptions: BackgroundVisibilityPreference[] = [
+  "Private",
+  "Matched/shared visibility only",
+  "Visible on profile preview",
+  "Ask me first",
+  "Prefer not to say",
+];
+export const backgroundStudyStatusOptions: BackgroundStudyStatusPreference[] = [
+  "Currently studying",
+  "Studied before",
+  "Self-study / online learning",
+  "Interested in study groups",
+  "Prefer not to say",
+];
+export const backgroundStudyAreaOptions: BackgroundStudyAreaPreference[] = [
+  "Technology",
+  "Design",
+  "Psychology",
+  "Business",
+  "Health",
+  "Education",
+  "Arts",
+  "Trades",
+  "Languages",
+  "Science",
+  "Writing",
+  "Other",
+];
+export const backgroundWorkOptions: BackgroundWorkPreference[] = [
+  "Technology",
+  "Hospitality",
+  "Retail",
+  "Healthcare",
+  "Education",
+  "Creative work",
+  "Trades",
+  "Admin",
+  "Finance",
+  "Community services",
+  "Freelance",
+  "Student work",
+  "Not currently working",
+  "Prefer not to say",
+];
+export const backgroundWorkRhythmOptions: BackgroundWorkRhythmPreference[] = [
+  "Weekdays",
+  "Weekends",
+  "Shift work",
+  "Remote/hybrid",
+  "Flexible",
+  "Prefer not to say",
+];
+export const backgroundCommunityOptions: BackgroundCommunityPreference[] = [
+  "Animal welfare",
+  "Environmental cleanup",
+  "Community events",
+  "Food relief",
+  "Mental health support",
+  "Youth support",
+  "Aged care",
+  "Disability support",
+  "Local clubs",
+  "Faith/community groups",
+  "Community gardens",
+  "Prefer not to say",
+];
 
 export type DietaryPreference =
   | "No preference"
@@ -315,6 +441,14 @@ const normalizePhysicalContactComfortPreferences = (value?: PhysicalContactComfo
   return filtered.length ? filtered : defaultPhysicalContactComfortPreferences;
 };
 
+const normalizeBackgroundVisibilityPreference = (value?: BackgroundVisibilityPreference | null): BackgroundVisibilityPreference =>
+  value && backgroundVisibilityOptions.includes(value) ? value : "Private";
+
+const normalizeBackgroundPreferenceList = <T extends string>(value: T[] | null | undefined, options: T[]): T[] => {
+  const filtered = Array.from(new Set((value ?? []).filter((preference): preference is T => options.includes(preference))));
+  return filtered.includes("Prefer not to say" as T) ? (["Prefer not to say"] as T[]) : filtered;
+};
+
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
   accountPaused?: boolean;
@@ -367,6 +501,14 @@ type OnboardingSnapshot = {
   groupSizePreference?: GroupSizePreference;
   photoRecordingComfortPreferences?: PhotoRecordingComfortPreference[];
   physicalContactComfortPreferences?: PhysicalContactComfortPreference[];
+  backgroundStudyStatuses?: BackgroundStudyStatusPreference[];
+  backgroundStudyAreas?: BackgroundStudyAreaPreference[];
+  backgroundStudyVisibility?: BackgroundVisibilityPreference;
+  backgroundWorkPreferences?: BackgroundWorkPreference[];
+  backgroundWorkRhythms?: BackgroundWorkRhythmPreference[];
+  backgroundWorkVisibility?: BackgroundVisibilityPreference;
+  backgroundCommunityPreferences?: BackgroundCommunityPreference[];
+  backgroundCommunityVisibility?: BackgroundVisibilityPreference;
   verifiedButPrivate?: boolean;
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
@@ -631,6 +773,22 @@ type AppSettings = {
   setPhotoRecordingComfortPreferences: (value: PhotoRecordingComfortPreference[]) => void;
   physicalContactComfortPreferences: PhysicalContactComfortPreference[];
   setPhysicalContactComfortPreferences: (value: PhysicalContactComfortPreference[]) => void;
+  backgroundStudyStatuses: BackgroundStudyStatusPreference[];
+  setBackgroundStudyStatuses: (value: BackgroundStudyStatusPreference[]) => void;
+  backgroundStudyAreas: BackgroundStudyAreaPreference[];
+  setBackgroundStudyAreas: (value: BackgroundStudyAreaPreference[]) => void;
+  backgroundStudyVisibility: BackgroundVisibilityPreference;
+  setBackgroundStudyVisibility: (value: BackgroundVisibilityPreference) => void;
+  backgroundWorkPreferences: BackgroundWorkPreference[];
+  setBackgroundWorkPreferences: (value: BackgroundWorkPreference[]) => void;
+  backgroundWorkRhythms: BackgroundWorkRhythmPreference[];
+  setBackgroundWorkRhythms: (value: BackgroundWorkRhythmPreference[]) => void;
+  backgroundWorkVisibility: BackgroundVisibilityPreference;
+  setBackgroundWorkVisibility: (value: BackgroundVisibilityPreference) => void;
+  backgroundCommunityPreferences: BackgroundCommunityPreference[];
+  setBackgroundCommunityPreferences: (value: BackgroundCommunityPreference[]) => void;
+  backgroundCommunityVisibility: BackgroundVisibilityPreference;
+  setBackgroundCommunityVisibility: (value: BackgroundVisibilityPreference) => void;
   verifiedButPrivate: boolean;
   setVerifiedButPrivate: (value: boolean) => void;
   dietaryPreferences: DietaryPreference[];
@@ -819,6 +977,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [groupSizePreference, setGroupSizePreference] = useState<GroupSizePreference>("Small groups only");
   const [photoRecordingComfortPreferences, setPhotoRecordingComfortPreferences] = useState<PhotoRecordingComfortPreference[]>(defaultPhotoRecordingComfortPreferences);
   const [physicalContactComfortPreferences, setPhysicalContactComfortPreferences] = useState<PhysicalContactComfortPreference[]>(defaultPhysicalContactComfortPreferences);
+  const [backgroundStudyStatuses, setBackgroundStudyStatuses] = useState<BackgroundStudyStatusPreference[]>([]);
+  const [backgroundStudyAreas, setBackgroundStudyAreas] = useState<BackgroundStudyAreaPreference[]>([]);
+  const [backgroundStudyVisibility, setBackgroundStudyVisibility] = useState<BackgroundVisibilityPreference>("Private");
+  const [backgroundWorkPreferences, setBackgroundWorkPreferences] = useState<BackgroundWorkPreference[]>([]);
+  const [backgroundWorkRhythms, setBackgroundWorkRhythms] = useState<BackgroundWorkRhythmPreference[]>([]);
+  const [backgroundWorkVisibility, setBackgroundWorkVisibility] = useState<BackgroundVisibilityPreference>("Private");
+  const [backgroundCommunityPreferences, setBackgroundCommunityPreferences] = useState<BackgroundCommunityPreference[]>([]);
+  const [backgroundCommunityVisibility, setBackgroundCommunityVisibility] = useState<BackgroundVisibilityPreference>("Private");
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
@@ -952,6 +1118,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
         setPhotoRecordingComfortPreferences(normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences));
         setPhysicalContactComfortPreferences(normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences));
+        setBackgroundStudyStatuses(normalizeBackgroundPreferenceList(snapshot.backgroundStudyStatuses, backgroundStudyStatusOptions));
+        setBackgroundStudyAreas(normalizeBackgroundPreferenceList(snapshot.backgroundStudyAreas, backgroundStudyAreaOptions));
+        setBackgroundStudyVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundStudyVisibility));
+        setBackgroundWorkPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundWorkPreferences, backgroundWorkOptions));
+        setBackgroundWorkRhythms(normalizeBackgroundPreferenceList(snapshot.backgroundWorkRhythms, backgroundWorkRhythmOptions));
+        setBackgroundWorkVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility));
+        setBackgroundCommunityPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions));
+        setBackgroundCommunityVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility));
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
@@ -1064,11 +1238,27 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextGroupSizePreference = normalizeGroupSizePreference(snapshot.groupSizePreference);
     const nextPhotoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences);
     const nextPhysicalContactComfortPreferences = normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences);
+    const nextBackgroundStudyStatuses = normalizeBackgroundPreferenceList(snapshot.backgroundStudyStatuses, backgroundStudyStatusOptions);
+    const nextBackgroundStudyAreas = normalizeBackgroundPreferenceList(snapshot.backgroundStudyAreas, backgroundStudyAreaOptions);
+    const nextBackgroundStudyVisibility = normalizeBackgroundVisibilityPreference(snapshot.backgroundStudyVisibility);
+    const nextBackgroundWorkPreferences = normalizeBackgroundPreferenceList(snapshot.backgroundWorkPreferences, backgroundWorkOptions);
+    const nextBackgroundWorkRhythms = normalizeBackgroundPreferenceList(snapshot.backgroundWorkRhythms, backgroundWorkRhythmOptions);
+    const nextBackgroundWorkVisibility = normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility);
+    const nextBackgroundCommunityPreferences = normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions);
+    const nextBackgroundCommunityVisibility = normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility);
     setSocialEnergyPreference(nextSocialEnergyPreference);
     setCommunicationPreferences(nextCommunicationPreferences);
     setGroupSizePreference(nextGroupSizePreference);
     setPhotoRecordingComfortPreferences(nextPhotoRecordingComfortPreferences);
     setPhysicalContactComfortPreferences(nextPhysicalContactComfortPreferences);
+    setBackgroundStudyStatuses(nextBackgroundStudyStatuses);
+    setBackgroundStudyAreas(nextBackgroundStudyAreas);
+    setBackgroundStudyVisibility(nextBackgroundStudyVisibility);
+    setBackgroundWorkPreferences(nextBackgroundWorkPreferences);
+    setBackgroundWorkRhythms(nextBackgroundWorkRhythms);
+    setBackgroundWorkVisibility(nextBackgroundWorkVisibility);
+    setBackgroundCommunityPreferences(nextBackgroundCommunityPreferences);
+    setBackgroundCommunityVisibility(nextBackgroundCommunityVisibility);
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
     setDietaryPreferences(snapshot.dietaryPreferences);
@@ -1139,6 +1329,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           groupSizePreference: nextGroupSizePreference,
           photoRecordingComfortPreferences: nextPhotoRecordingComfortPreferences,
           physicalContactComfortPreferences: nextPhysicalContactComfortPreferences,
+          backgroundStudyStatuses: nextBackgroundStudyStatuses,
+          backgroundStudyAreas: nextBackgroundStudyAreas,
+          backgroundStudyVisibility: nextBackgroundStudyVisibility,
+          backgroundWorkPreferences: nextBackgroundWorkPreferences,
+          backgroundWorkRhythms: nextBackgroundWorkRhythms,
+          backgroundWorkVisibility: nextBackgroundWorkVisibility,
+          backgroundCommunityPreferences: nextBackgroundCommunityPreferences,
+          backgroundCommunityVisibility: nextBackgroundCommunityVisibility,
           verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
           foodBeveragePreferenceIds: nextFoodBeveragePreferenceIds,
           interestPreferenceIds: nextInterestPreferenceIds,
@@ -1213,6 +1411,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       groupSizePreference,
       photoRecordingComfortPreferences,
       physicalContactComfortPreferences,
+      backgroundStudyStatuses,
+      backgroundStudyAreas,
+      backgroundStudyVisibility,
+      backgroundWorkPreferences,
+      backgroundWorkRhythms,
+      backgroundWorkVisibility,
+      backgroundCommunityPreferences,
+      backgroundCommunityVisibility,
       verifiedButPrivate,
       transportationMethod,
       dietaryPreferences,
@@ -1278,6 +1484,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.groupSizePreference = normalizeGroupSizePreference(nextSnapshot.groupSizePreference);
     nextSnapshot.photoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(nextSnapshot.photoRecordingComfortPreferences);
     nextSnapshot.physicalContactComfortPreferences = normalizePhysicalContactComfortPreferences(nextSnapshot.physicalContactComfortPreferences);
+    nextSnapshot.backgroundStudyStatuses = normalizeBackgroundPreferenceList(nextSnapshot.backgroundStudyStatuses, backgroundStudyStatusOptions);
+    nextSnapshot.backgroundStudyAreas = normalizeBackgroundPreferenceList(nextSnapshot.backgroundStudyAreas, backgroundStudyAreaOptions);
+    nextSnapshot.backgroundStudyVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.backgroundStudyVisibility);
+    nextSnapshot.backgroundWorkPreferences = normalizeBackgroundPreferenceList(nextSnapshot.backgroundWorkPreferences, backgroundWorkOptions);
+    nextSnapshot.backgroundWorkRhythms = normalizeBackgroundPreferenceList(nextSnapshot.backgroundWorkRhythms, backgroundWorkRhythmOptions);
+    nextSnapshot.backgroundWorkVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.backgroundWorkVisibility);
+    nextSnapshot.backgroundCommunityPreferences = normalizeBackgroundPreferenceList(nextSnapshot.backgroundCommunityPreferences, backgroundCommunityOptions);
+    nextSnapshot.backgroundCommunityVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.backgroundCommunityVisibility);
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
     nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(nextSnapshot.foodBeveragePreferenceIds);
     nextSnapshot.interestPreferenceIds = normalizeInterestPreferenceIds(nextSnapshot.interestPreferenceIds);
@@ -1365,6 +1579,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.groupSizePreference !== undefined) setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
     if (snapshot.photoRecordingComfortPreferences !== undefined) setPhotoRecordingComfortPreferences(normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences));
     if (snapshot.physicalContactComfortPreferences !== undefined) setPhysicalContactComfortPreferences(normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences));
+    if (snapshot.backgroundStudyStatuses !== undefined) setBackgroundStudyStatuses(normalizeBackgroundPreferenceList(snapshot.backgroundStudyStatuses, backgroundStudyStatusOptions));
+    if (snapshot.backgroundStudyAreas !== undefined) setBackgroundStudyAreas(normalizeBackgroundPreferenceList(snapshot.backgroundStudyAreas, backgroundStudyAreaOptions));
+    if (snapshot.backgroundStudyVisibility !== undefined) setBackgroundStudyVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundStudyVisibility));
+    if (snapshot.backgroundWorkPreferences !== undefined) setBackgroundWorkPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundWorkPreferences, backgroundWorkOptions));
+    if (snapshot.backgroundWorkRhythms !== undefined) setBackgroundWorkRhythms(normalizeBackgroundPreferenceList(snapshot.backgroundWorkRhythms, backgroundWorkRhythmOptions));
+    if (snapshot.backgroundWorkVisibility !== undefined) setBackgroundWorkVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility));
+    if (snapshot.backgroundCommunityPreferences !== undefined) setBackgroundCommunityPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions));
+    if (snapshot.backgroundCommunityVisibility !== undefined) setBackgroundCommunityVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility));
     if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
@@ -1666,6 +1888,22 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setPhotoRecordingComfortPreferences,
         physicalContactComfortPreferences,
         setPhysicalContactComfortPreferences,
+        backgroundStudyStatuses,
+        setBackgroundStudyStatuses,
+        backgroundStudyAreas,
+        setBackgroundStudyAreas,
+        backgroundStudyVisibility,
+        setBackgroundStudyVisibility,
+        backgroundWorkPreferences,
+        setBackgroundWorkPreferences,
+        backgroundWorkRhythms,
+        setBackgroundWorkRhythms,
+        backgroundWorkVisibility,
+        setBackgroundWorkVisibility,
+        backgroundCommunityPreferences,
+        setBackgroundCommunityPreferences,
+        backgroundCommunityVisibility,
+        setBackgroundCommunityVisibility,
         verifiedButPrivate,
         setVerifiedButPrivate,
         transportationMethod,

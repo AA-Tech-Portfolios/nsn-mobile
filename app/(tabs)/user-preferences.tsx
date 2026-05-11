@@ -5,11 +5,23 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
+  backgroundCommunityOptions,
+  backgroundStudyAreaOptions,
+  backgroundStudyStatusOptions,
+  backgroundVisibilityOptions,
+  backgroundWorkOptions,
+  backgroundWorkRhythmOptions,
   communicationPreferenceOptions,
   groupSizePreferenceOptions,
   photoRecordingComfortOptions,
   physicalContactComfortOptions,
   socialEnergyOptions,
+  type BackgroundCommunityPreference,
+  type BackgroundStudyAreaPreference,
+  type BackgroundStudyStatusPreference,
+  type BackgroundVisibilityPreference,
+  type BackgroundWorkPreference,
+  type BackgroundWorkRhythmPreference,
   type CommunicationPreference,
   type ContactPreference,
   type GroupSizePreference,
@@ -46,7 +58,7 @@ import {
   type InterestPreference,
 } from "@/lib/preferences/interests";
 
-type PreferenceSection = "overview" | "comfort" | "food" | "interests" | "transport" | "contact" | "location";
+type PreferenceSection = "overview" | "comfort" | "background" | "food" | "interests" | "transport" | "contact" | "location";
 
 const preferenceSections: Record<PreferenceSection, { icon: string; title: string; copy: string }> = {
   overview: {
@@ -58,6 +70,11 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
     icon: "🛡️",
     title: "Comfort & trust",
     copy: "Visibility, social energy, communication, group size, verification, photo comfort, and physical contact preferences in one calmer view.",
+  },
+  background: {
+    icon: "ðŸŒ±",
+    title: "Background & community",
+    copy: "Share light context about study, work, or volunteering if it helps others understand your interests. You control what appears publicly.",
   },
   food: {
     icon: "🍽️",
@@ -89,6 +106,7 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
 const compactPanelBySection: Record<PreferenceSection, string> = {
   overview: "preferences",
   comfort: "comfortTrust",
+  background: "backgroundCommunity",
   food: "foodBeverage",
   interests: "hobbiesInterests",
   transport: "preferences",
@@ -119,6 +137,7 @@ const normalizePreferenceSection = (section?: string | string[]): PreferenceSect
   const value = Array.isArray(section) ? section[0] : section;
 
   return value === "comfort" ||
+    value === "background" ||
     value === "food" ||
     value === "interests" ||
     value === "transport" ||
@@ -139,6 +158,14 @@ export default function UserPreferencesScreen() {
     groupSizePreference,
     photoRecordingComfortPreferences,
     physicalContactComfortPreferences,
+    backgroundStudyStatuses,
+    backgroundStudyAreas,
+    backgroundStudyVisibility,
+    backgroundWorkPreferences,
+    backgroundWorkRhythms,
+    backgroundWorkVisibility,
+    backgroundCommunityPreferences,
+    backgroundCommunityVisibility,
     verifiedButPrivate,
     foodBeveragePreferenceIds,
     interestPreferenceIds,
@@ -260,6 +287,55 @@ export default function UserPreferencesScreen() {
     await saveSoftHelloMvpState({ physicalContactComfortPreferences: nextPreferences.length ? nextPreferences : ["Ask first"] });
   };
 
+  const toggleBackgroundListItem = <T extends string>(current: T[], option: T, exclusiveOptions: T[] = []) => {
+    if (current.includes(option)) {
+      return current.filter((item) => item !== option);
+    }
+
+    if (option === ("Prefer not to say" as T) || exclusiveOptions.includes(option)) {
+      return [option];
+    }
+
+    return [...current.filter((item) => item !== ("Prefer not to say" as T) && !exclusiveOptions.includes(item)), option];
+  };
+
+  const toggleBackgroundStudyStatus = async (preference: BackgroundStudyStatusPreference) => {
+    await saveSoftHelloMvpState({ backgroundStudyStatuses: toggleBackgroundListItem(backgroundStudyStatuses, preference) });
+  };
+
+  const toggleBackgroundStudyArea = async (preference: BackgroundStudyAreaPreference) => {
+    await saveSoftHelloMvpState({ backgroundStudyAreas: toggleBackgroundListItem(backgroundStudyAreas, preference) });
+  };
+
+  const toggleBackgroundWorkPreference = async (preference: BackgroundWorkPreference) => {
+    await saveSoftHelloMvpState({ backgroundWorkPreferences: toggleBackgroundListItem(backgroundWorkPreferences, preference, ["Not currently working"]) });
+  };
+
+  const toggleBackgroundWorkRhythm = async (preference: BackgroundWorkRhythmPreference) => {
+    await saveSoftHelloMvpState({ backgroundWorkRhythms: toggleBackgroundListItem(backgroundWorkRhythms, preference) });
+  };
+
+  const toggleBackgroundCommunityPreference = async (preference: BackgroundCommunityPreference) => {
+    await saveSoftHelloMvpState({ backgroundCommunityPreferences: toggleBackgroundListItem(backgroundCommunityPreferences, preference) });
+  };
+
+  const updateBackgroundVisibility = async (
+    key: "backgroundStudyVisibility" | "backgroundWorkVisibility" | "backgroundCommunityVisibility",
+    preference: BackgroundVisibilityPreference
+  ) => {
+    if (key === "backgroundStudyVisibility") {
+      await saveSoftHelloMvpState({ backgroundStudyVisibility: preference });
+      return;
+    }
+
+    if (key === "backgroundWorkVisibility") {
+      await saveSoftHelloMvpState({ backgroundWorkVisibility: preference });
+      return;
+    }
+
+    await saveSoftHelloMvpState({ backgroundCommunityVisibility: preference });
+  };
+
   const toggleContactPreference = async (preference: ContactPreference) => {
     const nextPreferences = contactPreferences.includes(preference)
       ? contactPreferences.filter((item) => item !== preference)
@@ -357,6 +433,20 @@ export default function UserPreferencesScreen() {
     </View>
   );
 
+  const backgroundSelectedCount =
+    backgroundStudyStatuses.length +
+    backgroundStudyAreas.length +
+    backgroundWorkPreferences.length +
+    backgroundWorkRhythms.length +
+    backgroundCommunityPreferences.length;
+  const backgroundOverviewSummary = [
+    backgroundStudyAreas.length ? `Study: ${backgroundStudyAreas.slice(0, 2).join(", ")}` : "",
+    backgroundWorkPreferences.length ? `Work: ${backgroundWorkPreferences.slice(0, 2).join(", ")}` : "",
+    backgroundCommunityPreferences.length ? `Community: ${backgroundCommunityPreferences.slice(0, 2).join(", ")}` : "",
+  ]
+    .filter(Boolean)
+    .join(" / ");
+
   const overviewCards = [
     { section: "comfort" as const, title: "Comfort & trust", icon: "🛡️", copy: `${comfortMode} / ${socialEnergyPreference} energy / ${groupSizePreference}`, meta: "Visibility, contact, verification, and consent." },
     { section: "food" as const, title: "Food & beverage", icon: "🍽️", copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
@@ -364,6 +454,7 @@ export default function UserPreferencesScreen() {
     { section: "transport" as const, title: "Transportation method", icon: "🚆", copy: transportationMethod, meta: "Arrival comfort and meeting point notes." },
     { section: "contact" as const, title: "Contact preference", icon: "💬", copy: contactPreferences.join(", ") || "Text", meta: "How you prefer pre-meetup communication." },
     { section: "location" as const, title: "Location preference", icon: "📍", copy: suburb || "Sydney North Shore", meta: "Local area, radius, and profile location privacy." },
+    { section: "background" as const, title: "Background & community", icon: "ðŸŒ±", copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary || "Broad study, work, and volunteering context with visibility controls." },
   ];
 
   return (
@@ -483,6 +574,135 @@ export default function UserPreferencesScreen() {
                 {physicalContactComfortOptions.map((option) => renderChip({ key: option, label: option, active: physicalContactComfortPreferences.includes(option), onPress: () => togglePhysicalContactPreference(option), wide: true }))}
               </View>
             ))}
+          </View>
+        ) : null}
+
+        {activeSection === "background" ? (
+          <View style={styles.preferenceStack}>
+            <View style={[styles.searchCard, isDay && styles.dayCard]}>
+              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Privacy-first sharing</Text>
+              <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                NSN recommends sharing broad context first. Avoid posting exact workplaces, schools, schedules, or daily routines unless you are comfortable.
+              </Text>
+              {renderSummary(
+                [
+                  ...backgroundStudyAreas.slice(0, 3),
+                  ...backgroundWorkPreferences.slice(0, 3),
+                  ...backgroundCommunityPreferences.slice(0, 3),
+                ],
+                "No background context selected yet. Everything stays private by default."
+              )}
+            </View>
+            <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+              {renderSectionCard("Study", "Use broad study context only. School or university names are not required and should stay private unless you choose otherwise later.", "ðŸ“š", (
+                <>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundVisibilityOptions.map((option) =>
+                      renderChip({
+                        key: `study-${option}`,
+                        label: option,
+                        active: backgroundStudyVisibility === option,
+                        onPress: () => updateBackgroundVisibility("backgroundStudyVisibility", option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Study status</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundStudyStatusOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: backgroundStudyStatuses.includes(option),
+                        onPress: () => toggleBackgroundStudyStatus(option),
+                      })
+                    )}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Study areas</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundStudyAreaOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: backgroundStudyAreas.includes(option),
+                        onPress: () => toggleBackgroundStudyArea(option),
+                      })
+                    )}
+                  </View>
+                </>
+              ))}
+              {renderSectionCard("Work", "Choose broad industry or rhythm signals. Exact employer names and schedules are not requested in this prototype.", "ðŸ’¼", (
+                <>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundVisibilityOptions.map((option) =>
+                      renderChip({
+                        key: `work-${option}`,
+                        label: option,
+                        active: backgroundWorkVisibility === option,
+                        onPress: () => updateBackgroundVisibility("backgroundWorkVisibility", option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Work area</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundWorkOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: backgroundWorkPreferences.includes(option),
+                        onPress: () => toggleBackgroundWorkPreference(option),
+                      })
+                    )}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Work rhythm</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundWorkRhythmOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: backgroundWorkRhythms.includes(option),
+                        onPress: () => toggleBackgroundWorkRhythm(option),
+                      })
+                    )}
+                  </View>
+                </>
+              ))}
+              {renderSectionCard("Volunteering & community", "Share broad community interests without naming exact organisations. Organisation names should remain optional and private by default if added later.", "ðŸ¤", (
+                <>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundVisibilityOptions.map((option) =>
+                      renderChip({
+                        key: `community-${option}`,
+                        label: option,
+                        active: backgroundCommunityVisibility === option,
+                        onPress: () => updateBackgroundVisibility("backgroundCommunityVisibility", option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Community areas</Text>
+                  <View style={styles.chipGrid}>
+                    {backgroundCommunityOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: backgroundCommunityPreferences.includes(option),
+                        onPress: () => toggleBackgroundCommunityPreference(option),
+                      })
+                    )}
+                  </View>
+                </>
+              ))}
+              {renderSectionCard("Prototype matching notes", "Later, this can help suggest study groups, volunteering meetups, or shared industry conversation starters. No production recommendation engine is implied yet.", "ðŸ§­", (
+                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                  Background context should stay optional, broad, and easy to hide. Tester feedback will decide whether this feels useful and safe.
+                </Text>
+              ))}
+            </View>
           </View>
         ) : null}
 

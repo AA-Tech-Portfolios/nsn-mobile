@@ -4,6 +4,12 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import {
+  backgroundCommunityOptions,
+  backgroundStudyAreaOptions,
+  backgroundStudyStatusOptions,
+  backgroundVisibilityOptions,
+  backgroundWorkOptions,
+  backgroundWorkRhythmOptions,
   communicationPreferenceOptions,
   getLanguageBase,
   groupSizePreferenceOptions,
@@ -11,6 +17,12 @@ import {
   physicalContactComfortOptions,
   socialEnergyOptions,
   type CommunicationPreference,
+  type BackgroundCommunityPreference,
+  type BackgroundStudyAreaPreference,
+  type BackgroundStudyStatusPreference,
+  type BackgroundVisibilityPreference,
+  type BackgroundWorkPreference,
+  type BackgroundWorkRhythmPreference,
   type GroupSizePreference,
   type HomeEventLayout,
   type HomeEventVisualMode,
@@ -75,7 +87,7 @@ const rows = [
 const settingsRow = { icon: "settings", key: "settings", route: "/settings" } as const;
 type ProfileShortcutRow = (typeof rows)[number] | typeof settingsRow;
 type ProfileShortcutKey = ProfileShortcutRow["key"];
-type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "comfortTrust" | "foodBeverage" | "hobbiesInterests" | "display" | "layout" | "width" | "notifications" | "blockReport";
+type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "comfortTrust" | "backgroundCommunity" | "foodBeverage" | "hobbiesInterests" | "display" | "layout" | "width" | "notifications" | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
 const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
@@ -1056,6 +1068,14 @@ export default function ProfileScreen() {
     groupSizePreference,
     photoRecordingComfortPreferences,
     physicalContactComfortPreferences,
+    backgroundStudyStatuses,
+    backgroundStudyAreas,
+    backgroundStudyVisibility,
+    backgroundWorkPreferences,
+    backgroundWorkRhythms,
+    backgroundWorkVisibility,
+    backgroundCommunityPreferences,
+    backgroundCommunityVisibility,
     verifiedButPrivate,
     verificationLevel,
     profileShortcutLayout,
@@ -1201,7 +1221,7 @@ export default function ProfileScreen() {
   }, []);
 
   const openFullPreferenceView = useCallback(
-    (section: "overview" | "comfort" | "food" | "interests" | "transport" | "contact" | "location" = "overview") => {
+    (section: "overview" | "comfort" | "background" | "food" | "interests" | "transport" | "contact" | "location" = "overview") => {
       setShowPhotoMenu(false);
       setIsVerificationReviewOpen(false);
       setShowProfileMenu(false);
@@ -1212,8 +1232,8 @@ export default function ProfileScreen() {
 
   const openPreferenceDestination = useCallback(
     (
-      panel: "preferences" | "comfortTrust" | "foodBeverage" | "hobbiesInterests",
-      section: "overview" | "comfort" | "food" | "interests"
+      panel: "preferences" | "comfortTrust" | "backgroundCommunity" | "foodBeverage" | "hobbiesInterests",
+      section: "overview" | "comfort" | "background" | "food" | "interests"
     ) => {
       if (shouldOpenFullPreferenceView) {
         openFullPreferenceView(section);
@@ -1232,6 +1252,10 @@ export default function ProfileScreen() {
 
     if (menu === "comfortTrust") {
       openProfileOptionsPanel("comfortTrust");
+    }
+
+    if (menu === "backgroundCommunity") {
+      openProfileOptionsPanel("backgroundCommunity");
     }
 
     if (menu === "foodBeverage") {
@@ -1637,6 +1661,55 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ physicalContactComfortPreferences: nextPreferences.length ? nextPreferences : ["Ask first"] });
   };
 
+  const toggleBackgroundListItem = <T extends string>(current: T[], preference: T, exclusiveOptions: T[] = []) => {
+    if (current.includes(preference)) {
+      return current.filter((item) => item !== preference);
+    }
+
+    if (preference === ("Prefer not to say" as T) || exclusiveOptions.includes(preference)) {
+      return [preference];
+    }
+
+    return [...current.filter((item) => item !== ("Prefer not to say" as T) && !exclusiveOptions.includes(item)), preference];
+  };
+
+  const toggleBackgroundStudyStatus = async (preference: BackgroundStudyStatusPreference) => {
+    await saveSoftHelloMvpState({ backgroundStudyStatuses: toggleBackgroundListItem(backgroundStudyStatuses, preference) });
+  };
+
+  const toggleBackgroundStudyArea = async (preference: BackgroundStudyAreaPreference) => {
+    await saveSoftHelloMvpState({ backgroundStudyAreas: toggleBackgroundListItem(backgroundStudyAreas, preference) });
+  };
+
+  const toggleBackgroundWorkPreference = async (preference: BackgroundWorkPreference) => {
+    await saveSoftHelloMvpState({ backgroundWorkPreferences: toggleBackgroundListItem(backgroundWorkPreferences, preference, ["Not currently working"]) });
+  };
+
+  const toggleBackgroundWorkRhythm = async (preference: BackgroundWorkRhythmPreference) => {
+    await saveSoftHelloMvpState({ backgroundWorkRhythms: toggleBackgroundListItem(backgroundWorkRhythms, preference) });
+  };
+
+  const toggleBackgroundCommunityPreference = async (preference: BackgroundCommunityPreference) => {
+    await saveSoftHelloMvpState({ backgroundCommunityPreferences: toggleBackgroundListItem(backgroundCommunityPreferences, preference) });
+  };
+
+  const updateBackgroundVisibility = async (
+    key: "backgroundStudyVisibility" | "backgroundWorkVisibility" | "backgroundCommunityVisibility",
+    preference: BackgroundVisibilityPreference
+  ) => {
+    if (key === "backgroundStudyVisibility") {
+      await saveSoftHelloMvpState({ backgroundStudyVisibility: preference });
+      return;
+    }
+
+    if (key === "backgroundWorkVisibility") {
+      await saveSoftHelloMvpState({ backgroundWorkVisibility: preference });
+      return;
+    }
+
+    await saveSoftHelloMvpState({ backgroundCommunityVisibility: preference });
+  };
+
   const toggleFoodBeveragePreference = async (preferenceId: string) => {
     const nextPreferences = foodBeveragePreferenceIds.includes(preferenceId)
       ? foodBeveragePreferenceIds.filter((item) => item !== preferenceId)
@@ -1798,6 +1871,14 @@ export default function ProfileScreen() {
       groupSizePreference: "Small groups only",
       photoRecordingComfortPreferences: ["Ask me first", "No public posting without permission", "Prefer no screenshots of chats/profile"],
       physicalContactComfortPreferences: ["Ask first", "Prefer personal space"],
+      backgroundStudyStatuses: [],
+      backgroundStudyAreas: [],
+      backgroundStudyVisibility: "Private",
+      backgroundWorkPreferences: [],
+      backgroundWorkRhythms: [],
+      backgroundWorkVisibility: "Private",
+      backgroundCommunityPreferences: [],
+      backgroundCommunityVisibility: "Private",
       verifiedButPrivate: true,
       foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
       interestPreferenceIds: defaultInterestPreferenceIds,
@@ -2122,6 +2203,30 @@ export default function ProfileScreen() {
     </View>
   );
 
+  const lowerFirstBackgroundLabel = (value: string) => value.charAt(0).toLowerCase() + value.slice(1);
+  const backgroundCommunityProfileLines = [
+    backgroundStudyVisibility === "Visible on profile preview" && backgroundStudyAreas.length
+      ? `Studies ${lowerFirstBackgroundLabel(backgroundStudyAreas[0])}`
+      : "",
+    backgroundWorkVisibility === "Visible on profile preview" &&
+    backgroundWorkPreferences.length &&
+    !backgroundWorkPreferences.includes("Prefer not to say") &&
+    !backgroundWorkPreferences.includes("Not currently working")
+      ? `Works in ${lowerFirstBackgroundLabel(backgroundWorkPreferences[0])}`
+      : "",
+    backgroundCommunityVisibility === "Visible on profile preview" &&
+    backgroundCommunityPreferences.length &&
+    !backgroundCommunityPreferences.includes("Prefer not to say")
+      ? `Volunteers with ${lowerFirstBackgroundLabel(backgroundCommunityPreferences[0])} groups`
+      : "",
+  ].filter(Boolean);
+  const backgroundCommunitySelectedCount =
+    backgroundStudyStatuses.length +
+    backgroundStudyAreas.length +
+    backgroundWorkPreferences.length +
+    backgroundWorkRhythms.length +
+    backgroundCommunityPreferences.length;
+
   const comfortTrustSummarySection = (
     <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
       <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
@@ -2159,6 +2264,43 @@ export default function ProfileScreen() {
     </View>
   );
 
+  const backgroundCommunitySummarySection = (
+    <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+      <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+        <View style={styles.profileLayoutBody}>
+          <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Background & community</Text>
+          <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Optional broad context for study, work, and volunteering.
+          </Text>
+        </View>
+        <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>{backgroundCommunitySelectedCount ? `${backgroundCommunitySelectedCount} selected` : "Private"}</Text>
+      </View>
+      {backgroundCommunityProfileLines.length ? (
+        <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+          {backgroundCommunityProfileLines.map((line) => (
+            <Text key={line} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{line}</Text>
+          ))}
+        </View>
+      ) : (
+        <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+          Nothing is visible on the profile preview yet. Broad context can stay private, matched/shared only, or ask-first.
+        </Text>
+      )}
+      <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+        Avoid exact workplaces, schools, organisations, schedules, or daily routines unless you are comfortable.
+      </Text>
+      <TouchableOpacity
+        activeOpacity={0.82}
+        onPress={() => openPreferenceDestination("backgroundCommunity", "background")}
+        style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
+        accessibilityRole="button"
+        accessibilityLabel="Manage Background and community in User Options"
+      >
+        <Text style={styles.reviewSettingsText}>Manage in User Options</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const profileOptionsPanelTitle =
     profileMenuPanel === "edit"
       ? "Edit profile"
@@ -2166,8 +2308,10 @@ export default function ProfileScreen() {
         ? "Privacy guide"
         : profileMenuPanel === "preferences"
           ? "User preferences"
-          : profileMenuPanel === "comfortTrust"
-            ? "Comfort & trust"
+        : profileMenuPanel === "comfortTrust"
+          ? "Comfort & trust"
+          : profileMenuPanel === "backgroundCommunity"
+            ? "Background & community"
             : profileMenuPanel === "foodBeverage"
               ? "Food & beverage"
               : profileMenuPanel === "hobbiesInterests"
@@ -2288,7 +2432,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
                     {[
-                      { icon: "sliders" as const, title: "User preferences", copy: "Comfort & trust, social energy, communication, transport, food, and hobbies.", panel: "preferences" as const },
+                      { icon: "sliders" as const, title: "User preferences", copy: "Comfort & trust, background, communication, transport, food, and hobbies.", panel: "preferences" as const },
                       { icon: "layout" as const, title: "Display & layout", copy: `${homeEventLayout} events, ${homeLayoutDensity.toLowerCase()} Home density.`, panel: "display" as const },
                       { icon: "group" as const, title: "Profile layout", copy: isCleanProfile ? "Simple layout selected." : "Detailed layout selected.", panel: "layout" as const },
                       { icon: "resize" as const, title: "Width settings", copy: isWideProfile ? "Wide width selected." : "Contained width selected.", panel: "width" as const },
@@ -2479,6 +2623,25 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.78}
+                      onPress={() => openPreferenceDestination("backgroundCommunity", "background")}
+                      style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Background and community preferences"
+                    >
+                      <IconSymbol name="badge" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Background & community</Text>
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
+                          Optional study, work, and volunteering context with visibility controls.
+                        </Text>
+                      </View>
+                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>
+                        {backgroundStudyAreas.length + backgroundWorkPreferences.length + backgroundCommunityPreferences.length} selected
+                      </Text>
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
                       onPress={() => openPreferenceDestination("foodBeverage", "food")}
                       style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
                       accessibilityRole="button"
@@ -2557,6 +2720,145 @@ export default function ProfileScreen() {
                         <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       </TouchableOpacity>
                     ))}
+                  </>
+                ) : null}
+                {profileMenuPanel === "backgroundCommunity" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("preferences")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to user preferences">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
+                    </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("background")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Background and community">
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop background preference layout.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Background & community</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Share light context about study, work, or volunteering if it helps others understand your interests. You control what appears publicly.
+                      </Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        NSN recommends broad context first. Avoid exact workplaces, schools, schedules, or routines unless you are comfortable.
+                      </Text>
+                    </View>
+                    {[
+                      {
+                        title: "Study",
+                        visibilityKey: "backgroundStudyVisibility" as const,
+                        visibility: backgroundStudyVisibility,
+                        options: backgroundStudyStatusOptions,
+                        selected: backgroundStudyStatuses,
+                        toggle: toggleBackgroundStudyStatus,
+                        secondaryTitle: "Study areas",
+                        secondaryOptions: backgroundStudyAreaOptions,
+                        secondarySelected: backgroundStudyAreas,
+                        secondaryToggle: toggleBackgroundStudyArea,
+                      },
+                      {
+                        title: "Work",
+                        visibilityKey: "backgroundWorkVisibility" as const,
+                        visibility: backgroundWorkVisibility,
+                        options: backgroundWorkOptions,
+                        selected: backgroundWorkPreferences,
+                        toggle: toggleBackgroundWorkPreference,
+                        secondaryTitle: "Work rhythm",
+                        secondaryOptions: backgroundWorkRhythmOptions,
+                        secondarySelected: backgroundWorkRhythms,
+                        secondaryToggle: toggleBackgroundWorkRhythm,
+                      },
+                      {
+                        title: "Volunteering & community",
+                        visibilityKey: "backgroundCommunityVisibility" as const,
+                        visibility: backgroundCommunityVisibility,
+                        options: backgroundCommunityOptions,
+                        selected: backgroundCommunityPreferences,
+                        toggle: toggleBackgroundCommunityPreference,
+                      },
+                    ].map((section) => (
+                      <View key={section.title} style={[styles.foodPreferenceGroup, isDay && styles.daySoftOption]}>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{section.title}</Text>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Visibility</Text>
+                        <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                          {backgroundVisibilityOptions.map((option) => {
+                            const active = section.visibility === option;
+
+                            return (
+                              <TouchableOpacity
+                                key={`${section.title}-${option}`}
+                                activeOpacity={0.78}
+                                onPress={() => updateBackgroundVisibility(section.visibilityKey, option)}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${section.title} visibility ${option}`}
+                                accessibilityState={{ selected: active }}
+                                style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+                              >
+                                <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                                  {active ? `Selected: ${option}` : option}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                        <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                          {section.options.map((option) => {
+                            const active = section.selected.includes(option as never);
+
+                            return (
+                              <TouchableOpacity
+                                key={option}
+                                activeOpacity={0.78}
+                                onPress={() => section.toggle(option as never)}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${section.title} ${option}`}
+                                accessibilityState={{ selected: active }}
+                                style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+                              >
+                                <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                                  {active ? `Selected: ${option}` : option}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                        {section.secondaryOptions ? (
+                          <>
+                            <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>{section.secondaryTitle}</Text>
+                            <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                              {section.secondaryOptions.map((option) => {
+                                const active = section.secondarySelected?.includes(option as never) ?? false;
+
+                                return (
+                                  <TouchableOpacity
+                                    key={`${section.title}-${option}`}
+                                    activeOpacity={0.78}
+                                    onPress={() => section.secondaryToggle?.(option as never)}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={`${section.secondaryTitle} ${option}`}
+                                    accessibilityState={{ selected: active }}
+                                    style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+                                  >
+                                    <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                                      {active ? `Selected: ${option}` : option}
+                                    </Text>
+                                  </TouchableOpacity>
+                                );
+                              })}
+                            </View>
+                          </>
+                        ) : null}
+                      </View>
+                    ))}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Future matching note</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Later, broad context can help with study groups, volunteering meetups, and shared interest prompts. No production recommendation engine is connected yet.
+                      </Text>
+                    </View>
                   </>
                 ) : null}
                 {profileMenuPanel === "foodBeverage" ? (
@@ -4205,6 +4507,8 @@ export default function ProfileScreen() {
         ) : null}
 
         {comfortTrustSummarySection}
+
+        {backgroundCommunitySummarySection}
 
         {isCleanProfile ? (
           <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
