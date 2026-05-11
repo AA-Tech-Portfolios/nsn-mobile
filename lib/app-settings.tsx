@@ -135,6 +135,12 @@ export type HomeLayoutDensity = "Compact" | "Comfortable" | "Spacious";
 export type HomeHeaderControlsDensity = "Compact" | "Comfortable" | "Spacious";
 export type HomeCardLayout = "Vertical list" | "Horizontal cards" | "Boxed grid" | "Layered cards" | "Magazine";
 export type HomeEventVisualMode = "Emoji/Icon" | "Preview image";
+export type DateFormatPreference = "Device / locale" | "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY/MM/DD" | "YY/MM/DD";
+export type TimeFormatPreference = "Device / locale" | "12-hour clock" | "24-hour clock";
+export type ClockDisplayStyle = "Digital" | "Analog";
+export type TemperatureUnitPreference = "Device / locale" | "Celsius" | "Fahrenheit";
+export type DistanceUnitPreference = "Device / locale" | "Kilometres" | "Miles";
+export type CurrencyDisplayPreference = "Device / locale" | "AUD" | "USD" | "EUR" | "GBP";
 export type HomeVisibleSections = {
   weather: boolean;
   map: boolean;
@@ -200,6 +206,24 @@ const normalizeHomeEventVisualMode = (value?: HomeEventVisualMode | null): HomeE
 
 const normalizeHomeHeaderControlsDensity = (value?: HomeHeaderControlsDensity | null): HomeHeaderControlsDensity =>
   value === "Compact" || value === "Spacious" ? value : "Comfortable";
+
+const normalizeDateFormatPreference = (value?: DateFormatPreference | null): DateFormatPreference =>
+  value === "DD/MM/YYYY" || value === "MM/DD/YYYY" || value === "YYYY/MM/DD" || value === "YY/MM/DD" ? value : "Device / locale";
+
+const normalizeTimeFormatPreference = (value?: TimeFormatPreference | null): TimeFormatPreference =>
+  value === "12-hour clock" || value === "24-hour clock" ? value : "Device / locale";
+
+const normalizeClockDisplayStyle = (value?: ClockDisplayStyle | null): ClockDisplayStyle =>
+  value === "Analog" ? "Analog" : "Digital";
+
+const normalizeTemperatureUnitPreference = (value?: TemperatureUnitPreference | null): TemperatureUnitPreference =>
+  value === "Celsius" || value === "Fahrenheit" ? value : "Device / locale";
+
+const normalizeDistanceUnitPreference = (value?: DistanceUnitPreference | null): DistanceUnitPreference =>
+  value === "Kilometres" || value === "Miles" ? value : "Device / locale";
+
+const normalizeCurrencyDisplayPreference = (value?: CurrencyDisplayPreference | null): CurrencyDisplayPreference =>
+  value === "AUD" || value === "USD" || value === "EUR" || value === "GBP" ? value : "Device / locale";
 
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
@@ -273,6 +297,12 @@ type OnboardingSnapshot = {
   notificationSnoozePreset?: NotificationSnoozePreset;
   timezone?: TimezoneSetting;
   timeContextMode?: TimeContextMode;
+  dateFormatPreference?: DateFormatPreference;
+  timeFormatPreference?: TimeFormatPreference;
+  clockDisplayStyle?: ClockDisplayStyle;
+  temperatureUnitPreference?: TemperatureUnitPreference;
+  distanceUnitPreference?: DistanceUnitPreference;
+  currencyDisplayPreference?: CurrencyDisplayPreference;
   appLanguage?: string;
   translationLanguage?: string;
   brandThemeId?: BrandThemeId;
@@ -569,6 +599,18 @@ type AppSettings = {
   setTimezone: (value: TimezoneSetting) => void;
   timeContextMode: TimeContextMode;
   setTimeContextMode: (value: TimeContextMode) => void;
+  dateFormatPreference: DateFormatPreference;
+  setDateFormatPreference: (value: DateFormatPreference) => void;
+  timeFormatPreference: TimeFormatPreference;
+  setTimeFormatPreference: (value: TimeFormatPreference) => void;
+  clockDisplayStyle: ClockDisplayStyle;
+  setClockDisplayStyle: (value: ClockDisplayStyle) => void;
+  temperatureUnitPreference: TemperatureUnitPreference;
+  setTemperatureUnitPreference: (value: TemperatureUnitPreference) => void;
+  distanceUnitPreference: DistanceUnitPreference;
+  setDistanceUnitPreference: (value: DistanceUnitPreference) => void;
+  currencyDisplayPreference: CurrencyDisplayPreference;
+  setCurrencyDisplayPreference: (value: CurrencyDisplayPreference) => void;
   weather: WeatherSnapshot;
   liveWeatherAlert: LiveWeatherAlert | null;
 };
@@ -672,6 +714,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [clearBorders, setClearBorders] = useState(false);
   const [timezone, setTimezone] = useState<TimezoneSetting>(defaultNsnTimezone);
   const [timeContextMode, setTimeContextMode] = useState<TimeContextMode>("Use selected suburb/local area");
+  const [dateFormatPreference, setDateFormatPreference] = useState<DateFormatPreference>("Device / locale");
+  const [timeFormatPreference, setTimeFormatPreference] = useState<TimeFormatPreference>("Device / locale");
+  const [clockDisplayStyle, setClockDisplayStyle] = useState<ClockDisplayStyle>("Digital");
+  const [temperatureUnitPreference, setTemperatureUnitPreference] = useState<TemperatureUnitPreference>("Device / locale");
+  const [distanceUnitPreference, setDistanceUnitPreference] = useState<DistanceUnitPreference>("Device / locale");
+  const [currencyDisplayPreference, setCurrencyDisplayPreference] = useState<CurrencyDisplayPreference>("Device / locale");
   const [weather, setWeather] = useState<WeatherSnapshot>({ temperature: null, rainChance: null, category: "unknown" });
   const [liveWeatherAlert, setLiveWeatherAlert] = useState<LiveWeatherAlert | null>(null);
   const previousWeather = useRef<WeatherSnapshot | null>(null);
@@ -764,6 +812,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
         setTimezone(normalizeTimezoneSetting(snapshot.timezone));
         setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
+        setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+        setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
+        setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+        setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
+        setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
+        setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
         setBlurProfilePhoto(snapshot.blurProfilePhoto ?? (snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
         console.log("NSN onboarding could not load:", error);
@@ -856,6 +910,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
     setTimezone(normalizeTimezoneSetting(snapshot.timezone));
     setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
+    setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+    setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
+    setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+    setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
+    setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
+    setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
     setBlurProfilePhoto(snapshot.blurProfilePhoto ?? snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
 
@@ -875,6 +935,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           homeSectionOrder: normalizeHomeSectionOrder(snapshot.homeSectionOrder),
           timezone: normalizeTimezoneSetting(snapshot.timezone),
           timeContextMode: normalizeTimeContextMode(snapshot.timeContextMode),
+          dateFormatPreference: normalizeDateFormatPreference(snapshot.dateFormatPreference),
+          timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
+          clockDisplayStyle: normalizeClockDisplayStyle(snapshot.clockDisplayStyle),
+          temperatureUnitPreference: normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference),
+          distanceUnitPreference: normalizeDistanceUnitPreference(snapshot.distanceUnitPreference),
+          currencyDisplayPreference: normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference),
           hasCompletedOnboarding: true,
         } satisfies OnboardingSnapshot)
       );
@@ -959,6 +1025,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       brandThemeId,
       timezone,
       timeContextMode,
+      dateFormatPreference,
+      timeFormatPreference,
+      clockDisplayStyle,
+      temperatureUnitPreference,
+      distanceUnitPreference,
+      currencyDisplayPreference,
       ...snapshot,
     };
     nextSnapshot.appLanguage = normalizeNsnLanguage(nextSnapshot.appLanguage);
@@ -966,6 +1038,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.brandThemeId = normalizeBrandThemeId(nextSnapshot.brandThemeId);
     nextSnapshot.timezone = normalizeTimezoneSetting(nextSnapshot.timezone);
     nextSnapshot.timeContextMode = normalizeTimeContextMode(nextSnapshot.timeContextMode);
+    nextSnapshot.dateFormatPreference = normalizeDateFormatPreference(nextSnapshot.dateFormatPreference);
+    nextSnapshot.timeFormatPreference = normalizeTimeFormatPreference(nextSnapshot.timeFormatPreference);
+    nextSnapshot.clockDisplayStyle = normalizeClockDisplayStyle(nextSnapshot.clockDisplayStyle);
+    nextSnapshot.temperatureUnitPreference = normalizeTemperatureUnitPreference(nextSnapshot.temperatureUnitPreference);
+    nextSnapshot.distanceUnitPreference = normalizeDistanceUnitPreference(nextSnapshot.distanceUnitPreference);
+    nextSnapshot.currencyDisplayPreference = normalizeCurrencyDisplayPreference(nextSnapshot.currencyDisplayPreference);
     nextSnapshot.homeHeaderControlsDensity = normalizeHomeHeaderControlsDensity(nextSnapshot.homeHeaderControlsDensity);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
@@ -1089,6 +1167,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.brandThemeId !== undefined) setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
     if (snapshot.timezone !== undefined) setTimezone(normalizeTimezoneSetting(snapshot.timezone));
     if (snapshot.timeContextMode !== undefined) setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
+    if (snapshot.dateFormatPreference !== undefined) setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+    if (snapshot.timeFormatPreference !== undefined) setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
+    if (snapshot.clockDisplayStyle !== undefined) setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+    if (snapshot.temperatureUnitPreference !== undefined) setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
+    if (snapshot.distanceUnitPreference !== undefined) setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
+    if (snapshot.currencyDisplayPreference !== undefined) setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
@@ -1421,6 +1505,18 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTimezone,
         timeContextMode,
         setTimeContextMode,
+        dateFormatPreference,
+        setDateFormatPreference,
+        timeFormatPreference,
+        setTimeFormatPreference,
+        clockDisplayStyle,
+        setClockDisplayStyle,
+        temperatureUnitPreference,
+        setTemperatureUnitPreference,
+        distanceUnitPreference,
+        setDistanceUnitPreference,
+        currencyDisplayPreference,
+        setCurrencyDisplayPreference,
         weather,
         liveWeatherAlert,
       }}

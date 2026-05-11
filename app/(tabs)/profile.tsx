@@ -1012,6 +1012,9 @@ export default function ProfileScreen() {
     homeLayoutDensity,
     homeHeaderControlsDensity,
     homeEventVisualMode,
+    dateFormatPreference,
+    timeFormatPreference,
+    temperatureUnitPreference,
     screenReaderHints,
     softSurfaces,
     clearBorders,
@@ -2258,6 +2261,23 @@ export default function ProfileScreen() {
                 })}
               </View>
             </View>
+            <View style={styles.profileDisplayGroup}>
+              <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Regional formats</Text>
+              <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                {dateFormatPreference} · {timeFormatPreference} · {temperatureUnitPreference}
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => router.push({ pathname: "/settings", params: { section: "regionalFormats" } } as never)}
+                accessibilityRole="button"
+                accessibilityLabel="View regional format preferences"
+                accessibilityHint={screenReaderHints ? "Opens Settings to adjust date, time, clock and unit display." : undefined}
+                style={[styles.profileDisplayChip, styles.profileDisplayActionChip, isDay && styles.daySoftOption]}
+              >
+                <IconSymbol name="settings" color={isDay ? "#445E93" : "#A8B7DA"} size={14} />
+                <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>View Preferences</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -3095,6 +3115,7 @@ const styles = StyleSheet.create({
   profileDisplayGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   profileDisplayChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
   profileDisplayChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  profileDisplayActionChip: { alignSelf: "flex-start", marginTop: 4 },
   profileDisplayChipActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
   profileDisplayChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   profileLayoutStack: { gap: 8 },

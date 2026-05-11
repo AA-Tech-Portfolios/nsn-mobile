@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
-import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, type TimeContextMode, useAppSettings } from "@/lib/app-settings";
+import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type ClockDisplayStyle, type CurrencyDisplayPreference, type DateFormatPreference, type DistanceUnitPreference, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, type TemperatureUnitPreference, type TimeContextMode, type TimeFormatPreference, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -42,6 +42,12 @@ const timeContextModeOptions: { value: TimeContextMode; label: string; copy: str
   { value: "Use selected suburb/local area", label: "Selected local area", copy: "Use the suburb or North Shore area selected in NSN." },
   { value: "Manual city/suburb override", label: "Manual override", copy: "Prototype: falls back to the selected local area until city search is connected." },
 ];
+const dateFormatOptions: DateFormatPreference[] = ["Device / locale", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD", "YY/MM/DD"];
+const timeFormatOptions: TimeFormatPreference[] = ["Device / locale", "12-hour clock", "24-hour clock"];
+const clockDisplayOptions: ClockDisplayStyle[] = ["Digital", "Analog"];
+const temperatureUnitOptions: TemperatureUnitPreference[] = ["Device / locale", "Celsius", "Fahrenheit"];
+const distanceUnitOptions: DistanceUnitPreference[] = ["Device / locale", "Kilometres", "Miles"];
+const currencyDisplayOptions: CurrencyDisplayPreference[] = ["Device / locale", "AUD", "USD", "EUR", "GBP"];
 const notificationSnoozeOptions: { value: NotificationSnoozePreset; label: string; copy: string }[] = [
   { value: "1 hour", label: "1 hour", copy: "Pause routine pings briefly." },
   { value: "Tonight", label: "Tonight", copy: "Keep the rest of today quiet." },
@@ -59,6 +65,7 @@ const jumpIconBySection: Record<SettingsSectionJumpId, ComponentProps<typeof Ico
   gender: "person.fill",
   notifications: "bell",
   locationDiscovery: "location",
+  regionalFormats: "language",
   safetyContact: "shield",
   accessibility: "accessibility",
   appearance: "palette",
@@ -94,6 +101,7 @@ type SettingsSectionJumpId =
   | "gender"
   | "notifications"
   | "locationDiscovery"
+  | "regionalFormats"
   | "safetyContact"
   | "accessibility"
   | "appearance"
@@ -156,6 +164,9 @@ type SettingsCopy = {
   timeLocalContext?: string;
   timeLocalContextCopy?: string;
   timeLocalContextPrototypeNote?: string;
+  regionalFormats?: string;
+  regionalFormatsCopy?: string;
+  regionalFormatsPrototypeNote?: string;
   safetyContact?: string;
   allowMessageRequests?: string;
   allowMessageRequestsCopy?: string;
@@ -232,6 +243,9 @@ const englishCopy: SettingsCopy = {
   timeLocalContext: "Time & local context",
   timeLocalContextCopy: "Choose how NSN decides local time for the Home greeting, Day/Night mode, and local prompts.",
   timeLocalContextPrototypeNote: "Prototype only: selected-area and manual override both use local saved fallback data for now.",
+  regionalFormats: "Time, date & units",
+  regionalFormatsCopy: "Start from this device's locale, or override how NSN displays shared event times, weather, and future pricing.",
+  regionalFormatsPrototypeNote: "Event data stays standardized internally; NSN formats labels for each viewer to reduce date and time ambiguity.",
   safetyContact: "Safety & Contact",
   allowMessageRequests: "Allow message requests",
   allowMessageRequestsCopy: "Let people message before you join the same meetup.",
@@ -2992,6 +3006,12 @@ export default function SettingsScreen() {
     setShowDistanceInMeetups,
     timeContextMode,
     setTimeContextMode,
+    dateFormatPreference,
+    timeFormatPreference,
+    clockDisplayStyle,
+    temperatureUnitPreference,
+    distanceUnitPreference,
+    currencyDisplayPreference,
     allowMessageRequests,
     setAllowMessageRequests,
     safetyCheckIns,
@@ -3089,6 +3109,7 @@ export default function SettingsScreen() {
           { id: "gender" as const, label: "Gender" },
           { id: "notifications" as const, label: "Notifications" },
           { id: "locationDiscovery" as const, label: "Location" },
+          { id: "regionalFormats" as const, label: "Formats" },
           { id: "safetyContact" as const, label: "Safety" },
           { id: "accessibility" as const, label: "Accessibility" },
           { id: "appearance" as const, label: "Appearance" },
@@ -3252,6 +3273,19 @@ export default function SettingsScreen() {
     saveSoftHelloMvpState({ timeContextMode: value });
     showRecentlyChanged("timeContextMode");
   };
+  const saveRegionalPreference = (
+    snapshot: Partial<{
+      dateFormatPreference: DateFormatPreference;
+      timeFormatPreference: TimeFormatPreference;
+      clockDisplayStyle: ClockDisplayStyle;
+      temperatureUnitPreference: TemperatureUnitPreference;
+      distanceUnitPreference: DistanceUnitPreference;
+      currencyDisplayPreference: CurrencyDisplayPreference;
+    }>
+  ) => {
+    saveSoftHelloMvpState(snapshot);
+    showRecentlyChanged(Object.keys(snapshot)[0] ?? "regionalFormats");
+  };
   const registerSectionLayout = (id: SettingsSectionJumpId) => (event: LayoutChangeEvent) => {
     sectionOffsets.current[id] = event.nativeEvent.layout.y;
   };
@@ -3266,7 +3300,7 @@ export default function SettingsScreen() {
   };
   const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
   useEffect(() => {
-    if (normalizedRequestedSection !== "notifications") {
+    if (normalizedRequestedSection !== "notifications" && normalizedRequestedSection !== "regionalFormats") {
       handledRequestedSection.current = false;
       return;
     }
@@ -3279,7 +3313,7 @@ export default function SettingsScreen() {
     if (handledRequestedSection.current) return;
     handledRequestedSection.current = true;
 
-    const timer = setTimeout(() => jumpToSection("notifications"), 350);
+    const timer = setTimeout(() => jumpToSection(normalizedRequestedSection), 350);
     return () => clearTimeout(timer);
   }, [isAdvancedSettings, normalizedRequestedSection, saveSoftHelloMvpState]);
   useEffect(() => {
@@ -4020,6 +4054,46 @@ export default function SettingsScreen() {
               {copy.timeLocalContextPrototypeNote ?? englishCopy.timeLocalContextPrototypeNote}
             </Text>
           </View>
+        </View>
+
+        <Text onLayout={registerSectionLayout("regionalFormats")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          {copy.regionalFormats ?? englishCopy.regionalFormats}
+        </Text>
+        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          {[
+            { label: "Date format", value: dateFormatPreference, options: dateFormatOptions, update: (value: DateFormatPreference) => saveRegionalPreference({ dateFormatPreference: value }) },
+            { label: "Time format", value: timeFormatPreference, options: timeFormatOptions, update: (value: TimeFormatPreference) => saveRegionalPreference({ timeFormatPreference: value }) },
+            { label: "Clock display", value: clockDisplayStyle, options: clockDisplayOptions, update: (value: ClockDisplayStyle) => saveRegionalPreference({ clockDisplayStyle: value }) },
+            { label: "Temperature", value: temperatureUnitPreference, options: temperatureUnitOptions, update: (value: TemperatureUnitPreference) => saveRegionalPreference({ temperatureUnitPreference: value }) },
+            { label: "Distance", value: distanceUnitPreference, options: distanceUnitOptions, update: (value: DistanceUnitPreference) => saveRegionalPreference({ distanceUnitPreference: value }) },
+            { label: "Currency", value: currencyDisplayPreference, options: currencyDisplayOptions, update: (value: CurrencyDisplayPreference) => saveRegionalPreference({ currencyDisplayPreference: value }) },
+          ].map((group, index) => (
+            <View key={group.label} style={[styles.regionalFormatBlock, index < 5 && styles.rowDivider, isDay && index < 5 && styles.dayRowDivider, highContrast && index < 5 && styles.highContrastDivider]}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{group.label}</Text>
+              <View style={[styles.regionalOptionRow, isRtl && styles.rtlRow]}>
+                {group.options.map((option) => {
+                  const active = group.value === option;
+
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      activeOpacity={0.82}
+                      onPress={() => group.update(option as never)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: active }}
+                      accessibilityLabel={`${option} ${group.label}`}
+                      style={[styles.regionalOptionChip, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
+                    >
+                      <Text style={[styles.regionalOptionText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
+          <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+            {copy.regionalFormatsPrototypeNote ?? englishCopy.regionalFormatsPrototypeNote}
+          </Text>
         </View>
 
         <Text onLayout={registerSectionLayout("safetyContact")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
@@ -4939,6 +5013,33 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     lineHeight: 15,
     marginTop: 3,
+  },
+  regionalFormatBlock: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    gap: 10,
+  },
+  regionalOptionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  regionalOptionChip: {
+    minHeight: 36,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#4D6794",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+  },
+  regionalOptionText: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
   },
   rtlRow: {
     flexDirection: "row-reverse",
