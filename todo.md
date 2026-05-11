@@ -86,6 +86,11 @@
 ### Profile and settings polish
 
 - [ ] Continue button behaviour audit across Profile, Settings & Privacy, and modal menus
+- [ ] Expand richer food preference matching with lightweight comfort signals instead of restaurant recommendations
+- [ ] Add dietary/allergy confirmation reminders before food-based meetups
+- [ ] Add venue metadata for dietary safety, quiet seating, alcohol-free comfort, and cafe suitability
+- [ ] Define age-appropriate handling for alcohol-related event preferences and labels
+- [ ] Gather user feedback on whether food and beverage categories feel calm, useful, and not overwhelming
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 - [ ] Add interactive tutorials for privacy, preview visibility, and comfort modes
 - [ ] Review translations with real users or native speakers before treating each language as complete

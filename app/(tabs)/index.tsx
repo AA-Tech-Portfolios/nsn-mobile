@@ -12,6 +12,7 @@ import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAr
 import { getComfortEventScore, isNearbyEvent, isSmallGroupEvent, isWeatherSafeEvent } from "@/lib/home-view-filters";
 import { prioritizeEventsForComfort } from "@/lib/softhello-mvp";
 import { formatEventTimeLabel, formatPreferredDate, formatPreferredTime, formatTemperatureLabel } from "@/lib/regional-format";
+import { getEventFoodPreferenceMatches } from "@/lib/preferences/food-preferences";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 const appLocaleMap: Record<string, string> = {
@@ -458,7 +459,7 @@ const getMediaComfortEventChip = (event: EventItem, photoRecordingComfortPrefere
   return eventLabels[0];
 };
 
-function EventTag({ icon, label, isDay, isRtl }: { icon: "pace" | "volume" | "volume.off" | "weather" | "visibility"; label: string; isDay?: boolean; isRtl?: boolean }) {
+function EventTag({ icon, label, isDay, isRtl }: { icon: "pace" | "volume" | "volume.off" | "weather" | "visibility" | "food"; label: string; isDay?: boolean; isRtl?: boolean }) {
   return (
     <View style={[styles.eventTag, isDay && styles.dayEventTag, isRtl && styles.rtlRow]}>
       <IconSymbol name={icon} color={isDay ? "#53677A" : nsnColors.muted} size={12} />
@@ -594,7 +595,7 @@ function EventPrototypeScene({ event, place, isDay }: { event: EventItem; place?
   );
 }
 
-function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference, density, cardLayout, visualMode, cardOutlineStyle, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, verifiedButPrivate, featured, highlighted, onHighlight }: { event: EventItem; isDay?: boolean; appLanguageBase: string; locale: string; timeFormatPreference: ReturnType<typeof useAppSettings>["timeFormatPreference"]; density: HomeLayoutDensity; cardLayout: HomeCardLayout; visualMode: HomeEventVisualMode; cardOutlineStyle: CardOutlineStyle; socialEnergyPreference: SocialEnergyPreference; groupSizePreference: GroupSizePreference; photoRecordingComfortPreferences: PhotoRecordingComfortPreference[]; verifiedButPrivate: boolean; featured?: boolean; highlighted?: boolean; onHighlight?: (eventId: string) => void }) {
+function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference, density, cardLayout, visualMode, cardOutlineStyle, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, verifiedButPrivate, featured, highlighted, onHighlight }: { event: EventItem; isDay?: boolean; appLanguageBase: string; locale: string; timeFormatPreference: ReturnType<typeof useAppSettings>["timeFormatPreference"]; density: HomeLayoutDensity; cardLayout: HomeCardLayout; visualMode: HomeEventVisualMode; cardOutlineStyle: CardOutlineStyle; socialEnergyPreference: SocialEnergyPreference; groupSizePreference: GroupSizePreference; photoRecordingComfortPreferences: PhotoRecordingComfortPreference[]; foodBeveragePreferenceIds: string[]; verifiedButPrivate: boolean; featured?: boolean; highlighted?: boolean; onHighlight?: (eventId: string) => void }) {
   const router = useRouter();
   const isRtl = rtlLanguages.has(appLanguageBase);
   const localizedEvent = { ...event, ...(eventTranslations[appLanguageBase]?.[event.id] ?? {}) };
@@ -607,6 +608,7 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
   const eventTime = formatEventTimeLabel(event.time, { locale, timeFormatPreference });
   const trustFoundationChips = getTrustFoundationEventChips(event, socialEnergyPreference, groupSizePreference, verifiedButPrivate);
   const mediaComfortChip = getMediaComfortEventChip(event, photoRecordingComfortPreferences);
+  const foodPreferenceChips = getEventFoodPreferenceMatches(event, foodBeveragePreferenceIds, 2);
   const eventOutlineStyle =
     cardOutlineStyle === "Minimal"
       ? styles.eventCardOutlineMinimal
@@ -692,6 +694,9 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
           <EventTag icon="weather" label={localizedEvent.weather} isDay={isDay} isRtl={isRtl} />
           {trustFoundationChips.map((chip) => (
             <EventTag key={chip} icon="pace" label={chip} isDay={isDay} isRtl={isRtl} />
+          ))}
+          {foodPreferenceChips.map((chip) => (
+            <EventTag key={`food-${chip}`} icon="food" label={chip} isDay={isDay} isRtl={isRtl} />
           ))}
           <EventTag icon="visibility" label={mediaComfortChip} isDay={isDay} isRtl={isRtl} />
         </View>
@@ -1120,7 +1125,7 @@ function HeaderActionButton({
 export default function HomeScreen() {
   const router = useRouter();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -1200,6 +1205,12 @@ export default function HomeScreen() {
 
       if (trustDelta !== 0) return trustDelta;
 
+      const foodDelta =
+        getEventFoodPreferenceMatches(b, foodBeveragePreferenceIds, 3).length -
+        getEventFoodPreferenceMatches(a, foodBeveragePreferenceIds, 3).length;
+
+      if (foodDelta !== 0) return foodDelta;
+
       if (homeViewMode === "Comfortable") {
         return getComfortEventScore(a) - getComfortEventScore(b);
       }
@@ -1208,7 +1219,7 @@ export default function HomeScreen() {
     });
 
     return nextEvents;
-  }, [baseEvents, groupSizePreference, homeNearbyOnly, homeSmallGroupsOnly, homeViewMode, homeWeatherSafeOnly, socialEnergyPreference, timezone.city, timezone.country, timezone.label]);
+  }, [baseEvents, foodBeveragePreferenceIds, groupSizePreference, homeNearbyOnly, homeSmallGroupsOnly, homeViewMode, homeWeatherSafeOnly, socialEnergyPreference, timezone.city, timezone.country, timezone.label]);
   const isDay = !isNightMode;
   const effectiveReduceMotion = reduceMotion || batterySaver;
   const [now, setNow] = useState(new Date());
@@ -2001,7 +2012,7 @@ export default function HomeScreen() {
             {homeCardLayout === "Horizontal cards" ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.horizontalEventScroller, isRtl && styles.rtlRow]}>
                 {displayedEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} socialEnergyPreference={socialEnergyPreference} groupSizePreference={groupSizePreference} photoRecordingComfortPreferences={photoRecordingComfortPreferences} verifiedButPrivate={verifiedButPrivate} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
+                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} socialEnergyPreference={socialEnergyPreference} groupSizePreference={groupSizePreference} photoRecordingComfortPreferences={photoRecordingComfortPreferences} foodBeveragePreferenceIds={foodBeveragePreferenceIds} verifiedButPrivate={verifiedButPrivate} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
                 ))}
               </ScrollView>
             ) : (
@@ -2014,7 +2025,7 @@ export default function HomeScreen() {
                 ]}
               >
                 {displayedEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} socialEnergyPreference={socialEnergyPreference} groupSizePreference={groupSizePreference} photoRecordingComfortPreferences={photoRecordingComfortPreferences} verifiedButPrivate={verifiedButPrivate} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
+                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} socialEnergyPreference={socialEnergyPreference} groupSizePreference={groupSizePreference} photoRecordingComfortPreferences={photoRecordingComfortPreferences} foodBeveragePreferenceIds={foodBeveragePreferenceIds} verifiedButPrivate={verifiedButPrivate} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
                 ))}
               </View>
             )}

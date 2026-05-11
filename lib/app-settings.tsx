@@ -12,6 +12,7 @@ import {
 } from "./softhello-mvp";
 import type { NoiseLevel } from "./nsn-data";
 import { getBrandTheme, normalizeBrandThemeId, type BrandThemeId } from "./brand-theme";
+import { defaultFoodBeveragePreferenceIds, normalizeFoodBeveragePreferenceIds } from "./preferences/food-preferences";
 
 export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
 
@@ -348,6 +349,7 @@ type OnboardingSnapshot = {
   verifiedButPrivate?: boolean;
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
+  foodBeveragePreferenceIds?: string[];
   hobbiesInterests: string[];
   profileShortcutLayout?: ProfileShortcutLayout;
   profileWidthPreference?: ProfileWidthPreference;
@@ -608,6 +610,8 @@ type AppSettings = {
   setVerifiedButPrivate: (value: boolean) => void;
   dietaryPreferences: DietaryPreference[];
   setDietaryPreferences: (value: DietaryPreference[]) => void;
+  foodBeveragePreferenceIds: string[];
+  setFoodBeveragePreferenceIds: (value: string[]) => void;
   hobbiesInterests: string[];
   setHobbiesInterests: (value: string[]) => void;
   profileShortcutLayout: ProfileShortcutLayout;
@@ -788,6 +792,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
+  const [foodBeveragePreferenceIds, setFoodBeveragePreferenceIds] = useState<string[]>(defaultFoodBeveragePreferenceIds);
   const [hobbiesInterests, setHobbiesInterests] = useState<string[]>(["Coffee", "Movies", "Walks"]);
   const [profileShortcutLayout, setProfileShortcutLayout] = useState<ProfileShortcutLayout>("Clean");
   const [profileWidthPreference, setProfileWidthPreference] = useState<ProfileWidthPreference>("Contained");
@@ -917,6 +922,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
+        setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
         setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
         setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
         setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
@@ -1028,6 +1034,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
     setDietaryPreferences(snapshot.dietaryPreferences);
+    const nextFoodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds);
+    setFoodBeveragePreferenceIds(nextFoodBeveragePreferenceIds);
     setHobbiesInterests(snapshot.hobbiesInterests);
     setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
     setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
@@ -1089,6 +1097,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           groupSizePreference: nextGroupSizePreference,
           photoRecordingComfortPreferences: nextPhotoRecordingComfortPreferences,
           verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
+          foodBeveragePreferenceIds: nextFoodBeveragePreferenceIds,
           showWeekday: snapshot.showWeekday ?? true,
           timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
           clockDisplayStyle: normalizeClockDisplayStyle(snapshot.clockDisplayStyle),
@@ -1161,6 +1170,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       verifiedButPrivate,
       transportationMethod,
       dietaryPreferences,
+      foodBeveragePreferenceIds,
       hobbiesInterests,
       profileShortcutLayout,
       profileWidthPreference,
@@ -1220,6 +1230,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.groupSizePreference = normalizeGroupSizePreference(nextSnapshot.groupSizePreference);
     nextSnapshot.photoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(nextSnapshot.photoRecordingComfortPreferences);
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
+    nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(nextSnapshot.foodBeveragePreferenceIds);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
@@ -1305,6 +1316,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
+    if (snapshot.foodBeveragePreferenceIds !== undefined) setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
     if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
     if (snapshot.profileWidthPreference !== undefined) setProfileWidthPreference(snapshot.profileWidthPreference);
@@ -1599,6 +1611,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTransportationMethod,
         dietaryPreferences,
         setDietaryPreferences,
+        foodBeveragePreferenceIds,
+        setFoodBeveragePreferenceIds,
         hobbiesInterests,
         setHobbiesInterests,
         profileShortcutLayout,

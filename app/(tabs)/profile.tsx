@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Image, Alert, Modal, useWindowDimensions } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -28,6 +28,16 @@ import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import type { LocalAreaSuggestion } from "@/lib/location-lookup";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
+import {
+  defaultFoodBeveragePreferenceIds,
+  foodPreferenceGroups,
+  getFoodBeverageOptionsByGroup,
+  getFoodPreferenceGroupSelectedCount,
+  getSelectedFoodPreferenceLabels,
+  searchFoodBeveragePreferences,
+  type FoodBeveragePreference,
+  type FoodPreferenceGroupId,
+} from "@/lib/preferences/food-preferences";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
@@ -47,7 +57,7 @@ const rows = [
 const settingsRow = { icon: "settings", key: "settings", route: "/settings" } as const;
 type ProfileShortcutRow = (typeof rows)[number] | typeof settingsRow;
 type ProfileShortcutKey = ProfileShortcutRow["key"];
-type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "comfortTrust" | "display" | "layout" | "width" | "notifications" | "blockReport";
+type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "comfortTrust" | "foodBeverage" | "display" | "layout" | "width" | "notifications" | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
 const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
@@ -1054,6 +1064,7 @@ export default function ProfileScreen() {
     timezone,
     hobbiesInterests,
     transportationMethod,
+    foodBeveragePreferenceIds,
   } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const isDay = !isNightMode;
@@ -1119,6 +1130,11 @@ export default function ProfileScreen() {
   const [showComfortSaved, setShowComfortSaved] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [profileMenuPanel, setProfileMenuPanel] = useState<ProfileMenuPanel>("main");
+  const [foodPreferenceSearch, setFoodPreferenceSearch] = useState("");
+  const [openFoodPreferenceGroups, setOpenFoodPreferenceGroups] = useState<FoodPreferenceGroupId[]>(
+    foodPreferenceGroups.filter((group) => group.defaultOpen).map((group) => group.id)
+  );
+  const [showAllFoodPreferenceGroups, setShowAllFoodPreferenceGroups] = useState<FoodPreferenceGroupId[]>([]);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
   const [draftContactEmail, setDraftContactEmail] = useState(contactEmail);
   const [draftContactPhone, setDraftContactPhone] = useState(contactPhone);
@@ -1548,6 +1564,26 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ photoRecordingComfortPreferences: nextPreferences });
   };
 
+  const toggleFoodBeveragePreference = async (preferenceId: string) => {
+    const nextPreferences = foodBeveragePreferenceIds.includes(preferenceId)
+      ? foodBeveragePreferenceIds.filter((item) => item !== preferenceId)
+      : [...foodBeveragePreferenceIds, preferenceId];
+
+    await saveSoftHelloMvpState({ foodBeveragePreferenceIds: nextPreferences });
+  };
+
+  const toggleFoodPreferenceGroup = (groupId: FoodPreferenceGroupId) => {
+    setOpenFoodPreferenceGroups((current) =>
+      current.includes(groupId) ? current.filter((item) => item !== groupId) : [...current, groupId]
+    );
+  };
+
+  const toggleFoodPreferenceGroupLimit = (groupId: FoodPreferenceGroupId) => {
+    setShowAllFoodPreferenceGroups((current) =>
+      current.includes(groupId) ? current.filter((item) => item !== groupId) : [...current, groupId]
+    );
+  };
+
   const toggleVerifiedButPrivate = async () => {
     await saveSoftHelloMvpState({ verifiedButPrivate: !verifiedButPrivate });
   };
@@ -1633,6 +1669,7 @@ export default function ProfileScreen() {
       groupSizePreference: "Small groups only",
       photoRecordingComfortPreferences: ["Ask me first", "No public posting without permission", "Prefer no screenshots of chats/profile"],
       verifiedButPrivate: true,
+      foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
     });
     setShowProfileMenu(false);
   };
@@ -1685,6 +1722,40 @@ export default function ProfileScreen() {
       active: reviewVerificationLevel === "Real Person Verified",
     },
   ];
+  const selectedFoodPreferenceLabels = useMemo(
+    () => getSelectedFoodPreferenceLabels(foodBeveragePreferenceIds, 8),
+    [foodBeveragePreferenceIds]
+  );
+  const foodPreferenceSearchResults = useMemo(
+    () => searchFoodBeveragePreferences(foodPreferenceSearch),
+    [foodPreferenceSearch]
+  );
+
+  const renderFoodPreferenceChip = (option: FoodBeveragePreference) => {
+    const active = foodBeveragePreferenceIds.includes(option.id);
+    const group = foodPreferenceGroups.find((item) => item.id === option.group);
+
+    return (
+      <TouchableOpacity
+        key={option.id}
+        accessibilityRole="button"
+        accessibilityLabel={`Food and beverage preference ${option.label}`}
+        accessibilityState={{ selected: active }}
+        activeOpacity={0.78}
+        onPress={() => toggleFoodBeveragePreference(option.id)}
+        style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+      >
+        <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+          {active ? `Selected: ${option.label}` : option.label}
+        </Text>
+        {option.ageSensitive ? (
+          <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>Optional 18+</Text>
+        ) : group ? (
+          <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>{group.title}</Text>
+        ) : null}
+      </TouchableOpacity>
+    );
+  };
 
   const trustFoundationsSection = (
     <View style={[styles.profileSectionCard, !isCleanProfile && styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
@@ -1893,17 +1964,19 @@ export default function ProfileScreen() {
           ? "User preferences"
           : profileMenuPanel === "comfortTrust"
             ? "Comfort & trust"
-            : profileMenuPanel === "display"
-              ? "Display & layout"
-              : profileMenuPanel === "layout"
-                ? "Profile layout"
-                : profileMenuPanel === "width"
-                  ? "Width settings"
-                  : profileMenuPanel === "notifications"
-                    ? "Notifications"
-                    : profileMenuPanel === "blockReport"
-                      ? "Block & report"
-                      : "Profile controls";
+            : profileMenuPanel === "foodBeverage"
+              ? "Food & beverage"
+              : profileMenuPanel === "display"
+                ? "Display & layout"
+                : profileMenuPanel === "layout"
+                  ? "Profile layout"
+                  : profileMenuPanel === "width"
+                    ? "Width settings"
+                    : profileMenuPanel === "notifications"
+                      ? "Notifications"
+                      : profileMenuPanel === "blockReport"
+                        ? "Block & report"
+                        : "Profile controls";
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -2176,11 +2249,32 @@ export default function ProfileScreen() {
                       <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>Prototype</Text>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      onPress={() => setProfileMenuPanel("foodBeverage")}
+                      style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Food and beverage preferences"
+                    >
+                      <IconSymbol name="food" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Food & beverage</Text>
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
+                          Cuisines, drinks, dietary needs, avoidances, and alcohol comfort.
+                        </Text>
+                        {selectedFoodPreferenceLabels.length ? (
+                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]} numberOfLines={1}>
+                            {selectedFoodPreferenceLabels.join(", ")}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{foodBeveragePreferenceIds.length} selected</Text>
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                    </TouchableOpacity>
                     {[
                       { icon: "transport" as const, label: getRowLabel("transportation"), route: "/transportation-preference" },
                       { icon: "contact" as const, label: getRowLabel("contactPreference"), route: "/contact-preference" },
                       { icon: "explore" as const, label: getRowLabel("locationPreference"), route: "/location-preference" },
-                      { icon: "food" as const, label: getRowLabel("foodPreferences"), route: "/food-preferences" },
                       { icon: "interests" as const, label: getRowLabel("hobbiesInterests"), route: "/hobbies-interests" },
                     ].map((item) => (
                       <TouchableOpacity
@@ -2201,6 +2295,147 @@ export default function ProfileScreen() {
                         <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       </TouchableOpacity>
                     ))}
+                  </>
+                ) : null}
+                {profileMenuPanel === "foodBeverage" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("preferences")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to user preferences">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
+                    </TouchableOpacity>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Food & beverage preferences</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Food preferences are used locally in this prototype to help suggest comfortable meetups. This is not a food delivery or restaurant recommendation system.
+                      </Text>
+                    </View>
+                    <View style={styles.foodPreferenceSearchWrap}>
+                      <IconSymbol name="magnifyingglass" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <TextInput
+                        value={foodPreferenceSearch}
+                        onChangeText={setFoodPreferenceSearch}
+                        placeholder="Search pizza, bubble tea, halal..."
+                        placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                        style={[styles.foodPreferenceSearchInput, isDay && styles.dayTitle]}
+                        accessibilityLabel="Search food and beverage preferences"
+                        selectionColor="#7786FF"
+                        underlineColorAndroid="transparent"
+                      />
+                      {foodPreferenceSearch ? (
+                        <TouchableOpacity
+                          activeOpacity={0.78}
+                          onPress={() => setFoodPreferenceSearch("")}
+                          accessibilityRole="button"
+                          accessibilityLabel="Clear food and beverage search"
+                          style={styles.foodPreferenceClearButton}
+                        >
+                          <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={16} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                    <View style={[styles.foodPreferenceSummary, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Selected</Text>
+                      {selectedFoodPreferenceLabels.length ? (
+                        <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+                          {selectedFoodPreferenceLabels.map((label, index) => (
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                          ))}
+                          {foodBeveragePreferenceIds.length > selectedFoodPreferenceLabels.length ? (
+                            <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
+                              +{foodBeveragePreferenceIds.length - selectedFoodPreferenceLabels.length} more
+                            </Text>
+                          ) : null}
+                        </View>
+                      ) : (
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>No food preferences selected yet.</Text>
+                      )}
+                    </View>
+                    {foodPreferenceSearch.trim() ? (
+                      <View style={styles.foodPreferenceAccordionStack}>
+                        <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>
+                          Search results
+                        </Text>
+                        {foodPreferenceSearchResults.length ? (
+                          <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                            {foodPreferenceSearchResults.map(renderFoodPreferenceChip)}
+                          </View>
+                        ) : (
+                          <View style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No matching preference yet</Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                              Try another food, drink, cuisine, dietary need, or avoidance.
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    ) : (
+                      <View style={styles.foodPreferenceAccordionStack}>
+                        {foodPreferenceGroups.map((group) => {
+                          const options = getFoodBeverageOptionsByGroup(group.id);
+                          const selectedCount = getFoodPreferenceGroupSelectedCount(foodBeveragePreferenceIds, group.id);
+                          const isOpen = openFoodPreferenceGroups.includes(group.id);
+                          const showAll = showAllFoodPreferenceGroups.includes(group.id);
+                          const visibleLimit = group.defaultVisible ?? 8;
+                          const visibleOptions = showAll
+                            ? options
+                            : options.filter((option, index) => index < visibleLimit || foodBeveragePreferenceIds.includes(option.id));
+                          const hiddenCount = options.length - visibleOptions.length;
+
+                          return (
+                            <View key={group.id} style={[styles.foodPreferenceGroup, isDay && styles.daySoftOption]}>
+                              <TouchableOpacity
+                                activeOpacity={0.78}
+                                onPress={() => toggleFoodPreferenceGroup(group.id)}
+                                style={[styles.foodPreferenceGroupHeader, isRtl && styles.rtlRow]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${group.title} food preference group`}
+                                accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
+                              >
+                                <View style={styles.profileLayoutBody}>
+                                  <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{group.title}</Text>
+                                  <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{group.copy}</Text>
+                                </View>
+                                <View style={[styles.foodPreferenceGroupHeaderMeta, isRtl && styles.rtlRow]}>
+                                  {selectedCount ? <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{selectedCount} selected</Text> : null}
+                                  <IconSymbol name={isOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                                </View>
+                              </TouchableOpacity>
+                              {isOpen ? (
+                                <>
+                                  {group.ageSensitive ? (
+                                    <Text style={[styles.foodPreferenceNotice, isDay && styles.dayMutedText]}>
+                                      Alcohol preferences are optional and only relevant for age-appropriate events.
+                                    </Text>
+                                  ) : null}
+                                  <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                                    {visibleOptions.map(renderFoodPreferenceChip)}
+                                  </View>
+                                  {hiddenCount > 0 || showAll ? (
+                                    <TouchableOpacity
+                                      activeOpacity={0.78}
+                                      onPress={() => toggleFoodPreferenceGroupLimit(group.id)}
+                                      style={[styles.foodPreferenceShowMoreButton, isDay && styles.daySoftOption]}
+                                      accessibilityRole="button"
+                                      accessibilityLabel={showAll ? `Show fewer ${group.title} options` : `Show more ${group.title} options`}
+                                    >
+                                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>
+                                        {showAll ? "Show fewer" : `Show ${hiddenCount} more`}
+                                      </Text>
+                                    </TouchableOpacity>
+                                  ) : null}
+                                </>
+                              ) : null}
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Dietary safety note</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Dietary preferences help with meetup suggestions, but users should still confirm ingredients with venues.
+                      </Text>
+                    </View>
                   </>
                 ) : null}
                 {profileMenuPanel === "comfortTrust" ? (
@@ -3578,7 +3813,14 @@ export default function ProfileScreen() {
                 accessibilityLabel={getRowLabel(row.key)}
                 accessibilityHint={profileCopy.opensSectionHint}
                 activeOpacity={0.78}
-                onPress={() => router.push(row.route as any)}
+                onPress={() => {
+                  if (row.key === "foodPreferences") {
+                    openProfileOptionsPanel("foodBeverage");
+                    return;
+                  }
+
+                  router.push(row.route as any);
+                }}
                 style={[styles.row, index < expandedProfileRows.length - 1 && styles.rowBorder, isDay && index < expandedProfileRows.length - 1 && styles.dayRowBorder]}
               >
 
@@ -3718,6 +3960,23 @@ const styles = StyleSheet.create({
   profileMenuWarningCard: { borderColor: "rgba(247,200,91,0.55)", backgroundColor: "rgba(247,200,91,0.14)", marginTop: 8 },
   profileMenuWarningTitle: { color: "#7C5A00" },
   profileMenuWarningCopy: { color: "#7C5A00" },
+  foodPreferenceSearchWrap: { minHeight: 46, borderRadius: 14, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 11, marginBottom: 10 },
+  foodPreferenceSearchInput: { flex: 1, minHeight: 42, color: nsnColors.text, fontSize: 13, fontWeight: "800", paddingVertical: 0 },
+  foodPreferenceClearButton: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)" },
+  foodPreferenceSummary: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 11, marginBottom: 10, gap: 8 },
+  foodPreferenceSummaryChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  foodPreferenceSummaryChip: { color: nsnColors.warning, borderColor: "rgba(247,200,91,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
+  foodPreferenceAccordionStack: { gap: 9, marginBottom: 10 },
+  foodPreferenceGroup: { borderRadius: 15, borderWidth: 1, borderColor: "#3C5277", backgroundColor: "rgba(255,255,255,0.025)", overflow: "hidden" },
+  foodPreferenceGroupHeader: { minHeight: 62, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 10 },
+  foodPreferenceGroupHeaderMeta: { flexDirection: "row", alignItems: "center", gap: 8 },
+  foodPreferenceNotice: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 17, paddingHorizontal: 12, paddingBottom: 8 },
+  foodPreferenceChipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 10, paddingBottom: 10 },
+  foodPreferenceChip: { minHeight: 38, maxWidth: "100%", borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, paddingVertical: 7, justifyContent: "center" },
+  foodPreferenceChipActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
+  foodPreferenceChipText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  foodPreferenceChipMeta: { color: nsnColors.muted, fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 1 },
+  foodPreferenceShowMoreButton: { alignSelf: "flex-start", minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, marginLeft: 10, marginBottom: 10 },
   alphaGuideCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
   alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },

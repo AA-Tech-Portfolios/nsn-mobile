@@ -9,6 +9,7 @@ import type { NsnBlurLevel, NsnComfortMode, ProfileGender, SoftHelloIntent } fro
 import { defaultPhotoRecordingComfortPreferences, useAppSettings } from "@/lib/app-settings";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
+import { defaultFoodBeveragePreferenceIds } from "@/lib/preferences/food-preferences";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { defaultComfortPreferences, type SoftHelloComfortPreference } from "@/lib/softhello-mvp";
 
@@ -265,6 +266,7 @@ export default function OnboardingScreen() {
       verifiedButPrivate: true,
       transportationMethod: "Public transport",
       dietaryPreferences: ["No preference"],
+      foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
       hobbiesInterests: interests,
       appLanguage: settings.appLanguage,
       translationLanguage: settings.translationLanguage,
