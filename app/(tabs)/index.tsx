@@ -3,7 +3,7 @@ import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, Tex
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
-import { getLanguageBase, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -88,6 +88,7 @@ type HomeSectionKey = keyof HomeVisibleSections;
 
 const homeSectionLabels: Record<HomeSectionKey, string> = {
   weather: "Weather update",
+  map: "Selected location map",
   noiseGuide: "Noise level guide",
   search: "Search NSN",
   recommendedEvents: "Recommended events",
@@ -97,6 +98,7 @@ const homeSectionLabels: Record<HomeSectionKey, string> = {
 
 const homeSectionIcons: Record<HomeSectionKey, ComponentProps<typeof IconSymbol>["name"]> = {
   weather: "weather",
+  map: "location",
   noiseGuide: "volume",
   search: "magnifyingglass",
   recommendedEvents: "experience",
@@ -108,6 +110,12 @@ const homeDensityOptions: Array<{ value: HomeLayoutDensity; icon: string; label:
   { value: "Compact", icon: "▦", label: "Compact", copy: "Tighter cards" },
   { value: "Comfortable", icon: "◐", label: "Comfortable", copy: "Easy scan" },
   { value: "Spacious", icon: "□", label: "Spacious", copy: "More room" },
+];
+
+const homeHeaderControlDensityOptions: Array<{ value: HomeHeaderControlsDensity; icon: ComponentProps<typeof IconSymbol>["name"]; label: string; copy: string }> = [
+  { value: "Compact", icon: "ellipsis", label: "Compact", copy: "Smallest header buttons" },
+  { value: "Comfortable", icon: "settings", label: "Comfortable", copy: "Balanced spacing" },
+  { value: "Spacious", icon: "palette", label: "Spacious", copy: "Larger tap targets" },
 ];
 
 const homeCardLayoutOptions: Array<{ value: HomeCardLayout; icon: string; label: string; copy: string }> = [
@@ -437,7 +445,7 @@ function LayoutPreviewIcon({ layout, active, isDay }: { layout: HomeCardLayout; 
   );
 }
 
-function EventCard({ event, isDay, appLanguageBase, density, cardLayout, visualMode, featured }: { event: EventItem; isDay?: boolean; appLanguageBase: string; density: HomeLayoutDensity; cardLayout: HomeCardLayout; visualMode: HomeEventVisualMode; featured?: boolean }) {
+function EventCard({ event, isDay, appLanguageBase, density, cardLayout, visualMode, featured, highlighted, onHighlight }: { event: EventItem; isDay?: boolean; appLanguageBase: string; density: HomeLayoutDensity; cardLayout: HomeCardLayout; visualMode: HomeEventVisualMode; featured?: boolean; highlighted?: boolean; onHighlight?: (eventId: string) => void }) {
   const router = useRouter();
   const isRtl = rtlLanguages.has(appLanguageBase);
   const localizedEvent = { ...event, ...(eventTranslations[appLanguageBase]?.[event.id] ?? {}) };
@@ -450,7 +458,14 @@ function EventCard({ event, isDay, appLanguageBase, density, cardLayout, visualM
   return (
     <TouchableOpacity
       activeOpacity={0.82}
-      onPress={() => router.push(`/event/${event.id}`)}
+      onPress={() => {
+        onHighlight?.(event.id);
+        router.push(`/event/${event.id}`);
+      }}
+      onPressIn={() => onHighlight?.(event.id)}
+      accessibilityRole="button"
+      accessibilityState={{ selected: highlighted }}
+      accessibilityLabel={`Open meetup ${localizedEvent.title}`}
       style={[
         styles.eventCard,
         density === "Compact" && styles.eventCardCompact,
@@ -461,6 +476,8 @@ function EventCard({ event, isDay, appLanguageBase, density, cardLayout, visualM
         cardLayout === "Magazine" && styles.eventCardMagazine,
         cardLayout === "Magazine" && featured && styles.eventCardMagazineFeatured,
         isDay ? styles.dayCard : null,
+        highlighted && styles.eventCardHighlighted,
+        highlighted && isDay && styles.dayEventCardHighlighted,
         isRtl && !isCompactLayout && styles.rtlEventCard,
       ]}
     >
@@ -853,16 +870,20 @@ function HeaderActionButton({
   accessibilityLabel,
   accessibilityHint,
   isDay,
+  density = "Comfortable",
   onPress,
   children,
 }: {
   accessibilityLabel: string;
   accessibilityHint: string;
   isDay: boolean;
+  density?: HomeHeaderControlsDensity;
   onPress: () => void;
   children: ReactNode;
 }) {
   if (Platform.OS === "web") {
+    const buttonSize = density === "Compact" ? 38 : density === "Spacious" ? 46 : 42;
+
     return (
       <button
         type="button"
@@ -871,15 +892,15 @@ function HeaderActionButton({
         title={accessibilityLabel}
         onClick={onPress}
         style={{
-          width: 42,
-          height: 42,
-          borderRadius: 21,
+          width: buttonSize,
+          height: buttonSize,
+          borderRadius: buttonSize / 2,
           alignItems: "center",
           justifyContent: "center",
           borderWidth: 1,
           borderStyle: "solid",
-          borderColor: isDay ? "#C5D0DA" : "#2A3C59",
-          backgroundColor: isDay ? "#F4F7F8" : "#0F1B2C",
+          borderColor: isDay ? "#C5D0DA" : "#5F79A9",
+          backgroundColor: isDay ? "#F4F7F8" : "#163F8D",
           display: "flex",
           padding: 0,
           cursor: "pointer",
@@ -896,7 +917,12 @@ function HeaderActionButton({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
-      style={[styles.headerActionButton, isDay && styles.dayBellButton]}
+      style={[
+        styles.headerActionButton,
+        density === "Compact" && styles.headerActionButtonCompact,
+        density === "Spacious" && styles.headerActionButtonSpacious,
+        isDay && styles.dayBellButton,
+      ]}
       hitSlop={6}
     >
       {children}
@@ -906,7 +932,7 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -925,6 +951,7 @@ export default function HomeScreen() {
   const [homeSearchMode, setHomeSearchMode] = useState<HomeSearchMode>("areas");
   const [nsnSearchQuery, setNsnSearchQuery] = useState("");
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null);
   const showHomeControls = openHomePanel === "filters";
   const showCustomiseHome = openHomePanel === "customize";
   const showNsnSearch = openHomePanel === "search";
@@ -1003,6 +1030,11 @@ export default function HomeScreen() {
     showPrototypeUpdate("Home spacing updated locally");
   };
 
+  const updateHomeHeaderControlsDensity = (value: HomeHeaderControlsDensity) => {
+    saveSoftHelloMvpState({ homeHeaderControlsDensity: value });
+    showPrototypeUpdate("Header controls updated locally");
+  };
+
   const updateHomeCardLayout = (value: HomeCardLayout) => {
     saveSoftHelloMvpState({ homeCardLayout: value });
     showPrototypeUpdate("Layout preference saved locally");
@@ -1051,9 +1083,20 @@ export default function HomeScreen() {
   const displayedEvents = isMeetupSearch ? matchingMeetups : activeEvents.slice(0, recommendedEventLimit);
   const hasNoMeetupSearchResults = isMeetupSearch && matchingMeetups.length === 0;
   const hasNoFilteredEvents = !isMeetupSearch && activeEvents.length === 0;
+  const selectedMapEvent = displayedEvents.find((event) => event.id === highlightedEventId) ?? displayedEvents[0] ?? activeEvents[0] ?? allEvents[0];
+  const selectedMapEventCopy = selectedMapEvent ? { ...selectedMapEvent, ...(eventTranslations[appLanguageBase]?.[selectedMapEvent.id] ?? {}) } : null;
+  const selectedMapEventIndex = selectedMapEvent ? displayedEvents.findIndex((event) => event.id === selectedMapEvent.id) : -1;
+  const canCycleMapEvent = displayedEvents.length > 1;
   const shouldShowModeEvents =
     homeVisibleSections.recommendedEvents &&
     (isNightMode ? homeVisibleSections.nightEvents : homeVisibleSections.dayEvents);
+
+  const cycleMapEvent = () => {
+    if (!canCycleMapEvent) return;
+
+    const nextIndex = selectedMapEventIndex < 0 ? 0 : (selectedMapEventIndex + 1) % displayedEvents.length;
+    setHighlightedEventId(displayedEvents[nextIndex].id);
+  };
   const chooseLocalArea = (area: NsnLocalAreaSuggestion) => {
     saveSoftHelloMvpState({ timezone: area, suburb: area.label });
     setNsnSearchQuery(area.label);
@@ -1125,6 +1168,11 @@ export default function HomeScreen() {
 
   return () => clearInterval(timer);}, [batterySaver]
   );
+
+  useEffect(() => {
+    if (!highlightedEventId || displayedEvents.some((event) => event.id === highlightedEventId)) return;
+    setHighlightedEventId(displayedEvents[0]?.id ?? null);
+  }, [displayedEvents, highlightedEventId]);
 
 
   const formattedDate = now.toLocaleDateString(locale, {
@@ -1282,6 +1330,9 @@ export default function HomeScreen() {
       outputRange: [1, 1.16],
     });
 
+    const headerIconSize = homeHeaderControlsDensity === "Compact" ? 20 : homeHeaderControlsDensity === "Spacious" ? 24 : 22;
+    const headerToggleIconSize = homeHeaderControlsDensity === "Compact" ? 15 : homeHeaderControlsDensity === "Spacious" ? 18 : 16;
+
     let hasRenderedEventSection = false;
     const renderHomeSection = (sectionKey: HomeSectionOrderKey): ReactNode => {
       if (sectionKey === "search") {
@@ -1330,6 +1381,60 @@ export default function HomeScreen() {
               <Text style={[styles.todayNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                 No calendar sync yet - prototype only.
               </Text>
+            </View>
+          </View>
+        ) : null;
+      }
+
+      if (sectionKey === "map") {
+        return homeVisibleSections.map ? (
+          <View key={sectionKey} style={[styles.locationMapCard, styles.dashboardCard, isDay && styles.dayCard]}>
+            <View style={[styles.sectionTitleRow, isRtl && styles.rtlRow]}>
+              <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={18} />
+              <Text style={[styles.locationMapTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Selected location</Text>
+            </View>
+            <View style={[styles.prototypeMapCanvas, isDay && styles.dayPrototypeMapCanvas]}>
+              <View style={[styles.prototypeMapRoad, styles.prototypeMapRoadPrimary]} />
+              <View style={[styles.prototypeMapRoad, styles.prototypeMapRoadSecondary]} />
+              <View style={[styles.prototypeMapArea, isDay && styles.dayPrototypeMapArea]}>
+                <Text style={[styles.prototypeMapAreaText, isDay && styles.dayHeadingText]} numberOfLines={1}>
+                  {selectedMapEvent?.venue ?? timezone.label}
+                </Text>
+              </View>
+              <View style={[styles.prototypeMapPin, isDay && styles.dayPrototypeMapPin]}>
+                <IconSymbol name="location" color="#FFFFFF" size={16} />
+              </View>
+            </View>
+            <Text style={[styles.locationMapEvent, isDay && styles.dayHeadingText, isRtl && styles.rtlText]} numberOfLines={1}>
+              {selectedMapEventCopy?.title ?? "Local area"}
+            </Text>
+            <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
+              {selectedMapEvent ? `${selectedMapEvent.venue} - ${selectedMapEvent.time}` : `${timezone.label}, ${timezone.country}`}
+            </Text>
+            <View style={[styles.locationMapActions, isRtl && styles.rtlRow]}>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={cycleMapEvent}
+                disabled={!canCycleMapEvent}
+                accessibilityRole="button"
+                accessibilityLabel="Show next event location"
+                style={[styles.locationMapAction, !canCycleMapEvent && styles.disabledMoveButton]}
+              >
+                <IconSymbol name="flexible" color={isDay ? "#284E92" : "#C7B07A"} size={15} />
+                <Text style={[styles.locationMapActionText, isDay && styles.dayLinkText]}>Next</Text>
+              </TouchableOpacity>
+              {selectedMapEvent ? (
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() => router.push(`/event/${selectedMapEvent.id}`)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open meetup ${selectedMapEventCopy?.title ?? selectedMapEvent.title}`}
+                  style={[styles.locationMapAction, styles.locationMapPrimaryAction]}
+                >
+                  <Text style={styles.locationMapPrimaryActionText}>Open event</Text>
+                  <IconSymbol name="chevron.right" color="#FFFFFF" size={15} />
+                </TouchableOpacity>
+              ) : null}
             </View>
           </View>
         ) : null;
@@ -1404,9 +1509,11 @@ export default function HomeScreen() {
               onPress={showLayoutPreferencesPanel}
               accessibilityRole="button"
               accessibilityLabel="View event layout preferences"
+              style={[styles.sectionActionButton, isDay && styles.daySectionActionButton]}
             >
+              <IconSymbol name="visibility" color={isDay ? "#445E93" : "#C7B07A"} size={15} />
               <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null, isRtl && styles.rtlText]}>
-                View preferences
+                View Preferences
               </Text>
             </TouchableOpacity>
           </View>
@@ -1425,7 +1532,7 @@ export default function HomeScreen() {
             {homeCardLayout === "Horizontal cards" ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.horizontalEventScroller, isRtl && styles.rtlRow]}>
                 {displayedEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} density={homeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} featured={index === 0} />
+                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} density={homeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
                 ))}
               </ScrollView>
             ) : (
@@ -1438,7 +1545,7 @@ export default function HomeScreen() {
                 ]}
               >
                 {displayedEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} density={homeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} featured={index === 0} />
+                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} density={homeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
                 ))}
               </View>
             )}
@@ -1483,35 +1590,62 @@ export default function HomeScreen() {
             <Text style={[styles.logo, isDay && styles.dayText]}>NSN</Text>
             <Text style={[styles.subtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.subtitle}</Text>
           </View>
-          <View style={[styles.headerActions, isRtl && styles.rtlRow]}>
+          <View
+            style={[
+              styles.headerActions,
+              homeHeaderControlsDensity === "Compact" && styles.headerActionsCompact,
+              homeHeaderControlsDensity === "Spacious" && styles.headerActionsSpacious,
+              isRtl && styles.rtlRow,
+            ]}
+          >
             <HeaderActionButton
               onPress={showSearchPlaceholder}
               accessibilityLabel="Search NSN"
               accessibilityHint="Search North Shore suburbs and prototype meetups."
               isDay={isDay}
+              density={homeHeaderControlsDensity}
             >
-              <IconSymbol name="magnifyingglass" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
+              <IconSymbol name="magnifyingglass" color={isDay ? "#0B1220" : nsnColors.text} size={headerIconSize} />
             </HeaderActionButton>
-            <View style={[styles.headerModeToggle, isDay && styles.dayModeToggle, isRtl && styles.rtlRow]} accessibilityRole="tablist" accessibilityLabel="Day and Night mode">
+            <View
+              style={[
+                styles.headerModeToggle,
+                homeHeaderControlsDensity === "Compact" && styles.headerModeToggleCompact,
+                homeHeaderControlsDensity === "Spacious" && styles.headerModeToggleSpacious,
+                isDay && styles.dayModeToggle,
+                isRtl && styles.rtlRow,
+              ]}
+              accessibilityLabel="Day and Night mode"
+            >
               <TouchableOpacity
                 activeOpacity={0.86}
                 onPress={() => setIsNightMode(false)}
-                accessibilityRole="tab"
+                accessibilityRole="button"
                 accessibilityState={{ selected: mode === "day" }}
                 accessibilityLabel="Switch to Day mode"
-                style={[styles.headerModeToggleOption, mode === "day" && styles.modeToggleDayActive]}
+                style={[
+                  styles.headerModeToggleOption,
+                  homeHeaderControlsDensity === "Compact" && styles.headerModeToggleOptionCompact,
+                  homeHeaderControlsDensity === "Spacious" && styles.headerModeToggleOptionSpacious,
+                  mode === "day" && styles.modeToggleDayActive,
+                ]}
               >
-                <Animated.Text style={[styles.headerModeToggleIcon, isDay && mode !== "day" && styles.dayModeToggleText, mode === "day" && styles.modeToggleDayActiveText, mode === "day" && { transform: [{ scale: modeIconScale }] }]}>☀</Animated.Text>
+                <Animated.Text style={[styles.headerModeToggleIcon, { fontSize: headerToggleIconSize }, isDay && mode !== "day" && styles.dayModeToggleText, mode === "day" && styles.modeToggleDayActiveText, mode === "day" && { transform: [{ scale: modeIconScale }] }]}>{"\u2600"}</Animated.Text>
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.86}
                 onPress={() => setIsNightMode(true)}
-                accessibilityRole="tab"
+                accessibilityRole="button"
                 accessibilityState={{ selected: mode === "night" }}
                 accessibilityLabel="Switch to Night mode"
-                style={[styles.headerModeToggleOption, mode === "night" && styles.modeToggleNightActive]}
+                style={[
+                  styles.headerModeToggleOption,
+                  homeHeaderControlsDensity === "Compact" && styles.headerModeToggleOptionCompact,
+                  homeHeaderControlsDensity === "Spacious" && styles.headerModeToggleOptionSpacious,
+                  mode === "night" && styles.modeToggleNightActive,
+                ]}
               >
-                <Animated.Text style={[styles.headerModeToggleIcon, isDay && mode !== "night" && styles.dayModeToggleText, mode === "night" && { transform: [{ scale: modeIconScale }] }]}>☾</Animated.Text>
+                <Animated.Text style={[styles.headerModeToggleIcon, { fontSize: headerToggleIconSize }, isDay && mode !== "night" && styles.dayModeToggleText, mode === "night" && { transform: [{ scale: modeIconScale }] }]}>{"\u263E"}</Animated.Text>
               </TouchableOpacity>
             </View>
             <HeaderActionButton
@@ -1519,16 +1653,18 @@ export default function HomeScreen() {
               accessibilityLabel="Open Home Preferences"
               accessibilityHint="Adjust Home filters, comfort, and event display."
               isDay={isDay}
+              density={homeHeaderControlsDensity}
             >
-              <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
+              <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={headerIconSize} />
             </HeaderActionButton>
             <HeaderActionButton
               onPress={showCustomizeHomePanel}
               accessibilityLabel="Open Home actions"
               accessibilityHint="Customize Home sections and layout flow."
               isDay={isDay}
+              density={homeHeaderControlsDensity}
             >
-              <IconSymbol name="ellipsis" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
+              <IconSymbol name="ellipsis" color={isDay ? "#0B1220" : nsnColors.text} size={headerIconSize} />
             </HeaderActionButton>
           </View>
         </View>
@@ -1543,7 +1679,6 @@ export default function HomeScreen() {
             </View>
             <View style={[styles.localTimePill, isDay && styles.dayLocalTimePill]}>
               <Text style={[styles.localTimeText, isDay && styles.dayHeadingText]}>{formattedTime}</Text>
-              <Text style={[styles.localDateText, isDay && styles.dayMutedText]} numberOfLines={1}>{formattedDate}</Text>
             </View>
           </View>
         </View>
@@ -1573,7 +1708,7 @@ export default function HomeScreen() {
             <View style={[styles.locationSearchHeader, isRtl && styles.rtlRow]}>
               <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
                 <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
-                  {showLayoutPreferences ? "View preferences" : showCustomiseHome ? "Customize Home" : "Home Preferences"}
+                  {showLayoutPreferences ? "View Preferences" : showCustomiseHome ? "Customize Home" : "Home Preferences"}
                 </Text>
                 <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                   {showLayoutPreferences
@@ -1688,14 +1823,39 @@ export default function HomeScreen() {
                 })}
               </View>
             </View>
+            <View style={styles.homeControlGroup}>
+              <Text style={[styles.homeControlGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Header controls</Text>
+              <View style={[styles.homeHeaderDensityRow, isRtl && styles.rtlRow]}>
+                {homeHeaderControlDensityOptions.map((option) => {
+                  const active = homeHeaderControlsDensity === option.value;
+
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      activeOpacity={0.84}
+                      onPress={() => updateHomeHeaderControlsDensity(option.value)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`${option.label} header controls`}
+                      style={[styles.homeHeaderDensityCard, isDay && styles.dayLocationResultButton, active && styles.homeControlChipActive]}
+                    >
+                      <IconSymbol name={option.icon} color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={18} />
+                      <Text style={[styles.homeHeaderDensityTitle, isDay && styles.dayHeadingText, active && styles.homeControlChipTextActive]}>{option.label}</Text>
+                      <Text style={[styles.homeHeaderDensityCopy, isDay && styles.dayMutedText, active && styles.homeControlChipTextActive]}>{active ? "Selected" : option.copy}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
             <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
               <TouchableOpacity
                 activeOpacity={0.82}
                 onPress={showCustomizeHomePanel}
                 accessibilityRole="button"
                 accessibilityLabel="Customize Home sections"
-                style={[styles.homeControlChip, isDay && styles.dayLocationResultButton]}
+                style={[styles.homeControlChip, styles.homePanelNavChip, isDay && styles.dayLocationResultButton]}
               >
+                <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
                 <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Customize Home</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -1703,9 +1863,10 @@ export default function HomeScreen() {
                 onPress={showLayoutPreferencesPanel}
                 accessibilityRole="button"
                 accessibilityLabel="View event layout preferences"
-                style={[styles.homeControlChip, isDay && styles.dayLocationResultButton]}
+                style={[styles.homeControlChip, styles.homePanelNavChip, isDay && styles.dayLocationResultButton]}
               >
-                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>⚙ View preferences</Text>
+                <IconSymbol name="visibility" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
+                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>View Preferences</Text>
               </TouchableOpacity>
             </View>
               </>
@@ -1717,52 +1878,70 @@ export default function HomeScreen() {
                   activeOpacity={0.82}
                   onPress={showViewFilterPlaceholder}
                   accessibilityRole="button"
-                  accessibilityLabel="Adjust settings"
-                  style={[styles.homeControlChip, isDay && styles.dayLocationResultButton]}
+                  accessibilityLabel="Open Home Preferences"
+                  style={[styles.homeControlChip, styles.homePanelNavChip, isDay && styles.dayLocationResultButton]}
                 >
-                  <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Adjust settings</Text>
+                  <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
+                  <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Home Preferences</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.homeSectionOrderList}>
-                {homeSectionOrder.map((key, index) => (
-                  <View key={key} style={[styles.homeSectionOrderItem, isDay && styles.dayLocationResultButton, homeVisibleSections[key] && styles.homeSectionOrderItemActive]}>
-                    <TouchableOpacity
-                      activeOpacity={0.82}
-                      onPress={() => updateHomeSection(key, !homeVisibleSections[key])}
-                      accessibilityRole="switch"
-                      accessibilityState={{ checked: homeVisibleSections[key] }}
-                      accessibilityLabel={homeSectionLabels[key]}
-                      style={[styles.homeSectionToggle, isDay && styles.daySectionToggle, homeVisibleSections[key] && styles.homeSectionToggleActive]}
-                    >
-                      <IconSymbol name={homeSectionIcons[key]} color={homeVisibleSections[key] ? "#FFFFFF" : isDay ? "#445E93" : nsnColors.muted} size={15} />
-                      <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeVisibleSections[key] && styles.homeControlChipTextActive]}>
-                        {homeVisibleSections[key] ? "On: " : ""}{homeSectionLabels[key]}
-                      </Text>
-                    </TouchableOpacity>
-                    <View style={[styles.homeSectionMoveControls, isRtl && styles.rtlRow]}>
-                      <TouchableOpacity
-                        activeOpacity={0.78}
-                        onPress={() => moveHomeSection(key, -1)}
-                        disabled={index === 0}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Move ${homeSectionLabels[key]} up`}
-                        style={[styles.homeSectionMoveButton, index === 0 && styles.disabledMoveButton]}
-                      >
-                        <IconSymbol name="chevron.up" color={index === 0 ? "#607086" : isDay ? "#445E93" : "#C7B07A"} size={18} />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        activeOpacity={0.78}
-                        onPress={() => moveHomeSection(key, 1)}
-                        disabled={index === homeSectionOrder.length - 1}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Move ${homeSectionLabels[key]} down`}
-                        style={[styles.homeSectionMoveButton, index === homeSectionOrder.length - 1 && styles.disabledMoveButton]}
-                      >
-                        <IconSymbol name="chevron.down" color={index === homeSectionOrder.length - 1 ? "#607086" : isDay ? "#445E93" : "#C7B07A"} size={18} />
-                      </TouchableOpacity>
+                {homeSectionOrder.map((key, index) => {
+                  const visible = homeVisibleSections[key];
+
+                  return (
+                    <View key={key} style={[styles.homeSectionOrderItem, isDay && styles.dayLocationResultButton, visible && styles.homeSectionOrderItemActive]}>
+                      <View style={[styles.homeSectionOrderMain, isRtl && styles.rtlRow]}>
+                        <View style={[styles.homeSectionHandle, isDay && styles.daySectionToggle]}>
+                          <IconSymbol name="more" color={isDay ? "#53677A" : "#7890B8"} size={18} />
+                        </View>
+                        <IconSymbol name={homeSectionIcons[key]} color={visible ? "#C7B07A" : isDay ? "#445E93" : "#9FB0CD"} size={17} />
+                        <View style={[styles.homeSectionOrderText, isRtl && styles.rtlBlock]}>
+                          <Text style={[styles.homeSectionOrderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{homeSectionLabels[key]}</Text>
+                          <Text style={[styles.homeSectionOrderMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                            {visible ? "Visible on Home" : "Hidden from Home"}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={[styles.homeSectionRowControls, isRtl && styles.rtlRow]}>
+                        <TouchableOpacity
+                          activeOpacity={0.82}
+                          onPress={() => updateHomeSection(key, !visible)}
+                          accessibilityRole="switch"
+                          accessibilityState={{ checked: visible }}
+                          accessibilityLabel={`${homeSectionLabels[key]} visibility`}
+                          style={[styles.homeSectionVisibilityButton, visible && styles.homeSectionVisibilityButtonActive]}
+                        >
+                          <Text style={[styles.homeSectionVisibilityText, visible && styles.homeControlChipTextActive]}>
+                            {visible ? "Shown" : "Hidden"}
+                          </Text>
+                        </TouchableOpacity>
+                        <View style={[styles.homeSectionMoveControls, isRtl && styles.rtlRow]}>
+                          <TouchableOpacity
+                            activeOpacity={0.78}
+                            onPress={() => moveHomeSection(key, -1)}
+                            disabled={index === 0}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Move ${homeSectionLabels[key]} up`}
+                            style={[styles.homeSectionMoveButton, index === 0 && styles.disabledMoveButton]}
+                          >
+                            <IconSymbol name="chevron.up" color={index === 0 ? "#607086" : isDay ? "#445E93" : "#C7B07A"} size={17} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            activeOpacity={0.78}
+                            onPress={() => moveHomeSection(key, 1)}
+                            disabled={index === homeSectionOrder.length - 1}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Move ${homeSectionLabels[key]} down`}
+                            style={[styles.homeSectionMoveButton, index === homeSectionOrder.length - 1 && styles.disabledMoveButton]}
+                          >
+                            <IconSymbol name="chevron.down" color={index === homeSectionOrder.length - 1 ? "#607086" : isDay ? "#445E93" : "#C7B07A"} size={17} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
                     </View>
-                  </View>
-                ))}
+                  );
+                })}
               </View>
               </>
             ) : null}
@@ -1773,10 +1952,11 @@ export default function HomeScreen() {
                     activeOpacity={0.82}
                     onPress={showViewFilterPlaceholder}
                     accessibilityRole="button"
-                    accessibilityLabel="Adjust settings"
-                    style={[styles.homeControlChip, isDay && styles.dayLocationResultButton]}
+                    accessibilityLabel="Open Home Preferences"
+                    style={[styles.homeControlChip, styles.homePanelNavChip, isDay && styles.dayLocationResultButton]}
                   >
-                    <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>⚙ Adjust settings</Text>
+                    <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
+                    <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Home Preferences</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.homeControlGroup}>
@@ -1970,7 +2150,10 @@ export default function HomeScreen() {
                       <TouchableOpacity
                         key={event.id}
                         activeOpacity={0.82}
-                        onPress={() => router.push(`/event/${event.id}`)}
+                        onPress={() => {
+                          setHighlightedEventId(event.id);
+                          router.push(`/event/${event.id}`);
+                        }}
                         accessibilityRole="button"
                         accessibilityLabel={`Open meetup ${eventCopy.title}`}
                         style={[styles.locationResultButton, styles.meetupSearchResultButton, isDay && styles.dayLocationResultButton]}
@@ -2113,10 +2296,18 @@ const styles = StyleSheet.create({
   contentSpacious: { paddingTop: 14, paddingBottom: 34 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   headerTitle: { flex: 1, minWidth: 0 },
-  headerActions: { flexShrink: 0, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end", gap: 8, marginLeft: 12 },
-  headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#38527C", backgroundColor: "#12264B" },
+  headerActions: { flexShrink: 0, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end", gap: 9, marginLeft: 12 },
+  headerActionsCompact: { gap: 6 },
+  headerActionsSpacious: { gap: 11 },
+  headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#163F8D" },
+  headerActionButtonCompact: { width: 38, height: 38, borderRadius: 19 },
+  headerActionButtonSpacious: { width: 46, height: 46, borderRadius: 23 },
   headerModeToggle: { height: 42, flexDirection: "row", gap: 4, borderRadius: 21, padding: 4, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#38527C" },
+  headerModeToggleCompact: { height: 38, borderRadius: 19, padding: 3 },
+  headerModeToggleSpacious: { height: 46, borderRadius: 23, padding: 5 },
   headerModeToggleOption: { width: 34, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  headerModeToggleOptionCompact: { width: 31, height: 30, borderRadius: 15 },
+  headerModeToggleOptionSpacious: { width: 36, height: 34, borderRadius: 17 },
   headerModeToggleIcon: { color: "#FFFFFF", fontSize: 16, fontWeight: "900", lineHeight: 20 },
   localDashboardHeader: { alignItems: "center", justifyContent: "center", borderRadius: 26, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#0F2340", paddingHorizontal: 20, paddingVertical: 24, marginBottom: 18 },
   dayLocalDashboardHeader: { backgroundColor: "#F4F7F8", borderColor: "#B7C7DD" },
@@ -2125,9 +2316,9 @@ const styles = StyleSheet.create({
   greetingText: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35, textAlign: "center" },
   localMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 7 },
   localMetaText: { color: nsnColors.muted, fontSize: 14, fontWeight: "800", lineHeight: 19, textAlign: "center" },
-  localTimePill: { alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#132B52", paddingHorizontal: 13, paddingVertical: 8, alignItems: "center", marginTop: 14 },
+  localTimePill: { alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 16, paddingVertical: 9, alignItems: "center", marginTop: 14 },
   dayLocalTimePill: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
-  localTimeText: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 18 },
+  localTimeText: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 23 },
   localDateText: { color: nsnColors.muted, fontSize: 10, fontWeight: "800", lineHeight: 14 },
   headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
@@ -2153,6 +2344,11 @@ const styles = StyleSheet.create({
   homeDensityIcon: { color: nsnColors.muted, fontSize: 30, fontWeight: "900", lineHeight: 34 },
   homeDensityTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center", marginTop: 3 },
   homeDensityCopy: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, textAlign: "center", marginTop: 2 },
+  homeHeaderDensityRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  homeHeaderDensityCard: { flexGrow: 1, flexBasis: 126, minHeight: 76, borderRadius: 15, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "#101D31", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 10 },
+  homeHeaderDensityTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center", marginTop: 5 },
+  homeHeaderDensityCopy: { color: "#C7D3EA", fontSize: 10, fontWeight: "800", lineHeight: 14, textAlign: "center", marginTop: 1 },
+  homePanelNavChip: { flexDirection: "row", gap: 7 },
   layoutPreferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   layoutPreferenceCard: { flexGrow: 1, flexBasis: 138, minHeight: 130, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 12 },
   layoutPreferenceCardActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
@@ -2184,14 +2380,23 @@ const styles = StyleSheet.create({
   layoutPreviewMagazineLead: { width: 22, height: 29 },
   layoutPreviewMagazineSide: { width: 15, height: 29 },
   homeSectionToggleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingTop: 2 },
-  homeSectionOrderList: { gap: 8, paddingTop: 2 },
-  homeSectionOrderItem: { minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "#101D31", flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, paddingHorizontal: 8, paddingVertical: 7 },
-  homeSectionOrderItemActive: { borderColor: "#8DA7D8", backgroundColor: "rgba(33,75,149,0.18)" },
+  homeSectionOrderList: { gap: 7, paddingTop: 2 },
+  homeSectionOrderItem: { minHeight: 56, borderRadius: 15, borderWidth: 1, borderColor: "#3B5276", backgroundColor: "rgba(16,29,49,0.86)", flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 9, paddingHorizontal: 10, paddingVertical: 8 },
+  homeSectionOrderItemActive: { borderColor: "#7890B8", backgroundColor: "rgba(33,75,149,0.16)" },
+  homeSectionOrderMain: { flex: 1, minWidth: 190, flexDirection: "row", alignItems: "center", gap: 9 },
+  homeSectionHandle: { width: 28, height: 32, borderRadius: 11, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
+  homeSectionOrderText: { flex: 1, minWidth: 0 },
+  homeSectionOrderTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  homeSectionOrderMeta: { color: "#A8B7DA", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 1 },
+  homeSectionRowControls: { flexDirection: "row", alignItems: "center", gap: 7 },
   homeSectionToggle: { minHeight: 34, flex: 1, borderRadius: 12, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 10, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center" },
   daySectionToggle: { backgroundColor: "#E8EDF2", borderColor: "#9FB4CE" },
   homeSectionToggleActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
+  homeSectionVisibilityButton: { minHeight: 32, minWidth: 70, borderRadius: 12, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
+  homeSectionVisibilityButtonActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
+  homeSectionVisibilityText: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15 },
   homeSectionMoveControls: { flexDirection: "row", gap: 6 },
-  homeSectionMoveButton: { width: 34, height: 34, borderRadius: 12, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" },
+  homeSectionMoveButton: { width: 32, height: 32, borderRadius: 12, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" },
   disabledMoveButton: { opacity: 0.56 },
   homeUpdateNotice: { color: "#A8B7DA", fontSize: 11, fontWeight: "900", lineHeight: 15 },
   dayHeaderPlaceholderCard: { borderColor: "#C5D0DA", backgroundColor: "#F4F7F8" },
@@ -2286,6 +2491,25 @@ const styles = StyleSheet.create({
   todayDate: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19, marginTop: 7 },
   todayCopy: { color: "#C7D3EA", fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 3 },
   todayNote: { color: "#9FB0CD", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 5 },
+  locationMapCard: { minHeight: 190, borderRadius: 20, padding: 14, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
+  locationMapTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  prototypeMapCanvas: { height: 82, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#102B4E", overflow: "hidden", marginTop: 10, marginBottom: 10 },
+  dayPrototypeMapCanvas: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
+  prototypeMapRoad: { position: "absolute", backgroundColor: "rgba(199,211,234,0.25)", borderRadius: 999 },
+  prototypeMapRoadPrimary: { width: 210, height: 12, left: -24, top: 37, transform: [{ rotate: "-12deg" }] },
+  prototypeMapRoadSecondary: { width: 12, height: 116, right: 46, top: -18, transform: [{ rotate: "24deg" }] },
+  prototypeMapPin: { position: "absolute", right: 44, top: 24, width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: "#FFFFFF", backgroundColor: "#214B95", alignItems: "center", justifyContent: "center" },
+  dayPrototypeMapPin: { backgroundColor: "#284E92" },
+  prototypeMapArea: { position: "absolute", left: 10, bottom: 9, maxWidth: "62%", borderRadius: 12, backgroundColor: "rgba(8,17,31,0.72)", paddingHorizontal: 9, paddingVertical: 5 },
+  dayPrototypeMapArea: { backgroundColor: "rgba(255,255,255,0.72)" },
+  prototypeMapAreaText: { color: nsnColors.text, fontSize: 10, fontWeight: "900", lineHeight: 14 },
+  locationMapEvent: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  locationMapMeta: { color: "#C7D3EA", fontSize: 11, fontWeight: "800", lineHeight: 16, marginTop: 2 },
+  locationMapActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 11 },
+  locationMapAction: { minHeight: 32, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
+  locationMapActionText: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  locationMapPrimaryAction: { backgroundColor: "#214B95", borderColor: "#D2E0FF" },
+  locationMapPrimaryActionText: { color: "#FFFFFF", fontSize: 11, fontWeight: "900", lineHeight: 15 },
   filterRow: { gap: 8, paddingBottom: 18, paddingTop: 4 },
   noiseGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
   noiseGuideHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 },
@@ -2307,6 +2531,8 @@ const styles = StyleSheet.create({
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 },
   sectionTitleRow: { flexDirection: "row", alignItems: "center", gap: 7, flex: 1, minWidth: 0 },
   sectionTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
+  sectionActionButton: { minHeight: 32, borderRadius: 15, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.18)", paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
+  daySectionActionButton: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
   seeAll: { color: "#A8B7DA", fontSize: 12, fontWeight: "700" },
   cardStack: { gap: 10 },
   cardStackCompact: { gap: 7 },
@@ -2324,6 +2550,8 @@ const styles = StyleSheet.create({
   eventCardLayered: { borderLeftWidth: 4, borderLeftColor: "#7890B8", marginTop: -2 },
   eventCardMagazine: { minHeight: 132 },
   eventCardMagazineFeatured: { minHeight: 180 },
+  eventCardHighlighted: { borderColor: "#D2E0FF", backgroundColor: "#122A55" },
+  dayEventCardHighlighted: { borderColor: "#6F87A1", backgroundColor: "#E4ECF4" },
   rtlEventCard: { flexDirection: "row-reverse" },
   eventImage: { width: 88, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   eventImagePhoto: { overflow: "hidden", backgroundColor: "#102743" },

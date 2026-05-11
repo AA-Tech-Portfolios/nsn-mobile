@@ -45,6 +45,10 @@
 - [ ] Explore an optional photo/gallery widget for local memories, venue previews, or saved-place inspiration
 - [ ] Explore optional local-only/single-player mini-game widgets such as Snake, Solitaire, or a simple platformer
 - [ ] Keep mini-games local-first and opt-in, with no social pressure or meetup matching dependency
+- [ ] Refine richer event-location map behaviour with multiple pins, selected-event syncing, travel context, and external map handoff options
+- [ ] Broaden Home module layout customization beyond simple ordering into dashboard, grid, magazine, and boxed module presets
+- [ ] Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
+- [ ] Explore optional header control density preferences with live preview, per-device defaults, and larger accessibility targets
 - [ ] Continue future suburb/locality API or maintained-dataset refinement so Home time, weather, and local prompts can reflect selected areas more accurately
 
 ### Safety and trust

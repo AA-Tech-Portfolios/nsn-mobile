@@ -3,7 +3,7 @@ import { View, Text, TextInput, Platform, ScrollView, StyleSheet, TouchableOpaci
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { getLanguageBase, type ProfileGender, type ProfileShortcutLayout, type ProfileWidthPreference, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type ProfileGender, type ProfileShortcutLayout, type ProfileWidthPreference, useAppSettings } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
@@ -33,6 +33,10 @@ type ProfileMenuPanel = "main" | "edit" | "privacy" | "preferences" | "layout" |
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
 const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
+const profileHomeLayoutDensityOptions: HomeLayoutDensity[] = ["Compact", "Comfortable", "Spacious"];
+const profileHeaderControlsDensityOptions: HomeHeaderControlsDensity[] = ["Compact", "Comfortable", "Spacious"];
+const profileEventVisualModeOptions: HomeEventVisualMode[] = ["Emoji/Icon", "Preview image"];
+const profileEventLayoutOptions: HomeEventLayout[] = ["List", "Map"];
 
 const comfortOptions: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet", "Flexible pace", "Indoor backup"];
 const profileInterestOptions = [
@@ -1004,6 +1008,10 @@ export default function ProfileScreen() {
     verificationLevel,
     profileShortcutLayout,
     profileWidthPreference,
+    homeEventLayout,
+    homeLayoutDensity,
+    homeHeaderControlsDensity,
+    homeEventVisualMode,
     screenReaderHints,
     softSurfaces,
     clearBorders,
@@ -1437,6 +1445,17 @@ export default function ProfileScreen() {
     if (nextPreference === profileWidthPreference) return;
 
     await saveSoftHelloMvpState({ profileWidthPreference: nextPreference });
+  };
+
+  const updateProfileDisplayPreference = async (
+    snapshot: Partial<{
+      homeEventLayout: HomeEventLayout;
+      homeLayoutDensity: HomeLayoutDensity;
+      homeHeaderControlsDensity: HomeHeaderControlsDensity;
+      homeEventVisualMode: HomeEventVisualMode;
+    }>
+  ) => {
+    await saveSoftHelloMvpState(snapshot);
   };
 
   const openVerificationReview = () => {
@@ -2133,6 +2152,113 @@ export default function ProfileScreen() {
           <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
             Adjust your comfort profile, preview visibility, and local area. Verification, trust, account deletion, block, and report controls are prototype-only until real account systems exist.
           </Text>
+        </View>
+
+        <View style={[styles.profileDisplayCard, isDay && styles.dayCard, clearBorders && styles.clearBorderCard]}>
+          <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
+            <View style={[styles.profileDisplayTitleRow, isRtl && styles.rtlRow]}>
+              <IconSymbol name="visibility" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+              <View style={styles.profileLayoutBody}>
+                <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Display & layout</Text>
+                <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  View Preferences for Home cards, event previews, and header controls.
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.profileDisplayGrid}>
+            <View style={styles.profileDisplayGroup}>
+              <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Event layout</Text>
+              <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                {profileEventLayoutOptions.map((option) => {
+                  const active = homeEventLayout === option;
+
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      activeOpacity={0.82}
+                      onPress={() => updateProfileDisplayPreference({ homeEventLayout: option })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`${option} event layout`}
+                      style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                    >
+                      <IconSymbol name={option === "Map" ? "location" : "calendar"} color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
+                      <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+            <View style={styles.profileDisplayGroup}>
+              <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Event visuals</Text>
+              <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                {profileEventVisualModeOptions.map((option) => {
+                  const active = homeEventVisualMode === option;
+
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      activeOpacity={0.82}
+                      onPress={() => updateProfileDisplayPreference({ homeEventVisualMode: option })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`${option} event display`}
+                      style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                    >
+                      <IconSymbol name={option === "Preview image" ? "preview" : "experience"} color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
+                      <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+            <View style={styles.profileDisplayGroup}>
+              <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Home density</Text>
+              <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                {profileHomeLayoutDensityOptions.map((option) => {
+                  const active = homeLayoutDensity === option;
+
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      activeOpacity={0.82}
+                      onPress={() => updateProfileDisplayPreference({ homeLayoutDensity: option })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`${option} Home density`}
+                      style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                    >
+                      <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+            <View style={styles.profileDisplayGroup}>
+              <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Header controls</Text>
+              <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                {profileHeaderControlsDensityOptions.map((option) => {
+                  const active = homeHeaderControlsDensity === option;
+
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      activeOpacity={0.82}
+                      onPress={() => updateProfileDisplayPreference({ homeHeaderControlsDensity: option })}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`${option} header controls`}
+                      style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                    >
+                      <IconSymbol name="settings" color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
+                      <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
         </View>
 
         <View
@@ -2962,6 +3088,15 @@ const styles = StyleSheet.create({
   alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
   alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
+  profileDisplayCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#0F223D", padding: 14, marginBottom: 16, gap: 12 },
+  profileDisplayTitleRow: { flex: 1, flexDirection: "row", alignItems: "flex-start", gap: 9 },
+  profileDisplayGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
+  profileDisplayGroup: { flexGrow: 1, flexBasis: 220, gap: 7 },
+  profileDisplayGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  profileDisplayChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  profileDisplayChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  profileDisplayChipActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
+  profileDisplayChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   profileLayoutStack: { gap: 8 },
   profileWidthStack: { marginTop: 8 },
   profileLayoutOption: { minHeight: 58, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },

@@ -132,10 +132,12 @@ export type NotificationSnoozePreset = "1 hour" | "Tonight" | "24 hours" | "Unti
 export type HomeViewMode = "Essential" | "Comfortable";
 export type HomeEventLayout = "List" | "Map";
 export type HomeLayoutDensity = "Compact" | "Comfortable" | "Spacious";
+export type HomeHeaderControlsDensity = "Compact" | "Comfortable" | "Spacious";
 export type HomeCardLayout = "Vertical list" | "Horizontal cards" | "Boxed grid" | "Layered cards" | "Magazine";
 export type HomeEventVisualMode = "Emoji/Icon" | "Preview image";
 export type HomeVisibleSections = {
   weather: boolean;
+  map: boolean;
   noiseGuide: boolean;
   search: boolean;
   recommendedEvents: boolean;
@@ -157,6 +159,7 @@ export type DietaryPreference =
 
 export const defaultHomeVisibleSections: HomeVisibleSections = {
   weather: true,
+  map: true,
   noiseGuide: false,
   search: true,
   recommendedEvents: true,
@@ -164,7 +167,7 @@ export const defaultHomeVisibleSections: HomeVisibleSections = {
   nightEvents: true,
 };
 
-export const defaultHomeSectionOrder: HomeSectionOrderKey[] = ["search", "weather", "recommendedEvents", "dayEvents", "nightEvents", "noiseGuide"];
+export const defaultHomeSectionOrder: HomeSectionOrderKey[] = ["search", "weather", "map", "recommendedEvents", "dayEvents", "nightEvents", "noiseGuide"];
 
 const normalizeHomeVisibleSections = (value?: Partial<HomeVisibleSections> | null): HomeVisibleSections => ({
   ...defaultHomeVisibleSections,
@@ -175,11 +178,28 @@ const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSe
   const sectionKeys = Object.keys(defaultHomeVisibleSections) as HomeSectionOrderKey[];
   const validKeys = new Set(sectionKeys);
   const ordered = (value ?? []).filter((key): key is HomeSectionOrderKey => validKeys.has(key));
-  return [...ordered, ...sectionKeys.filter((key) => !ordered.includes(key))];
+  const normalizedOrder = [...ordered];
+
+  sectionKeys
+    .filter((key) => !normalizedOrder.includes(key))
+    .forEach((key) => {
+      if (key === "map") {
+        const weatherIndex = normalizedOrder.indexOf("weather");
+        normalizedOrder.splice(weatherIndex >= 0 ? weatherIndex + 1 : normalizedOrder.length, 0, key);
+        return;
+      }
+
+      normalizedOrder.push(key);
+    });
+
+  return normalizedOrder;
 };
 
 const normalizeHomeEventVisualMode = (value?: HomeEventVisualMode | null): HomeEventVisualMode =>
   value === "Preview image" ? "Preview image" : "Emoji/Icon";
+
+const normalizeHomeHeaderControlsDensity = (value?: HomeHeaderControlsDensity | null): HomeHeaderControlsDensity =>
+  value === "Compact" || value === "Spacious" ? value : "Comfortable";
 
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
@@ -243,6 +263,7 @@ type OnboardingSnapshot = {
   homeWeatherSafeOnly?: boolean;
   homeEventLayout?: HomeEventLayout;
   homeLayoutDensity?: HomeLayoutDensity;
+  homeHeaderControlsDensity?: HomeHeaderControlsDensity;
   homeCardLayout?: HomeCardLayout;
   homeEventVisualMode?: HomeEventVisualMode;
   homeVisibleSections?: HomeVisibleSections;
@@ -474,6 +495,8 @@ type AppSettings = {
   setHomeEventLayout: (value: HomeEventLayout) => void;
   homeLayoutDensity: HomeLayoutDensity;
   setHomeLayoutDensity: (value: HomeLayoutDensity) => void;
+  homeHeaderControlsDensity: HomeHeaderControlsDensity;
+  setHomeHeaderControlsDensity: (value: HomeHeaderControlsDensity) => void;
   homeCardLayout: HomeCardLayout;
   setHomeCardLayout: (value: HomeCardLayout) => void;
   homeEventVisualMode: HomeEventVisualMode;
@@ -614,6 +637,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [homeWeatherSafeOnly, setHomeWeatherSafeOnly] = useState(false);
   const [homeEventLayout, setHomeEventLayout] = useState<HomeEventLayout>("List");
   const [homeLayoutDensity, setHomeLayoutDensity] = useState<HomeLayoutDensity>("Comfortable");
+  const [homeHeaderControlsDensity, setHomeHeaderControlsDensity] = useState<HomeHeaderControlsDensity>("Comfortable");
   const [homeCardLayout, setHomeCardLayout] = useState<HomeCardLayout>("Vertical list");
   const [homeEventVisualMode, setHomeEventVisualMode] = useState<HomeEventVisualMode>("Emoji/Icon");
   const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(defaultHomeVisibleSections);
@@ -727,6 +751,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
         setHomeEventLayout(snapshot.homeEventLayout ?? "List");
         setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
+        setHomeHeaderControlsDensity(normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity));
         setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
         setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
         setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
@@ -818,6 +843,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
     setHomeEventLayout(snapshot.homeEventLayout ?? "List");
     setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
+    setHomeHeaderControlsDensity(normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity));
     setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
     setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
     setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
@@ -843,6 +869,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           preferredAgeMax: nextAgeRange.max,
           appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
           translationLanguage: normalizeNsnLanguage(snapshot.translationLanguage),
+          homeHeaderControlsDensity: normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity),
           homeEventVisualMode: normalizeHomeEventVisualMode(snapshot.homeEventVisualMode),
           homeVisibleSections: normalizeHomeVisibleSections(snapshot.homeVisibleSections),
           homeSectionOrder: normalizeHomeSectionOrder(snapshot.homeSectionOrder),
@@ -919,6 +946,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       homeWeatherSafeOnly,
       homeEventLayout,
       homeLayoutDensity,
+      homeHeaderControlsDensity,
       homeCardLayout,
       homeEventVisualMode,
       homeVisibleSections,
@@ -938,6 +966,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.brandThemeId = normalizeBrandThemeId(nextSnapshot.brandThemeId);
     nextSnapshot.timezone = normalizeTimezoneSetting(nextSnapshot.timezone);
     nextSnapshot.timeContextMode = normalizeTimeContextMode(nextSnapshot.timeContextMode);
+    nextSnapshot.homeHeaderControlsDensity = normalizeHomeHeaderControlsDensity(nextSnapshot.homeHeaderControlsDensity);
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
@@ -1031,6 +1060,11 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.homeWeatherSafeOnly !== undefined) setHomeWeatherSafeOnly(snapshot.homeWeatherSafeOnly);
     if (snapshot.homeEventLayout !== undefined) setHomeEventLayout(snapshot.homeEventLayout);
     if (snapshot.homeLayoutDensity !== undefined) setHomeLayoutDensity(snapshot.homeLayoutDensity);
+    if (snapshot.homeHeaderControlsDensity !== undefined) {
+      const nextDensity = normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity);
+      setHomeHeaderControlsDensity(nextDensity);
+      nextSnapshot.homeHeaderControlsDensity = nextDensity;
+    }
     if (snapshot.homeCardLayout !== undefined) setHomeCardLayout(snapshot.homeCardLayout);
     if (snapshot.homeEventVisualMode !== undefined) {
       const nextVisualMode = normalizeHomeEventVisualMode(snapshot.homeEventVisualMode);
@@ -1313,6 +1347,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeEventLayout,
         homeLayoutDensity,
         setHomeLayoutDensity,
+        homeHeaderControlsDensity,
+        setHomeHeaderControlsDensity,
         homeCardLayout,
         setHomeCardLayout,
         homeEventVisualMode,
