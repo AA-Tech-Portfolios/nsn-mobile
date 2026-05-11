@@ -4,9 +4,11 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { getLanguageBase, type ProfileGender, type ProfileShortcutLayout, type ProfileWidthPreference, useAppSettings } from "@/lib/app-settings";
+import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import type { LocalAreaSuggestion } from "@/lib/location-lookup";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
@@ -1010,6 +1012,7 @@ export default function ProfileScreen() {
     preferredAgeMin,
     preferredAgeMax,
     suburb,
+    timezone,
     hobbiesInterests,
     transportationMethod,
   } = useAppSettings();
@@ -1289,10 +1292,9 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ hobbiesInterests: nextInterests });
   };
 
-  const saveSuburb = async () => {
-    const nextSuburb = draftSuburb.trim();
-
-    await saveSoftHelloMvpState({ suburb: nextSuburb });
+  const saveSuburb = async (area: LocalAreaSuggestion) => {
+    await saveSoftHelloMvpState({ suburb: area.label, timezone: area });
+    setDraftSuburb(area.label);
     setIsEditingSuburb(false);
     setShowSuburbSaved(true);
     setTimeout(() => {
@@ -1302,7 +1304,7 @@ export default function ProfileScreen() {
 
   const toggleSuburbEditing = () => {
     if (isEditingSuburb) {
-      saveSuburb();
+      setIsEditingSuburb(false);
       return;
     }
 
@@ -2496,15 +2498,17 @@ export default function ProfileScreen() {
               </Text>
             </View>
             {isEditingSuburb ? (
-              <TextInput
-                value={draftSuburb}
-                onChangeText={setDraftSuburb}
+              <LocalAreaPicker
+                query={draftSuburb}
+                onQueryChange={setDraftSuburb}
+                onSelect={saveSuburb}
+                selectedAreaId={timezone.id}
+                isDay={isDay}
+                isRtl={isRtl}
                 autoFocus
-                placeholder="Chatswood, NSW 2067"
-                placeholderTextColor={isDay ? "#6E7F99" : nsnColors.mutedSoft}
-                style={[styles.locationInput, isDay && styles.dayInput, isRtl && styles.rtlInput]}
-                selectionColor="#7786FF"
-                onSubmitEditing={saveSuburb}
+                limit={7}
+                placeholder="Search suburb or region..."
+                promptCopy="Search and select a suburb, region, or locality for your profile."
               />
             ) : (
               <Text style={[styles.localAreaValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{suburb || "Local area not set"}</Text>

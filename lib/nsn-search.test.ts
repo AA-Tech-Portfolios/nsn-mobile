@@ -1,11 +1,20 @@
 import { describe, expect, it } from "vitest";
 
+import { lookupLocalAreaSuggestions } from "./location-lookup";
 import { searchNsnEvents, searchNsnSydneyLocalAreas } from "./nsn-search";
 import { allEvents } from "./nsn-data";
 
 describe("NSN local search", () => {
   it("does not show suburb suggestions before the user searches", () => {
     expect(searchNsnSydneyLocalAreas("")).toEqual([]);
+  });
+
+  it("uses the location lookup abstraction for local fallback suggestions", () => {
+    expect(lookupLocalAreaSuggestions("West Pymble")[0]).toMatchObject({
+      label: "West Pymble",
+      region: "North Shore",
+      resultType: "Suburb",
+    });
   });
 
   it("prioritises Sydney and North Shore suburbs without broad interstate cities", () => {

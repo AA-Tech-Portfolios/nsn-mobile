@@ -20,6 +20,8 @@ export type SydneyLocality = {
   aliases?: string[];
 };
 
+// Local prototype fallback. Keep this compact and replace/augment via
+// location-lookup.ts when an Australian locality API or maintained dataset lands.
 export const sydneyLocalities: SydneyLocality[] = [
   { id: "region-sydney-cbd", displayName: "Sydney CBD", region: "Sydney CBD", kind: "Region", latitude: -33.8688, longitude: 151.2093, aliases: ["CBD", "City", "Sydney city"] },
   { id: "region-eastern-suburbs", displayName: "Eastern Suburbs", region: "Eastern Suburbs", kind: "Region", latitude: -33.8915, longitude: 151.2509, aliases: ["East", "Eastern Sydney"] },

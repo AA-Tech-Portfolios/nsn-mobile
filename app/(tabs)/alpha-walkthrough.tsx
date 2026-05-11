@@ -21,7 +21,7 @@ const walkthroughSteps = [
   {
     title: "Search suburbs, regions, and meetups",
     eyebrow: "For alpha testing",
-    copy: "Use Search NSN on Home to look up a Sydney suburb, broader region, or meetup idea like coffee, walks, board games, Inner West, or Chatswood. Selecting a suburb or region updates the prototype local area.",
+    copy: "Use Search NSN on Home to look up a Sydney suburb or broader region, then switch to Meetups when you want activity ideas like coffee, walks, or board games. Profile uses the same location picker.",
     actionLabel: "Open Home",
     route: "/(tabs)",
     icon: "location",

@@ -4,10 +4,11 @@ import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
 import { getLanguageBase, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
+import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { allEvents, dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
-import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAreaSuggestion, searchNsnEvents, searchNsnSydneyLocalAreas } from "@/lib/nsn-search";
+import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAreaSuggestion, searchNsnEvents } from "@/lib/nsn-search";
 import { prioritizeEventsForComfort } from "@/lib/softhello-mvp";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -80,6 +81,7 @@ const appLocaleMap: Record<string, string> = {
 const filterKeys = ["All", "Outdoor", "Indoor", "Food", "Active"] as const;
 type EventFilter = (typeof filterKeys)[number];
 const noiseFilterKeys: NoiseLevelPreference[] = ["Any", ...noiseLevelOptions];
+type HomeSearchMode = "areas" | "meetups";
 
 const noiseGuideTranslations = {
   English: {
@@ -802,6 +804,7 @@ export default function HomeScreen() {
   const [dismissedThemeSuggestion, setDismissedThemeSuggestion] = useState<"day" | "night" | null>(null);
   const [headerPlaceholder, setHeaderPlaceholder] = useState<{ title: string; copy: string } | null>(null);
   const [showNsnSearch, setShowNsnSearch] = useState(false);
+  const [homeSearchMode, setHomeSearchMode] = useState<HomeSearchMode>("areas");
   const [nsnSearchQuery, setNsnSearchQuery] = useState("");
   const [detectingLocation, setDetectingLocation] = useState(false);
   const activeEvents = useMemo(() => {
@@ -832,13 +835,10 @@ export default function HomeScreen() {
   const showSearchPlaceholder = useCallback(() => {
     setHeaderPlaceholder(null);
     setShowNsnSearch(true);
+    setHomeSearchMode("areas");
   }, []);
 
   const normalizedNsnSearchQuery = normalizeNsnSearchQuery(nsnSearchQuery);
-  const matchingLocalAreas = useMemo(
-    () => searchNsnSydneyLocalAreas(nsnSearchQuery, normalizedNsnSearchQuery ? 4 : 6),
-    [normalizedNsnSearchQuery, nsnSearchQuery]
-  );
   const searchableMeetups = useMemo(
     () => allEvents.filter((event) => showHiddenEvents || !hiddenEventIds.includes(event.id)),
     [hiddenEventIds, showHiddenEvents]
@@ -847,8 +847,9 @@ export default function HomeScreen() {
     () => searchNsnEvents(searchableMeetups, nsnSearchQuery, eventTranslations[appLanguageBase] ?? {}, 4),
     [appLanguageBase, nsnSearchQuery, searchableMeetups]
   );
-  const displayedEvents = normalizedNsnSearchQuery ? matchingMeetups : activeEvents;
-  const hasNoSearchResults = Boolean(normalizedNsnSearchQuery) && matchingLocalAreas.length === 0 && matchingMeetups.length === 0;
+  const isMeetupSearch = homeSearchMode === "meetups" && Boolean(normalizedNsnSearchQuery);
+  const displayedEvents = isMeetupSearch ? matchingMeetups : activeEvents;
+  const hasNoMeetupSearchResults = isMeetupSearch && matchingMeetups.length === 0;
 
   const chooseLocalArea = (area: NsnLocalAreaSuggestion) => {
     saveSoftHelloMvpState({ timezone: area, suburb: area.label });
@@ -1151,7 +1152,7 @@ export default function HomeScreen() {
                   Search NSN
                 </Text>
                 <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Search for a suburb, region, or low-pressure meetup idea like coffee, walks, board games, Inner West, or Chatswood.
+                  Search suburbs and regions for your local area, or switch to meetups for activities like coffee, walks, and board games.
                 </Text>
               </View>
               <TouchableOpacity
@@ -1164,19 +1165,31 @@ export default function HomeScreen() {
                 <Text style={[styles.headerPlaceholderDismissText, isDay && styles.dayMutedText]}>{homeCopy.ok}</Text>
               </TouchableOpacity>
             </View>
-            <View style={[styles.locationInputWrap, isDay && styles.dayLocationInputWrap, isRtl && styles.rtlRow]}>
-              <IconSymbol name="magnifyingglass" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
-              <TextInput
-                value={nsnSearchQuery}
-                onChangeText={setNsnSearchQuery}
-                placeholder="Search suburb or activity..."
-                placeholderTextColor={isDay ? "#6B7890" : nsnColors.muted}
-                autoCapitalize="none"
-                autoCorrect={false}
-                accessibilityLabel="Search NSN suburbs and meetups"
-                style={[styles.locationInput, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
-              />
+            <View style={[styles.searchModeTabs, isRtl && styles.rtlRow]}>
+              {(["areas", "meetups"] as const).map((modeKey) => {
+                const active = homeSearchMode === modeKey;
+                const label = modeKey === "areas" ? "Suburbs & areas" : "Meetups";
+
+                return (
+                  <TouchableOpacity
+                    key={modeKey}
+                    activeOpacity={0.82}
+                    onPress={() => {
+                      setHomeSearchMode(modeKey);
+                      setNsnSearchQuery("");
+                    }}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={label}
+                    style={[styles.searchModeTab, isDay && styles.dayLocationResultButton, active && styles.searchModeTabActive]}
+                  >
+                    <Text style={[styles.searchModeTabText, isDay && styles.dayHeadingText, active && styles.searchModeTabTextActive]}>{label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
+            {homeSearchMode === "areas" ? (
+              <>
             <TouchableOpacity
               activeOpacity={0.82}
               onPress={detectLocalArea}
@@ -1191,44 +1204,43 @@ export default function HomeScreen() {
                 {detectingLocation ? "Detecting local area..." : "Use current location"}
               </Text>
             </TouchableOpacity>
-            {!normalizedNsnSearchQuery ? (
+            <LocalAreaPicker
+              query={nsnSearchQuery}
+              onQueryChange={setNsnSearchQuery}
+              onSelect={chooseLocalArea}
+              selectedAreaId={timezone.id}
+              isDay={isDay}
+              isRtl={isRtl}
+              limit={7}
+            />
+              </>
+            ) : null}
+            {homeSearchMode === "meetups" ? (
+              <View style={[styles.locationInputWrap, isDay && styles.dayLocationInputWrap, isRtl && styles.rtlRow]}>
+                <IconSymbol name="magnifyingglass" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
+                <TextInput
+                  value={nsnSearchQuery}
+                  onChangeText={setNsnSearchQuery}
+                  placeholder="Search meetup activity..."
+                  placeholderTextColor={isDay ? "#6B7890" : nsnColors.muted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  accessibilityLabel="Search NSN meetups"
+                  style={[styles.locationInput, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+                />
+              </View>
+            ) : null}
+            {homeSearchMode === "meetups" && !normalizedNsnSearchQuery ? (
               <View style={[styles.searchPromptCard, isDay && styles.dayLocationResultButton]}>
                 <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
-                  Search for a suburb, region, or activity to personalise NSN.
+                  Search for a meetup idea or activity.
                 </Text>
                 <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Try CBD, St. Ives, Parra, Northern Beaches, coffee, or board games.
+                  Try coffee, walk, board games, library, or ramen.
                 </Text>
               </View>
             ) : null}
-            {matchingLocalAreas.length > 0 ? (
-              <View style={styles.searchResultGroup}>
-                <Text style={[styles.searchResultGroupTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Matching suburbs and regions</Text>
-                <View style={styles.searchResultStack}>
-                  {matchingLocalAreas.map((area) => {
-                    const active = area.id === timezone.id;
-
-                    return (
-                      <TouchableOpacity
-                        key={area.id}
-                        activeOpacity={0.82}
-                        onPress={() => chooseLocalArea(area)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Use ${area.label} as local area`}
-                        style={[styles.locationResultButton, active && styles.activeLocationResultButton, isDay && styles.dayLocationResultButton, isDay && active && styles.dayActiveLocationResultButton]}
-                      >
-                        <View style={[styles.searchResultTopLine, isRtl && styles.rtlRow]}>
-                          <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, active && styles.activeLocationResultText, isRtl && styles.rtlText]}>{area.label}</Text>
-                          <Text style={[styles.searchResultBadge, active && styles.activeSearchResultBadge]}>{area.resultType}</Text>
-                        </View>
-                        <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, active && styles.activeLocationResultText, isRtl && styles.rtlText]}>{area.label} - {area.region}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-            ) : null}
-            {matchingMeetups.length > 0 ? (
+            {homeSearchMode === "meetups" && matchingMeetups.length > 0 ? (
               <View style={styles.searchResultGroup}>
                 <Text style={[styles.searchResultGroupTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Matching meetups</Text>
                 <View style={styles.searchResultStack}>
@@ -1255,11 +1267,11 @@ export default function HomeScreen() {
                 </View>
               </View>
             ) : null}
-            {hasNoSearchResults ? (
+            {hasNoMeetupSearchResults ? (
               <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
                 <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups yet.</Text>
                 <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Try another suburb, region, or activity — NSN is still an early local prototype.
+                  Try another suburb, region, or activity - NSN is still an early local prototype.
                 </Text>
               </View>
             ) : null}
@@ -1380,7 +1392,7 @@ export default function HomeScreen() {
 
         <View style={[styles.sectionHeader, isRtl && styles.rtlRow]}>
           <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]}>
-            {normalizedNsnSearchQuery ? "Matching meetups" : mode === "day" ? copy.dayEvents : copy.eveningEvents}
+            {isMeetupSearch ? "Matching meetups" : mode === "day" ? copy.dayEvents : copy.eveningEvents}
           </Text>
           <TouchableOpacity activeOpacity={0.75} onPress={() => setShowHiddenEvents((current) => !current)}>
             <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null, isRtl && styles.rtlText]}>
@@ -1390,7 +1402,7 @@ export default function HomeScreen() {
         </View>
         <View style={styles.cardStack}>
           {displayedEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} />))}
-          {normalizedNsnSearchQuery && displayedEvents.length === 0 ? (
+          {hasNoMeetupSearchResults ? (
             <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
               <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups yet.</Text>
               <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
@@ -1476,6 +1488,11 @@ const styles = StyleSheet.create({
   detectLocationButton: { minHeight: 42, borderRadius: 14, backgroundColor: nsnColors.primary, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   detectLocationButtonDisabled: { opacity: 0.72 },
   detectLocationButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  searchModeTabs: { flexDirection: "row", gap: 8 },
+  searchModeTab: { flex: 1, minHeight: 36, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
+  searchModeTabActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  searchModeTabText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  searchModeTabTextActive: { color: "#FFFFFF" },
   searchResultGroup: { gap: 7 },
   searchResultGroupTitle: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   searchResultStack: { gap: 8 },
