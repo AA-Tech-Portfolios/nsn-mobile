@@ -20,6 +20,7 @@ export type FoodBeveragePreference = {
   aliases?: string[];
   eventKeywords?: string[];
   ageSensitive?: boolean;
+  icon?: string;
 };
 
 export type FoodPreferenceGroup = {
@@ -29,12 +30,14 @@ export type FoodPreferenceGroup = {
   defaultOpen?: boolean;
   defaultVisible?: number;
   ageSensitive?: boolean;
+  icon?: string;
 };
 
 export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "cuisines",
     title: "Favourite cuisines",
+    icon: "🌏",
     copy: "Choose familiar or enjoyable cuisines for low-pressure meetup ideas.",
     defaultOpen: true,
     defaultVisible: 9,
@@ -42,24 +45,28 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "casualMeals",
     title: "Casual meals",
+    icon: "🍔",
     copy: "Easy, familiar foods that work well around simple local meetups.",
     defaultVisible: 8,
   },
   {
     id: "proteins",
     title: "Proteins",
+    icon: "🍳",
     copy: "Helpful for food comfort, dietary matching, and event planning notes.",
     defaultVisible: 8,
   },
   {
     id: "lighterOptions",
     title: "Lighter options",
+    icon: "🥗",
     copy: "Lower-pressure meals for quick chats, park meetups, and quieter days.",
     defaultVisible: 7,
   },
   {
     id: "cafeEasy",
     title: "Cafe and easy meetup foods",
+    icon: "☕",
     copy: "Cafe-friendly choices that make first meetups feel simple.",
     defaultOpen: true,
     defaultVisible: 8,
@@ -67,24 +74,28 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "desserts",
     title: "Desserts",
+    icon: "🍰",
     copy: "Sweet options for casual plans, markets, and dessert walks.",
     defaultVisible: 8,
   },
   {
     id: "iceCreamFlavours",
     title: "Ice cream and dessert flavours",
+    icon: "🍦",
     copy: "Flavours that can help suggest relaxed dessert-style meetups.",
     defaultVisible: 8,
   },
   {
     id: "snacks",
     title: "Snacks",
+    icon: "🥨",
     copy: "Simple snacks for picnics, movie nights, games, or quiet catchups.",
     defaultVisible: 8,
   },
   {
     id: "nonAlcoholicDrinks",
     title: "Non-alcoholic drinks",
+    icon: "🥤",
     copy: "Drinks that keep cafe, park, and daytime meetups easy.",
     defaultOpen: true,
     defaultVisible: 9,
@@ -92,6 +103,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "alcoholicDrinks",
     title: "Alcoholic drinks",
+    icon: "🍷",
     copy: "Optional and only relevant for age-appropriate events.",
     defaultVisible: 5,
     ageSensitive: true,
@@ -99,6 +111,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "alcoholComfort",
     title: "Alcohol comfort",
+    icon: "⚠️",
     copy: "Set whether alcohol-serving venues feel comfortable for you.",
     defaultVisible: 3,
     ageSensitive: true,
@@ -106,6 +119,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "dietaryNeeds",
     title: "Dietary needs and safety",
+    icon: "⚠️",
     copy: "Dietary preferences help with meetup suggestions, but users should still confirm ingredients with venues.",
     defaultOpen: true,
     defaultVisible: 10,
@@ -113,6 +127,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "avoidances",
     title: "Dislikes and avoidances",
+    icon: "🧭",
     copy: "Mark food or venue situations you would rather avoid.",
     defaultVisible: 7,
   },
@@ -121,7 +136,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
 export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "australian", label: "Australian", group: "cuisines", eventKeywords: ["australian", "pub", "picnic"] },
   { id: "italian", label: "Italian", group: "cuisines", eventKeywords: ["italian", "pizza", "pasta"] },
-  { id: "japanese", label: "Japanese", group: "cuisines", eventKeywords: ["japanese", "ramen", "sushi", "noodles"] },
+  { id: "japanese", label: "Japanese", group: "cuisines", icon: "🍣", eventKeywords: ["japanese", "ramen", "sushi", "noodles"] },
   { id: "korean", label: "Korean", group: "cuisines", eventKeywords: ["korean", "bbq"] },
   { id: "chinese", label: "Chinese", group: "cuisines", eventKeywords: ["chinese", "dumplings", "noodles"] },
   { id: "thai", label: "Thai", group: "cuisines", eventKeywords: ["thai", "noodles", "spice"] },
@@ -139,7 +154,7 @@ export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "mediterranean", label: "Mediterranean", group: "cuisines", eventKeywords: ["mediterranean", "greek", "lebanese"] },
   { id: "middle-eastern", label: "Middle Eastern", group: "cuisines", eventKeywords: ["middle eastern", "lebanese", "halal"] },
   { id: "ethiopian", label: "Ethiopian", group: "cuisines", eventKeywords: ["ethiopian"] },
-  { id: "vegetarian-friendly", label: "Vegetarian-friendly", group: "cuisines", aliases: ["vegetarian"], eventKeywords: ["vegetarian", "veggie"] },
+  { id: "vegetarian-friendly", label: "Vegetarian-friendly", group: "cuisines", icon: "🥗", aliases: ["vegetarian"], eventKeywords: ["vegetarian", "veggie"] },
   { id: "vegan-friendly", label: "Vegan-friendly", group: "cuisines", aliases: ["vegan"], eventKeywords: ["vegan"] },
   { id: "fusion", label: "Fusion", group: "cuisines", eventKeywords: ["fusion"] },
 
@@ -150,7 +165,7 @@ export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "pies", label: "Pies", group: "casualMeals", eventKeywords: ["pie", "pies"] },
   { id: "sausages", label: "Sausages", group: "casualMeals", eventKeywords: ["sausage", "sausages"] },
   { id: "chips", label: "Chips", group: "casualMeals", aliases: ["fries"], eventKeywords: ["chips", "fries"] },
-  { id: "pizza", label: "Pizza", group: "casualMeals", eventKeywords: ["pizza", "italian"] },
+  { id: "pizza", label: "Pizza", group: "casualMeals", icon: "🍕", eventKeywords: ["pizza", "italian"] },
   { id: "pasta", label: "Pasta", group: "casualMeals", eventKeywords: ["pasta", "italian"] },
   { id: "rice-dishes", label: "Rice dishes", group: "casualMeals", aliases: ["rice"], eventKeywords: ["rice"] },
   { id: "noodles", label: "Noodles", group: "casualMeals", aliases: ["ramen", "pho"], eventKeywords: ["noodles", "ramen", "pho", "laksa"] },
@@ -173,7 +188,7 @@ export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "poke-bowls", label: "Poke bowls", group: "lighterOptions", aliases: ["poke"], eventKeywords: ["poke", "bowl"] },
   { id: "soups", label: "Soups", group: "lighterOptions", eventKeywords: ["soup", "ramen"] },
 
-  { id: "coffee-food", label: "Coffee", group: "cafeEasy", aliases: ["cafe", "cafe coffee"], eventKeywords: ["coffee", "cafe", "cafe", "espresso"] },
+  { id: "coffee-food", label: "Coffee", group: "cafeEasy", icon: "☕", aliases: ["cafe", "cafe coffee"], eventKeywords: ["coffee", "cafe", "cafe", "espresso"] },
   { id: "tea-food", label: "Tea", group: "cafeEasy", eventKeywords: ["tea", "cafe"] },
   { id: "bubble-tea-food", label: "Bubble tea", group: "cafeEasy", aliases: ["boba"], eventKeywords: ["bubble tea", "boba"] },
   { id: "juices-food", label: "Juices", group: "cafeEasy", eventKeywords: ["juice", "juices"] },
@@ -216,7 +231,7 @@ export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
 
   { id: "water", label: "Water", group: "nonAlcoholicDrinks", eventKeywords: ["water", "walk", "beach"] },
   { id: "sparkling-water", label: "Sparkling water", group: "nonAlcoholicDrinks", eventKeywords: ["sparkling water"] },
-  { id: "coffee-drink", label: "Coffee", group: "nonAlcoholicDrinks", aliases: ["cafe"], eventKeywords: ["coffee", "cafe", "espresso"] },
+  { id: "coffee-drink", label: "Coffee", group: "nonAlcoholicDrinks", icon: "☕", aliases: ["cafe"], eventKeywords: ["coffee", "cafe", "espresso"] },
   { id: "tea-drink", label: "Tea", group: "nonAlcoholicDrinks", eventKeywords: ["tea", "cafe"] },
   { id: "bubble-tea-drink", label: "Bubble tea", group: "nonAlcoholicDrinks", aliases: ["boba"], eventKeywords: ["bubble tea", "boba"] },
   { id: "juice-drink", label: "Juice", group: "nonAlcoholicDrinks", eventKeywords: ["juice", "juices"] },
@@ -234,7 +249,7 @@ export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "comfortable-alcohol-venues", label: "Comfortable with venues that serve alcohol", group: "alcoholComfort", aliases: ["alcohol venues"], ageSensitive: true, eventKeywords: ["bar", "pub", "restaurant"] },
   { id: "not-interested-alcohol-meetups", label: "Not interested in alcohol-related meetups", group: "alcoholComfort", aliases: ["avoid alcohol", "no alcohol"], ageSensitive: true, eventKeywords: ["alcohol-free", "cafe", "library"] },
 
-  { id: "vegetarian", label: "Vegetarian", group: "dietaryNeeds", eventKeywords: ["vegetarian", "veggie"] },
+  { id: "vegetarian", label: "Vegetarian", group: "dietaryNeeds", icon: "🥗", eventKeywords: ["vegetarian", "veggie"] },
   { id: "vegan", label: "Vegan", group: "dietaryNeeds", eventKeywords: ["vegan"] },
   { id: "gluten-free", label: "Gluten-free", group: "dietaryNeeds", aliases: ["gluten free"], eventKeywords: ["gluten-free", "gluten free"] },
   { id: "dairy-free", label: "Dairy-free", group: "dietaryNeeds", aliases: ["dairy free"], eventKeywords: ["dairy-free", "dairy free"] },

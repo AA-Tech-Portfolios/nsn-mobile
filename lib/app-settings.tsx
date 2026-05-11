@@ -136,6 +136,12 @@ export type PhotoRecordingComfortPreference =
   | "No videos please"
   | "No public posting without permission"
   | "Prefer no screenshots of chats/profile";
+export type PhysicalContactComfortPreference =
+  | "No physical contact"
+  | "Ask first"
+  | "Handshake okay"
+  | "Hugs only if I offer"
+  | "Prefer personal space";
 export type ProfileGender = "Not specified" | "Male" | "Female" | "Other";
 export type ProfileNameDisplayMode = "Hidden" | "Initial" | "Full";
 export type SettingsPrivacyMode = "Basic" | "Advanced";
@@ -191,6 +197,14 @@ export const defaultPhotoRecordingComfortPreferences: PhotoRecordingComfortPrefe
   "No public posting without permission",
   "Prefer no screenshots of chats/profile",
 ];
+export const physicalContactComfortOptions: PhysicalContactComfortPreference[] = [
+  "No physical contact",
+  "Ask first",
+  "Handshake okay",
+  "Hugs only if I offer",
+  "Prefer personal space",
+];
+export const defaultPhysicalContactComfortPreferences: PhysicalContactComfortPreference[] = ["Ask first", "Prefer personal space"];
 
 export type DietaryPreference =
   | "No preference"
@@ -296,6 +310,11 @@ const normalizePhotoRecordingComfortPreferences = (value?: PhotoRecordingComfort
   return filtered.length ? filtered : defaultPhotoRecordingComfortPreferences;
 };
 
+const normalizePhysicalContactComfortPreferences = (value?: PhysicalContactComfortPreference[] | null): PhysicalContactComfortPreference[] => {
+  const filtered = (value ?? []).filter((preference): preference is PhysicalContactComfortPreference => physicalContactComfortOptions.includes(preference));
+  return filtered.length ? filtered : defaultPhysicalContactComfortPreferences;
+};
+
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
   accountPaused?: boolean;
@@ -347,6 +366,7 @@ type OnboardingSnapshot = {
   communicationPreferences?: CommunicationPreference[];
   groupSizePreference?: GroupSizePreference;
   photoRecordingComfortPreferences?: PhotoRecordingComfortPreference[];
+  physicalContactComfortPreferences?: PhysicalContactComfortPreference[];
   verifiedButPrivate?: boolean;
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
@@ -609,6 +629,8 @@ type AppSettings = {
   setGroupSizePreference: (value: GroupSizePreference) => void;
   photoRecordingComfortPreferences: PhotoRecordingComfortPreference[];
   setPhotoRecordingComfortPreferences: (value: PhotoRecordingComfortPreference[]) => void;
+  physicalContactComfortPreferences: PhysicalContactComfortPreference[];
+  setPhysicalContactComfortPreferences: (value: PhysicalContactComfortPreference[]) => void;
   verifiedButPrivate: boolean;
   setVerifiedButPrivate: (value: boolean) => void;
   dietaryPreferences: DietaryPreference[];
@@ -796,6 +818,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [communicationPreferences, setCommunicationPreferences] = useState<CommunicationPreference[]>(["Low-message mode", "Details only"]);
   const [groupSizePreference, setGroupSizePreference] = useState<GroupSizePreference>("Small groups only");
   const [photoRecordingComfortPreferences, setPhotoRecordingComfortPreferences] = useState<PhotoRecordingComfortPreference[]>(defaultPhotoRecordingComfortPreferences);
+  const [physicalContactComfortPreferences, setPhysicalContactComfortPreferences] = useState<PhysicalContactComfortPreference[]>(defaultPhysicalContactComfortPreferences);
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
@@ -928,6 +951,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
         setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
         setPhotoRecordingComfortPreferences(normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences));
+        setPhysicalContactComfortPreferences(normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences));
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
@@ -1039,10 +1063,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextCommunicationPreferences = normalizeCommunicationPreferences(snapshot.communicationPreferences);
     const nextGroupSizePreference = normalizeGroupSizePreference(snapshot.groupSizePreference);
     const nextPhotoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences);
+    const nextPhysicalContactComfortPreferences = normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences);
     setSocialEnergyPreference(nextSocialEnergyPreference);
     setCommunicationPreferences(nextCommunicationPreferences);
     setGroupSizePreference(nextGroupSizePreference);
     setPhotoRecordingComfortPreferences(nextPhotoRecordingComfortPreferences);
+    setPhysicalContactComfortPreferences(nextPhysicalContactComfortPreferences);
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
     setDietaryPreferences(snapshot.dietaryPreferences);
@@ -1112,6 +1138,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           communicationPreferences: nextCommunicationPreferences,
           groupSizePreference: nextGroupSizePreference,
           photoRecordingComfortPreferences: nextPhotoRecordingComfortPreferences,
+          physicalContactComfortPreferences: nextPhysicalContactComfortPreferences,
           verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
           foodBeveragePreferenceIds: nextFoodBeveragePreferenceIds,
           interestPreferenceIds: nextInterestPreferenceIds,
@@ -1185,6 +1212,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       communicationPreferences,
       groupSizePreference,
       photoRecordingComfortPreferences,
+      physicalContactComfortPreferences,
       verifiedButPrivate,
       transportationMethod,
       dietaryPreferences,
@@ -1249,6 +1277,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.communicationPreferences = normalizeCommunicationPreferences(nextSnapshot.communicationPreferences);
     nextSnapshot.groupSizePreference = normalizeGroupSizePreference(nextSnapshot.groupSizePreference);
     nextSnapshot.photoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(nextSnapshot.photoRecordingComfortPreferences);
+    nextSnapshot.physicalContactComfortPreferences = normalizePhysicalContactComfortPreferences(nextSnapshot.physicalContactComfortPreferences);
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
     nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(nextSnapshot.foodBeveragePreferenceIds);
     nextSnapshot.interestPreferenceIds = normalizeInterestPreferenceIds(nextSnapshot.interestPreferenceIds);
@@ -1335,6 +1364,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.communicationPreferences !== undefined) setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
     if (snapshot.groupSizePreference !== undefined) setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
     if (snapshot.photoRecordingComfortPreferences !== undefined) setPhotoRecordingComfortPreferences(normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences));
+    if (snapshot.physicalContactComfortPreferences !== undefined) setPhysicalContactComfortPreferences(normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences));
     if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
@@ -1634,6 +1664,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setGroupSizePreference,
         photoRecordingComfortPreferences,
         setPhotoRecordingComfortPreferences,
+        physicalContactComfortPreferences,
+        setPhysicalContactComfortPreferences,
         verifiedButPrivate,
         setVerifiedButPrivate,
         transportationMethod,

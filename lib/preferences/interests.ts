@@ -33,6 +33,7 @@ export type InterestPreference = {
   genres?: string[];
   comfortTags?: InterestComfortTagId[];
   eventKeywords?: string[];
+  icon?: string;
 };
 
 export type InterestCategory = {
@@ -41,6 +42,7 @@ export type InterestCategory = {
   copy: string;
   defaultOpen?: boolean;
   defaultVisible?: number;
+  icon?: string;
 };
 
 export const interestComfortTags: Array<{ id: InterestComfortTagId; label: string; copy: string }> = [
@@ -56,20 +58,20 @@ export const interestComfortTags: Array<{ id: InterestComfortTagId; label: strin
 ];
 
 export const interestCategories: InterestCategory[] = [
-  { id: "moviesTv", title: "Movies, TV & streaming", copy: "Low-pressure watching, chatting, and shared media interests.", defaultOpen: true, defaultVisible: 12 },
-  { id: "reading", title: "Reading", copy: "Books, book clubs, audiobooks, and quieter conversation starters.", defaultOpen: true, defaultVisible: 10 },
-  { id: "comicsAnimeManga", title: "Comics, anime & manga", copy: "Visual stories, fan-friendly chats, and calm watch/read ideas.", defaultVisible: 10 },
-  { id: "games", title: "Games", copy: "Games that can work as easy conversation starters.", defaultOpen: true, defaultVisible: 12 },
-  { id: "artCreativity", title: "Art & creativity", copy: "Creative interests for workshops, galleries, and gentle making sessions.", defaultVisible: 10 },
-  { id: "music", title: "Music", copy: "Listening, gigs, open mics, and shared playlists.", defaultVisible: 12 },
-  { id: "outdoorsLocal", title: "Outdoors & local exploring", copy: "North Shore-friendly places and simple outside activities.", defaultOpen: true, defaultVisible: 12 },
-  { id: "wellnessRelaxation", title: "Wellness & relaxation", copy: "Calm interests for decompressing without pressure.", defaultVisible: 9 },
-  { id: "foodDrinksVenues", title: "Food, drinks & venues", copy: "Activity-style venue interests that pair with food preferences.", defaultVisible: 9 },
-  { id: "movementSport", title: "Movement & sport", copy: "Casual, social, and easy-paced movement options.", defaultVisible: 11 },
-  { id: "learningIdeas", title: "Learning & ideas", copy: "Conversation-friendly topics, workshops, and study interests.", defaultVisible: 12 },
-  { id: "animalsPets", title: "Animals & pets", copy: "Pet-friendly and animal-related comfort interests.", defaultVisible: 7 },
-  { id: "travelCulture", title: "Travel & culture", copy: "Places, cultures, language exchange, and local discovery.", defaultVisible: 8 },
-  { id: "communityVolunteering", title: "Community & volunteering", copy: "Helpful, supportive, and local community activities.", defaultVisible: 8 },
+  { id: "moviesTv", title: "Movies, TV & streaming", icon: "🎬", copy: "Low-pressure watching, chatting, and shared media interests.", defaultOpen: true, defaultVisible: 12 },
+  { id: "reading", title: "Reading", icon: "📚", copy: "Books, book clubs, audiobooks, and quieter conversation starters.", defaultOpen: true, defaultVisible: 10 },
+  { id: "comicsAnimeManga", title: "Comics, anime & manga", icon: "✨", copy: "Visual stories, fan-friendly chats, and calm watch/read ideas.", defaultVisible: 10 },
+  { id: "games", title: "Games", icon: "🎮", copy: "Games that can work as easy conversation starters.", defaultOpen: true, defaultVisible: 12 },
+  { id: "artCreativity", title: "Art & creativity", icon: "🎨", copy: "Creative interests for workshops, galleries, and gentle making sessions.", defaultVisible: 10 },
+  { id: "music", title: "Music", icon: "🎵", copy: "Listening, gigs, open mics, and shared playlists.", defaultVisible: 12 },
+  { id: "outdoorsLocal", title: "Outdoors & local exploring", icon: "🌿", copy: "North Shore-friendly places and simple outside activities.", defaultOpen: true, defaultVisible: 12 },
+  { id: "wellnessRelaxation", title: "Wellness & relaxation", icon: "🧘", copy: "Calm interests for decompressing without pressure.", defaultVisible: 9 },
+  { id: "foodDrinksVenues", title: "Food, drinks & venues", icon: "☕", copy: "Activity-style venue interests that pair with food preferences.", defaultVisible: 9 },
+  { id: "movementSport", title: "Movement & sport", icon: "🏃", copy: "Casual, social, and easy-paced movement options.", defaultVisible: 11 },
+  { id: "learningIdeas", title: "Learning & ideas", icon: "🧠", copy: "Conversation-friendly topics, workshops, and study interests.", defaultVisible: 12 },
+  { id: "animalsPets", title: "Animals & pets", icon: "🐾", copy: "Pet-friendly and animal-related comfort interests.", defaultVisible: 7 },
+  { id: "travelCulture", title: "Travel & culture", icon: "🌏", copy: "Places, cultures, language exchange, and local discovery.", defaultVisible: 8 },
+  { id: "communityVolunteering", title: "Community & volunteering", icon: "🤝", copy: "Helpful, supportive, and local community activities.", defaultVisible: 8 },
 ];
 
 const mediaGenres = [
@@ -104,7 +106,7 @@ const mediaGenreInterests: InterestPreference[] = mediaGenres.map((genre) => ({
 }));
 
 export const interestPreferenceOptions: InterestPreference[] = [
-  { id: "movies", label: "Movies", category: "moviesTv", genres: mediaGenres, eventKeywords: ["movie", "movies", "cinema", "film"] },
+  { id: "movies", label: "Movies", category: "moviesTv", icon: "🎬", genres: mediaGenres, eventKeywords: ["movie", "movies", "cinema", "film"] },
   { id: "tv-shows", label: "TV shows", category: "moviesTv", genres: mediaGenres, aliases: ["television", "streaming"], eventKeywords: ["tv", "streaming"] },
   { id: "documentaries", label: "Documentaries", category: "moviesTv", genres: ["Documentary"], eventKeywords: ["documentary", "documentaries"] },
   { id: "reality-tv", label: "Reality TV", category: "moviesTv", aliases: ["reality shows"], eventKeywords: ["reality"] },
@@ -116,7 +118,7 @@ export const interestPreferenceOptions: InterestPreference[] = [
   { id: "movie-nights", label: "Movie nights", category: "moviesTv", aliases: ["watch party"], eventKeywords: ["movie night", "watch"] },
   ...mediaGenreInterests,
 
-  { id: "books", label: "Books", category: "reading", genres: mediaGenres, eventKeywords: ["book", "books", "library", "reading"] },
+  { id: "books", label: "Books", category: "reading", icon: "📚", genres: mediaGenres, eventKeywords: ["book", "books", "library", "reading"] },
   { id: "audiobooks", label: "Audiobooks", category: "reading", aliases: ["audio books"], genres: mediaGenres, eventKeywords: ["audiobook"] },
   { id: "comics", label: "Comics", category: "reading", genres: mediaGenres, eventKeywords: ["comic", "comics"] },
   { id: "graphic-novels", label: "Graphic novels", category: "reading", genres: mediaGenres, eventKeywords: ["graphic novel", "comics"] },
@@ -132,8 +134,8 @@ export const interestPreferenceOptions: InterestPreference[] = [
   { id: "comic-cons", label: "Comic cons", category: "comicsAnimeManga", aliases: ["conventions"], eventKeywords: ["comic con", "anime"] },
   { id: "cosplay", label: "Cosplay", category: "comicsAnimeManga", eventKeywords: ["cosplay"] },
 
-  { id: "video-games", label: "Video games", category: "games", genres: mediaGenres, aliases: ["gaming"], eventKeywords: ["video games", "gaming", "games"] },
-  { id: "board-games", label: "Board games", category: "games", aliases: ["boardgames"], eventKeywords: ["board games", "games"] },
+  { id: "video-games", label: "Video games", category: "games", icon: "🎮", genres: mediaGenres, aliases: ["gaming"], eventKeywords: ["video games", "gaming", "games"] },
+  { id: "board-games", label: "Board games", category: "games", icon: "🎲", aliases: ["boardgames"], eventKeywords: ["board games", "games"] },
   { id: "card-games", label: "Card games", category: "games", eventKeywords: ["card games", "cards"] },
   { id: "chess", label: "Chess", category: "games", eventKeywords: ["chess"] },
   { id: "trivia", label: "Trivia", category: "games", aliases: ["quiz"], eventKeywords: ["trivia", "quiz"] },
@@ -175,7 +177,7 @@ export const interestPreferenceOptions: InterestPreference[] = [
   { id: "open-mic-nights", label: "Open mic nights", category: "music", aliases: ["open mic"], eventKeywords: ["open mic"] },
   { id: "quiet-music", label: "Quiet music", category: "music", aliases: ["calm songs"], eventKeywords: ["quiet music", "calm songs", "music listening"] },
 
-  { id: "walking", label: "Walking", category: "outdoorsLocal", aliases: ["walks"], eventKeywords: ["walk", "walking"] },
+  { id: "walking", label: "Walking", category: "outdoorsLocal", icon: "🚶", aliases: ["walks"], eventKeywords: ["walk", "walking"] },
   { id: "bushwalks", label: "Bushwalks", category: "outdoorsLocal", aliases: ["hiking"], eventKeywords: ["bushwalk", "hike", "park"] },
   { id: "coastal-walks", label: "Coastal walks", category: "outdoorsLocal", eventKeywords: ["coastal walk", "beach", "harbour"] },
   { id: "picnics", label: "Picnics", category: "outdoorsLocal", eventKeywords: ["picnic", "park"] },
@@ -188,7 +190,7 @@ export const interestPreferenceOptions: InterestPreference[] = [
   { id: "gardens", label: "Gardens", category: "outdoorsLocal", eventKeywords: ["garden", "gardens"] },
   { id: "stargazing", label: "Stargazing", category: "outdoorsLocal", aliases: ["stars"], eventKeywords: ["stargazing", "stars"] },
 
-  { id: "yoga", label: "Yoga", category: "wellnessRelaxation", eventKeywords: ["yoga"] },
+  { id: "yoga", label: "Yoga", category: "wellnessRelaxation", icon: "🧘", eventKeywords: ["yoga"] },
   { id: "meditation", label: "Meditation", category: "wellnessRelaxation", eventKeywords: ["meditation"] },
   { id: "stretching", label: "Stretching", category: "wellnessRelaxation", eventKeywords: ["stretching"] },
   { id: "sauna-steam", label: "Sauna / steam room", category: "wellnessRelaxation", aliases: ["sauna", "steam room"], eventKeywords: ["sauna", "steam"] },
@@ -198,7 +200,7 @@ export const interestPreferenceOptions: InterestPreference[] = [
   { id: "self-care", label: "Self-care", category: "wellnessRelaxation", eventKeywords: ["self-care"] },
   { id: "recovery", label: "Recovery", category: "wellnessRelaxation", eventKeywords: ["recovery"] },
 
-  { id: "coffee-cafes", label: "Coffee", category: "foodDrinksVenues", aliases: ["coffee shops", "cafes"], eventKeywords: ["coffee", "cafe"] },
+  { id: "coffee-cafes", label: "Coffee", category: "foodDrinksVenues", icon: "☕", aliases: ["coffee shops", "cafes"], eventKeywords: ["coffee", "cafe"] },
   { id: "tea-meetups", label: "Tea", category: "foodDrinksVenues", eventKeywords: ["tea", "cafe"] },
   { id: "dessert-spots", label: "Dessert spots", category: "foodDrinksVenues", eventKeywords: ["dessert", "ice cream", "gelato"] },
   { id: "restaurants", label: "Restaurants", category: "foodDrinksVenues", eventKeywords: ["restaurant", "food"] },

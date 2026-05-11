@@ -6,7 +6,7 @@ import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity
 import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
 import { ScreenContainer } from "@/components/screen-container";
 import type { NsnBlurLevel, NsnComfortMode, ProfileGender, SoftHelloIntent } from "@/lib/app-settings";
-import { defaultPhotoRecordingComfortPreferences, useAppSettings } from "@/lib/app-settings";
+import { defaultPhotoRecordingComfortPreferences, defaultPhysicalContactComfortPreferences, useAppSettings } from "@/lib/app-settings";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
 import { defaultFoodBeveragePreferenceIds } from "@/lib/preferences/food-preferences";
@@ -264,6 +264,7 @@ export default function OnboardingScreen() {
       communicationPreferences: ["Low-message mode", "Details only"],
       groupSizePreference: "Small groups only",
       photoRecordingComfortPreferences: defaultPhotoRecordingComfortPreferences,
+      physicalContactComfortPreferences: defaultPhysicalContactComfortPreferences,
       verifiedButPrivate: true,
       transportationMethod: "Public transport",
       dietaryPreferences: ["No preference"],

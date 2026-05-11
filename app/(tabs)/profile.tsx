@@ -8,6 +8,7 @@ import {
   getLanguageBase,
   groupSizePreferenceOptions,
   photoRecordingComfortOptions,
+  physicalContactComfortOptions,
   socialEnergyOptions,
   type CommunicationPreference,
   type GroupSizePreference,
@@ -19,6 +20,7 @@ import {
   type ProfileShortcutLayout,
   type ProfileWidthPreference,
   type PhotoRecordingComfortPreference,
+  type PhysicalContactComfortPreference,
   type SocialEnergyPreference,
   useAppSettings,
 } from "@/lib/app-settings";
@@ -1053,6 +1055,7 @@ export default function ProfileScreen() {
     communicationPreferences,
     groupSizePreference,
     photoRecordingComfortPreferences,
+    physicalContactComfortPreferences,
     verifiedButPrivate,
     verificationLevel,
     profileShortcutLayout,
@@ -1119,6 +1122,7 @@ export default function ProfileScreen() {
   const isSoftHelloTheme = brandTheme.id === "softhello";
   const isWideLayout = width >= 880;
   const isDesktopUserOptions = width >= 760;
+  const shouldOpenFullPreferenceView = Platform.OS === "web" && width >= 900;
   const profileSectionMaxWidth = isWideProfile ? "100%" : 980;
   const profileTopCardMaxWidth = isWideProfile && isWideLayout ? 620 : isWideLayout ? 480 : brandTheme.layout.cardMaxWidth;
 
@@ -1196,9 +1200,46 @@ export default function ProfileScreen() {
     setShowProfileMenu(true);
   }, []);
 
+  const openFullPreferenceView = useCallback(
+    (section: "overview" | "comfort" | "food" | "interests" | "transport" | "contact" | "location" = "overview") => {
+      setShowPhotoMenu(false);
+      setIsVerificationReviewOpen(false);
+      setShowProfileMenu(false);
+      router.push({ pathname: "/user-preferences", params: { section } } as never);
+    },
+    [router]
+  );
+
+  const openPreferenceDestination = useCallback(
+    (
+      panel: "preferences" | "comfortTrust" | "foodBeverage" | "hobbiesInterests",
+      section: "overview" | "comfort" | "food" | "interests"
+    ) => {
+      if (shouldOpenFullPreferenceView) {
+        openFullPreferenceView(section);
+        return;
+      }
+
+      openProfileOptionsPanel(panel);
+    },
+    [openFullPreferenceView, openProfileOptionsPanel, shouldOpenFullPreferenceView]
+  );
+
   useEffect(() => {
     if (menu === "preferences") {
       openProfileOptionsPanel("preferences");
+    }
+
+    if (menu === "comfortTrust") {
+      openProfileOptionsPanel("comfortTrust");
+    }
+
+    if (menu === "foodBeverage") {
+      openProfileOptionsPanel("foodBeverage");
+    }
+
+    if (menu === "hobbiesInterests") {
+      openProfileOptionsPanel("hobbiesInterests");
     }
   }, [menu, openProfileOptionsPanel]);
 
@@ -1588,6 +1629,14 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ photoRecordingComfortPreferences: nextPreferences });
   };
 
+  const togglePhysicalContactComfortPreference = async (preference: PhysicalContactComfortPreference) => {
+    const nextPreferences = physicalContactComfortPreferences.includes(preference)
+      ? physicalContactComfortPreferences.filter((item) => item !== preference)
+      : [...physicalContactComfortPreferences, preference];
+
+    await saveSoftHelloMvpState({ physicalContactComfortPreferences: nextPreferences.length ? nextPreferences : ["Ask first"] });
+  };
+
   const toggleFoodBeveragePreference = async (preferenceId: string) => {
     const nextPreferences = foodBeveragePreferenceIds.includes(preferenceId)
       ? foodBeveragePreferenceIds.filter((item) => item !== preferenceId)
@@ -1748,6 +1797,7 @@ export default function ProfileScreen() {
       communicationPreferences: ["Low-message mode", "Details only"],
       groupSizePreference: "Small groups only",
       photoRecordingComfortPreferences: ["Ask me first", "No public posting without permission", "Prefer no screenshots of chats/profile"],
+      physicalContactComfortPreferences: ["Ask first", "Prefer personal space"],
       verifiedButPrivate: true,
       foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
       interestPreferenceIds: defaultInterestPreferenceIds,
@@ -1828,7 +1878,7 @@ export default function ProfileScreen() {
         style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
       >
         <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-          {active ? `Selected: ${option.label}` : option.label}
+          {active ? "Selected: " : ""}{option.icon ? `${option.icon} ` : ""}{option.label}
         </Text>
         {option.ageSensitive ? (
           <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>Optional 18+</Text>
@@ -1874,7 +1924,7 @@ export default function ProfileScreen() {
         style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
       >
         <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-          {active ? `Selected: ${option.label}` : option.label}
+          {active ? "Selected: " : ""}{option.icon ? `${option.icon} ` : ""}{option.label}
         </Text>
         {meta ? (
           <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={1}>{meta}</Text>
@@ -2024,6 +2074,33 @@ export default function ProfileScreen() {
         </Text>
       </View>
 
+      <View style={styles.trustFoundationGroup}>
+        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Physical contact comfort</Text>
+        <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+          Let others know what kind of greeting or personal-space boundary feels easiest. This is a preference signal, not enforcement.
+        </Text>
+        <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+          {physicalContactComfortOptions.map((option) => {
+            const active = physicalContactComfortPreferences.includes(option);
+
+            return (
+              <TouchableOpacity
+                key={option}
+                accessibilityRole="button"
+                accessibilityLabel={`Physical contact comfort ${option}`}
+                accessibilityState={{ selected: active }}
+                activeOpacity={0.78}
+                onPress={() => togglePhysicalContactComfortPreference(option)}
+              >
+                <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
+                  {active ? `Selected: ${option}` : option}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
       <TouchableOpacity
         activeOpacity={0.82}
         onPress={toggleVerifiedButPrivate}
@@ -2061,6 +2138,7 @@ export default function ProfileScreen() {
           { label: "Visibility", value: comfortMode },
           { label: "Communication", value: communicationPreferences.slice(0, 2).join(", ") || "Not set" },
           { label: "Photo comfort", value: photoRecordingComfortPreferences.slice(0, 2).join(", ") || "Ask first" },
+          { label: "Contact comfort", value: physicalContactComfortPreferences.slice(0, 2).join(", ") || "Ask first" },
           { label: "Trust status", value: verifiedButPrivate ? "Verified, private" : "Visible when shared" },
         ].map((item) => (
           <View key={item.label} style={[styles.privacySummaryItem, isDay && styles.daySoftOption]}>
@@ -2071,7 +2149,7 @@ export default function ProfileScreen() {
       </View>
       <TouchableOpacity
         activeOpacity={0.82}
-        onPress={() => openProfileOptionsPanel("comfortTrust")}
+        onPress={() => openPreferenceDestination("comfortTrust", "comfort")}
         style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
         accessibilityRole="button"
         accessibilityLabel="Manage Comfort and trust in User Options"
@@ -2218,7 +2296,14 @@ export default function ProfileScreen() {
                       <TouchableOpacity
                         key={item.title}
                         activeOpacity={0.78}
-                        onPress={() => setProfileMenuPanel(item.panel)}
+                        onPress={() => {
+                          if (item.panel === "preferences" && shouldOpenFullPreferenceView) {
+                            openFullPreferenceView("overview");
+                            return;
+                          }
+
+                          setProfileMenuPanel(item.panel);
+                        }}
                         style={styles.profileMenuItem}
                         accessibilityRole="button"
                         accessibilityLabel={item.title}
@@ -2292,7 +2377,7 @@ export default function ProfileScreen() {
                       { icon: "person.fill" as const, title: "Photo", copy: "Add, replace, or remove your profile photo.", action: () => { setShowProfileMenu(false); setShowPhotoMenu(true); } },
                       { icon: "calendar" as const, title: "Age, range & gender", copy: "Edit age, preferred age range, and optional gender.", action: () => { setShowProfileMenu(false); router.push("/settings" as any); } },
                       { icon: "location" as const, title: "Local area", copy: "Change your suburb or hide it from preview.", action: () => { setShowProfileMenu(false); setIsEditingSuburb(true); } },
-                      { icon: "interests" as const, title: "Interests", copy: "Choose first-meetup interests shown in preview.", action: () => setProfileMenuPanel("hobbiesInterests") },
+                      { icon: "interests" as const, title: "Interests", copy: "Choose first-meetup interests shown in preview.", action: () => openPreferenceDestination("hobbiesInterests", "interests") },
                       { icon: "group" as const, title: "My vibes", copy: "Update the quick feel for your social style.", action: () => { setShowProfileMenu(false); setIsEditingVibes(true); } },
                       { icon: "visibility" as const, title: "Comfort preferences", copy: "Adjust small groups, text-first and quiet preferences.", action: () => { setShowProfileMenu(false); router.push("/settings" as any); } },
                     ].map((item) => (
@@ -2360,9 +2445,24 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
                     </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity
+                        activeOpacity={0.82}
+                        onPress={() => openFullPreferenceView("overview")}
+                        style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]}
+                        accessibilityRole="button"
+                        accessibilityLabel="Open full view for user preferences"
+                      >
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop layout for categories, search, and selected summaries.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
                     <TouchableOpacity
                       activeOpacity={0.78}
-                      onPress={() => setProfileMenuPanel("comfortTrust")}
+                      onPress={() => openPreferenceDestination("comfortTrust", "comfort")}
                       style={[styles.profileMenuItem, styles.profileMenuFeaturedItem, isDay && styles.daySoftOption]}
                       accessibilityRole="button"
                       accessibilityLabel="Comfort and trust"
@@ -2379,7 +2479,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.78}
-                      onPress={() => setProfileMenuPanel("foodBeverage")}
+                      onPress={() => openPreferenceDestination("foodBeverage", "food")}
                       style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
                       accessibilityRole="button"
                       accessibilityLabel="Food and beverage preferences"
@@ -2401,7 +2501,7 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.78}
-                      onPress={() => setProfileMenuPanel("hobbiesInterests")}
+                      onPress={() => openPreferenceDestination("hobbiesInterests", "interests")}
                       style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
                       accessibilityRole="button"
                       accessibilityLabel="Hobbies and interests preferences"
@@ -2431,6 +2531,19 @@ export default function ProfileScreen() {
                         activeOpacity={0.78}
                         onPress={() => {
                           setShowProfileMenu(false);
+                          if (shouldOpenFullPreferenceView && item.route === "/transportation-preference") {
+                            openFullPreferenceView("transport");
+                            return;
+                          }
+                          if (shouldOpenFullPreferenceView && item.route === "/contact-preference") {
+                            openFullPreferenceView("contact");
+                            return;
+                          }
+                          if (shouldOpenFullPreferenceView && item.route === "/location-preference") {
+                            openFullPreferenceView("location");
+                            return;
+                          }
+
                           router.push(item.route as any);
                         }}
                         style={styles.profileMenuItem}
@@ -2452,6 +2565,15 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
                     </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("food")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Food and beverage preferences">
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop food preference layout.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Food & beverage preferences</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
@@ -2541,7 +2663,7 @@ export default function ProfileScreen() {
                                 accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
                               >
                                 <View style={styles.profileLayoutBody}>
-                                  <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{group.title}</Text>
+                                  <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{group.icon ? `${group.icon} ` : ""}{group.title}</Text>
                                   <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{group.copy}</Text>
                                 </View>
                                 <View style={[styles.foodPreferenceGroupHeaderMeta, isRtl && styles.rtlRow]}>
@@ -2593,6 +2715,15 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
                     </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("interests")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Hobbies and interests">
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop interests layout.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Hobbies & interests</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
@@ -2737,7 +2868,7 @@ export default function ProfileScreen() {
                                 accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
                               >
                                 <View style={styles.profileLayoutBody}>
-                                  <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{category.title}</Text>
+                                  <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{category.icon ? `${category.icon} ` : ""}{category.title}</Text>
                                   <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{category.copy}</Text>
                                 </View>
                                 <View style={[styles.foodPreferenceGroupHeaderMeta, isRtl && styles.rtlRow]}>
@@ -2778,6 +2909,15 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
                     </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("comfort")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Comfort and trust">
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop comfort and trust layout.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Comfort & trust</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
@@ -3126,6 +3266,27 @@ export default function ProfileScreen() {
                     activeOpacity={0.78}
                     onPress={() => {
                       setShowProfileMenu(false);
+                      if (shouldOpenFullPreferenceView && item.route === "/transportation-preference") {
+                        openFullPreferenceView("transport");
+                        return;
+                      }
+                      if (shouldOpenFullPreferenceView && item.route === "/contact-preference") {
+                        openFullPreferenceView("contact");
+                        return;
+                      }
+                      if (shouldOpenFullPreferenceView && item.route === "/location-preference") {
+                        openFullPreferenceView("location");
+                        return;
+                      }
+                      if (shouldOpenFullPreferenceView && item.route === "/food-preferences") {
+                        openFullPreferenceView("food");
+                        return;
+                      }
+                      if (shouldOpenFullPreferenceView && item.route === "/hobbies-interests") {
+                        openFullPreferenceView("interests");
+                        return;
+                      }
+
                       router.push(item.route as any);
                     }}
                     style={styles.profileMenuItem}
@@ -4149,12 +4310,27 @@ export default function ProfileScreen() {
                 activeOpacity={0.78}
                 onPress={() => {
                   if (row.key === "foodPreferences") {
-                    openProfileOptionsPanel("foodBeverage");
+                    openPreferenceDestination("foodBeverage", "food");
                     return;
                   }
 
                   if (row.key === "hobbiesInterests") {
-                    openProfileOptionsPanel("hobbiesInterests");
+                    openPreferenceDestination("hobbiesInterests", "interests");
+                    return;
+                  }
+
+                  if (row.key === "transportation" && shouldOpenFullPreferenceView) {
+                    openFullPreferenceView("transport");
+                    return;
+                  }
+
+                  if (row.key === "contactPreference" && shouldOpenFullPreferenceView) {
+                    openFullPreferenceView("contact");
+                    return;
+                  }
+
+                  if (row.key === "locationPreference" && shouldOpenFullPreferenceView) {
+                    openFullPreferenceView("location");
                     return;
                   }
 
