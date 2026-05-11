@@ -1,9 +1,9 @@
 import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
-import { getLanguageBase, type CardOutlineStyle, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
+import { defaultHomeSectionOrder, defaultHomeVisibleSections, getLanguageBase, type CardOutlineStyle, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -219,12 +219,12 @@ const noiseGuideTranslations = {
 
 const eventLivePreviews: Record<string, { photo: string; place: string; pulse: string }> = {
   "picnic-easy-hangout": {
-    photo: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=280&q=80",
+    photo: "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=420&q=82",
     place: "Lane Cove",
     pulse: "Live 2",
   },
   "beach-day-chill-vibes": {
-    photo: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=280&q=80",
+    photo: "https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&w=420&q=82",
     place: "Palm Beach",
     pulse: "Live 5",
   },
@@ -244,7 +244,7 @@ const eventLivePreviews: Record<string, { photo: string; place: string; pulse: s
     pulse: "Live 4",
   },
   "movie-night-watch-chat": {
-    photo: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=280&q=80",
+    photo: "https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=420&q=82",
     place: "Macquarie",
     pulse: "Live 6",
   },
@@ -525,7 +525,12 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
         { backgroundColor: event.imageTone },
       ]}>
         {shouldUsePreviewImage && livePreview ? (
-          <Image source={{ uri: livePreview.photo }} style={styles.eventPreviewPhoto} />
+          <>
+            <Image source={{ uri: livePreview.photo }} style={styles.eventPreviewPhoto} />
+            <View style={styles.eventPreviewOverlay}>
+              <Text style={styles.eventPreviewPlace} numberOfLines={1}>{livePreview.place}</Text>
+            </View>
+          </>
         ) : (
           <Text style={[styles.eventEmoji, density === "Compact" && styles.eventEmojiCompact]}>{event.emoji}</Text>
         )}
@@ -975,13 +980,16 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, dateFormatPreference, showWeekday, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
+  const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, dateFormatPreference, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
   const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const locale = appLocaleMap[appLanguage] ?? appLocaleMap[appLanguageBase] ?? "en-AU";
+  const shouldAutoFitDashboard = viewportWidth >= 900 && viewportHeight <= 820;
+  const effectiveHomeLayoutDensity = shouldAutoFitDashboard ? "Compact" : homeLayoutDensity;
   
   const mode = isNightMode ? "night" : "day"; // State
   const [activeFilter, setActiveFilter] = useState<EventFilter>("All");
@@ -1107,6 +1115,29 @@ export default function HomeScreen() {
     showPrototypeUpdate("Outline style saved locally");
   };
 
+  const restoreDefaultDashboardLayout = () => {
+    saveSoftHelloMvpState({
+      homeViewMode: "Essential",
+      homeNearbyOnly: false,
+      homeSmallGroupsOnly: false,
+      homeWeatherSafeOnly: false,
+      homeEventLayout: "List",
+      homeLayoutDensity: "Compact",
+      homeHeaderControlsDensity: "Comfortable",
+      homeCardLayout: "Vertical list",
+      homeEventVisualMode: "Preview image",
+      homeVisibleSections: defaultHomeVisibleSections,
+      homeSectionOrder: defaultHomeSectionOrder,
+      dayNightModePreference: "Follow selected suburb/local time",
+      cardOutlineStyle: "Strong",
+      showWeekday: true,
+    });
+    setActiveFilter("All");
+    setShowHiddenEvents(false);
+    setOpenHomePanel("preferences");
+    showPrototypeUpdate("Default dashboard restored");
+  };
+
   const updateHomeSection = (key: HomeSectionKey, value: boolean) => {
     saveSoftHelloMvpState({ homeVisibleSections: { ...homeVisibleSections, [key]: value } });
     showPrototypeUpdate("Home sections updated locally");
@@ -1141,7 +1172,7 @@ export default function HomeScreen() {
     [appLanguageBase, nsnSearchQuery, searchableMeetups]
   );
   const isMeetupSearch = homeSearchMode === "meetups" && Boolean(normalizedNsnSearchQuery);
-  const recommendedEventLimit = homeViewMode === "Essential" ? 3 : 5;
+  const recommendedEventLimit = shouldAutoFitDashboard || homeViewMode === "Essential" ? 3 : 5;
   const displayedEvents = isMeetupSearch ? matchingMeetups : activeEvents.slice(0, recommendedEventLimit);
   const hasNoMeetupSearchResults = isMeetupSearch && matchingMeetups.length === 0;
   const hasNoFilteredEvents = !isMeetupSearch && activeEvents.length === 0;
@@ -1334,7 +1365,7 @@ export default function HomeScreen() {
     locale,
     timeZone: localTimeZone,
     dateFormatPreference,
-    showWeekday,
+    showWeekday: true,
   });
   const formattedTime = formatPreferredTime(now, {
     locale,
@@ -1545,6 +1576,23 @@ export default function HomeScreen() {
     const headerIconSize = homeHeaderControlsDensity === "Compact" ? 20 : homeHeaderControlsDensity === "Spacious" ? 24 : 22;
     const headerToggleIconSize = homeHeaderControlsDensity === "Compact" ? 15 : homeHeaderControlsDensity === "Spacious" ? 18 : 16;
 
+    const renderDefaultDashboardControl = () => (
+      <TouchableOpacity
+        activeOpacity={0.84}
+        onPress={restoreDefaultDashboardLayout}
+        accessibilityRole="button"
+        accessibilityLabel="Restore default dashboard layout"
+        accessibilityHint="Restores the recommended NSN Home layout."
+        style={[styles.defaultDashboardButton, isDay && styles.dayLocationResultButton, outlinedButtonStyle, isRtl && styles.rtlRow]}
+      >
+        <IconSymbol name="checkmark" color={isDay ? "#284E92" : "#C7B07A"} size={18} />
+        <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
+          <Text style={[styles.defaultDashboardTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Default view</Text>
+          <Text style={[styles.defaultDashboardCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Restore the recommended NSN Home layout.</Text>
+        </View>
+      </TouchableOpacity>
+    );
+
     let hasRenderedEventSection = false;
     const renderHomeSection = (sectionKey: HomeSectionOrderKey): ReactNode => {
       if (sectionKey === "search") {
@@ -1571,7 +1619,7 @@ export default function HomeScreen() {
 
       if (sectionKey === "weather") {
         return homeVisibleSections.weather ? (
-          <View key={sectionKey} style={styles.localContextGroup}>
+          <View key={sectionKey} style={[styles.localContextGroup, shouldAutoFitDashboard && styles.localContextGroupAutoFit]}>
             <View style={styles.dashboardPair}>
             <TouchableOpacity activeOpacity={0.86} accessibilityHint={weatherMessage} style={[styles.weatherCard, styles.dashboardCard, isDay && styles.dayCard, outlinedCardStyle, isRtl && styles.rtlRow]}>
               <View style={[styles.weatherBody, isRtl && styles.rtlBlock]}>
@@ -1748,7 +1796,7 @@ export default function HomeScreen() {
       hasRenderedEventSection = true;
 
       return shouldShowModeEvents ? (
-        <View key="home-events" style={[styles.homeMajorSection, styles.dashboardWideCard, isDay && styles.dayCard, outlinedCardStyle]}>
+        <View key="home-events" style={[styles.homeMajorSection, shouldAutoFitDashboard && styles.homeMajorSectionAutoFit, styles.dashboardWideCard, isDay && styles.dayCard, outlinedCardStyle]}>
           <View style={[styles.sectionHeader, isRtl && styles.rtlRow]}>
             <View style={[styles.sectionTitleRow, isRtl && styles.rtlRow]}>
               <IconSymbol name={homeSectionIcons[activeEventSectionKey]} color={isDay ? "#284E92" : "#C7B07A"} size={18} />
@@ -1769,7 +1817,7 @@ export default function HomeScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-          <View style={[styles.cardStack, homeLayoutDensity === "Compact" && styles.cardStackCompact, homeLayoutDensity === "Spacious" && styles.cardStackSpacious]}>
+          <View style={[styles.cardStack, effectiveHomeLayoutDensity === "Compact" && styles.cardStackCompact, effectiveHomeLayoutDensity === "Spacious" && styles.cardStackSpacious]}>
             {homeEventLayout === "Map" && !isMeetupSearch ? (
               <View style={[styles.mapPreviewCard, isDay && styles.dayLocationResultButton, outlinedCardStyle, isRtl && styles.rtlRow]}>
                 <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={20} />
@@ -1784,7 +1832,7 @@ export default function HomeScreen() {
             {homeCardLayout === "Horizontal cards" ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.horizontalEventScroller, isRtl && styles.rtlRow]}>
                 {displayedEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={homeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
+                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
                 ))}
               </ScrollView>
             ) : (
@@ -1797,7 +1845,7 @@ export default function HomeScreen() {
                 ]}
               >
                 {displayedEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={homeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
+                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
                 ))}
               </View>
             )}
@@ -1832,8 +1880,9 @@ export default function HomeScreen() {
           style={styles.scrollSurface}
           contentContainerStyle={[
             styles.content,
-            homeLayoutDensity === "Compact" && styles.contentCompact,
-            homeLayoutDensity === "Spacious" && styles.contentSpacious,
+            effectiveHomeLayoutDensity === "Compact" && styles.contentCompact,
+            effectiveHomeLayoutDensity === "Spacious" && styles.contentSpacious,
+            shouldAutoFitDashboard && styles.contentAutoFit,
           ]}
           showsVerticalScrollIndicator={false}
         >
@@ -1933,7 +1982,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={[styles.localDashboardHeader, isDay && styles.dayLocalDashboardHeader, outlinedCardStyle]}>
+        <View style={[styles.localDashboardHeader, shouldAutoFitDashboard && styles.localDashboardHeaderAutoFit, isDay && styles.dayLocalDashboardHeader, outlinedCardStyle]}>
           <View style={[styles.localDashboardBody, isRtl && styles.rtlBlock]}>
             <Text style={[styles.localDashboardKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Local evening dashboard</Text>
             <Text style={[styles.greetingText, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{greeting}</Text>
@@ -1953,10 +2002,13 @@ export default function HomeScreen() {
                 <Text style={[styles.localTimeText, isDay && styles.dayHeadingText]}>{formattedTime}</Text>
               ) : null}
             </View>
-            <Text style={[styles.localDateText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{dayNightModeCopy}</Text>
+            {dayNightModePreference !== "Manual toggle" ? (
+              <Text style={[styles.localDateText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{dayNightModeCopy}</Text>
+            ) : null}
           </View>
         </View>
 
+        {homeViewMode === "Comfortable" ? (
         <TouchableOpacity
           activeOpacity={0.84}
           onPress={() => router.push("/(tabs)/alpha-walkthrough" as never)}
@@ -1976,6 +2028,7 @@ export default function HomeScreen() {
           </View>
           <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
         </TouchableOpacity>
+        ) : null}
 
         {showHomeControls || showCustomiseHome || showLayoutPreferences ? (
           <View style={[styles.homeControlsCard, isDay && styles.dayHeaderPlaceholderCard, outlinedCardStyle]}>
@@ -2004,6 +2057,7 @@ export default function HomeScreen() {
                 <Text style={[styles.homeSummaryAdjustText, isDay && styles.dayMutedText]}>Collapse Panel</Text>
               </TouchableOpacity>
             </View>
+            {renderDefaultDashboardControl()}
             {showHomeControls ? (
               <>
             <View style={styles.homeControlGroup}>
@@ -2629,6 +2683,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 112 },
   contentCompact: { paddingTop: 6, paddingBottom: 96 },
   contentSpacious: { paddingTop: 14, paddingBottom: 126 },
+  contentAutoFit: { paddingTop: 8, paddingBottom: 92 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 12 },
   headerTitle: { flex: 1, minWidth: 0 },
   headerActions: { flexShrink: 0, flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "flex-end", gap: 9, marginLeft: 12 },
@@ -2644,14 +2699,15 @@ const styles = StyleSheet.create({
   headerModeToggleOptionCompact: { width: 31, height: 30, borderRadius: 15 },
   headerModeToggleOptionSpacious: { width: 36, height: 34, borderRadius: 17 },
   headerModeToggleIcon: { color: "#FFFFFF", fontSize: 16, fontWeight: "900", lineHeight: 20 },
-  localDashboardHeader: { alignItems: "center", justifyContent: "center", borderRadius: 26, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#0F2340", paddingHorizontal: 20, paddingVertical: 24, marginBottom: 18 },
+  localDashboardHeader: { alignItems: "center", justifyContent: "center", borderRadius: 24, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#0F2340", paddingHorizontal: 20, paddingVertical: 18, marginBottom: 12 },
+  localDashboardHeaderAutoFit: { paddingVertical: 14, marginBottom: 10 },
   dayLocalDashboardHeader: { backgroundColor: "#F4F7F8", borderColor: "#B7C7DD" },
   localDashboardBody: { alignItems: "center", minWidth: 0 },
-  localDashboardKicker: { color: "#A8B7DA", fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase", marginBottom: 7 },
-  greetingText: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35, textAlign: "center" },
-  localMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 7 },
+  localDashboardKicker: { color: "#A8B7DA", fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase", marginBottom: 5 },
+  greetingText: { color: nsnColors.text, fontSize: 27, fontWeight: "900", lineHeight: 33, textAlign: "center" },
+  localMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 5 },
   localMetaText: { color: nsnColors.muted, fontSize: 14, fontWeight: "800", lineHeight: 19, textAlign: "center" },
-  localTimePill: { alignSelf: "center", minHeight: 46, flexDirection: "row", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 14, paddingVertical: 8, alignItems: "center", justifyContent: "center", marginTop: 14 },
+  localTimePill: { alignSelf: "center", minHeight: 42, flexDirection: "row", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 14, paddingVertical: 7, alignItems: "center", justifyContent: "center", marginTop: 10 },
   dayLocalTimePill: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
   localTimeText: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 23 },
   localDateText: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 7, textAlign: "center" },
@@ -2672,7 +2728,10 @@ const styles = StyleSheet.create({
   homeSummaryAdjustButton: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
   homeSummaryAdjustText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   homeCollapseButton: { minHeight: 34, borderRadius: 17, borderWidth: 1, borderColor: "#7890B8", backgroundColor: "rgba(31,78,154,0.18)", paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
-  homeControlsCard: { borderRadius: 20, borderWidth: 1, borderColor: "#38527C", backgroundColor: "rgba(16,33,58,0.94)", padding: 15, marginBottom: 14, gap: 15 },
+  homeControlsCard: { borderRadius: 20, borderWidth: 1, borderColor: "#38527C", backgroundColor: "rgba(16,33,58,0.94)", padding: 15, marginBottom: 14, gap: 12 },
+  defaultDashboardButton: { minHeight: 54, borderRadius: 16, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.14)", paddingHorizontal: 12, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 10 },
+  defaultDashboardTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  defaultDashboardCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, marginTop: 1 },
   homeControlGroup: { gap: 6 },
   homeControlGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   homeControlRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -2778,14 +2837,14 @@ const styles = StyleSheet.create({
   locationResultTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   locationResultMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, marginTop: 2 },
   activeLocationResultText: { color: nsnColors.text },
-  brandRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  nsnLogoMark: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#1590C9", alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1.25, borderColor: "rgba(255,255,255,0.28)" },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: 11 },
+  nsnLogoMark: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#1590C9", alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1.25, borderColor: "rgba(255,255,255,0.28)" },
   dayNsnLogoMark: { borderColor: "#B7C7DD" },
-  nsnLogoMoon: { position: "absolute", left: 8, top: 2, color: "#FFE074", fontSize: 16, fontWeight: "900", lineHeight: 20 },
-  nsnLogoText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 15, marginTop: 8 },
-  logo: { color: nsnColors.text, fontSize: 27, fontWeight: "900", letterSpacing: 0, lineHeight: 33 },
+  nsnLogoMoon: { position: "absolute", left: 8, top: 2, color: "#FFE074", fontSize: 17, fontWeight: "900", lineHeight: 21 },
+  nsnLogoText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 15, marginTop: 9 },
+  logo: { color: nsnColors.text, fontSize: 28, fontWeight: "900", letterSpacing: 0, lineHeight: 34 },
   moon: { color: nsnColors.day },
-  subtitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 2 },
+  subtitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 1 },
   bellButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   bellText: { color: nsnColors.text, fontSize: 20 },
   modeToggle: { alignSelf: "center", flexDirection: "row", gap: 6, borderRadius: 999, padding: 5, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#38527C", marginBottom: 16 },
@@ -2823,14 +2882,16 @@ const styles = StyleSheet.create({
   dateText: { color: nsnColors.text, fontSize: 13, lineHeight: 19 },
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   changeText: { color: "#A8B7DA", fontSize: 12, fontWeight: "700" },
-  homeSectionFlow: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 12, marginBottom: 8, width: "100%" },
-  localContextGroup: { flexGrow: 1, flexShrink: 1, flexBasis: 440, alignSelf: "stretch", gap: 12, minWidth: 0 },
+  homeSectionFlow: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 10, marginBottom: 8, width: "100%" },
+  localContextGroup: { flexGrow: 1, flexShrink: 1, flexBasis: 430, alignSelf: "stretch", gap: 10, minWidth: 0 },
+  localContextGroupAutoFit: { flexBasis: 410, gap: 9 },
   dashboardCard: { flexGrow: 1, flexShrink: 1, flexBasis: 210 },
   dashboardUtilityCard: { flexGrow: 1, flexShrink: 1, flexBasis: "100%" },
-  dashboardWideCard: { flexGrow: 1.6, flexShrink: 1, flexBasis: 560, minWidth: 0 },
-  homeMajorSection: { alignSelf: "stretch", gap: 12, borderRadius: 20, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.045)", padding: 14 },
-  dashboardPair: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
-  weatherCard: { minHeight: 100, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 20, paddingHorizontal: 15, paddingVertical: 12, backgroundColor: "#102B4E", borderWidth: 1, borderColor: "#38527C" },
+  dashboardWideCard: { flexGrow: 1.65, flexShrink: 1, flexBasis: 560, minWidth: 0 },
+  homeMajorSection: { alignSelf: "stretch", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.045)", padding: 13 },
+  homeMajorSectionAutoFit: { padding: 12, gap: 8 },
+  dashboardPair: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  weatherCard: { minHeight: 92, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 20, paddingHorizontal: 14, paddingVertical: 11, backgroundColor: "#102B4E", borderWidth: 1, borderColor: "#38527C" },
   weatherBody: { flex: 1, minWidth: 0 },
   weatherTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19 },
@@ -2839,15 +2900,15 @@ const styles = StyleSheet.create({
   weatherMetric: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15, borderRadius: 999, borderWidth: 1, borderColor: "#4D6794", paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden" },
   weatherCopy: { color: "#C7D3EA", fontSize: 11, lineHeight: 16, maxWidth: 290, marginTop: 5 },
   weatherIcon: { fontSize: 28, marginLeft: 8 },
-  todayCard: { minHeight: 92, borderRadius: 20, paddingHorizontal: 15, paddingVertical: 13, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
+  todayCard: { minHeight: 92, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
   todayTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   todayDate: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19, marginTop: 7 },
   todayCopy: { color: "#C7D3EA", fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 3 },
   todayNote: { color: "#9FB0CD", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 5 },
-  locationMapCard: { minHeight: 304, flexGrow: 1, borderRadius: 20, padding: 14, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
+  locationMapCard: { minHeight: 266, flexGrow: 1, borderRadius: 20, padding: 13, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
   locationMapTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  prototypeMapCanvas: { minHeight: 176, flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#102B4E", overflow: "hidden", marginTop: 10, marginBottom: 10 },
-  prototypeMapContent: { flex: 1, minHeight: 176 },
+  prototypeMapCanvas: { minHeight: 148, flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#102B4E", overflow: "hidden", marginTop: 9, marginBottom: 8 },
+  prototypeMapContent: { flex: 1, minHeight: 148 },
   dayPrototypeMapCanvas: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
   prototypeMapRoad: { position: "absolute", backgroundColor: "rgba(199,211,234,0.25)", borderRadius: 999 },
   dayPrototypeMapRoad: { backgroundColor: "rgba(86,103,122,0.28)" },
@@ -2946,6 +3007,8 @@ const styles = StyleSheet.create({
   eventImageMagazineFeatured: { width: 116 },
   eventEmoji: { fontSize: 34 },
   eventPreviewPhoto: { width: "100%", height: "100%", resizeMode: "cover" },
+  eventPreviewOverlay: { position: "absolute", left: 6, right: 6, bottom: 6, minHeight: 20, borderRadius: 9, backgroundColor: "rgba(2,8,20,0.72)", alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
+  eventPreviewPlace: { color: "#FFFFFF", fontSize: 9, fontWeight: "900", lineHeight: 12 },
   eventEmojiCompact: { fontSize: 28 },
   eventBody: { flex: 1, paddingLeft: 11, paddingRight: 4 },
   eventBodyStacked: { paddingLeft: 0, paddingRight: 0 },

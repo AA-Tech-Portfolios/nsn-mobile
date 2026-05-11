@@ -20,12 +20,12 @@ export function formatPreferredDate(date: Date, context: DateContext) {
 
   if (context.dateFormatPreference === "Device / locale") {
     return date.toLocaleDateString(context.locale, {
-      ...(context.showWeekday ? { weekday: "short" as const } : {}),
+      ...(context.showWeekday ? { weekday: "long" as const } : {}),
       day: "numeric",
       month: "long",
       year: "numeric",
       ...timeZone,
-    });
+    }).replace(",", "");
   }
 
   const parts = new Intl.DateTimeFormat("en-AU", {
@@ -40,7 +40,7 @@ export function formatPreferredDate(date: Date, context: DateContext) {
   const shortYear = year.slice(-2);
   const weekday = context.showWeekday
     ? `${new Intl.DateTimeFormat(context.locale, {
-        weekday: "short",
+        weekday: "long",
         ...timeZone,
       }).format(date)} `
     : "";
