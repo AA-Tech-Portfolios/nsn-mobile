@@ -99,6 +99,11 @@
 - [ ] Explore broad background-based suggestions for study groups, volunteering meetups, and shared industry conversation starters without exposing exact institutions or routines
 - [ ] Add stale-profile reminders for optional work, study, volunteering, and life-context details without nagging users
 - [ ] Expand profile freshness controls so users can review, hide, or refresh broad context when it may be outdated
+- [ ] Explore privacy-safe calendar integration only after alpha feedback, with local-only controls and clear opt-in copy
+- [ ] Add Australian public holiday data by state/region before using holidays for meetup suggestions
+- [ ] Explore cultural event suggestions and a local Sydney/North Shore event feed without assuming everyone participates
+- [ ] Add privacy-safe reminders around selected calendar moments, observances, and quiet-plan seasons
+- [ ] Gather tester feedback on whether sensitive calendar preferences feel respectful, useful, and easy to hide
 - [ ] Expand the interest taxonomy after tester feedback on categories, wording, and missing local activities
 - [ ] Gather user feedback on whether Hobbies & Interests feels useful, calm, and not profile-heavy
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made

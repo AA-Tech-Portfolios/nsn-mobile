@@ -52,6 +52,16 @@ import {
   type FoodPreferenceGroupId,
 } from "@/lib/preferences/food-preferences";
 import {
+  calendarMomentGroups,
+  calendarMomentStateOptions,
+  calendarMomentVisibilityOptions,
+  getCalendarMomentGroupOptions,
+  getSelectedCalendarMomentLabels,
+  searchCalendarMoments,
+  type CalendarMomentPreference,
+  type CalendarMomentState,
+} from "@/lib/preferences/calendar-moments";
+import {
   getInterestCategorySelectedCount,
   getInterestComfortTagLabels,
   getInterestOptionsByCategory,
@@ -73,7 +83,7 @@ import {
   type PreferenceOptionDetail,
 } from "@/lib/preferences/preference-panel-options";
 
-type PreferenceSection = "overview" | "comfort" | "background" | "food" | "interests" | "transport" | "contact" | "location";
+type PreferenceSection = "overview" | "comfort" | "background" | "calendar" | "food" | "interests" | "transport" | "contact" | "location";
 
 const preferenceSections: Record<PreferenceSection, { icon: string; title: string; copy: string }> = {
   overview: {
@@ -87,9 +97,14 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
     copy: "Visibility, social energy, communication, group size, verification, photo comfort, and physical contact preferences in one calmer view.",
   },
   background: {
-    icon: "ðŸŒ±",
+    icon: "🎓",
     title: "Work, study & life context",
     copy: "Share what you're doing, learning, or interested in - only if you want to. Keep it broad, optional, and privacy-controlled.",
+  },
+  calendar: {
+    icon: "📅",
+    title: "Calendar & cultural moments",
+    copy: "Choose events, holidays, or local moments that matter to you, so NSN can suggest more comfortable plans.",
   },
   food: {
     icon: "🍽️",
@@ -122,6 +137,7 @@ const compactPanelBySection: Record<PreferenceSection, string> = {
   overview: "preferences",
   comfort: "comfortTrust",
   background: "backgroundCommunity",
+  calendar: "calendarMoments",
   food: "foodBeverage",
   interests: "hobbiesInterests",
   transport: "transportPreferences",
@@ -137,6 +153,7 @@ const normalizePreferenceSection = (section?: string | string[]): PreferenceSect
 
   return value === "comfort" ||
     value === "background" ||
+    value === "calendar" ||
     value === "food" ||
     value === "interests" ||
     value === "transport" ||
@@ -173,6 +190,9 @@ export default function UserPreferencesScreen() {
     lifeContextLearningVisibility,
     lifeContextLastUpdatedAt,
     verifiedButPrivate,
+    calendarMomentStates,
+    calendarMomentVisibility,
+    customCalendarMoments,
     foodBeveragePreferenceIds,
     interestPreferenceIds,
     interestComfortTagsByInterest,
@@ -198,6 +218,8 @@ export default function UserPreferencesScreen() {
   const [activeSection, setActiveSection] = useState<PreferenceSection>(() => normalizePreferenceSection(section));
   const [foodSearch, setFoodSearch] = useState("");
   const [interestSearch, setInterestSearch] = useState("");
+  const [calendarSearch, setCalendarSearch] = useState("");
+  const [customCalendarMomentDraft, setCustomCalendarMomentDraft] = useState("");
   const [openFoodGroups, setOpenFoodGroups] = useState<FoodPreferenceGroupId[]>(foodPreferenceGroups.filter((group) => group.defaultOpen).map((group) => group.id));
   const [showAllFoodGroups, setShowAllFoodGroups] = useState<FoodPreferenceGroupId[]>([]);
   const [openInterestCategories, setOpenInterestCategories] = useState<InterestCategoryId[]>(interestCategories.filter((category) => category.defaultOpen).map((category) => category.id));
@@ -215,6 +237,10 @@ export default function UserPreferencesScreen() {
 
   const selectedFoodLabels = useMemo(() => getSelectedFoodPreferenceLabels(foodBeveragePreferenceIds, 10), [foodBeveragePreferenceIds]);
   const selectedInterestLabels = useMemo(() => getSelectedInterestLabels(interestPreferenceIds, 10), [interestPreferenceIds]);
+  const selectedCalendarMomentLabels = useMemo(
+    () => getSelectedCalendarMomentLabels(calendarMomentStates, customCalendarMoments, 10),
+    [calendarMomentStates, customCalendarMoments]
+  );
   const selectedInterestOptions = useMemo(
     () => interestPreferenceIds.map((id) => getInterestPreference(id)).filter((option): option is InterestPreference => Boolean(option)),
     [interestPreferenceIds]
@@ -222,6 +248,7 @@ export default function UserPreferencesScreen() {
   const activeInterestForComfort = activeInterestComfortId ? getInterestPreference(activeInterestComfortId) : null;
   const foodSearchResults = useMemo(() => searchFoodBeveragePreferences(foodSearch), [foodSearch]);
   const interestSearchResults = useMemo(() => searchInterestPreferences(interestSearch), [interestSearch]);
+  const calendarSearchResults = useMemo(() => searchCalendarMoments(calendarSearch, customCalendarMoments), [calendarSearch, customCalendarMoments]);
   const activeMeta = preferenceSections[activeSection];
   const lifeContextFreshness = useMemo(() => getLifeContextFreshnessLabel(lifeContextLastUpdatedAt), [lifeContextLastUpdatedAt]);
 
@@ -339,6 +366,45 @@ export default function UserPreferencesScreen() {
 
   const toggleLifeContextLearningInterest = async (preference: LifeContextLearningPreference) => {
     await saveSoftHelloMvpState({ lifeContextLearningInterests: toggleBackgroundListItem(lifeContextLearningInterests, preference) });
+  };
+
+  const updateCalendarMomentState = async (momentId: string, state: CalendarMomentState) => {
+    if (customCalendarMoments.some((moment) => moment.id === momentId)) {
+      await saveSoftHelloMvpState({
+        customCalendarMoments: customCalendarMoments.map((moment) =>
+          moment.id === momentId ? { ...moment, state } : moment
+        ),
+      });
+      return;
+    }
+
+    const nextStates = { ...calendarMomentStates };
+
+    if (nextStates[momentId] === state) {
+      delete nextStates[momentId];
+    } else {
+      nextStates[momentId] = state;
+    }
+
+    await saveSoftHelloMvpState({ calendarMomentStates: nextStates });
+  };
+
+  const addCustomCalendarMoment = async () => {
+    const label = customCalendarMomentDraft.trim();
+    if (!label) return;
+
+    await saveSoftHelloMvpState({
+      customCalendarMoments: [
+        ...customCalendarMoments,
+        {
+          id: `custom-${Date.now()}`,
+          label: label.slice(0, 80),
+          state: "Interested",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    });
+    setCustomCalendarMomentDraft("");
   };
 
   const updateBackgroundVisibility = async (
@@ -468,6 +534,38 @@ export default function UserPreferencesScreen() {
       onPress: () => toggleInterestPreference(option.id),
     });
 
+  const renderCalendarMoment = (moment: CalendarMomentPreference) => {
+    const activeState = calendarMomentStates[moment.id] ?? customCalendarMoments.find((item) => item.id === moment.id)?.state;
+
+    return (
+      <View key={moment.id} style={[styles.momentRow, isDay && styles.dayChip]}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardIcon}>{moment.icon ?? "📅"}</Text>
+          <View style={styles.cardBody}>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{moment.label}</Text>
+            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{moment.copy}</Text>
+          </View>
+          {activeState ? <Text style={[styles.countBadge, isDay && styles.daySummaryChip]}>{activeState}</Text> : null}
+        </View>
+        <View style={styles.chipGrid}>
+          {calendarMomentStateOptions.map((option) => {
+            const active = activeState === option.value;
+
+            return renderChip({
+              key: `${moment.id}-${option.value}`,
+              label: option.value,
+              icon: option.icon,
+              active,
+              onPress: () => updateCalendarMomentState(moment.id, option.value),
+              meta: option.copy,
+              wide: true,
+            });
+          })}
+        </View>
+      </View>
+    );
+  };
+
   const renderSectionCard = (title: string, copy: string, icon: string, children: ReactNode) => (
     <View key={title} style={[styles.card, isWide && styles.cardWide, isDay && styles.dayCard]}>
       <View style={styles.cardHeader}>
@@ -527,12 +625,13 @@ export default function UserPreferencesScreen() {
 
   const overviewCards = [
     { section: "comfort" as const, title: "Comfort & trust", icon: "🛡️", copy: `${comfortMode} / ${socialEnergyPreference} energy / ${groupSizePreference}`, meta: "Visibility, contact, verification, and consent." },
+    { section: "calendar" as const, title: "Calendar & cultural moments", icon: "📅", copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
     { section: "food" as const, title: "Food & beverage", icon: "🍽️", copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
     { section: "interests" as const, title: "Hobbies & interests", icon: "🎨", copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.join(", ") || "Activities, genres, and comfort-aware tags." },
     { section: "transport" as const, title: "Transportation method", icon: "🚆", copy: getPreferenceSummary(transportationPreferences, transportationMethod), meta: "Arrival comfort, route access, and travel pressure." },
     { section: "contact" as const, title: "Contact preference", icon: "💬", copy: getPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"), meta: "How you prefer pre-meetup communication." },
     { section: "location" as const, title: "Location preference", icon: "📍", copy: getPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"), meta: "Local area, venue comfort, and location privacy." },
-    { section: "background" as const, title: "Work, study & life context", icon: "ðŸŒ±", copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary || "Broad work, study, learning, and volunteering context with visibility controls." },
+    { section: "background" as const, title: "Work, study & life context", icon: "🎓", copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary || "Broad work, study, learning, and volunteering context with visibility controls." },
   ];
 
   return (
@@ -872,6 +971,92 @@ export default function UserPreferencesScreen() {
           </View>
         ) : null}
 
+        {activeSection === "calendar" ? (
+          <View style={styles.preferenceStack}>
+            <View style={[styles.searchCard, isDay && styles.dayCard]}>
+              <View style={[styles.searchBox, isDay && styles.dayInput]}>
+                <IconSymbol name="magnifyingglass" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                <TextInput
+                  value={calendarSearch}
+                  onChangeText={setCalendarSearch}
+                  placeholder="Search quiet, festival, religious, school holidays..."
+                  placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                  style={[styles.searchInput, isDay && styles.dayTitle]}
+                  accessibilityLabel="Search calendar and cultural moments"
+                  selectionColor="#7786FF"
+                  underlineColorAndroid="transparent"
+                />
+              </View>
+              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Selected moments</Text>
+              {renderSummary(selectedCalendarMomentLabels, "No calendar moments selected yet. Everything stays private by default.")}
+              <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                NSN uses these as comfort preferences, not assumptions. You control what appears publicly.
+              </Text>
+            </View>
+            {renderSectionCard("Visibility", "Choose how this section appears. Default is private/local-only.", "🔒", (
+              <View style={styles.chipGrid}>
+                {calendarMomentVisibilityOptions.map((option) =>
+                  renderChip({
+                    key: option,
+                    label: option,
+                    active: calendarMomentVisibility === option,
+                    onPress: () => saveSoftHelloMvpState({ calendarMomentVisibility: option }),
+                    wide: true,
+                  })
+                )}
+              </View>
+            ))}
+            {renderSectionCard("Custom moment", "Add a local, cultural, religious, or personal moment. This stays local in the prototype and does not sync to a calendar.", "✨", (
+              <>
+                <View style={[styles.searchBox, isDay && styles.dayInput]}>
+                  <TextInput
+                    value={customCalendarMomentDraft}
+                    onChangeText={setCustomCalendarMomentDraft}
+                    placeholder="Add a custom moment..."
+                    placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                    style={[styles.searchInput, isDay && styles.dayTitle]}
+                    accessibilityLabel="Custom calendar moment"
+                    selectionColor="#7786FF"
+                    underlineColorAndroid="transparent"
+                  />
+                </View>
+                <TouchableOpacity activeOpacity={0.78} onPress={addCustomCalendarMoment} style={[styles.showMoreButton, isDay && styles.dayChip]} accessibilityRole="button" accessibilityLabel="Add custom calendar moment">
+                  <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>Add local moment</Text>
+                </TouchableOpacity>
+              </>
+            ))}
+            {calendarSearch.trim() ? (
+              renderSectionCard("Search results", "Matching holidays, cultural events, local festivals, personal seasons, and keywords.", "🔎", (
+                calendarSearchResults.length ? <View style={styles.momentStack}>{calendarSearchResults.map(renderCalendarMoment)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching moment yet. Try another holiday, festival, observance, or keyword.</Text>
+              ))
+            ) : (
+              <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+                {calendarMomentGroups.map((group) =>
+                  renderSectionCard(group.title, group.copy, group.icon, (
+                    <View style={styles.momentStack}>
+                      {getCalendarMomentGroupOptions(group.id).map(renderCalendarMoment)}
+                      {group.id === "personal" && customCalendarMoments.map((moment) =>
+                        renderCalendarMoment({
+                          id: moment.id,
+                          label: moment.label,
+                          group: "personal",
+                          icon: "✨",
+                          copy: "Custom calendar moment saved locally in this prototype.",
+                        })
+                      )}
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+            {renderSectionCard("Prototype recommendation notes", "Later, these preferences can help suggest cultural festival ideas, quiet plans during busy holidays, alcohol-free or cafe options during observances, and local Sydney/North Shore moments.", "🧭", (
+              <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                No production calendar integration, public holiday feed, or event recommendation engine is connected yet.
+              </Text>
+            ))}
+          </View>
+        ) : null}
+
         {activeSection === "food" ? (
           <View style={styles.preferenceStack}>
             <View style={[styles.searchCard, isDay && styles.dayCard]}>
@@ -1184,6 +1369,8 @@ const styles = StyleSheet.create({
   chipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   chipText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   chipMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "700", lineHeight: 16, marginTop: 2 },
+  momentStack: { gap: 10 },
+  momentRow: { borderRadius: 15, borderWidth: 1, borderColor: "#3C5277", backgroundColor: "rgba(255,255,255,0.025)", padding: 12, gap: 10 },
   searchCard: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 12 },
   searchBox: { minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 12 },
   searchInput: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "800" },

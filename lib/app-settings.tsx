@@ -12,6 +12,17 @@ import {
 } from "./softhello-mvp";
 import type { NoiseLevel } from "./nsn-data";
 import { getBrandTheme, normalizeBrandThemeId, type BrandThemeId } from "./brand-theme";
+import {
+  defaultCalendarMomentStates,
+  defaultCalendarMomentVisibility,
+  defaultCustomCalendarMoments,
+  normalizeCalendarMomentStates,
+  normalizeCalendarMomentVisibility,
+  normalizeCustomCalendarMoments,
+  type CalendarMomentStates,
+  type CalendarMomentVisibility,
+  type CustomCalendarMoment,
+} from "./preferences/calendar-moments";
 import { defaultFoodBeveragePreferenceIds, normalizeFoodBeveragePreferenceIds } from "./preferences/food-preferences";
 import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds, normalizeInterestComfortTagsByInterest, normalizeInterestPreferenceIds } from "./preferences/interests";
 
@@ -788,6 +799,9 @@ type OnboardingSnapshot = {
   lifeContextLearningVisibility?: BackgroundVisibilityPreference;
   lifeContextLastUpdatedAt?: string | null;
   verifiedButPrivate?: boolean;
+  calendarMomentStates?: CalendarMomentStates;
+  calendarMomentVisibility?: CalendarMomentVisibility;
+  customCalendarMoments?: CustomCalendarMoment[];
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
   foodBeveragePreferenceIds?: string[];
@@ -1089,6 +1103,12 @@ type AppSettings = {
   setLifeContextLastUpdatedAt: (value: string | null) => void;
   verifiedButPrivate: boolean;
   setVerifiedButPrivate: (value: boolean) => void;
+  calendarMomentStates: CalendarMomentStates;
+  setCalendarMomentStates: (value: CalendarMomentStates) => void;
+  calendarMomentVisibility: CalendarMomentVisibility;
+  setCalendarMomentVisibility: (value: CalendarMomentVisibility) => void;
+  customCalendarMoments: CustomCalendarMoment[];
+  setCustomCalendarMoments: (value: CustomCalendarMoment[]) => void;
   dietaryPreferences: DietaryPreference[];
   setDietaryPreferences: (value: DietaryPreference[]) => void;
   foodBeveragePreferenceIds: string[];
@@ -1291,6 +1311,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [lifeContextLearningVisibility, setLifeContextLearningVisibility] = useState<BackgroundVisibilityPreference>("Matched/shared visibility only");
   const [lifeContextLastUpdatedAt, setLifeContextLastUpdatedAt] = useState<string | null>(null);
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
+  const [calendarMomentStates, setCalendarMomentStates] = useState<CalendarMomentStates>(defaultCalendarMomentStates);
+  const [calendarMomentVisibility, setCalendarMomentVisibility] = useState<CalendarMomentVisibility>(defaultCalendarMomentVisibility);
+  const [customCalendarMoments, setCustomCalendarMoments] = useState<CustomCalendarMoment[]>(defaultCustomCalendarMoments);
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
   const [transportationPreferences, setTransportationPreferences] = useState<TransportationPreference[]>(defaultTransportationPreferences);
@@ -1442,6 +1465,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setLifeContextLearningVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only"));
         setLifeContextLastUpdatedAt(normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt));
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
+        setCalendarMomentStates(normalizeCalendarMomentStates(snapshot.calendarMomentStates));
+        setCalendarMomentVisibility(normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility));
+        setCustomCalendarMoments(normalizeCustomCalendarMoments(snapshot.customCalendarMoments));
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setTransportationPreferences(normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences));
         setMeetupContactPreferences(normalizeSelectablePreferenceList(snapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences));
@@ -1573,6 +1599,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextLifeContextLastUpdatedAt =
       normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt) ??
       (nextLifeContextCurrentStates.length || nextLifeContextFields.length || nextLifeContextLearningInterests.length ? new Date().toISOString() : null);
+    const nextCalendarMomentStates = normalizeCalendarMomentStates(snapshot.calendarMomentStates);
+    const nextCalendarMomentVisibility = normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility);
+    const nextCustomCalendarMoments = normalizeCustomCalendarMoments(snapshot.customCalendarMoments);
     setSocialEnergyPreference(nextSocialEnergyPreference);
     setCommunicationPreferences(nextCommunicationPreferences);
     setGroupSizePreference(nextGroupSizePreference);
@@ -1593,6 +1622,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setLifeContextLearningInterests(nextLifeContextLearningInterests);
     setLifeContextLearningVisibility(nextLifeContextLearningVisibility);
     setLifeContextLastUpdatedAt(nextLifeContextLastUpdatedAt);
+    setCalendarMomentStates(nextCalendarMomentStates);
+    setCalendarMomentVisibility(nextCalendarMomentVisibility);
+    setCustomCalendarMoments(nextCustomCalendarMoments);
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
     const nextTransportationPreferences = normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences);
@@ -1684,6 +1716,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           lifeContextLearningInterests: nextLifeContextLearningInterests,
           lifeContextLearningVisibility: nextLifeContextLearningVisibility,
           lifeContextLastUpdatedAt: nextLifeContextLastUpdatedAt,
+          calendarMomentStates: nextCalendarMomentStates,
+          calendarMomentVisibility: nextCalendarMomentVisibility,
+          customCalendarMoments: nextCustomCalendarMoments,
           verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
           transportationPreferences: nextTransportationPreferences,
           meetupContactPreferences: nextMeetupContactPreferences,
@@ -1777,6 +1812,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       lifeContextLearningVisibility,
       lifeContextLastUpdatedAt,
       verifiedButPrivate,
+      calendarMomentStates,
+      calendarMomentVisibility,
+      customCalendarMoments,
       transportationMethod,
       transportationPreferences,
       meetupContactPreferences,
@@ -1870,6 +1908,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       lifeContextTouched && snapshot.lifeContextLastUpdatedAt === undefined ? new Date().toISOString() : nextSnapshot.lifeContextLastUpdatedAt
     );
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
+    nextSnapshot.calendarMomentStates = normalizeCalendarMomentStates(nextSnapshot.calendarMomentStates);
+    nextSnapshot.calendarMomentVisibility = normalizeCalendarMomentVisibility(nextSnapshot.calendarMomentVisibility);
+    nextSnapshot.customCalendarMoments = normalizeCustomCalendarMoments(nextSnapshot.customCalendarMoments);
     nextSnapshot.transportationPreferences = normalizeSelectablePreferenceList(nextSnapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences);
     nextSnapshot.meetupContactPreferences = normalizeSelectablePreferenceList(nextSnapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences);
     nextSnapshot.locationComfortPreferences = normalizeSelectablePreferenceList(nextSnapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences);
@@ -1975,6 +2016,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.lifeContextLearningVisibility !== undefined) setLifeContextLearningVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility));
     if (snapshot.lifeContextLastUpdatedAt !== undefined || lifeContextTouched) setLifeContextLastUpdatedAt(nextSnapshot.lifeContextLastUpdatedAt ?? null);
     if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
+    if (snapshot.calendarMomentStates !== undefined) setCalendarMomentStates(normalizeCalendarMomentStates(snapshot.calendarMomentStates));
+    if (snapshot.calendarMomentVisibility !== undefined) setCalendarMomentVisibility(normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility));
+    if (snapshot.customCalendarMoments !== undefined) setCustomCalendarMoments(normalizeCustomCalendarMoments(snapshot.customCalendarMoments));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.transportationPreferences !== undefined) setTransportationPreferences(normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences));
     if (snapshot.meetupContactPreferences !== undefined) setMeetupContactPreferences(normalizeSelectablePreferenceList(snapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences));
@@ -2310,6 +2354,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setLifeContextLastUpdatedAt,
         verifiedButPrivate,
         setVerifiedButPrivate,
+        calendarMomentStates,
+        setCalendarMomentStates,
+        calendarMomentVisibility,
+        setCalendarMomentVisibility,
+        customCalendarMoments,
+        setCustomCalendarMoments,
         transportationMethod,
         setTransportationMethod,
         transportationPreferences,

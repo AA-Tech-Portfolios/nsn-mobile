@@ -66,6 +66,16 @@ import {
   type FoodPreferenceGroupId,
 } from "@/lib/preferences/food-preferences";
 import {
+  calendarMomentGroups,
+  calendarMomentStateOptions,
+  calendarMomentVisibilityOptions,
+  getCalendarMomentGroupOptions,
+  getSelectedCalendarMomentLabels,
+  searchCalendarMoments,
+  type CalendarMomentPreference,
+  type CalendarMomentState,
+} from "@/lib/preferences/calendar-moments";
+import {
   defaultInterestComfortTagsByInterest,
   defaultInterestPreferenceIds,
   getInterestCategorySelectedCount,
@@ -114,6 +124,7 @@ type ProfileMenuPanel =
   | "preferences"
   | "comfortTrust"
   | "backgroundCommunity"
+  | "calendarMoments"
   | "foodBeverage"
   | "hobbiesInterests"
   | "transportPreferences"
@@ -1156,6 +1167,9 @@ export default function ProfileScreen() {
     lifeContextLearningVisibility,
     lifeContextLastUpdatedAt,
     verifiedButPrivate,
+    calendarMomentStates,
+    calendarMomentVisibility,
+    customCalendarMoments,
     verificationLevel,
     profileShortcutLayout,
     profileWidthPreference,
@@ -1255,6 +1269,8 @@ export default function ProfileScreen() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [profileMenuPanel, setProfileMenuPanel] = useState<ProfileMenuPanel>("main");
   const [foodPreferenceSearch, setFoodPreferenceSearch] = useState("");
+  const [calendarMomentSearch, setCalendarMomentSearch] = useState("");
+  const [customCalendarMomentDraft, setCustomCalendarMomentDraft] = useState("");
   const [openFoodPreferenceGroups, setOpenFoodPreferenceGroups] = useState<FoodPreferenceGroupId[]>(
     foodPreferenceGroups.filter((group) => group.defaultOpen).map((group) => group.id)
   );
@@ -1309,7 +1325,7 @@ export default function ProfileScreen() {
   }, []);
 
   const openFullPreferenceView = useCallback(
-    (section: "overview" | "comfort" | "background" | "food" | "interests" | "transport" | "contact" | "location" = "overview") => {
+    (section: "overview" | "comfort" | "background" | "calendar" | "food" | "interests" | "transport" | "contact" | "location" = "overview") => {
       setShowPhotoMenu(false);
       setIsVerificationReviewOpen(false);
       setShowProfileMenu(false);
@@ -1324,12 +1340,13 @@ export default function ProfileScreen() {
         | "preferences"
         | "comfortTrust"
         | "backgroundCommunity"
+        | "calendarMoments"
         | "foodBeverage"
         | "hobbiesInterests"
         | "transportPreferences"
         | "contactPreferencePanel"
         | "locationPreferencePanel",
-      section: "overview" | "comfort" | "background" | "food" | "interests" | "transport" | "contact" | "location"
+      section: "overview" | "comfort" | "background" | "calendar" | "food" | "interests" | "transport" | "contact" | "location"
     ) => {
       if (shouldOpenFullPreferenceView) {
         openFullPreferenceView(section);
@@ -1352,6 +1369,10 @@ export default function ProfileScreen() {
 
     if (menu === "backgroundCommunity") {
       openProfileOptionsPanel("backgroundCommunity");
+    }
+
+    if (menu === "calendarMoments") {
+      openProfileOptionsPanel("calendarMoments");
     }
 
     if (menu === "foodBeverage") {
@@ -1813,6 +1834,45 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ lifeContextLearningInterests: toggleBackgroundListItem(lifeContextLearningInterests, preference) });
   };
 
+  const updateCalendarMomentState = async (momentId: string, state: CalendarMomentState) => {
+    if (customCalendarMoments.some((moment) => moment.id === momentId)) {
+      await saveSoftHelloMvpState({
+        customCalendarMoments: customCalendarMoments.map((moment) =>
+          moment.id === momentId ? { ...moment, state } : moment
+        ),
+      });
+      return;
+    }
+
+    const nextStates = { ...calendarMomentStates };
+
+    if (nextStates[momentId] === state) {
+      delete nextStates[momentId];
+    } else {
+      nextStates[momentId] = state;
+    }
+
+    await saveSoftHelloMvpState({ calendarMomentStates: nextStates });
+  };
+
+  const addCustomCalendarMoment = async () => {
+    const label = customCalendarMomentDraft.trim();
+    if (!label) return;
+
+    await saveSoftHelloMvpState({
+      customCalendarMoments: [
+        ...customCalendarMoments,
+        {
+          id: `custom-${Date.now()}`,
+          label: label.slice(0, 80),
+          state: "Interested",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    });
+    setCustomCalendarMomentDraft("");
+  };
+
   const updateBackgroundVisibility = async (
     key: "backgroundStudyVisibility" | "backgroundWorkVisibility" | "backgroundCommunityVisibility",
     preference: BackgroundVisibilityPreference
@@ -2096,6 +2156,9 @@ export default function ProfileScreen() {
       lifeContextLearningVisibility: "Matched/shared visibility only",
       lifeContextLastUpdatedAt: null,
       verifiedButPrivate: true,
+      calendarMomentStates: {},
+      calendarMomentVisibility: "Private",
+      customCalendarMoments: [],
       foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
       interestPreferenceIds: defaultInterestPreferenceIds,
       interestComfortTagsByInterest: defaultInterestComfortTagsByInterest,
@@ -2155,6 +2218,14 @@ export default function ProfileScreen() {
     () => getSelectedFoodPreferenceLabels(foodBeveragePreferenceIds, 8),
     [foodBeveragePreferenceIds]
   );
+  const selectedCalendarMomentLabels = useMemo(
+    () => getSelectedCalendarMomentLabels(calendarMomentStates, customCalendarMoments, 8),
+    [calendarMomentStates, customCalendarMoments]
+  );
+  const calendarMomentSearchResults = useMemo(
+    () => searchCalendarMoments(calendarMomentSearch, customCalendarMoments),
+    [calendarMomentSearch, customCalendarMoments]
+  );
   const foodPreferenceSearchResults = useMemo(
     () => searchFoodBeveragePreferences(foodPreferenceSearch),
     [foodPreferenceSearch]
@@ -2183,6 +2254,45 @@ export default function ProfileScreen() {
           <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>{option.subgroup ?? group?.title}</Text>
         ) : null}
       </TouchableOpacity>
+    );
+  };
+
+  const renderCalendarMomentCard = (moment: CalendarMomentPreference) => {
+    const customMoment = customCalendarMoments.find((item) => item.id === moment.id);
+    const activeState = calendarMomentStates[moment.id] ?? customMoment?.state;
+
+    return (
+      <View key={moment.id} style={[styles.foodPreferenceGroup, styles.calendarMomentCard, isDay && styles.daySoftOption]}>
+        <View style={[styles.foodPreferenceGroupHeader, isRtl && styles.rtlRow]}>
+          <View style={styles.profileLayoutBody}>
+            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{moment.icon ? `${moment.icon} ` : ""}{moment.label}</Text>
+            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{moment.copy}</Text>
+          </View>
+          {activeState ? <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{activeState}</Text> : null}
+        </View>
+        <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+          {calendarMomentStateOptions.map((option) => {
+            const active = activeState === option.value;
+
+            return (
+              <TouchableOpacity
+                key={`${moment.id}-${option.value}`}
+                activeOpacity={0.78}
+                onPress={() => updateCalendarMomentState(moment.id, option.value)}
+                accessibilityRole="button"
+                accessibilityLabel={`${moment.label} ${option.value}`}
+                accessibilityState={{ selected: active }}
+                style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+              >
+                <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                  {active ? `Selected: ${option.icon} ${option.value}` : `${option.icon} ${option.value}`}
+                </Text>
+                <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={1}>{option.copy}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
     );
   };
 
@@ -2608,29 +2718,31 @@ export default function ProfileScreen() {
           ? "Comfort & trust"
           : profileMenuPanel === "backgroundCommunity"
             ? "Work, study & life context"
-            : profileMenuPanel === "foodBeverage"
-              ? "Food & beverage"
-              : profileMenuPanel === "hobbiesInterests"
-                ? "Hobbies & interests"
-                : profileMenuPanel === "transportPreferences"
-                  ? "Transportation Method"
-                  : profileMenuPanel === "contactPreferencePanel"
-                    ? "Contact Preference"
-                    : profileMenuPanel === "locationPreferencePanel"
-                      ? "Location Preference"
-                      : profileMenuPanel === "display"
-                        ? "Display & layout"
-                        : profileMenuPanel === "layout"
-                          ? "Profile layout"
-                          : profileMenuPanel === "width"
-                            ? "Width settings"
-                            : profileMenuPanel === "notifications"
-                              ? "Notifications"
-                              : profileMenuPanel === "helpSupport"
-                                ? "Help & Support"
-                              : profileMenuPanel === "blockReport"
-                                ? "Block & report"
-                                : "Profile controls";
+            : profileMenuPanel === "calendarMoments"
+              ? "Calendar & cultural moments"
+              : profileMenuPanel === "foodBeverage"
+                ? "Food & beverage"
+                : profileMenuPanel === "hobbiesInterests"
+                  ? "Hobbies & interests"
+                  : profileMenuPanel === "transportPreferences"
+                    ? "Transportation Method"
+                    : profileMenuPanel === "contactPreferencePanel"
+                      ? "Contact Preference"
+                      : profileMenuPanel === "locationPreferencePanel"
+                        ? "Location Preference"
+                        : profileMenuPanel === "display"
+                          ? "Display & layout"
+                          : profileMenuPanel === "layout"
+                            ? "Profile layout"
+                            : profileMenuPanel === "width"
+                              ? "Width settings"
+                              : profileMenuPanel === "notifications"
+                                ? "Notifications"
+                                : profileMenuPanel === "helpSupport"
+                                  ? "Help & Support"
+                                : profileMenuPanel === "blockReport"
+                                  ? "Block & report"
+                                  : "Profile controls";
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -2946,7 +3058,7 @@ export default function ProfileScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Work, study and life context preferences"
                     >
-                      <IconSymbol name="badge" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+                      <IconSymbol name="life-context" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Work, study & life context</Text>
                         <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
@@ -2955,6 +3067,30 @@ export default function ProfileScreen() {
                       </View>
                       <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>
                         {backgroundCommunitySelectedCount} selected
+                      </Text>
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      onPress={() => openPreferenceDestination("calendarMoments", "calendar")}
+                      style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Calendar and cultural moments preferences"
+                    >
+                      <IconSymbol name="calendar" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Calendar & cultural moments</Text>
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
+                          Holidays, festivals, observances, and personal calendar seasons.
+                        </Text>
+                        {selectedCalendarMomentLabels.length ? (
+                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]} numberOfLines={1}>
+                            {selectedCalendarMomentLabels.join(", ")}
+                          </Text>
+                        ) : null}
+                      </View>
+                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>
+                        {selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private"}
                       </Text>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -3257,6 +3393,142 @@ export default function ProfileScreen() {
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Future matching note</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         Later, broad context can help with study groups, volunteering meetups, and shared interest prompts. No production recommendation engine is connected yet.
+                      </Text>
+                    </View>
+                  </>
+                ) : null}
+                {profileMenuPanel === "calendarMoments" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("preferences")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to user preferences">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
+                    </TouchableOpacity>
+                    {shouldOpenFullPreferenceView ? (
+                      <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("calendar")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Calendar and cultural moments">
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                          <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use the wider desktop calendar preference layout.</Text>
+                        </View>
+                        <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                      </TouchableOpacity>
+                    ) : null}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Calendar & cultural moments</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Choose events, holidays, or local moments that matter to you, so NSN can suggest more comfortable plans.
+                      </Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        NSN uses these as comfort preferences, not assumptions. You control what appears publicly.
+                      </Text>
+                    </View>
+                    <View style={styles.foodPreferenceSearchWrap}>
+                      <IconSymbol name="magnifyingglass" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <TextInput
+                        value={calendarMomentSearch}
+                        onChangeText={setCalendarMomentSearch}
+                        placeholder="Search quiet, festival, religious..."
+                        placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                        style={[styles.foodPreferenceSearchInput, isDay && styles.dayTitle]}
+                        accessibilityLabel="Search calendar and cultural moments"
+                        selectionColor="#7786FF"
+                        underlineColorAndroid="transparent"
+                      />
+                      {calendarMomentSearch ? (
+                        <TouchableOpacity activeOpacity={0.78} onPress={() => setCalendarMomentSearch("")} accessibilityRole="button" accessibilityLabel="Clear calendar moments search" style={styles.foodPreferenceClearButton}>
+                          <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={16} />
+                        </TouchableOpacity>
+                      ) : null}
+                    </View>
+                    <View style={[styles.foodPreferenceSummary, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Selected</Text>
+                      {selectedCalendarMomentLabels.length ? (
+                        <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+                          {selectedCalendarMomentLabels.map((label, index) => (
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                          ))}
+                        </View>
+                      ) : (
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>No calendar moments selected yet. Default is private.</Text>
+                      )}
+                    </View>
+                    <View style={[styles.foodPreferenceGroup, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Visibility</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Choose how this section appears.</Text>
+                      <View style={[styles.foodPreferenceChipGrid, isRtl && styles.rtlRow]}>
+                        {calendarMomentVisibilityOptions.map((option) => {
+                          const active = calendarMomentVisibility === option;
+
+                          return (
+                            <TouchableOpacity key={option} activeOpacity={0.78} onPress={() => saveSoftHelloMvpState({ calendarMomentVisibility: option })} accessibilityRole="button" accessibilityLabel={`Calendar moments visibility ${option}`} accessibilityState={{ selected: active }} style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}>
+                              <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
+                                {active ? `Selected: ${option}` : option}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
+                    <View style={[styles.foodPreferenceGroup, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Custom moment</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Add a local, cultural, religious, or personal moment. No calendar sync is connected.</Text>
+                      <View style={styles.foodPreferenceSearchWrap}>
+                        <TextInput
+                          value={customCalendarMomentDraft}
+                          onChangeText={setCustomCalendarMomentDraft}
+                          placeholder="Add a custom moment..."
+                          placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                          style={[styles.foodPreferenceSearchInput, isDay && styles.dayTitle]}
+                          accessibilityLabel="Custom calendar moment"
+                          selectionColor="#7786FF"
+                          underlineColorAndroid="transparent"
+                        />
+                      </View>
+                      <TouchableOpacity activeOpacity={0.82} onPress={addCustomCalendarMoment} style={[styles.foodPreferenceShowMoreButton, isDay && styles.daySoftOption]} accessibilityRole="button" accessibilityLabel="Add custom calendar moment">
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Add local moment</Text>
+                      </TouchableOpacity>
+                    </View>
+                    {calendarMomentSearch.trim() ? (
+                      <View style={styles.foodPreferenceAccordionStack}>
+                        <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Search results</Text>
+                        {calendarMomentSearchResults.length ? (
+                          calendarMomentSearchResults.map(renderCalendarMomentCard)
+                        ) : (
+                          <View style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No matching moment yet</Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Try another holiday, festival, observance, or keyword.</Text>
+                          </View>
+                        )}
+                      </View>
+                    ) : (
+                      <View style={styles.foodPreferenceAccordionStack}>
+                        {calendarMomentGroups.map((group) => (
+                          <View key={group.id} style={[styles.foodPreferenceGroup, isDay && styles.daySoftOption]}>
+                            <View style={[styles.foodPreferenceGroupHeader, isRtl && styles.rtlRow]}>
+                              <View style={styles.profileLayoutBody}>
+                                <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{group.icon} {group.title}</Text>
+                                <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{group.copy}</Text>
+                              </View>
+                            </View>
+                            <View style={styles.calendarMomentStack}>
+                              {getCalendarMomentGroupOptions(group.id).map(renderCalendarMomentCard)}
+                              {group.id === "personal" && customCalendarMoments.map((moment) =>
+                                renderCalendarMomentCard({
+                                  id: moment.id,
+                                  label: moment.label,
+                                  group: "personal",
+                                  icon: "✨",
+                                  copy: "Custom calendar moment saved locally in this prototype.",
+                                })
+                              )}
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Prototype recommendation note</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Later, these can help with cultural festival ideas, quiet plans during busy holidays, alcohol-free or cafe options during observances, and local Sydney/North Shore moments. No production calendar integration is connected yet.
                       </Text>
                     </View>
                   </>
@@ -5577,6 +5849,8 @@ const styles = StyleSheet.create({
   foodPreferenceChipText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   foodPreferenceChipMeta: { color: nsnColors.muted, fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 1 },
   foodPreferenceShowMoreButton: { alignSelf: "flex-start", minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, marginLeft: 10, marginBottom: 10 },
+  calendarMomentStack: { gap: 10, paddingHorizontal: 10, paddingBottom: 10 },
+  calendarMomentCard: { backgroundColor: "rgba(12, 27, 50, 0.7)" },
   interestComfortTargetRow: { marginTop: 10, marginBottom: 8 },
   interestComfortTargetChip: { minHeight: 34, maxWidth: "100%", borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, paddingVertical: 7, justifyContent: "center" },
   interestComfortTagGrid: { paddingHorizontal: 0, paddingBottom: 0, marginTop: 2 },

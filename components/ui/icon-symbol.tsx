@@ -32,6 +32,7 @@ const MAPPING = {
   palette: "palette",
   language: "translate",
   account: "manage-accounts",
+  "life-context": "school",
   location: "place",
   group: "groups",
   share: "ios-share",
