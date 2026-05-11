@@ -141,6 +141,7 @@ export type HomeVisibleSections = {
   dayEvents: boolean;
   nightEvents: boolean;
 };
+export type HomeSectionOrderKey = keyof HomeVisibleSections;
 export type DietaryPreference =
   | "No preference"
   | "Vegetarian"
@@ -162,10 +163,19 @@ export const defaultHomeVisibleSections: HomeVisibleSections = {
   nightEvents: true,
 };
 
+export const defaultHomeSectionOrder: HomeSectionOrderKey[] = ["search", "weather", "recommendedEvents", "dayEvents", "nightEvents", "noiseGuide"];
+
 const normalizeHomeVisibleSections = (value?: Partial<HomeVisibleSections> | null): HomeVisibleSections => ({
   ...defaultHomeVisibleSections,
   ...(value ?? {}),
 });
+
+const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSectionOrderKey[] => {
+  const sectionKeys = Object.keys(defaultHomeVisibleSections) as HomeSectionOrderKey[];
+  const validKeys = new Set(sectionKeys);
+  const ordered = (value ?? []).filter((key): key is HomeSectionOrderKey => validKeys.has(key));
+  return [...ordered, ...sectionKeys.filter((key) => !ordered.includes(key))];
+};
 
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
@@ -231,6 +241,8 @@ type OnboardingSnapshot = {
   homeLayoutDensity?: HomeLayoutDensity;
   homeCardLayout?: HomeCardLayout;
   homeVisibleSections?: HomeVisibleSections;
+  homeSectionOrder?: HomeSectionOrderKey[];
+  suggestNightModeInEvenings?: boolean;
   notificationSnoozed?: boolean;
   notificationSnoozePreset?: NotificationSnoozePreset;
   timezone?: TimezoneSetting;
@@ -455,6 +467,8 @@ type AppSettings = {
   setHomeCardLayout: (value: HomeCardLayout) => void;
   homeVisibleSections: HomeVisibleSections;
   setHomeVisibleSections: (value: HomeVisibleSections) => void;
+  homeSectionOrder: HomeSectionOrderKey[];
+  setHomeSectionOrder: (value: HomeSectionOrderKey[]) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
   saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
   resetOnboarding: () => Promise<void>;
@@ -484,6 +498,8 @@ type AppSettings = {
   setMeetupReminders: (value: boolean) => void;
   weatherAlerts: boolean;
   setWeatherAlerts: (value: boolean) => void;
+  suggestNightModeInEvenings: boolean;
+  setSuggestNightModeInEvenings: (value: boolean) => void;
   chatNotifications: boolean;
   setChatNotifications: (value: boolean) => void;
   quietNotifications: boolean;
@@ -585,6 +601,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [homeLayoutDensity, setHomeLayoutDensity] = useState<HomeLayoutDensity>("Comfortable");
   const [homeCardLayout, setHomeCardLayout] = useState<HomeCardLayout>("Vertical list");
   const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(defaultHomeVisibleSections);
+  const [homeSectionOrder, setHomeSectionOrder] = useState<HomeSectionOrderKey[]>(defaultHomeSectionOrder);
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
@@ -598,6 +615,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [slowerTransitions, setSlowerTransitions] = useState(false);
   const [meetupReminders, setMeetupReminders] = useState(true);
   const [weatherAlerts, setWeatherAlerts] = useState(true);
+  const [suggestNightModeInEvenings, setSuggestNightModeInEvenings] = useState(false);
   const [chatNotifications, setChatNotifications] = useState(true);
   const [quietNotifications, setQuietNotifications] = useState(false);
   const [notificationSnoozed, setNotificationSnoozed] = useState(false);
@@ -694,6 +712,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
         setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
         setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
+        setHomeSectionOrder(normalizeHomeSectionOrder(snapshot.homeSectionOrder));
+        setSuggestNightModeInEvenings(Boolean(snapshot.suggestNightModeInEvenings));
         setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
         setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
         setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
@@ -781,6 +801,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
     setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
     setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
+    setHomeSectionOrder(normalizeHomeSectionOrder(snapshot.homeSectionOrder));
+    setSuggestNightModeInEvenings(Boolean(snapshot.suggestNightModeInEvenings));
     setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
     setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
     setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
@@ -800,6 +822,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           preferredAgeMax: nextAgeRange.max,
           appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
           translationLanguage: normalizeNsnLanguage(snapshot.translationLanguage),
+          homeVisibleSections: normalizeHomeVisibleSections(snapshot.homeVisibleSections),
+          homeSectionOrder: normalizeHomeSectionOrder(snapshot.homeSectionOrder),
           timezone: normalizeTimezoneSetting(snapshot.timezone),
           hasCompletedOnboarding: true,
         } satisfies OnboardingSnapshot)
@@ -874,6 +898,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       homeLayoutDensity,
       homeCardLayout,
       homeVisibleSections,
+      homeSectionOrder,
+      suggestNightModeInEvenings,
       notificationSnoozed,
       notificationSnoozePreset,
       appLanguage,
@@ -985,6 +1011,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       setHomeVisibleSections(nextSections);
       nextSnapshot.homeVisibleSections = nextSections;
     }
+    if (snapshot.homeSectionOrder !== undefined) {
+      const nextOrder = normalizeHomeSectionOrder(snapshot.homeSectionOrder);
+      setHomeSectionOrder(nextOrder);
+      nextSnapshot.homeSectionOrder = nextOrder;
+    }
+    if (snapshot.suggestNightModeInEvenings !== undefined) setSuggestNightModeInEvenings(snapshot.suggestNightModeInEvenings);
     if (snapshot.notificationSnoozed !== undefined) setNotificationSnoozed(snapshot.notificationSnoozed);
     if (snapshot.notificationSnoozePreset !== undefined) setNotificationSnoozePreset(snapshot.notificationSnoozePreset);
     if (snapshot.appLanguage !== undefined) setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
@@ -1253,6 +1285,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeCardLayout,
         homeVisibleSections,
         setHomeVisibleSections,
+        homeSectionOrder,
+        setHomeSectionOrder,
         completeOnboarding,
         saveSoftHelloMvpState,
         resetOnboarding,
@@ -1282,6 +1316,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setMeetupReminders,
         weatherAlerts,
         setWeatherAlerts,
+        suggestNightModeInEvenings,
+        setSuggestNightModeInEvenings,
         chatNotifications,
         setChatNotifications,
         quietNotifications,

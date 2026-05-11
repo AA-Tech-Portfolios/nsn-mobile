@@ -138,6 +138,8 @@ type SettingsCopy = {
   quietNotificationsCopy?: string;
   notificationSnoozed?: string;
   notificationSnoozedCopy?: string;
+  suggestNightModeInEvenings?: string;
+  suggestNightModeInEveningsCopy?: string;
   notificationSnoozeDuration?: string;
   notificationSnoozeDurationCopy?: string;
   notificationSnoozeSafetyNote?: string;
@@ -209,6 +211,8 @@ const englishCopy: SettingsCopy = {
   quietNotificationsCopy: "Keep notification tone gentle and avoid attention-heavy alerts.",
   notificationSnoozed: "Snooze notifications",
   notificationSnoozedCopy: "Pause non-safety notifications for a set time.",
+  suggestNightModeInEvenings: "Suggest Night mode in evenings",
+  suggestNightModeInEveningsCopy: "Show a quiet Home suggestion when local time and the current mode do not match.",
   notificationSnoozeDuration: "Snooze duration",
   notificationSnoozeDurationCopy: "Safety check-ins can still appear while routine notifications are snoozed.",
   notificationSnoozeSafetyNote: "Safety check-ins stay controlled by Safety & Contact.",
@@ -2967,6 +2971,8 @@ export default function SettingsScreen() {
     setQuietNotifications,
     notificationSnoozed,
     setNotificationSnoozed,
+    suggestNightModeInEvenings,
+    setSuggestNightModeInEvenings,
     notificationSnoozePreset,
     setNotificationSnoozePreset,
     useApproximateLocation,
@@ -3402,6 +3408,7 @@ export default function SettingsScreen() {
       chatNotifications,
       quietNotifications,
       notificationSnoozed,
+      suggestNightModeInEvenings,
       useApproximateLocation,
       showDistanceInMeetups,
       allowMessageRequests,
@@ -3425,6 +3432,7 @@ export default function SettingsScreen() {
       setChatNotifications,
       setQuietNotifications,
       setNotificationSnoozed: setAndSaveNotificationSnoozed,
+      setSuggestNightModeInEvenings: (value: boolean) => saveSoftHelloMvpState({ suggestNightModeInEvenings: value }),
       setUseApproximateLocation,
       setShowDistanceInMeetups,
       setAllowMessageRequests,
