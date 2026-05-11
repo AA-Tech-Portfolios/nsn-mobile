@@ -1,5 +1,5 @@
-import { Alert, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent } from "react-native";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
@@ -43,6 +43,40 @@ const notificationSnoozeOptions: { value: NotificationSnoozePreset; label: strin
   { value: "24 hours", label: "24 hours", copy: "Take a full-day notification break." },
   { value: "Until I turn it back on", label: "Until I turn it back on", copy: "Stay snoozed until you return here." },
 ];
+const jumpIconBySection: Record<SettingsSectionJumpId, ComponentProps<typeof IconSymbol>["name"]> = {
+  settingsView: "settings",
+  batteryPerformance: "battery",
+  generalPrivacy: "visibility",
+  profileVisibility: "person.fill",
+  profilePreview: "preview",
+  nameDisplay: "badge",
+  photoBlur: "visibility.off",
+  gender: "person.fill",
+  notifications: "bell",
+  locationDiscovery: "location",
+  safetyContact: "shield",
+  accessibility: "accessibility",
+  appearance: "palette",
+  language: "language",
+  generalSettings: "account",
+};
+const prototypeBadgeBySetting: Record<string, "Prototype" | "Demo" | "Coming soon"> = {
+  privateProfile: "Prototype",
+  sameAgeGroupsOnly: "Demo",
+  revealAfterRsvp: "Prototype",
+  friendsOfFriendsOnly: "Demo",
+  notificationSnoozed: "Demo",
+  allowMessageRequests: "Demo",
+  safetyCheckIns: "Coming soon",
+  useApproximateLocation: "Prototype",
+  showDistanceInMeetups: "Demo",
+};
+const prototypeOnlyToggleKeys = new Set(["showFirstNameOnly", "sameAgeGroupsOnly", "revealAfterRsvp", "friendsOfFriendsOnly"]);
+const comingSoonToggleKeys = new Set(["safetyCheckIns"]);
+type AccountConfirmation =
+  | { kind: "deactivate"; timeline: AccountPauseTimeline }
+  | { kind: "delete" }
+  | null;
 
 type SettingsSectionJumpId =
   | "settingsView"
@@ -2970,6 +3004,9 @@ export default function SettingsScreen() {
   const [translationLanguageSearch, setTranslationLanguageSearch] = useState("");
   const [appLanguageRegionBase, setAppLanguageRegionBase] = useState<string | null>(null);
   const [translationLanguageRegionBase, setTranslationLanguageRegionBase] = useState<string | null>(null);
+  const [recentlyChangedKey, setRecentlyChangedKey] = useState<string | null>(null);
+  const [accountConfirmation, setAccountConfirmation] = useState<AccountConfirmation>(null);
+  const recentlyChangedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy: SettingsCopy = {
     ...englishCopy,
@@ -3045,6 +3082,44 @@ export default function SettingsScreen() {
   const filteredQuickJumpOptions = normalizedQuickJumpSearch
     ? quickJumpOptions.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch))
     : quickJumpOptions;
+  const showRecentlyChanged = (key: string) => {
+    if (recentlyChangedTimer.current) {
+      clearTimeout(recentlyChangedTimer.current);
+    }
+
+    setRecentlyChangedKey(key);
+    recentlyChangedTimer.current = setTimeout(() => setRecentlyChangedKey(null), 2200);
+  };
+  const getRecentStatusCopy = (key: string) =>
+    prototypeOnlyToggleKeys.has(key) || comingSoonToggleKeys.has(key) ? "Updated for this prototype" : "Saved locally";
+  const getSettingBadge = (key: string) => prototypeBadgeBySetting[key];
+  const getSettingDisabled = (key: string) => comingSoonToggleKeys.has(key);
+  const renderSettingMeta = (key: string) => {
+    const badge = getSettingBadge(key);
+    const updated = recentlyChangedKey === key;
+
+    if (!badge && !updated) return null;
+
+    return (
+      <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]} accessibilityLiveRegion="polite">
+        {badge ? (
+          <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+            {badge}
+          </Text>
+        ) : null}
+        {updated ? (
+          <Text style={[styles.recentlyChangedText, isDay && styles.dayRecentlyChangedText]}>
+            {getRecentStatusCopy(key)}
+          </Text>
+        ) : null}
+      </View>
+    );
+  };
+  const onToggleChange = (key: string, onValueChange: (value: boolean) => void) => (value: boolean) => {
+    if (getSettingDisabled(key)) return;
+    onValueChange(value);
+    showRecentlyChanged(key);
+  };
   const extraAccessibilityCopy = appLanguageBase === "Hebrew"
     ? {
         largerTouchTargets: "אזורי לחיצה גדולים",
@@ -3183,6 +3258,13 @@ export default function SettingsScreen() {
     const timer = setTimeout(() => jumpToSection("notifications"), 350);
     return () => clearTimeout(timer);
   }, [isAdvancedSettings, normalizedRequestedSection, saveSoftHelloMvpState]);
+  useEffect(() => {
+    return () => {
+      if (recentlyChangedTimer.current) {
+        clearTimeout(recentlyChangedTimer.current);
+      }
+    };
+  }, []);
   const saveBooleanPrivacy = (key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView", value: boolean) => {
     if (key === "showSuburbArea") setShowSuburbArea(value);
     if (key === "showInterests") setShowInterests(value);
@@ -3418,19 +3500,20 @@ export default function SettingsScreen() {
     saveSoftHelloMvpState({ settingsPrivacyMode: value });
   };
 
-  const deactivateAccount = (timeline: AccountPauseTimeline) => {
+  const confirmDeactivateAccount = (timeline: AccountPauseTimeline) => {
     saveSoftHelloMvpState({ accountPaused: true, accountPauseTimeline: timeline });
+    setAccountConfirmation(null);
+    Alert.alert("Prototype action only", "Your local prototype account is marked as deactivated. No real account system was changed.");
   };
 
   const reactivateAccount = () => {
     saveSoftHelloMvpState({ accountPaused: false });
+    showRecentlyChanged("reactivateAccount");
   };
 
-  const showDeleteAccountNotice = () => {
-    Alert.alert(
-      "Delete account",
-      "Accounts are not connected in the NSN pilot yet. When authentication is added, this will permanently delete your account and profile data."
-    );
+  const confirmDeleteAccount = () => {
+    setAccountConfirmation(null);
+    Alert.alert("Prototype action only", "No real account was deleted. This NSN prototype has not connected account deletion to a backend.");
   };
 
   return (
@@ -3478,6 +3561,7 @@ export default function SettingsScreen() {
                 accessibilityLabel={`Jump to ${option.label}`}
                 style={[styles.quickJumpButton, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
               >
+                <IconSymbol name={jumpIconBySection[option.id]} size={14} color={isDay ? "#3949DB" : "#9BA5FF"} />
                 <Text style={[styles.quickJumpText, isDay && styles.dayActionText, contrastTextStyle]}>{option.label}</Text>
               </TouchableOpacity>
             ))}
@@ -3518,12 +3602,15 @@ export default function SettingsScreen() {
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                {renderSettingMeta(row.key)}
               </View>
               <Switch
-                value={row.value}
-                onValueChange={row.onValueChange}
+                value={getSettingDisabled(row.key) ? false : row.value}
+                onValueChange={onToggleChange(row.key, row.onValueChange)}
+                disabled={getSettingDisabled(row.key)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
+                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
                 trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
@@ -3575,12 +3662,15 @@ export default function SettingsScreen() {
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                {renderSettingMeta(row.key)}
               </View>
               <Switch
-                value={row.value}
-                onValueChange={row.onValueChange}
+                value={getSettingDisabled(row.key) ? false : row.value}
+                onValueChange={onToggleChange(row.key, row.onValueChange)}
+                disabled={getSettingDisabled(row.key)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
+                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
                 trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
@@ -3646,10 +3736,11 @@ export default function SettingsScreen() {
                   <View style={styles.settingCopy}>
                     <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                     <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                    {renderSettingMeta(row.label)}
                   </View>
                   <Switch
                     value={row.value}
-                    onValueChange={row.onChange}
+                    onValueChange={onToggleChange(row.label, row.onChange)}
                     accessibilityLabel={row.label}
                     accessibilityHint={screenReaderHints ? row.copy : undefined}
                     trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
@@ -3792,12 +3883,15 @@ export default function SettingsScreen() {
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                {renderSettingMeta(row.key)}
               </View>
               <Switch
-                value={row.value}
-                onValueChange={row.onValueChange}
+                value={getSettingDisabled(row.key) ? false : row.value}
+                onValueChange={onToggleChange(row.key, row.onValueChange)}
+                disabled={getSettingDisabled(row.key)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
+                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
                 trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
@@ -3812,6 +3906,7 @@ export default function SettingsScreen() {
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
                   {copy.notificationSnoozeDurationCopy ?? englishCopy.notificationSnoozeDurationCopy}
                 </Text>
+                {renderSettingMeta("notificationSnoozed")}
                 <View style={[styles.snoozeOptionGrid, isRtl && styles.rtlRow]}>
                   {notificationSnoozeOptions.map((option) => {
                     const active = notificationSnoozePreset === option.value;
@@ -3852,12 +3947,15 @@ export default function SettingsScreen() {
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                {renderSettingMeta(row.key)}
               </View>
               <Switch
-                value={row.value}
-                onValueChange={row.onValueChange}
+                value={getSettingDisabled(row.key) ? false : row.value}
+                onValueChange={onToggleChange(row.key, row.onValueChange)}
+                disabled={getSettingDisabled(row.key)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
+                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
                 trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
@@ -3873,13 +3971,18 @@ export default function SettingsScreen() {
             <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < safetyRows.length - 1 && styles.rowDivider, isDay && index < safetyRows.length - 1 && styles.dayRowDivider, highContrast && index < safetyRows.length - 1 && styles.highContrastDivider]}>
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  {getSettingDisabled(row.key) ? `${row.copy} Coming soon in the prototype.` : row.copy}
+                </Text>
+                {renderSettingMeta(row.key)}
               </View>
               <Switch
-                value={row.value}
-                onValueChange={row.onValueChange}
+                value={getSettingDisabled(row.key) ? false : row.value}
+                onValueChange={onToggleChange(row.key, row.onValueChange)}
+                disabled={getSettingDisabled(row.key)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
+                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
                 trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
                 thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
               />
@@ -3912,10 +4015,11 @@ export default function SettingsScreen() {
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, boldText && styles.boldInterfaceText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                {renderSettingMeta(row.label)}
               </View>
               <Switch
                 value={row.value}
-                onValueChange={row.onValueChange}
+                onValueChange={onToggleChange(row.label, row.onValueChange)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
                 trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
@@ -3973,10 +4077,11 @@ export default function SettingsScreen() {
               <View style={styles.settingCopy}>
                 <Text style={[styles.label, largerText && styles.largeLabel, boldText && styles.boldInterfaceText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                 <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                {renderSettingMeta(row.label)}
               </View>
               <Switch
                 value={row.value}
-                onValueChange={row.onValueChange}
+                onValueChange={onToggleChange(row.label, row.onValueChange)}
                 accessibilityLabel={row.label}
                 accessibilityHint={screenReaderHints ? row.copy : undefined}
                 trackColor={{ false: isDay ? "#B8C9E6" : nsnColors.border, true: paletteAccent }}
@@ -4262,9 +4367,15 @@ export default function SettingsScreen() {
               </Text>
               <Text style={[styles.helperText, styles.deactivateSettingsCopy, largerText && styles.largeHelperText, isRtl && styles.rtlText]}>
                 {accountPaused
-                  ? `Paused for ${accountPauseTimeline}. You can return whenever you feel ready.`
-                  : "Take a temporary break from NSN. Your profile and local settings stay saved."}
+                  ? `Paused locally for ${accountPauseTimeline}. You can return whenever you feel ready.`
+                  : "Prototype-only pause. Your local profile settings stay saved, and no real account system is changed."}
               </Text>
+              <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Prototype</Text>
+                {recentlyChangedKey === "reactivateAccount" ? (
+                  <Text style={[styles.recentlyChangedText, isDay && styles.dayRecentlyChangedText]}>Saved locally</Text>
+                ) : null}
+              </View>
               {accountPaused ? (
                 <TouchableOpacity
                   activeOpacity={0.82}
@@ -4281,11 +4392,11 @@ export default function SettingsScreen() {
                     <TouchableOpacity
                       key={option.value}
                       activeOpacity={0.82}
-                      onPress={() => deactivateAccount(option.value)}
+                      onPress={() => setAccountConfirmation({ kind: "deactivate", timeline: option.value })}
                       style={styles.pauseTimelineButton}
                       accessibilityRole="button"
                       accessibilityLabel={`Deactivate account for ${option.label}`}
-                      accessibilityHint={screenReaderHints ? option.copy : undefined}
+                      accessibilityHint={screenReaderHints ? `${option.copy} Opens a prototype confirmation dialog.` : undefined}
                     >
                       <Text style={styles.pauseTimelineLabel}>{option.label}</Text>
                       <Text style={styles.pauseTimelineCopy}>{option.copy}</Text>
@@ -4297,21 +4408,74 @@ export default function SettingsScreen() {
           </View>
           <TouchableOpacity
             activeOpacity={0.78}
-            onPress={showDeleteAccountNotice}
+            onPress={() => setAccountConfirmation({ kind: "delete" })}
             accessibilityRole="button"
             accessibilityLabel="Delete account"
+            accessibilityHint="Opens a prototype confirmation dialog. No real account will be deleted."
             style={[styles.actionRow, styles.destructiveSettingsRow, isRtl && styles.rtlRow]}
           >
             <View style={styles.settingCopy}>
               <Text style={[styles.label, styles.destructiveSettingsText, largerText && styles.largeLabel, isRtl && styles.rtlText]}>Delete account</Text>
               <Text style={[styles.helperText, styles.destructiveSettingsCopy, largerText && styles.largeHelperText, isRtl && styles.rtlText]}>
-                Permanent account deletion, once accounts exist.
+                Prototype-only deletion preview. Real permanent deletion needs account systems, audit logging, and recovery policy first.
               </Text>
+              <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                <Text style={[styles.prototypeBadge, styles.destructivePrototypeBadge]}>Demo</Text>
+              </View>
             </View>
             <Text style={styles.destructiveSettingsAction}>Delete</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <Modal
+        visible={accountConfirmation !== null}
+        transparent
+        animationType={reduceMotion || batterySaver ? "none" : "fade"}
+        onRequestClose={() => setAccountConfirmation(null)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View
+            style={[styles.confirmDialog, isDay && styles.dayConfirmDialog, highContrast && styles.highContrastCard]}
+            accessibilityRole="alert"
+            accessibilityLabel={accountConfirmation?.kind === "delete" ? "Confirm delete account" : "Confirm deactivate account"}
+          >
+            <Text style={[styles.confirmTitle, isDay && styles.dayTitle]}>
+              {accountConfirmation?.kind === "delete" ? "Delete account?" : "Deactivate account?"}
+            </Text>
+            <Text style={[styles.confirmCopy, isDay && styles.daySubtitle]}>
+              {accountConfirmation?.kind === "delete"
+                ? "This is a serious account action in a real product. In this NSN prototype, confirming will only show a demo result and no real account or profile data will be deleted."
+                : `This will mark your local prototype account as paused for ${accountConfirmation?.kind === "deactivate" ? accountConfirmation.timeline : "now"}. No real account system or backend will be changed.`}
+            </Text>
+            <View style={styles.confirmActions}>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={() => setAccountConfirmation(null)}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel account action"
+                style={[styles.confirmButton, styles.cancelButton, isDay && styles.dayDropdownButton]}
+              >
+                <Text style={[styles.confirmButtonText, isDay && styles.dayLabel]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={() => {
+                  if (accountConfirmation?.kind === "deactivate") {
+                    confirmDeactivateAccount(accountConfirmation.timeline);
+                    return;
+                  }
+                  confirmDeleteAccount();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={accountConfirmation?.kind === "delete" ? "Confirm prototype delete action" : "Confirm prototype deactivate action"}
+                style={[styles.confirmButton, accountConfirmation?.kind === "delete" ? styles.confirmDestructiveButton : styles.confirmPrimaryButton]}
+              >
+                <Text style={styles.confirmPrimaryText}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -4418,8 +4582,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: nsnColors.border,
     backgroundColor: "rgba(255,255,255,0.04)",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 6,
     paddingHorizontal: 13,
   },
   dayQuickJumpButton: {
@@ -4610,6 +4776,45 @@ const styles = StyleSheet.create({
   },
   settingCopy: {
     flex: 1,
+  },
+  settingMetaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 7,
+    marginTop: 8,
+  },
+  prototypeBadge: {
+    alignSelf: "flex-start",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(155,165,255,0.55)",
+    backgroundColor: "rgba(119,134,255,0.12)",
+    color: "#C7CEFF",
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  dayPrototypeBadge: {
+    borderColor: "#9AADE8",
+    backgroundColor: "#EDF2FF",
+    color: "#3949DB",
+  },
+  destructivePrototypeBadge: {
+    borderColor: "rgba(226,61,90,0.45)",
+    backgroundColor: "rgba(226,61,90,0.1)",
+    color: "#B83A50",
+  },
+  recentlyChangedText: {
+    color: "#B8F3D0",
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+  },
+  dayRecentlyChangedText: {
+    color: "#166534",
   },
   performanceLevelRow: {
     paddingHorizontal: 18,
@@ -5014,6 +5219,75 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   disabledOption: { opacity: 0.45 },
+  modalBackdrop: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.46)",
+    padding: 20,
+  },
+  confirmDialog: {
+    width: "100%",
+    maxWidth: 440,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0B1D35",
+    padding: 20,
+  },
+  dayConfirmDialog: {
+    borderColor: "#B8C9E6",
+    backgroundColor: "#F7FBFF",
+  },
+  confirmTitle: {
+    color: nsnColors.text,
+    fontSize: 20,
+    fontWeight: "900",
+    lineHeight: 26,
+  },
+  confirmCopy: {
+    color: nsnColors.muted,
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 19,
+    marginTop: 8,
+  },
+  confirmActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 18,
+  },
+  confirmButton: {
+    minHeight: 42,
+    minWidth: 104,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+  },
+  confirmPrimaryButton: {
+    backgroundColor: "#3949DB",
+  },
+  confirmDestructiveButton: {
+    backgroundColor: "#B83A50",
+  },
+  confirmButtonText: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+  },
+  confirmPrimaryText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "900",
+  },
   blurLevelText: {
     color: nsnColors.text,
     fontSize: 12,

@@ -20,6 +20,7 @@
 - [x] Add local User menu submenus for Edit menu, Privacy guide, User preferences, Profile layout, Width settings, Notifications, Block & report, and Settings & Privacy
 - [x] Add local user preference areas for transportation, location, food, hobbies/interests, contact preference, saved places, and meetup shortcuts
 - [x] Add temporary deactivate account controls above Delete account in Settings & Privacy
+- [x] Complete Settings & Privacy prototype safety polish with jump-chip icons, local update indicators, prototype badges, disabled coming-soon states, and account action confirmations
 - [x] Capture checkpoint screenshots for Home, Meetups, Chats, Alerts, Profile, Settings & Privacy, and onboarding stages
 
 ## Next Focus
@@ -28,7 +29,7 @@
 
 - [ ] Review checkpoint screenshots for layout regressions on desktop and mobile
 - [ ] Add an alpha tester walkthrough covering onboarding, profile privacy, comfort modes, and meetup joining
-- [ ] Decide which prototype-only account actions should stay visible, be labelled as local-only, or be hidden until auth exists
+- [ ] Decide which prototype-only account actions should stay visible after tester walkthrough, be backed by real auth, or be hidden before alpha
 - [ ] Create first release tag when ready: `v0.1.0 - Trust Foundations`
 
 ### Safety and trust
