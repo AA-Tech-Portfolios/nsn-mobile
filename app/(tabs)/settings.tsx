@@ -1,5 +1,5 @@
 import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
-import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
@@ -152,6 +152,65 @@ type SettingsSectionJumpId =
   | "appearance"
   | "language"
   | "generalSettings";
+
+type SettingsAccordionId =
+  | "displayLayout"
+  | "privacyVisibility"
+  | "profileDetails"
+  | "comfortSafety"
+  | "notifications"
+  | "timeUnits"
+  | "safetyContact"
+  | "advancedDisplay"
+  | "account";
+
+const allSettingsAccordionIds: SettingsAccordionId[] = [
+  "displayLayout",
+  "privacyVisibility",
+  "profileDetails",
+  "comfortSafety",
+  "notifications",
+  "timeUnits",
+  "safetyContact",
+  "advancedDisplay",
+  "account",
+];
+
+const basicOpenSettingsAccordions: SettingsAccordionId[] = ["comfortSafety", "privacyVisibility"];
+
+const advancedOpenSettingsAccordions: SettingsAccordionId[] = ["comfortSafety", "privacyVisibility"];
+
+const accordionByJumpSection: Record<SettingsSectionJumpId, SettingsAccordionId> = {
+  settingsView: "displayLayout",
+  batteryPerformance: "displayLayout",
+  generalPrivacy: "privacyVisibility",
+  profileVisibility: "privacyVisibility",
+  trustFoundations: "comfortSafety",
+  profilePreview: "profileDetails",
+  nameDisplay: "profileDetails",
+  photoBlur: "profileDetails",
+  gender: "profileDetails",
+  notifications: "notifications",
+  locationDiscovery: "timeUnits",
+  regionalFormats: "timeUnits",
+  safetyContact: "safetyContact",
+  accessibility: "advancedDisplay",
+  appearance: "advancedDisplay",
+  language: "advancedDisplay",
+  generalSettings: "account",
+};
+
+const settingsAccordionMeta: Record<SettingsAccordionId, { title: string; copy: string; icon: ComponentProps<typeof IconSymbol>["name"] }> = {
+  displayLayout: { title: "Display & layout", copy: "View mode, battery, low-light, and layout comfort.", icon: "palette" },
+  privacyVisibility: { title: "Privacy & visibility", copy: "Profile visibility, preview details, and what others can see.", icon: "visibility" },
+  profileDetails: { title: "Profile preview details", copy: "Name, photo blur, gender, and profile preview controls.", icon: "preview" },
+  comfortSafety: { title: "Comfort & safety", copy: "Trust foundations, safety copy, and low-pressure controls.", icon: "shield" },
+  notifications: { title: "Notifications", copy: "Meetup reminders, chats, weather alerts, and snooze controls.", icon: "bell" },
+  timeUnits: { title: "Time, date & units", copy: "Local time, Day/Night logic, dates, weather units, and regional formats.", icon: "language" },
+  safetyContact: { title: "Safety & contact", copy: "Prototype-safe safety states, onboarding restart, and contact controls.", icon: "shield" },
+  advancedDisplay: { title: "Advanced display settings", copy: "Accessibility, appearance, language, and theme controls.", icon: "accessibility" },
+  account: { title: "Account", copy: "Alpha walkthrough, reset controls, and prototype account actions.", icon: "account" },
+};
 
 type SettingsCopy = {
   title: string;
@@ -2966,6 +3025,7 @@ export default function SettingsScreen() {
   const { section: requestedSection } = useLocalSearchParams<{ section?: string | string[] }>();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const sectionOffsets = useRef<Partial<Record<SettingsSectionJumpId, number>>>({});
+  const accordionOffsets = useRef<Partial<Record<SettingsAccordionId, number>>>({});
   const handledRequestedSection = useRef(false);
   const {
     isNightMode,
@@ -3107,6 +3167,8 @@ export default function SettingsScreen() {
   const [recentlyChangedKey, setRecentlyChangedKey] = useState<string | null>(null);
   const [accountConfirmation, setAccountConfirmation] = useState<AccountConfirmation>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [openAccordionSections, setOpenAccordionSections] = useState<SettingsAccordionId[]>(basicOpenSettingsAccordions);
+  const [highlightedAccordionSection, setHighlightedAccordionSection] = useState<SettingsAccordionId | null>(null);
   const recentlyChangedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy: SettingsCopy = {
@@ -3182,9 +3244,31 @@ export default function SettingsScreen() {
     { id: "generalSettings", label: "Account" },
   ];
   const normalizedQuickJumpSearch = quickJumpSearch.trim().toLocaleLowerCase();
-  const filteredQuickJumpOptions = normalizedQuickJumpSearch
-    ? quickJumpOptions.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch))
-    : quickJumpOptions;
+  const filteredQuickJumpOptions = useMemo(
+    () => normalizedQuickJumpSearch
+      ? quickJumpOptions.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch))
+      : quickJumpOptions,
+    [normalizedQuickJumpSearch, quickJumpOptions]
+  );
+  const visibleSettingsAccordionIds = useMemo(
+    () => isAdvancedSettings
+      ? allSettingsAccordionIds
+      : allSettingsAccordionIds.filter((id) => id !== "notifications" && id !== "timeUnits" && id !== "safetyContact" && id !== "advancedDisplay"),
+    [isAdvancedSettings]
+  );
+  const expandAllSettingsAccordions = () => {
+    setOpenAccordionSections(visibleSettingsAccordionIds);
+  };
+  const collapseAllSettingsAccordions = () => {
+    setOpenAccordionSections([]);
+  };
+  const toggleSettingsAccordion = (id: SettingsAccordionId) => {
+    setOpenAccordionSections((current) =>
+      current.includes(id)
+        ? current.filter((sectionId) => sectionId !== id)
+        : [...current, id]
+    );
+  };
   const showRecentlyChanged = (key: string) => {
     if (recentlyChangedTimer.current) {
       clearTimeout(recentlyChangedTimer.current);
@@ -3359,8 +3443,14 @@ export default function SettingsScreen() {
   const registerSectionLayout = (id: SettingsSectionJumpId) => (event: LayoutChangeEvent) => {
     sectionOffsets.current[id] = event.nativeEvent.layout.y;
   };
-  const jumpToSection = (id: SettingsSectionJumpId) => {
-    const y = sectionOffsets.current[id];
+  const registerAccordionLayout = (id: SettingsAccordionId) => (event: LayoutChangeEvent) => {
+    accordionOffsets.current[id] = event.nativeEvent.layout.y;
+  };
+  const scrollToSectionOrAccordion = (id: SettingsSectionJumpId) => {
+    const accordionId = accordionByJumpSection[id];
+    const sectionY = sectionOffsets.current[id];
+    const accordionY = accordionOffsets.current[accordionId];
+    const y = typeof sectionY === "number" ? sectionY : accordionY;
     if (typeof y !== "number") return;
 
     scrollViewRef.current?.scrollTo({
@@ -3368,6 +3458,78 @@ export default function SettingsScreen() {
       animated: !batterySaver && !reduceMotion,
     });
   };
+  const jumpToSection = (id: SettingsSectionJumpId) => {
+    const accordionId = accordionByJumpSection[id];
+
+    setOpenAccordionSections((current) => current.includes(accordionId) ? current : [...current, accordionId]);
+    setHighlightedAccordionSection(accordionId);
+
+    setTimeout(() => {
+      scrollToSectionOrAccordion(id);
+      setTimeout(() => setHighlightedAccordionSection(null), 1600);
+    }, 80);
+  };
+  const renderSettingsAccordion = (id: SettingsAccordionId, children: ReactNode) => {
+    if (!visibleSettingsAccordionIds.includes(id)) return null;
+
+    const meta = settingsAccordionMeta[id];
+    const expanded = openAccordionSections.includes(id);
+    const highlighted = highlightedAccordionSection === id;
+
+    return (
+      <View
+        onLayout={registerAccordionLayout(id)}
+        style={[styles.accordionSection, isDay && styles.dayAccordionSection, highContrast && styles.highContrastCard, highlighted && styles.accordionSectionHighlighted]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => toggleSettingsAccordion(id)}
+          accessibilityRole="button"
+          accessibilityLabel={`${expanded ? "Collapse" : "Expand"} ${meta.title}`}
+          accessibilityState={{ expanded }}
+          style={[styles.accordionHeader, isRtl && styles.rtlRow]}
+        >
+          <View style={[styles.accordionIcon, isDay && styles.dayQuickJumpButton]}>
+            <IconSymbol name={meta.icon} color={isDay ? "#445E93" : "#A8B7DA"} size={18} />
+          </View>
+          <View style={styles.settingCopy}>
+            <Text style={[styles.accordionTitle, largerText && styles.largeLabel, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{meta.title}</Text>
+            <Text style={[styles.accordionCopy, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{meta.copy}</Text>
+          </View>
+          <View style={styles.accordionState}>
+            <Text style={[styles.accordionStateText, isDay && styles.daySubtitle]}>{expanded ? "Open" : "Closed"}</Text>
+            <IconSymbol name={expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+          </View>
+        </TouchableOpacity>
+        {expanded ? (
+          <View style={styles.accordionBody}>
+            {children}
+          </View>
+        ) : null}
+      </View>
+    );
+  };
+  const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
+  useEffect(() => {
+    setOpenAccordionSections((current) => {
+      const valid = current.filter((id) => visibleSettingsAccordionIds.includes(id));
+      return valid.length ? valid : isAdvancedSettings ? advancedOpenSettingsAccordions : basicOpenSettingsAccordions;
+    });
+  }, [isAdvancedSettings]);
+  useEffect(() => {
+    if (!normalizedQuickJumpSearch || filteredQuickJumpOptions.length === 0) return;
+
+    const matchingSections = filteredQuickJumpOptions
+      .map((option) => accordionByJumpSection[option.id])
+      .filter((id): id is SettingsAccordionId => visibleSettingsAccordionIds.includes(id));
+    const uniqueSections = matchingSections.filter((id, index, all) => all.indexOf(id) === index);
+
+    if (!uniqueSections.length) return;
+    setOpenAccordionSections((current) => {
+      if (uniqueSections.every((id) => current.includes(id))) return current;
+      return [...new Set([...current, ...uniqueSections])];
+    });
+  }, [filteredQuickJumpOptions, normalizedQuickJumpSearch, visibleSettingsAccordionIds]);
   const scrollSettingsToTop = () => {
     scrollViewRef.current?.scrollTo({
       y: 0,
@@ -3383,7 +3545,6 @@ export default function SettingsScreen() {
       return current;
     });
   };
-  const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
   useEffect(() => {
     if (normalizedRequestedSection !== "notifications" && normalizedRequestedSection !== "regionalFormats") {
       handledRequestedSection.current = false;
@@ -3709,6 +3870,26 @@ export default function SettingsScreen() {
         <View style={[styles.quickJumpBlock, isDay && styles.dayQuickJumpBlock, highContrast && styles.highContrastCard]}>
           <View style={styles.quickJumpHeader}>
             <Text style={[styles.quickJumpTitle, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Jump to section</Text>
+            <View style={[styles.accordionQuickActions, isRtl && styles.rtlRow]}>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={expandAllSettingsAccordions}
+                accessibilityRole="button"
+                accessibilityLabel="Expand all Settings sections"
+                style={[styles.accordionQuickAction, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+              >
+                <Text style={[styles.accordionQuickActionText, isDay && styles.dayActionText]}>Expand all</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={collapseAllSettingsAccordions}
+                accessibilityRole="button"
+                accessibilityLabel="Collapse all Settings sections"
+                style={[styles.accordionQuickAction, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+              >
+                <Text style={[styles.accordionQuickActionText, isDay && styles.dayActionText]}>Collapse all</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               value={quickJumpSearch}
               onChangeText={setQuickJumpSearch}
@@ -3760,6 +3941,8 @@ export default function SettingsScreen() {
           })}
         </View>
 
+        {renderSettingsAccordion("displayLayout", (
+          <>
         <Text onLayout={registerSectionLayout("batteryPerformance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.batteryPerformance ?? englishCopy.batteryPerformance}
         </Text>
@@ -3819,7 +4002,11 @@ export default function SettingsScreen() {
             </View>
           ) : null}
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("privacyVisibility", (
+          <>
         <Text onLayout={registerSectionLayout("generalPrivacy")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           General privacy
         </Text>
@@ -3918,7 +4105,11 @@ export default function SettingsScreen() {
             </View>
           </View>
         ))}
+          </>
+        ))}
 
+        {renderSettingsAccordion("comfortSafety", (
+          <>
         <Text onLayout={registerSectionLayout("trustFoundations")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Trust foundations
         </Text>
@@ -4035,7 +4226,11 @@ export default function SettingsScreen() {
             />
           </View>
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("profileDetails", (
+          <>
         {isAdvancedSettings ? (
           <>
         <Text onLayout={registerSectionLayout("nameDisplay")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
@@ -4159,8 +4354,12 @@ export default function SettingsScreen() {
             isDay={isDay}
           />
         </View>
+          </>
+        ))}
 
         {isAdvancedSettings ? (
+          <>
+        {renderSettingsAccordion("notifications", (
           <>
         <Text onLayout={registerSectionLayout("notifications")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.notifications ?? englishCopy.notifications}
@@ -4225,7 +4424,11 @@ export default function SettingsScreen() {
             </View>
           ) : null}
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("timeUnits", (
+          <>
         <Text onLayout={registerSectionLayout("locationDiscovery")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.locationDiscovery ?? englishCopy.locationDiscovery}
         </Text>
@@ -4389,7 +4592,11 @@ export default function SettingsScreen() {
             {copy.regionalFormatsPrototypeNote ?? englishCopy.regionalFormatsPrototypeNote}
           </Text>
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("safetyContact", (
+          <>
         <Text onLayout={registerSectionLayout("safetyContact")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.safetyContact ?? englishCopy.safetyContact}
         </Text>
@@ -4434,7 +4641,11 @@ export default function SettingsScreen() {
             <Text style={[styles.actionText, isDay && styles.dayActionText]}>{copy.restartOnboardingAction ?? englishCopy.restartOnboardingAction}</Text>
           </TouchableOpacity>
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("advancedDisplay", (
+          <>
         <Text onLayout={registerSectionLayout("accessibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {allAccessibilityRows.map((row, index) => (
@@ -4796,8 +5007,12 @@ export default function SettingsScreen() {
           )}
         </View>
           </>
+        ))}
+          </>
         ) : null}
 
+        {renderSettingsAccordion("account", (
+          <>
         <Text onLayout={registerSectionLayout("generalSettings")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           General settings
         </Text>
@@ -4899,6 +5114,8 @@ export default function SettingsScreen() {
             <Text style={styles.destructiveSettingsAction}>Delete</Text>
           </TouchableOpacity>
         </View>
+          </>
+        ))}
       </ScrollView>
       {showBackToTop ? (
         <TouchableOpacity
@@ -5082,6 +5299,92 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
     lineHeight: 17,
+  },
+  accordionQuickActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  accordionQuickAction: {
+    minHeight: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  accordionQuickActionText: {
+    color: "#A8B7DA",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
+  accordionSection: {
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "#38527C",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    marginTop: 16,
+    overflow: "hidden",
+  },
+  dayAccordionSection: {
+    backgroundColor: "#F4F7F8",
+    borderColor: "#9FB2C8",
+  },
+  accordionSectionHighlighted: {
+    borderColor: "#D2E0FF",
+  },
+  accordionHeader: {
+    minHeight: 74,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  accordionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  accordionTitle: {
+    color: nsnColors.text,
+    fontSize: 16,
+    fontWeight: "900",
+    lineHeight: 22,
+  },
+  accordionCopy: {
+    color: nsnColors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  accordionState: {
+    minWidth: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 5,
+  },
+  accordionStateText: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+  },
+  accordionBody: {
+    borderTopWidth: 1,
+    borderTopColor: nsnColors.border,
+    paddingHorizontal: 12,
+    paddingBottom: 14,
   },
   backToTopButton: {
     position: "absolute",
