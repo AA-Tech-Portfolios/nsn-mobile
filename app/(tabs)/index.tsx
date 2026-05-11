@@ -3,7 +3,7 @@ import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, Tex
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
-import { getLanguageBase, type HomeEventLayout, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type HomeEventLayout, type HomeLayoutDensity, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -94,6 +94,28 @@ const homeSectionLabels: Record<HomeSectionKey, string> = {
   nightEvents: "Night events",
 };
 
+const homeDensityOptions: Array<{ value: HomeLayoutDensity; icon: string; label: string; copy: string }> = [
+  { value: "Compact", icon: "▦", label: "Compact", copy: "Tighter cards" },
+  { value: "Comfortable", icon: "▤", label: "Comfortable", copy: "Easy scan" },
+  { value: "Spacious", icon: "□", label: "Spacious", copy: "More room" },
+];
+
+const homeViewModeLabels: Record<HomeViewMode, string> = {
+  Essential: "⚡ Essential view",
+  Comfortable: "🌙 Comfortable view",
+};
+
+const homeEventLayoutLabels: Record<HomeEventLayout, string> = {
+  List: "📋 List view",
+  Map: "🗺️ Map view",
+};
+
+const homeFilterLabels = {
+  nearby: "📍 Nearby",
+  smallGroups: "👥 Small groups",
+  weatherSafe: "☀️ Weather-safe",
+};
+
 const noiseGuideTranslations = {
   English: {
     title: "Noise Level Guide",
@@ -102,7 +124,7 @@ const noiseGuideTranslations = {
     levels: {
       Quiet: { icon: "🔇", label: "Quiet", copy: "Low noise" },
       Balanced: { icon: "🌿", label: "Moderate", copy: "Moderate noise" },
-      Lively: { icon: "🔊", label: "Lively", copy: "More energy" },
+      Lively: { icon: "🎉", label: "Lively", copy: "More energy" },
     },
   },
   Chinese: {
@@ -335,13 +357,13 @@ const getNoiseTagLabel = (label: string) => (label === "Balanced" ? "Moderate so
 function EventTag({ icon, label, isDay, isRtl }: { icon: "pace" | "volume" | "volume.off" | "weather"; label: string; isDay?: boolean; isRtl?: boolean }) {
   return (
     <View style={[styles.eventTag, isDay && styles.dayEventTag, isRtl && styles.rtlRow]}>
-      <IconSymbol name={icon} color={isDay ? "#3B4A63" : nsnColors.muted} size={12} />
+      <IconSymbol name={icon} color={isDay ? "#53677A" : nsnColors.muted} size={12} />
       <Text style={[styles.eventTagText, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{label}</Text>
     </View>
   );
 }
 
-function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?: boolean; appLanguageBase: string }) {
+function EventCard({ event, isDay, appLanguageBase, density }: { event: EventItem; isDay?: boolean; appLanguageBase: string; density: HomeLayoutDensity }) {
   const router = useRouter();
   const isRtl = rtlLanguages.has(appLanguageBase);
   const localizedEvent = { ...event, ...(eventTranslations[appLanguageBase]?.[event.id] ?? {}) };
@@ -353,10 +375,16 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
     <TouchableOpacity
       activeOpacity={0.82}
       onPress={() => router.push(`/event/${event.id}`)}
-      style={[styles.eventCard, isDay ? styles.dayCard : null, isRtl && styles.rtlEventCard]}
+      style={[
+        styles.eventCard,
+        density === "Compact" && styles.eventCardCompact,
+        density === "Spacious" && styles.eventCardSpacious,
+        isDay ? styles.dayCard : null,
+        isRtl && styles.rtlEventCard,
+      ]}
     >
-      <View style={[styles.eventImage, { backgroundColor: event.imageTone }]}>
-        <Text style={styles.eventEmoji}>{event.emoji}</Text>
+      <View style={[styles.eventImage, density === "Compact" && styles.eventImageCompact, density === "Spacious" && styles.eventImageSpacious, { backgroundColor: event.imageTone }]}>
+        <Text style={[styles.eventEmoji, density === "Compact" && styles.eventEmojiCompact]}>{event.emoji}</Text>
       </View>
       <View style={styles.eventBody}>
         <View style={[styles.eventTopLine, isRtl && styles.rtlRow]}>
@@ -366,15 +394,15 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
           <Text style={[styles.eventTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]} numberOfLines={1}>{localizedEvent.title}</Text>
         </View>
         <View style={[styles.eventMetaRow, isRtl && styles.rtlRow]}>
-          <IconSymbol name="location" color={isDay ? "#3B4A63" : nsnColors.muted} size={12} />
+          <IconSymbol name="location" color={isDay ? "#53677A" : nsnColors.muted} size={12} />
           <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{event.venue}</Text>
         </View>
         <View style={[styles.eventMetaRow, isRtl && styles.rtlRow]}>
-          <IconSymbol name="group" color={isDay ? "#3B4A63" : nsnColors.muted} size={12} />
+          <IconSymbol name="group" color={isDay ? "#53677A" : nsnColors.muted} size={12} />
           <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{localizedEvent.people}  ·  {event.time}</Text>
         </View>
-        <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={2}>{localizedEvent.description}</Text>
-        <View style={[styles.eventTags, isRtl && styles.rtlRow]}>
+        <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={density === "Spacious" ? 3 : density === "Compact" ? 1 : 2}>{localizedEvent.description}</Text>
+        <View style={[styles.eventTags, density === "Compact" && styles.eventTagsCompact, isRtl && styles.rtlRow]}>
           <EventTag icon="pace" label={`Pace: ${getSocialPaceLabel(localizedEvent.tone)}`} isDay={isDay} isRtl={isRtl} />
           <EventTag icon={event.noiseLevel === "Quiet" ? "volume.off" : "volume"} label={getNoiseTagLabel(eventNoise.label)} isDay={isDay} isRtl={isRtl} />
           <EventTag icon="weather" label={localizedEvent.weather} isDay={isDay} isRtl={isRtl} />
@@ -396,7 +424,7 @@ function EventCard({ event, isDay, appLanguageBase }: { event: EventItem; isDay?
         </View>
       ) : null}
       <View style={styles.cardArrow}>
-        <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#3B4A63" : nsnColors.muted} size={26} />
+        <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#53677A" : nsnColors.muted} size={26} />
       </View>
     </TouchableOpacity>
   );
@@ -420,7 +448,7 @@ const homeTranslations = {
     filters: ["All", "Outdoor", "Indoor", "Food", "Active"],
     dayEvents: "☀️ Day Events",
     eveningEvents: "🌙 Evening Events",
-    seeAll: "See all",
+    seeAll: "View preferences",
     hideHidden: "Hide hidden",
     createMeetup: "Create a Meetup",
     dayVsNight: "Day vs Night",
@@ -772,8 +800,8 @@ function HeaderActionButton({
           justifyContent: "center",
           borderWidth: 1,
           borderStyle: "solid",
-          borderColor: nsnColors.border,
-          backgroundColor: isDay ? "#FFFFFF" : nsnColors.surface,
+          borderColor: isDay ? "#D9CCB8" : "#2A3C59",
+          backgroundColor: isDay ? "#F7F1E6" : "#0F1B2C",
           display: "flex",
           padding: 0,
           cursor: "pointer",
@@ -800,7 +828,7 @@ function HeaderActionButton({
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isNightMode, setIsNightMode, timezone, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeVisibleSections, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeVisibleSections, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -890,6 +918,11 @@ export default function HomeScreen() {
     showPrototypeUpdate("Event view updated locally");
   };
 
+  const updateHomeLayoutDensity = (value: HomeLayoutDensity) => {
+    saveSoftHelloMvpState({ homeLayoutDensity: value });
+    showPrototypeUpdate("Home spacing updated locally");
+  };
+
   const updateHomeSection = (key: HomeSectionKey, value: boolean) => {
     saveSoftHelloMvpState({ homeVisibleSections: { ...homeVisibleSections, [key]: value } });
     showPrototypeUpdate("Home sections updated locally");
@@ -919,11 +952,12 @@ export default function HomeScreen() {
     homeVisibleSections.recommendedEvents &&
     (isNightMode ? homeVisibleSections.nightEvents : homeVisibleSections.dayEvents);
   const activeHomeFilterLabels = [
-    homeViewMode,
-    homeNearbyOnly ? "Nearby" : null,
-    homeSmallGroupsOnly ? "Small groups" : null,
-    homeWeatherSafeOnly ? "Weather-safe" : null,
-    homeEventLayout,
+    homeViewModeLabels[homeViewMode],
+    homeNearbyOnly ? homeFilterLabels.nearby : null,
+    homeSmallGroupsOnly ? homeFilterLabels.smallGroups : null,
+    homeWeatherSafeOnly ? homeFilterLabels.weatherSafe : null,
+    homeEventLayoutLabels[homeEventLayout],
+    homeLayoutDensity,
   ].filter(Boolean);
   const homeFilterSummary = activeHomeFilterLabels.join(" • ");
 
@@ -1120,7 +1154,7 @@ export default function HomeScreen() {
 
     const animatedScreenColor = modeTransition.interpolate({
       inputRange: [0, 1],
-      outputRange: [nsnColors.background, "#EAF4FF"],
+      outputRange: ["#0A1424", "#F3EFE7"],
     });
 
     const modeGlowOpacity = modePulse.interpolate({
@@ -1143,11 +1177,19 @@ export default function HomeScreen() {
             {
               opacity: modeGlowOpacity,
               transform: [{ scale: modeGlowScale }],
-              backgroundColor: isDay ? "#F2C94C" : "#2F80ED",
+              backgroundColor: isDay ? "#E8C97B" : "#4F75A3",
             },
           ]}
         />
-      <ScrollView style={styles.scrollSurface} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollSurface}
+          contentContainerStyle={[
+            styles.content,
+            homeLayoutDensity === "Compact" && styles.contentCompact,
+            homeLayoutDensity === "Spacious" && styles.contentSpacious,
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={[styles.header, isRtl && styles.rtlRow]}>
           <View style={[styles.headerTitle, isRtl && styles.rtlBlock]}>
             <Text style={[styles.logo, isDay && styles.dayText]}>NSN</Text>
@@ -1181,7 +1223,7 @@ export default function HomeScreen() {
           accessibilityHint="Opens a short prototype tour for first-time NSN alpha testers."
           style={[styles.alphaWalkthroughCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}
         >
-          <IconSymbol name="flag" color={isDay ? "#3949DB" : nsnColors.day} size={21} />
+          <IconSymbol name="flag" color={isDay ? "#5968A8" : nsnColors.day} size={21} />
           <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
             <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
               Alpha tester walkthrough
@@ -1190,7 +1232,7 @@ export default function HomeScreen() {
               New here? Try the short NSN prototype tour before browsing meetups.
             </Text>
           </View>
-          <IconSymbol name="chevron.right" color={isDay ? "#3B4A63" : nsnColors.muted} size={20} />
+          <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
         </TouchableOpacity>
 
         {homeVisibleSections.search && !showNsnSearch ? (
@@ -1202,7 +1244,7 @@ export default function HomeScreen() {
             accessibilityHint="Search suburbs, regions, and meetups."
             style={[styles.homeSearchEntryCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}
           >
-            <IconSymbol name="magnifyingglass" color={isDay ? "#3949DB" : nsnColors.day} size={20} />
+            <IconSymbol name="magnifyingglass" color={isDay ? "#5968A8" : nsnColors.day} size={20} />
             <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
               <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Search NSN</Text>
               <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
@@ -1214,7 +1256,7 @@ export default function HomeScreen() {
 
         {!showHomeControls ? (
           <View style={[styles.homeControlsSummaryCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}>
-            <IconSymbol name="settings" color={isDay ? "#3949DB" : nsnColors.day} size={19} />
+            <IconSymbol name="settings" color={isDay ? "#5968A8" : nsnColors.day} size={19} />
             <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
               <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{homeFilterSummary}</Text>
               <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
@@ -1250,7 +1292,7 @@ export default function HomeScreen() {
                 accessibilityLabel="Collapse Home filters"
                 style={[styles.homeCollapseButton, isDay && styles.dayHeaderPlaceholderDismiss]}
               >
-                <IconSymbol name="chevron.up" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
+                <IconSymbol name="chevron.up" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                 <Text style={[styles.homeSummaryAdjustText, isDay && styles.dayMutedText]}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -1268,7 +1310,7 @@ export default function HomeScreen() {
                   style={[styles.homeControlChip, isDay && styles.dayLocationResultButton, homeViewMode === option && styles.homeControlChipActive]}
                 >
                   <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeViewMode === option && styles.homeControlChipTextActive]}>
-                    {homeViewMode === option ? "Selected: " : ""}{option} view
+                    {homeViewMode === option ? "Selected: " : ""}{homeViewModeLabels[option]}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -1278,9 +1320,9 @@ export default function HomeScreen() {
               <Text style={[styles.homeControlGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Optional filters</Text>
               <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
               {[
-                { label: "Nearby", value: homeNearbyOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeNearbyOnly: value }) },
-                { label: "Small groups only", value: homeSmallGroupsOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeSmallGroupsOnly: value }) },
-                { label: "Weather-safe", value: homeWeatherSafeOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeWeatherSafeOnly: value }) },
+                { label: homeFilterLabels.nearby, value: homeNearbyOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeNearbyOnly: value }) },
+                { label: homeFilterLabels.smallGroups, value: homeSmallGroupsOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeSmallGroupsOnly: value }) },
+                { label: homeFilterLabels.weatherSafe, value: homeWeatherSafeOnly, update: (value: boolean) => saveSoftHelloMvpState({ homeWeatherSafeOnly: value }) },
               ].map((filter) => (
                 <TouchableOpacity
                   key={filter.label}
@@ -1315,10 +1357,34 @@ export default function HomeScreen() {
                   style={[styles.homeControlChip, isDay && styles.dayLocationResultButton, homeEventLayout === option && styles.homeControlChipActive]}
                 >
                   <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText, homeEventLayout === option && styles.homeControlChipTextActive]}>
-                    {homeEventLayout === option ? "Selected: " : ""}{option} view
+                    {homeEventLayout === option ? "Selected: " : ""}{homeEventLayoutLabels[option]}
                   </Text>
                 </TouchableOpacity>
               ))}
+              </View>
+            </View>
+            <View style={styles.homeControlGroup}>
+              <Text style={[styles.homeControlGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Layout comfort</Text>
+              <View style={[styles.homeDensityRow, isRtl && styles.rtlRow]}>
+                {homeDensityOptions.map((option) => {
+                  const active = homeLayoutDensity === option.value;
+
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      activeOpacity={0.84}
+                      onPress={() => updateHomeLayoutDensity(option.value)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={`${option.label} Home layout density`}
+                      style={[styles.homeDensityCard, isDay && styles.dayLocationResultButton, active && styles.homeDensityCardActive]}
+                    >
+                      <Text style={[styles.homeDensityIcon, active && styles.homeControlChipTextActive]}>{option.icon}</Text>
+                      <Text style={[styles.homeDensityTitle, isDay && styles.dayHeadingText, active && styles.homeControlChipTextActive]}>{option.label}</Text>
+                      <Text style={[styles.homeDensityCopy, isDay && styles.dayMutedText, active && styles.homeControlChipTextActive]}>{active ? "Selected" : option.copy}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
             <View style={[styles.homeControlRow, isRtl && styles.rtlRow]}>
@@ -1326,10 +1392,10 @@ export default function HomeScreen() {
                 activeOpacity={0.82}
                 onPress={() => setShowCustomiseHome((current) => !current)}
                 accessibilityRole="button"
-                accessibilityLabel="Customise Home sections"
+                accessibilityLabel="Customize Home sections"
                 style={[styles.homeControlChip, isDay && styles.dayLocationResultButton]}
               >
-                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>{showCustomiseHome ? "Hide" : "Customise Home"}</Text>
+                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>{showCustomiseHome ? "Hide preferences" : "Customize Home"}</Text>
               </TouchableOpacity>
             </View>
             {showCustomiseHome ? (
@@ -1452,7 +1518,7 @@ export default function HomeScreen() {
             ) : null}
             {homeSearchMode === "meetups" ? (
               <View style={[styles.locationInputWrap, isDay && styles.dayLocationInputWrap, isRtl && styles.rtlRow]}>
-                <IconSymbol name="magnifyingglass" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
+                <IconSymbol name="magnifyingglass" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                 <TextInput
                   value={nsnSearchQuery}
                   onChangeText={setNsnSearchQuery}
@@ -1610,6 +1676,9 @@ export default function HomeScreen() {
                   key={level}
                   activeOpacity={0.82}
                   onPress={() => selectNoiseLevelPreference(level)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`${levelCopy.label} noise preference`}
                   style={[styles.noiseLevelItem, active && styles.noiseLevelItemActive, isDay && styles.dayNoiseLevelItem, active && isDay && styles.dayNoiseLevelItemActive]}
                 >
                   <Text style={styles.noiseLevelIcon}>{levelCopy.icon}</Text>
@@ -1641,14 +1710,14 @@ export default function HomeScreen() {
           </Text>
           <TouchableOpacity activeOpacity={0.75} onPress={() => setShowHiddenEvents((current) => !current)}>
             <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null, isRtl && styles.rtlText]}>
-              {showHiddenEvents ? ("hideHidden" in copy ? copy.hideHidden : "Hide hidden") : copy.seeAll}
+              {showHiddenEvents ? ("hideHidden" in copy ? copy.hideHidden : "Hide hidden") : "View preferences"}
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.cardStack}>
+        <View style={[styles.cardStack, homeLayoutDensity === "Compact" && styles.cardStackCompact, homeLayoutDensity === "Spacious" && styles.cardStackSpacious]}>
           {homeEventLayout === "Map" && !isMeetupSearch ? (
             <View style={[styles.mapPreviewCard, isDay && styles.dayLocationResultButton, isRtl && styles.rtlRow]}>
-              <IconSymbol name="location" color={isDay ? "#3949DB" : nsnColors.day} size={20} />
+              <IconSymbol name="location" color={isDay ? "#5968A8" : nsnColors.day} size={20} />
               <View style={styles.headerPlaceholderBody}>
                 <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Map view prototype</Text>
                 <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
@@ -1657,7 +1726,7 @@ export default function HomeScreen() {
               </View>
             </View>
           ) : null}
-          {displayedEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} />))}
+          {displayedEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} density={homeLayoutDensity} />))}
           {hasNoMeetupSearchResults || hasNoFilteredEvents ? (
             <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
               <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups right now.</Text>
@@ -1709,60 +1778,68 @@ export default function HomeScreen() {
 
 // Styling
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: nsnColors.background },
+  screen: { flex: 1, backgroundColor: "#0A1424" },
   animatedScreen: { flex: 1 },
   scrollSurface: { flex: 1, backgroundColor: "transparent" },
   modeGlow: { position: "absolute", top: -58, alignSelf: "center", width: 230, height: 230, borderRadius: 115 },
-  dayBellButton: {backgroundColor: "#FFFFFF", },
+  dayBellButton: {backgroundColor: "#F7F1E6", },
   dayBellText: { color: "#0B1220", },
-  dayCard: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6", },
+  dayCard: { backgroundColor: "#F8F1E6", borderColor: "#D9CCB8", },
   dayHeadingText: { color: "#0B1220", },
-  dayLinkText: { color: "#3949DB", },
-  dayMutedText: { color: "#3B4A63", },
-  dayLivePreview: { borderColor: "#B8C9E6", backgroundColor: "#EEF7FF" },
-  dayPill: { backgroundColor: "#FFFFFF", borderColor: "#B8C9E6", },
-  dayPillActive: { backgroundColor: "#4353FF", borderColor: "#4353FF", },
+  dayLinkText: { color: "#5968A8", },
+  dayMutedText: { color: "#53677A", },
+  dayLivePreview: { borderColor: "#D9CCB8", backgroundColor: "#F3EADD" },
+  dayPill: { backgroundColor: "#F7F1E6", borderColor: "#D9CCB8", },
+  dayPillActive: { backgroundColor: "#5D68BA", borderColor: "#5D68BA", },
   dayPillText: { color: "#0B1220", },
   dayPillTextActive: { color: "#FFFFFF", },
-  dayScreen: { backgroundColor: "#EAF4FF" },
-  dayText: { color: "#111111", },
-  dayNoiseLevelItem: { backgroundColor: "#F8FBFF", borderColor: "#B8C9E6" },
-  dayNoiseLevelItemActive: { backgroundColor: "#EEF7FF", borderColor: nsnColors.primary },
+  dayScreen: { backgroundColor: "#F3EFE7" },
+  dayText: { color: "#1E252C", },
+  dayNoiseLevelItem: { backgroundColor: "#FBF6EC", borderColor: "#D9CCB8" },
+  dayNoiseLevelItemActive: { backgroundColor: "#EFE7D7", borderColor: "#8D7A54" },
   content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 24 },
+  contentCompact: { paddingTop: 6, paddingBottom: 18 },
+  contentSpacious: { paddingTop: 14, paddingBottom: 34 },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
   headerTitle: { flex: 1, minWidth: 0 },
   headerActions: { flexShrink: 0, flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 12 },
-  headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
-  headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
-  alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
-  homeSearchEntryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
-  homeControlsSummaryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 14, paddingVertical: 11, marginBottom: 12 },
+  headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#0F1B2C" },
+  headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  homeSearchEntryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  homeControlsSummaryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 14, paddingVertical: 11, marginBottom: 12 },
   homeSummaryAdjustButton: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, alignItems: "center", justifyContent: "center" },
   homeSummaryAdjustText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   homeCollapseButton: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
-  homeControlsCard: { borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", padding: 14, marginBottom: 12, gap: 14 },
+  homeControlsCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", padding: 14, marginBottom: 12, gap: 14 },
   homeControlGroup: { gap: 6 },
   homeControlGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   homeControlRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  homeControlChip: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, alignItems: "center", justifyContent: "center" },
-  homeControlChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  homeControlChip: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 11, alignItems: "center", justifyContent: "center" },
+  homeControlChipActive: { borderColor: "#7680D8", backgroundColor: "#5D68BA" },
   homeControlChipText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   homeControlChipTextActive: { color: "#FFFFFF" },
+  homeDensityRow: { flexDirection: "row", gap: 8 },
+  homeDensityCard: { flex: 1, minHeight: 72, borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 10, paddingVertical: 9, alignItems: "center", justifyContent: "center" },
+  homeDensityCardActive: { borderColor: "#7680D8", backgroundColor: "#5D68BA" },
+  homeDensityIcon: { color: nsnColors.muted, fontSize: 18, fontWeight: "900", lineHeight: 22 },
+  homeDensityTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
+  homeDensityCopy: { color: nsnColors.muted, fontSize: 10, fontWeight: "800", lineHeight: 14, textAlign: "center", marginTop: 1 },
   homeSectionToggleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingTop: 2 },
-  homeSectionToggle: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, alignItems: "center", justifyContent: "center" },
-  homeSectionToggleActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  homeSectionToggle: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 10, alignItems: "center", justifyContent: "center" },
+  homeSectionToggleActive: { borderColor: "#7680D8", backgroundColor: "#5D68BA" },
   homeUpdateNotice: { color: "#96A5FF", fontSize: 11, fontWeight: "900", lineHeight: 15 },
-  dayHeaderPlaceholderCard: { borderColor: "#B8C9E6", backgroundColor: "#F8FBFF" },
+  dayHeaderPlaceholderCard: { borderColor: "#D9CCB8", backgroundColor: "#FBF6EC" },
   headerPlaceholderBody: { flex: 1, minWidth: 0 },
   headerPlaceholderTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   headerPlaceholderCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   headerPlaceholderDismiss: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 13, alignItems: "center", justifyContent: "center" },
-  dayHeaderPlaceholderDismiss: { borderColor: "#B8C9E6" },
+  dayHeaderPlaceholderDismiss: { borderColor: "#D9CCB8" },
   headerPlaceholderDismissText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900" },
-  locationSearchCard: { borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", padding: 14, marginBottom: 12, gap: 12 },
+  locationSearchCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", padding: 14, marginBottom: 12, gap: 12 },
   locationSearchHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
-  locationInputWrap: { minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
-  dayLocationInputWrap: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },
+  locationInputWrap: { minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
+  dayLocationInputWrap: { backgroundColor: "#F7F1E6", borderColor: "#D9CCB8" },
   locationInput: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "700", paddingVertical: 8 },
   detectLocationButton: { minHeight: 42, borderRadius: 14, backgroundColor: nsnColors.primary, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   detectLocationButtonDisabled: { opacity: 0.72 },
@@ -1776,16 +1853,16 @@ const styles = StyleSheet.create({
   searchResultGroupTitle: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   searchResultStack: { gap: 8 },
   searchResultTopLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
-  searchResultBadge: { flexShrink: 0, borderRadius: 8, borderWidth: 1, borderColor: "#24426F", color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, paddingHorizontal: 7, paddingVertical: 2 },
+  searchResultBadge: { flexShrink: 0, borderRadius: 8, borderWidth: 1, borderColor: "#2A3C59", color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, paddingHorizontal: 7, paddingVertical: 2 },
   activeSearchResultBadge: { borderColor: nsnColors.day, color: nsnColors.text },
   searchEmptyCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
-  searchPromptCard: { borderRadius: 14, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 11, paddingVertical: 10 },
+  searchPromptCard: { borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 11, paddingVertical: 10 },
   mapPreviewCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 11, paddingVertical: 10 },
   locationResultButton: { borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, paddingVertical: 8 },
   meetupSearchResultButton: { backgroundColor: "rgba(255,255,255,0.035)" },
-  dayLocationResultButton: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },
+  dayLocationResultButton: { backgroundColor: "#F7F1E6", borderColor: "#D9CCB8" },
   activeLocationResultButton: { borderColor: nsnColors.day, backgroundColor: "#172A5C" },
-  dayActiveLocationResultButton: { borderColor: "#3949DB", backgroundColor: "#DCE7FF" },
+  dayActiveLocationResultButton: { borderColor: "#7F735C", backgroundColor: "#EFE7D7" },
   locationResultTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   locationResultMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, marginTop: 2 },
   activeLocationResultText: { color: nsnColors.text },
@@ -1794,17 +1871,17 @@ const styles = StyleSheet.create({
   subtitle: { color: nsnColors.muted, fontSize: 13, lineHeight: 18 },
   bellButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   bellText: { color: nsnColors.text, fontSize: 20 },
-  segmented: { flexDirection: "row", borderRadius: 24, padding: 4, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, marginBottom: 12 },
-  segmentedDay: { backgroundColor: "#DCEEFF", borderColor: "#9FB6D8", },
+  segmented: { flexDirection: "row", borderRadius: 24, padding: 4, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#2A3C59", marginBottom: 12 },
+  segmentedDay: { backgroundColor: "#EFE7D7", borderColor: "#D9CCB8", },
   segment: { flex: 1, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  segmentDay: { backgroundColor: nsnColors.day },
-  segmentInactiveDayText: {backgroundColor: "transparent", color: "#6E7F99", },
-  segmentNight: { backgroundColor: nsnColors.primary },
+  segmentDay: { backgroundColor: "#FFE8AE" },
+  segmentInactiveDayText: {backgroundColor: "transparent", color: "#6B7890", },
+  segmentNight: { backgroundColor: "#5D68BA" },
   segmentText: { color: nsnColors.muted, fontWeight: "700", fontSize: 14 },
   segmentDayText: { color: "#1B2233" },
   segmentNightText: { color: nsnColors.text },
-  themeSuggestionCard: { flexDirection: "row", alignItems: "flex-start", gap: 11, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
-  dayThemeSuggestionCard: { borderColor: "#B8C9E6", backgroundColor: "#F8FBFF" },
+  themeSuggestionCard: { flexDirection: "row", alignItems: "flex-start", gap: 11, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  dayThemeSuggestionCard: { borderColor: "#D9CCB8", backgroundColor: "#FBF6EC" },
   themeSuggestionIcon: { fontSize: 22, lineHeight: 27 },
   themeSuggestionBody: { flex: 1, minWidth: 0 },
   themeSuggestionTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
@@ -1813,42 +1890,49 @@ const styles = StyleSheet.create({
   themeSuggestionSwitch: { minHeight: 32, borderRadius: 16, backgroundColor: nsnColors.primary, paddingHorizontal: 14, alignItems: "center", justifyContent: "center" },
   themeSuggestionSwitchText: { color: nsnColors.text, fontSize: 12, fontWeight: "900" },
   themeSuggestionDismiss: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, alignItems: "center", justifyContent: "center" },
-  dayThemeSuggestionDismiss: { borderColor: "#B8C9E6" },
+  dayThemeSuggestionDismiss: { borderColor: "#D9CCB8" },
   themeSuggestionDismissText: { color: nsnColors.muted, fontSize: 12, fontWeight: "800" },
   contextRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
   dateText: { color: nsnColors.text, fontSize: 13, lineHeight: 19 },
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   changeText: { color: "#96A5FF", fontSize: 12, fontWeight: "700" },
-  weatherCard: { minHeight: 72, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#1B3566", marginBottom: 12 },
+  weatherCard: { minHeight: 72, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: "#10213A", borderWidth: 1, borderColor: "#2A3C59", marginBottom: 12 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },
   weatherIcon: { fontSize: 28 },
   filterRow: { gap: 8, paddingBottom: 14 },
-  noiseGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#06101F", padding: 14, marginBottom: 14 },
+  noiseGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
   noiseGuideHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 },
   noiseGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   noiseGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   noiseLevelRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
-  noiseLevelItem: { flex: 1, minHeight: 78, borderRadius: 14, borderWidth: 1, borderColor: "#172B49", backgroundColor: "rgba(255,255,255,0.03)", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 10 },
-  noiseLevelItemActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.16)" },
+  noiseLevelItem: { flex: 1, minHeight: 78, borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 10 },
+  noiseLevelItemActive: { borderColor: "#7680D8", backgroundColor: "rgba(93,104,186,0.22)" },
   noiseLevelIcon: { fontSize: 20, lineHeight: 24, marginBottom: 4 },
   noiseLevelTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
   noiseLevelTitleActive: { color: nsnColors.text },
   noiseLevelCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, textAlign: "center" },
   noiseLevelCopyActive: { color: nsnColors.text },
   noiseFilterRow: { gap: 8 },
-  pill: { height: 34, paddingHorizontal: 16, borderRadius: 17, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: "#13243E", alignItems: "center", justifyContent: "center" },
-  pillActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  pill: { height: 34, paddingHorizontal: 16, borderRadius: 17, backgroundColor: "#101D31", borderWidth: 1, borderColor: "#2A3C59", alignItems: "center", justifyContent: "center" },
+  pillActive: { backgroundColor: "#5D68BA", borderColor: "#7680D8" },
   pillText: { color: nsnColors.muted, fontWeight: "700", fontSize: 12 },
   pillTextActive: { color: nsnColors.text },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 9 },
   sectionTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 22 },
   seeAll: { color: "#96A5FF", fontSize: 12, fontWeight: "700" },
   cardStack: { gap: 10 },
-  eventCard: { flexDirection: "row", minHeight: 126, borderRadius: 18, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, padding: 10, overflow: "hidden" },
+  cardStackCompact: { gap: 7 },
+  cardStackSpacious: { gap: 14 },
+  eventCard: { flexDirection: "row", minHeight: 126, borderRadius: 18, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#2A3C59", padding: 10, overflow: "hidden" },
+  eventCardCompact: { minHeight: 108, padding: 8 },
+  eventCardSpacious: { minHeight: 148, padding: 12 },
   rtlEventCard: { flexDirection: "row-reverse" },
   eventImage: { width: 88, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  eventImageCompact: { width: 70, borderRadius: 12 },
+  eventImageSpacious: { width: 98 },
   eventEmoji: { fontSize: 34 },
+  eventEmojiCompact: { fontSize: 28 },
   eventBody: { flex: 1, paddingLeft: 11, paddingRight: 4 },
   eventTopLine: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 3 },
   rtlRow: { flexDirection: "row-reverse" },
@@ -1864,8 +1948,9 @@ const styles = StyleSheet.create({
   eventMetaDay: { color: "#CBD7EA", },
   eventDescription: { color: nsnColors.text, fontSize: 12, lineHeight: 17, marginTop: 2 },
   eventTags: { flexDirection: "row", gap: 6, flexWrap: "wrap", marginTop: 7 },
+  eventTagsCompact: { marginTop: 5 },
   eventTag: { minHeight: 22, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8 },
-  dayEventTag: { backgroundColor: "#F8FBFF", borderWidth: 1, borderColor: "#B8C9E6" },
+  dayEventTag: { backgroundColor: "#FBF6EC", borderWidth: 1, borderColor: "#D9CCB8" },
   eventTagText: { color: nsnColors.muted, fontSize: 10, lineHeight: 14 },
   livePreview: { width: 82, height: 104, borderRadius: 15, borderWidth: 1, borderColor: "#24426F", backgroundColor: "#081A2F", overflow: "hidden", marginLeft: 6 },
   miniMap: { height: 42, backgroundColor: "#102743", overflow: "hidden", justifyContent: "flex-end", paddingHorizontal: 7, paddingBottom: 5 },

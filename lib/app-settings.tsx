@@ -131,6 +131,7 @@ export type LowLightLevel = "Gentle" | "Medium" | "Deep";
 export type NotificationSnoozePreset = "1 hour" | "Tonight" | "24 hours" | "Until I turn it back on";
 export type HomeViewMode = "Essential" | "Comfortable";
 export type HomeEventLayout = "List" | "Map";
+export type HomeLayoutDensity = "Compact" | "Comfortable" | "Spacious";
 export type HomeVisibleSections = {
   weather: boolean;
   noiseGuide: boolean;
@@ -226,6 +227,7 @@ type OnboardingSnapshot = {
   homeSmallGroupsOnly?: boolean;
   homeWeatherSafeOnly?: boolean;
   homeEventLayout?: HomeEventLayout;
+  homeLayoutDensity?: HomeLayoutDensity;
   homeVisibleSections?: HomeVisibleSections;
   notificationSnoozed?: boolean;
   notificationSnoozePreset?: NotificationSnoozePreset;
@@ -445,6 +447,8 @@ type AppSettings = {
   setHomeWeatherSafeOnly: (value: boolean) => void;
   homeEventLayout: HomeEventLayout;
   setHomeEventLayout: (value: HomeEventLayout) => void;
+  homeLayoutDensity: HomeLayoutDensity;
+  setHomeLayoutDensity: (value: HomeLayoutDensity) => void;
   homeVisibleSections: HomeVisibleSections;
   setHomeVisibleSections: (value: HomeVisibleSections) => void;
   completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
@@ -574,6 +578,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [homeSmallGroupsOnly, setHomeSmallGroupsOnly] = useState(false);
   const [homeWeatherSafeOnly, setHomeWeatherSafeOnly] = useState(false);
   const [homeEventLayout, setHomeEventLayout] = useState<HomeEventLayout>("List");
+  const [homeLayoutDensity, setHomeLayoutDensity] = useState<HomeLayoutDensity>("Comfortable");
   const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(defaultHomeVisibleSections);
   const [isNightMode, setIsNightMode] = useState(false);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
@@ -681,6 +686,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeSmallGroupsOnly(Boolean(snapshot.homeSmallGroupsOnly));
         setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
         setHomeEventLayout(snapshot.homeEventLayout ?? "List");
+        setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
         setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
         setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
         setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
@@ -766,6 +772,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHomeSmallGroupsOnly(Boolean(snapshot.homeSmallGroupsOnly));
     setHomeWeatherSafeOnly(Boolean(snapshot.homeWeatherSafeOnly));
     setHomeEventLayout(snapshot.homeEventLayout ?? "List");
+    setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Comfortable");
     setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
     setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
     setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
@@ -857,6 +864,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       homeSmallGroupsOnly,
       homeWeatherSafeOnly,
       homeEventLayout,
+      homeLayoutDensity,
       homeVisibleSections,
       notificationSnoozed,
       notificationSnoozePreset,
@@ -962,6 +970,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.homeSmallGroupsOnly !== undefined) setHomeSmallGroupsOnly(snapshot.homeSmallGroupsOnly);
     if (snapshot.homeWeatherSafeOnly !== undefined) setHomeWeatherSafeOnly(snapshot.homeWeatherSafeOnly);
     if (snapshot.homeEventLayout !== undefined) setHomeEventLayout(snapshot.homeEventLayout);
+    if (snapshot.homeLayoutDensity !== undefined) setHomeLayoutDensity(snapshot.homeLayoutDensity);
     if (snapshot.homeVisibleSections !== undefined) {
       const nextSections = normalizeHomeVisibleSections(snapshot.homeVisibleSections);
       setHomeVisibleSections(nextSections);
@@ -1229,6 +1238,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeWeatherSafeOnly,
         homeEventLayout,
         setHomeEventLayout,
+        homeLayoutDensity,
+        setHomeLayoutDensity,
         homeVisibleSections,
         setHomeVisibleSections,
         completeOnboarding,

@@ -26,6 +26,7 @@
 - [x] Improve Search NSN autocomplete with Sydney locality data, region matching, aliases, and no default suburb list
 - [x] Refine Home/Profile local area editing with shared location picker and API-ready fallback lookup service
 - [x] Add Home view and filter controls for essential/comfortable layouts, nearby, small groups, weather-safe, map/list, and section visibility
+- [x] Refine NSN Home comfort themes, warmer filter controls, and Compact/Comfortable/Spacious layout density
 - [x] Capture checkpoint screenshots for Home, Meetups, Chats, Alerts, Profile, Settings & Privacy, and onboarding stages
 
 ## Next Focus
