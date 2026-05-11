@@ -292,6 +292,8 @@ type CreatedEvent = {
   mapPlace: string;
   coordinates: string;
   description: string;
+  preEventQuestions?: string[];
+  postEventQuestions?: string[];
 };
 
 type EventDraft = Omit<CreatedEvent, "id">;
@@ -440,6 +442,16 @@ export default function EventsScreen() {
       mapPlace: draft.mapPlace.trim(),
       coordinates: draft.coordinates.trim(),
       description: draft.description.trim(),
+      preEventQuestions: [
+        "What's something you're looking forward to this week?",
+        "What's your favorite way to spend a weekend?",
+        "What's a hobby or interest you'd like to share?"
+      ],
+      postEventQuestions: [
+        "How did you find the atmosphere?",
+        "What was your favorite part of the meetup?",
+        "Would you like to meet again?"
+      ],
     };
 
     saveEvents([newEvent, ...createdEvents]);
@@ -493,7 +505,7 @@ export default function EventsScreen() {
         ) : (
           <View style={styles.eventList}>
             {createdEvents.map((event) => (
-              <View key={event.id} style={[styles.eventCard, isDay && styles.dayCard]}>
+              <TouchableOpacity key={event.id} activeOpacity={0.9} onPress={() => router.push(`/event/${event.id}`)} style={[styles.eventCard, isDay && styles.dayCard]}>
                 <View style={[styles.eventHeader, isRtl && styles.rtlRow]}>
                   <View style={[styles.noiseBadge, event.noiseLevel === "Quiet" && styles.quietBadge, event.noiseLevel === "Lively" && styles.livelyBadge]}>
                     <Text style={styles.noiseBadgeText}>{copy.noise[event.noiseLevel]}</Text>
@@ -509,7 +521,7 @@ export default function EventsScreen() {
                 {event.description ? (
                   <Text style={[styles.eventDescription, isDay && styles.dayText, isRtl && styles.rtlText]}>{event.description}</Text>
                 ) : null}
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}

@@ -6,9 +6,11 @@ import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity
 import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
 import { ScreenContainer } from "@/components/screen-container";
 import type { NsnBlurLevel, NsnComfortMode, ProfileGender, SoftHelloIntent } from "@/lib/app-settings";
-import { useAppSettings } from "@/lib/app-settings";
+import { defaultPhotoRecordingComfortPreferences, defaultPhysicalContactComfortPreferences, useAppSettings } from "@/lib/app-settings";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
+import { defaultFoodBeveragePreferenceIds } from "@/lib/preferences/food-preferences";
+import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds } from "@/lib/preferences/interests";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { defaultComfortPreferences, type SoftHelloComfortPreference } from "@/lib/softhello-mvp";
 
@@ -258,9 +260,18 @@ export default function OnboardingScreen() {
       pinnedEventIds: [],
       hiddenEventIds: [],
       contactPreferences: ["Text"],
+      socialEnergyPreference: "Calm",
+      communicationPreferences: ["Low-message mode", "Details only"],
+      groupSizePreference: "Small groups only",
+      photoRecordingComfortPreferences: defaultPhotoRecordingComfortPreferences,
+      physicalContactComfortPreferences: defaultPhysicalContactComfortPreferences,
+      verifiedButPrivate: true,
       transportationMethod: "Public transport",
       dietaryPreferences: ["No preference"],
+      foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
       hobbiesInterests: interests,
+      interestPreferenceIds: defaultInterestPreferenceIds,
+      interestComfortTagsByInterest: defaultInterestComfortTagsByInterest,
       appLanguage: settings.appLanguage,
       translationLanguage: settings.translationLanguage,
       brandThemeId: settings.brandThemeId,
@@ -495,6 +506,7 @@ export default function OnboardingScreen() {
                 gender={gender}
                 interests={interests}
                 comfortPreferences={comfortPreferences}
+                photoRecordingComfortPreferences={defaultPhotoRecordingComfortPreferences}
                 comfortMode={comfortMode}
                 profilePhotoUri={profilePhotoUri}
                 privateProfile={privateProfile}

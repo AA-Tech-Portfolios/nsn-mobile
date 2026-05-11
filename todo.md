@@ -21,12 +21,15 @@
 - [x] Add local user preference areas for transportation, location, food, hobbies/interests, contact preference, saved places, and meetup shortcuts
 - [x] Add temporary deactivate account controls above Delete account in Settings & Privacy
 - [x] Complete Settings & Privacy prototype safety polish with jump-chip icons, local update indicators, prototype badges, disabled coming-soon states, and account action confirmations
+- [x] Add Profile User Options drawer and move Comfort & trust into User Preferences
+- [x] Add mobile drawer and desktop full-view panels for Transportation Method, Contact Preference, and Location Preference
 - [x] Add alpha tester walkthrough covering NSN purpose, local prototype scope, comfort/privacy settings, meetup browsing, alerts, profile review, and demo-only safety language
 - [x] Refine Home search into compact Search NSN suburb and meetup matching for the Sydney/North Shore prototype
 - [x] Improve Search NSN autocomplete with Sydney locality data, region matching, aliases, and no default suburb list
 - [x] Refine Home/Profile local area editing with shared location picker and API-ready fallback lookup service
 - [x] Add Home view and filter controls for essential/comfortable layouts, nearby, small groups, weather-safe, map/list, and section visibility
 - [x] Refine NSN Home comfort themes, warmer filter controls, and Compact/Comfortable/Spacious layout density
+- [x] Start Phase 1 Trust Foundations in the prototype: progressive visibility, social energy, communication preferences, group size comfort, and verified-but-private trust state
 - [x] Capture checkpoint screenshots for Home, Meetups, Chats, Alerts, Profile, Settings & Privacy, and onboarding stages
 
 ## Next Focus
@@ -62,9 +65,16 @@
 
 ### Safety and trust
 
-- [ ] Add Community Guidelines
+- [ ] Add Community Guidelines, including photo/video consent expectations and no sharing private chats, profiles, or meetup details without consent
+- [ ] Add event media comfort labels and a future reporting flow for privacy, photo, video, or screenshot violations
 - [ ] Add 18+ compliance copy and safeguards beyond local age entry
 - [ ] Decide real verification provider strategy before claiming production verification
+- [ ] Decide the real verification provider and UX handoff for the verified-but-private trust state
+- [ ] Add a real trust-state backend before treating verification or privacy gates as production systems
+- [ ] Expand privacy rules for progressive visibility, matched/shared visibility, event-visible fields, and warm-up disclosure
+- [ ] Connect social energy, communication style, and group size preferences to real preference-based recommendations
+- [ ] Expand the Profile User Options drawer as trust foundations and preference-based recommendations mature
+- [ ] Gather tester feedback on whether comfort/trust settings feel clear, calm, and lightweight
 - [ ] Complete safety, privacy, legal, and regional compliance specification before emergency feature implementation
 
 ### Meetup flow
@@ -73,12 +83,34 @@
 - [ ] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, or first-time attendee
 - [ ] Add pre-meetup readiness checklist covering location, host, plan, safety, and exit options
 - [ ] Add lightweight transportation options with nearby stops, estimated travel time, suggested arrival windows, and links out to maps
+- [ ] Add route-aware recommendations that combine transport comfort, local area preference, venue accessibility, and selected event timing
+- [ ] Add stronger venue accessibility metadata for step-free routes, parking, lighting, quietness, and public transport proximity
 
 ### Profile and settings polish
 
 - [ ] Continue button behaviour audit across Profile, Settings & Privacy, and modal menus
+- [ ] Expand richer food preference matching with lightweight comfort signals instead of restaurant recommendations
+- [ ] Add dietary/allergy confirmation reminders before food-based meetups
+- [ ] Add venue metadata for dietary safety, quiet seating, alcohol-free comfort, and cafe suitability
+- [ ] Define age-appropriate handling for alcohol-related event preferences and labels
+- [ ] Gather user feedback on whether food and beverage categories feel calm, useful, and not overwhelming
+- [ ] Add interest-based recommendations that use hobbies, genres, and comfort modifiers without turning NSN into a quiz
+- [ ] Connect richer preference matching across interests, food, social energy, communication, and group size
+- [ ] Explore broad background-based suggestions for study groups, volunteering meetups, and shared industry conversation starters without exposing exact institutions or routines
+- [ ] Add stale-profile reminders for optional work, study, volunteering, and life-context details without nagging users
+- [ ] Expand profile freshness controls so users can review, hide, or refresh broad context when it may be outdated
+- [ ] Explore privacy-safe calendar integration only after alpha feedback, with local-only controls and clear opt-in copy
+- [ ] Add Australian public holiday data by state/region before using holidays for meetup suggestions
+- [ ] Explore cultural event suggestions and a local Sydney/North Shore event feed without assuming everyone participates
+- [ ] Add privacy-safe reminders around selected calendar moments, observances, and quiet-plan seasons
+- [ ] Gather tester feedback on whether sensitive calendar preferences feel respectful, useful, and easy to hide
+- [ ] Expand the interest taxonomy after tester feedback on categories, wording, and missing local activities
+- [ ] Gather user feedback on whether Hobbies & Interests feels useful, calm, and not profile-heavy
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 - [ ] Add interactive tutorials for privacy, preview visibility, and comfort modes
+- [ ] Explore an optional AI assistant for in-app guidance, settings discovery, and feature help after alpha feedback. Keep it clearly optional, privacy-safe, and separate from human support or safety reporting.
+- [ ] Refine local area and suburb APIs so Location Preference can stay broad without relying on exact addresses
+- [ ] Gather tester feedback on contact preference wording, reply pace, and whether communication guidance reduces pressure
 - [ ] Review translations with real users or native speakers before treating each language as complete
 
 ## Upcoming
@@ -130,6 +162,8 @@
 - [ ] Add pre-meetup grounding screen with expectations, safety reminder, and backup plan
 - [ ] Add pre-meetup readiness checklist covering location, host, plan, safety, and exit options
 - [ ] Add event troubleshooting tools to help participants coordinate around busy work, study, and timetable constraints
+- [ ] Decide whether verified student, work, or volunteer status is ever needed, and keep exact institutions/employers private by default if added
+- [ ] If verified student/work/volunteer status is added, keep it optional, broad, privacy-controlled, and separate from exact employer or institution display
 - [x] Add transportation preference and arrival update messages for running late or not making it
 - [ ] Add lightweight transportation options with nearby stops, estimated travel time, suggested arrival windows, and links out to maps
 - [ ] Add host templates for common meetup types
@@ -145,6 +179,9 @@
 - [ ] Add conversation starter cards for low-pressure chats and meetups
 - [ ] Add mutual pre-meetup consent for optional 1-1 chats between members
 - [ ] Add mutual consent flow for revealing blurred profile pictures when both members feel ready
+- [ ] Gather tester feedback on whether Background & community sharing feels safe, useful, and appropriately broad
+- [ ] Gather tester feedback on whether Work, study & life context feels safe, useful, fresh enough, and not too occupation-focused
+- [ ] Add stronger privacy controls for exact schools, workplaces, volunteer organisations, schedules, and routines before supporting those fields
 - [x] Add local Contact Preference options for in-person, text, email, phone, and video comfort
 - [ ] Unlock phone or video call preferences after a meetup, with users choosing the contact mode they are comfortable with
 

@@ -34,6 +34,9 @@ export type EventItem = {
   imageTone: string;
   emoji: string;
   tags: string[];
+  mediaComfortLabels?: string[];
+  preEventQuestions?: string[];
+  postEventQuestions?: string[];
 };
 
 export const dayEvents: EventItem[] = [
@@ -51,6 +54,17 @@ export const dayEvents: EventItem[] = [
     imageTone: "#19432D",
     emoji: "🧺",
     tags: ["Outdoor", "Balanced"],
+    mediaComfortLabels: ["Ask before photos", "Group photos by consent"],
+    preEventQuestions: [
+      "What's your favorite picnic snack?",
+      "What's one thing you're looking forward to today?",
+      "Do you have a go-to outdoor activity?"
+    ],
+    postEventQuestions: [
+      "How was the picnic spot?",
+      "Did you try any new snacks?",
+      "Would you like to do this again?"
+    ],
   },
   {
     id: "beach-day-chill-vibes",
@@ -66,6 +80,7 @@ export const dayEvents: EventItem[] = [
     imageTone: "#1A4964",
     emoji: "🌊",
     tags: ["Outdoor", "Balanced"],
+    mediaComfortLabels: ["Ask before photos", "Venue photos okay"],
   },
   {
     id: "library-calm-study",
@@ -81,6 +96,7 @@ export const dayEvents: EventItem[] = [
     imageTone: "#29365E",
     emoji: "📚",
     tags: ["Indoor", "Quiet"],
+    mediaComfortLabels: ["Private meetup", "No public posting"],
   },
   {
     id: "coffee-lane-cove",
@@ -96,6 +112,17 @@ export const dayEvents: EventItem[] = [
     imageTone: "#5A3823",
     emoji: "☕",
     tags: ["Food", "Indoor", "Balanced"],
+    mediaComfortLabels: ["Ask before photos", "Private meetup"],
+    preEventQuestions: [
+      "What's your favorite type of coffee?",
+      "Do you have a morning routine?",
+      "What's a book or podcast you enjoy?"
+    ],
+    postEventQuestions: [
+      "How was the coffee?",
+      "Did you discover anything new?",
+      "Would you meet for coffee again?"
+    ],
   },
   {
     id: "harbour-walk-waverton",
@@ -111,6 +138,7 @@ export const dayEvents: EventItem[] = [
     imageTone: "#1E4F55",
     emoji: "🚶",
     tags: ["Active", "Outdoor", "Balanced"],
+    mediaComfortLabels: ["Venue photos okay", "Ask before photos"],
   },
 ];
 
@@ -129,6 +157,17 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#281C45",
     emoji: "🍿",
     tags: ["Indoor", "Quiet"],
+    mediaComfortLabels: ["No filming", "Private meetup"],
+    preEventQuestions: [
+      "What's your favorite movie genre?",
+      "Have you seen this movie before?",
+      "What's a movie that made you laugh/cry?"
+    ],
+    postEventQuestions: [
+      "What did you think of the movie?",
+      "How was the theater experience?",
+      "Would you watch a movie together again?"
+    ],
   },
   {
     id: "board-games-coffee",
@@ -144,6 +183,7 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#3B2D15",
     emoji: "🎲",
     tags: ["Indoor", "Food", "Balanced"],
+    mediaComfortLabels: ["Ask before photos", "Private meetup"],
   },
   {
     id: "ramen-small-table",
@@ -159,6 +199,7 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#55331C",
     emoji: "🍜",
     tags: ["Food", "Indoor", "Balanced"],
+    mediaComfortLabels: ["Private meetup", "No public posting"],
   },
   {
     id: "quiet-music-listening",
@@ -174,6 +215,7 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#1F2B4A",
     emoji: "🎧",
     tags: ["Indoor", "Quiet"],
+    mediaComfortLabels: ["No filming", "Private meetup"],
   },
 ];
 

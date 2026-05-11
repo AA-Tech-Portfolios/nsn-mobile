@@ -1,6 +1,16 @@
 import { Image, StyleSheet, Text, View } from "react-native";
 
-import type { ContactPreference, NsnBlurLevel, NsnComfortMode, ProfileGender, ProfileNameDisplayMode } from "@/lib/app-settings";
+import type {
+  CommunicationPreference,
+  ContactPreference,
+  GroupSizePreference,
+  NsnBlurLevel,
+  NsnComfortMode,
+  PhotoRecordingComfortPreference,
+  ProfileGender,
+  ProfileNameDisplayMode,
+  SocialEnergyPreference,
+} from "@/lib/app-settings";
 import { useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import type { SoftHelloComfortPreference } from "@/lib/softhello-mvp";
@@ -19,6 +29,11 @@ export type ProfileVisibilityPreviewProps = {
   interests: string[];
   comfortPreferences: SoftHelloComfortPreference[];
   contactPreferences?: ContactPreference[];
+  socialEnergyPreference?: SocialEnergyPreference;
+  communicationPreferences?: CommunicationPreference[];
+  groupSizePreference?: GroupSizePreference;
+  photoRecordingComfortPreferences?: PhotoRecordingComfortPreference[];
+  verifiedButPrivate?: boolean;
   comfortMode: NsnComfortMode;
   profilePhotoUri: string | null;
   privateProfile: boolean;
@@ -65,6 +80,11 @@ export function ProfileVisibilityPreview({
   interests,
   comfortPreferences,
   contactPreferences = [],
+  socialEnergyPreference,
+  communicationPreferences = [],
+  groupSizePreference,
+  photoRecordingComfortPreferences = [],
+  verifiedButPrivate = true,
   comfortMode,
   profilePhotoUri,
   privateProfile,
@@ -104,6 +124,10 @@ export function ProfileVisibilityPreview({
   const visibleInterests = privateProfile || minimalProfileView || !showInterests ? [] : interests.slice(0, 4);
   const visibleComfort = privateProfile || minimalProfileView || !showComfortPreferences ? [] : comfortPreferences.slice(0, 3);
   const visibleContact = privateProfile || minimalProfileView || !showComfortPreferences ? [] : contactPreferences.slice(0, 3);
+  const visibleCommunication = privateProfile || minimalProfileView || !showComfortPreferences ? [] : communicationPreferences.slice(0, 3);
+  const visibleSocialEnergy = privateProfile || minimalProfileView || !showComfortPreferences ? "" : socialEnergyPreference;
+  const visibleGroupSize = privateProfile || minimalProfileView || !showComfortPreferences ? "" : groupSizePreference;
+  const visiblePhotoRecording = privateProfile || minimalProfileView || !showComfortPreferences ? [] : photoRecordingComfortPreferences.slice(0, 2);
   const visibleVibes = privateProfile || minimalProfileView || !showVibes ? [] : vibes.slice(0, 3);
   const visibleAbout = privateProfile || minimalProfileView || !showAboutMe ? "" : aboutMe.trim();
   const shouldBlur = privateProfile || comfortMode === "Comfort Mode" || (comfortMode === "Warm Up Mode" && blurProfilePhoto);
@@ -160,6 +184,11 @@ export function ProfileVisibilityPreview({
           {visibleInterests.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Interests: {visibleInterests.join(", ")}</Text> : null}
           {visibleComfort.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Comfort: {visibleComfort.join(", ")}</Text> : null}
           {visibleContact.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Contact: {visibleContact.join(", ")}</Text> : null}
+          {visibleSocialEnergy ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Social energy: {visibleSocialEnergy}</Text> : null}
+          {visibleCommunication.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Communication: {visibleCommunication.join(", ")}</Text> : null}
+          {visibleGroupSize ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Group size: {visibleGroupSize}</Text> : null}
+          {visiblePhotoRecording.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Photo & recording: {visiblePhotoRecording.join(", ")}</Text> : null}
+          {verifiedButPrivate ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Verified, but private: trust status can be checked without opening the full profile.</Text> : null}
           {minimalProfileView ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Minimal view is on, so only basics are shown.</Text> : null}
         </View>
       )}

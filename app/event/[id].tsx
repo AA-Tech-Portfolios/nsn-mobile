@@ -1,10 +1,11 @@
-import { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 import { Alert, Modal, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type PhotoRecordingComfortPreference, useAppSettings } from "@/lib/app-settings";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   canMeetInPerson,
@@ -23,7 +24,39 @@ import {
   unpinEvent,
 } from "@/lib/softhello-mvp";
 
+const CREATED_EVENTS_KEY = "nsn.created-events.v1";
+
+type CreatedEvent = {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  venue: string;
+  backupVenue: string;
+  noiseLevel: string;
+  address: string;
+  mapPlace: string;
+  coordinates: string;
+  description: string;
+  preEventQuestions?: string[];
+  postEventQuestions?: string[];
+};
+
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
+
+const getDetailMediaComfortLabels = (event: EventItem, photoRecordingComfortPreferences: PhotoRecordingComfortPreference[]) => {
+  const labels = [...(event.mediaComfortLabels ?? ["Ask before photos"])];
+
+  if (photoRecordingComfortPreferences.includes("Ask me first")) labels.push("Ask before photos");
+  if (photoRecordingComfortPreferences.includes("No photos of me")) labels.push("No photos of me");
+  if (photoRecordingComfortPreferences.includes("Group photos are okay")) labels.push("Group photos only if everyone agrees");
+  if (photoRecordingComfortPreferences.includes("Venue/event photos are okay")) labels.push("Venue photos okay");
+  if (photoRecordingComfortPreferences.includes("No videos please")) labels.push("No filming");
+  if (photoRecordingComfortPreferences.includes("No public posting without permission")) labels.push("No public posting");
+  if (photoRecordingComfortPreferences.includes("Prefer no screenshots of chats/profile")) labels.push("Prefer no screenshots");
+
+  return labels.filter((label, index, all) => all.indexOf(label) === index).slice(0, 5);
+};
 
 const savePlaceTranslations = {
   English: { save: "Save place", saved: "Saved", savedMessage: "Place saved", removedMessage: "Place removed" },
@@ -434,6 +467,8 @@ const eventTranslations = {
     feedbackGood: "Good",
     feedbackMixed: "Mixed",
     feedbackUnsafe: "Unsafe",
+    preEventQuestionsTitle: "Icebreaker questions",
+    preEventQuestionsCopy: "These questions can help start conversations at the meetup.",
   },
   Chinese: {
     title: "电影夜 —\n观看 + 聊天",
@@ -475,6 +510,8 @@ const eventTranslations = {
     feedbackGood: "很好",
     feedbackMixed: "一般",
     feedbackUnsafe: "不安全",
+    preEventQuestionsTitle: "破冰问题",
+    preEventQuestionsCopy: "这些问题可以帮助在聚会开始对话。",
   },
   Japanese: {
     title: "映画ナイト —\n観る + 話す",
@@ -516,6 +553,8 @@ const eventTranslations = {
     feedbackGood: "良かった",
     feedbackMixed: "普通",
     feedbackUnsafe: "不安だった",
+    preEventQuestionsTitle: "アイスブレイカー質問",
+    preEventQuestionsCopy: "これらの質問はミートアップで会話を始めるのに役立ちます。",
   },
   Korean: {
     title: "영화 밤 —\n보기 + 대화",
@@ -557,6 +596,8 @@ const eventTranslations = {
     feedbackGood: "좋음",
     feedbackMixed: "보통",
     feedbackUnsafe: "불안함",
+    preEventQuestionsTitle: "아이스브레이커 질문",
+    preEventQuestionsCopy: "이 질문들은 모임에서 대화를 시작하는 데 도움이 될 수 있어요.",
   },
   Arabic: {
     title: "ليلة فيلم —\nمشاهدة + دردشة",
@@ -586,6 +627,8 @@ const eventTranslations = {
     genericMeetingCopy: (venue: string) => `نلتقي بالقرب من ${venue} قبل وقت البداية بحوالي 10 دقائق. يمكن للمضيف مشاركة مكان أكثر هدوءاً في الدردشة.`,
     softExitTitle: "يمكنك تغيير رأيك",
     softExitCopy: "لا بأس في تخطي هذا اللقاء إذا لم يناسب وتيرتك اليوم. يمكنك العثور على مجموعة أخرى، أو التراجع عن الدردشة، أو العودة لاحقاً.",
+    preEventQuestionsTitle: "أسئلة كسر الحواجز",
+    preEventQuestionsCopy: "هذه الأسئلة يمكن أن تساعد في بدء المحادثات في اللقاء.",
   },
   Hebrew: {
     title: "ערב סרט —\nצפייה + שיחה",
@@ -616,6 +659,8 @@ const eventTranslations = {
     softExitTitle: "אפשר לשנות את דעתך",
     softExitCopy: "זה בסדר לדלג על המפגש אם הוא לא מרגיש בקצב שלך היום. אפשר למצוא קבוצה אחרת, לקחת צעד אחורה מהצ'אט, או לחזור מאוחר יותר.",
     verifyBeforeMeeting: "אימות לפני מפגש",
+    preEventQuestionsTitle: "שאלות קרח-שבירה",
+    preEventQuestionsCopy: "שאלות אלו יכולות לעזור להתחיל שיחות במפגש.",
   },
   Russian: {
     title: "Киновечер —\nСмотрим + общаемся",
@@ -645,6 +690,8 @@ const eventTranslations = {
     genericMeetingCopy: (venue: string) => `Встречаемся рядом с ${venue} примерно за 10 минут до начала. Организатор может поделиться более спокойной точной точкой в чате.`,
     softExitTitle: "Вы можете передумать",
     softExitCopy: "Можно пропустить эту встречу, если сегодня она не подходит вашему темпу. Вы можете найти другую группу, отойти от чата или вернуться позже.",
+    preEventQuestionsTitle: "Ледоколы",
+    preEventQuestionsCopy: "Эти вопросы могут помочь начать разговоры на встрече.",
   },
   Spanish: {
     title: "Noche de cine —\nVer + charlar",
@@ -674,6 +721,8 @@ const eventTranslations = {
     genericMeetingCopy: (venue: string) => `Quedamos cerca de ${venue} unos 10 minutos antes de la hora de inicio. La persona anfitriona puede compartir un punto exacto más tranquilo en el chat.`,
     softExitTitle: "Puedes cambiar de opinión",
     softExitCopy: "Está bien saltarte esta quedada si hoy no va a tu ritmo. Puedes encontrar otro grupo, apartarte del chat o volver más tarde.",
+    preEventQuestionsTitle: "Preguntas de hielo",
+    preEventQuestionsCopy: "Estas preguntas pueden ayudar a iniciar conversaciones en la quedada.",
   },
 } as const;
 
@@ -703,6 +752,7 @@ export default function EventDetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+  const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const {
     ageConfirmed,
     appLanguage,
@@ -718,6 +768,7 @@ export default function EventDetailsScreen() {
     verificationLevel,
     eventMemberships,
     postEventFeedback,
+    photoRecordingComfortPreferences,
     savedPlaces,
     pinnedEventIds,
     hiddenEventIds,
@@ -736,19 +787,61 @@ export default function EventDetailsScreen() {
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
-  const event = allEvents.find((item) => item.id === id) ?? movieNight;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCreatedEvents() {
+      try {
+        const storedEvents = await AsyncStorage.getItem(CREATED_EVENTS_KEY);
+
+        if (storedEvents && isMounted) {
+          setCreatedEvents(JSON.parse(storedEvents) as CreatedEvent[]);
+        }
+      } catch (error) {
+        console.log("Created events could not load:", error);
+      }
+    }
+
+    loadCreatedEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const rawEvent = allEvents.find((item) => item.id === id) ?? createdEvents.find((item) => item.id === id) ?? movieNight;
+  const isCreatedEvent = createdEvents.some((item) => item.id === id);
+  const event: EventItem = isCreatedEvent ? {
+    id: (rawEvent as CreatedEvent).id,
+    title: (rawEvent as CreatedEvent).title,
+    category: "Custom",
+    venue: (rawEvent as CreatedEvent).venue,
+    time: (rawEvent as CreatedEvent).time,
+    people: "2–10 people",
+    description: (rawEvent as CreatedEvent).description,
+    tone: "Balanced",
+    noiseLevel: (rawEvent as CreatedEvent).noiseLevel as any,
+    weather: "Indoor ready",
+    imageTone: "#29365E",
+    emoji: "📅",
+    tags: ["Custom"],
+    preEventQuestions: (rawEvent as CreatedEvent).preEventQuestions,
+    postEventQuestions: (rawEvent as CreatedEvent).postEventQuestions,
+  } : rawEvent as EventItem;
   const localizedEvent = { ...event, ...(detailEventTranslations[appLanguageBase]?.[event.id] ?? {}) };
   const isMovieNight = event.id === movieNight.id;
   const eventTitle = isMovieNight ? copy.title : localizedEvent.title.replace(" — ", " —\n");
   const eventCategory = isMovieNight ? copy.category : localizedEvent.category;
   const eventTone = isMovieNight ? copy.tone : `Pace: ${getDetailSocialPaceLabel(localizedEvent.tone)}`;
-  const eventDate = isMovieNight ? copy.date : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
+  const eventDate = isMovieNight ? copy.date : isCreatedEvent ? `${(rawEvent as CreatedEvent).date} · ${(rawEvent as CreatedEvent).time}` : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
   const eventPeople = isMovieNight ? copy.people : localizedEvent.people;
   const eventDescription = isMovieNight ? copy.description : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
   const eventNoise = noiseCopy.levels[event.noiseLevel];
   const eventWeatherCopy = event.weather.includes("Weather")
     ? copy.weatherAffectedCopy
     : copy.weatherFriendlyCopy;
+  const mediaComfortLabels = getDetailMediaComfortLabels(event, photoRecordingComfortPreferences);
   const eventMeetingCopy = isMovieNight
     ? copy.meetingCopy
     : copy.genericMeetingCopy(event.venue);
@@ -1029,6 +1122,26 @@ export default function EventDetailsScreen() {
           </View>
         </View>
 
+        <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="visibility" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+          </View>
+          <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+          </Text>
+          <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+            {mediaComfortLabels.map((label) => (
+              <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
+            ))}
+          </View>
+          <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Please don't screenshot or share someone's profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention.
+          </Text>
+        </View>
+
         <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
         <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
           <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
@@ -1047,6 +1160,20 @@ export default function EventDetailsScreen() {
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.flexibleCopy}</Text>
           </View>
         </View>
+
+        {event.preEventQuestions && event.preEventQuestions.length > 0 && (
+          <View style={[styles.questionsPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.preEventQuestionsTitle}</Text>
+            <Text style={[styles.questionsCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.preEventQuestionsCopy}</Text>
+            <View style={styles.questionsList}>
+              {event.preEventQuestions.map((question, index) => (
+                <Text key={index} style={[styles.questionText, isDay && styles.dayText, isRtl && styles.rtlText]}>
+                  • {question}
+                </Text>
+              ))}
+            </View>
+          </View>
+        )}
 
         <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel, isRtl && styles.rtlBlock]}>
           <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.meetingPoint}</Text>
@@ -1087,6 +1214,15 @@ export default function EventDetailsScreen() {
             <Text style={[styles.safetyCopy, isDay && styles.dayMutedText]}>
               {existingFeedback ? eventCopy.feedbackSaved : eventCopy.feedbackPrompt}
             </Text>
+            {event.postEventQuestions && event.postEventQuestions.length > 0 && !existingFeedback && (
+              <View style={styles.postQuestionsList}>
+                {event.postEventQuestions.map((question, index) => (
+                  <Text key={index} style={[styles.postQuestionText, isDay && styles.dayText]}>
+                    • {question}
+                  </Text>
+                ))}
+              </View>
+            )}
             <View style={styles.feedbackActions}>
               <TouchableOpacity activeOpacity={0.82} onPress={() => saveFeedback("Good", true)} style={styles.feedbackButton}>
                 <Text style={styles.feedbackButtonText}>{eventCopy.feedbackGood}</Text>
@@ -1174,6 +1310,15 @@ const styles = StyleSheet.create({
   noiseCopyBlock: { flex: 1 },
   noiseTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   noiseDescription: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 2 },
+  mediaComfortCard: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 9, marginBottom: 16 },
+  mediaComfortHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
+  mediaComfortIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  mediaComfortTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  mediaComfortCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
+  mediaComfortChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  mediaComfortChip: { color: "#D2E0FF", borderColor: "rgba(124,170,201,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontSize: 11, fontWeight: "900", overflow: "hidden", backgroundColor: "rgba(124,170,201,0.1)" },
+  dayMediaComfortChip: { color: "#445E93", borderColor: "#9AADE8", backgroundColor: "#EDF2FF" },
+  mediaComfortNote: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, fontWeight: "700" },
   sectionTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 23, marginBottom: 10 },
   expectGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
   expectCard: { width: "48%", minHeight: 82, borderRadius: 16, padding: 13, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border },
@@ -1203,4 +1348,10 @@ const styles = StyleSheet.create({
   feedbackButton: { flex: 1, minHeight: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: nsnColors.border },
   feedbackButtonDanger: { borderColor: "rgba(255,119,119,0.45)" },
   feedbackButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900" },
+  questionsPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
+  questionsCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginBottom: 10 },
+  questionsList: { gap: 6 },
+  questionText: { color: nsnColors.text, fontSize: 14, lineHeight: 20 },
+  postQuestionsList: { gap: 6, marginTop: 10, marginBottom: 10 },
+  postQuestionText: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
 });

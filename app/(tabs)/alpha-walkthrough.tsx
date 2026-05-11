@@ -35,6 +35,14 @@ const walkthroughSteps = [
     icon: "visibility",
   },
   {
+    title: "Try trust foundations",
+    eyebrow: "Phase 1 prototype",
+    copy: "Set progressive visibility, social energy, communication style, group size comfort, and a verified-but-private trust state. These controls are local prototype signals until real verification and matching systems exist.",
+    actionLabel: "Open comfort & trust",
+    route: "/(tabs)/settings",
+    icon: "shield",
+  },
+  {
     title: "Browse meetups",
     eyebrow: "Demo meetups",
     copy: "Browse small plans like coffee, walks, films, games, and quiet indoor options. Nothing joins a real public meetup during alpha testing.",

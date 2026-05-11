@@ -3,7 +3,7 @@ import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, Tex
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
-import { defaultHomeSectionOrder, defaultHomeVisibleSections, getLanguageBase, type CardOutlineStyle, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, useAppSettings } from "@/lib/app-settings";
+import { defaultHomeSectionOrder, defaultHomeVisibleSections, getLanguageBase, type CardOutlineStyle, type GroupSizePreference, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, type PhotoRecordingComfortPreference, type SocialEnergyPreference, useAppSettings } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -12,6 +12,8 @@ import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAr
 import { getComfortEventScore, isNearbyEvent, isSmallGroupEvent, isWeatherSafeEvent } from "@/lib/home-view-filters";
 import { prioritizeEventsForComfort } from "@/lib/softhello-mvp";
 import { formatEventTimeLabel, formatPreferredDate, formatPreferredTime, formatTemperatureLabel } from "@/lib/regional-format";
+import { getEventFoodPreferenceMatches } from "@/lib/preferences/food-preferences";
+import { getEventInterestPreferenceMatches } from "@/lib/preferences/interests";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 const appLocaleMap: Record<string, string> = {
@@ -411,7 +413,54 @@ const eventMapDetails: Record<string, { suburb: string; x: number; y: number; ro
 
 const getNoiseTagLabel = (label: string) => (label === "Balanced" ? "Moderate sound" : `${label} sound`);
 
-function EventTag({ icon, label, isDay, isRtl }: { icon: "pace" | "volume" | "volume.off" | "weather"; label: string; isDay?: boolean; isRtl?: boolean }) {
+const getEventPeopleRange = (people: string) => {
+  const [first = 0, second = first] = people.match(/\d+/g)?.map(Number) ?? [];
+  return { min: first, max: second };
+};
+
+const getGroupSizePreferenceScore = (event: EventItem, preference: GroupSizePreference) => {
+  const range = getEventPeopleRange(event.people);
+
+  if (preference === "Flexible") return 0;
+  if (preference === "1:1") return range.max <= 2 ? 3 : range.max <= 3 ? 1 : -2;
+  if (preference === "2-3 people") return range.max <= 3 && range.min <= 3 ? 3 : range.max <= 4 ? 1 : -1;
+  if (preference === "4-6 people") return range.max >= 4 && range.max <= 6 ? 3 : range.max <= 3 ? 0 : -1;
+  return range.max <= 4 ? 3 : range.max <= 6 ? 1 : -2;
+};
+
+const getSocialEnergyPreferenceScore = (event: EventItem, preference: SocialEnergyPreference) => {
+  if (preference === "Calm") return event.noiseLevel === "Quiet" || event.tone === "Quiet" ? 3 : event.noiseLevel === "Balanced" ? 1 : -2;
+  if (preference === "Balanced") return event.noiseLevel === "Balanced" || event.tone === "Balanced" ? 3 : 1;
+  if (preference === "Social") return event.tone === "Balanced" || event.noiseLevel === "Balanced" ? 3 : event.tone === "Lively" ? 2 : 0;
+  return event.tone === "Lively" || event.noiseLevel === "Lively" ? 3 : event.noiseLevel === "Balanced" ? 1 : -1;
+};
+
+const getTrustFoundationEventChips = (event: EventItem, socialEnergyPreference: SocialEnergyPreference, groupSizePreference: GroupSizePreference, verifiedButPrivate: boolean) => {
+  const chips: string[] = [];
+  const range = getEventPeopleRange(event.people);
+
+  if (groupSizePreference !== "Flexible" && range.max <= 4) chips.push("Small group");
+  if (socialEnergyPreference === "Calm" && (event.noiseLevel === "Quiet" || event.tone === "Quiet")) chips.push("Calm vibe");
+  if (event.tone === "Quiet") chips.push("Low chat");
+  if (verifiedButPrivate) chips.push("Verified/private friendly");
+
+  return chips.filter((chip, index, all) => all.indexOf(chip) === index).slice(0, 2);
+};
+
+const getMediaComfortEventChip = (event: EventItem, photoRecordingComfortPreferences: PhotoRecordingComfortPreference[]) => {
+  const eventLabels = event.mediaComfortLabels ?? ["Ask before photos"];
+
+  if (photoRecordingComfortPreferences.includes("No videos please") || eventLabels.includes("No filming")) return "No filming";
+  if (photoRecordingComfortPreferences.includes("No photos of me") || photoRecordingComfortPreferences.includes("Ask me first")) return "Ask before photos";
+  if (photoRecordingComfortPreferences.includes("Group photos are okay")) return "Group photos by consent";
+  if (photoRecordingComfortPreferences.includes("Venue/event photos are okay")) return "Venue photos okay";
+  if (photoRecordingComfortPreferences.includes("No public posting without permission") || eventLabels.includes("No public posting")) return "No public posting";
+  if (photoRecordingComfortPreferences.includes("Prefer no screenshots of chats/profile")) return "No screenshots";
+
+  return eventLabels[0];
+};
+
+function EventTag({ icon, label, isDay, isRtl }: { icon: "pace" | "volume" | "volume.off" | "weather" | "visibility" | "food" | "interests"; label: string; isDay?: boolean; isRtl?: boolean }) {
   return (
     <View style={[styles.eventTag, isDay && styles.dayEventTag, isRtl && styles.rtlRow]}>
       <IconSymbol name={icon} color={isDay ? "#53677A" : nsnColors.muted} size={12} />
@@ -547,7 +596,7 @@ function EventPrototypeScene({ event, place, isDay }: { event: EventItem; place?
   );
 }
 
-function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference, density, cardLayout, visualMode, cardOutlineStyle, featured, highlighted, onHighlight }: { event: EventItem; isDay?: boolean; appLanguageBase: string; locale: string; timeFormatPreference: ReturnType<typeof useAppSettings>["timeFormatPreference"]; density: HomeLayoutDensity; cardLayout: HomeCardLayout; visualMode: HomeEventVisualMode; cardOutlineStyle: CardOutlineStyle; featured?: boolean; highlighted?: boolean; onHighlight?: (eventId: string) => void }) {
+function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference, density, cardLayout, visualMode, cardOutlineStyle, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, featured, highlighted, onHighlight }: { event: EventItem; isDay?: boolean; appLanguageBase: string; locale: string; timeFormatPreference: ReturnType<typeof useAppSettings>["timeFormatPreference"]; density: HomeLayoutDensity; cardLayout: HomeCardLayout; visualMode: HomeEventVisualMode; cardOutlineStyle: CardOutlineStyle; socialEnergyPreference: SocialEnergyPreference; groupSizePreference: GroupSizePreference; photoRecordingComfortPreferences: PhotoRecordingComfortPreference[]; foodBeveragePreferenceIds: string[]; interestPreferenceIds: string[]; interestComfortTagsByInterest: Record<string, string[]>; verifiedButPrivate: boolean; featured?: boolean; highlighted?: boolean; onHighlight?: (eventId: string) => void }) {
   const router = useRouter();
   const isRtl = rtlLanguages.has(appLanguageBase);
   const localizedEvent = { ...event, ...(eventTranslations[appLanguageBase]?.[event.id] ?? {}) };
@@ -558,6 +607,10 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
   const shouldUsePreviewImage = visualMode === "Preview image" && Boolean(livePreview?.photo);
   const shouldUsePrototypeFallback = visualMode === "Preview image" && !livePreview?.photo;
   const eventTime = formatEventTimeLabel(event.time, { locale, timeFormatPreference });
+  const trustFoundationChips = getTrustFoundationEventChips(event, socialEnergyPreference, groupSizePreference, verifiedButPrivate);
+  const mediaComfortChip = getMediaComfortEventChip(event, photoRecordingComfortPreferences);
+  const foodPreferenceChips = getEventFoodPreferenceMatches(event, foodBeveragePreferenceIds, 2);
+  const interestPreferenceChips = getEventInterestPreferenceMatches(event, interestPreferenceIds, interestComfortTagsByInterest, 2);
   const eventOutlineStyle =
     cardOutlineStyle === "Minimal"
       ? styles.eventCardOutlineMinimal
@@ -641,6 +694,16 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
           <EventTag icon="pace" label={`Pace: ${getSocialPaceLabel(localizedEvent.tone)}`} isDay={isDay} isRtl={isRtl} />
           <EventTag icon={event.noiseLevel === "Quiet" ? "volume.off" : "volume"} label={getNoiseTagLabel(eventNoise.label)} isDay={isDay} isRtl={isRtl} />
           <EventTag icon="weather" label={localizedEvent.weather} isDay={isDay} isRtl={isRtl} />
+          {trustFoundationChips.map((chip) => (
+            <EventTag key={chip} icon="pace" label={chip} isDay={isDay} isRtl={isRtl} />
+          ))}
+          {foodPreferenceChips.map((chip) => (
+            <EventTag key={`food-${chip}`} icon="food" label={chip} isDay={isDay} isRtl={isRtl} />
+          ))}
+          {interestPreferenceChips.map((chip) => (
+            <EventTag key={`interest-${chip}`} icon="interests" label={chip} isDay={isDay} isRtl={isRtl} />
+          ))}
+          <EventTag icon="visibility" label={mediaComfortChip} isDay={isDay} isRtl={isRtl} />
         </View>
       </View>
       <View style={styles.cardArrow}>
@@ -1067,7 +1130,7 @@ function HeaderActionButton({
 export default function HomeScreen() {
   const router = useRouter();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -1140,6 +1203,25 @@ export default function HomeScreen() {
         if (nearbyDelta !== 0) return nearbyDelta;
       }
 
+      const trustDelta =
+        getSocialEnergyPreferenceScore(b, socialEnergyPreference) +
+        getGroupSizePreferenceScore(b, groupSizePreference) -
+        (getSocialEnergyPreferenceScore(a, socialEnergyPreference) + getGroupSizePreferenceScore(a, groupSizePreference));
+
+      if (trustDelta !== 0) return trustDelta;
+
+      const foodDelta =
+        getEventFoodPreferenceMatches(b, foodBeveragePreferenceIds, 3).length -
+        getEventFoodPreferenceMatches(a, foodBeveragePreferenceIds, 3).length;
+
+      if (foodDelta !== 0) return foodDelta;
+
+      const interestDelta =
+        getEventInterestPreferenceMatches(b, interestPreferenceIds, interestComfortTagsByInterest, 3).length -
+        getEventInterestPreferenceMatches(a, interestPreferenceIds, interestComfortTagsByInterest, 3).length;
+
+      if (interestDelta !== 0) return interestDelta;
+
       if (homeViewMode === "Comfortable") {
         return getComfortEventScore(a) - getComfortEventScore(b);
       }
@@ -1148,7 +1230,7 @@ export default function HomeScreen() {
     });
 
     return nextEvents;
-  }, [baseEvents, homeNearbyOnly, homeSmallGroupsOnly, homeViewMode, homeWeatherSafeOnly, timezone.city, timezone.country, timezone.label]);
+  }, [baseEvents, foodBeveragePreferenceIds, groupSizePreference, homeNearbyOnly, homeSmallGroupsOnly, homeViewMode, homeWeatherSafeOnly, interestComfortTagsByInterest, interestPreferenceIds, socialEnergyPreference, timezone.city, timezone.country, timezone.label]);
   const isDay = !isNightMode;
   const effectiveReduceMotion = reduceMotion || batterySaver;
   const [now, setNow] = useState(new Date());
@@ -1941,7 +2023,7 @@ export default function HomeScreen() {
             {homeCardLayout === "Horizontal cards" ? (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.horizontalEventScroller, isRtl && styles.rtlRow]}>
                 {displayedEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
+                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} socialEnergyPreference={socialEnergyPreference} groupSizePreference={groupSizePreference} photoRecordingComfortPreferences={photoRecordingComfortPreferences} foodBeveragePreferenceIds={foodBeveragePreferenceIds} interestPreferenceIds={interestPreferenceIds} interestComfortTagsByInterest={interestComfortTagsByInterest} verifiedButPrivate={verifiedButPrivate} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
                 ))}
               </ScrollView>
             ) : (
@@ -1954,7 +2036,7 @@ export default function HomeScreen() {
                 ]}
               >
                 {displayedEvents.map((event, index) => (
-                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
+                  <EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} locale={locale} timeFormatPreference={timeFormatPreference} density={effectiveHomeLayoutDensity} cardLayout={homeCardLayout} visualMode={homeEventVisualMode} cardOutlineStyle={cardOutlineStyle} socialEnergyPreference={socialEnergyPreference} groupSizePreference={groupSizePreference} photoRecordingComfortPreferences={photoRecordingComfortPreferences} foodBeveragePreferenceIds={foodBeveragePreferenceIds} interestPreferenceIds={interestPreferenceIds} interestComfortTagsByInterest={interestComfortTagsByInterest} verifiedButPrivate={verifiedButPrivate} featured={index === 0} highlighted={selectedMapEvent?.id === event.id} onHighlight={setHighlightedEventId} />
                 ))}
               </View>
             )}

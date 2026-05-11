@@ -1,9 +1,40 @@
-import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent } from "react-native";
-import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
-import { appPalettes, getLanguageBase, nsnLocalLanguageOptions, normalizeNsnLanguage, type AccountPauseTimeline, type CardOutlineStyle, type ClockDisplayStyle, type CurrencyDisplayPreference, type DateFormatPreference, type DayNightModePreference, type DistanceUnitPreference, type LowLightLevel, type NotificationSnoozePreset, type NsnBlurLevel, type NsnComfortMode, type ProfileGender, type ProfileNameDisplayMode, type SettingsPrivacyMode, type TemperatureUnitPreference, type TimeContextMode, type TimeFormatPreference, useAppSettings } from "@/lib/app-settings";
+import {
+  appPalettes,
+  communicationPreferenceOptions,
+  getLanguageBase,
+  groupSizePreferenceOptions,
+  nsnLocalLanguageOptions,
+  normalizeNsnLanguage,
+  photoRecordingComfortOptions,
+  socialEnergyOptions,
+  type AccountPauseTimeline,
+  type CardOutlineStyle,
+  type ClockDisplayStyle,
+  type CommunicationPreference,
+  type CurrencyDisplayPreference,
+  type DateFormatPreference,
+  type DayNightModePreference,
+  type DistanceUnitPreference,
+  type GroupSizePreference,
+  type LowLightLevel,
+  type NotificationSnoozePreset,
+  type NsnBlurLevel,
+  type NsnComfortMode,
+  type PhotoRecordingComfortPreference,
+  type ProfileGender,
+  type ProfileNameDisplayMode,
+  type SettingsPrivacyMode,
+  type SocialEnergyPreference,
+  type TemperatureUnitPreference,
+  type TimeContextMode,
+  type TimeFormatPreference,
+  useAppSettings,
+} from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -69,6 +100,7 @@ const jumpIconBySection: Record<SettingsSectionJumpId, ComponentProps<typeof Ico
   batteryPerformance: "battery",
   generalPrivacy: "visibility",
   profileVisibility: "person.fill",
+  trustFoundations: "shield",
   profilePreview: "preview",
   nameDisplay: "badge",
   photoBlur: "visibility.off",
@@ -92,6 +124,11 @@ const prototypeBadgeBySetting: Record<string, "Prototype" | "Demo" | "Coming soo
   safetyCheckIns: "Coming soon",
   useApproximateLocation: "Prototype",
   showDistanceInMeetups: "Demo",
+  socialEnergyPreference: "Prototype",
+  communicationPreferences: "Prototype",
+  groupSizePreference: "Prototype",
+  photoRecordingComfortPreferences: "Prototype",
+  verifiedButPrivate: "Prototype",
 };
 const prototypeOnlyToggleKeys = new Set(["showFirstNameOnly", "sameAgeGroupsOnly", "revealAfterRsvp", "friendsOfFriendsOnly"]);
 const comingSoonToggleKeys = new Set(["safetyCheckIns"]);
@@ -105,6 +142,7 @@ type SettingsSectionJumpId =
   | "batteryPerformance"
   | "generalPrivacy"
   | "profileVisibility"
+  | "trustFoundations"
   | "profilePreview"
   | "nameDisplay"
   | "photoBlur"
@@ -117,6 +155,65 @@ type SettingsSectionJumpId =
   | "appearance"
   | "language"
   | "generalSettings";
+
+type SettingsAccordionId =
+  | "displayLayout"
+  | "privacyVisibility"
+  | "profileDetails"
+  | "comfortSafety"
+  | "notifications"
+  | "timeUnits"
+  | "safetyContact"
+  | "advancedDisplay"
+  | "account";
+
+const allSettingsAccordionIds: SettingsAccordionId[] = [
+  "displayLayout",
+  "privacyVisibility",
+  "profileDetails",
+  "comfortSafety",
+  "notifications",
+  "timeUnits",
+  "safetyContact",
+  "advancedDisplay",
+  "account",
+];
+
+const basicOpenSettingsAccordions: SettingsAccordionId[] = ["comfortSafety", "privacyVisibility"];
+
+const advancedOpenSettingsAccordions: SettingsAccordionId[] = ["comfortSafety", "privacyVisibility"];
+
+const accordionByJumpSection: Record<SettingsSectionJumpId, SettingsAccordionId> = {
+  settingsView: "displayLayout",
+  batteryPerformance: "displayLayout",
+  generalPrivacy: "privacyVisibility",
+  profileVisibility: "privacyVisibility",
+  trustFoundations: "comfortSafety",
+  profilePreview: "profileDetails",
+  nameDisplay: "profileDetails",
+  photoBlur: "profileDetails",
+  gender: "profileDetails",
+  notifications: "notifications",
+  locationDiscovery: "timeUnits",
+  regionalFormats: "timeUnits",
+  safetyContact: "safetyContact",
+  accessibility: "advancedDisplay",
+  appearance: "advancedDisplay",
+  language: "advancedDisplay",
+  generalSettings: "account",
+};
+
+const settingsAccordionMeta: Record<SettingsAccordionId, { title: string; copy: string; icon: ComponentProps<typeof IconSymbol>["name"] }> = {
+  displayLayout: { title: "Display & layout", copy: "View mode, battery, low-light, and layout comfort.", icon: "palette" },
+  privacyVisibility: { title: "Privacy & visibility", copy: "Profile visibility, preview details, and what others can see.", icon: "visibility" },
+  profileDetails: { title: "Profile preview details", copy: "Name, photo blur, gender, and profile preview controls.", icon: "preview" },
+  comfortSafety: { title: "Comfort & safety", copy: "Trust foundations, safety copy, and low-pressure controls.", icon: "shield" },
+  notifications: { title: "Notifications", copy: "Meetup reminders, chats, weather alerts, and snooze controls.", icon: "bell" },
+  timeUnits: { title: "Time, date & units", copy: "Local time, Day/Night logic, dates, weather units, and regional formats.", icon: "language" },
+  safetyContact: { title: "Safety & contact", copy: "Prototype-safe safety states, onboarding restart, and contact controls.", icon: "shield" },
+  advancedDisplay: { title: "Advanced display settings", copy: "Accessibility, appearance, language, and theme controls.", icon: "accessibility" },
+  account: { title: "Account", copy: "Alpha walkthrough, reset controls, and prototype account actions.", icon: "account" },
+};
 
 type SettingsCopy = {
   title: string;
@@ -2931,6 +3028,7 @@ export default function SettingsScreen() {
   const { section: requestedSection } = useLocalSearchParams<{ section?: string | string[] }>();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const sectionOffsets = useRef<Partial<Record<SettingsSectionJumpId, number>>>({});
+  const accordionOffsets = useRef<Partial<Record<SettingsAccordionId, number>>>({});
   const handledRequestedSection = useRef(false);
   const {
     isNightMode,
@@ -2978,6 +3076,11 @@ export default function SettingsScreen() {
     hobbiesInterests,
     comfortPreferences,
     contactPreferences,
+    socialEnergyPreference,
+    communicationPreferences,
+    groupSizePreference,
+    photoRecordingComfortPreferences,
+    verifiedButPrivate,
     profilePhotoUri,
     settingsPrivacyMode,
     batterySaver,
@@ -3067,6 +3170,9 @@ export default function SettingsScreen() {
   const [translationLanguageRegionBase, setTranslationLanguageRegionBase] = useState<string | null>(null);
   const [recentlyChangedKey, setRecentlyChangedKey] = useState<string | null>(null);
   const [accountConfirmation, setAccountConfirmation] = useState<AccountConfirmation>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [openAccordionSections, setOpenAccordionSections] = useState<SettingsAccordionId[]>(basicOpenSettingsAccordions);
+  const [highlightedAccordionSection, setHighlightedAccordionSection] = useState<SettingsAccordionId | null>(null);
   const recentlyChangedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy: SettingsCopy = {
@@ -3123,6 +3229,7 @@ export default function SettingsScreen() {
     { id: "batteryPerformance", label: "Battery" },
     { id: "generalPrivacy", label: "Privacy" },
     { id: "profileVisibility", label: "Visibility" },
+    { id: "trustFoundations", label: "Trust" },
     { id: "profilePreview", label: "Preview" },
     ...(isAdvancedSettings
       ? [
@@ -3141,9 +3248,31 @@ export default function SettingsScreen() {
     { id: "generalSettings", label: "Account" },
   ];
   const normalizedQuickJumpSearch = quickJumpSearch.trim().toLocaleLowerCase();
-  const filteredQuickJumpOptions = normalizedQuickJumpSearch
-    ? quickJumpOptions.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch))
-    : quickJumpOptions;
+  const filteredQuickJumpOptions = useMemo(
+    () => normalizedQuickJumpSearch
+      ? quickJumpOptions.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch))
+      : quickJumpOptions,
+    [normalizedQuickJumpSearch, quickJumpOptions]
+  );
+  const visibleSettingsAccordionIds = useMemo(
+    () => isAdvancedSettings
+      ? allSettingsAccordionIds
+      : allSettingsAccordionIds.filter((id) => id !== "notifications" && id !== "timeUnits" && id !== "safetyContact" && id !== "advancedDisplay"),
+    [isAdvancedSettings]
+  );
+  const expandAllSettingsAccordions = () => {
+    setOpenAccordionSections(visibleSettingsAccordionIds);
+  };
+  const collapseAllSettingsAccordions = () => {
+    setOpenAccordionSections([]);
+  };
+  const toggleSettingsAccordion = (id: SettingsAccordionId) => {
+    setOpenAccordionSections((current) =>
+      current.includes(id)
+        ? current.filter((sectionId) => sectionId !== id)
+        : [...current, id]
+    );
+  };
   const showRecentlyChanged = (key: string) => {
     if (recentlyChangedTimer.current) {
       clearTimeout(recentlyChangedTimer.current);
@@ -3318,8 +3447,14 @@ export default function SettingsScreen() {
   const registerSectionLayout = (id: SettingsSectionJumpId) => (event: LayoutChangeEvent) => {
     sectionOffsets.current[id] = event.nativeEvent.layout.y;
   };
-  const jumpToSection = (id: SettingsSectionJumpId) => {
-    const y = sectionOffsets.current[id];
+  const registerAccordionLayout = (id: SettingsAccordionId) => (event: LayoutChangeEvent) => {
+    accordionOffsets.current[id] = event.nativeEvent.layout.y;
+  };
+  const scrollToSectionOrAccordion = (id: SettingsSectionJumpId) => {
+    const accordionId = accordionByJumpSection[id];
+    const sectionY = sectionOffsets.current[id];
+    const accordionY = accordionOffsets.current[accordionId];
+    const y = typeof sectionY === "number" ? sectionY : accordionY;
     if (typeof y !== "number") return;
 
     scrollViewRef.current?.scrollTo({
@@ -3327,7 +3462,93 @@ export default function SettingsScreen() {
       animated: !batterySaver && !reduceMotion,
     });
   };
+  const jumpToSection = (id: SettingsSectionJumpId) => {
+    const accordionId = accordionByJumpSection[id];
+
+    setOpenAccordionSections((current) => current.includes(accordionId) ? current : [...current, accordionId]);
+    setHighlightedAccordionSection(accordionId);
+
+    setTimeout(() => {
+      scrollToSectionOrAccordion(id);
+      setTimeout(() => setHighlightedAccordionSection(null), 1600);
+    }, 80);
+  };
+  const renderSettingsAccordion = (id: SettingsAccordionId, children: ReactNode) => {
+    if (!visibleSettingsAccordionIds.includes(id)) return null;
+
+    const meta = settingsAccordionMeta[id];
+    const expanded = openAccordionSections.includes(id);
+    const highlighted = highlightedAccordionSection === id;
+
+    return (
+      <View
+        onLayout={registerAccordionLayout(id)}
+        style={[styles.accordionSection, isDay && styles.dayAccordionSection, highContrast && styles.highContrastCard, highlighted && styles.accordionSectionHighlighted]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => toggleSettingsAccordion(id)}
+          accessibilityRole="button"
+          accessibilityLabel={`${expanded ? "Collapse" : "Expand"} ${meta.title}`}
+          accessibilityState={{ expanded }}
+          style={[styles.accordionHeader, isRtl && styles.rtlRow]}
+        >
+          <View style={[styles.accordionIcon, isDay && styles.dayQuickJumpButton]}>
+            <IconSymbol name={meta.icon} color={isDay ? "#445E93" : "#A8B7DA"} size={18} />
+          </View>
+          <View style={styles.settingCopy}>
+            <Text style={[styles.accordionTitle, largerText && styles.largeLabel, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{meta.title}</Text>
+            <Text style={[styles.accordionCopy, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{meta.copy}</Text>
+          </View>
+          <View style={styles.accordionState}>
+            <Text style={[styles.accordionStateText, isDay && styles.daySubtitle]}>{expanded ? "Open" : "Closed"}</Text>
+            <IconSymbol name={expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+          </View>
+        </TouchableOpacity>
+        {expanded ? (
+          <View style={styles.accordionBody}>
+            {children}
+          </View>
+        ) : null}
+      </View>
+    );
+  };
   const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
+  useEffect(() => {
+    setOpenAccordionSections((current) => {
+      const valid = current.filter((id) => visibleSettingsAccordionIds.includes(id));
+      return valid.length ? valid : isAdvancedSettings ? advancedOpenSettingsAccordions : basicOpenSettingsAccordions;
+    });
+  }, [isAdvancedSettings]);
+  useEffect(() => {
+    if (!normalizedQuickJumpSearch || filteredQuickJumpOptions.length === 0) return;
+
+    const matchingSections = filteredQuickJumpOptions
+      .map((option) => accordionByJumpSection[option.id])
+      .filter((id): id is SettingsAccordionId => visibleSettingsAccordionIds.includes(id));
+    const uniqueSections = matchingSections.filter((id, index, all) => all.indexOf(id) === index);
+
+    if (!uniqueSections.length) return;
+    setOpenAccordionSections((current) => {
+      if (uniqueSections.every((id) => current.includes(id))) return current;
+      return [...new Set([...current, ...uniqueSections])];
+    });
+  }, [filteredQuickJumpOptions, normalizedQuickJumpSearch, visibleSettingsAccordionIds]);
+  const scrollSettingsToTop = () => {
+    scrollViewRef.current?.scrollTo({
+      y: 0,
+      animated: !batterySaver && !reduceMotion,
+    });
+    setShowBackToTop(false);
+  };
+  const handleSettingsScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setShowBackToTop((current) => {
+      if (offsetY > 420) return true;
+      if (offsetY < 260) return false;
+      return current;
+    });
+  };
   useEffect(() => {
     if (normalizedRequestedSection !== "notifications" && normalizedRequestedSection !== "regionalFormats") {
       handledRequestedSection.current = false;
@@ -3432,6 +3653,34 @@ export default function SettingsScreen() {
       comfortMode: value,
       ...previewDefaults,
     });
+  };
+  const saveSocialEnergyPreference = (value: SocialEnergyPreference) => {
+    saveSoftHelloMvpState({ socialEnergyPreference: value });
+    showRecentlyChanged("socialEnergyPreference");
+  };
+  const saveGroupSizePreference = (value: GroupSizePreference) => {
+    saveSoftHelloMvpState({ groupSizePreference: value });
+    showRecentlyChanged("groupSizePreference");
+  };
+  const toggleCommunicationPreference = (value: CommunicationPreference) => {
+    const nextPreferences = communicationPreferences.includes(value)
+      ? communicationPreferences.filter((item) => item !== value)
+      : [...communicationPreferences, value];
+
+    saveSoftHelloMvpState({ communicationPreferences: nextPreferences });
+    showRecentlyChanged("communicationPreferences");
+  };
+  const togglePhotoRecordingComfortPreference = (value: PhotoRecordingComfortPreference) => {
+    const nextPreferences = photoRecordingComfortPreferences.includes(value)
+      ? photoRecordingComfortPreferences.filter((item) => item !== value)
+      : [...photoRecordingComfortPreferences, value];
+
+    saveSoftHelloMvpState({ photoRecordingComfortPreferences: nextPreferences });
+    showRecentlyChanged("photoRecordingComfortPreferences");
+  };
+  const saveVerifiedButPrivate = (value: boolean) => {
+    saveSoftHelloMvpState({ verifiedButPrivate: value });
+    showRecentlyChanged("verifiedButPrivate");
   };
   const selectExactLanguage = (
     value: string,
@@ -3618,6 +3867,8 @@ export default function SettingsScreen() {
           },
         ]}
         showsVerticalScrollIndicator
+        onScroll={handleSettingsScroll}
+        scrollEventThrottle={16}
       >
         <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={copy.goBack ?? englishCopy.goBack}>
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
@@ -3631,6 +3882,26 @@ export default function SettingsScreen() {
         <View style={[styles.quickJumpBlock, isDay && styles.dayQuickJumpBlock, highContrast && styles.highContrastCard]}>
           <View style={styles.quickJumpHeader}>
             <Text style={[styles.quickJumpTitle, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Jump to section</Text>
+            <View style={[styles.accordionQuickActions, isRtl && styles.rtlRow]}>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={expandAllSettingsAccordions}
+                accessibilityRole="button"
+                accessibilityLabel="Expand all Settings sections"
+                style={[styles.accordionQuickAction, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+              >
+                <Text style={[styles.accordionQuickActionText, isDay && styles.dayActionText]}>Expand all</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={collapseAllSettingsAccordions}
+                accessibilityRole="button"
+                accessibilityLabel="Collapse all Settings sections"
+                style={[styles.accordionQuickAction, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+              >
+                <Text style={[styles.accordionQuickActionText, isDay && styles.dayActionText]}>Collapse all</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               value={quickJumpSearch}
               onChangeText={setQuickJumpSearch}
@@ -3682,10 +3953,12 @@ export default function SettingsScreen() {
           })}
         </View>
 
+        {renderSettingsAccordion("displayLayout", (
+          <>
         <Text onLayout={registerSectionLayout("batteryPerformance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.batteryPerformance ?? englishCopy.batteryPerformance}
         </Text>
-        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+        <View style={[styles.card, styles.trustFoundationsSettingsCard, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {performanceRows.map((row, index) => (
             <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.rowDivider, isDay && (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.dayRowDivider, highContrast && (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.highContrastDivider]}>
               <View style={styles.settingCopy}>
@@ -3741,7 +4014,11 @@ export default function SettingsScreen() {
             </View>
           ) : null}
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("privacyVisibility", (
+          <>
         <Text onLayout={registerSectionLayout("generalPrivacy")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           General privacy
         </Text>
@@ -3840,7 +4117,161 @@ export default function SettingsScreen() {
             </View>
           </View>
         ))}
+          </>
+        ))}
 
+        {renderSettingsAccordion("comfortSafety", (
+          <>
+        <Text onLayout={registerSectionLayout("trustFoundations")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          Trust foundations
+        </Text>
+        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          <View style={styles.settingCopy}>
+            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Progressive visibility</Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Comfort Mode keeps you mostly private, Warm Up reveals limited details, and Open Mode shows more event-visible profile details.
+            </Text>
+          </View>
+          <View style={styles.blurLevelGrid}>
+            {comfortModeOptions.map((option) => {
+              const active = comfortMode === option.value;
+              return (
+                <TouchableOpacity
+                  key={`trust-${option.value}`}
+                  activeOpacity={0.82}
+                  onPress={() => saveComfortMode(option.value)}
+                  style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`Progressive visibility ${option.value}`}
+                  accessibilityState={{ checked: active }}
+                >
+                  <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option.value}` : option.value}</Text>
+                  <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
+            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Social energy</Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>Choose the kind of social energy that feels easiest today.</Text>
+            <View style={styles.blurLevelGrid}>
+              {socialEnergyOptions.map((option) => {
+                const active = socialEnergyPreference === option;
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    activeOpacity={0.82}
+                    onPress={() => saveSocialEnergyPreference(option)}
+                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`Social energy ${option}`}
+                    accessibilityState={{ checked: active }}
+                  >
+                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
+            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Communication preferences</Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>These prototype chips help others understand how you like to communicate.</Text>
+            <View style={styles.blurLevelGrid}>
+              {communicationPreferenceOptions.map((option) => {
+                const active = communicationPreferences.includes(option);
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    activeOpacity={0.82}
+                    onPress={() => toggleCommunicationPreference(option)}
+                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Communication preference ${option}`}
+                    accessibilityState={{ selected: active }}
+                  >
+                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
+            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Group size preference</Text>
+            <View style={styles.blurLevelGrid}>
+              {groupSizePreferenceOptions.map((option) => {
+                const active = groupSizePreference === option;
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    activeOpacity={0.82}
+                    onPress={() => saveGroupSizePreference(option)}
+                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`Group size preference ${option}`}
+                    accessibilityState={{ checked: active }}
+                  >
+                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
+            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+            </Text>
+            <View style={styles.blurLevelGrid}>
+              {photoRecordingComfortOptions.map((option) => {
+                const active = photoRecordingComfortPreferences.includes(option);
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    activeOpacity={0.82}
+                    onPress={() => togglePhotoRecordingComfortPreference(option)}
+                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Photo and recording comfort ${option}`}
+                    accessibilityState={{ selected: active }}
+                  >
+                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Please don't screenshot or share someone's profile, chat, or meetup details without permission.
+            </Text>
+            {renderSettingMeta("photoRecordingComfortPreferences")}
+          </View>
+
+          <View style={[styles.settingRow, styles.settingRowLast, isRtl && styles.rtlRow]}>
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Verified, but private</Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Your contact/trust status can be checked without making your profile fully open. Prototype trust state only - no real verification provider is connected yet.
+              </Text>
+              {renderSettingMeta("verifiedButPrivate")}
+            </View>
+            <Switch
+              value={verifiedButPrivate}
+              onValueChange={onToggleChange("verifiedButPrivate", saveVerifiedButPrivate)}
+              accessibilityLabel="Verified but private prototype trust state"
+              accessibilityHint="Keeps trust status visible without opening your full profile."
+              trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
+              thumbColor={verifiedButPrivate ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+            />
+          </View>
+        </View>
+          </>
+        ))}
+
+        {renderSettingsAccordion("profileDetails", (
+          <>
         {isAdvancedSettings ? (
           <>
         <Text onLayout={registerSectionLayout("nameDisplay")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
@@ -3942,6 +4373,11 @@ export default function SettingsScreen() {
             interests={hobbiesInterests}
             comfortPreferences={comfortPreferences}
             contactPreferences={contactPreferences}
+            socialEnergyPreference={socialEnergyPreference}
+            communicationPreferences={communicationPreferences}
+            groupSizePreference={groupSizePreference}
+            photoRecordingComfortPreferences={photoRecordingComfortPreferences}
+            verifiedButPrivate={verifiedButPrivate}
             comfortMode={comfortMode}
             profilePhotoUri={profilePhotoUri}
             privateProfile={privateProfile}
@@ -3960,8 +4396,12 @@ export default function SettingsScreen() {
             isDay={isDay}
           />
         </View>
+          </>
+        ))}
 
         {isAdvancedSettings ? (
+          <>
+        {renderSettingsAccordion("notifications", (
           <>
         <Text onLayout={registerSectionLayout("notifications")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.notifications ?? englishCopy.notifications}
@@ -4026,7 +4466,11 @@ export default function SettingsScreen() {
             </View>
           ) : null}
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("timeUnits", (
+          <>
         <Text onLayout={registerSectionLayout("locationDiscovery")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.locationDiscovery ?? englishCopy.locationDiscovery}
         </Text>
@@ -4190,7 +4634,11 @@ export default function SettingsScreen() {
             {copy.regionalFormatsPrototypeNote ?? englishCopy.regionalFormatsPrototypeNote}
           </Text>
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("safetyContact", (
+          <>
         <Text onLayout={registerSectionLayout("safetyContact")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.safetyContact ?? englishCopy.safetyContact}
         </Text>
@@ -4235,7 +4683,11 @@ export default function SettingsScreen() {
             <Text style={[styles.actionText, isDay && styles.dayActionText]}>{copy.restartOnboardingAction ?? englishCopy.restartOnboardingAction}</Text>
           </TouchableOpacity>
         </View>
+          </>
+        ))}
 
+        {renderSettingsAccordion("advancedDisplay", (
+          <>
         <Text onLayout={registerSectionLayout("accessibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {allAccessibilityRows.map((row, index) => (
@@ -4597,8 +5049,12 @@ export default function SettingsScreen() {
           )}
         </View>
           </>
+        ))}
+          </>
         ) : null}
 
+        {renderSettingsAccordion("account", (
+          <>
         <Text onLayout={registerSectionLayout("generalSettings")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           General settings
         </Text>
@@ -4700,7 +5156,21 @@ export default function SettingsScreen() {
             <Text style={styles.destructiveSettingsAction}>Delete</Text>
           </TouchableOpacity>
         </View>
+          </>
+        ))}
       </ScrollView>
+      {showBackToTop ? (
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={scrollSettingsToTop}
+          accessibilityRole="button"
+          accessibilityLabel="Back to top of Settings & Privacy"
+          style={[styles.backToTopButton, isDay && styles.dayBackToTopButton, highContrast && styles.highContrastButton, isRtl && styles.rtlRow]}
+        >
+          <IconSymbol name="chevron.up" color={isDay ? "#244061" : "#FFFFFF"} size={18} />
+          <Text style={[styles.backToTopText, isDay && styles.dayBackToTopText]}>Back to top</Text>
+        </TouchableOpacity>
+      ) : null}
       <Modal
         visible={accountConfirmation !== null}
         transparent
@@ -4872,11 +5342,130 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     lineHeight: 17,
   },
+  accordionQuickActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  accordionQuickAction: {
+    minHeight: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  accordionQuickActionText: {
+    color: "#A8B7DA",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
+  accordionSection: {
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: "#38527C",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    marginTop: 16,
+    overflow: "hidden",
+  },
+  dayAccordionSection: {
+    backgroundColor: "#F4F7F8",
+    borderColor: "#9FB2C8",
+  },
+  accordionSectionHighlighted: {
+    borderColor: "#D2E0FF",
+  },
+  accordionHeader: {
+    minHeight: 74,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  accordionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  accordionTitle: {
+    color: nsnColors.text,
+    fontSize: 16,
+    fontWeight: "900",
+    lineHeight: 22,
+  },
+  accordionCopy: {
+    color: nsnColors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  accordionState: {
+    minWidth: 68,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 5,
+  },
+  accordionStateText: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+  },
+  accordionBody: {
+    borderTopWidth: 1,
+    borderTopColor: nsnColors.border,
+    paddingHorizontal: 12,
+    paddingBottom: 14,
+  },
+  backToTopButton: {
+    position: "absolute",
+    right: 18,
+    bottom: 88,
+    minHeight: 42,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#6F8BB8",
+    backgroundColor: "#214B95",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingHorizontal: 14,
+    zIndex: 40,
+  },
+  dayBackToTopButton: {
+    borderColor: "#6F87A1",
+    backgroundColor: "#E4ECF4",
+  },
+  backToTopText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
+  dayBackToTopText: {
+    color: "#244061",
+  },
   card: {
     borderRadius: 18,
     borderWidth: 1,
     backgroundColor: nsnColors.surface,
     overflow: "hidden",
+  },
+  trustFoundationsSettingsCard: {
+    padding: 16,
+    gap: 10,
   },
   dayCard: {
     backgroundColor: "#EEF3F4",
@@ -4901,6 +5490,11 @@ const styles = StyleSheet.create({
   settingsGroup: {
     gap: 8,
     marginTop: 14,
+  },
+  inlineSettingsGroup: {
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: nsnColors.border,
   },
   settingsModeGrid: {
     flexDirection: "row",
@@ -5093,6 +5687,13 @@ const styles = StyleSheet.create({
   performanceLevelRow: {
     paddingHorizontal: 18,
     paddingVertical: 14,
+  },
+  settingRowLast: {
+    paddingHorizontal: 0,
+    paddingBottom: 0,
+    marginTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: nsnColors.border,
   },
   notificationSnoozeRow: {
     paddingHorizontal: 18,
