@@ -3,10 +3,11 @@ import { Animated, Image, Platform, Pressable, ScrollView, StyleSheet, Text, Tex
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
-import { australianLocalAreas, findNearestAustralianLocalArea, getLanguageBase, type NoiseLevelPreference, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
+import { getLanguageBase, type NoiseLevelPreference, type TimezoneSetting, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
+import { allEvents, dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
+import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, searchNsnEvents, searchNsnSydneyLocalAreas } from "@/lib/nsn-search";
 import { prioritizeEventsForComfort } from "@/lib/softhello-mvp";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -800,8 +801,8 @@ export default function HomeScreen() {
   const [expandedInsight, setExpandedInsight] = useState<"day-night" | "weather" | null>(null);
   const [dismissedThemeSuggestion, setDismissedThemeSuggestion] = useState<"day" | "night" | null>(null);
   const [headerPlaceholder, setHeaderPlaceholder] = useState<{ title: string; copy: string } | null>(null);
-  const [showLocationSearch, setShowLocationSearch] = useState(false);
-  const [locationSearch, setLocationSearch] = useState("");
+  const [showNsnSearch, setShowNsnSearch] = useState(false);
+  const [nsnSearchQuery, setNsnSearchQuery] = useState("");
   const [detectingLocation, setDetectingLocation] = useState(false);
   const activeEvents = useMemo(() => {
     const hiddenIds = new Set(hiddenEventIds);
@@ -830,25 +831,32 @@ export default function HomeScreen() {
 
   const showSearchPlaceholder = useCallback(() => {
     setHeaderPlaceholder(null);
-    setShowLocationSearch(true);
+    setShowNsnSearch(true);
   }, []);
 
-  const filteredLocalAreas = useMemo(() => {
-    const normalized = locationSearch.trim().toLocaleLowerCase();
-    if (!normalized) return australianLocalAreas;
-
-    return australianLocalAreas.filter((area) =>
-      `${area.label} ${area.city} ${area.country}`.toLocaleLowerCase().includes(normalized)
-    );
-  }, [locationSearch]);
+  const normalizedNsnSearchQuery = normalizeNsnSearchQuery(nsnSearchQuery);
+  const matchingLocalAreas = useMemo(
+    () => searchNsnSydneyLocalAreas(nsnSearchQuery, normalizedNsnSearchQuery ? 4 : 6),
+    [normalizedNsnSearchQuery, nsnSearchQuery]
+  );
+  const searchableMeetups = useMemo(
+    () => allEvents.filter((event) => showHiddenEvents || !hiddenEventIds.includes(event.id)),
+    [hiddenEventIds, showHiddenEvents]
+  );
+  const matchingMeetups = useMemo(
+    () => searchNsnEvents(searchableMeetups, nsnSearchQuery, eventTranslations[appLanguageBase] ?? {}, 4),
+    [appLanguageBase, nsnSearchQuery, searchableMeetups]
+  );
+  const displayedEvents = normalizedNsnSearchQuery ? matchingMeetups : activeEvents;
+  const hasNoSearchResults = Boolean(normalizedNsnSearchQuery) && matchingLocalAreas.length === 0 && matchingMeetups.length === 0;
 
   const chooseLocalArea = (area: TimezoneSetting) => {
     saveSoftHelloMvpState({ timezone: area, suburb: area.label });
-    setLocationSearch(area.label);
-    setShowLocationSearch(false);
+    setNsnSearchQuery(area.label);
+    setShowNsnSearch(false);
     setHeaderPlaceholder({
       title: `Local area set to ${area.label}`,
-      copy: `Weather, local time, and nearby prompts now use ${area.country}.`,
+      copy: `Weather, local time, and nearby prompts now use the closest Sydney/North Shore prototype point for ${area.label}.`,
     });
   };
   const detectLocalArea = async () => {
@@ -860,14 +868,14 @@ export default function HomeScreen() {
       if (permission.status !== "granted") {
         setHeaderPlaceholder({
           title: "Location permission not enabled",
-          copy: "You can still choose your city or suburb manually from the list.",
+          copy: "You can still choose a Sydney or North Shore suburb manually from Search NSN.",
         });
         return;
       }
 
       const lastKnownLocation = await Location.getLastKnownPositionAsync({ maxAge: 10 * 60 * 1000 });
       const currentLocation = lastKnownLocation ?? await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const nearestArea = findNearestAustralianLocalArea(currentLocation.coords.latitude, currentLocation.coords.longitude);
+      const nearestArea = findNearestNsnSydneyLocalArea(currentLocation.coords.latitude, currentLocation.coords.longitude);
       chooseLocalArea(nearestArea);
     } catch (error) {
       console.log("Location detection failed:", error);
@@ -1071,8 +1079,8 @@ export default function HomeScreen() {
           <View style={[styles.headerActions, isRtl && styles.rtlRow]}>
             <HeaderActionButton
               onPress={showSearchPlaceholder}
-              accessibilityLabel="Search local area"
-              accessibilityHint="Choose the Australian suburb or city used for live weather."
+              accessibilityLabel="Search NSN"
+              accessibilityHint="Search North Shore suburbs and prototype meetups."
               isDay={isDay}
             >
               <IconSymbol name="magnifyingglass" color={isDay ? "#0B1220" : nsnColors.text} size={22} />
@@ -1133,20 +1141,20 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {showLocationSearch ? (
+        {showNsnSearch ? (
           <View style={[styles.locationSearchCard, isDay && styles.dayHeaderPlaceholderCard]}>
             <View style={[styles.locationSearchHeader, isRtl && styles.rtlRow]}>
               <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
                 <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
-                  Search Australian local area
+                  Search NSN
                 </Text>
                 <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Choose the suburb or city used for live weather, local time, and nearby prompts.
+                  Search for a North Shore suburb or a low-pressure meetup idea like coffee, walks, board games, or Chatswood.
                 </Text>
               </View>
               <TouchableOpacity
                 activeOpacity={0.78}
-                onPress={() => setShowLocationSearch(false)}
+                onPress={() => setShowNsnSearch(false)}
                 accessibilityRole="button"
                 accessibilityLabel={homeCopy.dismissMessage}
                 style={[styles.headerPlaceholderDismiss, isDay && styles.dayHeaderPlaceholderDismiss]}
@@ -1157,12 +1165,13 @@ export default function HomeScreen() {
             <View style={[styles.locationInputWrap, isDay && styles.dayLocationInputWrap, isRtl && styles.rtlRow]}>
               <IconSymbol name="magnifyingglass" color={isDay ? "#3B4A63" : nsnColors.muted} size={18} />
               <TextInput
-                value={locationSearch}
-                onChangeText={setLocationSearch}
-                placeholder="Newcastle, Wollongong, Canberra..."
+                value={nsnSearchQuery}
+                onChangeText={setNsnSearchQuery}
+                placeholder="Search suburb or activity..."
                 placeholderTextColor={isDay ? "#6B7890" : nsnColors.muted}
-                autoCapitalize="words"
+                autoCapitalize="none"
                 autoCorrect={false}
+                accessibilityLabel="Search NSN suburbs and meetups"
                 style={[styles.locationInput, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
               />
             </View>
@@ -1172,7 +1181,7 @@ export default function HomeScreen() {
               disabled={detectingLocation}
               accessibilityRole="button"
               accessibilityLabel="Use current location"
-              accessibilityHint="Requests permission and detects the closest supported Australian local area."
+              accessibilityHint="Requests permission and detects the closest supported Sydney or North Shore prototype area."
               style={[styles.detectLocationButton, detectingLocation && styles.detectLocationButtonDisabled]}
             >
               <IconSymbol name="location" color={nsnColors.text} size={18} />
@@ -1180,25 +1189,68 @@ export default function HomeScreen() {
                 {detectingLocation ? "Detecting local area..." : "Use current location"}
               </Text>
             </TouchableOpacity>
-            <View style={styles.locationResultGrid}>
-              {filteredLocalAreas.map((area) => {
-                const active = area.id === timezone.id;
+            {matchingLocalAreas.length > 0 ? (
+              <View style={styles.searchResultGroup}>
+                <Text style={[styles.searchResultGroupTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Matching suburbs</Text>
+                <View style={styles.searchResultStack}>
+                  {matchingLocalAreas.map((area) => {
+                    const active = area.id === timezone.id;
 
-                return (
-                  <TouchableOpacity
-                    key={area.id}
-                    activeOpacity={0.82}
-                    onPress={() => chooseLocalArea(area)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Use ${area.label} as local area`}
-                    style={[styles.locationResultButton, active && styles.activeLocationResultButton, isDay && styles.dayLocationResultButton, isDay && active && styles.dayActiveLocationResultButton]}
-                  >
-                    <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, active && styles.activeLocationResultText]}>{area.label}</Text>
-                    <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, active && styles.activeLocationResultText]}>{area.country}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                    return (
+                      <TouchableOpacity
+                        key={area.id}
+                        activeOpacity={0.82}
+                        onPress={() => chooseLocalArea(area)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Use ${area.label} as local area`}
+                        style={[styles.locationResultButton, active && styles.activeLocationResultButton, isDay && styles.dayLocationResultButton, isDay && active && styles.dayActiveLocationResultButton]}
+                      >
+                        <View style={[styles.searchResultTopLine, isRtl && styles.rtlRow]}>
+                          <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, active && styles.activeLocationResultText, isRtl && styles.rtlText]}>{area.label}</Text>
+                          <Text style={[styles.searchResultBadge, active && styles.activeSearchResultBadge]}>Suburb</Text>
+                        </View>
+                        <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, active && styles.activeLocationResultText, isRtl && styles.rtlText]}>{area.country}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
+            {matchingMeetups.length > 0 ? (
+              <View style={styles.searchResultGroup}>
+                <Text style={[styles.searchResultGroupTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Matching meetups</Text>
+                <View style={styles.searchResultStack}>
+                  {matchingMeetups.map((event) => {
+                    const eventCopy = { ...event, ...(eventTranslations[appLanguageBase]?.[event.id] ?? {}) };
+
+                    return (
+                      <TouchableOpacity
+                        key={event.id}
+                        activeOpacity={0.82}
+                        onPress={() => router.push(`/event/${event.id}`)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Open meetup ${eventCopy.title}`}
+                        style={[styles.locationResultButton, styles.meetupSearchResultButton, isDay && styles.dayLocationResultButton]}
+                      >
+                        <View style={[styles.searchResultTopLine, isRtl && styles.rtlRow]}>
+                          <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCopy.title}</Text>
+                          <Text style={styles.searchResultBadge}>Meetup</Text>
+                        </View>
+                        <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventCopy.venue} - {eventCopy.category}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            ) : null}
+            {hasNoSearchResults ? (
+              <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
+                <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups yet.</Text>
+                <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  Try another suburb or activity - NSN is still an early local prototype.
+                </Text>
+              </View>
+            ) : null}
           </View>
         ) : null}
 
@@ -1315,7 +1367,9 @@ export default function HomeScreen() {
         </View>
 
         <View style={[styles.sectionHeader, isRtl && styles.rtlRow]}>
-          <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]}>{mode === "day" ? copy.dayEvents : copy.eveningEvents}</Text>
+          <Text style={[styles.sectionTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]}>
+            {normalizedNsnSearchQuery ? "Matching meetups" : mode === "day" ? copy.dayEvents : copy.eveningEvents}
+          </Text>
           <TouchableOpacity activeOpacity={0.75} onPress={() => setShowHiddenEvents((current) => !current)}>
             <Text style={[styles.seeAll, isDay ? styles.dayLinkText : null, isRtl && styles.rtlText]}>
               {showHiddenEvents ? ("hideHidden" in copy ? copy.hideHidden : "Hide hidden") : copy.seeAll}
@@ -1323,7 +1377,15 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
         <View style={styles.cardStack}>
-          {activeEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} />))}
+          {displayedEvents.map((event) => (<EventCard key={event.id} event={event} isDay={isDay} appLanguageBase={appLanguageBase} />))}
+          {normalizedNsnSearchQuery && displayedEvents.length === 0 ? (
+            <View style={[styles.searchEmptyCard, isDay && styles.dayLocationResultButton]}>
+              <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups yet.</Text>
+              <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Try another suburb or activity - NSN is still an early local prototype.
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         <TouchableOpacity activeOpacity={0.88} onPress={() => router.push("/(tabs)/events")} style={[styles.createMeetupButton, isRtl && styles.rtlRow]}>
@@ -1402,8 +1464,15 @@ const styles = StyleSheet.create({
   detectLocationButton: { minHeight: 42, borderRadius: 14, backgroundColor: nsnColors.primary, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   detectLocationButtonDisabled: { opacity: 0.72 },
   detectLocationButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  locationResultGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  locationResultButton: { minWidth: 128, flexGrow: 1, flexBasis: "30%", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
+  searchResultGroup: { gap: 7 },
+  searchResultGroupTitle: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  searchResultStack: { gap: 8 },
+  searchResultTopLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  searchResultBadge: { flexShrink: 0, borderRadius: 8, borderWidth: 1, borderColor: "#24426F", color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, paddingHorizontal: 7, paddingVertical: 2 },
+  activeSearchResultBadge: { borderColor: nsnColors.day, color: nsnColors.text },
+  searchEmptyCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
+  locationResultButton: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
+  meetupSearchResultButton: { backgroundColor: "rgba(255,255,255,0.035)" },
   dayLocationResultButton: { backgroundColor: "#F7FBFF", borderColor: "#B8C9E6" },
   activeLocationResultButton: { borderColor: nsnColors.day, backgroundColor: "#172A5C" },
   dayActiveLocationResultButton: { borderColor: "#3949DB", backgroundColor: "#DCE7FF" },
