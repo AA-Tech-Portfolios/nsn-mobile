@@ -170,6 +170,14 @@ export default function NotificationsScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
+          <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
+          <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>Demo alerts only</Text>
+          <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
+            These cards show the tone of future weather-aware reminders and meetup prompts. No real push notification is sent from this prototype.
+          </Text>
+        </View>
+
         <View style={[styles.weatherFlow, isDay && styles.dayWeatherFlow]}>
           <View style={[styles.flowStep, isDay && styles.dayCard]}><Text style={styles.flowIcon}>🧺</Text><Text style={[styles.flowText, isDay && styles.dayTitle]}>{copy.flow[0]}</Text></View>
           <Text style={[styles.flowArrow, isDay && styles.dayMutedText]}>›</Text>
@@ -217,6 +225,10 @@ const styles = StyleSheet.create({
   settingsShortcut: { minHeight: 38, borderRadius: 19, borderWidth: 1, borderColor: "#284476", backgroundColor: nsnColors.surface, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 6 },
   daySettingsShortcut: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   settingsShortcutText: { color: nsnColors.day, fontSize: 12, fontWeight: "800", lineHeight: 16 },
+  alphaGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
+  alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
+  alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
   weatherFlow: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#061121", padding: 12, marginBottom: 20, flexDirection: "row", alignItems: "center", gap: 7 },
   dayWeatherFlow: { backgroundColor: "#DCEEFF", borderColor: "#B8C9E6" },
   flowStep: { flex: 1, minHeight: 80, borderRadius: 16, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", padding: 8 },

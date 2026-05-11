@@ -224,6 +224,14 @@ export default function MeetupsScreen() {
         <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
         <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
 
+        <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
+          <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
+          <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>What to try here</Text>
+          <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
+            Browse the demo meetup cards, open event details, and notice whether the plan feels low-pressure. Joining, trust gates, and private meetup access are prototype states for now.
+          </Text>
+        </View>
+
         {!canUseMeetups ? (
           <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
             <Text style={[styles.gateTitle, isDay && styles.dayTitle]}>{trustGateCopy.trustRequiredTitle}</Text>
@@ -283,6 +291,10 @@ const styles = StyleSheet.create({
   summaryCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 14 },
   summaryButton: { alignSelf: "flex-start", backgroundColor: nsnColors.primary, borderRadius: 15, paddingHorizontal: 16, paddingVertical: 9 },
   summaryButtonText: { color: nsnColors.text, fontWeight: "800", fontSize: 13 },
+  alphaGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
+  alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
+  alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
   trustGateCard: { borderRadius: 22, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#2B4578", padding: 18, marginBottom: 22 },
   gateTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
   gateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 10 },

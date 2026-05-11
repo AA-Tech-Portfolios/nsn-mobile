@@ -2125,6 +2125,14 @@ export default function ProfileScreen() {
           ) : null}
         </View>
 
+        <View style={[styles.alphaGuideCard, isDay && styles.dayCard, clearBorders && styles.clearBorderCard]}>
+          <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>Alpha testing</Text>
+          <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>What to try on Profile</Text>
+          <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Adjust your comfort profile, preview visibility, and local area. Verification, trust, account deletion, block, and report controls are prototype-only until real account systems exist.
+          </Text>
+        </View>
+
         <View
           style={[
             styles.profileHeader,
@@ -2946,6 +2954,10 @@ const styles = StyleSheet.create({
   profileMenuWarningCard: { borderColor: "rgba(247,200,91,0.55)", backgroundColor: "rgba(247,200,91,0.14)", marginTop: 8 },
   profileMenuWarningTitle: { color: "#7C5A00" },
   profileMenuWarningCopy: { color: "#7C5A00" },
+  alphaGuideCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
+  alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
+  alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
   profileLayoutStack: { gap: 8 },
   profileWidthStack: { marginTop: 8 },
   profileLayoutOption: { minHeight: 58, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },
@@ -3081,6 +3093,7 @@ const styles = StyleSheet.create({
   name: { color: nsnColors.text, fontSize: 26, fontWeight: "800", lineHeight: 33 },
   dayTitle: { color: "#0B1220" },
   dayMutedText: { color: "#3B4A63" },
+  dayAccentText: { color: "#3949DB" },
   nameInput: { color: nsnColors.text, fontSize: 26, fontWeight: "800", lineHeight: 33, textAlign: "center", minWidth: 120, borderBottomWidth: 1, borderBottomColor: nsnColors.primary, paddingVertical: 2 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 7, marginTop: 12 },
   cardTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 8 },

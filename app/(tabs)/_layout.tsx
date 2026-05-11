@@ -142,6 +142,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="alpha-walkthrough"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="saved-places"
         options={{
           href: null,

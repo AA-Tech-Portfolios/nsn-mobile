@@ -1223,8 +1223,12 @@ export default function ChatsScreen() {
             </View>
           </View>
           <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
+            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
             <Text style={[styles.trustGateTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredTitle}</Text>
             <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredCopy}</Text>
+            <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              This gate is a prototype state. No real verification provider or private messaging system is connected yet.
+            </Text>
             <Text style={[styles.trustGateStatus, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
               {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
@@ -1415,6 +1419,14 @@ export default function ChatsScreen() {
             <Text style={[styles.chatSelectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{chatMenuCopy.landingTitle}</Text>
             <Text style={[styles.chatSelectionCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.landingCopy}</Text>
 
+            <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
+              <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
+              <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>Demo conversations</Text>
+              <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
+                Try switching between group and private chats, sending a local message, and using soft-exit options. Reports, blocks, and private chats are prototype-only.
+              </Text>
+            </View>
+
             <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.meetupGroups}</Text>
             <View style={styles.chatSelectionList}>{groupChatTargets.map(renderChatTargetButton)}</View>
 
@@ -1512,6 +1524,12 @@ export default function ChatsScreen() {
         ) : null}
 
         <ScrollView style={styles.chat} contentContainerStyle={styles.chatContent} showsVerticalScrollIndicator={false} scrollEnabled={!chatMenuOpen}>
+          <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
+            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
+            <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
+              Messages stay in this prototype session. Try the tone, arrival updates, and soft exit controls without treating this as a live chat.
+            </Text>
+          </View>
           <View style={[styles.dayPill, isDay && styles.dayPillLight]}><Text style={[styles.dayPillText, isDay && styles.dayMutedText]}>{copy.today}</Text></View>
           <View style={[styles.systemNotice, isDay && styles.dayCard]}>
             <Text style={[styles.systemText, isDay && styles.dayTitle]}>{copy.joined}</Text>
@@ -1925,6 +1943,10 @@ const styles = StyleSheet.create({
   chatSelectionTitle: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35 },
   chatSelectionCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 4, marginBottom: 18 },
   chatSelectionList: { gap: 8, marginBottom: 18 },
+  alphaGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
+  alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
+  alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
   dayPill: { alignSelf: "center", backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 13, paddingVertical: 7, borderRadius: 15, marginBottom: 14 },
   dayPillLight: { backgroundColor: "#DCEEFF" },
   dayPillText: { color: nsnColors.muted, fontSize: 12, fontWeight: "700" },

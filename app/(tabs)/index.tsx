@@ -1088,6 +1088,26 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        <TouchableOpacity
+          activeOpacity={0.84}
+          onPress={() => router.push("/(tabs)/alpha-walkthrough" as never)}
+          accessibilityRole="button"
+          accessibilityLabel="Open alpha tester walkthrough"
+          accessibilityHint="Opens a short prototype tour for first-time NSN alpha testers."
+          style={[styles.alphaWalkthroughCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}
+        >
+          <IconSymbol name="flag" color={isDay ? "#3949DB" : nsnColors.day} size={21} />
+          <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
+            <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+              Alpha tester walkthrough
+            </Text>
+            <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              New here? Try the short NSN prototype tour before browsing meetups.
+            </Text>
+          </View>
+          <IconSymbol name="chevron.right" color={isDay ? "#3B4A63" : nsnColors.muted} size={20} />
+        </TouchableOpacity>
+
         {headerPlaceholder ? (
           <View
             style={[styles.headerPlaceholderCard, isDay && styles.dayHeaderPlaceholderCard, isRtl && styles.rtlRow]}
@@ -1366,6 +1386,7 @@ const styles = StyleSheet.create({
   headerActions: { flexShrink: 0, flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 12 },
   headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
+  alphaWalkthroughCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#24426F", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   dayHeaderPlaceholderCard: { borderColor: "#B8C9E6", backgroundColor: "#F8FBFF" },
   headerPlaceholderBody: { flex: 1, minWidth: 0 },
   headerPlaceholderTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },

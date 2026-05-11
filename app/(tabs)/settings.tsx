@@ -4347,6 +4347,22 @@ export default function SettingsScreen() {
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           <TouchableOpacity
             activeOpacity={0.78}
+            onPress={() => router.push("/(tabs)/alpha-walkthrough" as never)}
+            accessibilityRole="button"
+            accessibilityLabel="Open alpha tester walkthrough"
+            accessibilityHint="Opens a short prototype tour for first-time NSN alpha testers."
+            style={[styles.actionRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}
+          >
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Alpha tester walkthrough</Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Open the short NSN prototype tour for first-time testers.
+              </Text>
+            </View>
+            <Text style={[styles.actionText, isDay && styles.dayActionText]}>Open</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.78}
             onPress={resetProfileDefaults}
             accessibilityRole="button"
             accessibilityLabel="Reset to defaults"
