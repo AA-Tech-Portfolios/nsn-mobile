@@ -123,6 +123,9 @@ export type ProfileWidthPreference = "Contained" | "Wide";
 export type NoiseLevelPreference = "Any" | NoiseLevel;
 export type TransportationMethod = "Driving" | "Public transport" | "Walking" | "Cycling" | "Rideshare" | "Getting dropped off" | "Not sure yet";
 export type ContactPreference = "In person" | "Text" | "Email" | "Phone" | "Video";
+export type SocialEnergyPreference = "Calm" | "Balanced" | "Social" | "Lively";
+export type CommunicationPreference = "Chat before meetup" | "Details only" | "Voice okay" | "In-person first" | "Low-message mode" | "Reminders only";
+export type GroupSizePreference = "1:1" | "2-3 people" | "4-6 people" | "Small groups only" | "Flexible";
 export type ProfileGender = "Not specified" | "Male" | "Female" | "Other";
 export type ProfileNameDisplayMode = "Hidden" | "Initial" | "Full";
 export type SettingsPrivacyMode = "Basic" | "Advanced";
@@ -153,6 +156,18 @@ export type HomeVisibleSections = {
   nightEvents: boolean;
 };
 export type HomeSectionOrderKey = keyof HomeVisibleSections;
+
+export const socialEnergyOptions: SocialEnergyPreference[] = ["Calm", "Balanced", "Social", "Lively"];
+export const communicationPreferenceOptions: CommunicationPreference[] = [
+  "Chat before meetup",
+  "Details only",
+  "Voice okay",
+  "In-person first",
+  "Low-message mode",
+  "Reminders only",
+];
+export const groupSizePreferenceOptions: GroupSizePreference[] = ["1:1", "2-3 people", "4-6 people", "Small groups only", "Flexible"];
+
 export type DietaryPreference =
   | "No preference"
   | "Vegetarian"
@@ -241,6 +256,17 @@ const normalizeDayNightModePreference = (value?: DayNightModePreference | null):
 const normalizeCardOutlineStyle = (value?: CardOutlineStyle | null): CardOutlineStyle =>
   value === "Minimal" || value === "Standard" ? value : "Strong";
 
+const normalizeSocialEnergyPreference = (value?: SocialEnergyPreference | null): SocialEnergyPreference =>
+  value && socialEnergyOptions.includes(value) ? value : "Calm";
+
+const normalizeCommunicationPreferences = (value?: CommunicationPreference[] | null): CommunicationPreference[] => {
+  const filtered = (value ?? []).filter((preference): preference is CommunicationPreference => communicationPreferenceOptions.includes(preference));
+  return filtered.length ? filtered : ["Low-message mode", "Details only"];
+};
+
+const normalizeGroupSizePreference = (value?: GroupSizePreference | null): GroupSizePreference =>
+  value && groupSizePreferenceOptions.includes(value) ? value : "Small groups only";
+
 type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
   accountPaused?: boolean;
@@ -288,6 +314,10 @@ type OnboardingSnapshot = {
   hiddenEventIds: string[];
   noiseLevelPreference?: NoiseLevelPreference;
   contactPreferences?: ContactPreference[];
+  socialEnergyPreference?: SocialEnergyPreference;
+  communicationPreferences?: CommunicationPreference[];
+  groupSizePreference?: GroupSizePreference;
+  verifiedButPrivate?: boolean;
   transportationMethod: TransportationMethod;
   dietaryPreferences: DietaryPreference[];
   hobbiesInterests: string[];
@@ -538,6 +568,14 @@ type AppSettings = {
   setTransportationMethod: (value: TransportationMethod) => void;
   contactPreferences: ContactPreference[];
   setContactPreferences: (value: ContactPreference[]) => void;
+  socialEnergyPreference: SocialEnergyPreference;
+  setSocialEnergyPreference: (value: SocialEnergyPreference) => void;
+  communicationPreferences: CommunicationPreference[];
+  setCommunicationPreferences: (value: CommunicationPreference[]) => void;
+  groupSizePreference: GroupSizePreference;
+  setGroupSizePreference: (value: GroupSizePreference) => void;
+  verifiedButPrivate: boolean;
+  setVerifiedButPrivate: (value: boolean) => void;
   dietaryPreferences: DietaryPreference[];
   setDietaryPreferences: (value: DietaryPreference[]) => void;
   hobbiesInterests: string[];
@@ -713,6 +751,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [hiddenEventIds, setHiddenEventIds] = useState<string[]>([]);
   const [noiseLevelPreference, setNoiseLevelPreference] = useState<NoiseLevelPreference>("Any");
   const [contactPreferences, setContactPreferences] = useState<ContactPreference[]>(["Text"]);
+  const [socialEnergyPreference, setSocialEnergyPreference] = useState<SocialEnergyPreference>("Calm");
+  const [communicationPreferences, setCommunicationPreferences] = useState<CommunicationPreference[]>(["Low-message mode", "Details only"]);
+  const [groupSizePreference, setGroupSizePreference] = useState<GroupSizePreference>("Small groups only");
+  const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
   const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
   const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
   const [hobbiesInterests, setHobbiesInterests] = useState<string[]>(["Coffee", "Movies", "Walks"]);
@@ -837,6 +879,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHiddenEventIds(snapshot.hiddenEventIds ?? []);
         setNoiseLevelPreference(snapshot.noiseLevelPreference ?? "Any");
         setContactPreferences(snapshot.contactPreferences?.length ? snapshot.contactPreferences : ["Text"]);
+        setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
+        setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
+        setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
+        setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
         setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
@@ -939,6 +985,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHiddenEventIds(snapshot.hiddenEventIds);
     setNoiseLevelPreference(snapshot.noiseLevelPreference ?? "Any");
     setContactPreferences(snapshot.contactPreferences?.length ? snapshot.contactPreferences : ["Text"]);
+    const nextSocialEnergyPreference = normalizeSocialEnergyPreference(snapshot.socialEnergyPreference);
+    const nextCommunicationPreferences = normalizeCommunicationPreferences(snapshot.communicationPreferences);
+    const nextGroupSizePreference = normalizeGroupSizePreference(snapshot.groupSizePreference);
+    setSocialEnergyPreference(nextSocialEnergyPreference);
+    setCommunicationPreferences(nextCommunicationPreferences);
+    setGroupSizePreference(nextGroupSizePreference);
+    setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
     setDietaryPreferences(snapshot.dietaryPreferences);
     setHobbiesInterests(snapshot.hobbiesInterests);
@@ -997,6 +1050,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           timezone: normalizeTimezoneSetting(snapshot.timezone),
           timeContextMode: normalizeTimeContextMode(snapshot.timeContextMode),
           dateFormatPreference: normalizeDateFormatPreference(snapshot.dateFormatPreference),
+          socialEnergyPreference: nextSocialEnergyPreference,
+          communicationPreferences: nextCommunicationPreferences,
+          groupSizePreference: nextGroupSizePreference,
+          verifiedButPrivate: snapshot.verifiedButPrivate ?? true,
           showWeekday: snapshot.showWeekday ?? true,
           timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
           clockDisplayStyle: normalizeClockDisplayStyle(snapshot.clockDisplayStyle),
@@ -1062,6 +1119,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       hiddenEventIds,
       noiseLevelPreference,
       contactPreferences,
+      socialEnergyPreference,
+      communicationPreferences,
+      groupSizePreference,
+      verifiedButPrivate,
       transportationMethod,
       dietaryPreferences,
       hobbiesInterests,
@@ -1118,6 +1179,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.dayNightModePreference = normalizeDayNightModePreference(nextSnapshot.dayNightModePreference);
     nextSnapshot.cardOutlineStyle = normalizeCardOutlineStyle(nextSnapshot.cardOutlineStyle);
     nextSnapshot.homeHeaderControlsDensity = normalizeHomeHeaderControlsDensity(nextSnapshot.homeHeaderControlsDensity);
+    nextSnapshot.socialEnergyPreference = normalizeSocialEnergyPreference(nextSnapshot.socialEnergyPreference);
+    nextSnapshot.communicationPreferences = normalizeCommunicationPreferences(nextSnapshot.communicationPreferences);
+    nextSnapshot.groupSizePreference = normalizeGroupSizePreference(nextSnapshot.groupSizePreference);
+    nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
@@ -1196,6 +1261,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.hiddenEventIds !== undefined) setHiddenEventIds(snapshot.hiddenEventIds);
     if (snapshot.noiseLevelPreference !== undefined) setNoiseLevelPreference(snapshot.noiseLevelPreference);
     if (snapshot.contactPreferences !== undefined) setContactPreferences(snapshot.contactPreferences.length ? snapshot.contactPreferences : ["Text"]);
+    if (snapshot.socialEnergyPreference !== undefined) setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
+    if (snapshot.communicationPreferences !== undefined) setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
+    if (snapshot.groupSizePreference !== undefined) setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
+    if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
@@ -1478,6 +1547,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setNoiseLevelPreference,
         contactPreferences,
         setContactPreferences,
+        socialEnergyPreference,
+        setSocialEnergyPreference,
+        communicationPreferences,
+        setCommunicationPreferences,
+        groupSizePreference,
+        setGroupSizePreference,
+        verifiedButPrivate,
+        setVerifiedButPrivate,
         transportationMethod,
         setTransportationMethod,
         dietaryPreferences,

@@ -3,7 +3,23 @@ import { View, Text, TextInput, Platform, ScrollView, StyleSheet, TouchableOpaci
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { getLanguageBase, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type ProfileGender, type ProfileShortcutLayout, type ProfileWidthPreference, useAppSettings } from "@/lib/app-settings";
+import {
+  communicationPreferenceOptions,
+  getLanguageBase,
+  groupSizePreferenceOptions,
+  socialEnergyOptions,
+  type CommunicationPreference,
+  type GroupSizePreference,
+  type HomeEventLayout,
+  type HomeEventVisualMode,
+  type HomeHeaderControlsDensity,
+  type HomeLayoutDensity,
+  type ProfileGender,
+  type ProfileShortcutLayout,
+  type ProfileWidthPreference,
+  type SocialEnergyPreference,
+  useAppSettings,
+} from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
@@ -1005,6 +1021,10 @@ export default function ProfileScreen() {
     hasIdentityDocument,
     comfortPreferences,
     contactPreferences,
+    socialEnergyPreference,
+    communicationPreferences,
+    groupSizePreference,
+    verifiedButPrivate,
     verificationLevel,
     profileShortcutLayout,
     profileWidthPreference,
@@ -1463,6 +1483,26 @@ export default function ProfileScreen() {
     });
   };
 
+  const updateSocialEnergyPreference = async (preference: SocialEnergyPreference) => {
+    await saveSoftHelloMvpState({ socialEnergyPreference: preference });
+  };
+
+  const updateGroupSizePreference = async (preference: GroupSizePreference) => {
+    await saveSoftHelloMvpState({ groupSizePreference: preference });
+  };
+
+  const toggleCommunicationPreference = async (preference: CommunicationPreference) => {
+    const nextPreferences = communicationPreferences.includes(preference)
+      ? communicationPreferences.filter((item) => item !== preference)
+      : [...communicationPreferences, preference];
+
+    await saveSoftHelloMvpState({ communicationPreferences: nextPreferences });
+  };
+
+  const toggleVerifiedButPrivate = async () => {
+    await saveSoftHelloMvpState({ verifiedButPrivate: !verifiedButPrivate });
+  };
+
   const updateWarmUpLowerBlur = async (value: boolean) => {
     await saveSoftHelloMvpState({ warmUpLowerBlur: value });
   };
@@ -1538,6 +1578,10 @@ export default function ProfileScreen() {
       hobbiesInterests: ["Coffee", "Movies", "Walks", "Dinner"],
       comfortPreferences: ["Small groups", "Text-first", "Quiet"],
       contactPreferences: ["Text"],
+      socialEnergyPreference: "Calm",
+      communicationPreferences: ["Low-message mode", "Details only"],
+      groupSizePreference: "Small groups only",
+      verifiedButPrivate: true,
     });
     setShowProfileMenu(false);
   };
@@ -1590,6 +1634,138 @@ export default function ProfileScreen() {
       active: reviewVerificationLevel === "Real Person Verified",
     },
   ];
+
+  const trustFoundationsSection = (
+    <View style={[styles.profileSectionCard, !isCleanProfile && styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+      <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
+        <View style={styles.profileLayoutBody}>
+          <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Comfort & trust</Text>
+          <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Phase 1 prototype controls for visibility, energy, communication, group size, and verified-but-private trust.
+          </Text>
+        </View>
+        <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>Prototype</Text>
+      </View>
+
+      <View style={styles.trustFoundationGroup}>
+        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Progressive visibility</Text>
+        <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+          {(["Comfort Mode", "Warm Up Mode", "Open Mode"] as const).map((modeOption) => {
+            const active = comfortMode === modeOption;
+
+            return (
+              <TouchableOpacity
+                key={modeOption}
+                accessibilityRole="button"
+                accessibilityLabel={`Use ${modeOption}`}
+                accessibilityState={{ selected: active }}
+                activeOpacity={0.78}
+                onPress={() => updateComfortMode(modeOption)}
+              >
+                <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
+                  {active ? `Selected: ${modeOption}` : modeOption}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{visibilityModeCopy}</Text>
+      </View>
+
+      <View style={styles.trustFoundationGroup}>
+        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Social energy</Text>
+        <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Choose the kind of social energy that feels easiest today.</Text>
+        <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+          {socialEnergyOptions.map((option) => {
+            const active = socialEnergyPreference === option;
+
+            return (
+              <TouchableOpacity
+                key={option}
+                accessibilityRole="button"
+                accessibilityLabel={`Social energy ${option}`}
+                accessibilityState={{ selected: active }}
+                activeOpacity={0.78}
+                onPress={() => updateSocialEnergyPreference(option)}
+              >
+                <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
+                  {active ? `Selected: ${option}` : option}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.trustFoundationGroup}>
+        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Communication preferences</Text>
+        <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>These help others understand how you like to communicate before a meetup.</Text>
+        <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+          {communicationPreferenceOptions.map((option) => {
+            const active = communicationPreferences.includes(option);
+
+            return (
+              <TouchableOpacity
+                key={option}
+                accessibilityRole="button"
+                accessibilityLabel={`Communication preference ${option}`}
+                accessibilityState={{ selected: active }}
+                activeOpacity={0.78}
+                onPress={() => toggleCommunicationPreference(option)}
+              >
+                <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
+                  {active ? `Selected: ${option}` : option}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.trustFoundationGroup}>
+        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Group size preference</Text>
+        <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+          {groupSizePreferenceOptions.map((option) => {
+            const active = groupSizePreference === option;
+
+            return (
+              <TouchableOpacity
+                key={option}
+                accessibilityRole="button"
+                accessibilityLabel={`Group size preference ${option}`}
+                accessibilityState={{ selected: active }}
+                activeOpacity={0.78}
+                onPress={() => updateGroupSizePreference(option)}
+              >
+                <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
+                  {active ? `Selected: ${option}` : option}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <TouchableOpacity
+        activeOpacity={0.82}
+        onPress={toggleVerifiedButPrivate}
+        style={[styles.verifiedPrivateOption, isDay && styles.daySoftOption, verifiedButPrivate && styles.verifiedPrivateOptionActive]}
+        accessibilityRole="switch"
+        accessibilityLabel="Verified but private prototype trust state"
+        accessibilityState={{ checked: verifiedButPrivate }}
+      >
+        <View style={styles.profileLayoutBody}>
+          <Text style={[styles.trustFoundationTitle, verifiedButPrivate && styles.verifiedPrivateTextActive, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+            Verified, but private
+          </Text>
+          <Text style={[styles.trustFoundationCopy, verifiedButPrivate && styles.verifiedPrivateTextActive, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Your contact/trust status can be checked without making your profile fully open. Prototype only - no real verification provider is connected yet.
+          </Text>
+        </View>
+        <View style={styles.profileLayoutCheck}>{verifiedButPrivate ? <IconSymbol name="checkmark" color="#FFFFFF" size={18} /> : null}</View>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -2708,6 +2884,10 @@ export default function ProfileScreen() {
               interests={hobbiesInterests}
               comfortPreferences={comfortPreferences}
               contactPreferences={contactPreferences}
+              socialEnergyPreference={socialEnergyPreference}
+              communicationPreferences={communicationPreferences}
+              groupSizePreference={groupSizePreference}
+              verifiedButPrivate={verifiedButPrivate}
               comfortMode={comfortMode}
               profilePhotoUri={profilePhotoUri}
               privateProfile={privateProfile}
@@ -3058,6 +3238,8 @@ export default function ProfileScreen() {
         </View>
         ) : null}
 
+        {trustFoundationsSection}
+
         {isCleanProfile ? (
           <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
             <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
@@ -3389,6 +3571,12 @@ const styles = StyleSheet.create({
   dayTrustPillReady: { color: "#0F6B2F", backgroundColor: "#E8F8EE", borderColor: "#55A96E" },
   trustCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
   simpleTrustCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
+  trustFoundationGroup: { gap: 8, marginTop: 12 },
+  trustFoundationTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  trustFoundationCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17 },
+  verifiedPrivateOption: { minHeight: 72, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", gap: 10, padding: 12, marginTop: 14 },
+  verifiedPrivateOptionActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.2)" },
+  verifiedPrivateTextActive: { color: "#FFFFFF" },
   verificationSteps: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 12 },
   verificationStep: { borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 9, paddingVertical: 5, backgroundColor: "rgba(255,255,255,0.03)" },
   verificationStepActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.22)" },

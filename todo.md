@@ -27,6 +27,7 @@
 - [x] Refine Home/Profile local area editing with shared location picker and API-ready fallback lookup service
 - [x] Add Home view and filter controls for essential/comfortable layouts, nearby, small groups, weather-safe, map/list, and section visibility
 - [x] Refine NSN Home comfort themes, warmer filter controls, and Compact/Comfortable/Spacious layout density
+- [x] Start Phase 1 Trust Foundations in the prototype: progressive visibility, social energy, communication preferences, group size comfort, and verified-but-private trust state
 - [x] Capture checkpoint screenshots for Home, Meetups, Chats, Alerts, Profile, Settings & Privacy, and onboarding stages
 
 ## Next Focus
@@ -65,6 +66,11 @@
 - [ ] Add Community Guidelines
 - [ ] Add 18+ compliance copy and safeguards beyond local age entry
 - [ ] Decide real verification provider strategy before claiming production verification
+- [ ] Decide the real verification provider and UX handoff for the verified-but-private trust state
+- [ ] Add a real trust-state backend before treating verification or privacy gates as production systems
+- [ ] Expand privacy rules for progressive visibility, matched/shared visibility, event-visible fields, and warm-up disclosure
+- [ ] Connect social energy, communication style, and group size preferences to real preference-based recommendations
+- [ ] Gather tester feedback on whether comfort/trust settings feel clear, calm, and lightweight
 - [ ] Complete safety, privacy, legal, and regional compliance specification before emergency feature implementation
 
 ### Meetup flow
