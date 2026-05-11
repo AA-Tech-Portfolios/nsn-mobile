@@ -1,4 +1,4 @@
-import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent } from "react-native";
+import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -3106,6 +3106,7 @@ export default function SettingsScreen() {
   const [translationLanguageRegionBase, setTranslationLanguageRegionBase] = useState<string | null>(null);
   const [recentlyChangedKey, setRecentlyChangedKey] = useState<string | null>(null);
   const [accountConfirmation, setAccountConfirmation] = useState<AccountConfirmation>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const recentlyChangedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy: SettingsCopy = {
@@ -3365,6 +3366,21 @@ export default function SettingsScreen() {
     scrollViewRef.current?.scrollTo({
       y: Math.max(0, y - 8),
       animated: !batterySaver && !reduceMotion,
+    });
+  };
+  const scrollSettingsToTop = () => {
+    scrollViewRef.current?.scrollTo({
+      y: 0,
+      animated: !batterySaver && !reduceMotion,
+    });
+    setShowBackToTop(false);
+  };
+  const handleSettingsScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setShowBackToTop((current) => {
+      if (offsetY > 420) return true;
+      if (offsetY < 260) return false;
+      return current;
     });
   };
   const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
@@ -3678,6 +3694,8 @@ export default function SettingsScreen() {
           },
         ]}
         showsVerticalScrollIndicator
+        onScroll={handleSettingsScroll}
+        scrollEventThrottle={16}
       >
         <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={copy.goBack ?? englishCopy.goBack}>
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
@@ -4882,6 +4900,18 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {showBackToTop ? (
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={scrollSettingsToTop}
+          accessibilityRole="button"
+          accessibilityLabel="Back to top of Settings & Privacy"
+          style={[styles.backToTopButton, isDay && styles.dayBackToTopButton, highContrast && styles.highContrastButton, isRtl && styles.rtlRow]}
+        >
+          <IconSymbol name="chevron.up" color={isDay ? "#244061" : "#FFFFFF"} size={18} />
+          <Text style={[styles.backToTopText, isDay && styles.dayBackToTopText]}>Back to top</Text>
+        </TouchableOpacity>
+      ) : null}
       <Modal
         visible={accountConfirmation !== null}
         transparent
@@ -5052,6 +5082,35 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "900",
     lineHeight: 17,
+  },
+  backToTopButton: {
+    position: "absolute",
+    right: 18,
+    bottom: 88,
+    minHeight: 42,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#6F8BB8",
+    backgroundColor: "#214B95",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingHorizontal: 14,
+    zIndex: 40,
+  },
+  dayBackToTopButton: {
+    borderColor: "#6F87A1",
+    backgroundColor: "#E4ECF4",
+  },
+  backToTopText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
+  dayBackToTopText: {
+    color: "#244061",
   },
   card: {
     borderRadius: 18,
