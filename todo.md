@@ -21,6 +21,7 @@
 - [x] Add local user preference areas for transportation, location, food, hobbies/interests, contact preference, saved places, and meetup shortcuts
 - [x] Add temporary deactivate account controls above Delete account in Settings & Privacy
 - [x] Complete Settings & Privacy prototype safety polish with jump-chip icons, local update indicators, prototype badges, disabled coming-soon states, and account action confirmations
+- [x] Add Profile User Options drawer and move Comfort & trust into User Preferences
 - [x] Add alpha tester walkthrough covering NSN purpose, local prototype scope, comfort/privacy settings, meetup browsing, alerts, profile review, and demo-only safety language
 - [x] Refine Home search into compact Search NSN suburb and meetup matching for the Sydney/North Shore prototype
 - [x] Improve Search NSN autocomplete with Sydney locality data, region matching, aliases, and no default suburb list
@@ -71,6 +72,7 @@
 - [ ] Add a real trust-state backend before treating verification or privacy gates as production systems
 - [ ] Expand privacy rules for progressive visibility, matched/shared visibility, event-visible fields, and warm-up disclosure
 - [ ] Connect social energy, communication style, and group size preferences to real preference-based recommendations
+- [ ] Expand the Profile User Options drawer as trust foundations and preference-based recommendations mature
 - [ ] Gather tester feedback on whether comfort/trust settings feel clear, calm, and lightweight
 - [ ] Complete safety, privacy, legal, and regional compliance specification before emergency feature implementation
 
