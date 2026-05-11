@@ -8,6 +8,7 @@ type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 const MAPPING = {
   "house.fill": "home",
   "paperplane.fill": "send",
+  code: "code",
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
   "chevron.left": "chevron-left",
@@ -51,6 +52,7 @@ const MAPPING = {
   food: "restaurant",
   interests: "interests",
   contact: "contact-phone",
+  help: "help-outline",
   weather: "wb-cloudy",
   "low-pressure": "sentiment-satisfied-alt",
   experience: "local-activity",

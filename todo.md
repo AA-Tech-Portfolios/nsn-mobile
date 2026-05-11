@@ -103,6 +103,7 @@
 - [ ] Gather user feedback on whether Hobbies & Interests feels useful, calm, and not profile-heavy
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 - [ ] Add interactive tutorials for privacy, preview visibility, and comfort modes
+- [ ] Explore an optional AI assistant for in-app guidance, settings discovery, and feature help after alpha feedback. Keep it clearly optional, privacy-safe, and separate from human support or safety reporting.
 - [ ] Refine local area and suburb APIs so Location Preference can stay broad without relying on exact addresses
 - [ ] Gather tester feedback on contact preference wording, reply pace, and whether communication guidance reduces pressure
 - [ ] Review translations with real users or native speakers before treating each language as complete

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Image, Alert, Modal, useWindowDimensions } from "react-native";
+import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Image, Alert, Modal, useWindowDimensions, Linking } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -123,6 +123,7 @@ type ProfileMenuPanel =
   | "layout"
   | "width"
   | "notifications"
+  | "helpSupport"
   | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
@@ -131,6 +132,41 @@ const profileHomeLayoutDensityOptions: HomeLayoutDensity[] = ["Compact", "Comfor
 const profileHeaderControlsDensityOptions: HomeHeaderControlsDensity[] = ["Compact", "Comfortable", "Spacious"];
 const profileEventVisualModeOptions: HomeEventVisualMode[] = ["Emoji/Icon", "Preview image"];
 const profileEventLayoutOptions: HomeEventLayout[] = ["List", "Map"];
+type HelpFeedbackType = "Suggestion" | "Bug/problem" | "Confusing experience" | "Safety/trust concern" | "Accessibility issue" | "Other";
+const helpFeedbackTypes: HelpFeedbackType[] = ["Suggestion", "Bug/problem", "Confusing experience", "Safety/trust concern", "Accessibility issue", "Other"];
+const helpFaqItems = [
+  {
+    id: "what-is-nsn",
+    title: "What is NSN?",
+    copy: "North Shore Nights is a local, low-pressure meetup prototype for calmer ways to find small social plans around the North Shore.",
+  },
+  {
+    id: "prototype-only",
+    title: "What is prototype-only?",
+    copy: "Some controls are local demo settings. They show intended behaviour, but real accounts, moderation, verification, and feedback sending are not connected yet.",
+  },
+  {
+    id: "privacy-settings",
+    title: "How do I change my privacy settings?",
+    copy: "Open Privacy guide, Comfort & trust, or Settings & Privacy to adjust visibility, blur, profile preview, and sharing preferences.",
+  },
+  {
+    id: "event-preferences",
+    title: "How do event preferences work?",
+    copy: "Preferences help shape prototype suggestions and labels. They are comfort signals, not strict matching rules or production recommendations.",
+  },
+  {
+    id: "unsafe",
+    title: "How do I report something unsafe?",
+    copy: "Use Block & report for unsafe, pushy, or unwanted contact. NSN does not currently provide emergency support.",
+  },
+  {
+    id: "feature",
+    title: "Can I suggest a feature?",
+    copy: "Yes. Use the feedback draft below or open a GitHub issue so the idea can be reviewed during alpha polish.",
+  },
+];
+const supportIssueUrl = "https://github.com/AA-Tech-Portfolios/nsn-mobile/issues/new";
 
 const comfortOptions: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet", "Flexible pace", "Indoor backup"];
 const profileInterestOptions = [
@@ -1229,6 +1265,12 @@ export default function ProfileScreen() {
   );
   const [showAllInterestCategories, setShowAllInterestCategories] = useState<InterestCategoryId[]>([]);
   const [activeInterestComfortId, setActiveInterestComfortId] = useState<string | null>(null);
+  const [helpFeedbackType, setHelpFeedbackType] = useState<HelpFeedbackType>("Suggestion");
+  const [helpFeedbackMessage, setHelpFeedbackMessage] = useState("");
+  const [helpContactMe, setHelpContactMe] = useState(false);
+  const [helpIncludeContext, setHelpIncludeContext] = useState(true);
+  const [helpDraftPrepared, setHelpDraftPrepared] = useState(false);
+  const [openHelpFaqIds, setOpenHelpFaqIds] = useState<string[]>(["what-is-nsn"]);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
   const [draftContactEmail, setDraftContactEmail] = useState(contactEmail);
   const [draftContactPhone, setDraftContactPhone] = useState(contactPhone);
@@ -1900,6 +1942,56 @@ export default function ProfileScreen() {
     });
   };
 
+  const feedbackDraft = useMemo(
+    () =>
+      [
+        "NSN alpha feedback",
+        `Type: ${helpFeedbackType}`,
+        `Message: ${helpFeedbackMessage.trim() || "(add details here)"}`,
+        `Contact me about this: ${helpContactMe ? "Yes" : "No"}`,
+        helpIncludeContext ? `Context: Profile > User Options > Help & Support; ${isNightMode ? "night" : "day"} mode; viewport width ${Math.round(width)}px` : "",
+        "Prototype note: feedback sending is not connected yet.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    [helpContactMe, helpFeedbackMessage, helpFeedbackType, helpIncludeContext, isNightMode, width]
+  );
+
+  const toggleHelpFaq = (itemId: string) => {
+    setOpenHelpFaqIds((current) =>
+      current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId]
+    );
+  };
+
+  const prepareFeedbackDraft = async (copyToClipboard = false) => {
+    setHelpDraftPrepared(true);
+
+    if (!copyToClipboard) {
+      Alert.alert("Feedback draft prepared", "Feedback sending is not connected yet. A draft is shown below so you can copy or open a GitHub issue.");
+      return;
+    }
+
+    const clipboard = Platform.OS === "web" ? (globalThis.navigator as any)?.clipboard : null;
+
+    if (clipboard?.writeText) {
+      await clipboard.writeText(feedbackDraft);
+      Alert.alert("Feedback draft copied", "Paste it into a GitHub issue or message to the NSN developers.");
+      return;
+    }
+
+    Alert.alert("Feedback draft prepared", "Copy support is available on web. The draft is shown below as selectable text.");
+  };
+
+  const openSupportIssue = async () => {
+    setHelpDraftPrepared(true);
+
+    try {
+      await Linking.openURL(supportIssueUrl);
+    } catch {
+      Alert.alert("Open GitHub issue", "Could not open the issue page from this device. A feedback draft is shown below instead.");
+    }
+  };
+
   const toggleVerifiedButPrivate = async () => {
     await saveSoftHelloMvpState({ verifiedButPrivate: !verifiedButPrivate });
   };
@@ -2534,6 +2626,8 @@ export default function ProfileScreen() {
                             ? "Width settings"
                             : profileMenuPanel === "notifications"
                               ? "Notifications"
+                              : profileMenuPanel === "helpSupport"
+                                ? "Help & Support"
                               : profileMenuPanel === "blockReport"
                                 ? "Block & report"
                                 : "Profile controls";
@@ -2682,6 +2776,20 @@ export default function ProfileScreen() {
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Notifications</Text>
                         <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Manage event and safety alerts.</Text>
+                      </View>
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      onPress={() => setProfileMenuPanel("helpSupport")}
+                      style={styles.profileMenuItem}
+                      accessibilityRole="button"
+                      accessibilityLabel="Help and Support"
+                    >
+                      <IconSymbol name="help" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Help & Support</Text>
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Get help, send feedback, or suggest improvements.</Text>
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -3887,6 +3995,185 @@ export default function ProfileScreen() {
                         <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Use Advanced settings for notification switches.</Text>
                       </View>
                       <IconSymbol name="chevron.right" color="#FFFFFF" size={20} />
+                    </TouchableOpacity>
+                  </>
+                ) : null}
+                {profileMenuPanel === "helpSupport" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("main")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to profile menu">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Help & Support</Text>
+                    </TouchableOpacity>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Need help?</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        NSN is still in alpha. Feedback helps shape what gets built next, especially anything confusing, hard to use, or not calm enough.
+                      </Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Help & Support is for app feedback and non-urgent help. NSN does not currently provide emergency support.
+                      </Text>
+                    </View>
+                    <View style={styles.helpSupportSectionStack}>
+                      {[
+                        { icon: "help" as const, title: "Send feedback", copy: "Suggestions, UX feedback, bugs, or confusing areas." },
+                        { icon: "message" as const, title: "Contact the developers", copy: "Use a feedback draft or GitHub issue while alpha support is being shaped." },
+                        { icon: "flag" as const, title: "Report a problem", copy: "Broken buttons, display issues, prototype bugs, or accessibility concerns." },
+                        { icon: "interests" as const, title: "Feature ideas", copy: "Suggest improvements without turning NSN into a high-pressure app." },
+                      ].map((item) => (
+                        <View key={item.title} style={[styles.profileMenuGuideRow, styles.helpSupportCardRow, isDay && styles.daySoftOption]}>
+                          <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#C7B07A"} size={19} />
+                          <View style={styles.profileLayoutBody}>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{item.title}</Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{item.copy}</Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Feedback form</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Prototype note: feedback sending is not connected yet. Prepare a draft, copy it on web, or open a GitHub issue.
+                      </Text>
+                      <Text style={[styles.profileDisplayGroupLabel, styles.helpFieldLabel, isDay && styles.dayMutedText]}>Feedback type</Text>
+                      <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
+                        {helpFeedbackTypes.map((type) => {
+                          const active = helpFeedbackType === type;
+
+                          return (
+                            <TouchableOpacity
+                              key={type}
+                              activeOpacity={0.82}
+                              onPress={() => setHelpFeedbackType(type)}
+                              style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: active }}
+                              accessibilityLabel={`Feedback type ${type}`}
+                            >
+                              <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>
+                                {active ? `Selected: ${type}` : type}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                      <Text style={[styles.profileDisplayGroupLabel, styles.helpFieldLabel, isDay && styles.dayMutedText]}>Message</Text>
+                      <TextInput
+                        value={helpFeedbackMessage}
+                        onChangeText={setHelpFeedbackMessage}
+                        placeholder="Tell us what happened or what you'd like to see improved..."
+                        placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                        style={[styles.helpFeedbackInput, isDay && styles.dayInput]}
+                        multiline
+                        textAlignVertical="top"
+                        accessibilityLabel="Feedback message"
+                        selectionColor="#7786FF"
+                        underlineColorAndroid="transparent"
+                      />
+                      <View style={styles.helpToggleStack}>
+                        {[
+                          { label: "Contact me about this", value: helpContactMe, action: () => setHelpContactMe((current) => !current) },
+                          { label: "Include current screen/context", value: helpIncludeContext, action: () => setHelpIncludeContext((current) => !current) },
+                        ].map((item) => (
+                          <TouchableOpacity
+                            key={item.label}
+                            activeOpacity={0.8}
+                            onPress={item.action}
+                            style={[styles.profileLayoutOption, isDay && styles.daySoftOption, item.value && styles.profileLayoutOptionActive]}
+                            accessibilityRole="switch"
+                            accessibilityState={{ checked: item.value }}
+                            accessibilityLabel={item.label}
+                          >
+                            <View style={styles.profileLayoutBody}>
+                              <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, item.value && styles.profileLayoutTextActive]}>
+                                {item.value ? `On: ${item.label}` : `Off: ${item.label}`}
+                              </Text>
+                            </View>
+                            <View style={styles.profileLayoutCheck}>{item.value ? <IconSymbol name="checkmark" color="#FFFFFF" size={18} /> : null}</View>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      <View style={[styles.helpActionRow, isRtl && styles.rtlRow]}>
+                        <TouchableOpacity
+                          activeOpacity={0.82}
+                          onPress={() => prepareFeedbackDraft(false)}
+                          style={[styles.profileDisplayChip, styles.profileMenuPrimaryAction]}
+                          accessibilityRole="button"
+                          accessibilityLabel="Prepare feedback draft"
+                        >
+                          <IconSymbol name="edit" color="#FFFFFF" size={15} />
+                          <Text style={[styles.profileDisplayChipText, styles.profileLayoutTextActive]}>Prepare draft</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          activeOpacity={0.82}
+                          onPress={() => prepareFeedbackDraft(true)}
+                          style={[styles.profileDisplayChip, isDay && styles.daySoftOption]}
+                          accessibilityRole="button"
+                          accessibilityLabel="Copy feedback draft"
+                        >
+                          <IconSymbol name="share" color={isDay ? "#445E93" : "#A8B7DA"} size={15} />
+                          <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>Copy feedback</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          activeOpacity={0.82}
+                          onPress={openSupportIssue}
+                          style={[styles.profileDisplayChip, isDay && styles.daySoftOption]}
+                          accessibilityRole="button"
+                          accessibilityLabel="Open GitHub issue"
+                        >
+                          <IconSymbol name="code" color={isDay ? "#445E93" : "#A8B7DA"} size={15} />
+                          <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>Open GitHub issue</Text>
+                        </TouchableOpacity>
+                      </View>
+                      {helpDraftPrepared ? (
+                        <View style={[styles.helpDraftBox, isDay && styles.daySoftOption]}>
+                          <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Feedback draft</Text>
+                          <Text selectable style={[styles.helpDraftText, isDay && styles.dayTitle]}>{feedbackDraft}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Accessibility support</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        If something is hard to read, navigate, or understand, choose Accessibility issue above and describe what happened.
+                      </Text>
+                    </View>
+                    <View style={styles.helpSupportSectionStack}>
+                      <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Quick help</Text>
+                      {helpFaqItems.map((item) => {
+                        const isOpen = openHelpFaqIds.includes(item.id);
+
+                        return (
+                          <View key={item.id} style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
+                            <TouchableOpacity
+                              activeOpacity={0.78}
+                              onPress={() => toggleHelpFaq(item.id)}
+                              style={styles.helpFaqHeader}
+                              accessibilityRole="button"
+                              accessibilityLabel={item.title}
+                              accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
+                            >
+                              <View style={styles.profileLayoutBody}>
+                                <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{item.title}</Text>
+                              </View>
+                              <IconSymbol name={isOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={19} />
+                            </TouchableOpacity>
+                            {isOpen ? <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{item.copy}</Text> : null}
+                          </View>
+                        );
+                      })}
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.82}
+                      onPress={() => setProfileMenuPanel("blockReport")}
+                      style={[styles.profileLayoutOption, isDay && styles.daySoftOption]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Open Block and report for unsafe contact"
+                    >
+                      <View style={styles.profileLayoutBody}>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Unsafe or unwanted contact?</Text>
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Open Block & report for safety-focused prototype controls.</Text>
+                      </View>
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                   </>
                 ) : null}
@@ -5264,6 +5551,15 @@ const styles = StyleSheet.create({
   profileMenuWarningCard: { borderColor: "rgba(247,200,91,0.55)", backgroundColor: "rgba(247,200,91,0.14)", marginTop: 8 },
   profileMenuWarningTitle: { color: "#7C5A00" },
   profileMenuWarningCopy: { color: "#7C5A00" },
+  helpSupportSectionStack: { gap: 8, marginBottom: 8 },
+  helpSupportCardRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  helpFieldLabel: { marginTop: 12, marginBottom: 7 },
+  helpFeedbackInput: { minHeight: 108, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, fontSize: 13, fontWeight: "700", lineHeight: 19, paddingHorizontal: 12, paddingVertical: 10, ...(Platform.OS === "web" ? ({ outlineStyle: "none", outlineWidth: 0, outlineColor: "transparent", boxShadow: "none", appearance: "none", caretColor: "#7786FF" } as any) : {}) },
+  helpToggleStack: { gap: 8, marginTop: 10 },
+  helpActionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
+  helpDraftBox: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 10, marginTop: 12 },
+  helpDraftText: { color: nsnColors.text, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 6 },
+  helpFaqHeader: { minHeight: 32, flexDirection: "row", alignItems: "center", gap: 8 },
   foodPreferenceSearchWrap: { minHeight: 46, borderRadius: 14, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 11, marginBottom: 10 },
   foodPreferenceSearchInput: { flex: 1, minHeight: 42, color: nsnColors.text, fontSize: 13, fontWeight: "800", paddingVertical: 0 },
   foodPreferenceClearButton: { width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)" },
