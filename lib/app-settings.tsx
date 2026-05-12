@@ -325,6 +325,7 @@ export type LifeContextLearningPreference =
 export type ProfileGender = "Not specified" | "Male" | "Female" | "Other";
 export type ProfileNameDisplayMode = "Hidden" | "Initial" | "Full";
 export type SettingsPrivacyMode = "Basic" | "Advanced";
+export type UserPreferenceTextMode = "Simple" | "Detailed";
 export type AccountPauseTimeline = "A few days" | "One week" | "One month" | "Until I return";
 export type LowLightLevel = "Gentle" | "Medium" | "Deep";
 export type NotificationSnoozePreset = "1 hour" | "Tonight" | "24 hours" | "Until I turn it back on";
@@ -811,6 +812,9 @@ type OnboardingSnapshot = {
   profileShortcutLayout?: ProfileShortcutLayout;
   profileWidthPreference?: ProfileWidthPreference;
   settingsPrivacyMode?: SettingsPrivacyMode;
+  userPreferenceTextMode?: UserPreferenceTextMode;
+  showProfileControlsShortcut?: boolean;
+  showAlertsSettingsShortcut?: boolean;
   batterySaver?: boolean;
   lowLightMode?: boolean;
   lowLightLevel?: LowLightLevel;
@@ -1125,6 +1129,12 @@ type AppSettings = {
   setProfileWidthPreference: (value: ProfileWidthPreference) => void;
   settingsPrivacyMode: SettingsPrivacyMode;
   setSettingsPrivacyMode: (value: SettingsPrivacyMode) => void;
+  userPreferenceTextMode: UserPreferenceTextMode;
+  setUserPreferenceTextMode: (value: UserPreferenceTextMode) => void;
+  showProfileControlsShortcut: boolean;
+  setShowProfileControlsShortcut: (value: boolean) => void;
+  showAlertsSettingsShortcut: boolean;
+  setShowAlertsSettingsShortcut: (value: boolean) => void;
   batterySaver: boolean;
   setBatterySaver: (value: boolean) => void;
   lowLightMode: boolean;
@@ -1326,6 +1336,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [profileShortcutLayout, setProfileShortcutLayout] = useState<ProfileShortcutLayout>("Clean");
   const [profileWidthPreference, setProfileWidthPreference] = useState<ProfileWidthPreference>("Contained");
   const [settingsPrivacyMode, setSettingsPrivacyMode] = useState<SettingsPrivacyMode>("Basic");
+  const [userPreferenceTextMode, setUserPreferenceTextMode] = useState<UserPreferenceTextMode>("Simple");
+  const [showProfileControlsShortcut, setShowProfileControlsShortcut] = useState(true);
+  const [showAlertsSettingsShortcut, setShowAlertsSettingsShortcut] = useState(true);
   const [batterySaver, setBatterySaver] = useState(false);
   const [lowLightMode, setLowLightMode] = useState(false);
   const [lowLightLevel, setLowLightLevel] = useState<LowLightLevel>("Medium");
@@ -1481,6 +1494,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
         setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
         setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
+        setUserPreferenceTextMode(snapshot.userPreferenceTextMode ?? "Simple");
+        setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut ?? true);
+        setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut ?? true);
         setBatterySaver(Boolean(snapshot.batterySaver));
         setLowLightMode(Boolean(snapshot.lowLightMode));
         setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
@@ -1644,6 +1660,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
     setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
     setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
+    setUserPreferenceTextMode(snapshot.userPreferenceTextMode ?? "Simple");
+    setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut ?? true);
+    setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut ?? true);
     setBatterySaver(Boolean(snapshot.batterySaver));
     setLowLightMode(Boolean(snapshot.lowLightMode));
     setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
@@ -1827,6 +1846,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       profileShortcutLayout,
       profileWidthPreference,
       settingsPrivacyMode,
+      userPreferenceTextMode,
+      showProfileControlsShortcut,
+      showAlertsSettingsShortcut,
       batterySaver,
       lowLightMode,
       lowLightLevel,
@@ -2036,6 +2058,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
     if (snapshot.profileWidthPreference !== undefined) setProfileWidthPreference(snapshot.profileWidthPreference);
     if (snapshot.settingsPrivacyMode !== undefined) setSettingsPrivacyMode(snapshot.settingsPrivacyMode);
+    if (snapshot.userPreferenceTextMode !== undefined) setUserPreferenceTextMode(snapshot.userPreferenceTextMode);
+    if (snapshot.showProfileControlsShortcut !== undefined) setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut);
+    if (snapshot.showAlertsSettingsShortcut !== undefined) setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut);
     if (snapshot.batterySaver !== undefined) setBatterySaver(snapshot.batterySaver);
     if (snapshot.lowLightMode !== undefined) setLowLightMode(snapshot.lowLightMode);
     if (snapshot.lowLightLevel !== undefined) setLowLightLevel(snapshot.lowLightLevel);
@@ -2384,6 +2409,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setProfileWidthPreference,
         settingsPrivacyMode,
         setSettingsPrivacyMode,
+        userPreferenceTextMode,
+        setUserPreferenceTextMode,
+        showProfileControlsShortcut,
+        setShowProfileControlsShortcut,
+        showAlertsSettingsShortcut,
+        setShowAlertsSettingsShortcut,
         batterySaver,
         setBatterySaver,
         lowLightMode,

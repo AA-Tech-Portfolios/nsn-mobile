@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -7,6 +7,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { getLanguageBase, type SoftHelloIntent, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
+import { getSettingsPreferenceLayout } from "@/lib/preferences-layout";
 
 const intentOptions: SoftHelloIntent[] = ["Friends", "Dating", "Both", "Exploring"];
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -143,13 +144,16 @@ const findMatchingLocality = (value: string) => {
 
 export default function LocationPreferenceScreen() {
   const router = useRouter();
-  const { appLanguage, intent, isNightMode, saveSoftHelloMvpState, suburb } = useAppSettings();
+  const { width } = useWindowDimensions();
+  const { appLanguage, homeLayoutDensity, intent, isNightMode, saveSoftHelloMvpState, suburb } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const copy = copyByLanguage[appLanguageBase as keyof typeof copyByLanguage] ?? copyByLanguage.English;
   const locationCopy = { ...copyByLanguage.English, ...copy };
   const localIntentLabels = intentLabels[appLanguageBase] ?? {};
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(appLanguageBase);
+  const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
+  const isWide = preferenceLayout.isDesktop;
   const [draftSuburb, setDraftSuburb] = useState(suburb || "Chatswood");
   const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(() => findMatchingLocality(suburb || "Chatswood"));
   const [draftIntent, setDraftIntent] = useState<SoftHelloIntent>(intent);
@@ -197,7 +201,7 @@ export default function LocationPreferenceScreen() {
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
-      <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={[styles.content, isWide && styles.contentWide, { gap: preferenceLayout.sectionGap }]} showsVerticalScrollIndicator={false}>
         <TouchableOpacity
           activeOpacity={0.75}
           onPress={() => router.replace({ pathname: "/(tabs)/profile", params: { menu: "preferences" } })}
@@ -208,20 +212,20 @@ export default function LocationPreferenceScreen() {
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 
-        <View style={[styles.headerCard, isDay && styles.dayCard]}>
+        <View style={[styles.headerCard, { borderRadius: preferenceLayout.cardRadius, padding: preferenceLayout.cardPadding }, isDay && styles.dayCard]}>
           <Text style={[styles.title, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.title}</Text>
           <Text style={[styles.copy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.copy}</Text>
         </View>
 
-        <View style={[styles.summaryCard, isDay && styles.dayCard]}>
+        <View style={[styles.summaryCard, { borderRadius: preferenceLayout.cardRadius, padding: preferenceLayout.cardPadding }, isDay && styles.dayCard]}>
           <Text style={[styles.summaryLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.currentSummary}</Text>
           <Text style={[styles.summaryText, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
             {draftSuburb.trim() || copy.suburbPlaceholder} · {localIntentLabels[draftIntent] ?? draftIntent}
           </Text>
         </View>
 
-        <View style={styles.formStack}>
-          <View>
+        <View style={[styles.formStack, isWide && styles.formStackWide, { gap: preferenceLayout.sectionGap }]}>
+          <View style={[styles.formGroup, isWide ? preferenceLayout.sectionCard : preferenceLayout.fullWidthCard]}>
             <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.suburbLabel}</Text>
             <TextInput
               value={draftSuburb}
@@ -267,9 +271,9 @@ export default function LocationPreferenceScreen() {
             ) : null}
           </View>
 
-          <View>
+          <View style={[styles.formGroup, isWide ? preferenceLayout.sectionCard : preferenceLayout.fullWidthCard]}>
             <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.intentLabel}</Text>
-            <View style={[styles.optionGrid, isRtl && styles.rtlRow]}>
+            <View style={[styles.optionGrid, isRtl && styles.rtlRow, { gap: preferenceLayout.optionGap }]}>
               {intentOptions.map((option) => {
                 const active = draftIntent === option;
 
@@ -284,7 +288,13 @@ export default function LocationPreferenceScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={localIntentLabels[option] ?? option}
                     accessibilityState={{ selected: active }}
-                    style={[styles.intentOption, isDay && styles.dayChoice, active && styles.choiceActive]}
+                    style={[
+                      styles.intentOption,
+                      isWide ? preferenceLayout.optionCard : preferenceLayout.fullWidthCard,
+                      { borderRadius: Math.max(12, preferenceLayout.cardRadius - 2), minHeight: preferenceLayout.minTapTarget },
+                      isDay && styles.dayChoice,
+                      active && styles.choiceActive,
+                    ]}
                   >
                     <Text style={[styles.choiceText, isDay && styles.dayMutedText, active && styles.choiceTextActive]}>
                       {localIntentLabels[option] ?? option}
@@ -313,7 +323,8 @@ export default function LocationPreferenceScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 34, gap: 16 },
+  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 112, gap: 16 },
+  contentWide: { width: "100%", maxWidth: 1040, alignSelf: "center", paddingHorizontal: 24, paddingTop: 18 },
   backButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
   dayIconButton: { backgroundColor: "#EEF3F4" },
   headerCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
@@ -323,6 +334,8 @@ const styles = StyleSheet.create({
   summaryLabel: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 17, textTransform: "uppercase" },
   summaryText: { color: nsnColors.text, fontSize: 15, fontWeight: "800", lineHeight: 22, marginTop: 4 },
   formStack: { gap: 18 },
+  formStackWide: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start" },
+  formGroup: { flexGrow: 1, flexShrink: 1 },
   label: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginBottom: 8 },
   input: { minHeight: 50, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, paddingHorizontal: 14, fontSize: 15, fontWeight: "700" },
   dayInput: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA", color: "#0B1220" },

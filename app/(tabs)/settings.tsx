@@ -1,4 +1,4 @@
-import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, useWindowDimensions, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
 import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -26,6 +26,7 @@ import {
   type NsnBlurLevel,
   type NsnComfortMode,
   type PhotoRecordingComfortPreference,
+  type ProfileShortcutLayout,
   type ProfileGender,
   type ProfileNameDisplayMode,
   type SettingsPrivacyMode,
@@ -33,13 +34,20 @@ import {
   type TemperatureUnitPreference,
   type TimeContextMode,
   type TimeFormatPreference,
+  type UserPreferenceTextMode,
   useAppSettings,
 } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import {
+  getAlphaRecentStatusCopy,
+  getDependentSettingAvailability,
+  type AlphaActionLabel,
+} from "@/lib/alpha-readiness-controls";
 import { nsnColors } from "@/lib/nsn-data";
 import { brandThemes, isSoftHelloThemeEnabled, type BrandThemeId } from "@/lib/brand-theme";
 import { createSettingsToggleSections, selectSettingsPalette, toggleSettingsDropdown, type SettingsDropdownName } from "@/lib/settings-controls";
+import { getSettingsBackTarget, getSettingsPreferenceLayout } from "@/lib/preferences-layout";
 
 const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
 const comfortModeOptions: { value: NsnComfortMode; copy: string }[] = [
@@ -56,6 +64,14 @@ const nameDisplayOptions: { value: ProfileNameDisplayMode; label: string; copy: 
 const settingsPrivacyModeOptions: { value: SettingsPrivacyMode; label: string; copy: string }[] = [
   { value: "Basic", label: "Basic", copy: "Show the essentials for profile visibility, comfort and account controls." },
   { value: "Advanced", label: "Advanced", copy: "Show every privacy, notification, language and appearance setting." },
+];
+const profileShortcutLayoutOptions: { value: ProfileShortcutLayout; label: string; copy: string }[] = [
+  { value: "Clean", label: "Simple profile", copy: "Keep Profile lighter, with vibes, preview, local area, and key edit controls." },
+  { value: "Expanded", label: "Detailed profile", copy: "Show the fuller Profile layout with local area, interests, comfort, privacy, and trust detail cards." },
+];
+const userPreferenceTextModeOptions: { value: UserPreferenceTextMode; label: string; copy: string }[] = [
+  { value: "Simple", label: "Simple preference text", copy: "Use shorter labels and calmer summaries in User preferences." },
+  { value: "Detailed", label: "Detailed preference text", copy: "Show fuller explanatory text for each User preferences section." },
 ];
 const accountPauseTimelineOptions: { value: AccountPauseTimeline; label: string; copy: string }[] = [
   { value: "A few days", label: "A few days", copy: "A short reset without changing your setup." },
@@ -114,23 +130,26 @@ const jumpIconBySection: Record<SettingsSectionJumpId, ComponentProps<typeof Ico
   language: "language",
   generalSettings: "account",
 };
-const prototypeBadgeBySetting: Record<string, "Prototype" | "Demo" | "Coming soon"> = {
-  privateProfile: "Prototype",
+const prototypeBadgeBySetting: Record<string, AlphaActionLabel> = {
+  privateProfile: "Saved locally",
   sameAgeGroupsOnly: "Demo",
-  revealAfterRsvp: "Prototype",
+  revealAfterRsvp: "Saved locally",
   friendsOfFriendsOnly: "Demo",
   notificationSnoozed: "Demo",
   allowMessageRequests: "Demo",
   safetyCheckIns: "Coming soon",
-  useApproximateLocation: "Prototype",
+  useApproximateLocation: "Saved locally",
   showDistanceInMeetups: "Demo",
-  socialEnergyPreference: "Prototype",
-  communicationPreferences: "Prototype",
-  groupSizePreference: "Prototype",
-  photoRecordingComfortPreferences: "Prototype",
-  verifiedButPrivate: "Prototype",
+  socialEnergyPreference: "Saved locally",
+  communicationPreferences: "Saved locally",
+  groupSizePreference: "Saved locally",
+  photoRecordingComfortPreferences: "Saved locally",
+  verifiedButPrivate: "Saved locally",
+  profileShortcutLayout: "Saved locally",
+  userPreferenceTextMode: "Saved locally",
+  showProfileControlsShortcut: "Saved locally",
+  showAlertsSettingsShortcut: "Saved locally",
 };
-const prototypeOnlyToggleKeys = new Set(["showFirstNameOnly", "sameAgeGroupsOnly", "revealAfterRsvp", "friendsOfFriendsOnly"]);
 const comingSoonToggleKeys = new Set(["safetyCheckIns"]);
 type AccountConfirmation =
   | { kind: "deactivate"; timeline: AccountPauseTimeline }
@@ -179,7 +198,7 @@ const allSettingsAccordionIds: SettingsAccordionId[] = [
   "account",
 ];
 
-const basicOpenSettingsAccordions: SettingsAccordionId[] = ["comfortSafety", "privacyVisibility"];
+const basicOpenSettingsAccordions: SettingsAccordionId[] = ["displayLayout", "privacyVisibility", "comfortSafety", "advancedDisplay"];
 
 const advancedOpenSettingsAccordions: SettingsAccordionId[] = ["comfortSafety", "privacyVisibility"];
 
@@ -211,7 +230,7 @@ const settingsAccordionMeta: Record<SettingsAccordionId, { title: string; copy: 
   notifications: { title: "Notifications", copy: "Meetup reminders, chats, weather alerts, and snooze controls.", icon: "bell" },
   timeUnits: { title: "Time, date & units", copy: "Local time, Day/Night logic, dates, weather units, and regional formats.", icon: "language" },
   safetyContact: { title: "Safety & contact", copy: "Prototype-safe safety states, onboarding restart, and contact controls.", icon: "shield" },
-  advancedDisplay: { title: "Advanced display settings", copy: "Accessibility, appearance, language, and theme controls.", icon: "accessibility" },
+  advancedDisplay: { title: "Appearance & advanced display", copy: "Appearance is available in Basic; accessibility and language controls appear in Advanced.", icon: "accessibility" },
   account: { title: "Account", copy: "Alpha walkthrough, reset controls, and prototype account actions.", icon: "account" },
 };
 
@@ -3025,7 +3044,8 @@ const accessibilityTranslations: Record<string, Required<Pick<SettingsCopy, "acc
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { section: requestedSection } = useLocalSearchParams<{ section?: string | string[] }>();
+  const { section: requestedSection, from: settingsBackSource } = useLocalSearchParams<{ section?: string | string[]; from?: string | string[] }>();
+  const { width } = useWindowDimensions();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const sectionOffsets = useRef<Partial<Record<SettingsSectionJumpId, number>>>({});
   const accordionOffsets = useRef<Partial<Record<SettingsAccordionId, number>>>({});
@@ -3083,6 +3103,11 @@ export default function SettingsScreen() {
     verifiedButPrivate,
     profilePhotoUri,
     settingsPrivacyMode,
+    profileShortcutLayout,
+    userPreferenceTextMode,
+    showProfileControlsShortcut,
+    showAlertsSettingsShortcut,
+    homeLayoutDensity,
     batterySaver,
     setBatterySaver,
     lowLightMode,
@@ -3221,6 +3246,7 @@ export default function SettingsScreen() {
   const paletteAccent = appPalette.swatches[2];
   const brandThemeOptions = (isSoftHelloThemeEnabled ? [brandThemes.nsn, brandThemes.softhello] : [brandThemes.nsn]);
   const isAdvancedSettings = settingsPrivacyMode === "Advanced";
+  const settingsLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
   const contrastMutedStyle = highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
   const accessibilityCopy = accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
@@ -3231,6 +3257,7 @@ export default function SettingsScreen() {
     { id: "profileVisibility", label: "Visibility" },
     { id: "trustFoundations", label: "Trust" },
     { id: "profilePreview", label: "Preview" },
+    { id: "appearance", label: "Appearance" },
     ...(isAdvancedSettings
       ? [
           { id: "nameDisplay" as const, label: "Names" },
@@ -3241,7 +3268,6 @@ export default function SettingsScreen() {
           { id: "regionalFormats" as const, label: "Formats" },
           { id: "safetyContact" as const, label: "Safety" },
           { id: "accessibility" as const, label: "Accessibility" },
-          { id: "appearance" as const, label: "Appearance" },
           { id: "language" as const, label: "Language" },
         ]
       : []),
@@ -3257,7 +3283,7 @@ export default function SettingsScreen() {
   const visibleSettingsAccordionIds = useMemo(
     () => isAdvancedSettings
       ? allSettingsAccordionIds
-      : allSettingsAccordionIds.filter((id) => id !== "notifications" && id !== "timeUnits" && id !== "safetyContact" && id !== "advancedDisplay"),
+      : allSettingsAccordionIds.filter((id) => id !== "notifications" && id !== "timeUnits" && id !== "safetyContact"),
     [isAdvancedSettings]
   );
   const expandAllSettingsAccordions = () => {
@@ -3281,13 +3307,14 @@ export default function SettingsScreen() {
     setRecentlyChangedKey(key);
     recentlyChangedTimer.current = setTimeout(() => setRecentlyChangedKey(null), 2200);
   };
-  const getRecentStatusCopy = (key: string) =>
-    prototypeOnlyToggleKeys.has(key) || comingSoonToggleKeys.has(key) ? "Updated for this prototype" : "Saved locally";
   const getSettingBadge = (key: string) => prototypeBadgeBySetting[key];
+  const getRecentStatusCopy = (key: string) => getAlphaRecentStatusCopy(getSettingBadge(key));
   const getSettingDisabled = (key: string) => comingSoonToggleKeys.has(key);
   const renderSettingMeta = (key: string) => {
     const badge = getSettingBadge(key);
     const updated = recentlyChangedKey === key;
+    const recentStatus = updated ? getRecentStatusCopy(key) : null;
+    const showRecentStatus = Boolean(recentStatus && recentStatus !== badge);
 
     if (!badge && !updated) return null;
 
@@ -3298,9 +3325,9 @@ export default function SettingsScreen() {
             {badge}
           </Text>
         ) : null}
-        {updated ? (
+        {showRecentStatus ? (
           <Text style={[styles.recentlyChangedText, isDay && styles.dayRecentlyChangedText]}>
-            {getRecentStatusCopy(key)}
+            {recentStatus}
           </Text>
         ) : null}
       </View>
@@ -3506,13 +3533,37 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
         {expanded ? (
-          <View style={styles.accordionBody}>
+          <View style={[styles.accordionBody, { gap: settingsLayout.sectionGap, paddingHorizontal: settingsLayout.accordionPadding, paddingBottom: settingsLayout.accordionPadding }]}>
             {children}
           </View>
         ) : null}
       </View>
     );
   };
+  const responsiveSettingsCardStyle = (fullWidth = false) => [
+    styles.card,
+    styles.settingsResponsiveCard,
+    {
+      borderRadius: brandTheme.radius.card,
+      gap: settingsLayout.optionGap,
+      padding: settingsLayout.cardPadding,
+    },
+    settingsLayout.isDesktop && (fullWidth ? settingsLayout.fullWidthCard : settingsLayout.sectionCard),
+    !settingsLayout.isDesktop && settingsLayout.fullWidthCard,
+    isDay && styles.dayCard,
+    highContrast && styles.highContrastCard,
+  ];
+  const responsiveOptionButtonStyle = (active: boolean) => [
+    styles.blurLevelButton,
+    styles.settingsResponsiveOptionButton,
+    {
+      borderRadius: Math.max(12, settingsLayout.cardRadius - 4),
+      minHeight: settingsLayout.minTapTarget,
+    },
+    settingsLayout.isDesktop ? settingsLayout.optionCard : settingsLayout.fullWidthCard,
+    isDay && styles.dayDropdownButton,
+    active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
+  ];
   const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
   useEffect(() => {
     setOpenAccordionSections((current) => {
@@ -3808,6 +3859,11 @@ export default function SettingsScreen() {
     },
   ];
   const allAccessibilityRows = [...accessibilityRows, ...extraAccessibilityRows];
+  const digitalWithAnalogAvailability = getDependentSettingAvailability({
+    copy: "Keep the numeric time beside the analog clock when both are useful.",
+    disabledCopy: "Choose Analog clock display to enable this option.",
+    enabled: clockDisplayStyle === "Analog",
+  });
 
   const resetProfileDefaults = async () => {
     await saveSoftHelloMvpState({
@@ -3837,11 +3893,30 @@ export default function SettingsScreen() {
   const saveSettingsPrivacyMode = (value: SettingsPrivacyMode) => {
     saveSoftHelloMvpState({ settingsPrivacyMode: value });
   };
+  const saveProfileShortcutLayout = (value: ProfileShortcutLayout) => {
+    saveSoftHelloMvpState({ profileShortcutLayout: value });
+    showRecentlyChanged("profileShortcutLayout");
+  };
+  const saveUserPreferenceTextMode = (value: UserPreferenceTextMode) => {
+    saveSoftHelloMvpState({ userPreferenceTextMode: value });
+    showRecentlyChanged("userPreferenceTextMode");
+  };
+  const saveProfileControlsShortcutVisibility = (value: boolean) => {
+    saveSoftHelloMvpState({ showProfileControlsShortcut: value });
+    showRecentlyChanged("showProfileControlsShortcut");
+  };
+  const saveAlertsSettingsShortcutVisibility = (value: boolean) => {
+    saveSoftHelloMvpState({ showAlertsSettingsShortcut: value });
+    showRecentlyChanged("showAlertsSettingsShortcut");
+  };
+  const handleSettingsBack = () => {
+    router.replace(getSettingsBackTarget(settingsBackSource) as never);
+  };
 
   const confirmDeactivateAccount = (timeline: AccountPauseTimeline) => {
     saveSoftHelloMvpState({ accountPaused: true, accountPauseTimeline: timeline });
     setAccountConfirmation(null);
-    Alert.alert("Prototype action only", "Your local prototype account is marked as deactivated. No real account system was changed.");
+    Alert.alert("Saved locally", "Your demo account pause was saved locally. No real account system was changed.");
   };
 
   const reactivateAccount = () => {
@@ -3851,7 +3926,7 @@ export default function SettingsScreen() {
 
   const confirmDeleteAccount = () => {
     setAccountConfirmation(null);
-    Alert.alert("Prototype action only", "No real account was deleted. This NSN prototype has not connected account deletion to a backend.");
+    Alert.alert("Demo only", "No real account was deleted. This NSN prototype has not connected account deletion to a backend.");
   };
 
   return (
@@ -3863,14 +3938,14 @@ export default function SettingsScreen() {
           styles.container,
           {
             padding: brandTheme.spacing.screenX,
-            paddingBottom: brandTheme.spacing.screenY + 18,
+            paddingBottom: Math.max(brandTheme.spacing.screenY + 18, 112),
           },
         ]}
         showsVerticalScrollIndicator
         onScroll={handleSettingsScroll}
         scrollEventThrottle={16}
       >
-        <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={copy.goBack ?? englishCopy.goBack}>
+        <TouchableOpacity activeOpacity={0.75} onPress={handleSettingsBack} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={copy.goBack ?? englishCopy.goBack}>
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 
@@ -3934,7 +4009,7 @@ export default function SettingsScreen() {
         <Text onLayout={registerSectionLayout("settingsView")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Settings view
         </Text>
-        <View style={styles.settingsModeGrid}>
+        <View style={[styles.settingsModeGrid, { gap: settingsLayout.optionGap }]}>
           {settingsPrivacyModeOptions.map((option) => {
             const active = settingsPrivacyMode === option.value;
             return (
@@ -3942,7 +4017,13 @@ export default function SettingsScreen() {
                 key={option.value}
                 activeOpacity={0.82}
                 onPress={() => saveSettingsPrivacyMode(option.value)}
-                style={[styles.settingsModeButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                style={[
+                  styles.settingsModeButton,
+                  settingsLayout.isDesktop ? settingsLayout.sectionCard : settingsLayout.fullWidthCard,
+                  { borderRadius: Math.max(12, settingsLayout.cardRadius - 3), minHeight: Math.max(76, settingsLayout.minTapTarget) },
+                  isDay && styles.dayDropdownButton,
+                  active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
+                ]}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
               >
@@ -4014,6 +4095,101 @@ export default function SettingsScreen() {
             </View>
           ) : null}
         </View>
+        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+          Profile and preferences display
+        </Text>
+        <View style={[styles.settingsResponsiveGrid, settingsLayout.isDesktop && styles.settingsResponsiveGridWide, { gap: settingsLayout.sectionGap }]}>
+          <View style={responsiveSettingsCardStyle()}>
+            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Profile layout</Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Choose whether Profile opens in a simpler layout or the fuller detailed layout.
+            </Text>
+            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+              {profileShortcutLayoutOptions.map((option) => {
+                const active = profileShortcutLayout === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    activeOpacity={0.82}
+                    onPress={() => saveProfileShortcutLayout(option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: active }}
+                    accessibilityLabel={option.label}
+                    accessibilityHint={screenReaderHints ? option.copy : undefined}
+                    style={responsiveOptionButtonStyle(active)}
+                  >
+                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option.label}` : option.label}</Text>
+                    <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {renderSettingMeta("profileShortcutLayout")}
+          </View>
+
+          <View style={responsiveSettingsCardStyle()}>
+            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>User preference text</Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Switch the Profile drawer and User preferences between short summaries and fuller guidance.
+            </Text>
+            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+              {userPreferenceTextModeOptions.map((option) => {
+                const active = userPreferenceTextMode === option.value;
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    activeOpacity={0.82}
+                    onPress={() => saveUserPreferenceTextMode(option.value)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: active }}
+                    accessibilityLabel={option.label}
+                    accessibilityHint={screenReaderHints ? option.copy : undefined}
+                    style={responsiveOptionButtonStyle(active)}
+                  >
+                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option.label}` : option.label}</Text>
+                    <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {renderSettingMeta("userPreferenceTextMode")}
+          </View>
+
+          <View style={responsiveSettingsCardStyle(true)}>
+            {[
+              {
+                key: "showProfileControlsShortcut",
+                label: "Show Profile controls shortcut",
+                copy: "Show the Profile controls button at the top of Profile.",
+                value: showProfileControlsShortcut,
+                onChange: saveProfileControlsShortcutVisibility,
+              },
+              {
+                key: "showAlertsSettingsShortcut",
+                label: "Show Alerts settings shortcut",
+                copy: "Show the Settings button in Alerts.",
+                value: showAlertsSettingsShortcut,
+                onChange: saveAlertsSettingsShortcutVisibility,
+              },
+            ].map((row, index, rows) => (
+              <View key={row.key} style={[styles.settingRow, isRtl && styles.rtlRow, index < rows.length - 1 && styles.rowDivider, isDay && index < rows.length - 1 && styles.dayRowDivider, highContrast && index < rows.length - 1 && styles.highContrastDivider]}>
+                <View style={styles.settingCopy}>
+                  <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
+                  <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
+                  {renderSettingMeta(row.key)}
+                </View>
+                <Switch
+                  value={row.value}
+                  onValueChange={row.onChange}
+                  accessibilityLabel={row.label}
+                  accessibilityHint={screenReaderHints ? row.copy : undefined}
+                  trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
+                  thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                />
+              </View>
+            ))}
+          </View>
+        </View>
           </>
         ))}
 
@@ -4069,11 +4245,11 @@ export default function SettingsScreen() {
           {
             title: "Identity basics",
             rows: [
-              { label: "Show middle name", copy: middleName ? "Use name display below: full name or initial only." : "Add a middle name in Profile before showing it.", value: Boolean(middleName && middleNameDisplay !== "Hidden"), onChange: (value: boolean) => saveSoftHelloMvpState({ middleNameDisplay: Boolean(middleName && value) ? "Full" : "Hidden" }) },
-              { label: "Show last name", copy: lastName ? "Use name display below: full name or initial only." : "Add a last name in Profile before showing it.", value: Boolean(lastName && lastNameDisplay !== "Hidden"), onChange: (value: boolean) => saveSoftHelloMvpState({ lastNameDisplay: Boolean(lastName && value) ? "Full" : "Hidden" }) },
+              { label: "Show middle name", copy: middleName ? "Use name display below: full name or initial only." : "Add a middle name in Profile before showing it.", disabled: !middleName, value: Boolean(middleName && middleNameDisplay !== "Hidden"), onChange: (value: boolean) => saveSoftHelloMvpState({ middleNameDisplay: Boolean(middleName && value) ? "Full" : "Hidden" }) },
+              { label: "Show last name", copy: lastName ? "Use name display below: full name or initial only." : "Add a last name in Profile before showing it.", disabled: !lastName, value: Boolean(lastName && lastNameDisplay !== "Hidden"), onChange: (value: boolean) => saveSoftHelloMvpState({ lastNameDisplay: Boolean(lastName && value) ? "Full" : "Hidden" }) },
               { label: "Show age", copy: "Let others see your age in profile previews.", value: showAge, onChange: (value: boolean) => saveSoftHelloMvpState({ showAge: value }) },
               { label: "Show preferred age range", copy: "Show the age range you prefer for matching.", value: showPreferredAgeRange, onChange: (value: boolean) => saveSoftHelloMvpState({ showPreferredAgeRange: value }) },
-              { label: "Show gender", copy: gender === "Not specified" ? "Choose a gender below before showing it." : "Include your optional gender in profile previews.", value: Boolean(gender !== "Not specified" && showGender), onChange: (value: boolean) => saveSoftHelloMvpState({ showGender: Boolean(gender !== "Not specified" && value) }) },
+              { label: "Show gender", copy: gender === "Not specified" ? "Choose a gender below before showing it." : "Include your optional gender in profile previews.", disabled: gender === "Not specified", value: Boolean(gender !== "Not specified" && showGender), onChange: (value: boolean) => saveSoftHelloMvpState({ showGender: Boolean(gender !== "Not specified" && value) }) },
             ],
           },
           {
@@ -4098,19 +4274,21 @@ export default function SettingsScreen() {
             <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{group.title}</Text>
             <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
               {group.rows.map((row, index) => (
-                <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < group.rows.length - 1 && styles.rowDivider, isDay && index < group.rows.length - 1 && styles.dayRowDivider, highContrast && index < group.rows.length - 1 && styles.highContrastDivider]}>
+                <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (row as { disabled?: boolean }).disabled && styles.disabledOption, index < group.rows.length - 1 && styles.rowDivider, isDay && index < group.rows.length - 1 && styles.dayRowDivider, highContrast && index < group.rows.length - 1 && styles.highContrastDivider]}>
                   <View style={styles.settingCopy}>
                     <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
                     <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
                     {renderSettingMeta(row.label)}
                   </View>
                   <Switch
-                    value={row.value}
+                    value={(row as { disabled?: boolean }).disabled ? false : row.value}
                     onValueChange={onToggleChange(row.label, row.onChange)}
+                    disabled={(row as { disabled?: boolean }).disabled}
                     accessibilityLabel={row.label}
                     accessibilityHint={screenReaderHints ? row.copy : undefined}
+                    accessibilityState={{ disabled: (row as { disabled?: boolean }).disabled }}
                     trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                    thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                    thumbColor={!(row as { disabled?: boolean }).disabled && row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
                   />
                 </View>
               ))}
@@ -4125,37 +4303,39 @@ export default function SettingsScreen() {
         <Text onLayout={registerSectionLayout("trustFoundations")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           Trust foundations
         </Text>
-        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          <View style={styles.settingCopy}>
-            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Progressive visibility</Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Comfort Mode keeps you mostly private, Warm Up reveals limited details, and Open Mode shows more event-visible profile details.
-            </Text>
-          </View>
-          <View style={styles.blurLevelGrid}>
-            {comfortModeOptions.map((option) => {
-              const active = comfortMode === option.value;
-              return (
-                <TouchableOpacity
-                  key={`trust-${option.value}`}
-                  activeOpacity={0.82}
-                  onPress={() => saveComfortMode(option.value)}
-                  style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
-                  accessibilityRole="radio"
-                  accessibilityLabel={`Progressive visibility ${option.value}`}
-                  accessibilityState={{ checked: active }}
-                >
-                  <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option.value}` : option.value}</Text>
-                  <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                </TouchableOpacity>
-              );
-            })}
+        <View style={[styles.settingsResponsiveGrid, settingsLayout.isDesktop && styles.settingsResponsiveGridWide, { gap: settingsLayout.sectionGap }]}>
+          <View style={responsiveSettingsCardStyle()}>
+            <View style={styles.settingCopy}>
+              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Progressive visibility</Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Comfort Mode keeps you mostly private, Warm Up reveals limited details, and Open Mode shows more event-visible profile details.
+              </Text>
+            </View>
+            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+              {comfortModeOptions.map((option) => {
+                const active = comfortMode === option.value;
+                return (
+                  <TouchableOpacity
+                    key={`trust-${option.value}`}
+                    activeOpacity={0.82}
+                    onPress={() => saveComfortMode(option.value)}
+                    style={responsiveOptionButtonStyle(active)}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`Progressive visibility ${option.value}`}
+                    accessibilityState={{ checked: active }}
+                  >
+                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option.value}` : option.value}</Text>
+                    <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
-          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
-            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Social energy</Text>
+          <View style={responsiveSettingsCardStyle()}>
+            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Social energy</Text>
             <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>Choose the kind of social energy that feels easiest today.</Text>
-            <View style={styles.blurLevelGrid}>
+            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
               {socialEnergyOptions.map((option) => {
                 const active = socialEnergyPreference === option;
                 return (
@@ -4163,7 +4343,7 @@ export default function SettingsScreen() {
                     key={option}
                     activeOpacity={0.82}
                     onPress={() => saveSocialEnergyPreference(option)}
-                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                    style={responsiveOptionButtonStyle(active)}
                     accessibilityRole="radio"
                     accessibilityLabel={`Social energy ${option}`}
                     accessibilityState={{ checked: active }}
@@ -4175,10 +4355,10 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
-            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Communication preferences</Text>
+          <View style={responsiveSettingsCardStyle()}>
+            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Communication preferences</Text>
             <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>These prototype chips help others understand how you like to communicate.</Text>
-            <View style={styles.blurLevelGrid}>
+            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
               {communicationPreferenceOptions.map((option) => {
                 const active = communicationPreferences.includes(option);
                 return (
@@ -4186,7 +4366,7 @@ export default function SettingsScreen() {
                     key={option}
                     activeOpacity={0.82}
                     onPress={() => toggleCommunicationPreference(option)}
-                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                    style={responsiveOptionButtonStyle(active)}
                     accessibilityRole="button"
                     accessibilityLabel={`Communication preference ${option}`}
                     accessibilityState={{ selected: active }}
@@ -4198,9 +4378,9 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
-            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Group size preference</Text>
-            <View style={styles.blurLevelGrid}>
+          <View style={responsiveSettingsCardStyle()}>
+            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Group size preference</Text>
+            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
               {groupSizePreferenceOptions.map((option) => {
                 const active = groupSizePreference === option;
                 return (
@@ -4208,7 +4388,7 @@ export default function SettingsScreen() {
                     key={option}
                     activeOpacity={0.82}
                     onPress={() => saveGroupSizePreference(option)}
-                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                    style={responsiveOptionButtonStyle(active)}
                     accessibilityRole="radio"
                     accessibilityLabel={`Group size preference ${option}`}
                     accessibilityState={{ checked: active }}
@@ -4220,51 +4400,57 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          <View style={[styles.settingsGroup, styles.inlineSettingsGroup]}>
-            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+          <View style={responsiveSettingsCardStyle(true)}>
+            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Safety, privacy & consent details</Text>
             <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+              Photo comfort, consent reminders, and prototype trust state stay grouped here so safety actions remain calm and clear.
             </Text>
-            <View style={styles.blurLevelGrid}>
-              {photoRecordingComfortOptions.map((option) => {
-                const active = photoRecordingComfortPreferences.includes(option);
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    activeOpacity={0.82}
-                    onPress={() => togglePhotoRecordingComfortPreference(option)}
-                    style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Photo and recording comfort ${option}`}
-                    accessibilityState={{ selected: active }}
-                  >
-                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Please don't screenshot or share someone's profile, chat, or meetup details without permission.
-            </Text>
-            {renderSettingMeta("photoRecordingComfortPreferences")}
-          </View>
-
-          <View style={[styles.settingRow, styles.settingRowLast, isRtl && styles.rtlRow]}>
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Verified, but private</Text>
+            <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
+              <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
               <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Your contact/trust status can be checked without making your profile fully open. Prototype trust state only - no real verification provider is connected yet.
+                Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
               </Text>
-              {renderSettingMeta("verifiedButPrivate")}
+              <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                {photoRecordingComfortOptions.map((option) => {
+                  const active = photoRecordingComfortPreferences.includes(option);
+                  return (
+                    <TouchableOpacity
+                      key={option}
+                      activeOpacity={0.82}
+                      onPress={() => togglePhotoRecordingComfortPreference(option)}
+                      style={responsiveOptionButtonStyle(active)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Photo and recording comfort ${option}`}
+                      accessibilityState={{ selected: active }}
+                    >
+                      <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Please don't screenshot or share someone's profile, chat, or meetup details without permission.
+              </Text>
+              {renderSettingMeta("photoRecordingComfortPreferences")}
             </View>
-            <Switch
-              value={verifiedButPrivate}
-              onValueChange={onToggleChange("verifiedButPrivate", saveVerifiedButPrivate)}
-              accessibilityLabel="Verified but private prototype trust state"
-              accessibilityHint="Keeps trust status visible without opening your full profile."
-              trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-              thumbColor={verifiedButPrivate ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-            />
+
+            <View style={[styles.settingsInlineSwitchRow, isRtl && styles.rtlRow]}>
+              <View style={styles.settingCopy}>
+                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Verified, but private</Text>
+                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                  Your contact/trust status can be checked without making your profile fully open. Prototype trust state only - no real verification provider is connected yet.
+                </Text>
+                {renderSettingMeta("verifiedButPrivate")}
+              </View>
+              <Switch
+                value={verifiedButPrivate}
+                onValueChange={onToggleChange("verifiedButPrivate", saveVerifiedButPrivate)}
+                accessibilityLabel="Verified but private prototype trust state"
+                accessibilityHint="Keeps trust status visible without opening your full profile."
+                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
+                thumbColor={verifiedButPrivate ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+              />
+            </View>
           </View>
         </View>
           </>
@@ -4300,6 +4486,7 @@ export default function SettingsScreen() {
                         style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }, !row.value && styles.disabledOption]}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active, disabled: !row.value }}
+                        accessibilityHint={row.value ? option.copy : `Add a ${row.label.toLowerCase()} in Profile before changing this display option.`}
                       >
                         <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
                         <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
@@ -4615,19 +4802,19 @@ export default function SettingsScreen() {
             <View style={styles.settingCopy}>
               <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Show digital time with analog clock</Text>
               <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Keep the numeric time beside the analog clock when both are useful.
+                {digitalWithAnalogAvailability.copy}
               </Text>
               {renderSettingMeta("showDigitalTimeWithAnalog")}
             </View>
             <Switch
-              value={showDigitalTimeWithAnalog}
+              value={digitalWithAnalogAvailability.disabled ? false : showDigitalTimeWithAnalog}
               onValueChange={(value) => saveRegionalPreference({ showDigitalTimeWithAnalog: value })}
-              disabled={clockDisplayStyle !== "Analog"}
+              disabled={digitalWithAnalogAvailability.disabled}
               accessibilityLabel="Show digital time with analog clock"
-              accessibilityState={{ disabled: clockDisplayStyle !== "Analog" }}
-              accessibilityHint={screenReaderHints ? "Only applies when Clock display is set to Analog." : undefined}
+              accessibilityState={{ disabled: digitalWithAnalogAvailability.disabled }}
+              accessibilityHint={screenReaderHints ? digitalWithAnalogAvailability.accessibilityHint : undefined}
               trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-              thumbColor={showDigitalTimeWithAnalog ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+              thumbColor={!digitalWithAnalogAvailability.disabled && showDigitalTimeWithAnalog ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
             />
           </View>
           <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
@@ -4685,8 +4872,12 @@ export default function SettingsScreen() {
         </View>
           </>
         ))}
+          </>
+        ) : null}
 
         {renderSettingsAccordion("advancedDisplay", (
+          <>
+        {isAdvancedSettings ? (
           <>
         <Text onLayout={registerSectionLayout("accessibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
@@ -4708,6 +4899,8 @@ export default function SettingsScreen() {
             </View>
           ))}
         </View>
+          </>
+        ) : null}
 
         <Text onLayout={registerSectionLayout("appearance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.appearance ?? englishCopy.appearance}
@@ -4864,6 +5057,8 @@ export default function SettingsScreen() {
           )}
         </View>
 
+        {isAdvancedSettings ? (
+          <>
         <Text onLayout={registerSectionLayout("language")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.translations}</Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           <View style={[styles.dropdownRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider]}>
@@ -5049,9 +5244,9 @@ export default function SettingsScreen() {
           )}
         </View>
           </>
-        ))}
-          </>
         ) : null}
+          </>
+        ))}
 
         {renderSettingsAccordion("account", (
           <>
@@ -5101,7 +5296,7 @@ export default function SettingsScreen() {
                   : "Prototype-only pause. Your local profile settings stay saved, and no real account system is changed."}
               </Text>
               <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
-                <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Prototype</Text>
+                <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Saved locally</Text>
                 {recentlyChangedKey === "reactivateAccount" ? (
                   <Text style={[styles.recentlyChangedText, isDay && styles.dayRecentlyChangedText]}>Saved locally</Text>
                 ) : null}
@@ -5189,7 +5384,7 @@ export default function SettingsScreen() {
             <Text style={[styles.confirmCopy, isDay && styles.daySubtitle]}>
               {accountConfirmation?.kind === "delete"
                 ? "This is a serious account action in a real product. In this NSN prototype, confirming will only show a demo result and no real account or profile data will be deleted."
-                : `This will mark your local prototype account as paused for ${accountConfirmation?.kind === "deactivate" ? accountConfirmation.timeline : "now"}. No real account system or backend will be changed.`}
+                : `This will save a local demo pause for ${accountConfirmation?.kind === "deactivate" ? accountConfirmation.timeline : "now"}. No real account system or backend will be changed.`}
             </Text>
             <View style={styles.confirmActions}>
               <TouchableOpacity
@@ -5214,7 +5409,7 @@ export default function SettingsScreen() {
                 accessibilityLabel={accountConfirmation?.kind === "delete" ? "Confirm prototype delete action" : "Confirm prototype deactivate action"}
                 style={[styles.confirmButton, accountConfirmation?.kind === "delete" ? styles.confirmDestructiveButton : styles.confirmPrimaryButton]}
               >
-                <Text style={styles.confirmPrimaryText}>Confirm</Text>
+                <Text style={styles.confirmPrimaryText}>{accountConfirmation?.kind === "delete" ? "Show demo result" : "Save locally"}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -5462,6 +5657,34 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: nsnColors.surface,
     overflow: "hidden",
+  },
+  settingsResponsiveGrid: {
+    alignItems: "stretch",
+  },
+  settingsResponsiveGridWide: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+  },
+  settingsResponsiveCard: {
+    overflow: "visible",
+  },
+  settingsResponsiveCardTitle: {
+    marginLeft: 0,
+  },
+  settingsResponsiveOptionButton: {
+    alignItems: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  settingsInlineSwitchRow: {
+    minHeight: 68,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: nsnColors.border,
   },
   trustFoundationsSettingsCard: {
     padding: 16,

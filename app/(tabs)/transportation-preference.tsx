@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -6,6 +6,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, type TransportationMethod, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
+import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel, getPreferenceChipIcon, getSettingsPreferenceLayout } from "@/lib/preferences-layout";
 
 const transportationOptions: { value: TransportationMethod; label: string; copy: string }[] = [
   { value: "Driving", label: "Driving", copy: "I may need parking or a clear meeting point." },
@@ -19,8 +20,11 @@ const transportationOptions: { value: TransportationMethod; label: string; copy:
 
 export default function TransportationPreferenceScreen() {
   const router = useRouter();
-  const { appLanguage, isNightMode, saveSoftHelloMvpState, transportationMethod } = useAppSettings();
+  const { width } = useWindowDimensions();
+  const { appLanguage, homeLayoutDensity, isNightMode, saveSoftHelloMvpState, transportationMethod } = useAppSettings();
   const isDay = !isNightMode;
+  const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
+  const isWide = preferenceLayout.isDesktop;
   const preferenceCopy = getProfilePreferenceCopy(getLanguageBase(appLanguage));
   const copy = preferenceCopy.transportation;
   const backLabel = preferenceCopy.back ?? getProfilePreferenceCopy("English").back;
@@ -31,7 +35,7 @@ export default function TransportationPreferenceScreen() {
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
-      <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={[styles.content, isWide && styles.contentWide, { gap: preferenceLayout.sectionGap }]} showsVerticalScrollIndicator={false}>
         <TouchableOpacity
           activeOpacity={0.75}
           onPress={() => router.replace({ pathname: "/(tabs)/profile", params: { menu: "preferences" } })}
@@ -42,32 +46,43 @@ export default function TransportationPreferenceScreen() {
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 
-        <View style={[styles.headerCard, isDay && styles.dayCard]}>
+        <View style={[styles.headerCard, { borderRadius: preferenceLayout.cardRadius, padding: preferenceLayout.cardPadding }, isDay && styles.dayCard]}>
           <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
           <Text style={[styles.copy, isDay && styles.dayMutedText]}>
             {copy.copy}
           </Text>
         </View>
 
-        <View style={styles.optionStack}>
+        <View style={[styles.optionStack, isWide && styles.optionStackWide, { gap: preferenceLayout.optionGap }]}>
           {transportationOptions.map((option) => {
             const active = transportationMethod === option.value;
             const localizedOption = copy.options?.[option.value] ?? option;
+            const icon = getPreferenceChipIcon(option.value);
+            const optionLabel = active
+              ? formatSelectedPreferenceChipLabel(localizedOption.label, icon)
+              : formatPreferenceChipLabel(localizedOption.label, icon);
 
             return (
               <TouchableOpacity
                 key={option.value}
                 activeOpacity={0.82}
                 onPress={() => saveTransportationMethod(option.value)}
-                style={[styles.optionCard, isDay && styles.dayCard, active && styles.optionCardActive]}
+                style={[
+                  styles.optionCard,
+                  isWide ? preferenceLayout.sectionCard : preferenceLayout.fullWidthCard,
+                  { borderRadius: preferenceLayout.cardRadius, minHeight: Math.max(72, preferenceLayout.minTapTarget) },
+                  isDay && styles.dayCard,
+                  active && styles.optionCardActive,
+                ]}
                 accessibilityRole="button"
+                accessibilityLabel={optionLabel}
                 accessibilityState={{ selected: active }}
               >
                 <View style={styles.optionIcon}>
                   <IconSymbol name="transport" color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={21} />
                 </View>
                 <View style={styles.optionBody}>
-                  <Text style={[styles.optionTitle, isDay && styles.dayTitle, active && styles.activeText]}>{localizedOption.label}</Text>
+                  <Text style={[styles.optionTitle, isDay && styles.dayTitle, active && styles.activeText]}>{optionLabel}</Text>
                   <Text style={[styles.optionCopy, isDay && styles.dayMutedText, active && styles.activeText]}>{localizedOption.copy}</Text>
                 </View>
                 <Text style={[styles.check, active && styles.checkActive]}>{active ? "✓" : ""}</Text>
@@ -83,13 +98,15 @@ export default function TransportationPreferenceScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 34, gap: 16 },
+  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 112, gap: 16 },
+  contentWide: { width: "100%", maxWidth: 1040, alignSelf: "center", paddingHorizontal: 24, paddingTop: 18 },
   backButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
   dayIconButton: { backgroundColor: "#EEF3F4" },
   headerCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
   title: { color: nsnColors.text, fontSize: 26, fontWeight: "900", lineHeight: 32 },
   copy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 6 },
   optionStack: { gap: 10 },
+  optionStackWide: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch" },
   optionCard: { minHeight: 72, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, flexDirection: "row", alignItems: "center", gap: 12, padding: 13 },
   dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   optionCardActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
