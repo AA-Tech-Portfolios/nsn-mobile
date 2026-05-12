@@ -122,14 +122,14 @@ const notificationTranslations = {
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const { isNightMode, appLanguage, liveWeatherAlert } = useAppSettings();
+  const { isNightMode, appLanguage, liveWeatherAlert, showAlertsSettingsShortcut } = useAppSettings();
   const appLanguageBase = getLanguageBase(appLanguage);
   const isDay = !isNightMode;
   const copy = notificationTranslations[appLanguageBase as keyof typeof notificationTranslations] ?? notificationTranslations.English;
 
   const displayAlerts: NotificationAlert[] = liveWeatherAlert ? [{ ...liveWeatherAlert, isLive: true }, ...copy.alerts] : [...copy.alerts];
   const openNotificationSettings = () => {
-    router.push("/(tabs)/settings?section=notifications");
+    router.push({ pathname: "/(tabs)/settings", params: { section: "notifications", from: "notifications" } } as never);
   };
   const openAlert = (alert: NotificationAlert) => {
     if (alert.action === "settings") {
@@ -158,16 +158,18 @@ export default function NotificationsScreen() {
             <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
             <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
           </View>
-          <TouchableOpacity
-            activeOpacity={0.82}
-            onPress={openNotificationSettings}
-            style={[styles.settingsShortcut, isDay && styles.daySettingsShortcut]}
-            accessibilityRole="button"
-            accessibilityLabel="Open notification settings"
-          >
-            <IconSymbol name="settings" size={18} color={isDay ? "#445E93" : nsnColors.day} />
-            <Text style={[styles.settingsShortcutText, isDay && styles.dayAccentText]}>Settings</Text>
-          </TouchableOpacity>
+          {showAlertsSettingsShortcut ? (
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={openNotificationSettings}
+              style={[styles.settingsShortcut, isDay && styles.daySettingsShortcut]}
+              accessibilityRole="button"
+              accessibilityLabel="Open notification settings"
+            >
+              <IconSymbol name="settings" size={18} color={isDay ? "#445E93" : nsnColors.day} />
+              <Text style={[styles.settingsShortcutText, isDay && styles.dayAccentText]}>Settings</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
@@ -215,7 +217,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28 },
+  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 112 },
   headerRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 18 },
   headerCopy: { flex: 1 },
   title: { color: nsnColors.text, fontSize: 28, fontWeight: "800", lineHeight: 35 },

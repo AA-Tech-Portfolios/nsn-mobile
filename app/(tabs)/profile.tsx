@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Image, Alert, Modal, useWindowDimensions, Linking } from "react-native";
+import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Alert, Modal, useWindowDimensions, Linking, type ViewStyle } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -50,9 +50,19 @@ import {
   useAppSettings,
 } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import { ScreenContainer } from "@/components/screen-container";
-import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
+import { ProfileVisibilityPreview, type ProfileVisibilityPreviewProps } from "@/components/profile-visibility-preview";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import {
+  getProfilePreferenceDestination,
+  type ProfileDrawerPanel,
+  type ProfilePreferenceSection,
+} from "@/lib/alpha-readiness-controls";
+import { getUserPreferenceRowDescription, profileSupportRowMetadata, userPreferenceRowMetadata, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
+import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
+import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
+import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
 import type { LocalAreaSuggestion } from "@/lib/location-lookup";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
 import {
@@ -137,6 +147,7 @@ type ProfileMenuPanel =
   | "helpSupport"
   | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
+const simpleProfileShortcutRows: ProfileShortcutRow[] = [rows[0], rows[1], rows[2], rows[8], settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
 const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
 const profileHomeLayoutDensityOptions: HomeLayoutDensity[] = ["Compact", "Comfortable", "Spacious"];
@@ -257,7 +268,7 @@ const profileTranslations = {
     selectOrDeselectHint: "Double tap to select or deselect",
     trustStatus: "Trust status",
     reviewSettings: "Review settings",
-    profileMenuHint: "Opens profile shortcuts, layout, width, and settings links.",
+    profileMenuHint: "Opens profile shortcuts, preferences, layout, and settings links.",
     trustStatusHint: "Opens contact, selfie, and ID fields used for trust status.",
     opensSectionHint: "Opens section",
     verificationReviewTitle: "Confirm your details",
@@ -1186,6 +1197,8 @@ export default function ProfileScreen() {
     dayNightModePreference,
     cardOutlineStyle,
     screenReaderHints,
+    userPreferenceTextMode,
+    showProfileControlsShortcut,
     softSurfaces,
     clearBorders,
     brandTheme,
@@ -1239,8 +1252,18 @@ export default function ProfileScreen() {
   const isWideLayout = width >= 880;
   const isDesktopUserOptions = width >= 760;
   const shouldOpenFullPreferenceView = Platform.OS === "web" && width >= 900;
+  const interestComfortLayout = getInterestComfortLayout(Math.min(width, 560));
+  const interestComfortModifierStyle: ViewStyle = {
+    flexBasis: interestComfortLayout.modifierFlexBasis,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: interestComfortLayout.modifierMinWidth,
+  };
   const profileSectionMaxWidth = isWideProfile ? "100%" : 980;
   const profileTopCardMaxWidth = isWideProfile && isWideLayout ? 620 : isWideLayout ? 480 : brandTheme.layout.cardMaxWidth;
+  const isCompactProfileControls = width < 560;
+  const profileControlsButtonLabel = isCompactProfileControls ? "Controls" : "Profile controls";
+  const simpleVisibilitySectionMaxWidth = isWideLayout ? 520 : brandTheme.layout.cardMaxWidth;
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(displayName);
@@ -1325,40 +1348,64 @@ export default function ProfileScreen() {
   }, []);
 
   const openFullPreferenceView = useCallback(
-    (section: "overview" | "comfort" | "background" | "calendar" | "food" | "interests" | "transport" | "contact" | "location" = "overview") => {
+    (section: ProfilePreferenceSection = "overview") => {
       setShowPhotoMenu(false);
       setIsVerificationReviewOpen(false);
-      setShowProfileMenu(false);
+      closeProfileMenu();
       router.push({ pathname: "/user-preferences", params: { section } } as never);
     },
-    [router]
+    [closeProfileMenu, router]
   );
 
-  const openPreferenceDestination = useCallback(
-    (
-      panel:
-        | "preferences"
-        | "comfortTrust"
-        | "backgroundCommunity"
-        | "calendarMoments"
-        | "foodBeverage"
-        | "hobbiesInterests"
-        | "transportPreferences"
-        | "contactPreferencePanel"
-        | "locationPreferencePanel",
-      section: "overview" | "comfort" | "background" | "calendar" | "food" | "interests" | "transport" | "contact" | "location"
-    ) => {
-      if (shouldOpenFullPreferenceView) {
-        openFullPreferenceView(section);
+  const openSettingsFromProfile = useCallback(
+    (params?: Record<string, string>, source: "profile" | "user-options" = "profile") => {
+      setShowPhotoMenu(false);
+      setIsVerificationReviewOpen(false);
+      closeProfileMenu();
+      router.push({ pathname: "/settings", params: { from: source, ...(params ?? {}) } } as never);
+    },
+    [closeProfileMenu, router]
+  );
+
+  const openProfileShortcutRow = useCallback(
+    (row: ProfileShortcutRow) => {
+      setShowPhotoMenu(false);
+      setIsVerificationReviewOpen(false);
+
+      if (row.key === "settings") {
+        openSettingsFromProfile(undefined, "profile");
         return;
       }
 
-      openProfileOptionsPanel(panel);
+      router.push(row.route as any);
     },
-    [openFullPreferenceView, openProfileOptionsPanel, shouldOpenFullPreferenceView]
+    [openSettingsFromProfile, router]
+  );
+
+  const openPreferenceDestination = useCallback(
+    (panel: ProfileDrawerPanel, section: ProfilePreferenceSection) => {
+      const destination = getProfilePreferenceDestination({
+        panel,
+        platform: Platform.OS,
+        section,
+        width,
+      });
+
+      if (destination.kind === "full-view") {
+        openFullPreferenceView(destination.section);
+        return;
+      }
+
+      openProfileOptionsPanel(destination.panel);
+    },
+    [openFullPreferenceView, openProfileOptionsPanel, width]
   );
 
   useEffect(() => {
+    if (menu === "options") {
+      openProfileOptionsPanel("main");
+    }
+
     if (menu === "preferences") {
       openProfileOptionsPanel("preferences");
     }
@@ -1393,6 +1440,14 @@ export default function ProfileScreen() {
 
     if (menu === "locationPreferencePanel") {
       openProfileOptionsPanel("locationPreferencePanel");
+    }
+
+    if (menu === "helpSupport") {
+      openProfileOptionsPanel("helpSupport");
+    }
+
+    if (menu === "blockReport") {
+      openProfileOptionsPanel("blockReport");
     }
   }, [menu, openProfileOptionsPanel]);
 
@@ -1472,27 +1527,8 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleProfilePhotoDrop = (event: any) => {
-    event.preventDefault?.();
-    const file = event.dataTransfer?.files?.[0] ?? event.nativeEvent?.dataTransfer?.files?.[0];
-
-    if (!file || typeof file.type !== "string" || !file.type.startsWith("image/")) return;
-
-    const createObjectUrl = globalThis.URL?.createObjectURL;
-    if (!createObjectUrl) return;
-
-    saveProfilePhotoPreview(createObjectUrl(file));
-  };
-
-  const photoDropZoneProps = Platform.OS === "web"
-    ? ({
-        onDragOver: (event: any) => event.preventDefault?.(),
-        onDrop: handleProfilePhotoDrop,
-      } as any)
-    : {};
-
   const handleAvatarPress = () => {
-    setShowProfileMenu(false);
+    closeProfileMenu();
     setShowPhotoMenu(!showPhotoMenu);
   };
 
@@ -1643,6 +1679,13 @@ export default function ProfileScreen() {
       return;
     }
 
+    setDraftSuburb(suburb);
+    setShowSuburbSaved(false);
+    setIsEditingSuburb(true);
+  };
+
+  const openLocalAreaEditor = () => {
+    closeProfileMenu();
     setDraftSuburb(suburb);
     setShowSuburbSaved(false);
     setIsEditingSuburb(true);
@@ -2084,7 +2127,7 @@ export default function ProfileScreen() {
   };
 
   const openVerificationReview = () => {
-    setShowProfileMenu(false);
+    closeProfileMenu();
     setDraftContactEmail(contactEmail);
     setDraftContactPhone(contactPhone);
     setDraftIdentitySelfieUri(identitySelfieUri);
@@ -2163,14 +2206,14 @@ export default function ProfileScreen() {
       interestPreferenceIds: defaultInterestPreferenceIds,
       interestComfortTagsByInterest: defaultInterestComfortTagsByInterest,
     });
-    setShowProfileMenu(false);
+    closeProfileMenu();
   };
 
   const showDeleteAccountNotice = () => {
-    setShowProfileMenu(false);
+    closeProfileMenu();
     Alert.alert(
-      "Delete account",
-      "Accounts are not connected in the NSN pilot yet. When authentication is added, this will permanently delete your account and profile data."
+      "Demo only",
+      "No real account will be deleted. Account deletion needs authentication, audit logging, and recovery policy before NSN production."
     );
   };
 
@@ -2222,6 +2265,8 @@ export default function ProfileScreen() {
     () => getSelectedCalendarMomentLabels(calendarMomentStates, customCalendarMoments, 8),
     [calendarMomentStates, customCalendarMoments]
   );
+  const getPreferenceDisplayLabel = (label: string, active: boolean, icon?: string) =>
+    active ? formatSelectedPreferenceChipLabel(label, icon) : formatPreferenceChipLabel(label, icon);
   const calendarMomentSearchResults = useMemo(
     () => searchCalendarMoments(calendarMomentSearch, customCalendarMoments),
     [calendarMomentSearch, customCalendarMoments]
@@ -2246,7 +2291,7 @@ export default function ProfileScreen() {
         style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
       >
         <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-          {active ? "Selected: " : ""}{option.icon ? `${option.icon} ` : ""}{option.label}
+          {getPreferenceDisplayLabel(option.label, active, option.icon)}
         </Text>
         {option.ageSensitive ? (
           <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]}>Optional 18+</Text>
@@ -2285,7 +2330,7 @@ export default function ProfileScreen() {
                 style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
               >
                 <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                  {active ? `Selected: ${option.icon} ${option.value}` : `${option.icon} ${option.value}`}
+                  {getPreferenceDisplayLabel(option.value, active, option.icon)}
                 </Text>
                 <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={1}>{option.copy}</Text>
               </TouchableOpacity>
@@ -2297,7 +2342,9 @@ export default function ProfileScreen() {
   };
 
   const getCompactPreferenceSummary = (values: string[], fallback: string, limit = 3) =>
-    values.length ? `${values.slice(0, limit).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}` : fallback;
+    values.length
+      ? `${values.slice(0, limit).map((value) => formatPreferenceChipLabel(value)).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}`
+      : fallback;
 
   const renderDrawerPreferenceChip = <T extends string,>(
     option: PreferenceOptionDetail<T>,
@@ -2317,7 +2364,7 @@ export default function ProfileScreen() {
         style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
       >
         <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-          {active ? "Selected: " : ""}{option.icon ? `${option.icon} ` : ""}{option.value}
+          {getPreferenceDisplayLabel(option.value, active, option.icon)}
         </Text>
         <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={2}>{option.copy}</Text>
       </TouchableOpacity>
@@ -2338,6 +2385,22 @@ export default function ProfileScreen() {
         {options.map((option) => renderDrawerPreferenceChip(option, selectedValues, onPress))}
       </View>
     </View>
+  );
+
+  const renderDrawerSavedLocallyCloseAction = (label = "Saved locally") => (
+    <TouchableOpacity
+      activeOpacity={0.82}
+      onPress={closeProfileMenu}
+      style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]}
+      accessibilityRole="button"
+      accessibilityLabel="Close user options, changes saved locally"
+    >
+      <View style={styles.profileLayoutBody}>
+        <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>{label}</Text>
+        <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Changes stay on this device for alpha testing.</Text>
+      </View>
+      <Text style={styles.profileDrawerDoneText}>Close</Text>
+    </TouchableOpacity>
   );
 
   const selectedInterestPreferenceLabels = useMemo(
@@ -2377,7 +2440,7 @@ export default function ProfileScreen() {
         style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
       >
         <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-          {active ? "Selected: " : ""}{option.icon ? `${option.icon} ` : ""}{option.label}
+          {getPreferenceDisplayLabel(option.label, active, option.icon)}
         </Text>
         {meta ? (
           <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={1}>{meta}</Text>
@@ -2395,7 +2458,7 @@ export default function ProfileScreen() {
             Phase 1 prototype controls for visibility, energy, communication, group size, and verified-but-private trust.
           </Text>
         </View>
-        <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>Prototype</Text>
+        <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>Saved locally</Text>
       </View>
 
       <View style={styles.trustFoundationGroup}>
@@ -2414,7 +2477,7 @@ export default function ProfileScreen() {
                 onPress={() => updateComfortMode(modeOption)}
               >
                 <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
-                  {active ? `Selected: ${modeOption}` : modeOption}
+                  {getPreferenceDisplayLabel(modeOption, active)}
                 </Text>
               </TouchableOpacity>
             );
@@ -2440,7 +2503,7 @@ export default function ProfileScreen() {
                 onPress={() => updateSocialEnergyPreference(option)}
               >
                 <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
-                  {active ? `Selected: ${option}` : option}
+                  {getPreferenceDisplayLabel(option, active)}
                 </Text>
               </TouchableOpacity>
             );
@@ -2465,7 +2528,7 @@ export default function ProfileScreen() {
                 onPress={() => toggleCommunicationPreference(option)}
               >
                 <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
-                  {active ? `Selected: ${option}` : option}
+                  {getPreferenceDisplayLabel(option, active)}
                 </Text>
               </TouchableOpacity>
             );
@@ -2489,7 +2552,7 @@ export default function ProfileScreen() {
                 onPress={() => updateGroupSizePreference(option)}
               >
                 <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
-                  {active ? `Selected: ${option}` : option}
+                  {getPreferenceDisplayLabel(option, active)}
                 </Text>
               </TouchableOpacity>
             );
@@ -2516,7 +2579,7 @@ export default function ProfileScreen() {
                 onPress={() => togglePhotoRecordingComfortPreference(option)}
               >
                 <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
-                  {active ? `Selected: ${option}` : option}
+                  {getPreferenceDisplayLabel(option, active)}
                 </Text>
               </TouchableOpacity>
             );
@@ -2546,7 +2609,7 @@ export default function ProfileScreen() {
                 onPress={() => togglePhysicalContactComfortPreference(option)}
               >
                 <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
-                  {active ? `Selected: ${option}` : option}
+                  {getPreferenceDisplayLabel(option, active)}
                 </Text>
               </TouchableOpacity>
             );
@@ -2628,6 +2691,82 @@ export default function ProfileScreen() {
     backgroundWorkPreferences.length +
     backgroundWorkRhythms.length +
     backgroundCommunityPreferences.length;
+  const profilePreferenceRowTargets: Record<UserPreferenceRowKey, { panel: ProfileDrawerPanel; section: ProfilePreferenceSection }> = {
+    comfort: { panel: "comfortTrust", section: "comfort" },
+    background: { panel: "backgroundCommunity", section: "background" },
+    calendar: { panel: "calendarMoments", section: "calendar" },
+    food: { panel: "foodBeverage", section: "food" },
+    interests: { panel: "hobbiesInterests", section: "interests" },
+    transport: { panel: "transportPreferences", section: "transport" },
+    contact: { panel: "contactPreferencePanel", section: "contact" },
+    location: { panel: "locationPreferencePanel", section: "location" },
+  };
+  const getProfilePreferenceRowBadge = (key: UserPreferenceRowKey) => {
+    if (key === "comfort") return "Saved locally";
+    if (key === "background") return backgroundCommunitySelectedCount ? `${backgroundCommunitySelectedCount} selected` : "Private";
+    if (key === "calendar") return selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private";
+    if (key === "food") return foodBeveragePreferenceIds.length ? `${foodBeveragePreferenceIds.length} selected` : "None yet";
+    if (key === "interests") return interestPreferenceIds.length ? `${interestPreferenceIds.length} selected` : "None yet";
+    if (key === "transport") return transportationPreferences.length ? `${transportationPreferences.length} selected` : "Default";
+    if (key === "contact") return meetupContactPreferences.length ? `${meetupContactPreferences.length} selected` : "Default";
+    return locationComfortPreferences.length ? `${locationComfortPreferences.length} selected` : "Local area";
+  };
+  const getProfilePreferenceRowSummary = (key: UserPreferenceRowKey) => {
+    if (key === "calendar") return selectedCalendarMomentLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
+    if (key === "food") return selectedFoodPreferenceLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
+    if (key === "interests") return selectedInterestPreferenceLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
+    if (key === "transport") return getCompactPreferenceSummary(transportationPreferences, transportationMethod);
+    if (key === "contact") return getCompactPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text");
+    if (key === "location") return getCompactPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore");
+    return "";
+  };
+  const profileSummaryRowsById = new Map(getMainProfileSummaryRows().map((row) => {
+    if (row.id === "localArea") {
+      return [row.id, {
+        ...row,
+        summary: suburb || "Local area not set",
+        badge: showSuburbArea ? "Shown" : "Private",
+        action: openLocalAreaEditor,
+      }] as const;
+    }
+
+    if (row.id === "interests") {
+      return [row.id, {
+        ...row,
+        summary: hobbiesInterests.slice(0, 4).join(", ") || "Add a few interests",
+        badge: hobbiesInterests.length ? `${hobbiesInterests.length} saved` : "None yet",
+        action: () => openPreferenceDestination("hobbiesInterests", "interests"),
+      }] as const;
+    }
+
+    if (row.id === "comfortTrust") {
+      return [row.id, {
+        ...row,
+        summary: `${comfortMode} / ${groupSizePreference}`,
+        badge: "Saved locally",
+        action: () => openPreferenceDestination("comfortTrust", "comfort"),
+      }] as const;
+    }
+
+    if (row.id === "privacy") {
+      return [row.id, {
+        ...row,
+        summary: privateProfile ? "Private profile on" : "Visibility controls available",
+        badge: minimalProfileView ? "Minimal" : "Local",
+        action: () => openSettingsFromProfile({ section: "generalPrivacy" }),
+      }] as const;
+    }
+
+    return [row.id, {
+      ...row,
+      summary: canMeetInPerson(effectiveVerificationLevel) ? "Ready for in-person safety checks" : "Review prototype trust status",
+      badge: getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase),
+      action: openVerificationReview,
+    }] as const;
+  }));
+  const getProfileSummaryRows = (rows: ReturnType<typeof getMainProfileSummaryRows>) =>
+    rows.map((row) => profileSummaryRowsById.get(row.id)).filter((row): row is NonNullable<typeof row> => Boolean(row));
+  const simpleProfileSummaryRows = getProfileSummaryRows(getSimpleProfileSummaryRows());
 
   const comfortTrustSummarySection = (
     <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
@@ -2638,7 +2777,7 @@ export default function ProfileScreen() {
             {comfortMode} / {socialEnergyPreference} energy / {groupSizePreference}
           </Text>
         </View>
-        <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>Prototype</Text>
+        <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>Saved locally</Text>
       </View>
       <View style={styles.privacySummaryGrid}>
         {[
@@ -2707,6 +2846,284 @@ export default function ProfileScreen() {
     </View>
   );
 
+  const profileVisibilityPreviewProps: ProfileVisibilityPreviewProps = {
+    displayName,
+    middleName,
+    lastName,
+    suburb,
+    age,
+    preferredAgeMin,
+    preferredAgeMax,
+    gender,
+    middleNameDisplay,
+    lastNameDisplay,
+    interests: hobbiesInterests,
+    comfortPreferences,
+    contactPreferences,
+    socialEnergyPreference,
+    communicationPreferences,
+    groupSizePreference,
+    photoRecordingComfortPreferences,
+    verifiedButPrivate,
+    comfortMode,
+    profilePhotoUri,
+    privateProfile,
+    blurProfilePhoto,
+    blurLevel,
+    warmUpLowerBlur,
+    showSuburbArea,
+    showMiddleName,
+    showLastName,
+    showAge,
+    showPreferredAgeRange,
+    showGender,
+    showInterests,
+    showComfortPreferences,
+    minimalProfileView,
+    aboutMe,
+    showAboutMe: showAboutInPreview,
+    vibes: selectedVibes.map((vibe) => vibeCopy[vibe] ?? vibe),
+    showVibes: showVibesInPreview,
+    isDay,
+    isRtl,
+  };
+  const visibilityModeDetail =
+    privateProfile || comfortMode === "Comfort Mode"
+      ? "Private / matched/shared visibility only: full profile details stay limited, while trust and verification checks can still be shown where appropriate."
+      : comfortMode === "Warm Up Mode"
+        ? "Warm Up: people see a partial, gentler preview first. Photo blur and private details still follow your settings."
+        : "Open / visible: people in the same event can see the profile details you choose to show.";
+  const renderLocalAreaFeatureSection = (variant: "simple" | "detailed") => (
+    <View
+      style={[
+        variant === "detailed" ? styles.detailedProfileSummaryCard : styles.profileBasicsCard,
+        variant === "simple" && styles.simpleLocalAreaCard,
+        isDay && styles.dayCard,
+        softSurfaces && styles.softSurfaceCard,
+        clearBorders && styles.clearBorderCard,
+      ]}
+    >
+      <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+        <View style={styles.profileLayoutBody}>
+          <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Local area</Text>
+          <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            {comfortMode === "Open Mode"
+              ? "Used for local meetups and shown only when your visibility settings allow it."
+              : "Used for local matching. You control whether it appears in the preview."}
+          </Text>
+        </View>
+        <Text
+          accessibilityRole="button"
+          accessibilityLabel={isEditingSuburb ? "Done editing local area" : "Edit local area"}
+          style={styles.editText}
+          onPress={toggleSuburbEditing}
+        >
+          {showSuburbSaved ? copy.saved : isEditingSuburb ? copy.done : copy.edit}
+        </Text>
+      </View>
+      {isEditingSuburb ? (
+        <LocalAreaPicker
+          query={draftSuburb}
+          onQueryChange={setDraftSuburb}
+          onSelect={saveSuburb}
+          selectedAreaId={timezone.id}
+          isDay={isDay}
+          isRtl={isRtl}
+          autoFocus
+          limit={7}
+          placeholder="Search suburb or region..."
+          promptCopy="Search and select a suburb, region, or locality for your profile."
+        />
+      ) : (
+        <Text style={[styles.localAreaValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{suburb || "Local area not set"}</Text>
+      )}
+      <TouchableOpacity
+        activeOpacity={0.82}
+        onPress={() => saveSoftHelloMvpState({ showSuburbArea: !showSuburbArea })}
+        style={[styles.localAreaVisibilityToggle, isDay && styles.daySoftOption, showSuburbArea && styles.localAreaVisibilityToggleActive]}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: showSuburbArea }}
+        accessibilityLabel={showSuburbArea ? "Hide local area from profile preview" : "Show local area in profile preview"}
+      >
+        <IconSymbol name={showSuburbArea ? "visibility" : "visibility.off"} color={showSuburbArea ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={16} />
+        <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showSuburbArea && styles.localAreaVisibilityTextActive]}>
+          {showSuburbArea ? "Shown in preview" : "Hidden from preview"}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const detailedProfileSummarySections = !isCleanProfile ? (
+    <View style={[styles.detailedProfileSummaryStack, isWideLayout && styles.detailedProfileSummaryGrid, { maxWidth: profileSectionMaxWidth }]}>
+      <View style={[styles.detailedProfilePreviewPane, isWideLayout && styles.detailedProfileSummaryCard]}>
+        <Text style={[styles.sectionTitle, styles.detailedProfileSummaryTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>How others see me</Text>
+        <ProfileVisibilityPreview {...profileVisibilityPreviewProps} />
+      </View>
+
+      <View style={[styles.detailedProfileSummaryCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+        <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+          <View style={styles.profileLayoutBody}>
+            <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Profile visibility</Text>
+            <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{visibilityModeCopy}</Text>
+            <Text style={[styles.simpleTrustCopy, styles.visibilityDetailCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{visibilityModeDetail}</Text>
+          </View>
+          <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>{comfortMode}</Text>
+        </View>
+        <View style={styles.privacySummaryGrid}>
+          {[
+            { label: "Profile mode", value: privateProfile ? "Private" : comfortMode },
+            { label: "Photo treatment", value: blurProfilePhoto || privateProfile ? "Blurred when needed" : "Visible" },
+            { label: "About me", value: showAboutInPreview && !privateProfile ? "Shown" : "Hidden" },
+            { label: "Vibes", value: showVibesInPreview && !privateProfile ? "Shown" : "Hidden" },
+          ].map((item) => (
+            <View key={item.label} style={[styles.privacySummaryItem, isDay && styles.daySoftOption]}>
+              <Text style={[styles.privacySummaryLabel, isDay && styles.dayMutedText]}>{item.label}</Text>
+              <Text style={[styles.privacySummaryValue, isDay && styles.dayTitle]} numberOfLines={2}>{item.value}</Text>
+            </View>
+          ))}
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => openSettingsFromProfile({ section: "profileVisibility" })}
+          style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
+          accessibilityRole="button"
+          accessibilityLabel="Open profile visibility settings"
+        >
+          <Text style={styles.reviewSettingsText}>Open Settings & Privacy</Text>
+        </TouchableOpacity>
+      </View>
+
+      {renderLocalAreaFeatureSection("detailed")}
+
+      <View style={[styles.detailedProfileSummaryCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+        <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+          <View style={styles.profileLayoutBody}>
+            <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Interests</Text>
+            <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              {hobbiesInterests.slice(0, 4).join(", ") || "Add a few interests"}
+            </Text>
+          </View>
+          <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>{hobbiesInterests.length ? `${hobbiesInterests.length} saved` : "None yet"}</Text>
+        </View>
+        <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+          {(hobbiesInterests.length ? hobbiesInterests : ["Coffee", "Movies", "Walks"]).slice(0, 6).map((interest) => (
+            <Text key={interest} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
+              {formatPreferenceChipLabel(interest)}
+            </Text>
+          ))}
+        </View>
+        <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+          {showInterests ? "Interests can appear in your profile preview." : "Interests are kept out of your profile preview."}
+        </Text>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => openPreferenceDestination("hobbiesInterests", "interests")}
+          style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
+          accessibilityRole="button"
+          accessibilityLabel="Open hobbies and interests preferences"
+        >
+          <Text style={styles.reviewSettingsText}>Open User preferences</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.detailedProfileSummaryCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+        <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+          <View style={styles.profileLayoutBody}>
+            <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.trustStatus}</Text>
+            <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
+          </View>
+          <Text style={[styles.trustPill, isDay && styles.dayTrustPill, canMeetInPerson(effectiveVerificationLevel) && styles.trustPillReady, isDay && canMeetInPerson(effectiveVerificationLevel) && styles.dayTrustPillReady]}>
+            {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
+          </Text>
+        </View>
+        <View style={styles.verificationSteps}>
+          {verificationLevels.map((level) => (
+            <View key={level} style={[styles.verificationStep, isDay && styles.dayVerificationStep, level === effectiveVerificationLevel && styles.verificationStepActive, isDay && level === effectiveVerificationLevel && styles.dayVerificationStepActive]}>
+              <Text style={[styles.verificationStepText, isDay && styles.dayVerificationStepText, level === effectiveVerificationLevel && styles.verificationStepTextActive, isDay && level === effectiveVerificationLevel && styles.dayVerificationStepTextActive]}>
+                {getVerificationLevelLabel(level, appLanguageBase)}
+              </Text>
+            </View>
+          ))}
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => openSettingsFromProfile({ section: "trustFoundations" })}
+          style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
+          accessibilityRole="button"
+          accessibilityLabel="Open trust status settings"
+        >
+          <Text style={styles.reviewSettingsText}>Open Safety & Privacy</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.detailedProfileSummaryCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+        <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+          <View style={styles.profileLayoutBody}>
+            <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Privacy summary</Text>
+            <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>A quick view of what the prototype can show or hide.</Text>
+          </View>
+          <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>{privateProfile ? "Private" : "Local"}</Text>
+        </View>
+        <View style={styles.privacySummaryGrid}>
+          {[
+            { label: "Private profile", value: privateProfile ? "On" : "Off" },
+            { label: "Blur photo", value: blurProfilePhoto ? `On / ${blurLevel.replace(" blur", "")}` : "Off" },
+            { label: "Show suburb", value: showSuburbArea ? "On" : "Off" },
+            { label: "Show interests", value: showInterests ? "On" : "Off" },
+            { label: "Show comfort", value: showComfortPreferences ? "On" : "Off" },
+            { label: "Minimal view", value: minimalProfileView ? "On" : "Off" },
+          ].map((item) => (
+            <View key={item.label} style={[styles.privacySummaryItem, isDay && styles.daySoftOption]}>
+              <Text style={[styles.privacySummaryLabel, isDay && styles.dayMutedText]}>{item.label}</Text>
+              <Text style={[styles.privacySummaryValue, isDay && styles.dayTitle]} numberOfLines={2}>{item.value}</Text>
+            </View>
+          ))}
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => openSettingsFromProfile({ section: "generalPrivacy" })}
+          style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
+          accessibilityRole="button"
+          accessibilityLabel="Open privacy settings"
+        >
+          <Text style={styles.reviewSettingsText}>Open Settings & Privacy</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.detailedProfileSummaryCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+        <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+          <View style={styles.profileLayoutBody}>
+            <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Comfort & trust summary</Text>
+            <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{comfortMode} / {socialEnergyPreference} energy / {groupSizePreference}</Text>
+          </View>
+          <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>Saved locally</Text>
+        </View>
+        <View style={styles.privacySummaryGrid}>
+          {[
+            { label: "Comfort", value: comfortSummary },
+            { label: "Communication", value: communicationPreferences.slice(0, 2).join(", ") || "Not set" },
+            { label: "Photo comfort", value: photoRecordingComfortPreferences.slice(0, 2).join(", ") || "Ask first" },
+            { label: "Contact comfort", value: physicalContactComfortPreferences.slice(0, 2).join(", ") || "Ask first" },
+          ].map((item) => (
+            <View key={item.label} style={[styles.privacySummaryItem, isDay && styles.daySoftOption]}>
+              <Text style={[styles.privacySummaryLabel, isDay && styles.dayMutedText]}>{item.label}</Text>
+              <Text style={[styles.privacySummaryValue, isDay && styles.dayTitle]} numberOfLines={2}>{item.value}</Text>
+            </View>
+          ))}
+        </View>
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => openPreferenceDestination("comfortTrust", "comfort")}
+          style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
+          accessibilityRole="button"
+          accessibilityLabel="Open comfort and trust preferences"
+        >
+          <Text style={styles.reviewSettingsText}>Open User preferences</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  ) : null;
+
   const profileOptionsPanelTitle =
     profileMenuPanel === "edit"
       ? "Edit profile"
@@ -2760,17 +3177,22 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topRight}>
-          <TouchableOpacity
-            ref={profileMenuButtonRef}
-            activeOpacity={0.75}
-            onPress={() => openProfileOptionsPanel("main")}
-            style={[styles.settingsButton, isDay && styles.dayIconButton]}
-            accessibilityRole="button"
-            accessibilityLabel="Open user options"
-            accessibilityHint={screenReaderHints ? profileCopy.profileMenuHint : undefined}
-          >
-            <IconSymbol name="more" color={isDay ? "#0B1220" : nsnColors.text} size={23} />
-          </TouchableOpacity>
+          {showProfileControlsShortcut || showProfileMenu ? (
+            <TouchableOpacity
+              ref={profileMenuButtonRef}
+              activeOpacity={0.75}
+              onPress={() => openProfileOptionsPanel("main")}
+              style={[styles.profileControlsButton, isCompactProfileControls && styles.profileControlsButtonCompact, isDay && styles.dayProfileControlsButton, isRtl && styles.rtlRow]}
+              accessibilityRole="button"
+              accessibilityLabel="Open profile controls"
+              accessibilityHint={screenReaderHints ? profileCopy.profileMenuHint : undefined}
+            >
+              <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={19} />
+              <Text style={[styles.profileControlsButtonText, isDay && styles.dayTitle]} numberOfLines={1}>
+                {profileControlsButtonLabel}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
           {showProfileMenu ? (
             <Modal transparent animationType={isDesktopUserOptions ? "fade" : "slide"} visible={showProfileMenu} onRequestClose={closeProfileMenu}>
               <Pressable
@@ -2856,14 +3278,7 @@ export default function ProfileScreen() {
                       <TouchableOpacity
                         key={item.title}
                         activeOpacity={0.78}
-                        onPress={() => {
-                          if (item.panel === "preferences" && shouldOpenFullPreferenceView) {
-                            openFullPreferenceView("overview");
-                            return;
-                          }
-
-                          setProfileMenuPanel(item.panel);
-                        }}
+                        onPress={() => setProfileMenuPanel(item.panel)}
                         style={styles.profileMenuItem}
                         accessibilityRole="button"
                         accessibilityLabel={item.title}
@@ -2898,11 +3313,14 @@ export default function ProfileScreen() {
                       accessibilityRole="button"
                       accessibilityLabel="Help and Support"
                     >
-                      <IconSymbol name="help" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
-                      <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Help & Support</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Get help, send feedback, or suggest improvements.</Text>
+                      <View style={[styles.profileMenuIconBadge, isDay && styles.dayProfileMenuIconBadge]}>
+                        <IconSymbol name={profileSupportRowMetadata.icon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
                       </View>
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{profileSupportRowMetadata.title}</Text>
+                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{profileSupportRowMetadata.description}</Text>
+                      </View>
+                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{profileSupportRowMetadata.badge}</Text>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -2923,8 +3341,7 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => {
-                        setShowProfileMenu(false);
-                        router.push("/settings" as any);
+                        openSettingsFromProfile(undefined, "user-options");
                       }}
                       style={styles.profileMenuItem}
                       accessibilityRole="button"
@@ -2947,13 +3364,13 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Quick edits</Text>
                     {[
-                      { icon: "edit" as const, title: "Name", copy: "Update your first name or nickname.", action: () => { setShowProfileMenu(false); setIsEditingName(true); } },
-                      { icon: "person.fill" as const, title: "Photo", copy: "Add, replace, or remove your profile photo.", action: () => { setShowProfileMenu(false); setShowPhotoMenu(true); } },
-                      { icon: "calendar" as const, title: "Age, range & gender", copy: "Edit age, preferred age range, and optional gender.", action: () => { setShowProfileMenu(false); router.push("/settings" as any); } },
-                      { icon: "location" as const, title: "Local area", copy: "Change your suburb or hide it from preview.", action: () => { setShowProfileMenu(false); setIsEditingSuburb(true); } },
+                      { icon: "edit" as const, title: "Name", copy: "Update your first name or nickname.", action: () => { closeProfileMenu(); setIsEditingName(true); } },
+                      { icon: "person.fill" as const, title: "Photo", copy: "Add, replace, or remove your profile photo.", action: () => { closeProfileMenu(); setShowPhotoMenu(true); } },
+                      { icon: "calendar" as const, title: "Age, range & gender", copy: "Edit age, preferred age range, and optional gender.", action: () => openSettingsFromProfile(undefined, "user-options") },
+                      { icon: "location" as const, title: "Local area", copy: "Change your suburb or hide it from preview.", action: () => { closeProfileMenu(); setIsEditingSuburb(true); } },
                       { icon: "interests" as const, title: "Interests", copy: "Choose first-meetup interests shown in preview.", action: () => openPreferenceDestination("hobbiesInterests", "interests") },
-                      { icon: "group" as const, title: "My vibes", copy: "Update the quick feel for your social style.", action: () => { setShowProfileMenu(false); setIsEditingVibes(true); } },
-                      { icon: "visibility" as const, title: "Comfort preferences", copy: "Adjust small groups, text-first and quiet preferences.", action: () => { setShowProfileMenu(false); router.push("/settings" as any); } },
+                      { icon: "group" as const, title: "My vibes", copy: "Update the quick feel for your social style.", action: () => { closeProfileMenu(); setIsEditingVibes(true); } },
+                      { icon: "visibility" as const, title: "Comfort preferences", copy: "Adjust small groups, text-first and quiet preferences.", action: () => openSettingsFromProfile(undefined, "user-options") },
                     ].map((item) => (
                       <TouchableOpacity
                         key={item.title}
@@ -2998,8 +3415,7 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       activeOpacity={0.82}
                       onPress={() => {
-                        setShowProfileMenu(false);
-                        router.push("/settings" as any);
+                        openSettingsFromProfile(undefined, "user-options");
                       }}
                       style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]}
                       accessibilityRole="button"
@@ -3034,151 +3450,42 @@ export default function ProfileScreen() {
                         <IconSymbol name="resize" color="#FFFFFF" size={20} />
                       </TouchableOpacity>
                     ) : null}
-                    <TouchableOpacity
-                      activeOpacity={0.78}
-                      onPress={() => openPreferenceDestination("comfortTrust", "comfort")}
-                      style={[styles.profileMenuItem, styles.profileMenuFeaturedItem, isDay && styles.daySoftOption]}
-                      accessibilityRole="button"
-                      accessibilityLabel="Comfort and trust"
-                    >
-                      <IconSymbol name="shield" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
-                      <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Comfort & trust</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
-                          Visibility, social energy, communication, group size, verification, and photo comfort.
-                        </Text>
-                      </View>
-                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>Prototype</Text>
-                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      activeOpacity={0.78}
-                      onPress={() => openPreferenceDestination("backgroundCommunity", "background")}
-                      style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
-                      accessibilityRole="button"
-                      accessibilityLabel="Work, study and life context preferences"
-                    >
-                      <IconSymbol name="life-context" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
-                      <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Work, study & life context</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
-                          Optional work, study, learning, and volunteering context with visibility controls.
-                        </Text>
-                      </View>
-                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>
-                        {backgroundCommunitySelectedCount} selected
-                      </Text>
-                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      activeOpacity={0.78}
-                      onPress={() => openPreferenceDestination("calendarMoments", "calendar")}
-                      style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
-                      accessibilityRole="button"
-                      accessibilityLabel="Calendar and cultural moments preferences"
-                    >
-                      <IconSymbol name="calendar" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
-                      <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Calendar & cultural moments</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
-                          Holidays, festivals, observances, and personal calendar seasons.
-                        </Text>
-                        {selectedCalendarMomentLabels.length ? (
-                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]} numberOfLines={1}>
-                            {selectedCalendarMomentLabels.join(", ")}
-                          </Text>
-                        ) : null}
-                      </View>
-                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>
-                        {selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private"}
-                      </Text>
-                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      activeOpacity={0.78}
-                      onPress={() => openPreferenceDestination("foodBeverage", "food")}
-                      style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
-                      accessibilityRole="button"
-                      accessibilityLabel="Food and beverage preferences"
-                    >
-                      <IconSymbol name="food" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
-                      <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Food & beverage</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
-                          Cuisines, drinks, dietary needs, avoidances, and alcohol comfort.
-                        </Text>
-                        {selectedFoodPreferenceLabels.length ? (
-                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]} numberOfLines={1}>
-                            {selectedFoodPreferenceLabels.join(", ")}
-                          </Text>
-                        ) : null}
-                      </View>
-                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{foodBeveragePreferenceIds.length} selected</Text>
-                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      activeOpacity={0.78}
-                      onPress={() => openPreferenceDestination("hobbiesInterests", "interests")}
-                      style={[styles.profileMenuItem, isDay && styles.daySoftOption]}
-                      accessibilityRole="button"
-                      accessibilityLabel="Hobbies and interests preferences"
-                    >
-                      <IconSymbol name="interests" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
-                      <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Hobbies & interests</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
-                          Activities, genres, local exploring, and comfort-aware tags.
-                        </Text>
-                        {selectedInterestPreferenceLabels.length ? (
-                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]} numberOfLines={1}>
-                            {selectedInterestPreferenceLabels.join(", ")}
-                          </Text>
-                        ) : null}
-                      </View>
-                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{interestPreferenceIds.length} selected</Text>
-                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
-                    </TouchableOpacity>
-                    {[
-                      {
-                        icon: "transport" as const,
-                        label: getRowLabel("transportation"),
-                        copy: getCompactPreferenceSummary(transportationPreferences, transportationMethod),
-                        panel: "transportPreferences" as const,
-                        section: "transport" as const,
-                      },
-                      {
-                        icon: "contact" as const,
-                        label: getRowLabel("contactPreference"),
-                        copy: getCompactPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"),
-                        panel: "contactPreferencePanel" as const,
-                        section: "contact" as const,
-                      },
-                      {
-                        icon: "explore" as const,
-                        label: getRowLabel("locationPreference"),
-                        copy: getCompactPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"),
-                        panel: "locationPreferencePanel" as const,
-                        section: "location" as const,
-                      },
-                    ].map((item) => (
+                    {userPreferenceRowMetadata.map((item) => {
+                      const target = profilePreferenceRowTargets[item.key];
+                      const rowSummary = getProfilePreferenceRowSummary(item.key);
+
+                      return (
                       <TouchableOpacity
-                        key={item.section}
+                        key={item.key}
                         activeOpacity={0.78}
-                        onPress={() => openPreferenceDestination(item.panel, item.section)}
-                        style={styles.profileMenuItem}
+                        onPress={() => openPreferenceDestination(target.panel, target.section)}
+                        style={[
+                          styles.profileMenuItem,
+                          styles.profilePreferenceMenuItem,
+                          item.key === "comfort" && styles.profileMenuFeaturedItem,
+                          isDay && styles.daySoftOption,
+                        ]}
                         accessibilityRole="button"
-                        accessibilityLabel={item.label}
+                        accessibilityLabel={item.title}
                       >
-                        <IconSymbol name={item.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
-                        <View style={styles.profileMenuItemBody}>
-                          <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.label}</Text>
-                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]} numberOfLines={1}>
-                            {item.copy}
-                          </Text>
+                        <View style={[styles.profileMenuIconBadge, isDay && styles.dayProfileMenuIconBadge]}>
+                          <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
                         </View>
+                        <View style={styles.profileMenuItemBody}>
+                          <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.title}</Text>
+                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{getUserPreferenceRowDescription(item.key, userPreferenceTextMode)}</Text>
+                          {rowSummary ? (
+                            <Text style={[styles.profileMenuDescription, styles.profileMenuDescriptionCompact, isDay && styles.dayMutedText]} numberOfLines={1}>
+                              {rowSummary}
+                            </Text>
+                          ) : null}
+                        </View>
+                        <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{getProfilePreferenceRowBadge(item.key)}</Text>
                         <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       </TouchableOpacity>
-                    ))}
+                      );
+                    })}
+                    {renderDrawerSavedLocallyCloseAction()}
                   </>
                 ) : null}
                 {profileMenuPanel === "backgroundCommunity" ? (
@@ -3253,7 +3560,7 @@ export default function ProfileScreen() {
                                 style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
                               >
                                 <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                                  {active ? `Selected: ${option}` : option}
+                                  {getPreferenceDisplayLabel(option, active)}
                                 </Text>
                               </TouchableOpacity>
                             );
@@ -3274,7 +3581,7 @@ export default function ProfileScreen() {
                                 style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
                               >
                                 <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                                  {active ? `Selected: ${option}` : option}
+                                  {getPreferenceDisplayLabel(option, active)}
                                 </Text>
                               </TouchableOpacity>
                             );
@@ -3334,7 +3641,7 @@ export default function ProfileScreen() {
                                 style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
                               >
                                 <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                                  {active ? `Selected: ${option}` : option}
+                                  {getPreferenceDisplayLabel(option, active)}
                                 </Text>
                               </TouchableOpacity>
                             );
@@ -3355,7 +3662,7 @@ export default function ProfileScreen() {
                                 style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
                               >
                                 <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                                  {active ? `Selected: ${option}` : option}
+                                  {getPreferenceDisplayLabel(option, active)}
                                 </Text>
                               </TouchableOpacity>
                             );
@@ -3379,7 +3686,7 @@ export default function ProfileScreen() {
                                     style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
                                   >
                                     <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                                      {active ? `Selected: ${option}` : option}
+                                      {getPreferenceDisplayLabel(option, active)}
                                     </Text>
                                   </TouchableOpacity>
                                 );
@@ -3444,7 +3751,7 @@ export default function ProfileScreen() {
                       {selectedCalendarMomentLabels.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {selectedCalendarMomentLabels.map((label, index) => (
-                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
                           ))}
                         </View>
                       ) : (
@@ -3461,7 +3768,7 @@ export default function ProfileScreen() {
                           return (
                             <TouchableOpacity key={option} activeOpacity={0.78} onPress={() => saveSoftHelloMvpState({ calendarMomentVisibility: option })} accessibilityRole="button" accessibilityLabel={`Calendar moments visibility ${option}`} accessibilityState={{ selected: active }} style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}>
                               <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                                {active ? `Selected: ${option}` : option}
+                                {getPreferenceDisplayLabel(option, active)}
                               </Text>
                             </TouchableOpacity>
                           );
@@ -3583,7 +3890,7 @@ export default function ProfileScreen() {
                       {selectedFoodPreferenceLabels.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {selectedFoodPreferenceLabels.map((label, index) => (
-                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
                           ))}
                           {foodBeveragePreferenceIds.length > selectedFoodPreferenceLabels.length ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
@@ -3733,7 +4040,7 @@ export default function ProfileScreen() {
                       {selectedInterestPreferenceLabels.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {selectedInterestPreferenceLabels.map((label, index) => (
-                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
                           ))}
                           {interestPreferenceIds.length > selectedInterestPreferenceLabels.length ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
@@ -3746,14 +4053,14 @@ export default function ProfileScreen() {
                       )}
                     </View>
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
-                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Comfort modifiers</Text>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{interestComfortModifierTitle}</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         Mark how each selected interest feels. These labels are prototype comfort signals for future matching and event planning.
                       </Text>
                       {activeInterestForComfort ? (
                         <>
                           <View style={[styles.foodPreferenceSummaryChipRow, styles.interestComfortTargetRow, isRtl && styles.rtlRow]}>
-                            {selectedInterestPreferenceOptions.slice(0, 8).map((option) => {
+                            {selectedInterestPreferenceOptions.map((option) => {
                               const active = activeInterestForComfort.id === option.id;
 
                               return (
@@ -3761,13 +4068,14 @@ export default function ProfileScreen() {
                                   key={option.id}
                                   activeOpacity={0.78}
                                   onPress={() => setActiveInterestComfortId(option.id)}
+                                  focusable
                                   accessibilityRole="button"
                                   accessibilityLabel={`Edit comfort tags for ${option.label}`}
                                   accessibilityState={{ selected: active }}
                                   style={[styles.interestComfortTargetChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
                                 >
-                                  <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                                    {active ? `Editing: ${option.label}` : option.label}
+                                  <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={2}>
+                                    {active ? `Editing: ${formatPreferenceChipLabel(option.label, option.icon)}` : formatPreferenceChipLabel(option.label, option.icon)}
                                   </Text>
                                 </TouchableOpacity>
                               );
@@ -3782,15 +4090,17 @@ export default function ProfileScreen() {
                                   key={tag.id}
                                   activeOpacity={0.78}
                                   onPress={() => toggleInterestComfortTag(activeInterestForComfort.id, tag.id)}
+                                  focusable
                                   accessibilityRole="button"
                                   accessibilityLabel={`${tag.label} for ${activeInterestForComfort.label}`}
+                                  accessibilityHint={tag.copy}
                                   accessibilityState={{ selected: active }}
-                                  style={[styles.foodPreferenceChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
+                                  style={[styles.foodPreferenceChip, styles.interestComfortModifierChip, interestComfortModifierStyle, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
                                 >
-                                  <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={1}>
-                                    {active ? `Selected: ${tag.label}` : tag.label}
+                                  <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={2}>
+                                    {getPreferenceDisplayLabel(tag.label, active)}
                                   </Text>
-                                  <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={1}>{tag.copy}</Text>
+                                  <Text style={[styles.foodPreferenceChipMeta, active && styles.profileLayoutTextActive]} numberOfLines={2}>{tag.copy}</Text>
                                 </TouchableOpacity>
                               );
                             })}
@@ -3906,7 +4216,7 @@ export default function ProfileScreen() {
                       {transportationPreferences.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {transportationPreferences.slice(0, 8).map((label) => (
-                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
                           ))}
                           {transportationPreferences.length > 8 ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{transportationPreferences.length - 8} more</Text>
@@ -3936,6 +4246,7 @@ export default function ProfileScreen() {
                         Travel preferences are used locally in this prototype and are not route guarantees.
                       </Text>
                     </View>
+                    {renderDrawerSavedLocallyCloseAction()}
                   </>
                 ) : null}
                 {profileMenuPanel === "contactPreferencePanel" ? (
@@ -3964,7 +4275,7 @@ export default function ProfileScreen() {
                       {meetupContactPreferences.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {meetupContactPreferences.slice(0, 8).map((label) => (
-                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
                           ))}
                           {meetupContactPreferences.length > 8 ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{meetupContactPreferences.length - 8} more</Text>
@@ -3994,6 +4305,7 @@ export default function ProfileScreen() {
                         These preferences are guidance only and do not force how others communicate.
                       </Text>
                     </View>
+                    {renderDrawerSavedLocallyCloseAction()}
                   </>
                 ) : null}
                 {profileMenuPanel === "locationPreferencePanel" ? (
@@ -4025,7 +4337,7 @@ export default function ProfileScreen() {
                       {locationComfortPreferences.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {locationComfortPreferences.slice(0, 8).map((label) => (
-                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{label}</Text>
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
                           ))}
                           {locationComfortPreferences.length > 8 ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{locationComfortPreferences.length - 8} more</Text>
@@ -4038,7 +4350,7 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       activeOpacity={0.82}
                       onPress={() => {
-                        setShowProfileMenu(false);
+                        closeProfileMenu();
                         router.push("/location-preference" as any);
                       }}
                       style={[styles.profileLayoutOption, isDay && styles.daySoftOption]}
@@ -4068,6 +4380,7 @@ export default function ProfileScreen() {
                         NSN recommends sharing broad location context first. Avoid sharing exact home, work, school, or routine locations.
                       </Text>
                     </View>
+                    {renderDrawerSavedLocallyCloseAction()}
                   </>
                 ) : null}
                 {profileMenuPanel === "comfortTrust" ? (
@@ -4095,8 +4408,7 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       activeOpacity={0.82}
                       onPress={() => {
-                        setShowProfileMenu(false);
-                        router.push("/settings" as any);
+                        openSettingsFromProfile(undefined, "user-options");
                       }}
                       style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]}
                       accessibilityRole="button"
@@ -4220,8 +4532,7 @@ export default function ProfileScreen() {
                         <TouchableOpacity
                           activeOpacity={0.82}
                           onPress={() => {
-                            setShowProfileMenu(false);
-                            router.push({ pathname: "/settings", params: { section: "regionalFormats" } } as never);
+                            openSettingsFromProfile({ section: "regionalFormats" }, "user-options");
                           }}
                           accessibilityRole="button"
                           accessibilityLabel="View regional format preferences"
@@ -4255,8 +4566,7 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       activeOpacity={0.82}
                       onPress={() => {
-                        setShowProfileMenu(false);
-                        router.push("/settings" as any);
+                        openSettingsFromProfile({ section: "notifications" }, "user-options");
                       }}
                       style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]}
                       accessibilityRole="button"
@@ -4322,7 +4632,7 @@ export default function ProfileScreen() {
                               accessibilityLabel={`Feedback type ${type}`}
                             >
                               <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>
-                                {active ? `Selected: ${type}` : type}
+                                {getPreferenceDisplayLabel(type, active)}
                               </Text>
                             </TouchableOpacity>
                           );
@@ -4373,7 +4683,7 @@ export default function ProfileScreen() {
                           accessibilityLabel="Prepare feedback draft"
                         >
                           <IconSymbol name="edit" color="#FFFFFF" size={15} />
-                          <Text style={[styles.profileDisplayChipText, styles.profileLayoutTextActive]}>Prepare draft</Text>
+                          <Text style={[styles.profileDisplayChipText, styles.profileLayoutTextActive]}>Demo draft</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           activeOpacity={0.82}
@@ -4383,7 +4693,7 @@ export default function ProfileScreen() {
                           accessibilityLabel="Copy feedback draft"
                         >
                           <IconSymbol name="share" color={isDay ? "#445E93" : "#A8B7DA"} size={15} />
-                          <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>Copy feedback</Text>
+                          <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>Copy demo draft</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           activeOpacity={0.82}
@@ -4447,6 +4757,7 @@ export default function ProfileScreen() {
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
+                    {renderDrawerSavedLocallyCloseAction("Demo support draft")}
                   </>
                 ) : null}
                 {profileMenuPanel === "blockReport" ? (
@@ -4458,13 +4769,13 @@ export default function ProfileScreen() {
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Safety first</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        In the NSN pilot these are local mock actions. Account-based blocking and reports will connect when authentication exists.
+                        Demo only: these show the intended safety controls. Account-based blocking and reports will connect when authentication exists.
                       </Text>
                     </View>
                     {[
-                      { title: "Block a member", copy: "Hide future contact from someone once accounts are enabled.", alert: "Blocking will connect to account profiles after the NSN pilot." },
-                      { title: "Report unsafe behaviour", copy: "Flag pushy, unsafe, or unwanted contact for review.", alert: "Reporting will connect to moderation tools after the NSN pilot." },
-                      { title: "View blocked people", copy: "Review and unblock people later.", alert: "Your blocked list will appear here once accounts exist." },
+                      { title: "Demo: Block a member", copy: "Shows how future contact blocking will work once accounts are enabled.", alert: "Demo only: blocking will connect to account profiles after the NSN pilot." },
+                      { title: "Demo: Report unsafe behaviour", copy: "Shows how pushy, unsafe, or unwanted contact could be reported for review.", alert: "Demo only: reporting will connect to moderation tools after the NSN pilot." },
+                      { title: "Coming soon: View blocked people", copy: "Review and unblock people later.", alert: "Coming soon: your blocked list will appear here once accounts exist." },
                     ].map((item) => (
                       <TouchableOpacity
                         key={item.title}
@@ -4479,6 +4790,9 @@ export default function ProfileScreen() {
                           <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.title}</Text>
                           <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{item.copy}</Text>
                         </View>
+                        <Text style={[styles.profileMenuStatusBadge, item.title.startsWith("Coming soon") && styles.profileMenuComingSoonBadge]}>
+                          {item.title.startsWith("Coming soon") ? "Coming soon" : "Demo"}
+                        </Text>
                       </TouchableOpacity>
                     ))}
                     <View style={[styles.profileMenuInfoCard, styles.profileMenuWarningCard]}>
@@ -4585,8 +4899,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity
                   activeOpacity={0.78}
                   onPress={() => {
-                    setShowProfileMenu(false);
-                    router.push("/settings" as any);
+                    openSettingsFromProfile(undefined, "user-options");
                   }}
                   style={styles.profileMenuItem}
                   accessibilityRole="button"
@@ -4739,8 +5052,7 @@ export default function ProfileScreen() {
                 <TouchableOpacity
                   activeOpacity={0.78}
                   onPress={() => {
-                    setShowProfileMenu(false);
-                    router.push("/settings" as any);
+                    openSettingsFromProfile(undefined, "user-options");
                   }}
                   style={styles.profileMenuItem}
                   accessibilityRole="button"
@@ -4778,7 +5090,7 @@ export default function ProfileScreen() {
                   <IconSymbol name="flag" color="#E23D5A" size={20} />
                   <View style={styles.profileMenuItemBody}>
                     <Text style={[styles.profileMenuText, styles.profileMenuDestructiveText]}>Delete account</Text>
-                    <Text style={[styles.profileMenuDescription, styles.profileMenuDestructiveDescription]}>Permanent account deletion, once accounts exist.</Text>
+                    <Text style={[styles.profileMenuDescription, styles.profileMenuDestructiveDescription]}>Demo deletion preview; real deletion needs account systems first.</Text>
                   </View>
                 </TouchableOpacity>
                   </>
@@ -4914,7 +5226,7 @@ export default function ProfileScreen() {
               </Text>
               <TouchableOpacity
                 activeOpacity={0.82}
-                onPress={() => router.push({ pathname: "/settings", params: { section: "regionalFormats" } } as never)}
+                onPress={() => openSettingsFromProfile({ section: "regionalFormats" }, "user-options")}
                 accessibilityRole="button"
                 accessibilityLabel="View regional format preferences"
                 accessibilityHint={screenReaderHints ? "Opens Settings to adjust date, time, clock and unit display." : undefined}
@@ -4969,17 +5281,18 @@ export default function ProfileScreen() {
             }
             accessibilityHint={profileCopy.profilePhotoOptionsHint}
           >
-            {profilePhotoUri ? (
-              <Image
-                source={{ uri: profilePhotoUri }}
-                style={styles.avatarImage}
-                blurRadius={blurProfilePhoto ? getBlurRadius(getEffectiveBlurLevel(comfortMode, blurLevel, warmUpLowerBlur)) : 0}
-              />
-            ) : (
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
-              </View>
-            )}
+            <ProfileAvatar
+              displayName={displayName}
+              profilePhotoUri={profilePhotoUri}
+              size={90}
+              tone="#1590C9"
+              blurProfilePhoto={blurProfilePhoto}
+              blurLevel={blurLevel}
+              comfortMode={comfortMode}
+              warmUpLowerBlur={warmUpLowerBlur}
+              privateProfile={privateProfile}
+              isDay={isDay}
+            />
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -5028,26 +5341,6 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   </View>
 )}
-          <TouchableOpacity
-            {...photoDropZoneProps}
-            activeOpacity={0.82}
-            onPress={pickProfilePhoto}
-            style={[styles.photoDropZone, isDay && styles.daySoftOption]}
-            accessibilityRole="button"
-            accessibilityLabel="Choose or drop a profile photo"
-            accessibilityHint="Tap to choose a photo. On web, you can also drag and drop an image here."
-          >
-            <IconSymbol name="add" color={isDay ? "#445E93" : "#C7B07A"} size={18} />
-            <View style={styles.photoDropZoneCopy}>
-              <Text style={[styles.photoDropZoneTitle, isDay && styles.dayTitle]}>Profile photo preview</Text>
-              <Text style={[styles.photoDropZoneText, isDay && styles.dayMutedText]}>
-                Drag and drop a photo, or tap to choose one.
-              </Text>
-              <Text style={[styles.photoDropZoneNote, isDay && styles.dayMutedText]}>
-                Preview only - no photo is uploaded yet.
-              </Text>
-            </View>
-          </TouchableOpacity>
           <View style={styles.nameRow}>
             {isEditingName ? (
               <TextInput
@@ -5082,7 +5375,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
           {nameError ? <Text style={[styles.inlineMessage, styles.identityMessage, isDay && styles.dayMessage]}>{nameError}</Text> : null}
-          {!isCleanProfile ? (
+          {false ? (
           <View style={styles.inlineEditRow}>
             {isEditingLastName ? (
               <>
@@ -5099,7 +5392,7 @@ export default function ProfileScreen() {
             </Text>
           </View>
           ) : null}
-          {!isCleanProfile ? (
+          {false ? (
           <View style={styles.nameToggleRow}>
             {middleName ? (
               <TouchableOpacity activeOpacity={0.82} onPress={() => saveSoftHelloMvpState({ middleNameDisplay: middleNameDisplay === "Hidden" ? "Initial" : middleNameDisplay === "Initial" ? "Full" : "Hidden" })} style={[styles.nameVisibilityToggle, isDay && styles.daySoftOption, middleNameDisplay !== "Hidden" && styles.localAreaVisibilityToggleActive]} accessibilityRole="button">
@@ -5113,7 +5406,7 @@ export default function ProfileScreen() {
             ) : null}
           </View>
           ) : null}
-          {!isCleanProfile ? (
+          {false ? (
           <View style={[styles.profileBasicsCard, styles.ageEditorCard, isDay && styles.dayVisibilityModeCard]}>
             <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
               <View style={styles.profileLayoutBody}>
@@ -5168,6 +5461,33 @@ export default function ProfileScreen() {
             <Text style={[styles.identitySummaryText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Comfort: {comfortSummary}</Text>
           </View>
           ) : null}
+          {false ? (
+            <View style={[styles.simpleProfileList, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
+              {[
+                { icon: "location" as const, title: "Local area", copy: suburb || "Local area not set", action: () => openPreferenceDestination("locationPreferencePanel", "location") },
+                { icon: "interests" as const, title: "Interests", copy: hobbiesInterests.slice(0, 3).join(", ") || "Add a few interests", action: () => openPreferenceDestination("hobbiesInterests", "interests") },
+                { icon: "shield" as const, title: "Comfort & trust", copy: `${comfortMode} · ${groupSizePreference}`, action: () => openPreferenceDestination("comfortTrust", "comfort") },
+                { icon: "settings" as const, title: "Privacy", copy: privateProfile ? "Private profile on" : "Profile controls available", action: () => openSettingsFromProfile() },
+              ].map((row, index, rows) => (
+                <TouchableOpacity
+                  key={row.title}
+                  activeOpacity={0.78}
+                  onPress={row.action}
+                  accessibilityRole="button"
+                  accessibilityLabel={row.title}
+                  style={[styles.simpleProfileRow, index < rows.length - 1 && styles.rowBorder, isDay && index < rows.length - 1 && styles.dayRowBorder, isRtl && styles.rtlRow]}
+                >
+                  <IconSymbol name={row.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                  <View style={styles.profileLayoutBody}>
+                    <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{row.title}</Text>
+                    <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{row.copy}</Text>
+                  </View>
+                  <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : null}
+          {false ? (
           <View style={[styles.profileCardsGrid, { maxWidth: profileSectionMaxWidth }, isWideLayout && styles.profileCardsGridWide]}>
           <View
             style={[
@@ -5348,7 +5668,110 @@ export default function ProfileScreen() {
 
         </View>
 
+          ) : null}
         </View>
+
+        {isCleanProfile ? (
+          <View style={[styles.profileSectionCard, styles.simpleVibesCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: simpleVisibilitySectionMaxWidth }]}>
+            <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
+              <View style={styles.profileLayoutBody}>
+                <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.myVibes}</Text>
+                <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>A quick feel for your social style.</Text>
+              </View>
+              <Text style={styles.editText} onPress={toggleVibeEditing}>
+                {showVibesSaved ? copy.saved : isEditingVibes ? copy.done : copy.edit}
+              </Text>
+            </View>
+            <View style={[styles.vibeGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+              {profileVibes.map((vibe) => {
+                const selected = selectedVibes.includes(vibe);
+                const vibeLabel = vibeCopy[vibe] ?? vibe;
+
+                if (!isEditingVibes && !selected) return null;
+
+                return (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={vibeLabel}
+                    accessibilityState={{ selected }}
+                    accessibilityHint={isEditingVibes ? profileCopy.selectOrDeselectHint : undefined}
+                    key={vibe}
+                    activeOpacity={0.75}
+                    onPress={() => isEditingVibes && toggleVibe(vibe)}
+                  >
+                    <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, isEditingVibes && !selected && styles.vibeChipMuted, isRtl && styles.rtlText]}>
+                      {selected ? vibeLabel : `+ ${vibeLabel}`}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {vibeLimitMessage ? <Text style={[styles.inlineMessage, styles.cardInlineMessage, isDay && styles.dayMessage]}>{vibeLimitMessage}</Text> : null}
+          </View>
+        ) : null}
+
+        {isCleanProfile ? (
+          <View style={[styles.simpleProfileOverviewGrid, isWideLayout && styles.simpleProfileOverviewGridWide, { maxWidth: profileSectionMaxWidth }]}>
+          <View style={[styles.simpleVisibilityPreviewSection, styles.simpleVisibilityPreviewPane, { maxWidth: simpleVisibilitySectionMaxWidth }]}>
+            <View style={[styles.simpleVisibilityHeader, isRtl && styles.rtlRow]}>
+              <View style={styles.profileLayoutBody}>
+                <Text style={[styles.simpleVisibilityPreviewTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{visibilityCopy.title}</Text>
+                <Text style={[styles.simpleVisibilityPreviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText, isRtl && styles.ltrInlineCopy]}>
+                  Preview what others can see before they open a full profile.
+                </Text>
+              </View>
+              <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{comfortMode}</Text>
+            </View>
+            <View style={[styles.simpleVisibilityModeCard, isDay && styles.dayVisibilityModeCard]}>
+              <View style={[styles.simpleVisibilityModeGrid, isRtl && styles.rtlRow]}>
+                {([
+                  { value: "Comfort Mode" as const, label: "Private / matched" },
+                  { value: "Warm Up Mode" as const, label: "Warm Up" },
+                  { value: "Open Mode" as const, label: "Open / visible" },
+                ]).map((option) => {
+                  const active = comfortMode === option.value;
+
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      activeOpacity={0.82}
+                      onPress={() => updateComfortMode(option.value)}
+                      accessibilityRole="button"
+                      accessibilityLabel={option.label}
+                      accessibilityState={{ selected: active }}
+                      style={[styles.simpleVisibilityModeOption, isDay && styles.daySoftOption, active && styles.simpleVisibilityModeOptionActive]}
+                    >
+                      <Text style={[styles.simpleVisibilityModeOptionText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={2}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={[styles.simpleVisibilityModeCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText, isRtl && styles.ltrInlineCopy]}>{visibilityModeDetail}</Text>
+              {comfortMode === "Warm Up Mode" ? (
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() => updateWarmUpLowerBlur(!warmUpLowerBlur)}
+                  style={[styles.warmUpBlurOption, styles.simpleWarmUpBlurOption, isDay && styles.daySoftOption, warmUpLowerBlur && styles.warmUpBlurOptionActive, isRtl && styles.rtlRow]}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: warmUpLowerBlur }}
+                >
+                  <View style={styles.profileLayoutBody}>
+                    <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Lower blur in Warm Up</Text>
+                    <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                      {warmUpLowerBlur ? "Using a softer blur for partial visibility." : "Keeping your selected blur level."}
+                    </Text>
+                  </View>
+                  <View style={styles.profileLayoutCheck}>{warmUpLowerBlur ? <IconSymbol name="checkmark" color="#FFFFFF" size={18} /> : null}</View>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            <ProfileVisibilityPreview {...profileVisibilityPreviewProps} />
+          </View>
+          {renderLocalAreaFeatureSection("simple")}
+          </View>
+        ) : null}
 
         <View style={[styles.profileSectionCard, !isCleanProfile && styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
@@ -5389,19 +5812,23 @@ export default function ProfileScreen() {
           ) : (
             <Text style={[styles.aboutText, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{aboutMe}</Text>
           )}
-          <TouchableOpacity
-            activeOpacity={0.82}
-            onPress={() => setShowAboutInPreview((current) => !current)}
-            style={[styles.previewVisibilityToggle, isDay && styles.daySoftOption, showAboutInPreview && styles.localAreaVisibilityToggleActive]}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: showAboutInPreview }}
-          >
-            <IconSymbol name={showAboutInPreview ? "visibility" : "visibility.off"} color={showAboutInPreview ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={16} />
-            <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showAboutInPreview && styles.localAreaVisibilityTextActive]}>
-              {showAboutInPreview ? "Shown in preview" : "Hidden from preview"}
-            </Text>
-          </TouchableOpacity>
+          {!isCleanProfile ? (
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={() => setShowAboutInPreview((current) => !current)}
+              style={[styles.previewVisibilityToggle, isDay && styles.daySoftOption, showAboutInPreview && styles.localAreaVisibilityToggleActive]}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: showAboutInPreview }}
+            >
+              <IconSymbol name={showAboutInPreview ? "visibility" : "visibility.off"} color={showAboutInPreview ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={16} />
+              <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showAboutInPreview && styles.localAreaVisibilityTextActive]}>
+                {showAboutInPreview ? "Shown in preview" : "Hidden from preview"}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
 
+          {!isCleanProfile ? (
+          <>
           <View style={[styles.profileCardDivider, isDay && styles.dayRowBorder]} />
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
             <View style={styles.profileLayoutBody}>
@@ -5449,9 +5876,92 @@ export default function ProfileScreen() {
               {showVibesInPreview ? "Shown in preview" : "Hidden from preview"}
             </Text>
           </TouchableOpacity>
+          </>
+          ) : null}
         </View>
 
-        {!isCleanProfile ? (
+        {isCleanProfile ? (
+          <View style={[styles.simpleProfileList, styles.simpleProfileShortcutList, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
+            {simpleProfileShortcutRows.map((row, index, rows) => (
+              <TouchableOpacity
+                key={row.key}
+                activeOpacity={0.78}
+                onPress={() => openProfileShortcutRow(row)}
+                accessibilityRole="button"
+                accessibilityLabel={getRowLabel(row.key)}
+                accessibilityHint={row.key === "settings" ? "Opens Settings & Privacy from Profile." : profileCopy.opensSectionHint}
+                style={[styles.simpleProfileRow, index < rows.length - 1 && styles.rowBorder, isDay && index < rows.length - 1 && styles.dayRowBorder, isRtl && styles.rtlRow]}
+              >
+                <IconSymbol name={row.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                <Text style={[styles.rowLabel, styles.simpleShortcutLabel, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{getRowLabel(row.key)}</Text>
+                <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
+        {isCleanProfile ? (
+          <View style={[styles.simpleProfileList, styles.socialProfileSummaryList, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
+            {simpleProfileSummaryRows.map((row, index, rows) => (
+              <TouchableOpacity
+                key={row.id}
+                activeOpacity={0.78}
+                onPress={row.action}
+                accessibilityRole="button"
+                accessibilityLabel={row.title}
+                accessibilityHint={`Opens ${row.title.toLowerCase()} preferences.`}
+                style={[styles.simpleProfileRow, styles.socialProfileSummaryRow, index < rows.length - 1 && styles.rowBorder, isDay && index < rows.length - 1 && styles.dayRowBorder, isRtl && styles.rtlRow]}
+              >
+                <IconSymbol name={row.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                <View style={styles.profileLayoutBody}>
+                  <View style={[styles.socialProfileSummaryTitleRow, isRtl && styles.rtlRow]}>
+                    <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{row.title}</Text>
+                    <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{row.badge}</Text>
+                  </View>
+                  <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{row.summary}</Text>
+                  <Text style={[styles.profileLayoutCopy, styles.socialProfileSummaryDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{row.description}</Text>
+                  {row.id === "verificationTrust" ? (
+                    <>
+                      <View style={[styles.simpleVerificationSteps, isRtl && styles.rtlRow]}>
+                        {verificationLevels.map((level) => {
+                          const active = level === effectiveVerificationLevel;
+
+                          return (
+                            <View
+                              key={level}
+                              style={[
+                                styles.verificationStep,
+                                isDay && styles.dayVerificationStep,
+                                active && styles.verificationStepActive,
+                                isDay && active && styles.dayVerificationStepActive,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.verificationStepText,
+                                  isDay && styles.dayVerificationStepText,
+                                  active && styles.verificationStepTextActive,
+                                  isDay && active && styles.dayVerificationStepTextActive,
+                                ]}
+                              >
+                                {level}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                      <Text style={[styles.simpleVerificationReviewText, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>{profileVerificationCopy.reviewSettings}</Text>
+                    </>
+                  ) : null}
+                </View>
+                <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
+
+        {detailedProfileSummarySections}
+
+        {false ? (
         <View style={[styles.profileSectionCard, styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
             <View style={styles.profileLayoutBody}>
@@ -5550,11 +6060,11 @@ export default function ProfileScreen() {
         </View>
         ) : null}
 
-        {comfortTrustSummarySection}
+        {shouldShowManagementSectionOnProfileHome("comfortTrustDetails") ? comfortTrustSummarySection : null}
 
-        {backgroundCommunitySummarySection}
+        {shouldShowManagementSectionOnProfileHome("workStudyLifeContext") ? backgroundCommunitySummarySection : null}
 
-        {isCleanProfile ? (
+        {isCleanProfile && shouldShowManagementSectionOnProfileHome("trustStatusDetails") ? (
           <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
             <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
               <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.trustStatus}</Text>
@@ -5586,7 +6096,7 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
-        {!isCleanProfile ? (
+        {false ? (
           <>
         <View style={[styles.profileSectionCard, styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
@@ -5596,7 +6106,7 @@ export default function ProfileScreen() {
             </View>
             <Text
               style={styles.editText}
-              onPress={() => router.push("/settings" as any)}
+              onPress={() => openSettingsFromProfile()}
               accessibilityRole="button"
               accessibilityLabel="Manage privacy and visibility"
             >
@@ -5679,6 +6189,11 @@ export default function ProfileScreen() {
 
                   if (row.key === "locationPreference") {
                     openPreferenceDestination("locationPreferencePanel", "location");
+                    return;
+                  }
+
+                  if (row.key === "settings") {
+                    openSettingsFromProfile();
                     return;
                   }
 
@@ -5781,11 +6296,14 @@ const styles = StyleSheet.create({
   dayContainer: { backgroundColor: "#E8EDF2" },
   content: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 112 },
   contentWide: { maxWidth: "100%" },
-  softHelloContent: { alignItems: "stretch", paddingBottom: 42 },
+  softHelloContent: { alignItems: "stretch", paddingBottom: 132 },
   rtlInput: { textAlign: "right", writingDirection: "rtl" },
+  ltrInlineCopy: { writingDirection: "ltr" },
   topRight: { alignItems: "flex-end", marginBottom: 8, zIndex: 20 },
-  settingsButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
-  dayIconButton: { backgroundColor: "#EEF3F4" },
+  profileControlsButton: { minHeight: 42, maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.055)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 13, paddingVertical: 8 },
+  profileControlsButtonCompact: { paddingHorizontal: 11 },
+  profileControlsButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  dayProfileControlsButton: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   profileDrawerBackdrop: { flex: 1, alignItems: "flex-end", justifyContent: "center", backgroundColor: "rgba(2,8,20,0.58)", padding: 18 },
   profileDrawerBackdropMobile: { justifyContent: "flex-end", padding: 10 },
   profileOptionsDrawer: { width: 440, maxWidth: "96%", height: "100%", maxHeight: 820, borderRadius: 24, borderWidth: 1, borderColor: "#536C9E", backgroundColor: "#0B1626", padding: 14, gap: 12, shadowColor: "#000000", shadowOpacity: 0.32, shadowRadius: 24, shadowOffset: { width: -8, height: 10 }, elevation: 16 },
@@ -5800,17 +6318,20 @@ const styles = StyleSheet.create({
   profileMenu: { width: "100%", maxWidth: 410, maxHeight: 720, marginTop: 8, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   profileMenuDocked: { flex: 1, maxWidth: "100%", maxHeight: "100%", marginTop: 0, borderRadius: 18, borderColor: "#3C5277", backgroundColor: "rgba(255,255,255,0.025)" },
   profileMenuScroll: { width: "100%" },
-  profileMenuContent: { padding: 8 },
+  profileMenuContent: { padding: 8, gap: 2 },
   profileMenuTitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, paddingHorizontal: 10, paddingVertical: 5 },
-  profileMenuItem: { minHeight: 62, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 9 },
+  profileMenuItem: { minHeight: 68, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 11 },
+  profilePreferenceMenuItem: { minHeight: 74, borderWidth: 1, borderColor: "rgba(124,170,201,0.24)", backgroundColor: "rgba(255,255,255,0.035)" },
   profileMenuFeaturedItem: { borderWidth: 1, borderColor: "rgba(124,170,201,0.45)", backgroundColor: "rgba(124,170,201,0.1)" },
+  profileMenuIconBadge: { width: 34, height: 34, borderRadius: 14, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
   profileMenuDisabledOption: { opacity: 0.72, borderStyle: "dashed" },
   profileMenuStatusBadge: { color: nsnColors.warning, borderColor: "rgba(247,200,91,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, fontSize: 10, fontWeight: "900", overflow: "hidden" },
   profileMenuComingSoonBadge: { color: nsnColors.muted, borderColor: "rgba(166,177,199,0.35)" },
   profileMenuBack: { minHeight: 48, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10, marginBottom: 8 },
-  profileMenuItemBody: { flex: 1, gap: 2 },
+  profileMenuItemBody: { flex: 1, minWidth: 0, gap: 2 },
   profileMenuText: { flex: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   profileMenuDescription: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17 },
+  profileMenuDescriptionCompact: { fontSize: 11, lineHeight: 15 },
   profileMenuChevron: { color: nsnColors.muted, fontSize: 20, fontWeight: "900", lineHeight: 24 },
   profileMenuDivider: { height: 1, backgroundColor: nsnColors.border, marginVertical: 10 },
   profileMenuDestructiveDivider: { backgroundColor: "rgba(226,61,90,0.28)", marginTop: 14 },
@@ -5851,9 +6372,10 @@ const styles = StyleSheet.create({
   foodPreferenceShowMoreButton: { alignSelf: "flex-start", minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, marginLeft: 10, marginBottom: 10 },
   calendarMomentStack: { gap: 10, paddingHorizontal: 10, paddingBottom: 10 },
   calendarMomentCard: { backgroundColor: "rgba(12, 27, 50, 0.7)" },
-  interestComfortTargetRow: { marginTop: 10, marginBottom: 8 },
-  interestComfortTargetChip: { minHeight: 34, maxWidth: "100%", borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, paddingVertical: 7, justifyContent: "center" },
-  interestComfortTagGrid: { paddingHorizontal: 0, paddingBottom: 0, marginTop: 2 },
+  interestComfortTargetRow: { width: "100%", marginTop: 10, marginBottom: 8, overflow: "visible" },
+  interestComfortTargetChip: { minHeight: 34, maxWidth: "100%", borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, paddingVertical: 7, justifyContent: "center", flexShrink: 1 },
+  interestComfortTagGrid: { width: "100%", paddingHorizontal: 0, paddingBottom: 0, marginTop: 2, overflow: "visible" },
+  interestComfortModifierChip: { flexGrow: 1, flexShrink: 1 },
   alphaGuideCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
   alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
@@ -5872,31 +6394,49 @@ const styles = StyleSheet.create({
   profileWidthStack: { marginTop: 8 },
   profileLayoutOption: { minHeight: 58, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },
   daySoftOption: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
+  dayProfileMenuIconBadge: { backgroundColor: "#E8EEF3", borderColor: "#C5D0DA" },
   profileLayoutOptionActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
-  profileLayoutBody: { flex: 1 },
+  profileLayoutBody: { flex: 1, minWidth: 0 },
   profileLayoutTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   profileLayoutCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   profileLayoutCheck: { width: 22, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
   profileLayoutTextActive: { color: "#FFFFFF" },
+  profileDrawerDoneText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17 },
   profileHeader: { width: "100%", alignSelf: "center", alignItems: "center", marginTop: 4, marginBottom: 22, gap: 10, padding: 6 },
   profileHeaderDetailed: { borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
+  simpleVisibilityPreviewSection: { width: "100%", maxWidth: 520, alignSelf: "center", alignItems: "stretch", gap: 10, marginBottom: 18 },
+  simpleProfileOverviewGrid: { width: "100%", alignSelf: "center", alignItems: "stretch", gap: 14, marginBottom: 18 },
+  simpleProfileOverviewGridWide: { flexDirection: "row", alignItems: "stretch", justifyContent: "center" },
+  simpleVisibilityPreviewPane: { flexGrow: 1, flexShrink: 1, flexBasis: 360, minWidth: 280, marginBottom: 0 },
+  simpleVisibilityHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  simpleVisibilityPreviewTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "left" },
+  simpleVisibilityPreviewCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 2 },
+  simpleVisibilityModeCard: { width: "100%", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 12, gap: 10 },
+  simpleVisibilityModeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  simpleVisibilityModeOption: { flexGrow: 1, flexShrink: 1, flexBasis: 142, minHeight: 42, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 8 },
+  simpleVisibilityModeOptionActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  simpleVisibilityModeOptionText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
+  simpleVisibilityModeCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
+  simpleWarmUpBlurOption: { marginTop: 0 },
+  simpleProfileList: { width: "100%", maxWidth: 520, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, overflow: "hidden", marginTop: 8 },
+  simpleProfileRow: { minHeight: 66, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 11 },
+  simpleProfileShortcutList: { alignSelf: "center", marginTop: 0, marginBottom: 14 },
+  simpleShortcutLabel: { fontWeight: "800" },
+  socialProfileSummaryList: { alignSelf: "center", marginTop: 0, marginBottom: 18 },
+  socialProfileSummaryRow: { minHeight: 74, alignItems: "flex-start" },
+  socialProfileSummaryTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  socialProfileSummaryDescription: { opacity: 0.82 },
+  simpleVerificationSteps: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 9 },
+  simpleVerificationReviewText: { color: "#7786FF", fontSize: 12, fontWeight: "900", lineHeight: 17, marginTop: 8 },
   softHelloProfileHeader: { alignSelf: "center", width: "100%", marginBottom: 30 },
   pausedProfileBanner: { width: "100%", maxWidth: 520, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(56,72,255,0.10)", padding: 14, marginBottom: 8 },
   pausedProfileTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
   pausedProfileCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 4 },
-  avatar: { width: 90, height: 90, borderRadius: 45, alignItems: "center", justifyContent: "center", backgroundColor: "#1590C9" },
-  avatarImage: { width: 90, height: 90, borderRadius: 45 },
   avatarRing: { width: 104, height: 104, borderRadius: 52, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.10)" },
-  avatarText: { color: nsnColors.text, fontSize: 38, fontWeight: "900" },
   photoButton: { marginTop: 10, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignSelf: "center", },
   dayPhotoButton: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   photoButtonText: { color: "#7786FF", fontSize: 12, fontWeight: "800" },
   dayPhotoButtonText: { color: "#445E93" },
-  photoDropZone: { width: "100%", maxWidth: 380, minHeight: 78, borderRadius: 16, borderWidth: 1, borderStyle: "dashed", borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 13, paddingVertical: 11, marginTop: 4 },
-  photoDropZoneCopy: { flex: 1, minWidth: 0 },
-  photoDropZoneTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  photoDropZoneText: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 1 },
-  photoDropZoneNote: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, marginTop: 3, textTransform: "uppercase" },
   identitySummary: { alignItems: "center", gap: 6, marginTop: 2, marginBottom: 4, width: "100%" },
   identitySummaryRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
   identitySummaryText: { color: nsnColors.muted, fontSize: 13, fontWeight: "800", lineHeight: 19, textAlign: "center" },
@@ -5912,8 +6452,15 @@ const styles = StyleSheet.create({
   genderChipText: { color: nsnColors.text, fontSize: 12, fontWeight: "900" },
   profileCardsGrid: { width: "100%", alignSelf: "center", alignItems: "center", justifyContent: "center", gap: 14, marginTop: 8 },
   profileCardsGridWide: { flexDirection: "row", alignItems: "flex-start", justifyContent: "center" },
+  detailedProfileSummaryStack: { width: "100%", alignSelf: "center", gap: 14, marginBottom: 18 },
+  detailedProfileSummaryGrid: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", justifyContent: "center" },
+  detailedProfileSummaryCard: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 280, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 14, gap: 12 },
+  detailedProfilePreviewPane: { flexGrow: 1, flexShrink: 1, flexBasis: 340, minWidth: 280, gap: 8 },
+  detailedProfileSummaryTitle: { marginBottom: 0, textAlign: "left" },
   profileControlsColumn: { width: "100%", maxWidth: 480, alignItems: "center", gap: 14 },
   profileBasicsCard: { width: "100%", maxWidth: 480, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 12, marginTop: 12 },
+  simpleVibesCard: { alignSelf: "center", marginBottom: 14 },
+  simpleLocalAreaCard: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 280, maxWidth: 520, alignSelf: "stretch", marginTop: 0 },
   leftAlignedTitle: { textAlign: "left", marginBottom: 0 },
   locationInput: { minHeight: 42, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, fontSize: 14, fontWeight: "800", paddingHorizontal: 12, marginTop: 8 },
   localAreaValue: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 8 },
@@ -5945,13 +6492,13 @@ const styles = StyleSheet.create({
   compactGrid: { marginBottom: 0 },
   interestChipActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.16)" },
   cardInlineMessage: { marginTop: 10, marginBottom: 0, textAlign: "left" },
-  privacySummaryGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 4 },
-  privacySummaryItem: { flexGrow: 1, minWidth: 140, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 12, paddingVertical: 10 },
+  privacySummaryGrid: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 10, marginTop: 4 },
+  privacySummaryItem: { flexGrow: 1, flexShrink: 1, flexBasis: 160, minWidth: 0, maxWidth: "100%", overflow: "hidden", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 12, paddingVertical: 10 },
   privacySummaryLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
-  privacySummaryValue: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginTop: 2 },
+  privacySummaryValue: { width: "100%", flexShrink: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginTop: 2 },
   trustCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, marginBottom: 16 },
   simpleTrustCard: { paddingVertical: 14 },
-  trustHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 6 },
+  trustHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 },
   trustTitle: { fontWeight: "900" },
   trustPill: { color: nsnColors.warning, borderColor: "rgba(247,200,91,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
   trustPillReady: { color: nsnColors.green, borderColor: "rgba(114,214,126,0.45)" },
@@ -5959,6 +6506,7 @@ const styles = StyleSheet.create({
   dayTrustPillReady: { color: "#0F6B2F", backgroundColor: "#E8F8EE", borderColor: "#55A96E" },
   trustCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
   simpleTrustCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
+  visibilityDetailCopy: { marginTop: 6 },
   trustFoundationGroup: { gap: 8, marginTop: 12 },
   trustFoundationTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   trustFoundationCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17 },

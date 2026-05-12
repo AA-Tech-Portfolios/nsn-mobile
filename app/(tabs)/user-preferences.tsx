@@ -1,5 +1,5 @@
 import { type ComponentProps, type ReactNode, useEffect, useMemo, useState } from "react";
-import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, type StyleProp, type ViewStyle } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -58,6 +58,7 @@ import {
   getCalendarMomentGroupOptions,
   getSelectedCalendarMomentLabels,
   searchCalendarMoments,
+  type CalendarMomentGroupId,
   type CalendarMomentPreference,
   type CalendarMomentState,
 } from "@/lib/preferences/calendar-moments";
@@ -82,6 +83,16 @@ import {
   transportationPreferenceDetails,
   type PreferenceOptionDetail,
 } from "@/lib/preferences/preference-panel-options";
+import { getCalmDefaultOpenGroupIds, getExpandableGroupSummary } from "@/lib/progressive-disclosure";
+import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
+import {
+  formatPreferenceCategoryChipLabel,
+  formatPreferenceChipLabel,
+  formatSelectedPreferenceChipLabel,
+  getPreferenceCategoryIcon,
+  getPreferenceChipIcon,
+  getSettingsPreferenceLayout,
+} from "@/lib/preferences-layout";
 
 type PreferenceSection = "overview" | "comfort" | "background" | "calendar" | "food" | "interests" | "transport" | "contact" | "location";
 
@@ -133,6 +144,18 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
   },
 };
 
+const simplePreferenceSectionCopy: Record<PreferenceSection, string> = {
+  overview: "Choose what makes local meetups feel easier.",
+  comfort: "Visibility, trust, and meeting comfort.",
+  background: "Optional life context.",
+  calendar: "Dates and moments that matter to you.",
+  food: "Food, drinks, and dietary comfort.",
+  interests: "Activities and easy conversation starters.",
+  transport: "How getting there feels easiest.",
+  contact: "How you prefer to communicate.",
+  location: "Local area and venue comfort.",
+};
+
 const workStudySectionIcons: Record<string, ComponentProps<typeof IconSymbol>["name"]> = {
   "Current context": "explore",
   "Broad field or area": "badge",
@@ -144,7 +167,7 @@ const workStudySectionIcons: Record<string, ComponentProps<typeof IconSymbol>["n
 };
 
 const getPreferenceSectionIcon = (section: PreferenceSection, fallback: string) =>
-  section === "background" ? "🎓" : fallback;
+  getPreferenceCategoryIcon(section, fallback) ?? fallback;
 
 const compactPanelBySection: Record<PreferenceSection, string> = {
   overview: "preferences",
@@ -223,20 +246,68 @@ export default function UserPreferencesScreen() {
     setShowDistanceInMeetups,
     showSuburbArea,
     homeNearbyOnly,
+    homeLayoutDensity,
+    userPreferenceTextMode,
     screenReaderHints,
     saveSoftHelloMvpState,
   } = useAppSettings();
   const isDay = !isNightMode;
-  const isWide = width >= 900;
+  const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
+  const isWide = preferenceLayout.isDesktop;
+  const responsiveCardGridStyle = [styles.cardGrid, isWide && styles.cardGridWide, { gap: preferenceLayout.sectionGap }];
+  const responsiveChipGridStyle = [styles.chipGrid, { gap: preferenceLayout.optionGap }];
   const [activeSection, setActiveSection] = useState<PreferenceSection>(() => normalizePreferenceSection(section));
   const [foodSearch, setFoodSearch] = useState("");
   const [interestSearch, setInterestSearch] = useState("");
   const [calendarSearch, setCalendarSearch] = useState("");
   const [customCalendarMomentDraft, setCustomCalendarMomentDraft] = useState("");
-  const [openFoodGroups, setOpenFoodGroups] = useState<FoodPreferenceGroupId[]>(foodPreferenceGroups.filter((group) => group.defaultOpen).map((group) => group.id));
+  const [openFoodGroups, setOpenFoodGroups] = useState<FoodPreferenceGroupId[]>(() =>
+    getCalmDefaultOpenGroupIds(
+      foodPreferenceGroups.map((group) => ({
+        id: group.id,
+        defaultOpen: group.defaultOpen,
+        selectedCount: getFoodPreferenceGroupSelectedCount(foodBeveragePreferenceIds, group.id),
+      })),
+      { maxOpen: 1 }
+    )
+  );
   const [showAllFoodGroups, setShowAllFoodGroups] = useState<FoodPreferenceGroupId[]>([]);
-  const [openInterestCategories, setOpenInterestCategories] = useState<InterestCategoryId[]>(interestCategories.filter((category) => category.defaultOpen).map((category) => category.id));
+  const [openInterestCategories, setOpenInterestCategories] = useState<InterestCategoryId[]>(() =>
+    getCalmDefaultOpenGroupIds(
+      interestCategories.map((category) => ({
+        id: category.id,
+        defaultOpen: category.defaultOpen,
+        selectedCount: getInterestCategorySelectedCount(interestPreferenceIds, category.id),
+      })),
+      { maxOpen: 1 }
+    )
+  );
   const [showAllInterestCategories, setShowAllInterestCategories] = useState<InterestCategoryId[]>([]);
+  const [openCalendarGroups, setOpenCalendarGroups] = useState<CalendarMomentGroupId[]>(() =>
+    getCalmDefaultOpenGroupIds(
+      calendarMomentGroups.map((group) => ({
+        id: group.id,
+        defaultOpen: group.defaultOpen,
+        selectedCount:
+          getCalendarMomentGroupOptions(group.id).filter((moment) => calendarMomentStates[moment.id]).length +
+          (group.id === "personal" ? customCalendarMoments.length : 0),
+      })),
+      { maxOpen: 1 }
+    )
+  );
+  const [openPreferenceDetailGroups, setOpenPreferenceDetailGroups] = useState<string[]>(() =>
+    getCalmDefaultOpenGroupIds(
+      [
+        { id: "background-current", defaultOpen: true, selectedCount: lifeContextCurrentStates.length },
+        { id: "background-field", selectedCount: lifeContextFields.length },
+        { id: "background-learning", selectedCount: lifeContextLearningInterests.length },
+        { id: "background-study", selectedCount: backgroundStudyStatuses.length + backgroundStudyAreas.length },
+        { id: "background-work", selectedCount: backgroundWorkPreferences.length + backgroundWorkRhythms.length },
+        { id: "background-community", selectedCount: backgroundCommunityPreferences.length },
+      ],
+      { maxOpen: 1 }
+    )
+  );
   const [activeInterestComfortId, setActiveInterestComfortId] = useState<string | null>(interestPreferenceIds[0] ?? null);
 
   useEffect(() => {
@@ -263,7 +334,17 @@ export default function UserPreferencesScreen() {
   const interestSearchResults = useMemo(() => searchInterestPreferences(interestSearch), [interestSearch]);
   const calendarSearchResults = useMemo(() => searchCalendarMoments(calendarSearch, customCalendarMoments), [calendarSearch, customCalendarMoments]);
   const activeMeta = preferenceSections[activeSection];
+  const getPreferenceText = (detailed: string, simple: string) => userPreferenceTextMode === "Simple" ? simple : detailed;
+  const getPreferenceSectionCopy = (nextSection: PreferenceSection) =>
+    getPreferenceText(preferenceSections[nextSection].copy, simplePreferenceSectionCopy[nextSection]);
   const lifeContextFreshness = useMemo(() => getLifeContextFreshnessLabel(lifeContextLastUpdatedAt), [lifeContextLastUpdatedAt]);
+  const interestComfortLayout = getInterestComfortLayout(width);
+  const interestComfortModifierStyle: ViewStyle = {
+    flexBasis: interestComfortLayout.modifierFlexBasis,
+    flexGrow: 1,
+    flexShrink: 1,
+    minWidth: interestComfortLayout.modifierMinWidth,
+  };
 
   const showSection = (nextSection: PreferenceSection) => {
     setActiveSection(nextSection);
@@ -493,6 +574,14 @@ export default function UserPreferencesScreen() {
     setShowAllInterestCategories((current) => (current.includes(categoryId) ? current.filter((item) => item !== categoryId) : [...current, categoryId]));
   };
 
+  const toggleCalendarGroup = (groupId: CalendarMomentGroupId) => {
+    setOpenCalendarGroups((current) => (current.includes(groupId) ? current.filter((item) => item !== groupId) : [...current, groupId]));
+  };
+
+  const togglePreferenceDetailGroup = (groupId: string) => {
+    setOpenPreferenceDetailGroups((current) => (current.includes(groupId) ? current.filter((item) => item !== groupId) : [...current, groupId]));
+  };
+
   const renderChip = ({
     key,
     label,
@@ -501,6 +590,7 @@ export default function UserPreferencesScreen() {
     icon,
     meta,
     wide,
+    style,
   }: {
     key: string;
     label: string;
@@ -509,30 +599,44 @@ export default function UserPreferencesScreen() {
     icon?: string;
     meta?: string;
     wide?: boolean;
-  }) => (
-    <TouchableOpacity
-      key={key}
-      activeOpacity={0.8}
-      onPress={onPress}
-      style={[styles.chip, wide && styles.chipWide, isDay && styles.dayChip, active && styles.chipActive]}
-      accessibilityRole="button"
-      accessibilityLabel={`${active ? "Selected: " : ""}${label}`}
-      accessibilityState={{ selected: active }}
-    >
-      <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]} numberOfLines={wide ? 2 : 1}>
-        {active ? "Selected: " : ""}
-        {icon ? `${icon} ` : ""}
-        {label}
-      </Text>
-      {meta ? <Text style={[styles.chipMeta, isDay && styles.dayMutedText, active && styles.activeText]} numberOfLines={2}>{meta}</Text> : null}
-    </TouchableOpacity>
-  );
+    style?: StyleProp<ViewStyle>;
+  }) => {
+    const displayLabel = formatPreferenceChipLabel(label, icon);
+    const chipLabel = active ? formatSelectedPreferenceChipLabel(label, icon) : displayLabel;
+
+    return (
+      <TouchableOpacity
+        key={key}
+        activeOpacity={0.8}
+        onPress={onPress}
+        focusable
+        style={[
+          styles.chip,
+          { minHeight: preferenceLayout.minTapTarget },
+          wide && styles.chipWide,
+          wide && (isWide ? preferenceLayout.optionCard : preferenceLayout.fullWidthCard),
+          isDay && styles.dayChip,
+          active && styles.chipActive,
+          style,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={chipLabel}
+        accessibilityState={{ selected: active }}
+        accessibilityHint={meta}
+      >
+        <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]} numberOfLines={wide ? 2 : 1}>
+          {chipLabel}
+        </Text>
+        {meta ? <Text style={[styles.chipMeta, isDay && styles.dayMutedText, active && styles.activeText]} numberOfLines={2}>{meta}</Text> : null}
+      </TouchableOpacity>
+    );
+  };
 
   const renderFoodChip = (option: FoodBeveragePreference) =>
     renderChip({
       key: option.id,
       label: option.label,
-      icon: option.icon,
+      icon: option.icon ?? getPreferenceChipIcon(option.label),
       active: foodBeveragePreferenceIds.includes(option.id),
       onPress: () => toggleFoodPreference(option.id),
       meta: option.ageSensitive ? "Age-appropriate only" : option.subgroup,
@@ -560,7 +664,7 @@ export default function UserPreferencesScreen() {
           </View>
           {activeState ? <Text style={[styles.countBadge, isDay && styles.daySummaryChip]}>{activeState}</Text> : null}
         </View>
-        <View style={styles.chipGrid}>
+        <View style={styles.compactChipRow}>
           {calendarMomentStateOptions.map((option) => {
             const active = activeState === option.value;
 
@@ -570,8 +674,6 @@ export default function UserPreferencesScreen() {
               icon: option.icon,
               active,
               onPress: () => updateCalendarMomentState(moment.id, option.value),
-              meta: option.copy,
-              wide: true,
             });
           })}
         </View>
@@ -579,11 +681,21 @@ export default function UserPreferencesScreen() {
     );
   };
 
-  const renderSectionCard = (title: string, copy: string, icon: string, children: ReactNode) => {
+  const renderSectionCard = (title: string, copy: string, icon: string, children: ReactNode, cardStyle?: StyleProp<ViewStyle>) => {
     const workStudyIcon = workStudySectionIcons[title];
 
     return (
-      <View key={title} style={[styles.card, isWide && styles.cardWide, isDay && styles.dayCard]}>
+      <View
+        key={title}
+        style={[
+          styles.card,
+          isWide && styles.cardWide,
+          isWide ? preferenceLayout.sectionCard : preferenceLayout.fullWidthCard,
+          { borderRadius: preferenceLayout.cardRadius, gap: preferenceLayout.sectionGap, padding: preferenceLayout.cardPadding },
+          cardStyle,
+          isDay && styles.dayCard,
+        ]}
+      >
         <View style={styles.cardHeader}>
           {workStudyIcon ? (
             <View style={[styles.cardIconSymbol, isDay && styles.dayChip]}>
@@ -602,9 +714,81 @@ export default function UserPreferencesScreen() {
     );
   };
 
+  const renderInlinePreferenceGroup = (title: string, copy: string, children: ReactNode) => (
+    <View style={[styles.inlinePreferenceGroup, isDay && styles.dayChip]}>
+      <Text style={[styles.inlinePreferenceTitle, isDay && styles.dayTitle]}>{title}</Text>
+      <Text style={[styles.inlinePreferenceCopy, isDay && styles.dayMutedText]}>{copy}</Text>
+      {children}
+    </View>
+  );
+
+  const renderExpandableSectionCard = ({
+    id,
+    title,
+    copy,
+    icon,
+    children,
+    open,
+    onToggle,
+    selectedCount,
+    totalCount,
+    wide = true,
+  }: {
+    id: string;
+    title: string;
+    copy: string;
+    icon: string;
+    children: ReactNode;
+    open: boolean;
+    onToggle: () => void;
+    selectedCount?: number;
+    totalCount?: number;
+    wide?: boolean;
+  }) => {
+    const workStudyIcon = workStudySectionIcons[title];
+    const summary = getExpandableGroupSummary({ selectedCount, totalCount });
+
+    return (
+      <View
+        key={id}
+        style={[
+          styles.card,
+          wide && isWide && styles.cardWide,
+          wide && (isWide ? preferenceLayout.sectionCard : preferenceLayout.fullWidthCard),
+          { borderRadius: preferenceLayout.cardRadius, gap: preferenceLayout.sectionGap, padding: preferenceLayout.cardPadding },
+          isDay && styles.dayCard,
+        ]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.78}
+          onPress={onToggle}
+          style={styles.accordionHeader}
+          accessibilityRole="button"
+          accessibilityLabel={`${open ? "Collapse" : "Expand"} ${title}`}
+          accessibilityState={{ expanded: open }}
+        >
+          {workStudyIcon ? (
+            <View style={[styles.cardIconSymbol, isDay && styles.dayChip]}>
+              <IconSymbol name={workStudyIcon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+            </View>
+          ) : (
+            <Text style={[styles.cardIcon]}>{icon}</Text>
+          )}
+          <View style={styles.cardBody}>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{title}</Text>
+            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy}</Text>
+          </View>
+          <Text style={[styles.countBadge, isDay && styles.daySummaryChip]}>{summary}</Text>
+          <IconSymbol name={open ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={21} />
+        </TouchableOpacity>
+        {open ? children : null}
+      </View>
+    );
+  };
+
   const renderSummary = (labels: string[], fallback: string) => (
     <View style={styles.summaryChips}>
-      {labels.length ? labels.map((label) => <Text key={label} style={[styles.summaryChip, isDay && styles.daySummaryChip]}>{label}</Text>) : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{fallback}</Text>}
+      {labels.length ? labels.map((label) => <Text key={label} style={[styles.summaryChip, isDay && styles.daySummaryChip]}>{formatPreferenceChipLabel(label)}</Text>) : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{fallback}</Text>}
     </View>
   );
 
@@ -624,7 +808,12 @@ export default function UserPreferencesScreen() {
     });
 
   const getPreferenceSummary = (values: string[], fallback: string, limit = 3) =>
-    values.length ? `${values.slice(0, limit).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}` : fallback;
+    values.length ? `${values.slice(0, limit).map((value) => formatPreferenceChipLabel(value)).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}` : fallback;
+  const getPreferenceDetailGroupCount = <T extends string>(
+    details: Array<PreferenceOptionDetail<T>>,
+    selectedValues: T[],
+    group: string
+  ) => details.filter((option) => option.group === group && selectedValues.includes(option.value)).length;
 
   const backgroundSelectedCount =
     lifeContextCurrentStates.length +
@@ -645,17 +834,43 @@ export default function UserPreferencesScreen() {
   ]
     .filter(Boolean)
     .join(" / ");
+  const backgroundGroupCounts: Record<string, number> = {
+    "background-current": lifeContextCurrentStates.length,
+    "background-field": lifeContextFields.length,
+    "background-learning": lifeContextLearningInterests.length,
+    "background-study": backgroundStudyStatuses.length + backgroundStudyAreas.length,
+    "background-work": backgroundWorkPreferences.length + backgroundWorkRhythms.length,
+    "background-community": backgroundCommunityPreferences.length,
+  };
+  const calendarGroupSelectedCounts = calendarMomentGroups.reduce<Record<CalendarMomentGroupId, number>>((counts, group) => {
+    counts[group.id] =
+      getCalendarMomentGroupOptions(group.id).filter((moment) => calendarMomentStates[moment.id]).length +
+      (group.id === "personal" ? customCalendarMoments.length : 0);
+    return counts;
+  }, {} as Record<CalendarMomentGroupId, number>);
 
   const overviewCards = [
-    { section: "comfort" as const, title: "Comfort & trust", icon: "🛡️", copy: `${comfortMode} / ${socialEnergyPreference} energy / ${groupSizePreference}`, meta: "Visibility, contact, verification, and consent." },
-    { section: "calendar" as const, title: "Calendar & cultural moments", icon: "📅", copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
-    { section: "food" as const, title: "Food & beverage", icon: "🍽️", copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
-    { section: "interests" as const, title: "Hobbies & interests", icon: "🎨", copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.join(", ") || "Activities, genres, and comfort-aware tags." },
-    { section: "transport" as const, title: "Transportation method", icon: "🚆", copy: getPreferenceSummary(transportationPreferences, transportationMethod), meta: "Arrival comfort, route access, and travel pressure." },
-    { section: "contact" as const, title: "Contact preference", icon: "💬", copy: getPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"), meta: "How you prefer pre-meetup communication." },
-    { section: "location" as const, title: "Location preference", icon: "📍", copy: getPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"), meta: "Local area, venue comfort, and location privacy." },
-    { section: "background" as const, title: "Work, study & life context", icon: "🎓", copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary || "Broad work, study, learning, and volunteering context with visibility controls." },
+    { section: "comfort" as const, title: "Comfort & trust", icon: getPreferenceSectionIcon("comfort", "🛡️"), copy: `${formatPreferenceChipLabel(comfortMode)} / ${formatPreferenceChipLabel(socialEnergyPreference)} energy / ${formatPreferenceChipLabel(groupSizePreference)}`, meta: "Visibility, contact, verification, and consent." },
+    { section: "calendar" as const, title: "Calendar & cultural moments", icon: getPreferenceSectionIcon("calendar", "🗓️"), copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
+    { section: "food" as const, title: "Food & beverage", icon: getPreferenceSectionIcon("food", "🍽️"), copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
+    { section: "interests" as const, title: "Hobbies & interests", icon: getPreferenceSectionIcon("interests", "🎨"), copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Activities, genres, and comfort-aware tags." },
+    { section: "transport" as const, title: "Transportation method", icon: getPreferenceSectionIcon("transport", "🚆"), copy: getPreferenceSummary(transportationPreferences, transportationMethod), meta: "Arrival comfort, route access, and travel pressure." },
+    { section: "contact" as const, title: "Contact preference", icon: getPreferenceSectionIcon("contact", "💬"), copy: getPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"), meta: "How you prefer pre-meetup communication." },
+    { section: "location" as const, title: "Location preference", icon: getPreferenceSectionIcon("location", "📍"), copy: getPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"), meta: "Local area, venue comfort, and location privacy." },
+    { section: "background" as const, title: "Work, study & life context", icon: getPreferenceSectionIcon("background", "🎓"), copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary ? backgroundOverviewSummary.split(" / ").map((label) => formatPreferenceChipLabel(label)).join(" / ") : "Broad work, study, learning, and volunteering context with visibility controls." },
   ];
+
+  const getOverviewCardMeta = (item: (typeof overviewCards)[number]) => {
+    if (userPreferenceTextMode === "Detailed") return item.meta;
+    if (item.section === "comfort") return "Visibility, trust, and comfort.";
+    if (item.section === "calendar") return selectedCalendarMomentLabels.length ? item.meta : simplePreferenceSectionCopy.calendar;
+    if (item.section === "food") return selectedFoodLabels.length ? item.meta : simplePreferenceSectionCopy.food;
+    if (item.section === "interests") return selectedInterestLabels.length ? item.meta : simplePreferenceSectionCopy.interests;
+    if (item.section === "transport") return simplePreferenceSectionCopy.transport;
+    if (item.section === "contact") return simplePreferenceSectionCopy.contact;
+    if (item.section === "location") return simplePreferenceSectionCopy.location;
+    return backgroundOverviewSummary ? item.meta : simplePreferenceSectionCopy.background;
+  };
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -687,7 +902,7 @@ export default function UserPreferencesScreen() {
           <View style={styles.headerText}>
             <Text style={[styles.eyebrow, isDay && styles.dayMutedText]}>NSN preferences</Text>
             <Text style={[styles.title, isDay && styles.dayTitle]}>{activeMeta.title}</Text>
-            <Text style={[styles.copy, isDay && styles.dayMutedText]}>{activeMeta.copy}</Text>
+            <Text style={[styles.copy, isDay && styles.dayMutedText]}>{getPreferenceSectionCopy(activeSection)}</Text>
           </View>
           <Text style={[styles.prototypeBadge, isDay && styles.daySummaryChip]}>Updated locally for this prototype</Text>
         </View>
@@ -696,6 +911,10 @@ export default function UserPreferencesScreen() {
           {(Object.keys(preferenceSections) as PreferenceSection[]).map((item) => {
             const meta = preferenceSections[item];
             const active = activeSection === item;
+            const sectionIcon = getPreferenceSectionIcon(item, meta.icon);
+            const sectionLabel = active
+              ? formatSelectedPreferenceChipLabel(meta.title, sectionIcon)
+              : formatPreferenceCategoryChipLabel(meta.title, item, sectionIcon);
 
             return (
               <TouchableOpacity
@@ -707,14 +926,14 @@ export default function UserPreferencesScreen() {
                 accessibilityLabel={`Open ${meta.title}`}
                 accessibilityState={{ selected: active }}
               >
-                <Text style={[styles.navPillText, isDay && styles.dayTitle, active && styles.activeText]}>{active ? "Selected: " : ""}{getPreferenceSectionIcon(item, meta.icon)} {meta.title}</Text>
+                <Text style={[styles.navPillText, isDay && styles.dayTitle, active && styles.activeText]}>{sectionLabel}</Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
 
         {activeSection === "overview" ? (
-          <View style={[styles.overviewGrid, isWide && styles.overviewGridWide]}>
+          <View style={[styles.overviewGrid, isWide && styles.overviewGridWide, { gap: preferenceLayout.sectionGap }]}>
             {overviewCards.map((item) => (
               <TouchableOpacity
                 key={item.section}
@@ -728,7 +947,7 @@ export default function UserPreferencesScreen() {
                 <View style={styles.cardBody}>
                   <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{item.title}</Text>
                   <Text style={[styles.overviewValue, isDay && styles.dayTitle]}>{item.copy}</Text>
-                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]} numberOfLines={3}>{item.meta}</Text>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]} numberOfLines={3}>{getOverviewCardMeta(item)}</Text>
                 </View>
                 <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={21} />
               </TouchableOpacity>
@@ -737,43 +956,57 @@ export default function UserPreferencesScreen() {
         ) : null}
 
         {activeSection === "comfort" ? (
-          <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+          <View style={responsiveCardGridStyle}>
             {renderSectionCard("Progressive visibility", "Choose how much profile detail feels right. Copy is prototype-safe and does not imply production privacy enforcement.", "👁️", (
-              <View style={styles.chipGrid}>
+              <View style={responsiveChipGridStyle}>
                 {comfortModes.map((mode) => renderChip({ key: mode, label: mode, icon: mode === "Comfort Mode" ? "🛡️" : mode === "Warm Up Mode" ? "🌤️" : "✨", active: comfortMode === mode, onPress: () => saveSoftHelloMvpState({ comfortMode: mode }), wide: true }))}
               </View>
             ))}
             {renderSectionCard("Social energy", "Choose the kind of social energy that feels easiest today.", "🌿", (
-              <View style={styles.chipGrid}>
+              <View style={responsiveChipGridStyle}>
                 {socialEnergyOptions.map((option: SocialEnergyPreference) => renderChip({ key: option, label: option, icon: option === "Calm" ? "🌿" : option === "Balanced" ? "⚖️" : option === "Social" ? "💬" : "✨", active: socialEnergyPreference === option, onPress: () => saveSoftHelloMvpState({ socialEnergyPreference: option }) }))}
               </View>
             ))}
             {renderSectionCard("Communication preferences", "These help others understand how you like to communicate before a meetup.", "💬", (
-              <View style={styles.chipGrid}>
+              <View style={responsiveChipGridStyle}>
                 {communicationPreferenceOptions.map((option) => renderChip({ key: option, label: option, active: communicationPreferences.includes(option), onPress: () => toggleCommunicationPreference(option) }))}
               </View>
             ))}
             {renderSectionCard("Group size preferences", "Keep plans aligned with the number of people that feels comfortable.", "👥", (
-              <View style={styles.chipGrid}>
+              <View style={responsiveChipGridStyle}>
                 {groupSizePreferenceOptions.map((option: GroupSizePreference) => renderChip({ key: option, label: option, icon: option === "Small groups only" ? "👥" : undefined, active: groupSizePreference === option, onPress: () => saveSoftHelloMvpState({ groupSizePreference: option }) }))}
               </View>
             ))}
-            {renderSectionCard("Verified but private", "Your contact/trust status can be checked without making your full profile fully open. No real verification provider is connected yet.", "✅", (
-              <View style={styles.chipGrid}>
-                {renderChip({ key: "verified-private-on", label: "Verified, but private", active: verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: true }), wide: true })}
-                {renderChip({ key: "verified-private-off", label: "Show normal trust status", active: !verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: false }), wide: true })}
-              </View>
-            ))}
-            {renderSectionCard("Photo & recording comfort", "NSN can show preferences and reminders, but it cannot fully prevent screenshots, photos, videos, or public sharing.", "📷", (
-              <View style={styles.chipGrid}>
-                {photoRecordingComfortOptions.map((option) => renderChip({ key: option, label: option, icon: option === "Ask me first" ? "📷" : undefined, active: photoRecordingComfortPreferences.includes(option), onPress: () => togglePhotoRecordingPreference(option), wide: true }))}
-              </View>
-            ))}
-            {renderSectionCard("Physical contact comfort", "Let others know what kind of greeting or personal-space boundary feels easiest. This is a preference signal, not an enforcement system.", "🤝", (
-              <View style={styles.chipGrid}>
-                {physicalContactComfortOptions.map((option) => renderChip({ key: option, label: option, active: physicalContactComfortPreferences.includes(option), onPress: () => togglePhysicalContactPreference(option), wide: true }))}
-              </View>
-            ))}
+            {renderExpandableSectionCard({
+              id: "comfort-advanced",
+              title: "Safety, privacy & consent details",
+              copy: "Verification display, photo comfort, and personal-space preferences live here for testers who want finer control.",
+              icon: "✅",
+              open: openPreferenceDetailGroups.includes("comfort-advanced"),
+              onToggle: () => togglePreferenceDetailGroup("comfort-advanced"),
+              selectedCount: Number(verifiedButPrivate) + photoRecordingComfortPreferences.length + physicalContactComfortPreferences.length,
+              totalCount: 3,
+              children: (
+                <View style={styles.inlinePreferenceStack}>
+                  {renderInlinePreferenceGroup("Verified but private", "Your contact/trust status can be checked without making your full profile fully open. No real verification provider is connected yet.", (
+                    <View style={responsiveChipGridStyle}>
+                      {renderChip({ key: "verified-private-on", label: "Verified, but private", active: verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: true }), wide: true })}
+                      {renderChip({ key: "verified-private-off", label: "Show normal trust status", active: !verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: false }), wide: true })}
+                    </View>
+                  ))}
+                  {renderInlinePreferenceGroup("Photo & recording comfort", "NSN can show preferences and reminders, but it cannot fully prevent screenshots, photos, videos, or public sharing.", (
+                    <View style={responsiveChipGridStyle}>
+                      {photoRecordingComfortOptions.map((option) => renderChip({ key: option, label: option, icon: option === "Ask me first" ? "📷" : undefined, active: photoRecordingComfortPreferences.includes(option), onPress: () => togglePhotoRecordingPreference(option), wide: true }))}
+                    </View>
+                  ))}
+                  {renderInlinePreferenceGroup("Physical contact comfort", "Let others know what kind of greeting or personal-space boundary feels easiest. This is a preference signal, not an enforcement system.", (
+                    <View style={responsiveChipGridStyle}>
+                      {physicalContactComfortOptions.map((option) => renderChip({ key: option, label: option, active: physicalContactComfortPreferences.includes(option), onPress: () => togglePhysicalContactPreference(option), wide: true }))}
+                    </View>
+                  ))}
+                </View>
+              ),
+            })}
           </View>
         ) : null}
 
@@ -800,11 +1033,20 @@ export default function UserPreferencesScreen() {
                 "No life context selected yet. Everything stays private by default."
               )}
             </View>
-            <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
-              {renderSectionCard("Current context", "Choose one or more broad current states. This should feel like gentle conversation context, not an occupation requirement.", "ðŸ§­", (
+            <View style={responsiveCardGridStyle}>
+              {renderExpandableSectionCard({
+                id: "background-current",
+                title: "Current context",
+                copy: "Choose one or more broad current states. This should feel like gentle conversation context, not an occupation requirement.",
+                icon: "ðŸ§­",
+                open: openPreferenceDetailGroups.includes("background-current"),
+                onToggle: () => togglePreferenceDetailGroup("background-current"),
+                selectedCount: backgroundGroupCounts["background-current"],
+                totalCount: lifeContextCurrentStateOptions.length,
+                children: (
                 <>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundVisibilityOptions.map((option) =>
                       renderChip({
                         key: `life-current-${option}`,
@@ -816,7 +1058,7 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Current state</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {lifeContextCurrentStateOptions.map((option) =>
                       renderChip({
                         key: option,
@@ -827,11 +1069,21 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                 </>
-              ))}
-              {renderSectionCard("Broad field or area", "Use broad categories only. NSN does not ask for exact employers, schools, organisations, or schedules in this prototype.", "ðŸ’¼", (
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "background-field",
+                title: "Broad field or area",
+                copy: "Use broad categories only. NSN does not ask for exact employers, schools, organisations, or schedules in this prototype.",
+                icon: "ðŸ’¼",
+                open: openPreferenceDetailGroups.includes("background-field"),
+                onToggle: () => togglePreferenceDetailGroup("background-field"),
+                selectedCount: backgroundGroupCounts["background-field"],
+                totalCount: lifeContextFieldOptions.length,
+                children: (
                 <>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundVisibilityOptions.map((option) =>
                       renderChip({
                         key: `life-field-${option}`,
@@ -843,7 +1095,7 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Broad categories</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {lifeContextFieldOptions.map((option) =>
                       renderChip({
                         key: option,
@@ -854,11 +1106,21 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                 </>
-              ))}
-              {renderSectionCard("Interested in / learning about", "Share curiosity or learning topics that could become easy conversation starters.", "âœ¨", (
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "background-learning",
+                title: "Interested in / learning about",
+                copy: "Share curiosity or learning topics that could become easy conversation starters.",
+                icon: "âœ¨",
+                open: openPreferenceDetailGroups.includes("background-learning"),
+                onToggle: () => togglePreferenceDetailGroup("background-learning"),
+                selectedCount: backgroundGroupCounts["background-learning"],
+                totalCount: lifeContextLearningOptions.length,
+                children: (
                 <>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundVisibilityOptions.map((option) =>
                       renderChip({
                         key: `life-learning-${option}`,
@@ -870,7 +1132,7 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Learning topics</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {lifeContextLearningOptions.map((option) =>
                       renderChip({
                         key: option,
@@ -881,11 +1143,21 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                 </>
-              ))}
-              {renderSectionCard("Study", "Use broad study context only. School or university names are not required and should stay private unless you choose otherwise later.", "ðŸ“š", (
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "background-study",
+                title: "Study",
+                copy: "Use broad study context only. School or university names are not required and should stay private unless you choose otherwise later.",
+                icon: "ðŸ“š",
+                open: openPreferenceDetailGroups.includes("background-study"),
+                onToggle: () => togglePreferenceDetailGroup("background-study"),
+                selectedCount: backgroundGroupCounts["background-study"],
+                totalCount: backgroundStudyStatusOptions.length + backgroundStudyAreaOptions.length,
+                children: (
                 <>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundVisibilityOptions.map((option) =>
                       renderChip({
                         key: `study-${option}`,
@@ -897,7 +1169,7 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Study status</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundStudyStatusOptions.map((option) =>
                       renderChip({
                         key: option,
@@ -908,7 +1180,7 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Study areas</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundStudyAreaOptions.map((option) =>
                       renderChip({
                         key: option,
@@ -919,11 +1191,21 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                 </>
-              ))}
-              {renderSectionCard("Work", "Choose broad industry or rhythm signals. Exact employer names and schedules are not requested in this prototype.", "ðŸ’¼", (
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "background-work",
+                title: "Work",
+                copy: "Choose broad industry or rhythm signals. Exact employer names and schedules are not requested in this prototype.",
+                icon: "ðŸ’¼",
+                open: openPreferenceDetailGroups.includes("background-work"),
+                onToggle: () => togglePreferenceDetailGroup("background-work"),
+                selectedCount: backgroundGroupCounts["background-work"],
+                totalCount: backgroundWorkOptions.length + backgroundWorkRhythmOptions.length,
+                children: (
                 <>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundVisibilityOptions.map((option) =>
                       renderChip({
                         key: `work-${option}`,
@@ -935,7 +1217,7 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Work area</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundWorkOptions.map((option) =>
                       renderChip({
                         key: option,
@@ -946,7 +1228,7 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Work rhythm</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundWorkRhythmOptions.map((option) =>
                       renderChip({
                         key: option,
@@ -957,11 +1239,21 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                 </>
-              ))}
-              {renderSectionCard("Volunteering & community", "Share broad community interests without naming exact organisations. Organisation names should remain optional and private by default if added later.", "ðŸ¤", (
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "background-community",
+                title: "Volunteering & community",
+                copy: "Share broad community interests without naming exact organisations. Organisation names should remain optional and private by default if added later.",
+                icon: "ðŸ¤",
+                open: openPreferenceDetailGroups.includes("background-community"),
+                onToggle: () => togglePreferenceDetailGroup("background-community"),
+                selectedCount: backgroundGroupCounts["background-community"],
+                totalCount: backgroundCommunityOptions.length,
+                children: (
                 <>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundVisibilityOptions.map((option) =>
                       renderChip({
                         key: `community-${option}`,
@@ -973,7 +1265,7 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Community areas</Text>
-                  <View style={styles.chipGrid}>
+                  <View style={responsiveChipGridStyle}>
                     {backgroundCommunityOptions.map((option) =>
                       renderChip({
                         key: option,
@@ -984,12 +1276,22 @@ export default function UserPreferencesScreen() {
                     )}
                   </View>
                 </>
-              ))}
-              {renderSectionCard("Prototype matching notes", "Later, this can help suggest study groups, volunteering meetups, or shared industry conversation starters. No production recommendation engine is implied yet.", "ðŸ§­", (
-                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                  Work, study, and life context should stay optional, broad, and easy to hide. Tester feedback will decide whether this feels useful and safe.
-                </Text>
-              ))}
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "background-notes",
+                title: "Prototype matching notes",
+                copy: "How broad context could help later, without adding a production recommendation engine.",
+                icon: "ðŸ§­",
+                open: openPreferenceDetailGroups.includes("background-notes"),
+                onToggle: () => togglePreferenceDetailGroup("background-notes"),
+                totalCount: 1,
+                children: (
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                    Work, study, and life context should stay optional, broad, and easy to hide. Later, this can help suggest study groups, volunteering meetups, or shared industry conversation starters. Tester feedback will decide whether this feels useful and safe.
+                  </Text>
+                ),
+              })}
             </View>
           </View>
         ) : null}
@@ -1016,8 +1318,18 @@ export default function UserPreferencesScreen() {
                 NSN uses these as comfort preferences, not assumptions. You control what appears publicly.
               </Text>
             </View>
-            {renderSectionCard("Visibility", "Choose how this section appears. Default is private/local-only.", "🔒", (
-              <View style={styles.chipGrid}>
+            {renderExpandableSectionCard({
+              id: "calendar-visibility",
+              title: "Visibility",
+              copy: "Choose how this section appears. Default is private/local-only.",
+              icon: "🔒",
+              open: openPreferenceDetailGroups.includes("calendar-visibility"),
+              onToggle: () => togglePreferenceDetailGroup("calendar-visibility"),
+              selectedCount: calendarMomentVisibility === "Private" ? 0 : 1,
+              totalCount: calendarMomentVisibilityOptions.length,
+              wide: false,
+              children: (
+              <View style={responsiveChipGridStyle}>
                 {calendarMomentVisibilityOptions.map((option) =>
                   renderChip({
                     key: option,
@@ -1028,8 +1340,19 @@ export default function UserPreferencesScreen() {
                   })
                 )}
               </View>
-            ))}
-            {renderSectionCard("Custom moment", "Add a local, cultural, religious, or personal moment. This stays local in the prototype and does not sync to a calendar.", "✨", (
+              ),
+            })}
+            {renderExpandableSectionCard({
+              id: "calendar-custom",
+              title: "Custom moment",
+              copy: "Add a local, cultural, religious, or personal moment. This stays local in the prototype and does not sync to a calendar.",
+              icon: "✨",
+              open: openPreferenceDetailGroups.includes("calendar-custom"),
+              onToggle: () => togglePreferenceDetailGroup("calendar-custom"),
+              selectedCount: customCalendarMoments.length,
+              totalCount: 1,
+              wide: false,
+              children: (
               <>
                 <View style={[styles.searchBox, isDay && styles.dayInput]}>
                   <TextInput
@@ -1047,36 +1370,63 @@ export default function UserPreferencesScreen() {
                   <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>Add local moment</Text>
                 </TouchableOpacity>
               </>
-            ))}
+              ),
+            })}
             {calendarSearch.trim() ? (
               renderSectionCard("Search results", "Matching holidays, cultural events, local festivals, personal seasons, and keywords.", "🔎", (
                 calendarSearchResults.length ? <View style={styles.momentStack}>{calendarSearchResults.map(renderCalendarMoment)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching moment yet. Try another holiday, festival, observance, or keyword.</Text>
               ))
             ) : (
-              <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
-                {calendarMomentGroups.map((group) =>
-                  renderSectionCard(group.title, group.copy, group.icon, (
-                    <View style={styles.momentStack}>
-                      {getCalendarMomentGroupOptions(group.id).map(renderCalendarMoment)}
-                      {group.id === "personal" && customCalendarMoments.map((moment) =>
-                        renderCalendarMoment({
-                          id: moment.id,
-                          label: moment.label,
-                          group: "personal",
-                          icon: "✨",
-                          copy: "Custom calendar moment saved locally in this prototype.",
-                        })
-                      )}
-                    </View>
-                  ))
-                )}
+              <View style={responsiveCardGridStyle}>
+                {calendarMomentGroups.map((group) => {
+                  const options = getCalendarMomentGroupOptions(group.id);
+                  const customOptions = group.id === "personal" ? customCalendarMoments : [];
+                  const selectedCount = calendarGroupSelectedCounts[group.id];
+                  const totalCount = options.length + customOptions.length;
+                  const isOpen = openCalendarGroups.includes(group.id);
+
+                  return renderExpandableSectionCard({
+                    id: `calendar-${group.id}`,
+                    title: group.title,
+                    copy: group.copy,
+                    icon: group.icon,
+                    open: isOpen,
+                    onToggle: () => toggleCalendarGroup(group.id),
+                    selectedCount,
+                    totalCount,
+                    children: (
+                      <View style={styles.momentStack}>
+                        {options.map(renderCalendarMoment)}
+                        {customOptions.map((moment) =>
+                          renderCalendarMoment({
+                            id: moment.id,
+                            label: moment.label,
+                            group: "personal",
+                            icon: "✨",
+                            copy: "Custom calendar moment saved locally in this prototype.",
+                          })
+                        )}
+                      </View>
+                    ),
+                  });
+                })}
               </View>
             )}
-            {renderSectionCard("Prototype recommendation notes", "Later, these preferences can help suggest cultural festival ideas, quiet plans during busy holidays, alcohol-free or cafe options during observances, and local Sydney/North Shore moments.", "🧭", (
-              <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                No production calendar integration, public holiday feed, or event recommendation engine is connected yet.
-              </Text>
-            ))}
+            {renderExpandableSectionCard({
+              id: "calendar-notes",
+              title: "Prototype recommendation notes",
+              copy: "How these signals could help later, without implying a production recommendation engine.",
+              icon: "🧭",
+              open: openPreferenceDetailGroups.includes("calendar-notes"),
+              onToggle: () => togglePreferenceDetailGroup("calendar-notes"),
+              totalCount: 1,
+              wide: false,
+              children: (
+                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                  Later, these preferences can help suggest cultural festival ideas, quiet plans during busy holidays, alcohol-free or cafe options during observances, and local Sydney/North Shore moments. No production calendar integration, public holiday feed, or event recommendation engine is connected yet.
+                </Text>
+              ),
+            })}
           </View>
         ) : null}
 
@@ -1101,10 +1451,10 @@ export default function UserPreferencesScreen() {
             </View>
             {foodSearch.trim() ? (
               renderSectionCard("Search results", "Matching cuisines, foods, drinks, dietary needs, and avoidances.", "🔎", (
-                foodSearchResults.length ? <View style={styles.chipGrid}>{foodSearchResults.map(renderFoodChip)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching preference yet. Try another food, drink, cuisine, dietary need, or avoidance.</Text>
+                foodSearchResults.length ? <View style={responsiveChipGridStyle}>{foodSearchResults.map(renderFoodChip)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching preference yet. Try another food, drink, cuisine, dietary need, or avoidance.</Text>
               ))
             ) : (
-              <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+              <View style={responsiveCardGridStyle}>
                 {foodPreferenceGroups.map((group) => {
                   const options = getFoodBeverageOptionsByGroup(group.id);
                   const selectedCount = getFoodPreferenceGroupSelectedCount(foodBeveragePreferenceIds, group.id);
@@ -1135,7 +1485,7 @@ export default function UserPreferencesScreen() {
                       {isOpen ? (
                         <>
                           {group.ageSensitive ? <Text style={[styles.notice, isDay && styles.dayMutedText]}>Alcohol preferences are optional and only relevant for age-appropriate events.</Text> : null}
-                          <View style={styles.chipGrid}>{visibleOptions.map(renderFoodChip)}</View>
+                          <View style={responsiveChipGridStyle}>{visibleOptions.map(renderFoodChip)}</View>
                           {hiddenCount > 0 || showAll ? (
                             <TouchableOpacity activeOpacity={0.78} onPress={() => toggleFoodGroupLimit(group.id)} style={[styles.showMoreButton, isDay && styles.dayChip]} accessibilityRole="button" accessibilityLabel={showAll ? `Show fewer ${group.title} options` : `Show more ${group.title} options`}>
                               <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>{showAll ? "Show fewer" : `Show ${hiddenCount} more`}</Text>
@@ -1170,15 +1520,22 @@ export default function UserPreferencesScreen() {
               <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Selected interests</Text>
               {renderSummary(selectedInterestLabels, "No hobbies or interests selected yet.")}
             </View>
-            {renderSectionCard("Comfort modifiers", "Mark how each selected interest feels. These labels are prototype comfort signals for future matching and event planning.", "🌿", (
+            {renderSectionCard(interestComfortModifierTitle, "Mark how each selected interest feels. These labels are prototype comfort signals for future matching and event planning.", "🌿", (
               activeInterestForComfort ? (
                 <>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalChipRow}>
-                    {selectedInterestOptions.slice(0, 12).map((option) =>
-                      renderChip({ key: option.id, label: option.label, icon: option.icon, active: activeInterestForComfort.id === option.id, onPress: () => setActiveInterestComfortId(option.id) })
+                  <View style={styles.interestComfortTabRow}>
+                    {selectedInterestOptions.map((option) =>
+                      renderChip({
+                        key: option.id,
+                        label: option.label,
+                        icon: option.icon,
+                        active: activeInterestForComfort.id === option.id,
+                        onPress: () => setActiveInterestComfortId(option.id),
+                        style: styles.interestComfortTabChip,
+                      })
                     )}
-                  </ScrollView>
-                  <View style={styles.chipGrid}>
+                  </View>
+                  <View style={[responsiveChipGridStyle, styles.interestComfortModifierGrid]}>
                     {interestComfortTags.map((tag) =>
                       renderChip({
                         key: tag.id,
@@ -1187,6 +1544,7 @@ export default function UserPreferencesScreen() {
                         onPress: () => toggleInterestComfortTag(activeInterestForComfort.id, tag.id),
                         meta: tag.copy,
                         wide: true,
+                        style: interestComfortModifierStyle,
                       })
                     )}
                   </View>
@@ -1194,13 +1552,13 @@ export default function UserPreferencesScreen() {
               ) : (
                 <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Select an interest below to add comfort modifiers.</Text>
               )
-            ))}
+            ), styles.interestComfortFullCard)}
             {interestSearch.trim() ? (
               renderSectionCard("Search results", "Matching interests, genres, categories, and aliases.", "🔎", (
-                interestSearchResults.length ? <View style={styles.chipGrid}>{interestSearchResults.map(renderInterestChip)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching interest yet. Try another activity, genre, category, or local place.</Text>
+                interestSearchResults.length ? <View style={responsiveChipGridStyle}>{interestSearchResults.map(renderInterestChip)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching interest yet. Try another activity, genre, category, or local place.</Text>
               ))
             ) : (
-              <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+              <View style={responsiveCardGridStyle}>
                 {interestCategories.map((category) => {
                   const options = getInterestOptionsByCategory(category.id);
                   const selectedCount = getInterestCategorySelectedCount(interestPreferenceIds, category.id);
@@ -1230,7 +1588,7 @@ export default function UserPreferencesScreen() {
                       </TouchableOpacity>
                       {isOpen ? (
                         <>
-                          <View style={styles.chipGrid}>{visibleOptions.map(renderInterestChip)}</View>
+                          <View style={responsiveChipGridStyle}>{visibleOptions.map(renderInterestChip)}</View>
                           {hiddenCount > 0 || showAll ? (
                             <TouchableOpacity activeOpacity={0.78} onPress={() => toggleInterestCategoryLimit(category.id)} style={[styles.showMoreButton, isDay && styles.dayChip]} accessibilityRole="button" accessibilityLabel={showAll ? `Show fewer ${category.title} options` : `Show more ${category.title} options`}>
                               <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>{showAll ? "Show fewer" : `Show ${hiddenCount} more`}</Text>
@@ -1256,16 +1614,26 @@ export default function UserPreferencesScreen() {
                 </Text>
               </>
             ))}
-            <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
-              {["Transport method", "Travel comfort"].map((group) =>
-                renderSectionCard(group, group === "Transport method" ? "How you are most likely to arrive." : "Route, timing, and accessibility comfort.", group === "Transport method" ? "🧭" : "🌿", (
-                  <View style={styles.chipGrid}>
-                    {transportationPreferenceDetails
-                      .filter((option) => option.group === group)
-                      .map((option) => renderPreferenceDetailChip(option, transportationPreferences, toggleTransportationPreference))}
-                  </View>
-                ))
-              )}
+            <View style={responsiveCardGridStyle}>
+              {["Transport method", "Travel comfort"].map((group) => {
+                const options = transportationPreferenceDetails.filter((option) => option.group === group);
+
+                return renderExpandableSectionCard({
+                  id: `transport-${group}`,
+                  title: group,
+                  copy: group === "Transport method" ? "How you are most likely to arrive." : "Route, timing, and accessibility comfort.",
+                  icon: group === "Transport method" ? "🧭" : "🌿",
+                  open: openPreferenceDetailGroups.includes(`transport-${group}`),
+                  onToggle: () => togglePreferenceDetailGroup(`transport-${group}`),
+                  selectedCount: getPreferenceDetailGroupCount(transportationPreferenceDetails, transportationPreferences, group),
+                  totalCount: options.length,
+                  children: (
+                    <View style={responsiveChipGridStyle}>
+                      {options.map((option) => renderPreferenceDetailChip(option, transportationPreferences, toggleTransportationPreference))}
+                    </View>
+                  ),
+                });
+              })}
             </View>
           </View>
         ) : null}
@@ -1280,16 +1648,26 @@ export default function UserPreferencesScreen() {
                 </Text>
               </>
             ))}
-            <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
-              {["Communication style", "Timing and pace"].map((group) =>
-                renderSectionCard(group, group === "Communication style" ? "Chat, calls, reminders, and planning clarity." : "Pace and timing expectations that keep plans low-pressure.", group === "Communication style" ? "📝" : "⏰", (
-                  <View style={styles.chipGrid}>
-                    {meetupContactPreferenceDetails
-                      .filter((option) => option.group === group)
-                      .map((option) => renderPreferenceDetailChip(option, meetupContactPreferences, toggleMeetupContactPreference))}
-                  </View>
-                ))
-              )}
+            <View style={responsiveCardGridStyle}>
+              {["Communication style", "Timing and pace"].map((group) => {
+                const options = meetupContactPreferenceDetails.filter((option) => option.group === group);
+
+                return renderExpandableSectionCard({
+                  id: `contact-${group}`,
+                  title: group,
+                  copy: group === "Communication style" ? "Chat, calls, reminders, and planning clarity." : "Pace and timing expectations that keep plans low-pressure.",
+                  icon: group === "Communication style" ? "📝" : "⏰",
+                  open: openPreferenceDetailGroups.includes(`contact-${group}`),
+                  onToggle: () => togglePreferenceDetailGroup(`contact-${group}`),
+                  selectedCount: getPreferenceDetailGroupCount(meetupContactPreferenceDetails, meetupContactPreferences, group),
+                  totalCount: options.length,
+                  children: (
+                    <View style={responsiveChipGridStyle}>
+                      {options.map((option) => renderPreferenceDetailChip(option, meetupContactPreferences, toggleMeetupContactPreference))}
+                    </View>
+                  ),
+                });
+              })}
             </View>
           </View>
         ) : null}
@@ -1304,7 +1682,7 @@ export default function UserPreferencesScreen() {
                 </Text>
               </>
             ))}
-            <View style={[styles.cardGrid, isWide && styles.cardGridWide]}>
+            <View style={responsiveCardGridStyle}>
               {renderSectionCard("Local area", "Your suburb or local area is used as a gentle prototype signal for nearby plans.", "📍", (
                 <>
                   <Text style={[styles.locationValue, isDay && styles.dayTitle]}>{suburb || "Sydney North Shore"}</Text>
@@ -1314,27 +1692,37 @@ export default function UserPreferencesScreen() {
                 </>
               ))}
               {renderSectionCard("I am here for", "Keep intent lightweight and changeable.", "🧭", (
-                <View style={styles.chipGrid}>
+                <View style={responsiveChipGridStyle}>
                   {intentOptions.map((option) => renderChip({ key: option, label: option, active: intent === option, onPress: () => saveSoftHelloMvpState({ intent: option }) }))}
                 </View>
               ))}
               {renderSectionCard("Location privacy and discovery", "These controls are prototype preference signals for local area display and nearby suggestions.", "🗺️", (
-                <View style={styles.chipGrid}>
+                <View style={responsiveChipGridStyle}>
                   {renderChip({ key: "show-area", label: "Show suburb/local area", active: showSuburbArea, onPress: () => saveSoftHelloMvpState({ showSuburbArea: !showSuburbArea }), wide: true })}
                   {renderChip({ key: "approximate", label: "Use approximate location", active: useApproximateLocation, onPress: () => setUseApproximateLocation(!useApproximateLocation), wide: true })}
                   {renderChip({ key: "distance", label: "Show distance in meetups", active: showDistanceInMeetups, onPress: () => setShowDistanceInMeetups(!showDistanceInMeetups), wide: true })}
                   {renderChip({ key: "nearby", label: "Prefer nearby meetups", active: homeNearbyOnly, onPress: () => saveSoftHelloMvpState({ homeNearbyOnly: !homeNearbyOnly }), wide: true })}
                 </View>
               ))}
-              {["Area comfort", "Venue comfort", "Time comfort", "Location privacy"].map((group) =>
-                renderSectionCard(group, group === "Location privacy" ? "Broad sharing controls for safer local context." : "Venue and area signals for easier meetup suggestions.", group === "Location privacy" ? "🔒" : "🌿", (
-                  <View style={styles.chipGrid}>
-                    {locationComfortPreferenceDetails
-                      .filter((option) => option.group === group)
-                      .map((option) => renderPreferenceDetailChip(option, locationComfortPreferences, toggleLocationComfortPreference))}
-                  </View>
-                ))
-              )}
+              {["Area comfort", "Venue comfort", "Time comfort", "Location privacy"].map((group) => {
+                const options = locationComfortPreferenceDetails.filter((option) => option.group === group);
+
+                return renderExpandableSectionCard({
+                  id: `location-${group}`,
+                  title: group,
+                  copy: group === "Location privacy" ? "Broad sharing controls for safer local context." : "Venue and area signals for easier meetup suggestions.",
+                  icon: group === "Location privacy" ? "🔒" : "🌿",
+                  open: openPreferenceDetailGroups.includes(`location-${group}`),
+                  onToggle: () => togglePreferenceDetailGroup(`location-${group}`),
+                  selectedCount: getPreferenceDetailGroupCount(locationComfortPreferenceDetails, locationComfortPreferences, group),
+                  totalCount: options.length,
+                  children: (
+                    <View style={responsiveChipGridStyle}>
+                      {options.map((option) => renderPreferenceDetailChip(option, locationComfortPreferences, toggleLocationComfortPreference))}
+                    </View>
+                  ),
+                });
+              })}
             </View>
           </View>
         ) : null}
@@ -1349,7 +1737,7 @@ export default function UserPreferencesScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 96, gap: 14 },
+  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 128, gap: 14 },
   contentWide: { width: "100%", maxWidth: 1220, alignSelf: "center", paddingHorizontal: 24, paddingTop: 18 },
   topActions: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)" },
@@ -1372,14 +1760,14 @@ const styles = StyleSheet.create({
   overviewGrid: { gap: 12 },
   overviewGridWide: { flexDirection: "row", flexWrap: "wrap" },
   overviewCard: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 12, flexDirection: "row", alignItems: "flex-start" },
-  overviewCardWide: { width: "32%", minWidth: 320, flexGrow: 1 },
+  overviewCardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 320 },
   overviewIcon: { fontSize: 27, lineHeight: 34 },
   overviewValue: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginTop: 2 },
   preferenceStack: { gap: 14 },
   cardGrid: { gap: 14 },
   cardGridWide: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start" },
   card: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 13 },
-  cardWide: { width: "48%", minWidth: 360, flexGrow: 1 },
+  cardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 320 },
   cardHeader: { flexDirection: "row", alignItems: "flex-start", gap: 11 },
   cardIcon: { width: 34, fontSize: 24, lineHeight: 30, textAlign: "center" },
   cardIconSymbol: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center" },
@@ -1387,12 +1775,20 @@ const styles = StyleSheet.create({
   cardTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
   cardCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 2 },
   chipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
-  horizontalChipRow: { gap: 8, paddingBottom: 2 },
+  compactChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  interestComfortFullCard: { width: "100%", flexBasis: "100%", maxWidth: "100%", minWidth: 0, alignSelf: "stretch", overflow: "visible" },
+  interestComfortTabRow: { width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 8, paddingBottom: 2, overflow: "visible" },
+  interestComfortTabChip: { flexShrink: 1 },
+  interestComfortModifierGrid: { width: "100%", overflow: "visible" },
   chip: { minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "flex-start", justifyContent: "center", paddingHorizontal: 12, paddingVertical: 8, maxWidth: "100%" },
-  chipWide: { flexBasis: 210, flexGrow: 1 },
+  chipWide: { flexBasis: 160, flexGrow: 1, flexShrink: 1 },
   chipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   chipText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   chipMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "700", lineHeight: 16, marginTop: 2 },
+  inlinePreferenceStack: { gap: 10 },
+  inlinePreferenceGroup: { borderRadius: 15, borderWidth: 1, borderColor: "#3C5277", backgroundColor: "rgba(255,255,255,0.025)", padding: 12, gap: 9 },
+  inlinePreferenceTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  inlinePreferenceCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17 },
   momentStack: { gap: 10 },
   momentRow: { borderRadius: 15, borderWidth: 1, borderColor: "#3C5277", backgroundColor: "rgba(255,255,255,0.025)", padding: 12, gap: 10 },
   searchCard: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 12 },
@@ -1405,7 +1801,7 @@ const styles = StyleSheet.create({
   notice: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
   showMoreButton: { minHeight: 38, alignSelf: "flex-start", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
   optionCard: { minHeight: 88, borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, flexDirection: "row", alignItems: "center", gap: 13, padding: 14 },
-  optionCardWide: { width: "31%", minWidth: 300, flexGrow: 1 },
+  optionCardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 300 },
   optionCardActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   optionEmoji: { width: 34, fontSize: 24, lineHeight: 30, textAlign: "center" },
   optionTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },

@@ -1,5 +1,6 @@
-import { Image, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
+import { ProfileAvatar, getEffectiveBlurLevel } from "@/components/profile-avatar";
 import type {
   CommunicationPreference,
   ContactPreference,
@@ -14,6 +15,8 @@ import type {
 import { useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import type { SoftHelloComfortPreference } from "@/lib/softhello-mvp";
+
+export { getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-avatar";
 
 export type ProfileVisibilityPreviewProps = {
   displayName: string;
@@ -54,17 +57,8 @@ export type ProfileVisibilityPreviewProps = {
   vibes?: string[];
   showVibes?: boolean;
   isDay?: boolean;
+  isRtl?: boolean;
 };
-
-export function getBlurRadius(level: NsnBlurLevel) {
-  if (level === "Soft blur") return 6;
-  if (level === "Strong blur") return 18;
-  return 12;
-}
-
-export function getEffectiveBlurLevel(comfortMode: NsnComfortMode, blurLevel: NsnBlurLevel, warmUpLowerBlur: boolean) {
-  return comfortMode === "Warm Up Mode" && warmUpLowerBlur ? "Soft blur" : blurLevel;
-}
 
 export function ProfileVisibilityPreview({
   displayName,
@@ -105,6 +99,7 @@ export function ProfileVisibilityPreview({
   vibes = [],
   showVibes = false,
   isDay = false,
+  isRtl = false,
 }: ProfileVisibilityPreviewProps) {
   const { brandTheme } = useAppSettings();
   const name = displayName.trim() || "NSN member";
@@ -120,7 +115,6 @@ export function ProfileVisibilityPreview({
     formatNamePart(middleName, middleNameDisplay, showMiddleName),
     formatNamePart(lastName, lastNameDisplay, showLastName),
   ].filter(Boolean).join(" ");
-  const initial = name.charAt(0).toUpperCase() || "N";
   const visibleInterests = privateProfile || minimalProfileView || !showInterests ? [] : interests.slice(0, 4);
   const visibleComfort = privateProfile || minimalProfileView || !showComfortPreferences ? [] : comfortPreferences.slice(0, 3);
   const visibleContact = privateProfile || minimalProfileView || !showComfortPreferences ? [] : contactPreferences.slice(0, 3);
@@ -153,43 +147,45 @@ export function ProfileVisibilityPreview({
         isDay && styles.dayCard,
       ]}
     >
-      <View style={styles.header}>
-        <View style={styles.avatar}>
-          {profilePhotoUri ? (
-            <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} blurRadius={shouldBlur ? getBlurRadius(effectiveBlurLevel) : 0} />
-          ) : (
-            <Text style={styles.avatarInitial}>{initial}</Text>
-          )}
-        </View>
+      <View style={[styles.header, isRtl && styles.rtlRow]}>
+        <ProfileAvatar
+          displayName={name}
+          profilePhotoUri={profilePhotoUri}
+          size={64}
+          privateProfile={privateProfile}
+          forceBlur={shouldBlur}
+          effectiveBlurLevel={effectiveBlurLevel}
+          isDay={isDay}
+        />
         <View style={styles.identity}>
-          <Text style={[styles.name, brandTheme.typography.sectionTitle, isDay && styles.dayTitle]}>{privateProfile ? "Private NSN member" : publicName}</Text>
-          <Text style={[styles.status, brandTheme.typography.caption, isDay && styles.dayMuted]}>{status}</Text>
+          <Text style={[styles.name, brandTheme.typography.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{privateProfile ? "Private NSN member" : publicName}</Text>
+          <Text style={[styles.status, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>{status}</Text>
         </View>
       </View>
 
       {privateProfile ? (
-        <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>
+        <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>
           Only your RSVP and safety basics are visible until you choose to share more.
         </Text>
       ) : (
         <View style={styles.detailStack}>
-          {showSuburbArea && suburb.trim() ? <Text style={[styles.detail, brandTheme.typography.label, isDay && styles.dayTitle]}>{suburb.trim()}</Text> : null}
-          {showAge && age ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Age: {age}</Text> : null}
+          {showSuburbArea && suburb.trim() ? <Text style={[styles.detail, brandTheme.typography.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{suburb.trim()}</Text> : null}
+          {showAge && age ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Age: {age}</Text> : null}
           {showPreferredAgeRange && preferredAgeMin && preferredAgeMax ? (
-            <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Preferred age range: {preferredAgeMin}-{preferredAgeMax}</Text>
+            <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Preferred age range: {preferredAgeMin}-{preferredAgeMax}</Text>
           ) : null}
-          {showGender && gender !== "Not specified" ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Gender: {gender}</Text> : null}
-          {visibleAbout ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>{visibleAbout}</Text> : null}
-          {visibleVibes.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Vibes: {visibleVibes.join(", ")}</Text> : null}
-          {visibleInterests.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Interests: {visibleInterests.join(", ")}</Text> : null}
-          {visibleComfort.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Comfort: {visibleComfort.join(", ")}</Text> : null}
-          {visibleContact.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Contact: {visibleContact.join(", ")}</Text> : null}
-          {visibleSocialEnergy ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Social energy: {visibleSocialEnergy}</Text> : null}
-          {visibleCommunication.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Communication: {visibleCommunication.join(", ")}</Text> : null}
-          {visibleGroupSize ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Group size: {visibleGroupSize}</Text> : null}
-          {visiblePhotoRecording.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Photo & recording: {visiblePhotoRecording.join(", ")}</Text> : null}
-          {verifiedButPrivate ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Verified, but private: trust status can be checked without opening the full profile.</Text> : null}
-          {minimalProfileView ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted]}>Minimal view is on, so only basics are shown.</Text> : null}
+          {showGender && gender !== "Not specified" ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Gender: {gender}</Text> : null}
+          {visibleAbout ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>{visibleAbout}</Text> : null}
+          {visibleVibes.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Vibes: {visibleVibes.join(", ")}</Text> : null}
+          {visibleInterests.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Interests: {visibleInterests.join(", ")}</Text> : null}
+          {visibleComfort.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Comfort: {visibleComfort.join(", ")}</Text> : null}
+          {visibleContact.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Contact: {visibleContact.join(", ")}</Text> : null}
+          {visibleSocialEnergy ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Social energy: {visibleSocialEnergy}</Text> : null}
+          {visibleCommunication.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Communication: {visibleCommunication.join(", ")}</Text> : null}
+          {visibleGroupSize ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Group size: {visibleGroupSize}</Text> : null}
+          {visiblePhotoRecording.length ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Photo & recording: {visiblePhotoRecording.join(", ")}</Text> : null}
+          {verifiedButPrivate ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Verified, but private: trust status can be checked without opening the full profile.</Text> : null}
+          {minimalProfileView ? <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>Minimal view is on, so only basics are shown.</Text> : null}
         </View>
       )}
     </View>
@@ -204,20 +200,11 @@ const styles = StyleSheet.create({
     backgroundColor: nsnColors.surface,
     padding: 14,
     gap: 12,
+    width: "100%",
+    alignSelf: "center",
   },
   dayCard: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   header: { flexDirection: "row", alignItems: "center", gap: 12 },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    overflow: "hidden",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: nsnColors.primary,
-  },
-  avatarImage: { width: 64, height: 64, borderRadius: 32 },
-  avatarInitial: { color: "#FFFFFF", fontSize: 27, fontWeight: "900" },
   identity: { flex: 1 },
   name: { color: nsnColors.text, fontSize: 16, fontWeight: "900", lineHeight: 22 },
   status: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 2 },
@@ -226,4 +213,6 @@ const styles = StyleSheet.create({
   copy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
   dayTitle: { color: "#0B1220" },
   dayMuted: { color: "#53677A" },
+  rtlRow: { flexDirection: "row-reverse" },
+  rtlText: { textAlign: "right", writingDirection: "rtl" },
 });

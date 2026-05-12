@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -6,6 +6,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, type DietaryPreference, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
+import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel, getPreferenceChipIcon, getSettingsPreferenceLayout } from "@/lib/preferences-layout";
 
 const dietaryOptions: DietaryPreference[] = [
   "No preference",
@@ -22,8 +23,11 @@ const dietaryOptions: DietaryPreference[] = [
 
 export default function FoodPreferencesScreen() {
   const router = useRouter();
-  const { appLanguage, dietaryPreferences, isNightMode, saveSoftHelloMvpState } = useAppSettings();
+  const { width } = useWindowDimensions();
+  const { appLanguage, dietaryPreferences, homeLayoutDensity, isNightMode, saveSoftHelloMvpState } = useAppSettings();
   const isDay = !isNightMode;
+  const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
+  const isWide = preferenceLayout.isDesktop;
   const preferenceCopy = getProfilePreferenceCopy(getLanguageBase(appLanguage));
   const copy = preferenceCopy.food;
   const backLabel = preferenceCopy.back ?? getProfilePreferenceCopy("English").back;
@@ -41,35 +45,46 @@ export default function FoodPreferencesScreen() {
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
-      <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={[styles.content, isWide && styles.contentWide, { gap: preferenceLayout.sectionGap }]} showsVerticalScrollIndicator={false}>
         <TouchableOpacity activeOpacity={0.75} onPress={() => router.replace({ pathname: "/(tabs)/profile", params: { menu: "preferences" } })} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={backLabel}>
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 
-        <View style={[styles.headerCard, isDay && styles.dayCard]}>
+        <View style={[styles.headerCard, { borderRadius: preferenceLayout.cardRadius, padding: preferenceLayout.cardPadding }, isDay && styles.dayCard]}>
           <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
           <Text style={[styles.copy, isDay && styles.dayMutedText]}>
             {copy.copy}
           </Text>
         </View>
 
-        <View style={[styles.card, isDay && styles.dayCard]}>
+        <View style={[styles.card, { borderRadius: preferenceLayout.cardRadius, gap: preferenceLayout.sectionGap, padding: preferenceLayout.cardPadding }, isDay && styles.dayCard]}>
           <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.dietary}</Text>
-          <View style={styles.optionGrid}>
+          <View style={[styles.optionGrid, { gap: preferenceLayout.optionGap }]}>
             {dietaryOptions.map((option) => {
               const active = dietaryPreferences.includes(option);
               const localizedOption = copy.dietaryOptions?.[option] ?? option;
+              const icon = getPreferenceChipIcon(option);
+              const chipLabel = active
+                ? formatSelectedPreferenceChipLabel(localizedOption, icon)
+                : formatPreferenceChipLabel(localizedOption, icon);
 
               return (
                 <TouchableOpacity
                   key={option}
                   activeOpacity={0.82}
                   onPress={() => toggleDietaryPreference(option)}
-                  style={[styles.chip, isDay && styles.dayChip, active && styles.chipActive]}
+                  style={[
+                    styles.chip,
+                    isWide ? preferenceLayout.optionCard : preferenceLayout.fullWidthCard,
+                    { minHeight: preferenceLayout.minTapTarget },
+                    isDay && styles.dayChip,
+                    active && styles.chipActive,
+                  ]}
                   accessibilityRole="button"
+                  accessibilityLabel={chipLabel}
                   accessibilityState={{ selected: active }}
                 >
-                  <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]}>{localizedOption}</Text>
+                  <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]}>{chipLabel}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -84,7 +99,8 @@ export default function FoodPreferencesScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 34, gap: 16 },
+  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 112, gap: 16 },
+  contentWide: { width: "100%", maxWidth: 1040, alignSelf: "center", paddingHorizontal: 24, paddingTop: 18 },
   backButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)" },
   dayIconButton: { backgroundColor: "#EEF3F4" },
   headerCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
