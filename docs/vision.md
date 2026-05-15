@@ -1,5 +1,7 @@
 # SoftHello Vision
 
+> Emotional mission and long-term north star. For current NSN prototype status, see [`current-state.md`](current-state.md). For short non-negotiable rules, see [`core-principles.md`](core-principles.md).
+
 SoftHello exists so people never have to feel alone in a crowded room.
 
 It is built for the person who wants connection, but not pressure. The person who may be shy, introverted, privacy-conscious, socially tired, newly arrived, quietly curious, or simply done with apps that make human connection feel like a performance.

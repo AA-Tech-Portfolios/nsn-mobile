@@ -1,14 +1,16 @@
 # SoftHello Safety and Trust
 
-> Future/global context only: North Shore Nights (NSN) remains the active identity for this repository and Sydney/North Shore pilot.
+> Future/global context only: North Shore Nights (NSN) remains the active identity for this repository and Sydney/North Shore pilot. Current implemented status lives in [`current-state.md`](current-state.md).
 
 SoftHello focuses on safety through design, not punishment. The product should reduce exposure, avoid pressure mechanics, and make trust visible before interaction moves toward meeting.
+
+This document describes the intended safety model. It must not be used to imply that NSN currently has production moderation, real verification, backend trust enforcement, or emergency response.
 
 ## Safety Principles
 
 - Users control how visible they are.
 - Users can opt out of meetups, chats, and connections without needing to justify themselves.
-- Meeting requires verification.
+- Future real-world meeting flows require verification.
 - Block and report actions are always available.
 - Reports are structured and private.
 - Moderation should begin with proportionate, gentle responses where appropriate.
@@ -23,7 +25,7 @@ SoftHello focuses on safety through design, not punishment. The product should r
 | Level 2 | Real Person Verified | Live selfie or equivalent human check. | Required before in-person meeting eligibility. |
 | Level 3 | Identity Verified | Optional ID verification confirming name and age. | Post-MVP unless required for a specific high-trust flow. |
 
-Real selfie and ID verification require a third-party provider or backend integration before production. The MVP can model verification state in the UI, but it should not claim real verification unless the provider flow exists.
+Real selfie and ID verification require a third-party provider, backend integration, compliance decisions, and safety/legal review before production. The current NSN prototype may model verification state in the UI, but it should not claim real verification.
 
 ## Meeting Safety Rule
 
@@ -34,7 +36,7 @@ Before meeting in person:
 - Higher-trust meetups may require Identity Verified in a later release.
 - Users should see a clear safety reminder before joining or attending.
 
-For v1.1, this rule should be visible in onboarding, event details, and pre-meetup chat surfaces.
+For v1.1, this rule can be visible in onboarding, event details, and pre-meetup chat surfaces as safety copy. Production enforcement needs real verification and backend access rules.
 
 ## Block and Report
 
@@ -48,11 +50,11 @@ Report concern:
 
 - Structured and calm.
 - Allows users to describe safety, harassment, fake profile, underage concern, spam, or other issue.
-- Can trigger moderation review, temporary limits, or additional verification.
+- Can trigger moderation review, temporary limits, or additional verification in a future production system.
 
 ## Moderation Approach
 
-SoftHello moderation should be proportional:
+SoftHello moderation should be proportional once a real moderation workflow exists:
 
 - Gentle warning for minor first-time behavior.
 - Temporary limits or timeouts for repeated boundary issues.
@@ -82,7 +84,7 @@ SoftHello is an adults-only product. v1.1 should include:
 - Safety copy stating that underage users are not allowed.
 - Report option for suspected underage accounts.
 
-Production 18+ compliance may require stronger age verification depending on launch region, app store policy, and legal review.
+Production 18+ compliance may require stronger age verification depending on launch region, app store policy, and legal review. The current NSN prototype only has local age-entry safeguards.
 
 ## Progressive Reveal Safety
 
@@ -93,4 +95,10 @@ Progressive reveal gives users control over exposure:
 - Stage 2: Partial reveal after conversation.
 - Stage 3: Full reveal after mutual connection or consent.
 
-For v1.1, the implementable minimum is blurred vs visible profile control with clear consent copy. Full staged reveal can follow after the underlying connection and consent model exists.
+For v1.1, the implementable minimum is blurred vs visible profile control with clear consent copy. Full staged reveal can follow only after the underlying connection model, mutual consent rules, and backend visibility enforcement exist.
+
+## See Also
+
+- [`current-state.md`](current-state.md) - current NSN prototype status.
+- [`core-principles.md`](core-principles.md) - non-negotiable product rules.
+- [`softhello-feature-map.md`](softhello-feature-map.md) - MVP/post-MVP/future boundaries.

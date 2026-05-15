@@ -4,6 +4,8 @@ North Shore Nights (NSN) is the active identity for this repository: a local Syd
 
 The app is not launch-ready. The goal of this roadmap is readiness for controlled alpha testing, not public release.
 
+For what is actually implemented today, see [`current-state.md`](current-state.md). Items below are readiness requirements and should not be read as current production capability.
+
 ## Readiness Principles
 
 - Keep NSN separate from SoftHello in user-facing screens, docs, and test scripts.
@@ -47,6 +49,8 @@ Phase 1 focuses on first impressions, onboarding, navigation, and cleanup. A new
 ### 2. Account creation options
 
 **Must-have for alpha**
+
+Current status: account/auth behaviour is still prototype/scaffolded. Treat this section as a requirement before controlled alpha accounts are used, not as a shipped capability.
 
 - Support email/password account creation and sign-in.
 - Support Google sign-in.
@@ -171,6 +175,8 @@ Phase 2 focuses on the two central product jobs: creating a clear local meetup a
 
 **Must-have for alpha**
 
+Current status: event membership and RSVP-like behaviour are local prototype states. A real alpha needs honest labels or backend persistence before users rely on RSVP state.
+
 - Make RSVP states clear and reversible:
   - Interested.
   - Going.
@@ -202,6 +208,8 @@ Phase 2 focuses on the two central product jobs: creating a clear local meetup a
 ### 8. Privacy and profile settings clarity
 
 **Must-have for alpha**
+
+Current status: many profile/privacy controls exist locally. Backend-enforced privacy, real trust gates, and cross-user visibility rules are still future work.
 
 - Make profile visibility understandable before users RSVP.
 - Clearly separate:
@@ -240,6 +248,7 @@ Phase 3 makes the prototype testable with real people while keeping expectations
 
 - Update README and docs so NSN is the active product identity.
 - Keep SoftHello docs clearly marked as future/global context only.
+- Keep [`current-state.md`](current-state.md) updated as the single source of truth for actual prototype status.
 - Add a short alpha tester guide covering:
   - What NSN is.
   - What works.
@@ -308,6 +317,8 @@ Phase 3 makes the prototype testable with real people while keeping expectations
 - Dead buttons and placeholders are removed, disabled, or labelled.
 - NSN docs are separated from SoftHello future/global context.
 - Alpha tester guide and manual QA checklist exist.
+
+If real auth is not included in the first controlled test, the tester guide must state that clearly and avoid asking testers to trust local/demo account states.
 
 ## Later Feature Parking Lot
 

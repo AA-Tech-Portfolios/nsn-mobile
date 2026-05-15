@@ -1,125 +1,63 @@
 # SoftHello UX Principles
 
-> Future/global context only: North Shore Nights (NSN) remains the active identity for this repository and Sydney/North Shore pilot.
+> Future/global context only: North Shore Nights (NSN) remains the active identity for this repository and Sydney/North Shore pilot. Current implemented status lives in [`current-state.md`](current-state.md).
 
-SoftHello should feel warm, calm, trustworthy, inclusive, and genuine. The experience should help users say hello at their own pace.
+This document defines UX behaviour and copy rules. It should not repeat the full mission from [`vision.md`](vision.md) or the non-negotiables from [`core-principles.md`](core-principles.md).
 
 ## Core UX Rules
 
 - No swiping.
-- No leaderboards.
-- No streaks.
-- No popularity metrics.
-- No forced calls.
-- No urgency to respond.
-- No public ratings or reviews.
+- No leaderboards, streaks, public ratings, or popularity metrics.
+- No forced calls or urgency to respond.
 - No pressure to reveal photos before the user is ready.
 - No pressure to attend, stay, or keep engaging when a group does not feel right.
+- No future safety, trust, verification, moderation, or AI feature should sound production-ready until the underlying system exists.
 
 ## Comfort-First Design
 
-SoftHello is designed for users with different social comfort levels, including neurodivergent users and users with social or communication anxiety.
+SoftHello and NSN should support different social comfort levels, including neurodivergent users and users with social or communication anxiety.
 
-The app should prioritize:
+Prioritise predictable interactions, text-first communication, flexible pacing, clear context before joining, consent-first visibility, small-group meetups, and respectful opt-outs.
 
-- Predictable interactions.
-- Reduced social pressure.
-- Text-first communication.
-- Flexible pacing.
-- Clear context before joining events or chats.
-- Small group meetups instead of large events.
-- Consent-first profile visibility.
-- Respectful opt-outs and group changes.
-
-Choosing not to attend should feel valid and supported. Users should be encouraged to skip, leave, or change groups before they feel forced into an experience they may not enjoy. The app should frame group fit as personal preference, not social success or failure.
+Choosing not to attend should feel valid. The app should frame group fit as personal preference, not social success or failure.
 
 ## Progressive Reveal
 
-Profile visibility should be treated as a consent and comfort feature, not a growth mechanic.
+Profile visibility is a consent and comfort feature, not a growth mechanic.
 
-Recommended stages:
-
-- Stage 0: Fully blurred profile.
-- Stage 1: Slight reveal after interaction.
-- Stage 2: Partial reveal after conversation.
-- Stage 3: Full reveal after mutual connection or consent.
-
-The MVP can start with blurred/visible controls and explain that profiles reveal only when users choose to reveal.
+The future SoftHello concept includes staged reveal, but the current NSN prototype only has local blur/visibility controls and profile preview settings. Full staged reveal needs a real connection model, mutual consent rules, and backend-enforced visibility before it can be treated as production behaviour.
 
 ## Availability and Comfort Signals
 
-Availability signals are optional, soft guidance. They should never become strict scheduling rules.
+Availability and comfort signals are optional guidance. They should never become strict scheduling rules or a reason to pressure someone.
 
-Examples:
-
-- Early bird.
-- Night owl.
-- Flexible.
-- Available now.
-- Taking it slow.
-- Busy but open later.
-
-Temporary status examples:
-
-- Taking a break this week.
-- Busy with exams.
-- Back soon.
-
-Optional notes can help set expectations, such as:
-
-- Busy with studies at the moment.
-- Working full-time, weekends are best.
-- Prefer relaxed meetups.
+Examples include early bird, night owl, flexible, available now, taking it slow, busy but open later, taking a break this week, or back soon.
 
 ## Comfort Settings
 
-Comfort settings should let users decide how energetic the app feels.
+Comfort settings should let users decide how energetic the app feels:
 
-- Daily motivational messages can appear when the app opens, but must be optional.
-- App animations should have a clear on/off setting for users who prefer a still interface.
-- Reduce-motion accessibility support should remain available even if decorative animations are later added.
+- Daily messages, music, atmosphere, widgets, and animations must be optional.
+- Decorative motion should respect reduce-motion settings.
+- Calm mode and low-light choices should help the app feel easier to sit with, not like a productivity target.
 
 ## Communication Preferences
 
-Users should be able to signal:
+Users should be able to signal text preferred, slower replies, small groups preferred, voice/video optional, clear plans preferred, or taking it slow.
 
-- Text preferred.
-- Slower replies.
-- Small groups preferred.
-- Voice or video optional.
-- Clear plans preferred.
-- Taking it slow.
-
-These preferences reduce misunderstandings and make social pacing explicit without making users justify themselves.
+These preferences reduce misunderstandings. They should not make users justify themselves.
 
 ## Event UX
 
-Events should reduce uncertainty. Event cards and details should show:
+Events should reduce uncertainty. Event cards and details should show enough context before a user joins: location or suburb, venue, time, group size, age group where relevant, vibe or comfort level, safety note, weather backup, and who is going when appropriate.
 
-- Location or suburb.
-- Venue.
-- Time.
-- Group size.
-- Age group.
-- Vibe or comfort level.
-- Safety note.
-- Backup plan if weather is bad.
-- Who is going, when appropriate.
-
-Small group events should be the default recommendation for v1.1.
+For the current NSN prototype, event membership and RSVP-like states are local/demo behaviours. Future SoftHello planning can describe richer flows, but docs should link back to [`current-state.md`](current-state.md) for what exists now.
 
 ## Tone and Copy
 
-SoftHello copy should be:
+Copy should be warm, plain, reassuring, short, non-judgmental, and consent-focused.
 
-- Warm.
-- Plain.
-- Reassuring.
-- Short.
-- Non-judgmental.
-- Consent-focused.
-
-Avoid language that sounds competitive, performative, urgent, or sales-like.
+Avoid language that sounds competitive, performative, urgent, corporate, or sales-like.
 
 Good examples:
 
@@ -130,3 +68,10 @@ Good examples:
 - It is okay if this group is not your group.
 - Find a group that feels more like your pace.
 - Safety first, so you can be yourself.
+
+## See Also
+
+- [`vision.md`](vision.md) - emotional mission.
+- [`core-principles.md`](core-principles.md) - immutable product rules.
+- [`current-state.md`](current-state.md) - current NSN prototype status.
+- [`softhello-feature-map.md`](softhello-feature-map.md) - future feature boundaries.

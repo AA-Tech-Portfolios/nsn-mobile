@@ -4,6 +4,8 @@
 
 This map separates SoftHello ideas into MVP, post-MVP, and future work so v1.1 stays buildable.
 
+For actual NSN prototype coverage, use [`current-state.md`](current-state.md). This file is a future/global feature boundary map, not the implementation source of truth.
+
 ## MVP
 
 The MVP should focus on the smallest complete trust-first loop: onboard, discover, connect, join, chat, meet safely, and reflect privately.
@@ -20,10 +22,10 @@ The MVP should focus on the smallest complete trust-first loop: onboard, discove
 | Event details | Show enough context to reduce uncertainty before joining. |
 | Intro/group chat | Support intentional text-first communication. |
 | Hello/request action | Let users initiate gently without swipe pressure. |
-| Basic verification state | Show whether a user is contact verified or real-person verified. |
-| Meeting safety rule | Require at least Real Person Verified before in-person meetings. |
+| Basic verification state | Show whether a user is contact verified or real-person verified, without claiming real verification until a provider/backend exists. |
+| Meeting safety rule | Explain that in-person meetings require a verified trust state; production enforcement depends on real verification and backend rules. |
 | Block user | Instant, private safety control. |
-| Report concern | Structured feedback for moderation. |
+| Report concern | Structured feedback that can feed moderation once a real review workflow exists. |
 | Post-event feedback | Private reflection and safety signal after a meetup. |
 | Availability signals | Optional guidance such as available now, taking it slow, or busy but open later. |
 
@@ -76,22 +78,6 @@ These belong in later product strategy after the MVP proves the core loop.
 
 ## Current Prototype Coverage
 
-Already represented in the app:
+The current implementation snapshot lives in [`current-state.md`](current-state.md). In short, NSN already has a local alpha prototype for onboarding, Home discovery, event details, meetup/chat previews, profile visibility, comfort preferences, saved-local event states, and settings.
 
-- Event discovery and event cards.
-- Event details.
-- Group chat prototype.
-- Profile blur privacy.
-- Localisation and settings.
-- Event creation.
-
-Still missing for MVP:
-
-- Onboarding.
-- 18+ compliance gate.
-- People discovery.
-- Mutual connection flow.
-- Verification state and meeting eligibility.
-- Report and block actions.
-- Post-event feedback.
-- SoftHello branding.
+The current prototype does not yet have production auth, real backend RSVP persistence, live chat, real verification, production moderation, backend trust enforcement, emergency escalation, or SoftHello global launch branding.

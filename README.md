@@ -1,48 +1,65 @@
 # North Shore Nights (NSN)
 
-North Shore Nights (NSN) is a Sydney/North Shore local pilot for low-pressure social meetups. It is built for young adults who want easier, calmer ways to meet new people locally: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
+North Shore Nights (NSN) is a Sydney/North Shore alpha prototype for low-pressure social meetups. It is built for young adults who want easier, calmer ways to meet new people locally: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
 
-The current prototype focuses on Sydney's North Shore. Broader location and timezone support may arrive later, but the active app identity in this repository is North Shore Nights.
+**Alpha note:** this repository is still a prototype. Several safety, trust, RSVP, verification, moderation, and account behaviours are local-only, mocked, or scaffolded. Do not treat the app as production-ready or rely on it for real-world meetups without separate alpha organiser confirmation.
 
-## Future Global Context
+## Current Prototype Status
 
-Some planning docs mention **SoftHello v1.1** as a possible future/global product direction. Those notes are retained as context only; they are not the active app identity for this repository.
+The active app identity is **North Shore Nights**, focused on Sydney's North Shore and Australia/Sydney local context. The prototype currently supports local onboarding, Home discovery, event details, meetup/chat previews, profile/privacy settings, comfort preferences, and saved-local prototype states.
 
-Future/global planning docs:
-
-- [`docs/vision.md`](docs/vision.md) - future product vision notes.
-- [`docs/core-principles.md`](docs/core-principles.md) - non-negotiable SoftHello product principles.
-- [`docs/softhello-v1.1-mvp.md`](docs/softhello-v1.1-mvp.md) - product overview and MVP build plan.
-- [`docs/softhello-feature-map.md`](docs/softhello-feature-map.md) - MVP, post-MVP, and future feature boundaries.
-- [`docs/softhello-safety-and-trust.md`](docs/softhello-safety-and-trust.md) - verification, meeting safety, reporting, and 18+ expectations.
-- [`docs/softhello-privacy-comfort-trust-roadmap.md`](docs/softhello-privacy-comfort-trust-roadmap.md) - privacy, comfort, visibility, atmosphere, and trust roadmap.
-- [`docs/user-experience-roadmap.md`](docs/user-experience-roadmap.md) - phased trust, safety, comfort, and personalisation roadmap.
-- [`docs/softhello-ux-principles.md`](docs/softhello-ux-principles.md) - calm, ND-friendly, low-pressure UX rules.
-- [`docs/brand-systems.md`](docs/brand-systems.md) - future/global brand context and the NSN local visual system.
+For the real current state, including what is working, what is mocked, and what is not implemented yet, see [`docs/current-state.md`](docs/current-state.md).
 
 ## Product Intent
 
-Many social apps assume users are ready for big groups, loud events, or open-ended networking. NSN is designed for people who may be shy, reserved, new to an area, or simply more comfortable with structured, smaller meetups.
+Many social apps assume users are ready for big groups, loud events, or open-ended networking. NSN is designed for people who may be shy, reserved, new to an area, neurodivergent, privacy-conscious, or simply more comfortable with structured, smaller meetups.
 
-Core principles:
+Core principles live in [`docs/core-principles.md`](docs/core-principles.md). The emotional mission lives in [`docs/vision.md`](docs/vision.md).
 
-- Low-pressure meetups with clear context before joining.
-- Small group experiences instead of crowded event discovery.
-- Day and night modes for different social energy levels.
-- Weather-aware suggestions and indoor alternatives.
-- Privacy-first profile controls.
-- Accessibility and translation settings for a wider audience.
+## NSN Local Pilot
+
+NSN-specific docs:
+
+- [`docs/current-state.md`](docs/current-state.md) - current implemented prototype status and limitations.
+- [`docs/nsn-alpha-readiness.md`](docs/nsn-alpha-readiness.md) - readiness requirements for controlled alpha testing.
+- [`docs/brand-systems.md`](docs/brand-systems.md) - NSN local visual identity and future SoftHello brand context.
+- [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes.
+- [`todo.md`](todo.md) - active implementation roadmap.
+
+## SoftHello Future / Global Context
+
+SoftHello remains the future/global direction. These docs are retained for product continuity, but they are not the active app identity in this repository:
+
+- [`docs/vision.md`](docs/vision.md) - emotional mission and north star.
+- [`docs/core-principles.md`](docs/core-principles.md) - short non-negotiable rules.
+- [`docs/softhello-v1.1-mvp.md`](docs/softhello-v1.1-mvp.md) - future/global MVP concept.
+- [`docs/softhello-feature-map.md`](docs/softhello-feature-map.md) - MVP, post-MVP, and future feature boundaries.
+- [`docs/softhello-safety-and-trust.md`](docs/softhello-safety-and-trust.md) - future safety and trust model, not current production capability.
+- [`docs/softhello-privacy-comfort-trust-roadmap.md`](docs/softhello-privacy-comfort-trust-roadmap.md) - future privacy, comfort, atmosphere, and trust concepts.
+- [`docs/user-experience-roadmap.md`](docs/user-experience-roadmap.md) - future UX roadmap summary.
+- [`docs/softhello-ux-principles.md`](docs/softhello-ux-principles.md) - UX rules and copy guidance.
+
+## Repository Structure
+
+- `app/` - Expo Router screens and routes.
+- `components/` - reusable UI components.
+- `lib/` - app settings, local data, prototype logic, search, formatting, and preference helpers.
+- `server/` - Express/tRPC/OAuth/storage scaffolding.
+- `shared/` - shared server/client utilities.
+- `assets/` - app icons and event imagery.
+- `docs/` - product, roadmap, and contributor documentation.
+- `tests/` - Vitest coverage for prototype logic.
+- `scripts/` - local helper scripts.
 
 ## Current Features
 
-- Home discovery with Day/Night mode.
-- Weather-aware meetup cards.
-- Event detail pages with expectations and meeting point.
-- Group chat prototype for meetup conversations.
-- Profile, vibes, photo controls, and privacy settings.
-- Settings for language, translation language, and accessibility.
-- Light/day and dark/night visual themes.
-- Sydney/North Shore local time and weather context using Australia/Sydney.
+- Home discovery with Day/Night mode, Sydney/North Shore context, filters, layout controls, and weather-aware meetup cards.
+- Event detail pages with expectations, meeting point, safety copy, media comfort labels, saved places, pin/hide actions, and local join state.
+- Meetups and chat prototype screens with calm alpha guidance.
+- Five-stage local onboarding with adult age validation, local-area selection, comfort preferences, and profile preview controls.
+- Profile, vibes, optional photo, blur controls, visibility settings, contact preferences, food/interests, saved places, and user preference panels.
+- Settings for language, translation language, accessibility, appearance, regional formats, notification preferences, account pause/delete demo actions, and privacy controls.
+- NSN and SoftHello brand theme support for design exploration, with NSN as the active identity.
 
 ## Tech Stack
 
@@ -53,6 +70,7 @@ Core principles:
 - PNPM
 - tRPC / Express server scaffold
 - Drizzle ORM scaffold
+- AsyncStorage for local prototype state
 
 ## Getting Started
 
@@ -105,17 +123,11 @@ Windows and PowerShell-safe command notes live in [`docs/development-workflow.md
 
 The design language is calm, night-friendly, and privacy-conscious: deep navy surfaces, soft blue accents, readable cards, friendly icons, and clear social expectations.
 
-See [`design.md`](design.md) for the broader interface plan.
+See [`design.md`](design.md) for the broader interface plan and [`docs/brand-systems.md`](docs/brand-systems.md) for product identity boundaries.
 
 ## Roadmap
 
-- Persist user settings and profile details.
-- Add real authentication and account management.
-- Build real RSVP and attendee flows.
-- Replace mock chat with live group chat.
-- Expand event creation and moderation.
-- Improve location support beyond the North Shore prototype.
-- Add stronger safety, reporting, and trust features before any real-world launch.
+The active roadmap lives in [`todo.md`](todo.md). In short, the next work is alpha readiness: smoke testing, clearer tester feedback, continued locality refinement, honest prototype labels, and later real auth, backend trust, moderation, and safety/legal review before any public launch.
 
 ## Status
 

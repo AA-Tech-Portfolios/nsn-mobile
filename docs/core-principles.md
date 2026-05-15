@@ -2,6 +2,8 @@
 
 These are non-negotiables.
 
+They apply to both SoftHello's future/global direction and the current North Shore Nights alpha prototype. They are intentionally short; implementation status lives in [`current-state.md`](current-state.md), and the emotional reason for the product lives in [`vision.md`](vision.md).
+
 ## 1. Privacy Before Popularity
 
 SoftHello never pressures users to reveal themselves.
@@ -25,7 +27,7 @@ Quiet days are normal.
 
 ## 6. Verification Does Not Require Public Visibility
 
-Users may verify privately.
+Users may verify privately. In the current NSN prototype, verification is only a local/demo trust state and must not be described as production verification.
 
 ## 7. No Vanity Metrics
 

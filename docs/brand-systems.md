@@ -47,21 +47,23 @@ The original concept also introduces:
 - Active NSN location fields should stay local to Sydney's North Shore, NSW, and Australia/Sydney time.
 - Suburb/local-area language can be adapted by region rather than hard-coded as Australian-only wording.
 
-### Core Features
+### Future Core Features
 
 - **Events first:** browse local events that match your vibe.
 - **Comfort and privacy:** blurred profiles, reveal only when ready.
-- **Verified and safe:** human verification, moderation, and safety you can trust.
+- **Verified and safe:** future human verification, moderation, and safety systems that users can trust once real providers and backend workflows exist.
 - **Local matching:** meet people near you, not overseas by default.
-- **Trust and feedback:** community feedback keeps everyone safer.
+- **Trust and feedback:** private community feedback that can support safer operations once moderation exists.
 
-### Trust and Safety Pillars
+### Future Trust and Safety Pillars
 
 - **Identity verification:** real people only.
 - **Location verification:** locally verified members where appropriate.
 - **Report and block:** easy reporting tools.
 - **Secure evidence:** preserve safety evidence for investigations.
 - **Community standards:** respect, always.
+
+These are SoftHello product goals, not current NSN production capabilities. See [`current-state.md`](current-state.md) for what exists now.
 
 ### Visual System
 
@@ -205,6 +207,8 @@ Both identities should preserve:
 - Noise Level Guide that separates venue sound from social talking pressure.
 - Accessibility settings and screen reader support.
 - Gentle exits, arrival updates, and respectful cancellation flows.
+
+Current implementation status for these shared principles belongs in [`current-state.md`](current-state.md), not in this brand document.
 
 ## Implementation Rules
 

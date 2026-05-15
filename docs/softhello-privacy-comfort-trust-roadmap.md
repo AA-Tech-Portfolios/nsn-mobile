@@ -2,50 +2,28 @@
 
 Created: May 2026
 
-## Product Philosophy
+> Future/global context only. NSN is the active Sydney/North Shore alpha prototype. Current implemented state lives in [`current-state.md`](current-state.md).
 
-SoftHello is designed for people who value:
+This document parks future privacy, comfort, atmosphere, and trust ideas. It should not restate the full product philosophy from [`vision.md`](vision.md) or the rules from [`core-principles.md`](core-principles.md).
 
-- Psychological safety.
-- Privacy.
-- Slow-paced introductions.
-- Genuine friendships, social connection, and dating.
-- Comfort over performance.
+## Current Boundary
 
-Core principle:
+In the current NSN prototype:
 
-> Your face is yours. Your pace is yours.
+- Profile blur, local visibility settings, profile preview, comfort mode, communication preferences, and broad local-area controls exist.
+- Verification, trust state, reports, RSVP membership, progressive reveal, and safety escalation are local/demo systems or roadmap concepts.
+- No real verification provider, production moderation queue, backend trust enforcement, or safety escalation service is connected.
 
-Users are never forced to reveal identity, appearance, or communication preferences.
-
-## Progressive Visibility System
+## Future Progressive Visibility
 
 Goal: reduce appearance-based judgement and create safer first impressions.
 
-### Visibility Levels
+Potential levels:
 
-#### Level 0 - Private Pace 🌫️
-
-- Fully blurred profile photo.
-- May remain blurred forever.
-- Can join events.
-- Can chat.
-- Can RSVP.
-- Can build reputation.
-
-#### Level 1 - Getting Comfortable 🙂
-
-- Soft silhouette.
-- Hair or outline visible.
-
-#### Level 2 - Opening Up 👀
-
-- Partial facial details visible.
-
-#### Level 3 - Fully Open ✨
-
-- Full visibility.
-- User-controlled only.
+- Level 0 - Private Pace: fully blurred profile photo; user may stay blurred forever.
+- Level 1 - Getting Comfortable: soft silhouette or outline.
+- Level 2 - Opening Up: partial reveal.
+- Level 3 - Fully Open: full visibility, controlled by the user.
 
 Rules:
 
@@ -54,122 +32,44 @@ Rules:
 - No pressure to reveal.
 - Users may stay blurred forever.
 
-Matching:
-
-- Prioritize users with similar visibility comfort levels.
+This future system requires mutual consent rules and backend-enforced visibility before it can be treated as real product safety.
 
 ## Communication Preferences
 
-Goal: respect different social energy levels.
+Future SoftHello can expand preference signalling for text first, voice notes, phone calls, video calls, in-person only, still deciding, slower replies, and clear-plan preferences.
 
-Users may select:
-
-- Text only.
-- Voice notes.
-- Phone calls.
-- Video calls.
-- In-person only.
-- Still deciding.
-
-Display on profile:
-
-> Prefers text first.
+The purpose is to reduce ambiguity, not to rank users or make them perform.
 
 ## Comfort Features
 
-### Battery Saver Mode 🔋
+Optional future comfort features:
 
-Default: off.
-
-Features:
-
-- Reduce animations.
-- Reduce background refresh.
-- Static weather icons.
-- Reduced haptics.
-
-### Wallpapers 🎨
-
-Default: system wallpaper.
-
-Optional themes:
-
-- Library.
-- Rain.
-- Beach sunset.
-- Night city.
-- Bush walk.
-- Café.
-
-## Sound and Atmosphere
-
-### Ambient and Classical Music 🎼
-
-Default: muted.
-
-Users may manually enable:
-
-- Classical piano.
-- Café ambience.
-- Rain sounds.
-- Nature sounds.
-- Soft instrumental.
-
-Rules:
-
-- Never autoplay.
-- User-controlled only.
-- Respect battery saver mode.
+- Battery Saver Mode: reduce animations, background refresh, weather refresh, haptics, and decorative effects.
+- Wallpapers or gentle themes: library, rain, beach sunset, night city, bush walk, cafe.
+- Ambient or classical music: muted by default, never autoplay, user-controlled only.
+- Calm widgets: local-only, removable, and not tied to matching pressure.
 
 ## Welcome Experience
 
-Goal: reduce onboarding anxiety.
+The welcome experience should reduce onboarding anxiety and tell users there is no rush.
 
-Welcome message:
+Suggested SoftHello anchor:
 
-> Welcome to SoftHello.
-> There is no rush here.
-> Meet people at your own pace.
+> Welcome to SoftHello. There is no rush here. Meet people at your own pace.
 
-## Trust and Community
+For NSN alpha copy, keep Sydney/North Shore wording and current prototype limitations visible.
 
-### Membership Badges
+## Trust and Community Concepts
 
-Examples:
+Future trust ideas may include private verification, member-since fields, consistency badges, reporting, block controls, and proportional moderation.
 
-- 🌱 New Here.
-- 🌤 1 Month.
-- 🌿 3 Months.
-- 🌳 6 Months.
-- ⭐ 1 Year.
-- 💎 5 Years.
-- 🕊 Legacy Member.
+These ideas must avoid public reputation scores, public punishment, vanity metrics, and social pressure loops.
 
-Goal: reward consistency, not popularity.
+Current NSN trust state is prototype-only. See [`current-state.md`](current-state.md) before describing any trust feature as implemented.
 
-## Joined Since
+## See Also
 
-Optional profile field:
-
-> Member since May 2026.
-
-Users may:
-
-- Show publicly.
-- Show to matches only.
-- Hide completely.
-
-## Privacy Principles
-
-SoftHello privacy follows privacy-by-design principles.
-
-Users control:
-
-- Visibility.
-- Communication preferences.
-- Profile reveal timing.
-- Profile history visibility.
-
-No advertising-based profile ranking.
-No forced engagement loops.
-No auto-reveal timers.
+- [`current-state.md`](current-state.md) - what exists now.
+- [`softhello-safety-and-trust.md`](softhello-safety-and-trust.md) - future safety model and production caveats.
+- [`softhello-feature-map.md`](softhello-feature-map.md) - MVP/post-MVP/future feature boundaries.
+- [`softhello-ux-principles.md`](softhello-ux-principles.md) - UX and copy rules.
