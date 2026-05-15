@@ -278,7 +278,7 @@ export default function MeetupsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28 },
+  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 112 },
   title: { color: nsnColors.text, fontSize: 28, fontWeight: "800", lineHeight: 35 },
   dayTitle: { color: "#0B1220" },
   subtitle: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginBottom: 18 },

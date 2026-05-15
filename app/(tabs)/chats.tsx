@@ -1,11 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { ChatProfilePreviewSheet } from "@/components/chat-profile-preview-sheet";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { allEvents, chatSeed, nsnColors, type EventItem } from "@/lib/nsn-data";
+import { allEvents, eventChatSeeds, nsnColors, type ChatMessage, type EventItem } from "@/lib/nsn-data";
+import { getChatProfilePreview } from "@/lib/chat-profile-preview";
+import {
+  askAboutMeetupQuestionGroups,
+  firstMeetupSupportOptions,
+  getFirstMeetupSupportSummary,
+  type AskAboutMeetupQuestion,
+  type FirstMeetupSupportOption,
+} from "@/lib/options-hub";
 import {
   blockUser,
   cancelSafetyReport,
@@ -20,7 +30,6 @@ import {
 } from "@/lib/softhello-mvp";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 
-type ChatMessage = (typeof chatSeed)[number];
 type SoftExitChoice = "stepBack" | "skipToday";
 type CannotMakeItReason = "unwell" | "work" | "appointment" | "somethingCameUp" | "changedMind";
 type SafetyReportReasonOption = {
@@ -132,13 +141,13 @@ const directChatTargets = [
 
 const directChatSeedByPerson: Record<string, ChatMessage[]> = {
   "maya-host": [
-    { id: "maya-direct-1", name: "Maya", avatar: "M", text: "Hi, happy to help if you have any questions before the meetup.", time: "4:28pm", mine: false },
+    { id: "maya-direct-1", personId: "maya-host", name: "Maya", avatar: "M", text: "Hi, happy to help if you have any questions before the meetup.", time: "4:28pm", mine: false },
   ],
   "alon-member": [
-    { id: "alon-direct-1", name: "Alon", avatar: "A", text: "Hey, nice to meet you here.", time: "4:30pm", mine: false },
+    { id: "alon-direct-1", personId: "alon-member", name: "Alon", avatar: "A", text: "Hey, nice to meet you here.", time: "4:30pm", mine: false },
   ],
   "james-member": [
-    { id: "james-direct-1", name: "James", avatar: "J", text: "Hi, are you going to the movie night too?", time: "4:31pm", mine: false },
+    { id: "james-direct-1", personId: "james-member", name: "James", avatar: "J", text: "Hi, are you going to the movie night too?", time: "4:31pm", mine: false },
   ],
 };
 
@@ -1114,6 +1123,8 @@ const chatMessageTranslations = {
 
 export default function ChatsScreen() {
   const router = useRouter();
+  const { eventId: requestedEventIdParam } = useLocalSearchParams<{ eventId?: string | string[] }>();
+  const requestedEventId = Array.isArray(requestedEventIdParam) ? requestedEventIdParam[0] : requestedEventIdParam;
   const {
     isNightMode,
     appLanguage,
@@ -1147,11 +1158,12 @@ export default function ChatsScreen() {
   const transportationOptionsCopy = getProfilePreferenceCopy(appLanguageBase).transportation.options ?? {};
   const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
   const canUsePrivateChats = canChatPrivately(effectiveVerificationLevel);
-  const [messages, setMessages] = useState<ChatMessage[]>(chatSeed);
+  const [eventMessagesById, setEventMessagesById] = useState<Record<string, ChatMessage[]>>(() => ({ ...eventChatSeeds }));
   const [directMessagesByPerson, setDirectMessagesByPerson] = useState<Record<string, ChatMessage[]>>(directChatSeedByPerson);
   const [draft, setDraft] = useState("");
   const [selectedChatId, setSelectedChatId] = useState("movie-night-watch-chat");
   const [selectedChatTargetId, setSelectedChatTargetId] = useState<string | null>(null);
+  const [previewPersonId, setPreviewPersonId] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [softExitOpen, setSoftExitOpen] = useState(false);
   const [safetyOpen, setSafetyOpen] = useState(false);
@@ -1166,7 +1178,16 @@ export default function ChatsScreen() {
   const [reportNotice, setReportNotice] = useState("");
   const [cannotMakeItOpen, setCannotMakeItOpen] = useState(false);
   const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
+  const [chatPlusOpen, setChatPlusOpen] = useState(false);
+  const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
+  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | null>(null);
   const softExitMessage = softExitChoice ? copy.softExitPresets[softExitChoice] : null;
+  useEffect(() => {
+    if (!requestedEventId || !allEvents.some((event) => event.id === requestedEventId)) return;
+
+    setSelectedChatId(requestedEventId);
+    setSelectedChatTargetId(`group-${requestedEventId}`);
+  }, [requestedEventId]);
   const selectedChat = allEvents.find((event) => event.id === selectedChatId) ?? allEvents.find((event) => event.id === "movie-night-watch-chat") ?? allEvents[0]!;
   const selectedChatTitle = chatEventTitleCopy[selectedChat.id] ?? selectedChat.title;
   const selectedChatMembers = selectedChat.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(selectedChat, appLanguageBase);
@@ -1195,12 +1216,18 @@ export default function ChatsScreen() {
   const activeChatSubtitle = selectedChatTarget?.subtitle ?? selectedChatMembers;
   const activeChatEmoji = selectedChatTarget?.emoji ?? selectedChat.emoji;
   const activeChatTone = selectedChatTarget?.tone ?? selectedChat.imageTone;
+  const activeChatProfile = selectedChatTarget?.type === "person" ? getChatProfilePreview(selectedChatTarget.personId) : undefined;
   const conversationId = selectedChatTarget?.type === "person" ? selectedChatTarget.personId : selectedChat.id;
   const eventId = selectedChat.id;
   const activeMessages =
     selectedChatTarget?.type === "person"
       ? localizeDirectMessages(directMessagesByPerson, appLanguageBase)[selectedChatTarget.personId] ?? []
-      : messages;
+      : eventMessagesById[selectedChat.id] ?? eventChatSeeds[selectedChat.id] ?? [];
+  const previewProfile = getChatProfilePreview(previewPersonId);
+  const getMessagePersonId = (message: ChatMessage) =>
+    message.personId ??
+    directChatTargets.find((person) => person.name === message.name)?.personId ??
+    null;
   const hostUserId = "maya-host";
   const isHostBlocked = blockedUserIds.includes(hostUserId);
   const selectedBlockMember = memberBlockTargets.find((target) => target.id === selectedBlockMemberId) ?? memberBlockTargets[0];
@@ -1244,7 +1271,7 @@ export default function ChatsScreen() {
   const sendMessage = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
-    const nextMessage = { id: String(Date.now()), name: copy.you, avatar: "Y", text: trimmed, time: copy.now, mine: true };
+    const nextMessage: ChatMessage = { id: String(Date.now()), name: copy.you, avatar: "Y", text: trimmed, time: copy.now, mine: true };
 
     if (selectedChatTarget?.type === "person") {
       setDirectMessagesByPerson((current) => ({
@@ -1252,17 +1279,23 @@ export default function ChatsScreen() {
         [selectedChatTarget.personId]: [...(current[selectedChatTarget.personId] ?? []), nextMessage],
       }));
     } else {
-      setMessages((current) => [...current, nextMessage]);
+      setEventMessagesById((current) => ({
+        ...current,
+        [selectedChat.id]: [...(current[selectedChat.id] ?? []), nextMessage],
+      }));
     }
 
     setDraft("");
   };
 
   const sendArrivalUpdate = (text: string) => {
-    setMessages((current) => [
+    setEventMessagesById((current) => ({
       ...current,
-      { id: String(Date.now()), name: copy.you, avatar: "Y", text, time: copy.now, mine: true },
-    ]);
+      [selectedChat.id]: [
+        ...(current[selectedChat.id] ?? []),
+        { id: String(Date.now()), name: copy.you, avatar: "Y", text, time: copy.now, mine: true },
+      ],
+    }));
   };
 
   const sendRunningLateUpdate = () => {
@@ -1273,6 +1306,19 @@ export default function ChatsScreen() {
     sendArrivalUpdate(localizedArrivalUpdateCopy.cannotMakeItReasons[reason].message);
     setCannotMakeItOpen(false);
     await saveSoftHelloMvpState({ eventMemberships: leaveEvent(eventId, eventMemberships) });
+  };
+
+  const toggleFirstMeetupSupportOption = (option: FirstMeetupSupportOption) => {
+    setSelectedFirstMeetupSupport((current) => {
+      if (option === "No extra support") return ["No extra support"];
+
+      const selectedWithoutFallback = current.filter((item) => item !== "No extra support");
+      const nextSelection = selectedWithoutFallback.includes(option)
+        ? selectedWithoutFallback.filter((item) => item !== option)
+        : [...selectedWithoutFallback, option];
+
+      return nextSelection.length > 0 ? nextSelection : ["No extra support"];
+    });
   };
 
   const reportConcern = async (reason: SafetyReportReason) => {
@@ -1380,12 +1426,14 @@ export default function ChatsScreen() {
     setBlockChoiceOpen(false);
     setMemberBlockOpen(false);
     setCannotMakeItOpen(false);
+    setChatPlusOpen(false);
     setBlockNotice("");
     setReportNotice("");
   };
 
   const renderChatTargetButton = (target: ChatTarget) => {
     const active = selectedChatTarget?.id === target.id;
+    const targetProfile = target.type === "person" ? getChatProfilePreview(target.personId) : undefined;
 
     return (
       <TouchableOpacity
@@ -1397,9 +1445,21 @@ export default function ChatsScreen() {
         accessibilityState={{ selected: active }}
         accessibilityHint={screenReaderHints ? `Opens ${target.type === "person" ? "a private chat with" : "the group chat for"} ${target.title}.` : undefined}
       >
-        <View style={[styles.chatMenuEmoji, { backgroundColor: target.tone }]}>
-          <Text style={target.type === "person" ? styles.chatMenuInitialText : styles.chatMenuEmojiText}>{target.emoji}</Text>
-        </View>
+        {target.type === "person" ? (
+          <ProfileAvatar
+            displayName={target.title}
+            avatarText={target.emoji}
+            tone={targetProfile?.avatarTone ?? target.tone}
+            privateProfile={targetProfile?.avatarPrivate}
+            comfortMode={targetProfile?.privacyMode}
+            size={40}
+            isDay={isDay}
+          />
+        ) : (
+          <View style={[styles.chatMenuEmoji, { backgroundColor: target.tone }]}>
+            <Text style={styles.chatMenuEmojiText}>{target.emoji}</Text>
+          </View>
+        )}
         <View style={styles.chatMenuItemBody}>
           <Text style={[styles.chatMenuItemTitle, isDay && styles.dayTitle, active && styles.chatMenuItemTextActive, isRtl && styles.rtlText]}>{target.title}</Text>
           <Text style={[styles.chatMenuItemMeta, isDay && styles.dayMutedText, active && styles.chatMenuItemTextActive, isRtl && styles.rtlText]}>
@@ -1450,6 +1510,7 @@ export default function ChatsScreen() {
               setSafetyOpen(false);
               setSoftExitOpen(false);
               setCannotMakeItOpen(false);
+              setChatPlusOpen(false);
             }}
             style={styles.iconButton}
             accessibilityRole="button"
@@ -1464,13 +1525,26 @@ export default function ChatsScreen() {
               setChatMenuOpen((current) => !current);
               setSafetyOpen(false);
               setSoftExitOpen(false);
+              setChatPlusOpen(false);
             }}
             style={styles.chatPickerButton}
             accessibilityRole="button"
             accessibilityLabel={chatMenuCopy.openLabel}
             accessibilityHint={screenReaderHints ? chatCopy.openChatListHint : undefined}
           >
-            <View style={[styles.eventAvatar, { backgroundColor: activeChatTone }]}><Text style={selectedChatTarget.type === "person" ? styles.eventInitial : styles.eventEmoji}>{activeChatEmoji}</Text></View>
+            {selectedChatTarget.type === "person" ? (
+              <ProfileAvatar
+                displayName={activeChatTitle}
+                avatarText={activeChatEmoji}
+                tone={activeChatProfile?.avatarTone ?? activeChatTone}
+                privateProfile={activeChatProfile?.avatarPrivate}
+                comfortMode={activeChatProfile?.privacyMode}
+                size={42}
+                isDay={isDay}
+              />
+            ) : (
+              <View style={[styles.eventAvatar, { backgroundColor: activeChatTone }]}><Text style={styles.eventEmoji}>{activeChatEmoji}</Text></View>
+            )}
             <View style={styles.headerText}>
               <Text style={[styles.title, isDay && styles.dayTitle]}>{activeChatTitle}</Text>
               <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{activeChatSubtitle}</Text>
@@ -1485,6 +1559,7 @@ export default function ChatsScreen() {
               setBlockChoiceOpen(false);
               setMemberBlockOpen(false);
               setSoftExitOpen(false);
+              setChatPlusOpen(false);
             }}
             style={styles.iconButton}
             accessibilityRole="button"
@@ -1500,6 +1575,7 @@ export default function ChatsScreen() {
                 setSoftExitOpen((current) => !current);
                 setSafetyOpen(false);
                 setMemberBlockOpen(false);
+                setChatPlusOpen(false);
               }}
               style={styles.iconButton}
               accessibilityRole="button"
@@ -1817,18 +1893,42 @@ export default function ChatsScreen() {
             </View>
           )}
 
-          {activeMessages.map((message) => (
-            <View key={message.id} style={[styles.messageRow, message.mine && styles.messageRowMine]}>
-              {!message.mine && <View style={styles.avatar}><Text style={styles.avatarText}>{message.avatar}</Text></View>}
-              <View style={[styles.messageBlock, message.mine && styles.messageBlockMine]}>
-                {!message.mine && <Text style={[styles.senderName, isDay && styles.dayMutedText]}>{message.name}</Text>}
-                <View style={[styles.bubble, message.mine ? styles.myBubble : styles.theirBubble, isDay && !message.mine && styles.dayCard]}>
-                  <Text style={[styles.bubbleText, isDay && !message.mine && styles.dayTitle]}>{translatedMessages?.[message.id as keyof typeof translatedMessages] ?? message.text}</Text>
-                  <Text style={[styles.messageTime, isDay && !message.mine && styles.dayMessageTime]}>{message.time}</Text>
+          {activeMessages.map((message) => {
+            const personId = getMessagePersonId(message);
+            const profile = getChatProfilePreview(personId);
+
+            return (
+              <View key={message.id} style={[styles.messageRow, message.mine && styles.messageRowMine]}>
+                {!message.mine ? (
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    disabled={!personId}
+                    onPress={() => personId && setPreviewPersonId(personId)}
+                    style={styles.avatarButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Preview ${message.name}'s profile`}
+                  >
+                    <ProfileAvatar
+                      displayName={message.name}
+                      avatarText={message.avatar}
+                      tone={profile?.avatarTone ?? "#164E6A"}
+                      privateProfile={profile?.avatarPrivate}
+                      comfortMode={profile?.privacyMode}
+                      size={34}
+                      isDay={isDay}
+                    />
+                  </TouchableOpacity>
+                ) : null}
+                <View style={[styles.messageBlock, message.mine && styles.messageBlockMine]}>
+                  {!message.mine && <Text style={[styles.senderName, isDay && styles.dayMutedText]}>{message.name}</Text>}
+                  <View style={[styles.bubble, message.mine ? styles.myBubble : styles.theirBubble, isDay && !message.mine && styles.dayCard]}>
+                    <Text style={[styles.bubbleText, isDay && !message.mine && styles.dayTitle]}>{translatedMessages?.[message.id as keyof typeof translatedMessages] ?? message.text}</Text>
+                    <Text style={[styles.messageTime, isDay && !message.mine && styles.dayMessageTime]}>{message.time}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
 
         <View style={styles.composerWrap}>
@@ -1880,7 +1980,81 @@ export default function ChatsScreen() {
               <Text style={[styles.resumeButtonText, isDay && styles.dayTitle]}>{copy.reopenOptions}</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity activeOpacity={0.75} style={[styles.addButton, isDay && styles.dayCard]}>
+          {chatPlusOpen ? (
+            <View style={[styles.chatPlusPanel, isDay && styles.dayCard]}>
+              <Text style={[styles.chatPlusTitle, isDay && styles.dayTitle]}>Prototype meetup tools</Text>
+              <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>
+                Local helper chips only. Reports, blocks, leaving, or emergency help stay in the safety menu.
+              </Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>First meetup support</Text>
+              <View style={styles.chatPlusChipRow}>
+                {firstMeetupSupportOptions.map((option) => {
+                  const active = selectedFirstMeetupSupport.includes(option.label);
+
+                  return (
+                    <TouchableOpacity
+                      key={option.label}
+                      activeOpacity={0.82}
+                      onPress={() => toggleFirstMeetupSupportOption(option.label)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={option.label}
+                      accessibilityHint={option.description}
+                      style={[styles.chatPlusChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                    >
+                      <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{option.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={[styles.chatPlusMeta, isDay && styles.dayMutedText]}>
+                Current: {getFirstMeetupSupportSummary(selectedFirstMeetupSupport)}
+              </Text>
+              {askAboutMeetupQuestionGroups.map((group) => (
+                <View key={group.phase} style={styles.chatPlusQuestionGroup}>
+                  <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>{group.title}</Text>
+                  <View style={styles.chatPlusChipRow}>
+                    {group.questions.map((question) => {
+                      const active = selectedMeetupQuestion === question;
+
+                      return (
+                        <TouchableOpacity
+                          key={question}
+                          activeOpacity={0.82}
+                          onPress={() => {
+                            setSelectedMeetupQuestion(question);
+                            setDraft(question);
+                          }}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: active }}
+                          accessibilityLabel={question}
+                          accessibilityHint="Adds this pre-written demo question to the composer."
+                          style={[styles.chatPlusQuestionChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                        >
+                          <Text style={[styles.chatPlusQuestionText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{question}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              ))}
+              {selectedMeetupQuestion ? (
+                <Text style={[styles.chatPlusMeta, isDay && styles.dayMutedText]}>Added to composer: {selectedMeetupQuestion}</Text>
+              ) : null}
+            </View>
+          ) : null}
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => {
+              setChatPlusOpen((current) => !current);
+              setSafetyOpen(false);
+              setSoftExitOpen(false);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Open prototype meetup tools"
+            accessibilityHint="Opens local first meetup support and ask-about-this-meetup chips."
+            style={[styles.addButton, isDay && styles.dayCard, chatPlusOpen && styles.addButtonActive]}
+          >
             <IconSymbol name="add" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
           </TouchableOpacity>
           <View style={[styles.inputWrap, isDay && styles.dayInputWrap]}>
@@ -1901,6 +2075,12 @@ export default function ChatsScreen() {
           <Text style={[styles.disclaimer, isDay && styles.dayMutedText]}>{copy.disclaimer}</Text>
         </View>
       </View>
+      <ChatProfilePreviewSheet
+        visible={Boolean(previewProfile)}
+        profile={previewProfile}
+        isDay={isDay}
+        onClose={() => setPreviewPersonId(null)}
+      />
     </ScreenContainer>
   );
 }
@@ -1912,7 +2092,6 @@ const styles = StyleSheet.create({
   dayHeader: { borderColor: "#C5D0DA" },
   eventAvatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#26133F", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.primary },
   eventEmoji: { fontSize: 22 },
-  eventInitial: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
   chatPickerButton: { flex: 1, minHeight: 46, flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 16, paddingRight: 8 },
   headerText: { flex: 1 },
   title: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 21 },
@@ -1931,15 +2110,14 @@ const styles = StyleSheet.create({
   chatMenuItemActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   chatMenuEmoji: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
   chatMenuEmojiText: { fontSize: 20 },
-  chatMenuInitialText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
   chatMenuItemBody: { flex: 1 },
   chatMenuItemTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   chatMenuItemMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   chatMenuStatus: { width: 20, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
   chatMenuItemTextActive: { color: "#FFFFFF" },
   chat: { flex: 1 },
-  chatContent: { paddingTop: 16, paddingBottom: 16 },
-  chatSelectionContent: { paddingTop: 22, paddingBottom: 28 },
+  chatContent: { paddingTop: 16, paddingBottom: 96 },
+  chatSelectionContent: { paddingTop: 22, paddingBottom: 112 },
   chatSelectionTitle: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35 },
   chatSelectionCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 4, marginBottom: 18 },
   chatSelectionList: { gap: 8, marginBottom: 18 },
@@ -2001,8 +2179,7 @@ const styles = StyleSheet.create({
   softExitResultSubtext: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 4 },
   messageRow: { flexDirection: "row", gap: 9, marginBottom: 14, alignItems: "flex-end" },
   messageRowMine: { justifyContent: "flex-end" },
-  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: "#164E6A", alignItems: "center", justifyContent: "center" },
-  avatarText: { color: nsnColors.text, fontSize: 13, fontWeight: "800" },
+  avatarButton: { width: 34, height: 34, borderRadius: 17 },
   messageBlock: { maxWidth: "76%" },
   messageBlockMine: { alignItems: "flex-end" },
   senderName: { color: nsnColors.muted, fontSize: 12, marginBottom: 4, lineHeight: 16 },
@@ -2012,7 +2189,7 @@ const styles = StyleSheet.create({
   bubbleText: { color: nsnColors.text, fontSize: 14, lineHeight: 20 },
   messageTime: { alignSelf: "flex-end", color: "rgba(245,247,255,0.62)", fontSize: 11, marginTop: 4, lineHeight: 14 },
   dayMessageTime: { color: "#7890AE" },
-  composerWrap: { paddingBottom: 10 },
+  composerWrap: { paddingBottom: 96 },
   arrivalPanel: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginBottom: 9 },
   arrivalTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
   arrivalActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
@@ -2029,6 +2206,20 @@ const styles = StyleSheet.create({
   cannotMakeItReasonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
   resumeButton: { minHeight: 40, borderRadius: 16, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, alignItems: "center", justifyContent: "center", marginBottom: 9 },
   resumeButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "800" },
+  chatPlusPanel: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginBottom: 9, gap: 8 },
+  chatPlusTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  chatPlusCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 16 },
+  chatPlusSectionLabel: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
+  chatPlusChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  chatPlusChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  chatPlusQuestionGroup: { gap: 6 },
+  chatPlusQuestionChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  chatPlusChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  chatPlusChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  chatPlusQuestionText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  chatPlusChipTextActive: { color: "#FFFFFF" },
+  chatPlusMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15 },
+  addButtonActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(80,104,255,0.18)" },
   addButton: { position: "absolute", left: 0, bottom: 42, width: 40, height: 40, borderRadius: 20, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border },
   inputWrap: { marginLeft: 48, minHeight: 44, borderRadius: 22, backgroundColor: "#061121", borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "center", paddingLeft: 15, paddingRight: 5 },
   dayInputWrap: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },

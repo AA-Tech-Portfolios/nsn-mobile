@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { allEvents, chatSeed, dayEvents, eveningEvents, movieNight, nsnColors, profileVibes } from "./nsn-data";
+import { allEvents, chatSeed, dayEvents, eveningEvents, eventChatSeeds, movieNight, nsnColors, profileVibes } from "./nsn-data";
 
 describe("NSN prototype data", () => {
   it("keeps event identifiers unique and route-safe", () => {
@@ -26,6 +26,33 @@ describe("NSN prototype data", () => {
     expect(chatSeed.some((message) => message.mine)).toBe(true);
     expect(profileVibes.length).toBeGreaterThanOrEqual(12);
     expect(profileVibes).toEqual(expect.arrayContaining(["🌿 Calm", "👥 Small groups", "☕ Coffee", "🎬 Movies", "📚 Libraries"]));
+  });
+
+  it("adds event-specific chats for the key alpha meetup previews", () => {
+    const requiredEventIds = [
+      "picnic-easy-hangout",
+      "coffee-lane-cove",
+      "library-calm-study",
+      "movie-night-watch-chat",
+      "board-games-coffee",
+      "beach-day-chill-vibes",
+    ];
+
+    expect(Object.keys(eventChatSeeds)).toEqual(expect.arrayContaining(requiredEventIds));
+
+    for (const eventId of requiredEventIds) {
+      expect(eventChatSeeds[eventId]?.length).toBeGreaterThanOrEqual(4);
+      expect(eventChatSeeds[eventId].some((message) => message.personId === "maya-host")).toBe(true);
+      expect(eventChatSeeds[eventId].some((message) => message.personId === "james-member")).toBe(true);
+    }
+
+    const combinedText = requiredEventIds
+      .flatMap((eventId) => eventChatSeeds[eventId].map((message) => message.text.toLowerCase()))
+      .join(" ");
+
+    expect(combinedText).toContain("ask before photos");
+    expect(combinedText).toContain("quiet");
+    expect(combinedText).toContain("arrival");
   });
 
   it("uses a dark, high-contrast NSN palette", () => {

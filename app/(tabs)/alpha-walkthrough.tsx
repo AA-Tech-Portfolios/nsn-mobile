@@ -92,6 +92,11 @@ export default function AlphaWalkthroughScreen() {
   const canGoNext = stepIndex < walkthroughSteps.length - 1;
 
   const openStepRoute = () => {
+    if (step.route === "/(tabs)/settings") {
+      router.push({ pathname: "/(tabs)/settings", params: { from: "alpha-walkthrough" } } as never);
+      return;
+    }
+
     router.push(step.route as never);
   };
 

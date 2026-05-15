@@ -5,6 +5,7 @@ import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity
 
 import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
 import { ScreenContainer } from "@/components/screen-container";
+import { getOnboardingAboutRequirement } from "@/lib/alpha-readiness-controls";
 import type { NsnBlurLevel, NsnComfortMode, ProfileGender, SoftHelloIntent } from "@/lib/app-settings";
 import { defaultPhotoRecordingComfortPreferences, defaultPhysicalContactComfortPreferences, useAppSettings } from "@/lib/app-settings";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
@@ -111,6 +112,13 @@ export default function OnboardingScreen() {
     suburb.trim().length >= 2 &&
     preferredAgeRangeIsValid &&
     interests.length > 0;
+  const aboutStepRequirement = getOnboardingAboutRequirement({
+    hasAllowedName: displayName.trim().length > 0 && isAllowedDisplayName(displayName),
+    hasInterests: interests.length > 0,
+    hasLocalArea: suburb.trim().length >= 2,
+    hasPreferredAgeRange: preferredAgeRangeIsValid,
+    isAdult,
+  });
 
   const localitySuggestions = useMemo(() => {
     const query = normalizeLocalitySearch(suburb);
@@ -391,6 +399,7 @@ export default function OnboardingScreen() {
             </View>
             {ageValidationMessage ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{ageValidationMessage}</Text> : null}
             {preferredAgeValidationMessage ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{preferredAgeValidationMessage}</Text> : null}
+            {aboutStepRequirement ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{aboutStepRequirement}</Text> : null}
             <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
               Preferred matching starts at {MIN_ADULT_AGE}. NSN keeps age ranges realistic and within the adult pilot.
             </Text>
@@ -567,7 +576,15 @@ export default function OnboardingScreen() {
               <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>Back</Text>
             </TouchableOpacity>
           ) : null}
-          <TouchableOpacity activeOpacity={0.88} disabled={stage === 1 && !canContinueAbout} onPress={stage === 4 ? finishOnboarding : nextStage} style={[styles.primaryButton, stage === 1 && !canContinueAbout && styles.primaryButtonDisabled]}>
+          <TouchableOpacity
+            activeOpacity={0.88}
+            disabled={stage === 1 && !canContinueAbout}
+            onPress={stage === 4 ? finishOnboarding : nextStage}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: stage === 1 && !canContinueAbout }}
+            accessibilityHint={stage === 1 && aboutStepRequirement ? aboutStepRequirement : undefined}
+            style={[styles.primaryButton, stage === 1 && !canContinueAbout && styles.primaryButtonDisabled]}
+          >
             <Text style={styles.primaryButtonText}>{stage === 0 ? "Get Started" : stage === 4 ? "Finish setup" : "Continue"}</Text>
           </TouchableOpacity>
         </View>

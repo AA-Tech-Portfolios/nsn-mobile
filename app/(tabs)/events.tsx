@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     backgroundColor: nsnColors.background,
     padding: 20,
   },
-  content: { padding: 20, paddingBottom: 32 },
+  content: { padding: 20, paddingBottom: 112 },
 
   dayContainer: {
     backgroundColor: "#E8EDF2",
