@@ -31,17 +31,14 @@ if (port !== preferredPort) {
   console.log(`[expo] Port ${preferredPort} is busy, using ${port} instead.`);
 }
 
-const command = process.platform === "win32" ? "cmd.exe" : "npx";
+const command = process.platform === "win32" ? "cmd.exe" : "pnpm";
 const args =
   process.platform === "win32"
-    ? ["/d", "/s", "/c", `npx expo start --web --port ${port}`]
-    : ["expo", "start", "--web", "--port", String(port)];
+    ? ["/d", "/s", "/c", `pnpm exec expo start --web --port ${port}`]
+    : ["exec", "expo", "start", "--web", "--port", String(port)];
 
 const child = spawn(command, args, {
-  env: {
-    ...process.env,
-    EXPO_USE_METRO_WORKSPACE_ROOT: "1",
-  },
+  env: process.env,
   stdio: "inherit",
 });
 
