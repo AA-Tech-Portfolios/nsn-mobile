@@ -66,6 +66,11 @@ SoftHello remains future/global context only. It should guide long-term product 
 - Translation, accessibility, and regional behaviour need further review on real devices and with real users.
 - The prototype has been iterated primarily for product exploration and alpha readiness, not production hardening.
 
+## Controlled Alpha Testing Docs
+
+- [`alpha-tester-guide.md`](alpha-tester-guide.md) explains NSN's current prototype scope, local-only behaviours, tester focus areas, and feedback expectations for trusted alpha testers.
+- [`alpha-tester-feedback-checklist.md`](alpha-tester-feedback-checklist.md) provides a short walkthrough questionnaire for alpha feedback sessions.
+
 ## Platforms Tested
 
 Current validation has focused on TypeScript checks, local Expo/web startup, screenshots, and manual prototype review. iOS, Android, and web should each receive explicit manual QA before broader alpha testing.
@@ -75,4 +80,4 @@ Current validation has focused on TypeScript checks, local Expo/web startup, scr
 - **Current active identity:** North Shore Nights, a Sydney/North Shore local alpha prototype.
 - **Future/global direction:** SoftHello, the broader product and brand direction for low-pressure, privacy-aware social connection.
 
-See also: [`nsn-alpha-readiness.md`](nsn-alpha-readiness.md), [`brand-systems.md`](brand-systems.md), [`softhello-feature-map.md`](softhello-feature-map.md), and [`../todo.md`](../todo.md).
+See also: [`nsn-alpha-readiness.md`](nsn-alpha-readiness.md), [`alpha-tester-guide.md`](alpha-tester-guide.md), [`alpha-tester-feedback-checklist.md`](alpha-tester-feedback-checklist.md), [`brand-systems.md`](brand-systems.md), [`softhello-feature-map.md`](softhello-feature-map.md), and [`../todo.md`](../todo.md).

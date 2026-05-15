@@ -22,6 +22,8 @@ NSN-specific docs:
 
 - [`docs/current-state.md`](docs/current-state.md) - current implemented prototype status and limitations.
 - [`docs/nsn-alpha-readiness.md`](docs/nsn-alpha-readiness.md) - readiness requirements for controlled alpha testing.
+- [`docs/alpha-tester-guide.md`](docs/alpha-tester-guide.md) - human-facing guide for trusted controlled alpha testers.
+- [`docs/alpha-tester-feedback-checklist.md`](docs/alpha-tester-feedback-checklist.md) - short feedback questions for alpha walkthroughs and debriefs.
 - [`docs/brand-systems.md`](docs/brand-systems.md) - NSN local visual identity and future SoftHello brand context.
 - [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes.
 - [`todo.md`](todo.md) - active implementation roadmap.

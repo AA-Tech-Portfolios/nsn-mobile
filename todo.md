@@ -10,7 +10,7 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [ ] Run mobile and desktop smoke tests for Compact, Comfortable, and Spacious Home layouts, focusing on map height, bottom-nav clearance, wrapped chips, and section visibility rows
 - [ ] Smoke test Settings & Privacy plus User Preferences on desktop and mobile, focusing on expanded accordion wrapping, keyboard focus through chips, and Profile/User Options back navigation
 - [ ] Review checkpoint screenshots for desktop and mobile layout regressions
-- [ ] Create an alpha tester feedback checklist after the walkthrough has been exercised
+- [x] Create an alpha tester feedback checklist after the walkthrough has been exercised
 - [ ] Continue button behaviour audit across Profile, Settings & Privacy, modal menus, disabled controls, and saved-locally actions
 - [ ] Decide which prototype-only account actions should stay visible after tester walkthrough, be backed by real auth, or be hidden before alpha
 - [ ] If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
@@ -144,6 +144,7 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [x] Add Profile User Options drawer and move Comfort & trust into User Preferences
 - [x] Add mobile drawer and desktop full-view panels for Transportation Method, Contact Preference, and Location Preference
 - [x] Add alpha tester walkthrough covering NSN purpose, local prototype scope, comfort/privacy settings, meetup browsing, alerts, profile review, and demo-only safety language
+- [x] Add controlled alpha tester guide and feedback checklist docs for trusted walkthroughs
 - [x] Refine Home search into compact Search NSN suburb and meetup matching for the Sydney/North Shore prototype
 - [x] Improve Search NSN autocomplete with Sydney locality data, region matching, aliases, and no default suburb list
 - [x] Refine Home/Profile local area editing with shared location picker and API-ready fallback lookup service
