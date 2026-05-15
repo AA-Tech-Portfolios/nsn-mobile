@@ -36,6 +36,22 @@
 
 ### Alpha readiness
 
+- [x] 2026-05-12 button behaviour pass: Home weather card now responds with Demo guidance; onboarding Continue explains missing required fields; Settings dependency-disabled controls now include clear reasons; Profile drawer preference panels for Transportation Method, Contact Preference, Location Preference, Help & Support, and User preferences include explicit Saved locally close actions
+- [x] 2026-05-12 prototype action labels: standardized key action badges/statuses around Demo, Coming soon, and Saved locally language without adding backend/auth behavior
+- [x] 2026-05-12 progressive disclosure pass started: Home Preferences now keeps primary view/filter/event controls first and tucks display/card-layout tuning behind expandable sections; User Preferences now defaults large food, interest, background, calendar, transport, contact, and location groups into summarized expandable controls
+- [x] 2026-05-12 Options Hub polish pass started: merged the Home gear/more entry points into one Options button, added accordion sections for Home/User preferences/Meetups/Chat/Safety/Alpha/Prototype tools, and surfaced local-only first-meetup support plus pre-written meetup question chips on Home, Event Details, and Chat
+- [x] 2026-05-12 Home layout preset pass: added shared Compact/Comfortable/Spacious preset rules and applied them across the alpha tester guide, Weather/Today, North Shore map, event sections/cards, Search NSN, Noise Guide, Options/Home Preferences controls, section rows, chips, tags, and small actions; Primary view now explicitly controls which sections appear while Layout comfort controls density
+- [x] 2026-05-12 Home header label check: Home still uses the local-hour helper so "Local evening dashboard" only appears during evening hours, with morning/afternoon/night labels used at other times
+- [x] 2026-05-12 Settings & Preferences layout consistency pass: added shared responsive card/grid density rules, widened Settings & Privacy expanded content on desktop, rebuilt Comfort & safety into desktop-friendly cards, standardised common preference chip icons without playful safety labels, and fixed Settings back routing to return to Profile/source routes with Profile as the direct URL fallback
+- [x] 2026-05-12 layout/profile polish pass: removed Home locked-dashboard overflow, added bottom-nav clearance across tabbed scroll views, changed Options into a first-level category hub, clarified web photo drag-and-drop/Add photo copy, and separated Simple versus Detailed Profile presentation
+- [x] 2026-05-12 Home local event image pass: added local prototype raster assets for Picnic, Beach, and Movie Night, then wired Home Preview image mode to those local files instead of blank/external previews for the supplied scenes
+- [x] 2026-05-12 event image refinement: tuned the Picnic image to read as a park scene and the Movie Night image to show red cinema seats facing a bright screen
+- [x] 2026-05-12 profile cleanup pass: moved Profile back toward a social-first order with avatar/photo, name, About me, My vibes, then clean Local area, Interests, Comfort & trust, and Privacy rows; detailed comfort, work/life context, and trust status controls now stay behind User Options/Settings entry points
+- [x] 2026-05-12 realistic Home thumbnail pass: switched Picnic, Beach, and Movie Night preview cards to realistic photo-style Unsplash sources instead of flat local illustration thumbnails
+- [ ] Remaining image asset note: if exact original upload pixels are needed later, save the source files into `assets/images/events` and swap the Home preview sources to local files
+- [ ] Remaining alpha note: run a rendered mobile drawer smoke test on device or Expo web after dependency/type checks, focusing on drawer scrolling, close behavior, and long label wrapping
+- [ ] Remaining Home layout note: run a rendered mobile and desktop smoke test of Compact, Comfortable, and Spacious layouts, focusing on map height, bottom-nav clearance, wrapped chips, and section visibility rows
+- [ ] Remaining Settings note: smoke test Settings & Privacy plus User Preferences on desktop and mobile, focusing on expanded accordion wrapping, keyboard focus through chips, and Profile/User Options back navigation
 - [ ] Review checkpoint screenshots for layout regressions on desktop and mobile
 - [ ] Create an alpha tester feedback checklist after the walkthrough has been exercised
 - [ ] Continue suburb/locality refinement with an API-backed or maintained Australian locality dataset
@@ -223,3 +239,4 @@
 ## Release Notes
 
 - 2026-05-10: Validated TypeScript, app startup health, and core local flows during pilot setup.
+- 2026-05-12: Polished Settings & Preferences responsive layouts, preference chip icon consistency, and Settings back navigation for alpha readiness.
