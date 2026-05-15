@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    paddingBottom: 34,
+    paddingBottom: 112,
   },
   dayContainer: {
     backgroundColor: "#E8EDF2",
