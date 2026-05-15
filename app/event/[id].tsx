@@ -8,6 +8,13 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, type PhotoRecordingComfortPreference, useAppSettings } from "@/lib/app-settings";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
+  askAboutMeetupQuestionGroups,
+  firstMeetupSupportOptions,
+  getFirstMeetupSupportSummary,
+  type AskAboutMeetupQuestion,
+  type FirstMeetupSupportOption,
+} from "@/lib/options-hub";
+import {
   canMeetInPerson,
   deriveVerificationLevel,
   getEventMembership,
@@ -753,6 +760,8 @@ export default function EventDetailsScreen() {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
+  const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
+  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | null>(null);
   const {
     ageConfirmed,
     appLanguage,
@@ -855,6 +864,19 @@ export default function EventDetailsScreen() {
   const isEventPinned = pinnedEventIds.includes(event.id);
   const isEventHidden = hiddenEventIds.includes(event.id);
 
+  const toggleFirstMeetupSupportOption = (option: FirstMeetupSupportOption) => {
+    setSelectedFirstMeetupSupport((current) => {
+      if (option === "No extra support") return ["No extra support"];
+
+      const selectedWithoutFallback = current.filter((item) => item !== "No extra support");
+      const nextSelection = selectedWithoutFallback.includes(option)
+        ? selectedWithoutFallback.filter((item) => item !== option)
+        : [...selectedWithoutFallback, option];
+
+      return nextSelection.length > 0 ? nextSelection : ["No extra support"];
+    });
+  };
+
   const shareEvent = async () => {
     const message = actionCopy.shareMessage(event.title, event.venue, eventDate);
 
@@ -891,7 +913,7 @@ export default function EventDetailsScreen() {
 
     const nextMemberships = joinEvent(event.id, eventMemberships);
     await saveSoftHelloMvpState({ eventMemberships: nextMemberships });
-    router.push({ pathname: "/(tabs)/chats" });
+    router.push({ pathname: "/(tabs)/chats", params: { eventId: event.id } } as never);
   };
 
   const confirmVerificationDetails = async () => {
@@ -1180,6 +1202,89 @@ export default function EventDetailsScreen() {
           <Text style={[styles.meetingCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventMeetingCopy}</Text>
         </View>
 
+        <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <View style={styles.weatherCopyBlock}>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>First meetup support</Text>
+              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Local prototype choices only. No guide, matching, or private 1:1 flow is created.
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+            {firstMeetupSupportOptions.map((option) => {
+              const active = selectedFirstMeetupSupport.includes(option.label);
+
+              return (
+                <TouchableOpacity
+                  key={option.label}
+                  activeOpacity={0.82}
+                  onPress={() => toggleFirstMeetupSupportOption(option.label)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={option.label}
+                  accessibilityHint={option.description}
+                  style={[styles.meetupSupportChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                >
+                  <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text style={[styles.meetupSupportSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Current: {getFirstMeetupSupportSummary(selectedFirstMeetupSupport)}
+          </Text>
+        </View>
+
+        <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="message" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <View style={styles.weatherCopyBlock}>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Ask about this meetup</Text>
+              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Demo question chips for clarity. For report, block, leave, or emergency help, use existing safety flows.
+              </Text>
+            </View>
+          </View>
+          {askAboutMeetupQuestionGroups.map((group) => (
+            <View key={group.phase} style={styles.meetupQuestionGroup}>
+              <Text style={[styles.meetupQuestionPhase, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{group.title}</Text>
+              <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+                {group.questions.map((question) => {
+                  const active = selectedMeetupQuestion === question;
+
+                  return (
+                    <TouchableOpacity
+                      key={question}
+                      activeOpacity={0.82}
+                      onPress={() => setSelectedMeetupQuestion(question)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={question}
+                      style={[styles.meetupQuestionChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                    >
+                      <Text style={[styles.meetupQuestionText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{question}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ))}
+          {selectedMeetupQuestion ? (
+            <View style={[styles.meetupHelperResult, isDay && styles.dayActionRow]}>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Demo helper selected</Text>
+              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{selectedMeetupQuestion}</Text>
+            </View>
+          ) : null}
+        </View>
+
         <View style={[styles.safetyPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
             <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCopy.meetingSafety}</Text>
@@ -1327,6 +1432,20 @@ const styles = StyleSheet.create({
   expectCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 1 },
   meetingPanel: { borderTopWidth: 1, borderColor: nsnColors.border, paddingTop: 14, marginTop: 2, marginBottom: 18 },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
+  meetupSupportPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 10, marginBottom: 14 },
+  meetupSupportHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  meetupSupportIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  meetupSupportChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  meetupSupportChip: { minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  meetupSupportChipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  meetupSupportChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  meetupSupportChipTextActive: { color: "#FFFFFF" },
+  meetupSupportSummary: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  meetupQuestionGroup: { gap: 6 },
+  meetupQuestionPhase: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
+  meetupQuestionChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  meetupQuestionText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  meetupHelperResult: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(114,214,126,0.3)", backgroundColor: "rgba(114,214,126,0.1)", padding: 10 },
   softExitCard: { borderRadius: 18, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: nsnColors.border, padding: 15, marginBottom: 18 },
   daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   softExitTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, marginBottom: 4 },
