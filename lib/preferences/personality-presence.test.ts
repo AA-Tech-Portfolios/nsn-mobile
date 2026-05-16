@@ -6,6 +6,7 @@ import {
   normalizePersonalityPresenceList,
   personalityPresenceComfortAroundOptions,
   personalityPresenceHairOptions,
+  personalityPresencePersonalStyleOptions,
   personalityPresenceSocialStyleOptions,
 } from "./personality-presence";
 
@@ -25,6 +26,7 @@ describe("personality and presence preferences", () => {
       )
     ).toEqual(["More introverted"]);
     expect(normalizePersonalityPresenceList(["Good listeners"], personalityPresenceComfortAroundOptions)).toEqual(["Good listeners"]);
+    expect(normalizePersonalityPresenceList(["Smart casual", "Smart casual"], personalityPresencePersonalStyleOptions)).toEqual(["Smart casual"]);
   });
 
   it("counts only user-provided preference values, not privacy visibility", () => {
@@ -34,10 +36,11 @@ describe("personality and presence preferences", () => {
         eyes: null,
         facialHair: null,
         style: "Casual",
+        personalStyles: ["Smart casual", "Don't mind what others wear"],
         socialStyles: ["Quiet at first, warmer later"],
         connectionPreferences: [],
         comfortableAround: ["Kind and patient", "Good listeners"],
       })
-    ).toBe(5);
+    ).toBe(7);
   });
 });

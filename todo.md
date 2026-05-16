@@ -186,4 +186,5 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 
 - Connect Personality & Presence to preference-based recommendations later.
 - Gather tester feedback on whether appearance/personality descriptors feel helpful or too personal.
+- Gather tester feedback on whether style/personality chips feel expressive without creating social pressure.
 - Add stronger privacy controls before using these fields in recommendations.

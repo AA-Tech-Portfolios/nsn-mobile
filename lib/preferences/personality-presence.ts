@@ -34,6 +34,21 @@ export type PersonalityPresenceStyle =
   | "Relaxed"
   | "Prefer not to say";
 
+export type PersonalityPresencePersonalStyle =
+  | "Casual"
+  | "Relaxed"
+  | "Neat/simple"
+  | "Smart casual"
+  | "Creative/artsy"
+  | "Sporty"
+  | "Cozy/comfy"
+  | "Minimalist"
+  | "Formal when needed"
+  | "Depends on the setting"
+  | "Don't mind what others wear"
+  | "Still figuring out my style"
+  | "Prefer not to say";
+
 export type PersonalityPresenceSocialStyle =
   | "More introverted"
   | "More extroverted"
@@ -105,6 +120,22 @@ export const personalityPresenceStyleOptions: PersonalityPresenceStyle[] = [
   "Prefer not to say",
 ];
 
+export const personalityPresencePersonalStyleOptions: PersonalityPresencePersonalStyle[] = [
+  "Casual",
+  "Relaxed",
+  "Neat/simple",
+  "Smart casual",
+  "Creative/artsy",
+  "Sporty",
+  "Cozy/comfy",
+  "Minimalist",
+  "Formal when needed",
+  "Depends on the setting",
+  "Don't mind what others wear",
+  "Still figuring out my style",
+  "Prefer not to say",
+];
+
 export const personalityPresenceSocialStyleOptions: PersonalityPresenceSocialStyle[] = [
   "More introverted",
   "More extroverted",
@@ -154,6 +185,7 @@ export const getPersonalityPresenceSelectedCount = ({
   eyes,
   facialHair,
   style,
+  personalStyles,
   socialStyles,
   connectionPreferences,
   comfortableAround,
@@ -162,11 +194,13 @@ export const getPersonalityPresenceSelectedCount = ({
   eyes?: PersonalityPresenceEyes | null;
   facialHair?: PersonalityPresenceFacialHair | null;
   style?: PersonalityPresenceStyle | null;
+  personalStyles: readonly PersonalityPresencePersonalStyle[];
   socialStyles: readonly PersonalityPresenceSocialStyle[];
   connectionPreferences: readonly PersonalityPresenceConnectionPreference[];
   comfortableAround: readonly PersonalityPresenceComfortAround[];
 }) =>
   [hair, eyes, facialHair, style].filter(Boolean).length +
+  personalStyles.length +
   socialStyles.length +
   connectionPreferences.length +
   comfortableAround.length;

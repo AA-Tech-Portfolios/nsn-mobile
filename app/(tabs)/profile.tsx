@@ -1185,6 +1185,7 @@ export default function ProfileScreen() {
     personalityPresenceEyes,
     personalityPresenceFacialHair,
     personalityPresenceStyle,
+    personalityPresencePersonalStyles,
     personalityPresenceSocialStyles,
     personalityPresenceConnectionPreferences,
     personalityPresenceComfortAround,
@@ -2711,6 +2712,7 @@ export default function ProfileScreen() {
     eyes: personalityPresenceEyes,
     facialHair: personalityPresenceFacialHair,
     style: personalityPresenceStyle,
+    personalStyles: personalityPresencePersonalStyles,
     socialStyles: personalityPresenceSocialStyles,
     connectionPreferences: personalityPresenceConnectionPreferences,
     comfortableAround: personalityPresenceComfortAround,
@@ -2718,6 +2720,7 @@ export default function ProfileScreen() {
   const personalityPresenceSummary = [
     personalityPresenceHair ? `Hair: ${personalityPresenceHair}` : "",
     personalityPresenceStyle ? `Style: ${personalityPresenceStyle}` : "",
+    ...personalityPresencePersonalStyles.slice(0, 2),
     ...personalityPresenceSocialStyles.slice(0, 2),
     ...personalityPresenceConnectionPreferences.slice(0, 2),
     ...personalityPresenceComfortAround.slice(0, 2),

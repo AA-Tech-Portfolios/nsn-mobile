@@ -84,6 +84,7 @@ import {
   personalityPresenceEyeOptions,
   personalityPresenceFacialHairOptions,
   personalityPresenceHairOptions,
+  personalityPresencePersonalStyleOptions,
   personalityPresenceSocialStyleOptions,
   personalityPresenceStyleOptions,
   type PersonalityPresenceComfortAround,
@@ -91,6 +92,7 @@ import {
   type PersonalityPresenceEyes,
   type PersonalityPresenceFacialHair,
   type PersonalityPresenceHair,
+  type PersonalityPresencePersonalStyle,
   type PersonalityPresenceSocialStyle,
   type PersonalityPresenceStyle,
 } from "@/lib/preferences/personality-presence";
@@ -256,6 +258,7 @@ export default function UserPreferencesScreen() {
     personalityPresenceEyes,
     personalityPresenceFacialHair,
     personalityPresenceStyle,
+    personalityPresencePersonalStyles,
     personalityPresenceSocialStyles,
     personalityPresenceConnectionPreferences,
     personalityPresenceComfortAround,
@@ -333,6 +336,7 @@ export default function UserPreferencesScreen() {
     getCalmDefaultOpenGroupIds(
       [
         { id: "personality-recognition", defaultOpen: true, selectedCount: 0 },
+        { id: "personality-usual-style", selectedCount: 0 },
         { id: "personality-social", selectedCount: 0 },
         { id: "personality-connection", selectedCount: 0 },
         { id: "personality-comfort", selectedCount: 0 },
@@ -383,6 +387,7 @@ export default function UserPreferencesScreen() {
         eyes: personalityPresenceEyes,
         facialHair: personalityPresenceFacialHair,
         style: personalityPresenceStyle,
+        personalStyles: personalityPresencePersonalStyles,
         socialStyles: personalityPresenceSocialStyles,
         connectionPreferences: personalityPresenceConnectionPreferences,
         comfortableAround: personalityPresenceComfortAround,
@@ -393,6 +398,7 @@ export default function UserPreferencesScreen() {
       personalityPresenceEyes,
       personalityPresenceFacialHair,
       personalityPresenceHair,
+      personalityPresencePersonalStyles,
       personalityPresenceSocialStyles,
       personalityPresenceStyle,
     ]
@@ -403,6 +409,7 @@ export default function UserPreferencesScreen() {
     personalityPresenceEyes ? `Eyes: ${personalityPresenceEyes}` : "",
     personalityPresenceFacialHair ? `Facial hair: ${personalityPresenceFacialHair}` : "",
     personalityPresenceStyle ? `Style: ${personalityPresenceStyle}` : "",
+    ...personalityPresencePersonalStyles,
     ...personalityPresenceSocialStyles,
     ...personalityPresenceConnectionPreferences,
     ...personalityPresenceComfortAround,
@@ -525,13 +532,18 @@ export default function UserPreferencesScreen() {
   };
 
   const togglePersonalityPresenceListItem = async <T extends string>(
-    key: "personalityPresenceSocialStyles" | "personalityPresenceConnectionPreferences" | "personalityPresenceComfortAround",
+    key: "personalityPresencePersonalStyles" | "personalityPresenceSocialStyles" | "personalityPresenceConnectionPreferences" | "personalityPresenceComfortAround",
     current: T[],
     option: T
   ) => {
     const nextPreferences = current.includes(option)
       ? current.filter((item) => item !== option)
       : [...current, option];
+
+    if (key === "personalityPresencePersonalStyles") {
+      await saveSoftHelloMvpState({ personalityPresencePersonalStyles: nextPreferences as PersonalityPresencePersonalStyle[] });
+      return;
+    }
 
     if (key === "personalityPresenceSocialStyles") {
       await saveSoftHelloMvpState({ personalityPresenceSocialStyles: nextPreferences as PersonalityPresenceSocialStyle[] });
@@ -1241,6 +1253,29 @@ export default function UserPreferencesScreen() {
                         label: option,
                         active: personalityPresenceSocialStyles.includes(option),
                         onPress: () => togglePersonalityPresenceListItem("personalityPresenceSocialStyles", personalityPresenceSocialStyles, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-usual-style",
+                title: "My usual style",
+                copy: "Optional self-expression for how you usually show up. This is not a fashion score, attractiveness signal, or requirement.",
+                icon: "🌿",
+                open: openPreferenceDetailGroups.includes("personality-usual-style"),
+                onToggle: () => togglePreferenceDetailGroup("personality-usual-style"),
+                selectedCount: personalityPresencePersonalStyles.length,
+                totalCount: personalityPresencePersonalStyleOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresencePersonalStyleOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: personalityPresencePersonalStyles.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresencePersonalStyles", personalityPresencePersonalStyles, option),
                         wide: true,
                       })
                     )}

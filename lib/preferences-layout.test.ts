@@ -70,6 +70,7 @@ describe("preference chip metadata", () => {
     expect(getPreferenceChipIcon("Beef")).toBe("🥩");
     expect(getPreferenceChipIcon("Sandwiches")).toBe("🥪");
     expect(getPreferenceChipIcon("Tea")).toBe("🍵");
+    expect(getPreferenceChipIcon("Bubble tea")).toBe("🧋");
     expect(getPreferenceChipIcon("Ice cream")).toBe("🍦");
     expect(getPreferenceChipIcon("Pizza")).toBe("🍕");
     expect(getPreferenceChipIcon("Burgers")).toBe("🍔");
@@ -83,6 +84,13 @@ describe("preference chip metadata", () => {
     expect(getPreferenceChipIcon("Beach days")).toBe("🌊");
     expect(getPreferenceChipIcon("Vegetarian")).toBe("🥗");
     expect(getPreferenceChipIcon("Vegan")).toBe("🌱");
+    expect(getPreferenceChipIcon("Allergy-aware venues")).toBe("🛡️");
+    expect(getPreferenceChipIcon("Prefer alcohol-free venues")).toBe("🚫");
+    expect(getPreferenceChipIcon("Wine")).toBe("🍷");
+    expect(getPreferenceChipIcon("Beer")).toBe("🍺");
+    expect(getPreferenceChipIcon("Cocktails")).toBe("🍸");
+    expect(getPreferenceChipIcon("Thai")).toBe("🇹🇭");
+    expect(getPreferenceChipIcon("Vietnamese")).toBe("🇻🇳");
     expect(getPreferenceChipIcon("Calm")).toBe("🌿");
     expect(getPreferenceChipIcon("Good listener")).toBe("💬");
     expect(getPreferenceChipIcon("Small groups")).toBe("🧑‍🤝‍🧑");

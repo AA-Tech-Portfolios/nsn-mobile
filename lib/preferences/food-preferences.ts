@@ -53,7 +53,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "proteins",
     title: "Proteins",
-    icon: "🍳",
+    icon: "🥩",
     copy: "Helpful for food comfort, dietary matching, and event planning notes.",
     defaultVisible: 8,
   },
@@ -112,7 +112,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "alcoholComfort",
     title: "Alcohol comfort",
-    icon: "⚠️",
+    icon: "🍷",
     copy: "Set whether alcohol-serving venues feel comfortable for you.",
     defaultVisible: 3,
     ageSensitive: true,
@@ -120,7 +120,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
   {
     id: "dietaryNeeds",
     title: "Dietary needs and safety",
-    icon: "⚠️",
+    icon: "🛡️",
     copy: "Dietary preferences help with meetup suggestions, but users should still confirm ingredients with venues.",
     defaultOpen: true,
     defaultVisible: 10,

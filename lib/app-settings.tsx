@@ -33,6 +33,7 @@ import {
   personalityPresenceEyeOptions,
   personalityPresenceFacialHairOptions,
   personalityPresenceHairOptions,
+  personalityPresencePersonalStyleOptions,
   personalityPresenceSocialStyleOptions,
   personalityPresenceStyleOptions,
   type PersonalityPresenceComfortAround,
@@ -40,6 +41,7 @@ import {
   type PersonalityPresenceEyes,
   type PersonalityPresenceFacialHair,
   type PersonalityPresenceHair,
+  type PersonalityPresencePersonalStyle,
   type PersonalityPresenceSocialStyle,
   type PersonalityPresenceStyle,
 } from "./preferences/personality-presence";
@@ -916,6 +918,7 @@ type OnboardingSnapshot = {
   personalityPresenceEyes?: PersonalityPresenceEyes | null;
   personalityPresenceFacialHair?: PersonalityPresenceFacialHair | null;
   personalityPresenceStyle?: PersonalityPresenceStyle | null;
+  personalityPresencePersonalStyles?: PersonalityPresencePersonalStyle[];
   personalityPresenceSocialStyles?: PersonalityPresenceSocialStyle[];
   personalityPresenceConnectionPreferences?: PersonalityPresenceConnectionPreference[];
   personalityPresenceComfortAround?: PersonalityPresenceComfortAround[];
@@ -1235,6 +1238,8 @@ type AppSettings = {
   setPersonalityPresenceFacialHair: (value: PersonalityPresenceFacialHair | null) => void;
   personalityPresenceStyle: PersonalityPresenceStyle | null;
   setPersonalityPresenceStyle: (value: PersonalityPresenceStyle | null) => void;
+  personalityPresencePersonalStyles: PersonalityPresencePersonalStyle[];
+  setPersonalityPresencePersonalStyles: (value: PersonalityPresencePersonalStyle[]) => void;
   personalityPresenceSocialStyles: PersonalityPresenceSocialStyle[];
   setPersonalityPresenceSocialStyles: (value: PersonalityPresenceSocialStyle[]) => void;
   personalityPresenceConnectionPreferences: PersonalityPresenceConnectionPreference[];
@@ -1461,6 +1466,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [personalityPresenceEyes, setPersonalityPresenceEyes] = useState<PersonalityPresenceEyes | null>(null);
   const [personalityPresenceFacialHair, setPersonalityPresenceFacialHair] = useState<PersonalityPresenceFacialHair | null>(null);
   const [personalityPresenceStyle, setPersonalityPresenceStyle] = useState<PersonalityPresenceStyle | null>(null);
+  const [personalityPresencePersonalStyles, setPersonalityPresencePersonalStyles] = useState<PersonalityPresencePersonalStyle[]>([]);
   const [personalityPresenceSocialStyles, setPersonalityPresenceSocialStyles] = useState<PersonalityPresenceSocialStyle[]>([]);
   const [personalityPresenceConnectionPreferences, setPersonalityPresenceConnectionPreferences] = useState<PersonalityPresenceConnectionPreference[]>([]);
   const [personalityPresenceComfortAround, setPersonalityPresenceComfortAround] = useState<PersonalityPresenceComfortAround[]>([]);
@@ -1626,6 +1632,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setPersonalityPresenceEyes(normalizePersonalityPresenceChoice(snapshot.personalityPresenceEyes, personalityPresenceEyeOptions));
         setPersonalityPresenceFacialHair(normalizePersonalityPresenceChoice(snapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions));
         setPersonalityPresenceStyle(normalizePersonalityPresenceChoice(snapshot.personalityPresenceStyle, personalityPresenceStyleOptions));
+        setPersonalityPresencePersonalStyles(normalizePersonalityPresenceList(snapshot.personalityPresencePersonalStyles, personalityPresencePersonalStyleOptions));
         setPersonalityPresenceSocialStyles(normalizePersonalityPresenceList(snapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions));
         setPersonalityPresenceConnectionPreferences(normalizePersonalityPresenceList(snapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions));
         setPersonalityPresenceComfortAround(normalizePersonalityPresenceList(snapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions));
@@ -1774,6 +1781,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextPersonalityPresenceEyes = normalizePersonalityPresenceChoice(snapshot.personalityPresenceEyes, personalityPresenceEyeOptions);
     const nextPersonalityPresenceFacialHair = normalizePersonalityPresenceChoice(snapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions);
     const nextPersonalityPresenceStyle = normalizePersonalityPresenceChoice(snapshot.personalityPresenceStyle, personalityPresenceStyleOptions);
+    const nextPersonalityPresencePersonalStyles = normalizePersonalityPresenceList(snapshot.personalityPresencePersonalStyles, personalityPresencePersonalStyleOptions);
     const nextPersonalityPresenceSocialStyles = normalizePersonalityPresenceList(snapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions);
     const nextPersonalityPresenceConnectionPreferences = normalizePersonalityPresenceList(snapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions);
     const nextPersonalityPresenceComfortAround = normalizePersonalityPresenceList(snapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions);
@@ -1801,6 +1809,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setPersonalityPresenceEyes(nextPersonalityPresenceEyes);
     setPersonalityPresenceFacialHair(nextPersonalityPresenceFacialHair);
     setPersonalityPresenceStyle(nextPersonalityPresenceStyle);
+    setPersonalityPresencePersonalStyles(nextPersonalityPresencePersonalStyles);
     setPersonalityPresenceSocialStyles(nextPersonalityPresenceSocialStyles);
     setPersonalityPresenceConnectionPreferences(nextPersonalityPresenceConnectionPreferences);
     setPersonalityPresenceComfortAround(nextPersonalityPresenceComfortAround);
@@ -1906,6 +1915,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           personalityPresenceEyes: nextPersonalityPresenceEyes,
           personalityPresenceFacialHair: nextPersonalityPresenceFacialHair,
           personalityPresenceStyle: nextPersonalityPresenceStyle,
+          personalityPresencePersonalStyles: nextPersonalityPresencePersonalStyles,
           personalityPresenceSocialStyles: nextPersonalityPresenceSocialStyles,
           personalityPresenceConnectionPreferences: nextPersonalityPresenceConnectionPreferences,
           personalityPresenceComfortAround: nextPersonalityPresenceComfortAround,
@@ -2010,6 +2020,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       personalityPresenceEyes,
       personalityPresenceFacialHair,
       personalityPresenceStyle,
+      personalityPresencePersonalStyles,
       personalityPresenceSocialStyles,
       personalityPresenceConnectionPreferences,
       personalityPresenceComfortAround,
@@ -2117,6 +2128,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.personalityPresenceEyes = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceEyes, personalityPresenceEyeOptions);
     nextSnapshot.personalityPresenceFacialHair = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions);
     nextSnapshot.personalityPresenceStyle = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceStyle, personalityPresenceStyleOptions);
+    nextSnapshot.personalityPresencePersonalStyles = normalizePersonalityPresenceList(nextSnapshot.personalityPresencePersonalStyles, personalityPresencePersonalStyleOptions);
     nextSnapshot.personalityPresenceSocialStyles = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions);
     nextSnapshot.personalityPresenceConnectionPreferences = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions);
     nextSnapshot.personalityPresenceComfortAround = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions);
@@ -2233,6 +2245,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.personalityPresenceEyes !== undefined) setPersonalityPresenceEyes(nextSnapshot.personalityPresenceEyes ?? null);
     if (snapshot.personalityPresenceFacialHair !== undefined) setPersonalityPresenceFacialHair(nextSnapshot.personalityPresenceFacialHair ?? null);
     if (snapshot.personalityPresenceStyle !== undefined) setPersonalityPresenceStyle(nextSnapshot.personalityPresenceStyle ?? null);
+    if (snapshot.personalityPresencePersonalStyles !== undefined) setPersonalityPresencePersonalStyles(nextSnapshot.personalityPresencePersonalStyles ?? []);
     if (snapshot.personalityPresenceSocialStyles !== undefined) setPersonalityPresenceSocialStyles(nextSnapshot.personalityPresenceSocialStyles ?? []);
     if (snapshot.personalityPresenceConnectionPreferences !== undefined) setPersonalityPresenceConnectionPreferences(nextSnapshot.personalityPresenceConnectionPreferences ?? []);
     if (snapshot.personalityPresenceComfortAround !== undefined) setPersonalityPresenceComfortAround(nextSnapshot.personalityPresenceComfortAround ?? []);
@@ -2586,6 +2599,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setPersonalityPresenceFacialHair,
         personalityPresenceStyle,
         setPersonalityPresenceStyle,
+        personalityPresencePersonalStyles,
+        setPersonalityPresencePersonalStyles,
         personalityPresenceSocialStyles,
         setPersonalityPresenceSocialStyles,
         personalityPresenceConnectionPreferences,
