@@ -2,6 +2,7 @@ export type PreferenceLayoutDensity = "Compact" | "Comfortable" | "Spacious";
 export type PreferenceCategoryKey =
   | "overview"
   | "comfort"
+  | "personality"
   | "background"
   | "calendar"
   | "food"
@@ -117,6 +118,7 @@ export function getSettingsPreferenceLayout(width: number, density: PreferenceLa
 export const preferenceCategoryDisplayMetadata: Record<PreferenceCategoryKey, { icon: string; title: string }> = {
   overview: { icon: "👤", title: "User preferences" },
   comfort: { icon: "🛡️", title: "Comfort & trust" },
+  personality: { icon: "🌿", title: "Personality & presence" },
   background: { icon: "🎓", title: "Work, study & life context" },
   calendar: { icon: "🗓️", title: "Calendar & cultural moments" },
   food: { icon: "🍽️", title: "Food & beverage" },
@@ -166,6 +168,7 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["calendar & cultural moments", "🗓️"],
   ["calendar/cultural moments", "🗓️"],
   ["calm", "🌿"],
+  ["calm and thoughtful", "🌿"],
   ["carpool okay", "🤝"],
   ["celebrate", "🎉"],
   ["chicken", "🍗"],
@@ -175,6 +178,7 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["community gardens", "🌿"],
   ["community services", "🤝"],
   ["community work", "🤝"],
+  ["community/group hangouts", "🤝"],
   ["coffee", "☕"],
   ["cookies", "🍪"],
   ["contact", "💬"],
@@ -207,6 +211,7 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["getting dropped off", "🚗"],
   ["gluten-free", "🌾"],
   ["good listener", "💬"],
+  ["good listeners", "💬"],
   ["health", "🩺"],
   ["healthcare", "🩺"],
   ["halal", "🥘"],
@@ -252,6 +257,7 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["prefer nearby only", "🏠"],
   ["prefer non-alcohol venues", "🔕"],
   ["prefer quiet plans", "🌙"],
+  ["prefer smaller conversations", "🌙"],
   ["public transport", "🚌"],
   ["quiet music", "🎧"],
   ["reading", "📚"],
@@ -267,6 +273,7 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["small business", "💼"],
   ["small groups", "🧑‍🤝‍🧑"],
   ["small groups only", "🧑‍🤝‍🧑"],
+  ["somewhere in between", "⚖️"],
   ["social", "💬"],
   ["soups", "🍲"],
   ["sorbet", "🍧"],

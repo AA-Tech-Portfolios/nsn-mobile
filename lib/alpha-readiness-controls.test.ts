@@ -30,6 +30,19 @@ describe("alpha readiness controls", () => {
       kind: "drawer-panel",
       panel: "transportPreferences",
     });
+
+    expect(
+      getProfilePreferenceDestination({
+        panel: "personalityPresence",
+        platform: "ios",
+        section: "personality",
+        width: 390,
+      })
+    ).toEqual({
+      closesDrawer: false,
+      kind: "drawer-panel",
+      panel: "personalityPresence",
+    });
   });
 
   it("closes the drawer before using the wide web preference view", () => {

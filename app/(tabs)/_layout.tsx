@@ -2,7 +2,7 @@ import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -57,10 +57,11 @@ const tabLabels: Record<string, { home: string; meetups: string; chats: string; 
 export default function TabLayout() {
   const { isNightMode, appLanguage, appPalette, largerTouchTargets, reduceTransparency, boldText, simplifiedInterface, screenReaderHints, softSurfaces, clearBorders } = useAppSettings();
   const isDay = !isNightMode;
-  const labels = tabLabels[getLanguageBase(appLanguage)] ?? tabLabels.English;
+  const labels = tabLabels[getTranslationLanguageBase(appLanguage)] ?? tabLabels.English;
   const activeTintColor = appPalette.swatches[2];
   const insets = useSafeAreaInsets();
-  const bottomPadding = Platform.OS === "web" ? 12 : Math.max(insets.bottom, 8);
+  const bottomSafeArea = Platform.OS === "web" ? Math.max(insets.bottom, 28) : Math.max(insets.bottom, 16);
+  const tabContentHeight = largerTouchTargets ? 86 : 76;
 
   return (
       <Tabs
@@ -72,17 +73,29 @@ export default function TabLayout() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: boldText ? "800" : "600",
-          lineHeight: 15,
+          lineHeight: 16,
           marginTop: 2,
+          marginBottom: 0,
         },
         tabBarIconStyle: {
-          marginTop: 4,
-          marginBottom: 1,
+          marginTop: 0,
+          marginBottom: 4,
+        },
+        tabBarItemStyle: {
+          minHeight: tabContentHeight,
+          height: tabContentHeight,
+          paddingTop: largerTouchTargets ? 12 : 10,
+          paddingBottom: largerTouchTargets ? 11 : 9,
+          alignItems: "center",
+          justifyContent: "center",
+          overflow: "visible",
         },
         tabBarStyle: {
-          height: (largerTouchTargets ? 76 : 66) + bottomPadding,
-          paddingTop: largerTouchTargets ? 12 : 9,
-          paddingBottom: bottomPadding,
+          minHeight: tabContentHeight + bottomSafeArea + 12,
+          height: tabContentHeight + bottomSafeArea + 12,
+          paddingTop: 6,
+          paddingBottom: bottomSafeArea + 6,
+          overflow: "visible",
           backgroundColor: reduceTransparency ? (isDay ? "#F4F7F8" : "#0B1626") : isDay ? "#E8EDF2" : nsnColors.background,
           borderTopColor: clearBorders ? (isDay ? "#6F87A1" : "#5A6EA5") : softSurfaces ? (isDay ? "#DDE6EC" : "rgba(148,163,184,0.18)") : isDay ? "#C5D0DA" : nsnColors.border,
           borderTopWidth: clearBorders ? 1.5 : softSurfaces ? 0.6 : 0.8,

@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ChatProfilePreviewSheet } from "@/components/chat-profile-preview-sheet";
 import { ProfileAvatar } from "@/components/profile-avatar";
-import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { allEvents, eventChatSeeds, nsnColors, type ChatMessage, type EventItem } from "@/lib/nsn-data";
@@ -1140,8 +1140,8 @@ export default function ChatsScreen() {
     screenReaderHints,
     saveSoftHelloMvpState,
   } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
-  const translationLanguageBase = getLanguageBase(translationLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
+  const translationLanguageBase = getTranslationLanguageBase(translationLanguage);
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const copy = chatTranslations[appLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;

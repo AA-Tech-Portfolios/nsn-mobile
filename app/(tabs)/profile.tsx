@@ -15,7 +15,7 @@ import {
   defaultMeetupContactPreferences,
   defaultTransportationPreferences,
   getLifeContextFreshnessLabel,
-  getLanguageBase,
+  getTranslationLanguageBase,
   groupSizePreferenceOptions,
   lifeContextCurrentStateOptions,
   lifeContextFieldOptions,
@@ -23,6 +23,7 @@ import {
   photoRecordingComfortOptions,
   physicalContactComfortOptions,
   socialEnergyOptions,
+  toggleMeetupContactPreferenceSelection,
   type CommunicationPreference,
   type BackgroundCommunityPreference,
   type BackgroundStudyAreaPreference,
@@ -108,6 +109,7 @@ import {
   transportationPreferenceDetails,
   type PreferenceOptionDetail,
 } from "@/lib/preferences/preference-panel-options";
+import { getPersonalityPresenceSelectedCount } from "@/lib/preferences/personality-presence";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
@@ -133,6 +135,7 @@ type ProfileMenuPanel =
   | "privacy"
   | "preferences"
   | "comfortTrust"
+  | "personalityPresence"
   | "backgroundCommunity"
   | "calendarMoments"
   | "foodBeverage"
@@ -1178,6 +1181,14 @@ export default function ProfileScreen() {
     lifeContextLearningVisibility,
     lifeContextLastUpdatedAt,
     verifiedButPrivate,
+    personalityPresenceHair,
+    personalityPresenceEyes,
+    personalityPresenceFacialHair,
+    personalityPresenceStyle,
+    personalityPresenceSocialStyles,
+    personalityPresenceConnectionPreferences,
+    personalityPresenceComfortAround,
+    showPersonalityPresenceOnProfile,
     calendarMomentStates,
     calendarMomentVisibility,
     customCalendarMoments,
@@ -1216,7 +1227,7 @@ export default function ProfileScreen() {
     interestPreferenceIds,
     interestComfortTagsByInterest,
   } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const copy = profileTranslations[appLanguageBase as keyof typeof profileTranslations] ?? profileTranslations.English;
@@ -1412,6 +1423,10 @@ export default function ProfileScreen() {
 
     if (menu === "comfortTrust") {
       openProfileOptionsPanel("comfortTrust");
+    }
+
+    if (menu === "personalityPresence") {
+      openProfileOptionsPanel("personalityPresence");
     }
 
     if (menu === "backgroundCommunity") {
@@ -1962,7 +1977,7 @@ export default function ProfileScreen() {
   };
 
   const toggleMeetupContactPreference = async (preference: MeetupContactPreference) => {
-    await saveSoftHelloMvpState({ meetupContactPreferences: toggleBackgroundListItem(meetupContactPreferences, preference) });
+    await saveSoftHelloMvpState({ meetupContactPreferences: toggleMeetupContactPreferenceSelection(meetupContactPreferences, preference) });
   };
 
   const toggleLocationComfortPreference = async (preference: LocationComfortPreference) => {
@@ -2691,8 +2706,25 @@ export default function ProfileScreen() {
     backgroundWorkPreferences.length +
     backgroundWorkRhythms.length +
     backgroundCommunityPreferences.length;
+  const personalityPresenceSelectedCount = getPersonalityPresenceSelectedCount({
+    hair: personalityPresenceHair,
+    eyes: personalityPresenceEyes,
+    facialHair: personalityPresenceFacialHair,
+    style: personalityPresenceStyle,
+    socialStyles: personalityPresenceSocialStyles,
+    connectionPreferences: personalityPresenceConnectionPreferences,
+    comfortableAround: personalityPresenceComfortAround,
+  });
+  const personalityPresenceSummary = [
+    personalityPresenceHair ? `Hair: ${personalityPresenceHair}` : "",
+    personalityPresenceStyle ? `Style: ${personalityPresenceStyle}` : "",
+    ...personalityPresenceSocialStyles.slice(0, 2),
+    ...personalityPresenceConnectionPreferences.slice(0, 2),
+    ...personalityPresenceComfortAround.slice(0, 2),
+  ].filter(Boolean);
   const profilePreferenceRowTargets: Record<UserPreferenceRowKey, { panel: ProfileDrawerPanel; section: ProfilePreferenceSection }> = {
     comfort: { panel: "comfortTrust", section: "comfort" },
+    personality: { panel: "personalityPresence", section: "personality" },
     background: { panel: "backgroundCommunity", section: "background" },
     calendar: { panel: "calendarMoments", section: "calendar" },
     food: { panel: "foodBeverage", section: "food" },
@@ -2703,6 +2735,7 @@ export default function ProfileScreen() {
   };
   const getProfilePreferenceRowBadge = (key: UserPreferenceRowKey) => {
     if (key === "comfort") return "Saved locally";
+    if (key === "personality") return personalityPresenceSelectedCount ? `${personalityPresenceSelectedCount} selected` : "Hidden";
     if (key === "background") return backgroundCommunitySelectedCount ? `${backgroundCommunitySelectedCount} selected` : "Private";
     if (key === "calendar") return selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private";
     if (key === "food") return foodBeveragePreferenceIds.length ? `${foodBeveragePreferenceIds.length} selected` : "None yet";
@@ -2712,6 +2745,7 @@ export default function ProfileScreen() {
     return locationComfortPreferences.length ? `${locationComfortPreferences.length} selected` : "Local area";
   };
   const getProfilePreferenceRowSummary = (key: UserPreferenceRowKey) => {
+    if (key === "personality") return personalityPresenceSummary.map((label) => formatPreferenceChipLabel(label)).join(", ");
     if (key === "calendar") return selectedCalendarMomentLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
     if (key === "food") return selectedFoodPreferenceLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
     if (key === "interests") return selectedInterestPreferenceLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
@@ -3450,9 +3484,39 @@ export default function ProfileScreen() {
                         <IconSymbol name="resize" color="#FFFFFF" size={20} />
                       </TouchableOpacity>
                     ) : null}
+                    <View style={[styles.profilePreferenceDisplayToggle, isDay && styles.daySoftOption]}>
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Row style</Text>
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                          Switch between the compact title-only list and the fuller descriptive preference cards.
+                        </Text>
+                      </View>
+                      <View style={styles.profilePreferenceModeButtons}>
+                        {(["Simple", "Detailed"] as const).map((mode) => {
+                          const active = userPreferenceTextMode === mode;
+
+                          return (
+                            <TouchableOpacity
+                              key={mode}
+                              activeOpacity={0.78}
+                              onPress={() => saveSoftHelloMvpState({ userPreferenceTextMode: mode })}
+                              style={[styles.profilePreferenceModeButton, active && styles.profilePreferenceModeButtonActive]}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: active }}
+                              accessibilityLabel={`${mode === "Simple" ? "Compact title only" : "Descriptive cards"} preference row style`}
+                            >
+                              <Text style={[styles.profilePreferenceModeButtonText, active && styles.profileLayoutTextActive]}>
+                                {mode === "Simple" ? "Compact" : "Descriptive"}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
                     {userPreferenceRowMetadata.map((item) => {
                       const target = profilePreferenceRowTargets[item.key];
                       const rowSummary = getProfilePreferenceRowSummary(item.key);
+                      const compactRows = userPreferenceTextMode === "Simple";
 
                       return (
                       <TouchableOpacity
@@ -3461,31 +3525,85 @@ export default function ProfileScreen() {
                         onPress={() => openPreferenceDestination(target.panel, target.section)}
                         style={[
                           styles.profileMenuItem,
-                          styles.profilePreferenceMenuItem,
-                          item.key === "comfort" && styles.profileMenuFeaturedItem,
-                          isDay && styles.daySoftOption,
+                          compactRows ? styles.profilePreferenceMenuItemCompact : styles.profilePreferenceMenuItem,
+                          !compactRows && item.key === "comfort" && styles.profileMenuFeaturedItem,
+                          !compactRows && isDay && styles.daySoftOption,
                         ]}
                         accessibilityRole="button"
                         accessibilityLabel={item.title}
                       >
-                        <View style={[styles.profileMenuIconBadge, isDay && styles.dayProfileMenuIconBadge]}>
-                          <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
-                        </View>
+                        {compactRows ? (
+                          <IconSymbol name={item.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                        ) : (
+                          <View style={[styles.profileMenuIconBadge, isDay && styles.dayProfileMenuIconBadge]}>
+                            <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+                          </View>
+                        )}
                         <View style={styles.profileMenuItemBody}>
                           <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.title}</Text>
-                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{getUserPreferenceRowDescription(item.key, userPreferenceTextMode)}</Text>
-                          {rowSummary ? (
+                          {!compactRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{getUserPreferenceRowDescription(item.key, userPreferenceTextMode)}</Text> : null}
+                          {!compactRows && rowSummary ? (
                             <Text style={[styles.profileMenuDescription, styles.profileMenuDescriptionCompact, isDay && styles.dayMutedText]} numberOfLines={1}>
                               {rowSummary}
                             </Text>
                           ) : null}
                         </View>
-                        <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{getProfilePreferenceRowBadge(item.key)}</Text>
+                        {!compactRows ? <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{getProfilePreferenceRowBadge(item.key)}</Text> : null}
                         <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       </TouchableOpacity>
                       );
                     })}
                     {renderDrawerSavedLocallyCloseAction()}
+                  </>
+                ) : null}
+                {profileMenuPanel === "personalityPresence" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("preferences")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to user preferences">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>User preferences</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity activeOpacity={0.82} onPress={() => openFullPreferenceView("personality")} style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]} accessibilityRole="button" accessibilityLabel="Open full view for Personality and presence preferences">
+                      <View style={styles.profileLayoutBody}>
+                        <Text style={[styles.profileLayoutTitle, styles.profileLayoutTextActive]}>Open full view</Text>
+                        <Text style={[styles.profileLayoutCopy, styles.profileLayoutTextActive]}>Edit appearance, social style, and connection comfort chips.</Text>
+                      </View>
+                      <IconSymbol name="resize" color="#FFFFFF" size={20} />
+                    </TouchableOpacity>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Personality & presence</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Optional human context for blurred or private profile photos. These details stay local in this prototype and are not used for ranking, swiping, scoring, or matching logic.
+                      </Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        {showPersonalityPresenceOnProfile ? "Allowed in profile preview when your privacy settings permit it." : "Hidden from your public profile preview."}
+                      </Text>
+                    </View>
+                    {personalityPresenceSummary.length ? (
+                      <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+                        {personalityPresenceSummary.map((label) => (
+                          <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
+                            {formatPreferenceChipLabel(label)}
+                          </Text>
+                        ))}
+                      </View>
+                    ) : (
+                      <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
+                        No Personality & Presence details selected yet. Everything here is optional.
+                      </Text>
+                    )}
+                    <TouchableOpacity
+                      activeOpacity={0.82}
+                      onPress={() => saveSoftHelloMvpState({ showPersonalityPresenceOnProfile: !showPersonalityPresenceOnProfile })}
+                      style={[styles.previewVisibilityToggle, isDay && styles.daySoftOption, showPersonalityPresenceOnProfile && styles.localAreaVisibilityToggleActive]}
+                      accessibilityRole="switch"
+                      accessibilityState={{ checked: showPersonalityPresenceOnProfile }}
+                      accessibilityLabel={showPersonalityPresenceOnProfile ? "Hide Personality and Presence from profile preview" : "Allow Personality and Presence in profile preview"}
+                    >
+                      <IconSymbol name={showPersonalityPresenceOnProfile ? "visibility" : "visibility.off"} color={showPersonalityPresenceOnProfile ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={16} />
+                      <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showPersonalityPresenceOnProfile && styles.localAreaVisibilityTextActive]}>
+                        {showPersonalityPresenceOnProfile ? "Allowed in preview" : "Hidden from preview"}
+                      </Text>
+                    </TouchableOpacity>
                   </>
                 ) : null}
                 {profileMenuPanel === "backgroundCommunity" ? (
@@ -6322,6 +6440,12 @@ const styles = StyleSheet.create({
   profileMenuTitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, paddingHorizontal: 10, paddingVertical: 5 },
   profileMenuItem: { minHeight: 68, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 11 },
   profilePreferenceMenuItem: { minHeight: 74, borderWidth: 1, borderColor: "rgba(124,170,201,0.24)", backgroundColor: "rgba(255,255,255,0.035)" },
+  profilePreferenceMenuItemCompact: { minHeight: 48, paddingVertical: 9, borderWidth: 0, backgroundColor: "transparent" },
+  profilePreferenceDisplayToggle: { borderRadius: 14, borderWidth: 1, borderColor: "rgba(124,170,201,0.24)", backgroundColor: "rgba(255,255,255,0.035)", padding: 12, gap: 10, marginBottom: 6 },
+  profilePreferenceModeButtons: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  profilePreferenceModeButton: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.18)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
+  profilePreferenceModeButtonActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  profilePreferenceModeButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   profileMenuFeaturedItem: { borderWidth: 1, borderColor: "rgba(124,170,201,0.45)", backgroundColor: "rgba(124,170,201,0.1)" },
   profileMenuIconBadge: { width: 34, height: 34, borderRadius: 14, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
   profileMenuDisabledOption: { opacity: 0.72, borderStyle: "dashed" },

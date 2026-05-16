@@ -5,7 +5,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { getLanguageBase, type PhotoRecordingComfortPreference, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, type PhotoRecordingComfortPreference, useAppSettings } from "@/lib/app-settings";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   askAboutMeetupQuestionGroups,
@@ -784,7 +784,7 @@ export default function EventDetailsScreen() {
     screenReaderHints,
     saveSoftHelloMvpState,
   } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy = eventTranslations[appLanguageBase as keyof typeof eventTranslations] ?? eventTranslations.English;
   const saveCopy = savePlaceTranslations[appLanguageBase as keyof typeof savePlaceTranslations] ?? savePlaceTranslations.English;
   const actionCopy = eventActionTranslations[appLanguageBase as keyof typeof eventActionTranslations] ?? eventActionTranslations.English;

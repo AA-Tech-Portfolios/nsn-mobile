@@ -1,5 +1,6 @@
 export type ProfileMenuIcon =
   | "shield"
+  | "person.fill"
   | "life-context"
   | "calendar"
   | "food"
@@ -11,6 +12,7 @@ export type ProfileMenuIcon =
 
 export type UserPreferenceRowKey =
   | "comfort"
+  | "personality"
   | "background"
   | "calendar"
   | "food"
@@ -39,6 +41,15 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
     description: "Visibility, social energy, communication, group size, verification, and photo comfort.",
     simpleDescription: "Visibility, trust, and meeting comfort.",
     badgeKind: "saved",
+    chevron: true,
+  },
+  {
+    key: "personality",
+    icon: "person.fill",
+    title: "Personality & presence",
+    description: "Optional appearance, social style, and connection context for blurred profiles.",
+    simpleDescription: "Optional human context.",
+    badgeKind: "count",
     chevron: true,
   },
   {

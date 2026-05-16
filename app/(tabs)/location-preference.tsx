@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
-import { getLanguageBase, type SoftHelloIntent, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, type SoftHelloIntent, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import { getSettingsPreferenceLayout } from "@/lib/preferences-layout";
 
@@ -146,7 +146,7 @@ export default function LocationPreferenceScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { appLanguage, homeLayoutDensity, intent, isNightMode, saveSoftHelloMvpState, suburb } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy = copyByLanguage[appLanguageBase as keyof typeof copyByLanguage] ?? copyByLanguage.English;
   const locationCopy = { ...copyByLanguage.English, ...copy };
   const localIntentLabels = intentLabels[appLanguageBase] ?? {};

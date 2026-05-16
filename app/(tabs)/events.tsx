@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -341,7 +341,7 @@ export default function EventsScreen() {
     transportationMethod,
     verificationLevel,
   } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy = eventsTranslations[appLanguageBase as keyof typeof eventsTranslations] ?? eventsTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;

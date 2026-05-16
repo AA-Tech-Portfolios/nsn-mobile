@@ -20,6 +20,7 @@ import {
   photoRecordingComfortOptions,
   physicalContactComfortOptions,
   socialEnergyOptions,
+  toggleMeetupContactPreferenceSelection,
   type BackgroundCommunityPreference,
   type BackgroundStudyAreaPreference,
   type BackgroundStudyStatusPreference,
@@ -77,6 +78,23 @@ import {
   type InterestPreference,
 } from "@/lib/preferences/interests";
 import {
+  getPersonalityPresenceSelectedCount,
+  personalityPresenceComfortAroundOptions,
+  personalityPresenceConnectionOptions,
+  personalityPresenceEyeOptions,
+  personalityPresenceFacialHairOptions,
+  personalityPresenceHairOptions,
+  personalityPresenceSocialStyleOptions,
+  personalityPresenceStyleOptions,
+  type PersonalityPresenceComfortAround,
+  type PersonalityPresenceConnectionPreference,
+  type PersonalityPresenceEyes,
+  type PersonalityPresenceFacialHair,
+  type PersonalityPresenceHair,
+  type PersonalityPresenceSocialStyle,
+  type PersonalityPresenceStyle,
+} from "@/lib/preferences/personality-presence";
+import {
   locationComfortPreferenceDetails,
   meetupContactPreferenceDetails,
   transportationMethodByPreference,
@@ -94,7 +112,7 @@ import {
   getSettingsPreferenceLayout,
 } from "@/lib/preferences-layout";
 
-type PreferenceSection = "overview" | "comfort" | "background" | "calendar" | "food" | "interests" | "transport" | "contact" | "location";
+type PreferenceSection = "overview" | "comfort" | "personality" | "background" | "calendar" | "food" | "interests" | "transport" | "contact" | "location";
 
 const preferenceSections: Record<PreferenceSection, { icon: string; title: string; copy: string }> = {
   overview: {
@@ -106,6 +124,11 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
     icon: "🛡️",
     title: "Comfort & trust",
     copy: "Visibility, social energy, communication, group size, verification, photo comfort, and physical contact preferences in one calmer view.",
+  },
+  personality: {
+    icon: "🌿",
+    title: "Personality & presence",
+    copy: "Optional appearance, social style, and connection context for blurred profiles. Keep it private, hide it from your public profile, and change it anytime.",
   },
   background: {
     icon: "🎓",
@@ -147,6 +170,7 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
 const simplePreferenceSectionCopy: Record<PreferenceSection, string> = {
   overview: "Choose what makes local meetups feel easier.",
   comfort: "Visibility, trust, and meeting comfort.",
+  personality: "Optional human context for blurred profiles.",
   background: "Optional life context.",
   calendar: "Dates and moments that matter to you.",
   food: "Food, drinks, and dietary comfort.",
@@ -172,6 +196,7 @@ const getPreferenceSectionIcon = (section: PreferenceSection, fallback: string) 
 const compactPanelBySection: Record<PreferenceSection, string> = {
   overview: "preferences",
   comfort: "comfortTrust",
+  personality: "personalityPresence",
   background: "backgroundCommunity",
   calendar: "calendarMoments",
   food: "foodBeverage",
@@ -188,6 +213,7 @@ const normalizePreferenceSection = (section?: string | string[]): PreferenceSect
   const value = Array.isArray(section) ? section[0] : section;
 
   return value === "comfort" ||
+    value === "personality" ||
     value === "background" ||
     value === "calendar" ||
     value === "food" ||
@@ -226,6 +252,14 @@ export default function UserPreferencesScreen() {
     lifeContextLearningVisibility,
     lifeContextLastUpdatedAt,
     verifiedButPrivate,
+    personalityPresenceHair,
+    personalityPresenceEyes,
+    personalityPresenceFacialHair,
+    personalityPresenceStyle,
+    personalityPresenceSocialStyles,
+    personalityPresenceConnectionPreferences,
+    personalityPresenceComfortAround,
+    showPersonalityPresenceOnProfile,
     calendarMomentStates,
     calendarMomentVisibility,
     customCalendarMoments,
@@ -298,6 +332,10 @@ export default function UserPreferencesScreen() {
   const [openPreferenceDetailGroups, setOpenPreferenceDetailGroups] = useState<string[]>(() =>
     getCalmDefaultOpenGroupIds(
       [
+        { id: "personality-recognition", defaultOpen: true, selectedCount: 0 },
+        { id: "personality-social", selectedCount: 0 },
+        { id: "personality-connection", selectedCount: 0 },
+        { id: "personality-comfort", selectedCount: 0 },
         { id: "background-current", defaultOpen: true, selectedCount: lifeContextCurrentStates.length },
         { id: "background-field", selectedCount: lifeContextFields.length },
         { id: "background-learning", selectedCount: lifeContextLearningInterests.length },
@@ -338,6 +376,37 @@ export default function UserPreferencesScreen() {
   const getPreferenceSectionCopy = (nextSection: PreferenceSection) =>
     getPreferenceText(preferenceSections[nextSection].copy, simplePreferenceSectionCopy[nextSection]);
   const lifeContextFreshness = useMemo(() => getLifeContextFreshnessLabel(lifeContextLastUpdatedAt), [lifeContextLastUpdatedAt]);
+  const personalityPresenceSelectedCount = useMemo(
+    () =>
+      getPersonalityPresenceSelectedCount({
+        hair: personalityPresenceHair,
+        eyes: personalityPresenceEyes,
+        facialHair: personalityPresenceFacialHair,
+        style: personalityPresenceStyle,
+        socialStyles: personalityPresenceSocialStyles,
+        connectionPreferences: personalityPresenceConnectionPreferences,
+        comfortableAround: personalityPresenceComfortAround,
+      }),
+    [
+      personalityPresenceComfortAround,
+      personalityPresenceConnectionPreferences,
+      personalityPresenceEyes,
+      personalityPresenceFacialHair,
+      personalityPresenceHair,
+      personalityPresenceSocialStyles,
+      personalityPresenceStyle,
+    ]
+  );
+  const recognitionSelectedCount = [personalityPresenceHair, personalityPresenceEyes, personalityPresenceFacialHair, personalityPresenceStyle].filter(Boolean).length;
+  const selectedPersonalityPresenceLabels = [
+    personalityPresenceHair ? `Hair: ${personalityPresenceHair}` : "",
+    personalityPresenceEyes ? `Eyes: ${personalityPresenceEyes}` : "",
+    personalityPresenceFacialHair ? `Facial hair: ${personalityPresenceFacialHair}` : "",
+    personalityPresenceStyle ? `Style: ${personalityPresenceStyle}` : "",
+    ...personalityPresenceSocialStyles,
+    ...personalityPresenceConnectionPreferences,
+    ...personalityPresenceComfortAround,
+  ].filter(Boolean);
   const interestComfortLayout = getInterestComfortLayout(width);
   const interestComfortModifierStyle: ViewStyle = {
     flexBasis: interestComfortLayout.modifierFlexBasis,
@@ -428,6 +497,53 @@ export default function UserPreferencesScreen() {
     }
 
     return [...current.filter((item) => item !== ("Prefer not to say" as T) && !exclusiveOptions.includes(item)), option];
+  };
+
+  const togglePersonalityPresenceChoice = async <T extends string>(
+    key: "personalityPresenceHair" | "personalityPresenceEyes" | "personalityPresenceFacialHair" | "personalityPresenceStyle",
+    current: T | null,
+    option: T
+  ) => {
+    const nextValue = current === option ? null : option;
+
+    if (key === "personalityPresenceHair") {
+      await saveSoftHelloMvpState({ personalityPresenceHair: nextValue as PersonalityPresenceHair | null });
+      return;
+    }
+
+    if (key === "personalityPresenceEyes") {
+      await saveSoftHelloMvpState({ personalityPresenceEyes: nextValue as PersonalityPresenceEyes | null });
+      return;
+    }
+
+    if (key === "personalityPresenceFacialHair") {
+      await saveSoftHelloMvpState({ personalityPresenceFacialHair: nextValue as PersonalityPresenceFacialHair | null });
+      return;
+    }
+
+    await saveSoftHelloMvpState({ personalityPresenceStyle: nextValue as PersonalityPresenceStyle | null });
+  };
+
+  const togglePersonalityPresenceListItem = async <T extends string>(
+    key: "personalityPresenceSocialStyles" | "personalityPresenceConnectionPreferences" | "personalityPresenceComfortAround",
+    current: T[],
+    option: T
+  ) => {
+    const nextPreferences = current.includes(option)
+      ? current.filter((item) => item !== option)
+      : [...current, option];
+
+    if (key === "personalityPresenceSocialStyles") {
+      await saveSoftHelloMvpState({ personalityPresenceSocialStyles: nextPreferences as PersonalityPresenceSocialStyle[] });
+      return;
+    }
+
+    if (key === "personalityPresenceConnectionPreferences") {
+      await saveSoftHelloMvpState({ personalityPresenceConnectionPreferences: nextPreferences as PersonalityPresenceConnectionPreference[] });
+      return;
+    }
+
+    await saveSoftHelloMvpState({ personalityPresenceComfortAround: nextPreferences as PersonalityPresenceComfortAround[] });
   };
 
   const toggleBackgroundStudyStatus = async (preference: BackgroundStudyStatusPreference) => {
@@ -547,7 +663,7 @@ export default function UserPreferencesScreen() {
   };
 
   const toggleMeetupContactPreference = async (preference: MeetupContactPreference) => {
-    const nextPreferences = toggleBackgroundListItem(meetupContactPreferences, preference);
+    const nextPreferences = toggleMeetupContactPreferenceSelection(meetupContactPreferences, preference);
 
     await saveSoftHelloMvpState({ meetupContactPreferences: nextPreferences });
   };
@@ -851,6 +967,7 @@ export default function UserPreferencesScreen() {
 
   const overviewCards = [
     { section: "comfort" as const, title: "Comfort & trust", icon: getPreferenceSectionIcon("comfort", "🛡️"), copy: `${formatPreferenceChipLabel(comfortMode)} / ${formatPreferenceChipLabel(socialEnergyPreference)} energy / ${formatPreferenceChipLabel(groupSizePreference)}`, meta: "Visibility, contact, verification, and consent." },
+    { section: "personality" as const, title: "Personality & presence", icon: getPreferenceSectionIcon("personality", "🌿"), copy: personalityPresenceSelectedCount ? `${personalityPresenceSelectedCount} optional details` : "Hidden by default", meta: selectedPersonalityPresenceLabels.length ? selectedPersonalityPresenceLabels.slice(0, 6).map((label) => formatPreferenceChipLabel(label)).join(", ") : "Gentle recognisability, social style, and connection context for blurred profiles." },
     { section: "calendar" as const, title: "Calendar & cultural moments", icon: getPreferenceSectionIcon("calendar", "🗓️"), copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
     { section: "food" as const, title: "Food & beverage", icon: getPreferenceSectionIcon("food", "🍽️"), copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
     { section: "interests" as const, title: "Hobbies & interests", icon: getPreferenceSectionIcon("interests", "🎨"), copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Activities, genres, and comfort-aware tags." },
@@ -863,6 +980,7 @@ export default function UserPreferencesScreen() {
   const getOverviewCardMeta = (item: (typeof overviewCards)[number]) => {
     if (userPreferenceTextMode === "Detailed") return item.meta;
     if (item.section === "comfort") return "Visibility, trust, and comfort.";
+    if (item.section === "personality") return selectedPersonalityPresenceLabels.length ? item.meta : simplePreferenceSectionCopy.personality;
     if (item.section === "calendar") return selectedCalendarMomentLabels.length ? item.meta : simplePreferenceSectionCopy.calendar;
     if (item.section === "food") return selectedFoodLabels.length ? item.meta : simplePreferenceSectionCopy.food;
     if (item.section === "interests") return selectedInterestLabels.length ? item.meta : simplePreferenceSectionCopy.interests;
@@ -1007,6 +1125,175 @@ export default function UserPreferencesScreen() {
                 </View>
               ),
             })}
+          </View>
+        ) : null}
+
+        {activeSection === "personality" ? (
+          <View style={styles.preferenceStack}>
+            <View style={[styles.searchCard, isDay && styles.dayCard]}>
+              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Personality & presence</Text>
+              <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                These optional details are for gentle human context when photos are blurred or private. They stay local in this prototype and are not used for matching, scoring, ranking, swiping, or compatibility percentages.
+              </Text>
+              <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                {showPersonalityPresenceOnProfile
+                  ? "You have allowed these details to appear in your profile preview when your other privacy settings allow it."
+                  : "Hidden from your public profile preview. You can keep everything private or share only what feels useful."}
+              </Text>
+              {renderSummary(selectedPersonalityPresenceLabels.slice(0, 8), "No personality or presence details selected yet. Everything here is optional.")}
+            </View>
+            <View style={responsiveCardGridStyle}>
+              {renderSectionCard("Profile display control", "Hide these details from your public profile, or allow them only as gentle preview context. This does not override private profile or blur settings.", "🔒", (
+                <View style={responsiveChipGridStyle}>
+                  {renderChip({
+                    key: "personality-hidden",
+                    label: "Hide from public profile",
+                    active: !showPersonalityPresenceOnProfile,
+                    onPress: () => saveSoftHelloMvpState({ showPersonalityPresenceOnProfile: false }),
+                    wide: true,
+                  })}
+                  {renderChip({
+                    key: "personality-visible",
+                    label: "Allow in profile preview",
+                    active: showPersonalityPresenceOnProfile,
+                    onPress: () => saveSoftHelloMvpState({ showPersonalityPresenceOnProfile: true }),
+                    meta: "Still follows your profile privacy settings.",
+                    wide: true,
+                  })}
+                </View>
+              ), styles.fullWidthCard)}
+              {renderExpandableSectionCard({
+                id: "personality-recognition",
+                title: "What helps people recognise me",
+                copy: "Broad, optional descriptors only. Use Prefer not to say whenever you want, and avoid exact sensitive details.",
+                icon: "👤",
+                open: openPreferenceDetailGroups.includes("personality-recognition"),
+                onToggle: () => togglePreferenceDetailGroup("personality-recognition"),
+                selectedCount: recognitionSelectedCount,
+                totalCount: 4,
+                children: (
+                  <View style={styles.inlinePreferenceStack}>
+                    {renderInlinePreferenceGroup("Hair", "Choose one broad descriptor, or leave it blank.", (
+                      <View style={responsiveChipGridStyle}>
+                        {personalityPresenceHairOptions.map((option) =>
+                          renderChip({
+                            key: `hair-${option}`,
+                            label: option,
+                            active: personalityPresenceHair === option,
+                            onPress: () => togglePersonalityPresenceChoice("personalityPresenceHair", personalityPresenceHair, option),
+                          })
+                        )}
+                      </View>
+                    ))}
+                    {renderInlinePreferenceGroup("Eyes", "Choose one broad descriptor, or leave it blank.", (
+                      <View style={responsiveChipGridStyle}>
+                        {personalityPresenceEyeOptions.map((option) =>
+                          renderChip({
+                            key: `eyes-${option}`,
+                            label: option,
+                            active: personalityPresenceEyes === option,
+                            onPress: () => togglePersonalityPresenceChoice("personalityPresenceEyes", personalityPresenceEyes, option),
+                          })
+                        )}
+                      </View>
+                    ))}
+                    {renderInlinePreferenceGroup("Facial hair", "Choose one broad descriptor, or leave it blank.", (
+                      <View style={responsiveChipGridStyle}>
+                        {personalityPresenceFacialHairOptions.map((option) =>
+                          renderChip({
+                            key: `facial-hair-${option}`,
+                            label: option,
+                            active: personalityPresenceFacialHair === option,
+                            onPress: () => togglePersonalityPresenceChoice("personalityPresenceFacialHair", personalityPresenceFacialHair, option),
+                          })
+                        )}
+                      </View>
+                    ))}
+                    {renderInlinePreferenceGroup("Style", "Choose one broad descriptor, or leave it blank.", (
+                      <View style={responsiveChipGridStyle}>
+                        {personalityPresenceStyleOptions.map((option) =>
+                          renderChip({
+                            key: `style-${option}`,
+                            label: option,
+                            active: personalityPresenceStyle === option,
+                            onPress: () => togglePersonalityPresenceChoice("personalityPresenceStyle", personalityPresenceStyle, option),
+                          })
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-social",
+                title: "My social style",
+                copy: "Soft context for how you tend to arrive in a conversation. Select any that feel true today.",
+                icon: "💬",
+                open: openPreferenceDetailGroups.includes("personality-social"),
+                onToggle: () => togglePreferenceDetailGroup("personality-social"),
+                selectedCount: personalityPresenceSocialStyles.length,
+                totalCount: personalityPresenceSocialStyleOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresenceSocialStyleOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: personalityPresenceSocialStyles.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresenceSocialStyles", personalityPresenceSocialStyles, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-connection",
+                title: "Connection preferences",
+                copy: "What you are open to here. This is guidance only, not matching logic or an ideal-type filter.",
+                icon: "🤝",
+                open: openPreferenceDetailGroups.includes("personality-connection"),
+                onToggle: () => togglePreferenceDetailGroup("personality-connection"),
+                selectedCount: personalityPresenceConnectionPreferences.length,
+                totalCount: personalityPresenceConnectionOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresenceConnectionOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: personalityPresenceConnectionPreferences.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresenceConnectionPreferences", personalityPresenceConnectionPreferences, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-comfort",
+                title: "People I feel comfortable around",
+                copy: "Soft preference chips for the kind of energy that tends to feel safe and easy.",
+                icon: "🌿",
+                open: openPreferenceDetailGroups.includes("personality-comfort"),
+                onToggle: () => togglePreferenceDetailGroup("personality-comfort"),
+                selectedCount: personalityPresenceComfortAround.length,
+                totalCount: personalityPresenceComfortAroundOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresenceComfortAroundOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: personalityPresenceComfortAround.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresenceComfortAround", personalityPresenceComfortAround, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+            </View>
           </View>
         ) : null}
 
@@ -1768,6 +2055,7 @@ const styles = StyleSheet.create({
   cardGridWide: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start" },
   card: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 13 },
   cardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 320 },
+  fullWidthCard: { flexBasis: "100%", minWidth: "100%" },
   cardHeader: { flexDirection: "row", alignItems: "flex-start", gap: 11 },
   cardIcon: { width: 34, fontSize: 24, lineHeight: 30, textAlign: "center" },
   cardIconSymbol: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center" },

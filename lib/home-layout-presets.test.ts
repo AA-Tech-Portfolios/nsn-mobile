@@ -57,4 +57,23 @@ describe("home layout presets", () => {
     expect(spacious.tapTarget).toBeGreaterThanOrEqual(48);
     expect(compact.tapTarget).toBeLessThan(spacious.tapTarget);
   });
+
+  it("uses readable, equal event thumbnail dimensions for each density", () => {
+    const compact = getHomeLayoutPreset("Compact");
+    const comfortable = getHomeLayoutPreset("Comfortable");
+    const spacious = getHomeLayoutPreset("Spacious");
+
+    expect(compact.eventImageWidth).toBe(compact.eventImageHeight);
+    expect(comfortable.eventImageWidth).toBe(comfortable.eventImageHeight);
+    expect(spacious.eventImageWidth).toBe(spacious.eventImageHeight);
+    expect(compact.eventImageWidth).toBeGreaterThanOrEqual(86);
+    expect(compact.eventImageWidth).toBeLessThan(comfortable.eventImageWidth);
+    expect(comfortable.eventImageWidth).toBeLessThan(spacious.eventImageWidth);
+  });
+
+  it("keeps scroll content clear of the taller bottom tabs", () => {
+    expect(getHomeLayoutPreset("Compact").bottomPadding).toBeGreaterThanOrEqual(132);
+    expect(getHomeLayoutPreset("Comfortable").bottomPadding).toBeGreaterThanOrEqual(148);
+    expect(getHomeLayoutPreset("Spacious").bottomPadding).toBeGreaterThanOrEqual(164);
+  });
 });

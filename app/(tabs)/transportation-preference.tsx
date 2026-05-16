@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { getLanguageBase, type TransportationMethod, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, type TransportationMethod, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel, getPreferenceChipIcon, getSettingsPreferenceLayout } from "@/lib/preferences-layout";
@@ -25,7 +25,7 @@ export default function TransportationPreferenceScreen() {
   const isDay = !isNightMode;
   const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const isWide = preferenceLayout.isDesktop;
-  const preferenceCopy = getProfilePreferenceCopy(getLanguageBase(appLanguage));
+  const preferenceCopy = getProfilePreferenceCopy(getTranslationLanguageBase(appLanguage));
   const copy = preferenceCopy.transportation;
   const backLabel = preferenceCopy.back ?? getProfilePreferenceCopy("English").back;
 

@@ -6,13 +6,14 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 
 ## Immediate Alpha Priorities
 
-- [ ] Run a rendered mobile drawer smoke test on device or Expo web after dependency/type checks, focusing on drawer scrolling, close behaviour, and long label wrapping
-- [ ] Run mobile and desktop smoke tests for Compact, Comfortable, and Spacious Home layouts, focusing on map height, bottom-nav clearance, wrapped chips, and section visibility rows
-- [ ] Smoke test Settings & Privacy plus User Preferences on desktop and mobile, focusing on expanded accordion wrapping, keyboard focus through chips, and Profile/User Options back navigation
-- [ ] Review checkpoint screenshots for desktop and mobile layout regressions
+- [x] Run a rendered mobile drawer smoke test on device or Expo web after dependency/type checks, focusing on drawer scrolling, close behaviour, and long label wrapping
+- [x] Run mobile and desktop smoke tests for Compact, Comfortable, and Spacious Home layouts, focusing on map height, bottom-nav clearance, wrapped chips, and section visibility rows
+- [x] Smoke test Settings & Privacy plus User Preferences on desktop and mobile, focusing on expanded accordion wrapping, keyboard focus through chips, and Profile/User Options back navigation
+- [x] Review checkpoint screenshots for desktop and mobile layout regressions
 - [x] Create an alpha tester feedback checklist after the walkthrough has been exercised
-- [ ] Continue button behaviour audit across Profile, Settings & Privacy, modal menus, disabled controls, and saved-locally actions
+- [x] Continue button behaviour audit across Profile, Settings & Privacy, modal menus, disabled controls, and saved-locally actions
 - [ ] Decide which prototype-only account actions should stay visible after tester walkthrough, be backed by real auth, or be hidden before alpha
+- [ ] Regenerate stale checkpoint screenshots after the alpha QA smoke pass, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
 - [ ] If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
 
 ## Post-Alpha Core Features
@@ -180,3 +181,9 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [x] Clarify product split between SoftHello global release and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
 - [x] Define separate brand systems: SoftHello should use the soft purple global identity, while North Shore Nights can keep the local light-blue/dark-blue Australian design direction
 - [x] v0.1.1-alpha — UX & Onboarding Polish
+
+## Personality & Presence future notes
+
+- Connect Personality & Presence to preference-based recommendations later.
+- Gather tester feedback on whether appearance/personality descriptors feel helpful or too personal.
+- Add stronger privacy controls before using these fields in recommendations.

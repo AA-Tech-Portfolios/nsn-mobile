@@ -46,6 +46,7 @@ describe("preference chip metadata", () => {
   it("centralizes preference category icons", () => {
     expect(getPreferenceCategoryIcon("overview")).toBe("👤");
     expect(getPreferenceCategoryIcon("comfort")).toBe("🛡️");
+    expect(getPreferenceCategoryIcon("personality")).toBe("🌿");
     expect(getPreferenceCategoryIcon("background")).toBe("🎓");
     expect(getPreferenceCategoryIcon("calendar")).toBe("🗓️");
     expect(getPreferenceCategoryIcon("food")).toBe("🍽️");

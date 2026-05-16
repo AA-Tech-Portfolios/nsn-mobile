@@ -1,7 +1,7 @@
 import { ScrollView, View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 
-import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -225,7 +225,7 @@ const supplementalSavedPlacesTranslations = {
 export default function SavedPlacesScreen() {
   const router = useRouter();
   const { appLanguage, isNightMode, savedPlaces, saveSoftHelloMvpState } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy = {
     ...(savedPlacesTranslations[appLanguageBase as keyof typeof savedPlacesTranslations] ?? savedPlacesTranslations.English),
     ...(supplementalSavedPlacesTranslations[appLanguageBase as keyof typeof supplementalSavedPlacesTranslations] ?? {}),

@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, Vi
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { getLanguageBase, type ContactPreference, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, type ContactPreference, useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel, getPreferenceChipIcon, getSettingsPreferenceLayout } from "@/lib/preferences-layout";
@@ -23,7 +23,7 @@ export default function ContactPreferenceScreen() {
   const isDay = !isNightMode;
   const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const isWide = preferenceLayout.isDesktop;
-  const preferenceCopy = getProfilePreferenceCopy(getLanguageBase(appLanguage));
+  const preferenceCopy = getProfilePreferenceCopy(getTranslationLanguageBase(appLanguage));
   const englishCopy = getProfilePreferenceCopy("English");
   const copy = preferenceCopy.contact ?? englishCopy.contact!;
   const backLabel = preferenceCopy.back ?? englishCopy.back;

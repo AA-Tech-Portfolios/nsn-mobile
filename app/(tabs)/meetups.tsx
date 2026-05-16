@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
 import { canChatPrivately, deriveVerificationLevel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
@@ -209,8 +209,8 @@ const meetupsTrustGateTranslations = {
 export default function MeetupsScreen() {
   const router = useRouter();
   const { appLanguage, contactEmail, contactPhone, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
-  const translationLanguageBase = getLanguageBase(translationLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
+  const translationLanguageBase = getTranslationLanguageBase(translationLanguage);
   const isDay = !isNightMode;
   const copy = meetupsTranslations[appLanguageBase as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
   const meetupCopy = { ...meetupsTranslations.English, ...copy };

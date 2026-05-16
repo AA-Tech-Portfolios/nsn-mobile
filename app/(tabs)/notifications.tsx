@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { getLanguageBase, type LiveWeatherAlert, useAppSettings } from "@/lib/app-settings";
+import { getTranslationLanguageBase, type LiveWeatherAlert, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
@@ -123,7 +123,7 @@ const notificationTranslations = {
 export default function NotificationsScreen() {
   const router = useRouter();
   const { isNightMode, appLanguage, liveWeatherAlert, showAlertsSettingsShortcut } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const isDay = !isNightMode;
   const copy = notificationTranslations[appLanguageBase as keyof typeof notificationTranslations] ?? notificationTranslations.English;
 

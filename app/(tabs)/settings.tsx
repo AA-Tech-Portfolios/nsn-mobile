@@ -7,8 +7,11 @@ import {
   appPalettes,
   communicationPreferenceOptions,
   getLanguageBase,
+  getTranslationLanguageBase,
   groupSizePreferenceOptions,
   nsnLocalLanguageOptions,
+  nsnPlannedGlobalLanguageOptions,
+  nsnPlannedLocalCommunityLanguageOptions,
   normalizeNsnLanguage,
   photoRecordingComfortOptions,
   socialEnergyOptions,
@@ -3199,7 +3202,7 @@ export default function SettingsScreen() {
   const [openAccordionSections, setOpenAccordionSections] = useState<SettingsAccordionId[]>(basicOpenSettingsAccordions);
   const [highlightedAccordionSection, setHighlightedAccordionSection] = useState<SettingsAccordionId | null>(null);
   const recentlyChangedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const appLanguageBase = getLanguageBase(appLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy: SettingsCopy = {
     ...englishCopy,
     ...(settingsSectionTranslations[appLanguageBase] ?? {}),
@@ -3413,11 +3416,36 @@ export default function SettingsScreen() {
 
     if (!normalized) return options;
     return options.filter((language) =>
-      `${language.label} ${language.nativeName} ${getLanguageBase(language.label)}`.toLocaleLowerCase().includes(normalized)
+      `${language.label} ${language.nativeName} ${language.code} ${language.status} ${getLanguageBase(language.label)}`.toLocaleLowerCase().includes(normalized)
     );
   };
   const appLanguageOptions = filterLanguages(appLanguageSearch, appLanguageRegionBase);
   const translationLanguageOptions = filterLanguages(translationLanguageSearch, translationLanguageRegionBase);
+  const renderPlannedLanguageGroup = (
+    title: string,
+    copy: string,
+    languages: ReadonlyArray<{ label: string; nativeName: string; flag: string; code: string; status: string; note: string }>
+  ) => (
+    <View style={[styles.plannedLanguageGroup, isDay && styles.dayDropdownOption]}>
+      <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{title}</Text>
+      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{copy}</Text>
+      <View style={styles.plannedLanguageList}>
+        {languages.map((language) => (
+          <View key={language.label} style={[styles.plannedLanguageRow, isRtl && styles.rtlRow]}>
+            <View style={styles.languageOptionCopy}>
+              <Text style={[styles.dropdownOptionText, styles.languageLabelText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>
+                {language.flag} {language.label}
+              </Text>
+              <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
+                {language.nativeName} · {language.code} · {language.note}
+              </Text>
+            </View>
+            <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>{language.status}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
   const setAndSaveBlurProfilePhoto = (value: boolean) => {
     setBlurProfilePhoto(value);
     saveSoftHelloMvpState({ blurProfilePhoto: value });
@@ -5135,6 +5163,11 @@ export default function SettingsScreen() {
                       <Text style={[styles.dropdownNativeText, optionIsRtl ? styles.languageNativeRtlText : styles.languageNativeLtrText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
                         {hasRegions ? getRegionalLanguages(language.label).map((option) => option.nativeName).join(" / ") : language.nativeName}
                       </Text>
+                      <View style={styles.settingMetaRow}>
+                        <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>{language.status}</Text>
+                        <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{language.code}</Text>
+                      </View>
+                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{language.note}</Text>
                     </View>
                     {hasRegions ? (
                       <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>{isRtl ? "‹" : "›"}</Text>
@@ -5226,6 +5259,11 @@ export default function SettingsScreen() {
                       <Text style={[styles.dropdownNativeText, optionIsRtl ? styles.languageNativeRtlText : styles.languageNativeLtrText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
                         {hasRegions ? getRegionalLanguages(language.label).map((option) => option.nativeName).join(" / ") : language.nativeName}
                       </Text>
+                      <View style={styles.settingMetaRow}>
+                        <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>{language.status}</Text>
+                        <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{language.code}</Text>
+                      </View>
+                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{language.note}</Text>
                     </View>
                     {hasRegions ? (
                       <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>{isRtl ? "‹" : "›"}</Text>
@@ -5242,6 +5280,29 @@ export default function SettingsScreen() {
               )}
             </ScrollView>
           )}
+
+          <View style={[styles.languageRoadmapCard, isDay && styles.dayDropdownButton]}>
+            <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+              <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Sydney/North Shore alpha</Text>
+              <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>English fallback</Text>
+            </View>
+            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+              Planned language support
+            </Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              These languages are not selectable as fully supported yet. NSN will keep the alpha focused locally and use English fallback strings until translation coverage is complete and reviewed.
+            </Text>
+            {renderPlannedLanguageGroup(
+              "Local community languages",
+              "Planned for community review around Sydney/North Shore before being treated as supported.",
+              nsnPlannedLocalCommunityLanguageOptions
+            )}
+            {renderPlannedLanguageGroup(
+              "Future SoftHello/global languages",
+              "Future-facing only; not part of the current NSN alpha release.",
+              nsnPlannedGlobalLanguageOptions
+            )}
+          </View>
         </View>
           </>
         ) : null}
@@ -6155,6 +6216,31 @@ const styles = StyleSheet.create({
   },
   languageNativeRtlText: {
     writingDirection: "rtl",
+  },
+  languageRoadmapCard: {
+    gap: 12,
+    marginTop: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    padding: 14,
+  },
+  plannedLanguageGroup: {
+    gap: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(166,177,199,0.18)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    padding: 12,
+  },
+  plannedLanguageList: {
+    gap: 8,
+  },
+  plannedLanguageRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
   },
   paletteOption: {
     alignItems: "center",

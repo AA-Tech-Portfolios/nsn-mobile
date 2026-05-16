@@ -4,6 +4,7 @@ export type AlphaActionLabel = "Coming soon" | "Demo" | "Saved locally";
 export type ProfileDrawerPanel =
   | "preferences"
   | "comfortTrust"
+  | "personalityPresence"
   | "backgroundCommunity"
   | "calendarMoments"
   | "foodBeverage"
@@ -15,6 +16,7 @@ export type ProfileDrawerPanel =
 export type ProfilePreferenceSection =
   | "overview"
   | "comfort"
+  | "personality"
   | "background"
   | "calendar"
   | "food"

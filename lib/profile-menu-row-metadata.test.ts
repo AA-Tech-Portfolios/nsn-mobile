@@ -15,6 +15,7 @@ describe("profile menu row metadata", () => {
 
   it("sets explicit icons for preference and support rows testers look for", () => {
     expect(userPreferenceRowMetadata.find((row) => row.key === "transport")?.icon).toBe("transport");
+    expect(userPreferenceRowMetadata.find((row) => row.key === "personality")?.icon).toBe("person.fill");
     expect(userPreferenceRowMetadata.find((row) => row.key === "contact")?.icon).toBe("contact");
     expect(userPreferenceRowMetadata.find((row) => row.key === "location")?.icon).toBe("location");
     expect(profileSupportRowMetadata.icon).toBe("help");
@@ -25,6 +26,7 @@ describe("profile menu row metadata", () => {
     expect(getUserPreferenceRowDescription("comfort", "Detailed")).toBe(
       "Visibility, social energy, communication, group size, verification, and photo comfort."
     );
+    expect(getUserPreferenceRowDescription("personality", "Simple")).toBe("Optional human context.");
     expect(getUserPreferenceRowDescription("food", "Simple")).toBe("Food, drinks, and dietary comfort.");
   });
 });

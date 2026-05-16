@@ -3,7 +3,7 @@ import { Animated, Image, type ImageSourcePropType, Platform, Pressable, ScrollV
 import { useRouter } from "expo-router";
 import * as Location from "expo-location";
 
-import { defaultHomeSectionOrder, defaultHomeVisibleSections, getLanguageBase, type CardOutlineStyle, type GroupSizePreference, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, type PhotoRecordingComfortPreference, type SocialEnergyPreference, useAppSettings } from "@/lib/app-settings";
+import { defaultHomeSectionOrder, defaultHomeVisibleSections, getTranslationLanguageBase, type CardOutlineStyle, type GroupSizePreference, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, type PhotoRecordingComfortPreference, type SocialEnergyPreference, useAppSettings } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -64,6 +64,8 @@ const appLocaleMap: Record<string, string> = {
   "English (UK)": "en-GB",
   "English (US)": "en-US",
   "English (ZA)": "en-ZA",
+  "Chinese (Simplified)": "zh-Hans",
+  "Chinese (Traditional)": "zh-Hant",
   Estonian: "et-EE",
   French: "fr",
   "French (BE)": "fr-BE",
@@ -707,9 +709,8 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
         shouldUsePreviewImage && styles.eventImagePhoto,
         density === "Compact" && styles.eventImageCompact,
         density === "Spacious" && styles.eventImageSpacious,
-        { width: layoutPreset.eventImageWidth, minHeight: layoutPreset.eventImageHeight, borderRadius: Math.max(12, layoutPreset.cardRadius - 6) },
         isCompactLayout && styles.eventImageWide,
-        cardLayout === "Magazine" && featured && styles.eventImageMagazineFeatured,
+        { width: isCompactLayout ? "100%" : layoutPreset.eventImageWidth, height: layoutPreset.eventImageHeight, minHeight: layoutPreset.eventImageHeight, maxHeight: layoutPreset.eventImageHeight, borderRadius: Math.max(12, layoutPreset.cardRadius - 6) },
         { backgroundColor: event.imageTone },
       ]}>
         {shouldUsePreviewImage && livePreview ? (
@@ -1182,7 +1183,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, saveSoftHelloMvpState } = useAppSettings();
-  const appLanguageBase = getLanguageBase(appLanguage);
+  const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
   const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
@@ -3725,12 +3726,11 @@ const styles = StyleSheet.create({
   eventCardHighlighted: { borderColor: "#D2E0FF", backgroundColor: "#122A55" },
   dayEventCardHighlighted: { borderColor: "#6F87A1", backgroundColor: "#E4ECF4" },
   rtlEventCard: { flexDirection: "row-reverse" },
-  eventImage: { width: 88, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  eventImage: { width: 104, height: 104, minHeight: 104, maxHeight: 104, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" },
   eventImagePhoto: { overflow: "hidden", backgroundColor: "#102743" },
-  eventImageCompact: { width: 70, borderRadius: 12 },
-  eventImageSpacious: { width: 98 },
-  eventImageWide: { width: "100%", height: 82, marginBottom: 10 },
-  eventImageMagazineFeatured: { width: 116 },
+  eventImageCompact: { width: 86, height: 86, minHeight: 86, maxHeight: 86, borderRadius: 12 },
+  eventImageSpacious: { width: 118, height: 118, minHeight: 118, maxHeight: 118 },
+  eventImageWide: { width: "100%", marginBottom: 10 },
   eventEmoji: { fontSize: 34 },
   prototypeEventScene: { flex: 1, alignSelf: "stretch", width: "100%", height: "100%", minHeight: 82, borderRadius: 14, overflow: "hidden", backgroundColor: "#102743" },
   dayPrototypeEventSceneFrame: { borderWidth: 1, borderColor: "rgba(255,255,255,0.52)" },

@@ -25,6 +25,24 @@ import {
 } from "./preferences/calendar-moments";
 import { defaultFoodBeveragePreferenceIds, normalizeFoodBeveragePreferenceIds } from "./preferences/food-preferences";
 import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds, normalizeInterestComfortTagsByInterest, normalizeInterestPreferenceIds } from "./preferences/interests";
+import {
+  normalizePersonalityPresenceChoice,
+  normalizePersonalityPresenceList,
+  personalityPresenceComfortAroundOptions,
+  personalityPresenceConnectionOptions,
+  personalityPresenceEyeOptions,
+  personalityPresenceFacialHairOptions,
+  personalityPresenceHairOptions,
+  personalityPresenceSocialStyleOptions,
+  personalityPresenceStyleOptions,
+  type PersonalityPresenceComfortAround,
+  type PersonalityPresenceConnectionPreference,
+  type PersonalityPresenceEyes,
+  type PersonalityPresenceFacialHair,
+  type PersonalityPresenceHair,
+  type PersonalityPresenceSocialStyle,
+  type PersonalityPresenceStyle,
+} from "./preferences/personality-presence";
 
 export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
 
@@ -72,15 +90,57 @@ export const getLanguageBase = (language: string) => language.replace(/\s+\([^)]
 
 export const DEFAULT_NSN_LANGUAGE = "English (Australia)";
 
+export type NsnLanguageSupportStatus = "Alpha active" | "Partially translated" | "Needs community review" | "Coming later";
+
+export type NsnLanguageOption = {
+  label: string;
+  nativeName: string;
+  flag: string;
+  code: string;
+  status: NsnLanguageSupportStatus;
+  selectable: boolean;
+  translationBase?: string;
+  note: string;
+};
+
 export const nsnLocalLanguageOptions = [
-  { label: "English (Australia)", nativeName: "English · Australia", flag: "🇦🇺" },
-  { label: "Hebrew", nativeName: "עברית", flag: "🇮🇱" },
-  { label: "Chinese (Simplified)", nativeName: "简体中文", flag: "🇨🇳" },
-  { label: "Korean", nativeName: "한국어", flag: "🇰🇷" },
-  { label: "Japanese", nativeName: "日本語", flag: "🇯🇵" },
+  { label: "English (Australia)", nativeName: "English · Australia", flag: "🇦🇺", code: "en-AU", status: "Alpha active", selectable: true, translationBase: "English", note: "Primary Sydney/North Shore alpha language." },
+  { label: "Hebrew", nativeName: "עברית", flag: "🇮🇱", code: "he", status: "Partially translated", selectable: true, translationBase: "Hebrew", note: "Visible for alpha testing; needs continued community review." },
+  { label: "Chinese (Simplified)", nativeName: "简体中文", flag: "🇨🇳", code: "zh-Hans", status: "Partially translated", selectable: true, translationBase: "Chinese", note: "Uses the current Simplified Chinese strings where available." },
+  { label: "Chinese (Traditional)", nativeName: "繁體中文", flag: "🇹🇼", code: "zh-Hant", status: "Partially translated", selectable: true, translationBase: "English", note: "Visible for staging; falls back to English until Traditional Chinese copy is reviewed." },
+  { label: "Korean", nativeName: "한국어", flag: "🇰🇷", code: "ko", status: "Partially translated", selectable: true, translationBase: "Korean", note: "Visible for alpha testing; needs continued community review." },
+  { label: "Japanese", nativeName: "日本語", flag: "🇯🇵", code: "ja", status: "Partially translated", selectable: true, translationBase: "Japanese", note: "Visible for alpha testing; needs continued community review." },
 ] as const;
 
 export type NsnLocalLanguage = (typeof nsnLocalLanguageOptions)[number]["label"];
+
+export const nsnPlannedLocalCommunityLanguageOptions = [
+  { label: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳", code: "hi", status: "Needs community review", selectable: false, note: "Planned for Sydney community review after alpha." },
+  { label: "Arabic", nativeName: "العربية", flag: "🇦🇺", code: "ar", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
+  { label: "Vietnamese", nativeName: "Tiếng Việt", flag: "🇻🇳", code: "vi", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
+  { label: "Punjabi", nativeName: "ਪੰਜਾਬੀ", flag: "🇮🇳", code: "pa", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
+  { label: "Persian / Farsi", nativeName: "فارسی", flag: "🇮🇷", code: "fa", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
+  { label: "Filipino / Tagalog", nativeName: "Filipino / Tagalog", flag: "🇵🇭", code: "fil", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
+  { label: "Indonesian", nativeName: "Bahasa Indonesia", flag: "🇮🇩", code: "id", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
+  { label: "Malay / Bahasa Melayu", nativeName: "Bahasa Melayu", flag: "🇲🇾", code: "ms", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
+] as const;
+
+export const nsnPlannedGlobalLanguageOptions = [
+  { label: "Spanish", nativeName: "Español", flag: "🇪🇸", code: "es", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "French", nativeName: "Français", flag: "🇫🇷", code: "fr", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "German", nativeName: "Deutsch", flag: "🇩🇪", code: "de", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Portuguese", nativeName: "Português", flag: "🇵🇹", code: "pt", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Italian", nativeName: "Italiano", flag: "🇮🇹", code: "it", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Dutch", nativeName: "Nederlands", flag: "🇳🇱", code: "nl", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Greek", nativeName: "Ελληνικά", flag: "🇬🇷", code: "el", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Turkish", nativeName: "Türkçe", flag: "🇹🇷", code: "tr", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Russian", nativeName: "Русский", flag: "🇷🇺", code: "ru", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Ukrainian", nativeName: "Українська", flag: "🇺🇦", code: "uk", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Swedish", nativeName: "Svenska", flag: "🇸🇪", code: "sv", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Danish", nativeName: "Dansk", flag: "🇩🇰", code: "da", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Norwegian", nativeName: "Norsk", flag: "🇳🇴", code: "no", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  { label: "Finnish", nativeName: "Suomi", flag: "🇫🇮", code: "fi", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+] as const;
 
 const supportedLanguageLabels = new Set<string>(nsnLocalLanguageOptions.map((language) => language.label));
 
@@ -94,12 +154,20 @@ export function normalizeNsnLanguage(language?: string | null): NsnLocalLanguage
   const baseLanguage = getLanguageBase(language);
 
   if (language === "English (AU)" || baseLanguage === "English") return DEFAULT_NSN_LANGUAGE;
+  if (language === "Chinese (Traditional)" || language === "Chinese (Taiwan)" || language === "Chinese (Hong Kong)" || language === "Traditional Chinese") return "Chinese (Traditional)";
   if (baseLanguage === "Chinese") return "Chinese (Simplified)";
   if (baseLanguage === "Hebrew") return "Hebrew";
   if (baseLanguage === "Korean") return "Korean";
   if (baseLanguage === "Japanese") return "Japanese";
 
   return DEFAULT_NSN_LANGUAGE;
+}
+
+export function getTranslationLanguageBase(language: string) {
+  const normalizedLanguage = normalizeNsnLanguage(language);
+  const languageOption = nsnLocalLanguageOptions.find((option) => option.label === normalizedLanguage);
+
+  return languageOption?.translationBase ?? getLanguageBase(normalizedLanguage);
 }
 
 const ONBOARDING_STORAGE_KEY = "softhello.onboarding.v1";
@@ -694,6 +762,50 @@ const normalizeSelectablePreferenceList = <T extends string>(value: T[] | null |
   return filtered.length ? filtered : fallback;
 };
 
+const meetupContactConflicts: Array<readonly MeetupContactPreference[]> = [
+  ["Voice call okay", "No voice calls"],
+  ["Details only", "Chat before meetup", "Group chat okay", "Direct messages okay", "Voice call okay"],
+  ["Reminders only", "Chat before meetup", "Group chat okay", "Direct messages okay", "Voice call okay"],
+  ["Prefer planning ahead", "Last-minute plans okay"],
+];
+
+export const normalizeMeetupContactPreferences = (value?: MeetupContactPreference[] | null): MeetupContactPreference[] => {
+  const normalized: MeetupContactPreference[] = [];
+
+  for (const preference of value ?? []) {
+    if (!meetupContactPreferenceOptions.includes(preference)) continue;
+
+    const conflicts = new Set(
+      meetupContactConflicts
+        .filter((group) => group.includes(preference))
+        .flatMap((group) => group)
+        .filter((item) => item !== preference)
+    );
+    const nextPreferences = conflicts.size
+      ? normalized.filter((item) => !conflicts.has(item))
+      : normalized;
+
+    if (!nextPreferences.includes(preference)) {
+      nextPreferences.push(preference);
+    }
+
+    normalized.splice(0, normalized.length, ...nextPreferences);
+  }
+
+  return normalized.length ? normalized : defaultMeetupContactPreferences;
+};
+
+export const toggleMeetupContactPreferenceSelection = (
+  current: MeetupContactPreference[],
+  preference: MeetupContactPreference
+): MeetupContactPreference[] => {
+  const nextPreferences = current.includes(preference)
+    ? current.filter((item) => item !== preference)
+    : [...current, preference];
+
+  return normalizeMeetupContactPreferences(nextPreferences);
+};
+
 const normalizeLifeContextUpdatedAt = (value?: string | null) => {
   if (!value) return null;
   const timestamp = Date.parse(value);
@@ -800,6 +912,14 @@ type OnboardingSnapshot = {
   lifeContextLearningVisibility?: BackgroundVisibilityPreference;
   lifeContextLastUpdatedAt?: string | null;
   verifiedButPrivate?: boolean;
+  personalityPresenceHair?: PersonalityPresenceHair | null;
+  personalityPresenceEyes?: PersonalityPresenceEyes | null;
+  personalityPresenceFacialHair?: PersonalityPresenceFacialHair | null;
+  personalityPresenceStyle?: PersonalityPresenceStyle | null;
+  personalityPresenceSocialStyles?: PersonalityPresenceSocialStyle[];
+  personalityPresenceConnectionPreferences?: PersonalityPresenceConnectionPreference[];
+  personalityPresenceComfortAround?: PersonalityPresenceComfortAround[];
+  showPersonalityPresenceOnProfile?: boolean;
   calendarMomentStates?: CalendarMomentStates;
   calendarMomentVisibility?: CalendarMomentVisibility;
   customCalendarMoments?: CustomCalendarMoment[];
@@ -1107,6 +1227,22 @@ type AppSettings = {
   setLifeContextLastUpdatedAt: (value: string | null) => void;
   verifiedButPrivate: boolean;
   setVerifiedButPrivate: (value: boolean) => void;
+  personalityPresenceHair: PersonalityPresenceHair | null;
+  setPersonalityPresenceHair: (value: PersonalityPresenceHair | null) => void;
+  personalityPresenceEyes: PersonalityPresenceEyes | null;
+  setPersonalityPresenceEyes: (value: PersonalityPresenceEyes | null) => void;
+  personalityPresenceFacialHair: PersonalityPresenceFacialHair | null;
+  setPersonalityPresenceFacialHair: (value: PersonalityPresenceFacialHair | null) => void;
+  personalityPresenceStyle: PersonalityPresenceStyle | null;
+  setPersonalityPresenceStyle: (value: PersonalityPresenceStyle | null) => void;
+  personalityPresenceSocialStyles: PersonalityPresenceSocialStyle[];
+  setPersonalityPresenceSocialStyles: (value: PersonalityPresenceSocialStyle[]) => void;
+  personalityPresenceConnectionPreferences: PersonalityPresenceConnectionPreference[];
+  setPersonalityPresenceConnectionPreferences: (value: PersonalityPresenceConnectionPreference[]) => void;
+  personalityPresenceComfortAround: PersonalityPresenceComfortAround[];
+  setPersonalityPresenceComfortAround: (value: PersonalityPresenceComfortAround[]) => void;
+  showPersonalityPresenceOnProfile: boolean;
+  setShowPersonalityPresenceOnProfile: (value: boolean) => void;
   calendarMomentStates: CalendarMomentStates;
   setCalendarMomentStates: (value: CalendarMomentStates) => void;
   calendarMomentVisibility: CalendarMomentVisibility;
@@ -1321,6 +1457,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [lifeContextLearningVisibility, setLifeContextLearningVisibility] = useState<BackgroundVisibilityPreference>("Matched/shared visibility only");
   const [lifeContextLastUpdatedAt, setLifeContextLastUpdatedAt] = useState<string | null>(null);
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
+  const [personalityPresenceHair, setPersonalityPresenceHair] = useState<PersonalityPresenceHair | null>(null);
+  const [personalityPresenceEyes, setPersonalityPresenceEyes] = useState<PersonalityPresenceEyes | null>(null);
+  const [personalityPresenceFacialHair, setPersonalityPresenceFacialHair] = useState<PersonalityPresenceFacialHair | null>(null);
+  const [personalityPresenceStyle, setPersonalityPresenceStyle] = useState<PersonalityPresenceStyle | null>(null);
+  const [personalityPresenceSocialStyles, setPersonalityPresenceSocialStyles] = useState<PersonalityPresenceSocialStyle[]>([]);
+  const [personalityPresenceConnectionPreferences, setPersonalityPresenceConnectionPreferences] = useState<PersonalityPresenceConnectionPreference[]>([]);
+  const [personalityPresenceComfortAround, setPersonalityPresenceComfortAround] = useState<PersonalityPresenceComfortAround[]>([]);
+  const [showPersonalityPresenceOnProfile, setShowPersonalityPresenceOnProfile] = useState(false);
   const [calendarMomentStates, setCalendarMomentStates] = useState<CalendarMomentStates>(defaultCalendarMomentStates);
   const [calendarMomentVisibility, setCalendarMomentVisibility] = useState<CalendarMomentVisibility>(defaultCalendarMomentVisibility);
   const [customCalendarMoments, setCustomCalendarMoments] = useState<CustomCalendarMoment[]>(defaultCustomCalendarMoments);
@@ -1478,12 +1622,20 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setLifeContextLearningVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only"));
         setLifeContextLastUpdatedAt(normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt));
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
+        setPersonalityPresenceHair(normalizePersonalityPresenceChoice(snapshot.personalityPresenceHair, personalityPresenceHairOptions));
+        setPersonalityPresenceEyes(normalizePersonalityPresenceChoice(snapshot.personalityPresenceEyes, personalityPresenceEyeOptions));
+        setPersonalityPresenceFacialHair(normalizePersonalityPresenceChoice(snapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions));
+        setPersonalityPresenceStyle(normalizePersonalityPresenceChoice(snapshot.personalityPresenceStyle, personalityPresenceStyleOptions));
+        setPersonalityPresenceSocialStyles(normalizePersonalityPresenceList(snapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions));
+        setPersonalityPresenceConnectionPreferences(normalizePersonalityPresenceList(snapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions));
+        setPersonalityPresenceComfortAround(normalizePersonalityPresenceList(snapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions));
+        setShowPersonalityPresenceOnProfile(Boolean(snapshot.showPersonalityPresenceOnProfile));
         setCalendarMomentStates(normalizeCalendarMomentStates(snapshot.calendarMomentStates));
         setCalendarMomentVisibility(normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility));
         setCustomCalendarMoments(normalizeCustomCalendarMoments(snapshot.customCalendarMoments));
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
         setTransportationPreferences(normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences));
-        setMeetupContactPreferences(normalizeSelectablePreferenceList(snapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences));
+        setMeetupContactPreferences(normalizeMeetupContactPreferences(snapshot.meetupContactPreferences));
         setLocationComfortPreferences(normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences));
         setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
         setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
@@ -1618,6 +1770,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextCalendarMomentStates = normalizeCalendarMomentStates(snapshot.calendarMomentStates);
     const nextCalendarMomentVisibility = normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility);
     const nextCustomCalendarMoments = normalizeCustomCalendarMoments(snapshot.customCalendarMoments);
+    const nextPersonalityPresenceHair = normalizePersonalityPresenceChoice(snapshot.personalityPresenceHair, personalityPresenceHairOptions);
+    const nextPersonalityPresenceEyes = normalizePersonalityPresenceChoice(snapshot.personalityPresenceEyes, personalityPresenceEyeOptions);
+    const nextPersonalityPresenceFacialHair = normalizePersonalityPresenceChoice(snapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions);
+    const nextPersonalityPresenceStyle = normalizePersonalityPresenceChoice(snapshot.personalityPresenceStyle, personalityPresenceStyleOptions);
+    const nextPersonalityPresenceSocialStyles = normalizePersonalityPresenceList(snapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions);
+    const nextPersonalityPresenceConnectionPreferences = normalizePersonalityPresenceList(snapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions);
+    const nextPersonalityPresenceComfortAround = normalizePersonalityPresenceList(snapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions);
     setSocialEnergyPreference(nextSocialEnergyPreference);
     setCommunicationPreferences(nextCommunicationPreferences);
     setGroupSizePreference(nextGroupSizePreference);
@@ -1638,13 +1797,21 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setLifeContextLearningInterests(nextLifeContextLearningInterests);
     setLifeContextLearningVisibility(nextLifeContextLearningVisibility);
     setLifeContextLastUpdatedAt(nextLifeContextLastUpdatedAt);
+    setPersonalityPresenceHair(nextPersonalityPresenceHair);
+    setPersonalityPresenceEyes(nextPersonalityPresenceEyes);
+    setPersonalityPresenceFacialHair(nextPersonalityPresenceFacialHair);
+    setPersonalityPresenceStyle(nextPersonalityPresenceStyle);
+    setPersonalityPresenceSocialStyles(nextPersonalityPresenceSocialStyles);
+    setPersonalityPresenceConnectionPreferences(nextPersonalityPresenceConnectionPreferences);
+    setPersonalityPresenceComfortAround(nextPersonalityPresenceComfortAround);
+    setShowPersonalityPresenceOnProfile(Boolean(snapshot.showPersonalityPresenceOnProfile));
     setCalendarMomentStates(nextCalendarMomentStates);
     setCalendarMomentVisibility(nextCalendarMomentVisibility);
     setCustomCalendarMoments(nextCustomCalendarMoments);
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
     const nextTransportationPreferences = normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences);
-    const nextMeetupContactPreferences = normalizeSelectablePreferenceList(snapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences);
+    const nextMeetupContactPreferences = normalizeMeetupContactPreferences(snapshot.meetupContactPreferences);
     const nextLocationComfortPreferences = normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences);
     setTransportationPreferences(nextTransportationPreferences);
     setMeetupContactPreferences(nextMeetupContactPreferences);
@@ -1735,6 +1902,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           lifeContextLearningInterests: nextLifeContextLearningInterests,
           lifeContextLearningVisibility: nextLifeContextLearningVisibility,
           lifeContextLastUpdatedAt: nextLifeContextLastUpdatedAt,
+          personalityPresenceHair: nextPersonalityPresenceHair,
+          personalityPresenceEyes: nextPersonalityPresenceEyes,
+          personalityPresenceFacialHair: nextPersonalityPresenceFacialHair,
+          personalityPresenceStyle: nextPersonalityPresenceStyle,
+          personalityPresenceSocialStyles: nextPersonalityPresenceSocialStyles,
+          personalityPresenceConnectionPreferences: nextPersonalityPresenceConnectionPreferences,
+          personalityPresenceComfortAround: nextPersonalityPresenceComfortAround,
+          showPersonalityPresenceOnProfile: Boolean(snapshot.showPersonalityPresenceOnProfile),
           calendarMomentStates: nextCalendarMomentStates,
           calendarMomentVisibility: nextCalendarMomentVisibility,
           customCalendarMoments: nextCustomCalendarMoments,
@@ -1831,6 +2006,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       lifeContextLearningVisibility,
       lifeContextLastUpdatedAt,
       verifiedButPrivate,
+      personalityPresenceHair,
+      personalityPresenceEyes,
+      personalityPresenceFacialHair,
+      personalityPresenceStyle,
+      personalityPresenceSocialStyles,
+      personalityPresenceConnectionPreferences,
+      personalityPresenceComfortAround,
+      showPersonalityPresenceOnProfile,
       calendarMomentStates,
       calendarMomentVisibility,
       customCalendarMoments,
@@ -1930,11 +2113,19 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       lifeContextTouched && snapshot.lifeContextLastUpdatedAt === undefined ? new Date().toISOString() : nextSnapshot.lifeContextLastUpdatedAt
     );
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
+    nextSnapshot.personalityPresenceHair = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceHair, personalityPresenceHairOptions);
+    nextSnapshot.personalityPresenceEyes = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceEyes, personalityPresenceEyeOptions);
+    nextSnapshot.personalityPresenceFacialHair = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions);
+    nextSnapshot.personalityPresenceStyle = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceStyle, personalityPresenceStyleOptions);
+    nextSnapshot.personalityPresenceSocialStyles = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions);
+    nextSnapshot.personalityPresenceConnectionPreferences = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions);
+    nextSnapshot.personalityPresenceComfortAround = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions);
+    nextSnapshot.showPersonalityPresenceOnProfile = Boolean(nextSnapshot.showPersonalityPresenceOnProfile);
     nextSnapshot.calendarMomentStates = normalizeCalendarMomentStates(nextSnapshot.calendarMomentStates);
     nextSnapshot.calendarMomentVisibility = normalizeCalendarMomentVisibility(nextSnapshot.calendarMomentVisibility);
     nextSnapshot.customCalendarMoments = normalizeCustomCalendarMoments(nextSnapshot.customCalendarMoments);
     nextSnapshot.transportationPreferences = normalizeSelectablePreferenceList(nextSnapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences);
-    nextSnapshot.meetupContactPreferences = normalizeSelectablePreferenceList(nextSnapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences);
+    nextSnapshot.meetupContactPreferences = normalizeMeetupContactPreferences(nextSnapshot.meetupContactPreferences);
     nextSnapshot.locationComfortPreferences = normalizeSelectablePreferenceList(nextSnapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences);
     nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(nextSnapshot.foodBeveragePreferenceIds);
     nextSnapshot.interestPreferenceIds = normalizeInterestPreferenceIds(nextSnapshot.interestPreferenceIds);
@@ -2038,12 +2229,20 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.lifeContextLearningVisibility !== undefined) setLifeContextLearningVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility));
     if (snapshot.lifeContextLastUpdatedAt !== undefined || lifeContextTouched) setLifeContextLastUpdatedAt(nextSnapshot.lifeContextLastUpdatedAt ?? null);
     if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
+    if (snapshot.personalityPresenceHair !== undefined) setPersonalityPresenceHair(nextSnapshot.personalityPresenceHair ?? null);
+    if (snapshot.personalityPresenceEyes !== undefined) setPersonalityPresenceEyes(nextSnapshot.personalityPresenceEyes ?? null);
+    if (snapshot.personalityPresenceFacialHair !== undefined) setPersonalityPresenceFacialHair(nextSnapshot.personalityPresenceFacialHair ?? null);
+    if (snapshot.personalityPresenceStyle !== undefined) setPersonalityPresenceStyle(nextSnapshot.personalityPresenceStyle ?? null);
+    if (snapshot.personalityPresenceSocialStyles !== undefined) setPersonalityPresenceSocialStyles(nextSnapshot.personalityPresenceSocialStyles ?? []);
+    if (snapshot.personalityPresenceConnectionPreferences !== undefined) setPersonalityPresenceConnectionPreferences(nextSnapshot.personalityPresenceConnectionPreferences ?? []);
+    if (snapshot.personalityPresenceComfortAround !== undefined) setPersonalityPresenceComfortAround(nextSnapshot.personalityPresenceComfortAround ?? []);
+    if (snapshot.showPersonalityPresenceOnProfile !== undefined) setShowPersonalityPresenceOnProfile(Boolean(snapshot.showPersonalityPresenceOnProfile));
     if (snapshot.calendarMomentStates !== undefined) setCalendarMomentStates(normalizeCalendarMomentStates(snapshot.calendarMomentStates));
     if (snapshot.calendarMomentVisibility !== undefined) setCalendarMomentVisibility(normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility));
     if (snapshot.customCalendarMoments !== undefined) setCustomCalendarMoments(normalizeCustomCalendarMoments(snapshot.customCalendarMoments));
     if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
     if (snapshot.transportationPreferences !== undefined) setTransportationPreferences(normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences));
-    if (snapshot.meetupContactPreferences !== undefined) setMeetupContactPreferences(normalizeSelectablePreferenceList(snapshot.meetupContactPreferences, meetupContactPreferenceOptions, defaultMeetupContactPreferences));
+    if (snapshot.meetupContactPreferences !== undefined) setMeetupContactPreferences(normalizeMeetupContactPreferences(snapshot.meetupContactPreferences));
     if (snapshot.locationComfortPreferences !== undefined) setLocationComfortPreferences(normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences));
     if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
     if (snapshot.foodBeveragePreferenceIds !== undefined) setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
@@ -2379,6 +2578,22 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setLifeContextLastUpdatedAt,
         verifiedButPrivate,
         setVerifiedButPrivate,
+        personalityPresenceHair,
+        setPersonalityPresenceHair,
+        personalityPresenceEyes,
+        setPersonalityPresenceEyes,
+        personalityPresenceFacialHair,
+        setPersonalityPresenceFacialHair,
+        personalityPresenceStyle,
+        setPersonalityPresenceStyle,
+        personalityPresenceSocialStyles,
+        setPersonalityPresenceSocialStyles,
+        personalityPresenceConnectionPreferences,
+        setPersonalityPresenceConnectionPreferences,
+        personalityPresenceComfortAround,
+        setPersonalityPresenceComfortAround,
+        showPersonalityPresenceOnProfile,
+        setShowPersonalityPresenceOnProfile,
         calendarMomentStates,
         setCalendarMomentStates,
         calendarMomentVisibility,
