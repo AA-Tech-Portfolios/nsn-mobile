@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Alert, Modal, useWindowDimensions, Linking, type ViewStyle } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -113,6 +113,7 @@ import { getPersonalityPresenceSelectedCount } from "@/lib/preferences/personali
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
+import { gentleConnectionGuidance, supportBelongingGuidance, type SupportGuidanceId } from "@/lib/support-guidance";
 
 const rows = [
   { icon: "calendar", key: "meetups", route: "/meetups" },
@@ -159,6 +160,7 @@ const profileEventVisualModeOptions: HomeEventVisualMode[] = ["Emoji/Icon", "Pre
 const profileEventLayoutOptions: HomeEventLayout[] = ["List", "Map"];
 type HelpFeedbackType = "Suggestion" | "Bug/problem" | "Confusing experience" | "Safety/trust concern" | "Accessibility issue" | "Other";
 const helpFeedbackTypes: HelpFeedbackType[] = ["Suggestion", "Bug/problem", "Confusing experience", "Safety/trust concern", "Accessibility issue", "Other"];
+type HelpSupportSectionId = "ways-to-get-help" | "support-belonging" | "connection-guides" | "feedback-draft" | "faq-accessibility";
 const helpFaqItems = [
   {
     id: "what-is-nsn",
@@ -1264,6 +1266,7 @@ export default function ProfileScreen() {
   const isWideLayout = width >= 880;
   const isDesktopUserOptions = width >= 760;
   const shouldOpenFullPreferenceView = Platform.OS === "web" && width >= 900;
+  const compactUserOptionRows = userPreferenceTextMode === "Simple";
   const interestComfortLayout = getInterestComfortLayout(Math.min(width, 560));
   const interestComfortModifierStyle: ViewStyle = {
     flexBasis: interestComfortLayout.modifierFlexBasis,
@@ -1321,6 +1324,8 @@ export default function ProfileScreen() {
   const [helpContactMe, setHelpContactMe] = useState(false);
   const [helpIncludeContext, setHelpIncludeContext] = useState(true);
   const [helpDraftPrepared, setHelpDraftPrepared] = useState(false);
+  const [openHelpSectionIds, setOpenHelpSectionIds] = useState<HelpSupportSectionId[]>(["support-belonging"]);
+  const [openSupportGuideIds, setOpenSupportGuideIds] = useState<SupportGuidanceId[]>(["slow-start"]);
   const [openHelpFaqIds, setOpenHelpFaqIds] = useState<string[]>(["what-is-nsn"]);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
   const [draftContactEmail, setDraftContactEmail] = useState(contactEmail);
@@ -2082,6 +2087,47 @@ export default function ProfileScreen() {
     );
   };
 
+  const toggleHelpSection = (sectionId: HelpSupportSectionId) => {
+    setOpenHelpSectionIds((current) =>
+      current.includes(sectionId) ? current.filter((id) => id !== sectionId) : [...current, sectionId]
+    );
+  };
+
+  const toggleSupportGuide = (itemId: SupportGuidanceId) => {
+    setOpenSupportGuideIds((current) =>
+      current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId]
+    );
+  };
+
+  const openSupportGuide = (itemId: SupportGuidanceId) => {
+    closeProfileMenu();
+    router.push({ pathname: "/support-guidance/[id]", params: { id: itemId } } as never);
+  };
+
+  const renderHelpSectionHeader = (sectionId: HelpSupportSectionId, title: string, copy: string, icon: ComponentProps<typeof IconSymbol>["name"]) => {
+    const isOpen = openHelpSectionIds.includes(sectionId);
+
+    return (
+      <TouchableOpacity
+        activeOpacity={0.78}
+        onPress={() => toggleHelpSection(sectionId)}
+        style={[styles.helpSubsectionHeader, isRtl && styles.rtlRow]}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
+      >
+        <View style={[styles.helpSupportCardRow, styles.profileLayoutBody, isRtl && styles.rtlRow]}>
+          <IconSymbol name={icon} color={isDay ? "#445E93" : "#C7B07A"} size={19} />
+          <View style={styles.profileLayoutBody}>
+            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{title}</Text>
+            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy}</Text>
+          </View>
+        </View>
+        <IconSymbol name={isOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={19} />
+      </TouchableOpacity>
+    );
+  };
+
   const prepareFeedbackDraft = async (copyToClipboard = false) => {
     setHelpDraftPrepared(true);
 
@@ -2763,7 +2809,7 @@ export default function ProfileScreen() {
         ...row,
         summary: suburb || "Local area not set",
         badge: showSuburbArea ? "Shown" : "Private",
-        action: openLocalAreaEditor,
+        action: () => openFullPreferenceView("location"),
       }] as const;
     }
 
@@ -2798,7 +2844,7 @@ export default function ProfileScreen() {
       ...row,
       summary: canMeetInPerson(effectiveVerificationLevel) ? "Ready for in-person safety checks" : "Review prototype trust status",
       badge: getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase),
-      action: openVerificationReview,
+      action: () => openFullPreferenceView("comfort"),
     }] as const;
   }));
   const getProfileSummaryRows = (rows: ReturnType<typeof getMainProfileSummaryRows>) =>
@@ -2921,6 +2967,80 @@ export default function ProfileScreen() {
     showAboutMe: showAboutInPreview,
     vibes: selectedVibes.map((vibe) => vibeCopy[vibe] ?? vibe),
     showVibes: showVibesInPreview,
+    personalityPresenceLabels: personalityPresenceSummary.map((label) => formatPreferenceChipLabel(label)),
+    showPersonalityPresence: showPersonalityPresenceOnProfile,
+    editActions: {
+      localArea: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("location"),
+        accessibilityLabel: "Manage location preferences",
+      },
+      age: {
+        label: "Edit",
+        onPress: toggleAgeEditing,
+        accessibilityLabel: "Edit age",
+      },
+      preferredAgeRange: {
+        label: "Edit",
+        onPress: toggleAgeEditing,
+        accessibilityLabel: "Edit preferred age range",
+      },
+      gender: {
+        label: "Edit",
+        onPress: toggleAgeEditing,
+        accessibilityLabel: "Edit gender",
+      },
+      vibes: {
+        label: "Edit",
+        onPress: toggleVibeEditing,
+        accessibilityLabel: "Edit profile vibes",
+      },
+      interests: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("interests"),
+        accessibilityLabel: "Manage hobbies and interests preferences",
+      },
+      comfort: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("comfort"),
+        accessibilityLabel: "Manage comfort and trust preferences",
+      },
+      contact: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("contact"),
+        accessibilityLabel: "Manage contact preferences",
+      },
+      socialEnergy: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("comfort"),
+        accessibilityLabel: "Manage social energy in comfort and trust preferences",
+      },
+      communication: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("comfort"),
+        accessibilityLabel: "Manage communication preferences in comfort and trust",
+      },
+      groupSize: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("comfort"),
+        accessibilityLabel: "Manage group size preference in comfort and trust",
+      },
+      photoRecording: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("comfort"),
+        accessibilityLabel: "Manage photo and recording comfort",
+      },
+      verificationTrust: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("comfort"),
+        accessibilityLabel: "Manage verification and trust display preferences",
+      },
+      personalityPresence: {
+        label: "Manage",
+        onPress: () => openFullPreferenceView("personality"),
+        accessibilityLabel: "Manage Personality and Presence preferences",
+      },
+    },
     isDay,
     isRtl,
   };
@@ -2986,6 +3106,15 @@ export default function ProfileScreen() {
         <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showSuburbArea && styles.localAreaVisibilityTextActive]}>
           {showSuburbArea ? "Shown in preview" : "Hidden from preview"}
         </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.82}
+        onPress={() => openFullPreferenceView("location")}
+        style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
+        accessibilityRole="button"
+        accessibilityLabel="Manage location preferences"
+      >
+        <Text style={styles.reviewSettingsText}>Manage location preferences</Text>
       </TouchableOpacity>
     </View>
   );
@@ -3198,6 +3327,50 @@ export default function ProfileScreen() {
                                   ? "Block & report"
                                   : "Profile controls";
 
+  const ageAndGroupPreferenceCard = (
+    <View style={[styles.profileBasicsCard, styles.ageEditorCard, isCleanProfile && styles.profileDetailsAgeCard, isDay && styles.dayVisibilityModeCard]}>
+      <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
+        <View style={styles.profileLayoutBody}>
+          <Text style={[styles.visibilityModeTitle, styles.leftAlignedTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Age & group preferences</Text>
+          <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            {age ? `${age} · prefers ${preferredAgeMin}-${preferredAgeMax}` : `Prefers ${preferredAgeMin}-${preferredAgeMax}`}
+            {gender !== "Not specified" ? ` · ${gender}` : ""}
+          </Text>
+        </View>
+        <Text style={styles.editText} onPress={toggleAgeEditing}>{showAgeSaved ? copy.saved : isEditingAge ? copy.done : copy.edit}</Text>
+      </View>
+      {isEditingAge ? (
+        <>
+          <View style={styles.rangeRow}>
+            <TextInput value={draftAge} onChangeText={(value) => setDraftAge(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Age" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
+            <TextInput value={draftPreferredAgeMin} onChangeText={(value) => setDraftPreferredAgeMin(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Min" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
+            <TextInput value={draftPreferredAgeMax} onChangeText={(value) => setDraftPreferredAgeMax(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Max" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
+          </View>
+          <View style={styles.preferenceGrid}>
+            {genderOptions.map((option) => (
+              <TouchableOpacity key={option} activeOpacity={0.78} onPress={() => setDraftGender(option)} style={[styles.genderChip, isDay && styles.dayCard, draftGender === option && styles.interestChipActive]} accessibilityRole="radio" accessibilityState={{ checked: draftGender === option }}>
+                <Text style={[styles.genderChipText, isDay && styles.dayTitle]}>{option}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      ) : null}
+      <View style={styles.nameToggleRow}>
+        <TouchableOpacity activeOpacity={0.82} onPress={() => saveSoftHelloMvpState({ showAge: !showAge })} style={[styles.nameVisibilityToggle, isDay && styles.daySoftOption, showAge && styles.localAreaVisibilityToggleActive]} accessibilityRole="switch" accessibilityState={{ checked: showAge }}>
+          <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showAge && styles.localAreaVisibilityTextActive]}>{showAge ? "Age shown" : "Age hidden"}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity activeOpacity={0.82} onPress={() => saveSoftHelloMvpState({ showPreferredAgeRange: !showPreferredAgeRange })} style={[styles.nameVisibilityToggle, isDay && styles.daySoftOption, showPreferredAgeRange && styles.localAreaVisibilityToggleActive]} accessibilityRole="switch" accessibilityState={{ checked: showPreferredAgeRange }}>
+          <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showPreferredAgeRange && styles.localAreaVisibilityTextActive]}>{showPreferredAgeRange ? "Range shown" : "Range hidden"}</Text>
+        </TouchableOpacity>
+        {gender !== "Not specified" ? (
+          <TouchableOpacity activeOpacity={0.82} onPress={() => saveSoftHelloMvpState({ showGender: !showGender })} style={[styles.nameVisibilityToggle, isDay && styles.daySoftOption, showGender && styles.localAreaVisibilityToggleActive]} accessibilityRole="switch" accessibilityState={{ checked: showGender }}>
+            <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showGender && styles.localAreaVisibilityTextActive]}>{showGender ? "Gender shown" : "Gender hidden"}</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    </View>
+  );
+
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView
@@ -3277,31 +3450,62 @@ export default function ProfileScreen() {
                 {profileMenuPanel === "main" ? (
                   <>
                     <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>User options</Text>
+                    <View style={[styles.profilePreferenceDisplayToggle, isDay && styles.daySoftOption]}>
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Row style</Text>
+                        {!compactUserOptionRows ? (
+                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                            Switch between compact title/icon rows and descriptive settings cards.
+                          </Text>
+                        ) : null}
+                      </View>
+                      <View style={styles.profilePreferenceModeButtons}>
+                        {(["Simple", "Detailed"] as const).map((mode) => {
+                          const active = userPreferenceTextMode === mode;
+
+                          return (
+                            <TouchableOpacity
+                              key={mode}
+                              activeOpacity={0.78}
+                              onPress={() => saveSoftHelloMvpState({ userPreferenceTextMode: mode })}
+                              style={[styles.profilePreferenceModeButton, active && styles.profilePreferenceModeButtonActive]}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: active }}
+                              accessibilityLabel={`${mode === "Simple" ? "Compact title and icon only" : "Descriptive settings cards"} user options row style`}
+                            >
+                              <Text style={[styles.profilePreferenceModeButtonText, active && styles.profileLayoutTextActive]}>
+                                {mode === "Simple" ? "Compact" : "Descriptive"}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("edit")}
-                      style={styles.profileMenuItem}
+                      style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                       accessibilityRole="button"
                       accessibilityLabel="Edit profile"
                     >
                       <IconSymbol name="edit" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Edit profile</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Name, photo, interests, and vibes.</Text>
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Name, photo, interests, and vibes.</Text> : null}
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("privacy")}
-                      style={styles.profileMenuItem}
+                      style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                       accessibilityRole="button"
                       accessibilityLabel="Privacy guide"
                     >
                       <IconSymbol name="visibility" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Privacy guide</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Review blur, private profile, and preview controls.</Text>
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Review blur, private profile, and preview controls.</Text> : null}
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -3316,14 +3520,14 @@ export default function ProfileScreen() {
                         key={item.title}
                         activeOpacity={0.78}
                         onPress={() => setProfileMenuPanel(item.panel)}
-                        style={styles.profileMenuItem}
+                        style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                         accessibilityRole="button"
                         accessibilityLabel={item.title}
                       >
                         <IconSymbol name={item.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                         <View style={styles.profileMenuItemBody}>
                           <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.title}</Text>
-                          <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{item.copy}</Text>
+                          {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{item.copy}</Text> : null}
                         </View>
                         <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       </TouchableOpacity>
@@ -3332,45 +3536,49 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("notifications")}
-                      style={styles.profileMenuItem}
+                      style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                       accessibilityRole="button"
                       accessibilityLabel="Notifications"
                     >
                       <IconSymbol name="bell" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Notifications</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Manage event and safety alerts.</Text>
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Manage event and safety alerts.</Text> : null}
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("helpSupport")}
-                      style={styles.profileMenuItem}
+                      style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                       accessibilityRole="button"
                       accessibilityLabel="Help and Support"
                     >
+                      {compactUserOptionRows ? (
+                        <IconSymbol name={profileSupportRowMetadata.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                      ) : (
                       <View style={[styles.profileMenuIconBadge, isDay && styles.dayProfileMenuIconBadge]}>
                         <IconSymbol name={profileSupportRowMetadata.icon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
                       </View>
+                      )}
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{profileSupportRowMetadata.title}</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{profileSupportRowMetadata.description}</Text>
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{profileSupportRowMetadata.description}</Text> : null}
                       </View>
-                      <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{profileSupportRowMetadata.badge}</Text>
+                      {!compactUserOptionRows ? <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{profileSupportRowMetadata.badge}</Text> : null}
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("blockReport")}
-                      style={styles.profileMenuItem}
+                      style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                       accessibilityRole="button"
                       accessibilityLabel="Block and report"
                     >
                       <IconSymbol name="flag" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Block & report</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>For unsafe, pushy, or unwanted contact.</Text>
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>For unsafe, pushy, or unwanted contact.</Text> : null}
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -3380,14 +3588,14 @@ export default function ProfileScreen() {
                       onPress={() => {
                         openSettingsFromProfile(undefined, "user-options");
                       }}
-                      style={styles.profileMenuItem}
+                      style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                       accessibilityRole="button"
                       accessibilityLabel={getRowLabel("settings")}
                     >
                       <IconSymbol name="settings" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getRowLabel("settings")}</Text>
-                        <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>General settings, privacy, and account controls.</Text>
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>General settings, privacy, and account controls.</Text> : null}
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -3403,7 +3611,7 @@ export default function ProfileScreen() {
                     {[
                       { icon: "edit" as const, title: "Name", copy: "Update your first name or nickname.", action: () => { closeProfileMenu(); setIsEditingName(true); } },
                       { icon: "person.fill" as const, title: "Photo", copy: "Add, replace, or remove your profile photo.", action: () => { closeProfileMenu(); setShowPhotoMenu(true); } },
-                      { icon: "calendar" as const, title: "Age, range & gender", copy: "Edit age, preferred age range, and optional gender.", action: () => openSettingsFromProfile(undefined, "user-options") },
+                      { icon: "calendar" as const, title: "Age, range & gender", copy: "Edit age, preferred age range, and optional gender.", action: () => { closeProfileMenu(); toggleAgeEditing(); } },
                       { icon: "location" as const, title: "Local area", copy: "Change your suburb or hide it from preview.", action: () => { closeProfileMenu(); setIsEditingSuburb(true); } },
                       { icon: "interests" as const, title: "Interests", copy: "Choose first-meetup interests shown in preview.", action: () => openPreferenceDestination("hobbiesInterests", "interests") },
                       { icon: "group" as const, title: "My vibes", copy: "Update the quick feel for your social style.", action: () => { closeProfileMenu(); setIsEditingVibes(true); } },
@@ -4716,23 +4924,191 @@ export default function ProfileScreen() {
                         Help & Support is for app feedback and non-urgent help. NSN does not currently provide emergency support.
                       </Text>
                     </View>
-                    <View style={styles.helpSupportSectionStack}>
-                      {[
-                        { icon: "help" as const, title: "Send feedback", copy: "Suggestions, UX feedback, bugs, or confusing areas." },
-                        { icon: "message" as const, title: "Contact the developers", copy: "Use a feedback draft or GitHub issue while alpha support is being shaped." },
-                        { icon: "flag" as const, title: "Report a problem", copy: "Broken buttons, display issues, prototype bugs, or accessibility concerns." },
-                        { icon: "interests" as const, title: "Feature ideas", copy: "Suggest improvements without turning NSN into a high-pressure app." },
-                      ].map((item) => (
-                        <View key={item.title} style={[styles.profileMenuGuideRow, styles.helpSupportCardRow, isDay && styles.daySoftOption]}>
-                          <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#C7B07A"} size={19} />
-                          <View style={styles.profileLayoutBody}>
-                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{item.title}</Text>
-                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{item.copy}</Text>
-                          </View>
+                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                      {renderHelpSectionHeader("ways-to-get-help", "Ways to get help", "Feedback, problems, developer contact, and feature ideas.", "help")}
+                      {openHelpSectionIds.includes("ways-to-get-help") ? (
+                        <View style={styles.helpSubsectionBody}>
+                          {[
+                            { icon: "help" as const, title: "Send feedback", copy: "Suggestions, UX feedback, bugs, or confusing areas." },
+                            { icon: "message" as const, title: "Contact the developers", copy: "Use a feedback draft or GitHub issue while alpha support is being shaped." },
+                            { icon: "flag" as const, title: "Report a problem", copy: "Broken buttons, display issues, prototype bugs, or accessibility concerns." },
+                            { icon: "interests" as const, title: "Feature ideas", copy: "Suggest improvements without turning NSN into a high-pressure app." },
+                          ].map((item) => (
+                            <View key={item.title} style={[styles.profileMenuGuideRow, styles.helpSupportCardRow, isDay && styles.daySoftOption]}>
+                              <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#C7B07A"} size={19} />
+                              <View style={styles.profileLayoutBody}>
+                                <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{item.title}</Text>
+                                <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{item.copy}</Text>
+                              </View>
+                            </View>
+                          ))}
+                        </View>
+                      ) : null}
+                    </View>
+                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                      {renderHelpSectionHeader("support-belonging", "Support & belonging", "Low-pressure guidance for feeling unsure, new, isolated, or cautious.", "shield")}
+                      {openHelpSectionIds.includes("support-belonging") ? (
+                        <View style={styles.helpSubsectionBody}>
+                      <View style={[styles.profileMenuInfoCard, styles.helpEmergencyNotice, isDay && styles.daySoftOption]}>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Local prototype guidance only</Text>
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          NSN can offer gentle app guidance, but it is not mental health care, therapy, crisis support, or emergency support. If you are in immediate danger or need urgent help, contact local emergency or crisis services.
+                        </Text>
+                      </View>
+                      {supportBelongingGuidance.map((item) => (
+                        <View key={item.id} style={[styles.profileMenuGuideRow, styles.helpGuidanceCard, isDay && styles.daySoftOption]}>
+                          <TouchableOpacity
+                            activeOpacity={0.78}
+                            onPress={() => toggleSupportGuide(item.id)}
+                            style={[styles.helpGuidanceHeader, isRtl && styles.rtlRow]}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${item.title} guidance`}
+                            accessibilityValue={{ text: openSupportGuideIds.includes(item.id) ? "Expanded" : "Collapsed" }}
+                          >
+                            <View style={[styles.helpSupportCardRow, styles.profileLayoutBody, isRtl && styles.rtlRow]}>
+                              <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#C7B07A"} size={19} />
+                              <View style={styles.profileLayoutBody}>
+                                <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{item.title}</Text>
+                                <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+                              </View>
+                            </View>
+                            <IconSymbol name={openSupportGuideIds.includes(item.id) ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={19} />
+                          </TouchableOpacity>
+                          {openSupportGuideIds.includes(item.id) ? (
+                            <>
+                              <View style={styles.helpGuidancePointGrid}>
+                                {item.points.map((point) => (
+                                  <Text key={point} style={[styles.helpGuidancePoint, isDay && styles.dayTrustPill, isRtl && styles.rtlText]}>
+                                    {point}
+                                  </Text>
+                                ))}
+                              </View>
+                              <TouchableOpacity
+                                activeOpacity={0.82}
+                                onPress={() => openSupportGuide(item.id)}
+                                style={[styles.profileDisplayChip, styles.helpLearnMoreButton]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Learn more about ${item.title}`}
+                              >
+                                <IconSymbol name="help" color="#FFFFFF" size={15} />
+                                <Text style={[styles.profileDisplayChipText, styles.profileLayoutTextActive]}>Learn more</Text>
+                              </TouchableOpacity>
+                            </>
+                          ) : null}
                         </View>
                       ))}
+                      <View style={[styles.profileMenuGuideRow, styles.helpGuidanceCard, isDay && styles.daySoftOption]}>
+                        <View style={[styles.helpSupportCardRow, isRtl && styles.rtlRow]}>
+                          <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={19} />
+                          <View style={styles.profileLayoutBody}>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Trust and support pathways</Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                              Optional shortcuts to prototype settings that can make first meetups feel easier. These do not collect sensitive health, anxiety, disability, trauma, or support details.
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={[styles.helpPathwayGrid, isRtl && styles.rtlRow]}>
+                          {[
+                            { label: "Comfort settings", icon: "shield" as const, action: () => openFullPreferenceView("comfort") },
+                            { label: "Contact preferences", icon: "message" as const, action: () => openFullPreferenceView("contact") },
+                            { label: "Group size preferences", icon: "group" as const, action: () => openFullPreferenceView("comfort") },
+                          ].map((item) => (
+                            <TouchableOpacity
+                              key={item.label}
+                              activeOpacity={0.82}
+                              onPress={item.action}
+                              style={[styles.profileDisplayChip, styles.helpPathwayButton, isDay && styles.daySoftOption]}
+                              accessibilityRole="button"
+                              accessibilityLabel={item.label}
+                            >
+                              <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#A8B7DA"} size={15} />
+                              <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>{item.label}</Text>
+                            </TouchableOpacity>
+                          ))}
+                          <View style={[styles.profileDisplayChip, styles.helpPathwayButton, styles.helpPathwayButtonDisabled, isDay && styles.daySoftOption]}>
+                            <IconSymbol name="help" color={isDay ? "#6E7B88" : nsnColors.muted} size={15} />
+                            <Text style={[styles.profileDisplayChipText, isDay && styles.dayMutedText]}>Buddy/guide mode - coming later</Text>
+                          </View>
+                          <TouchableOpacity
+                            activeOpacity={0.82}
+                            onPress={() => {
+                              setHelpFeedbackType("Confusing experience");
+                              setHelpFeedbackMessage((current) => current || "I would like to share feedback about support, belonging, or first-meetup guidance in NSN.");
+                            }}
+                            style={[styles.profileDisplayChip, styles.helpPathwayButton, isDay && styles.daySoftOption]}
+                            accessibilityRole="button"
+                            accessibilityLabel="Contact developers about support guidance"
+                          >
+                            <IconSymbol name="message" color={isDay ? "#445E93" : "#A8B7DA"} size={15} />
+                            <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>Contact developers</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                      <View style={[styles.profileMenuInfoCard, styles.helpFutureIdeaCard, isDay && styles.daySoftOption]}>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Future idea</Text>
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          Opt-in comfort gestures, such as a consent-first free-hug option at suitable meetups, only where both people clearly agree and the host/community guidelines allow it. This is not active in the local prototype.
+                        </Text>
+                      </View>
+                        </View>
+                      ) : null}
                     </View>
-                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                      {renderHelpSectionHeader("connection-guides", "Friendship & dating guides", "Optional guidance for gentle friendships and consent-first dating.", "heart")}
+                      {openHelpSectionIds.includes("connection-guides") ? (
+                        <View style={styles.helpSubsectionBody}>
+                      {gentleConnectionGuidance.map((item) => (
+                        <View key={item.id} style={[styles.profileMenuGuideRow, styles.helpGuidanceCard, isDay && styles.daySoftOption]}>
+                          <TouchableOpacity
+                            activeOpacity={0.78}
+                            onPress={() => toggleSupportGuide(item.id)}
+                            style={[styles.helpGuidanceHeader, isRtl && styles.rtlRow]}
+                            accessibilityRole="button"
+                            accessibilityLabel={`${item.title} guidance`}
+                            accessibilityValue={{ text: openSupportGuideIds.includes(item.id) ? "Expanded" : "Collapsed" }}
+                          >
+                            <View style={[styles.helpSupportCardRow, styles.profileLayoutBody, isRtl && styles.rtlRow]}>
+                              <IconSymbol name={item.icon} color={isDay ? "#445E93" : "#C7B07A"} size={19} />
+                              <View style={styles.profileLayoutBody}>
+                                <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{item.title}</Text>
+                                <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+                              </View>
+                            </View>
+                            <IconSymbol name={openSupportGuideIds.includes(item.id) ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={19} />
+                          </TouchableOpacity>
+                          {openSupportGuideIds.includes(item.id) ? (
+                            <>
+                              <View style={styles.helpGuidancePointGrid}>
+                                {item.points.map((point) => (
+                                  <Text key={point} style={[styles.helpGuidancePoint, isDay && styles.dayTrustPill, isRtl && styles.rtlText]}>
+                                    {point}
+                                  </Text>
+                                ))}
+                              </View>
+                              <TouchableOpacity
+                                activeOpacity={0.82}
+                                onPress={() => openSupportGuide(item.id)}
+                                style={[styles.profileDisplayChip, styles.helpLearnMoreButton]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Learn more about ${item.title}`}
+                              >
+                                <IconSymbol name="help" color="#FFFFFF" size={15} />
+                                <Text style={[styles.profileDisplayChipText, styles.profileLayoutTextActive]}>Learn more</Text>
+                              </TouchableOpacity>
+                            </>
+                          ) : null}
+                        </View>
+                      ))}
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                        Guidance is optional and used as reassurance only. It does not create matching scores, rankings, swiping, or pressure to date.
+                      </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                      {renderHelpSectionHeader("feedback-draft", "Feedback draft", "Prepare a local prototype note for bugs, confusion, or support feedback.", "edit")}
+                      {openHelpSectionIds.includes("feedback-draft") ? (
+                        <View style={[styles.profileMenuInfoCard, styles.helpSubsectionBody, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Feedback form</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         Prototype note: feedback sending is not connected yet. Prepare a draft, copy it on web, or open a GitHub issue.
@@ -4833,37 +5209,43 @@ export default function ProfileScreen() {
                           <Text selectable style={[styles.helpDraftText, isDay && styles.dayTitle]}>{feedbackDraft}</Text>
                         </View>
                       ) : null}
+                        </View>
+                      ) : null}
                     </View>
-                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
-                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Accessibility support</Text>
-                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        If something is hard to read, navigate, or understand, choose Accessibility issue above and describe what happened.
-                      </Text>
-                    </View>
-                    <View style={styles.helpSupportSectionStack}>
-                      <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Quick help</Text>
-                      {helpFaqItems.map((item) => {
-                        const isOpen = openHelpFaqIds.includes(item.id);
-
-                        return (
-                          <View key={item.id} style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
-                            <TouchableOpacity
-                              activeOpacity={0.78}
-                              onPress={() => toggleHelpFaq(item.id)}
-                              style={styles.helpFaqHeader}
-                              accessibilityRole="button"
-                              accessibilityLabel={item.title}
-                              accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
-                            >
-                              <View style={styles.profileLayoutBody}>
-                                <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{item.title}</Text>
-                              </View>
-                              <IconSymbol name={isOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={19} />
-                            </TouchableOpacity>
-                            {isOpen ? <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{item.copy}</Text> : null}
+                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                      {renderHelpSectionHeader("faq-accessibility", "FAQs & accessibility", "Quick answers and a reminder to report readability or navigation issues.", "accessibility")}
+                      {openHelpSectionIds.includes("faq-accessibility") ? (
+                        <View style={styles.helpSubsectionBody}>
+                          <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Accessibility support</Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                              If something is hard to read, navigate, or understand, choose Accessibility issue above and describe what happened.
+                            </Text>
                           </View>
-                        );
-                      })}
+                          {helpFaqItems.map((item) => {
+                            const isOpen = openHelpFaqIds.includes(item.id);
+
+                            return (
+                              <View key={item.id} style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
+                                <TouchableOpacity
+                                  activeOpacity={0.78}
+                                  onPress={() => toggleHelpFaq(item.id)}
+                                  style={styles.helpFaqHeader}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={item.title}
+                                  accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
+                                >
+                                  <View style={styles.profileLayoutBody}>
+                                    <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{item.title}</Text>
+                                  </View>
+                                  <IconSymbol name={isOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={19} />
+                                </TouchableOpacity>
+                                {isOpen ? <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{item.copy}</Text> : null}
+                              </View>
+                            );
+                          })}
+                        </View>
+                      ) : null}
                     </View>
                     <TouchableOpacity
                       activeOpacity={0.82}
@@ -5528,49 +5910,6 @@ export default function ProfileScreen() {
           </View>
           ) : null}
           {false ? (
-          <View style={[styles.profileBasicsCard, styles.ageEditorCard, isDay && styles.dayVisibilityModeCard]}>
-            <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
-              <View style={styles.profileLayoutBody}>
-                <Text style={[styles.visibilityModeTitle, styles.leftAlignedTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Age & group preferences</Text>
-                <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  {age ? `${age} · prefers ${preferredAgeMin}-${preferredAgeMax}` : `Prefers ${preferredAgeMin}-${preferredAgeMax}`}
-                  {gender !== "Not specified" ? ` · ${gender}` : ""}
-                </Text>
-              </View>
-              <Text style={styles.editText} onPress={toggleAgeEditing}>{showAgeSaved ? copy.saved : isEditingAge ? copy.done : copy.edit}</Text>
-            </View>
-            {isEditingAge ? (
-              <>
-                <View style={styles.rangeRow}>
-                  <TextInput value={draftAge} onChangeText={(value) => setDraftAge(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Age" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
-                  <TextInput value={draftPreferredAgeMin} onChangeText={(value) => setDraftPreferredAgeMin(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Min" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
-                  <TextInput value={draftPreferredAgeMax} onChangeText={(value) => setDraftPreferredAgeMax(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Max" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
-                </View>
-                <View style={styles.preferenceGrid}>
-                  {genderOptions.map((option) => (
-                    <TouchableOpacity key={option} activeOpacity={0.78} onPress={() => setDraftGender(option)} style={[styles.genderChip, isDay && styles.dayCard, draftGender === option && styles.interestChipActive]} accessibilityRole="radio" accessibilityState={{ checked: draftGender === option }}>
-                      <Text style={[styles.genderChipText, isDay && styles.dayTitle]}>{option}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </>
-            ) : null}
-            <View style={styles.nameToggleRow}>
-              <TouchableOpacity activeOpacity={0.82} onPress={() => saveSoftHelloMvpState({ showAge: !showAge })} style={[styles.nameVisibilityToggle, isDay && styles.daySoftOption, showAge && styles.localAreaVisibilityToggleActive]} accessibilityRole="switch" accessibilityState={{ checked: showAge }}>
-                <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showAge && styles.localAreaVisibilityTextActive]}>{showAge ? "Age shown" : "Age hidden"}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.82} onPress={() => saveSoftHelloMvpState({ showPreferredAgeRange: !showPreferredAgeRange })} style={[styles.nameVisibilityToggle, isDay && styles.daySoftOption, showPreferredAgeRange && styles.localAreaVisibilityToggleActive]} accessibilityRole="switch" accessibilityState={{ checked: showPreferredAgeRange }}>
-                <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showPreferredAgeRange && styles.localAreaVisibilityTextActive]}>{showPreferredAgeRange ? "Range shown" : "Range hidden"}</Text>
-              </TouchableOpacity>
-              {gender !== "Not specified" ? (
-                <TouchableOpacity activeOpacity={0.82} onPress={() => saveSoftHelloMvpState({ showGender: !showGender })} style={[styles.nameVisibilityToggle, isDay && styles.daySoftOption, showGender && styles.localAreaVisibilityToggleActive]} accessibilityRole="switch" accessibilityState={{ checked: showGender }}>
-                  <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showGender && styles.localAreaVisibilityTextActive]}>{showGender ? "Gender shown" : "Gender hidden"}</Text>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          </View>
-          ) : null}
-          {false ? (
           <View style={styles.identitySummary}>
             <View style={[styles.identitySummaryRow, isRtl && styles.rtlRow]}>
               <IconSymbol name="location" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
@@ -5793,46 +6132,9 @@ export default function ProfileScreen() {
         </View>
 
         {isCleanProfile ? (
-          <View style={[styles.profileSectionCard, styles.simpleVibesCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: simpleVisibilitySectionMaxWidth }]}>
-            <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
-              <View style={styles.profileLayoutBody}>
-                <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.myVibes}</Text>
-                <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>A quick feel for your social style.</Text>
-              </View>
-              <Text style={styles.editText} onPress={toggleVibeEditing}>
-                {showVibesSaved ? copy.saved : isEditingVibes ? copy.done : copy.edit}
-              </Text>
-            </View>
-            <View style={[styles.vibeGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
-              {profileVibes.map((vibe) => {
-                const selected = selectedVibes.includes(vibe);
-                const vibeLabel = vibeCopy[vibe] ?? vibe;
-
-                if (!isEditingVibes && !selected) return null;
-
-                return (
-                  <TouchableOpacity
-                    accessibilityRole="button"
-                    accessibilityLabel={vibeLabel}
-                    accessibilityState={{ selected }}
-                    accessibilityHint={isEditingVibes ? profileCopy.selectOrDeselectHint : undefined}
-                    key={vibe}
-                    activeOpacity={0.75}
-                    onPress={() => isEditingVibes && toggleVibe(vibe)}
-                  >
-                    <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, isEditingVibes && !selected && styles.vibeChipMuted, isRtl && styles.rtlText]}>
-                      {selected ? vibeLabel : `+ ${vibeLabel}`}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {vibeLimitMessage ? <Text style={[styles.inlineMessage, styles.cardInlineMessage, isDay && styles.dayMessage]}>{vibeLimitMessage}</Text> : null}
-          </View>
-        ) : null}
-
-        {isCleanProfile ? (
-          <View style={[styles.simpleProfileOverviewGrid, isWideLayout && styles.simpleProfileOverviewGridWide, { maxWidth: profileSectionMaxWidth }]}>
+          <View style={[styles.profileDetailsGroup, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
+            {ageAndGroupPreferenceCard}
+            <View style={[styles.simpleProfileOverviewGrid, styles.profileDetailsOverviewGrid, isWideLayout && styles.simpleProfileOverviewGridWide]}>
           <View style={[styles.simpleVisibilityPreviewSection, styles.simpleVisibilityPreviewPane, { maxWidth: simpleVisibilitySectionMaxWidth }]}>
             <View style={[styles.simpleVisibilityHeader, isRtl && styles.rtlRow]}>
               <View style={styles.profileLayoutBody}>
@@ -5891,10 +6193,61 @@ export default function ProfileScreen() {
             <ProfileVisibilityPreview {...profileVisibilityPreviewProps} />
           </View>
           {renderLocalAreaFeatureSection("simple")}
+            </View>
           </View>
-        ) : null}
+        ) : ageAndGroupPreferenceCard}
 
         <View style={[styles.profileSectionCard, !isCleanProfile && styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+          <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
+            <View style={styles.profileLayoutBody}>
+              <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.myVibes}</Text>
+              <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>A quick feel for your social style.</Text>
+            </View>
+            <Text style={styles.editText} onPress={toggleVibeEditing}>
+              {showVibesSaved ? copy.saved : isEditingVibes ? copy.done : copy.edit}
+            </Text>
+          </View>
+          <View style={[styles.vibeGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+            {profileVibes.map((vibe) => {
+              const selected = selectedVibes.includes(vibe);
+              const vibeLabel = vibeCopy[vibe] ?? vibe;
+
+              if (!isEditingVibes && !selected) return null;
+
+              return (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel={vibeLabel}
+                  accessibilityState={{ selected }}
+                  accessibilityHint={isEditingVibes ? profileCopy.selectOrDeselectHint : undefined}
+                  key={vibe}
+                  activeOpacity={0.75}
+                  onPress={() => isEditingVibes && toggleVibe(vibe)}
+                >
+                  <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, isEditingVibes && !selected && styles.vibeChipMuted, isRtl && styles.rtlText]}>
+                    {selected ? vibeLabel : `+ ${vibeLabel}`}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {vibeLimitMessage ? <Text style={[styles.inlineMessage, styles.cardInlineMessage, isDay && styles.dayMessage]}>{vibeLimitMessage}</Text> : null}
+          {!isCleanProfile ? (
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={() => setShowVibesInPreview((current) => !current)}
+              style={[styles.previewVisibilityToggle, isDay && styles.daySoftOption, showVibesInPreview && styles.localAreaVisibilityToggleActive]}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: showVibesInPreview }}
+            >
+              <IconSymbol name={showVibesInPreview ? "visibility" : "visibility.off"} color={showVibesInPreview ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={16} />
+              <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showVibesInPreview && styles.localAreaVisibilityTextActive]}>
+                {showVibesInPreview ? "Shown in preview" : "Hidden from preview"}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
+          <View style={[styles.profileCardDivider, isDay && styles.dayRowBorder]} />
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
             <View style={styles.profileLayoutBody}>
               <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.about}</Text>
@@ -5946,58 +6299,6 @@ export default function ProfileScreen() {
                 {showAboutInPreview ? "Shown in preview" : "Hidden from preview"}
               </Text>
             </TouchableOpacity>
-          ) : null}
-
-          {!isCleanProfile ? (
-          <>
-          <View style={[styles.profileCardDivider, isDay && styles.dayRowBorder]} />
-          <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
-            <View style={styles.profileLayoutBody}>
-              <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.myVibes}</Text>
-              <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>A quick feel for your social style.</Text>
-            </View>
-            <Text style={styles.editText} onPress={toggleVibeEditing}>
-              {showVibesSaved ? copy.saved : isEditingVibes ? copy.done : copy.edit}
-            </Text>
-          </View>
-          <View style={[styles.vibeGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
-            {profileVibes.map((vibe) => {
-              const selected = selectedVibes.includes(vibe);
-              const vibeLabel = vibeCopy[vibe] ?? vibe;
-
-              if (!isEditingVibes && !selected) return null;
-
-              return (
-                <TouchableOpacity
-                  accessibilityRole="button"
-                  accessibilityLabel={vibeLabel}
-                  accessibilityState={{ selected }}
-                  accessibilityHint={isEditingVibes ? profileCopy.selectOrDeselectHint : undefined}
-                  key={vibe}
-                  activeOpacity={0.75}
-                  onPress={() => isEditingVibes && toggleVibe(vibe)}
-                >
-                  <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, isEditingVibes && !selected && styles.vibeChipMuted, isRtl && styles.rtlText]}>
-                    {selected ? vibeLabel : `+ ${vibeLabel}`}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          {vibeLimitMessage ? <Text style={[styles.inlineMessage, styles.cardInlineMessage, isDay && styles.dayMessage]}>{vibeLimitMessage}</Text> : null}
-          <TouchableOpacity
-            activeOpacity={0.82}
-            onPress={() => setShowVibesInPreview((current) => !current)}
-            style={[styles.previewVisibilityToggle, isDay && styles.daySoftOption, showVibesInPreview && styles.localAreaVisibilityToggleActive]}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: showVibesInPreview }}
-          >
-            <IconSymbol name={showVibesInPreview ? "visibility" : "visibility.off"} color={showVibesInPreview ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={16} />
-            <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showVibesInPreview && styles.localAreaVisibilityTextActive]}>
-              {showVibesInPreview ? "Shown in preview" : "Hidden from preview"}
-            </Text>
-          </TouchableOpacity>
-          </>
           ) : null}
         </View>
 
@@ -6473,6 +6774,19 @@ const styles = StyleSheet.create({
   profileMenuWarningCopy: { color: "#7C5A00" },
   helpSupportSectionStack: { gap: 8, marginBottom: 8 },
   helpSupportCardRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  helpSubsection: { borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 10, marginBottom: 8 },
+  helpSubsectionHeader: { minHeight: 48, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 },
+  helpSubsectionBody: { gap: 8, marginTop: 8 },
+  helpGuidanceCard: { gap: 10 },
+  helpGuidanceHeader: { minHeight: 42, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 },
+  helpGuidancePointGrid: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  helpGuidancePoint: { maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.035)", color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, paddingHorizontal: 9, paddingVertical: 6, overflow: "hidden" },
+  helpLearnMoreButton: { alignSelf: "flex-start", backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  helpPathwayGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  helpPathwayButton: { minHeight: 36 },
+  helpPathwayButtonDisabled: { opacity: 0.72, borderStyle: "dashed" },
+  helpEmergencyNotice: { borderColor: "rgba(247,200,91,0.4)" },
+  helpFutureIdeaCard: { borderStyle: "dashed" },
   helpFieldLabel: { marginTop: 12, marginBottom: 7 },
   helpFeedbackInput: { minHeight: 108, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, fontSize: 13, fontWeight: "700", lineHeight: 19, paddingHorizontal: 12, paddingVertical: 10, ...(Platform.OS === "web" ? ({ outlineStyle: "none", outlineWidth: 0, outlineColor: "transparent", boxShadow: "none", appearance: "none", caretColor: "#7786FF" } as any) : {}) },
   helpToggleStack: { gap: 8, marginTop: 10 },
@@ -6534,6 +6848,9 @@ const styles = StyleSheet.create({
   simpleVisibilityPreviewSection: { width: "100%", maxWidth: 520, alignSelf: "center", alignItems: "stretch", gap: 10, marginBottom: 18 },
   simpleProfileOverviewGrid: { width: "100%", alignSelf: "center", alignItems: "stretch", gap: 14, marginBottom: 18 },
   simpleProfileOverviewGridWide: { flexDirection: "row", alignItems: "stretch", justifyContent: "center" },
+  profileDetailsGroup: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, gap: 14, marginBottom: 18 },
+  profileDetailsOverviewGrid: { marginBottom: 0 },
+  profileDetailsAgeCard: { maxWidth: "100%", alignSelf: "stretch", marginTop: 0 },
   simpleVisibilityPreviewPane: { flexGrow: 1, flexShrink: 1, flexBasis: 360, minWidth: 280, marginBottom: 0 },
   simpleVisibilityHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
   simpleVisibilityPreviewTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "left" },

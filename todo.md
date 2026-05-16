@@ -21,6 +21,15 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [ ] Add Guides or buddy-mode support to help first-time attendees feel oriented without creating pressure
 - [ ] Add host templates for common meetup types
 - [ ] Add conversation starter cards and pre-made replies for low-pressure chats and meetups
+- [ ] Gather tester feedback on whether gentle friendship/dating guidance feels reassuring or unnecessary
+- [ ] Gather tester feedback on whether belonging/support guidance feels reassuring or too personal
+- [ ] Explore low-pressure first-meetup guidance
+- [ ] Explore consent-first buddy/guide systems
+- [ ] Explore buddy/guide support for first-time attendees
+- [ ] Explore consent-first comfort gestures only after community guidelines and safety review
+- [ ] Add crisis/resource links only after regional safety/legal review
+- [ ] Ensure support features are privacy-safe and do not expose sensitive personal information
+- [ ] Avoid encouraging emotional dependency or replacing real support systems in support/belonging features
 - [ ] Add interactive tutorials for privacy, preview visibility, comfort modes, and key meetup flows
 - [ ] Add personality or preference-based recommendations that prioritise comfort, intent, pacing, shared interests, communication style, and group-size comfort without turning NSN into a quiz
 - [ ] Connect social energy, communication style, group size, interests, food, and other comfort preferences to real preference-based recommendations

@@ -92,6 +92,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="support-guidance/[id]" />
             <Stack.Screen name="oauth/callback" />
           </Stack>
           <LowLightOverlay />
