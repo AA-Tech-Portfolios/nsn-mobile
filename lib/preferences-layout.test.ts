@@ -106,6 +106,9 @@ describe("preference chip metadata", () => {
     expect(getPreferenceChipIcon("Phone")).toBe("📞");
     expect(getPreferenceChipIcon("Video")).toBe("🎥");
     expect(getPreferenceChipIcon("Low-message mode")).toBe("🔕");
+    expect(getPreferenceChipIcon("Still learning English")).toBe("🌱");
+    expect(getPreferenceChipIcon("Prefer simple English")).toBe("📝");
+    expect(getPreferenceChipIcon("Prefer multilingual-friendly meetups")).toBe("🌐");
     expect(getPreferenceChipIcon("Reminders only")).toBe("🕰️");
     expect(getPreferenceChipIcon("Hobbies")).toBe("🎨");
     expect(getPreferenceChipIcon("Transport")).toBe("🚆");

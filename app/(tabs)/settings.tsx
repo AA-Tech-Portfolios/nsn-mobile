@@ -52,6 +52,7 @@ import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { brandThemes, isSoftHelloThemeEnabled, type BrandThemeId } from "@/lib/brand-theme";
 import { createSettingsToggleSections, selectSettingsPalette, toggleSettingsDropdown, type SettingsDropdownName } from "@/lib/settings-controls";
 import { emojiDisplayModeOptions, getSettingsBackTarget, getSettingsPreferenceLayout, type EmojiDisplayMode } from "@/lib/preferences-layout";
+import { getEffectivePrototypeVerificationLevel, verificationLevels, type SoftHelloVerificationLevel } from "@/lib/softhello-mvp";
 
 const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
 const comfortModeOptions: { value: NsnComfortMode; copy: string }[] = [
@@ -155,6 +156,7 @@ const prototypeBadgeBySetting: Record<string, AlphaActionLabel> = {
   groupSizePreference: "Saved locally",
   photoRecordingComfortPreferences: "Saved locally",
   verifiedButPrivate: "Saved locally",
+  verificationLevel: "Saved locally",
   profileShortcutLayout: "Saved locally",
   userPreferenceTextMode: "Saved locally",
   showProfileControlsShortcut: "Saved locally",
@@ -233,7 +235,7 @@ const accordionByJumpSection: Record<SettingsSectionJumpId, SettingsAccordionId>
 };
 
 const settingsAccordionMeta: Record<SettingsAccordionId, { title: string; copy: string; icon: ComponentProps<typeof IconSymbol>["name"] }> = {
-  displayLayout: { title: "Display & Layout", copy: "View mode, battery, low-light, and layout comfort.", icon: "palette" },
+  displayLayout: { title: "Appearance & Layout", copy: "View mode, battery, low-light, and layout comfort.", icon: "palette" },
   privacyVisibility: { title: "Privacy & visibility", copy: "Profile visibility, preview details, and what others can see.", icon: "visibility" },
   profileDetails: { title: "Profile preview details", copy: "Name, photo blur, gender, and profile preview controls.", icon: "preview" },
   comfortSafety: { title: "Comfort & safety", copy: "Trust foundations, safety copy, and low-pressure controls.", icon: "shield" },
@@ -241,7 +243,7 @@ const settingsAccordionMeta: Record<SettingsAccordionId, { title: string; copy: 
   timeUnits: { title: "Time, date & units", copy: "Local time, Day/Night logic, dates, weather units, and regional formats.", icon: "language" },
   safetyContact: { title: "Safety & contact", copy: "Prototype-safe safety states, onboarding restart, and contact controls.", icon: "shield" },
   advancedDisplay: { title: "Appearance & advanced display", copy: "Appearance is available in Basic; accessibility and language controls appear in Advanced.", icon: "accessibility" },
-  account: { title: "Account", copy: "Alpha walkthrough, reset controls, and prototype account actions.", icon: "account" },
+  account: { title: "Prototype account controls", copy: "Alpha walkthrough, reset controls, and local-only account action previews.", icon: "account" },
 };
 
 type SettingsCopy = {
@@ -3161,6 +3163,10 @@ export default function SettingsScreen() {
     setUseApproximateLocation,
     showDistanceInMeetups,
     setShowDistanceInMeetups,
+    contactEmail,
+    contactPhone,
+    identitySelfieUri,
+    hasIdentityDocument,
     timeContextMode,
     setTimeContextMode,
     dateFormatPreference,
@@ -3177,6 +3183,7 @@ export default function SettingsScreen() {
     setAllowMessageRequests,
     safetyCheckIns,
     setSafetyCheckIns,
+    verificationLevel,
     appLanguage,
     setAppLanguage,
     translationLanguage,
@@ -3261,6 +3268,10 @@ export default function SettingsScreen() {
   const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
   const contrastMutedStyle = highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
   const accessibilityCopy = accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
+  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel(
+    { contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument },
+    verificationLevel
+  );
   const quickJumpOptions: { id: SettingsSectionJumpId; label: string }[] = [
     { id: "settingsView", label: "View" },
     { id: "batteryPerformance", label: "Battery" },
@@ -3282,7 +3293,7 @@ export default function SettingsScreen() {
           { id: "language" as const, label: "Language" },
         ]
       : []),
-    { id: "generalSettings", label: "Account" },
+    { id: "generalSettings", label: "Prototype account" },
   ];
   const normalizedQuickJumpSearch = quickJumpSearch.trim().toLocaleLowerCase();
   const filteredQuickJumpOptions = useMemo(
@@ -3769,6 +3780,10 @@ export default function SettingsScreen() {
     saveSoftHelloMvpState({ verifiedButPrivate: value });
     showRecentlyChanged("verifiedButPrivate");
   };
+  const savePrototypeVerificationLevel = (value: SoftHelloVerificationLevel) => {
+    saveSoftHelloMvpState({ verificationLevel: value });
+    showRecentlyChanged("verificationLevel");
+  };
   const selectExactLanguage = (
     value: string,
     selectLanguage: (language: string) => void,
@@ -3956,7 +3971,7 @@ export default function SettingsScreen() {
   const confirmDeactivateAccount = (timeline: AccountPauseTimeline) => {
     saveSoftHelloMvpState({ accountPaused: true, accountPauseTimeline: timeline });
     setAccountConfirmation(null);
-    Alert.alert("Saved locally", "Your demo account pause was saved locally. No real account system was changed.");
+    Alert.alert("Saved locally", "Your prototype account pause was saved locally. No real account system was changed.");
   };
 
   const reactivateAccount = () => {
@@ -3966,7 +3981,7 @@ export default function SettingsScreen() {
 
   const confirmDeleteAccount = () => {
     setAccountConfirmation(null);
-    Alert.alert("Demo only", "No real account was deleted. This NSN prototype has not connected account deletion to a backend.");
+    Alert.alert("Demo only", "No real account or profile data was deleted. This NSN alpha has not connected account deletion to a backend.");
   };
 
   return (
@@ -4140,7 +4155,7 @@ export default function SettingsScreen() {
         </Text>
         <View style={[styles.settingsResponsiveGrid, settingsLayout.isDesktop && styles.settingsResponsiveGridWide, { gap: settingsLayout.sectionGap }]}>
           <View style={responsiveSettingsCardStyle()}>
-            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Profile Layout</Text>
+            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Profile display style</Text>
             <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
               Choose whether Profile opens in a simpler layout or the fuller detailed layout.
             </Text>
@@ -4446,6 +4461,19 @@ export default function SettingsScreen() {
               Photo comfort, consent reminders, and prototype trust state stay grouped here so safety actions remain calm and clear.
             </Text>
             <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
+              <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Community Guidelines (alpha)</Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Keep meetups consent-first and low-pressure: ask before photos or videos, respect no-photo preferences, and do not share private chats, profiles, screenshots, or meetup details without permission.
+              </Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                These are prototype guidelines for tester clarity. Reporting, moderation, and account enforcement are not production systems yet.
+              </Text>
+              <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Alpha guidance</Text>
+                <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Prototype-only</Text>
+              </View>
+            </View>
+            <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
               <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
               <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
                 Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
@@ -4472,6 +4500,41 @@ export default function SettingsScreen() {
                 Please don't screenshot or share someone's profile, chat, or meetup details without permission.
               </Text>
               {renderSettingMeta("photoRecordingComfortPreferences")}
+            </View>
+
+            <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
+              <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Prototype verification status</Text>
+              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+                Choose a local-only trust level for alpha testing. This unlocks prototype chat and meetup gates on this device, but does not perform real identity verification.
+              </Text>
+              <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                {verificationLevels.map((level) => {
+                  const active = effectiveVerificationLevel === level;
+                  const helper =
+                    level === "Unverified"
+                      ? "Browse-only prototype state."
+                      : level === "Contact Verified"
+                        ? "Allows prototype chat access."
+                        : "Allows prototype meetup/chat access.";
+
+                  return (
+                    <TouchableOpacity
+                      key={level}
+                      activeOpacity={0.82}
+                      onPress={() => savePrototypeVerificationLevel(level)}
+                      style={responsiveOptionButtonStyle(active)}
+                      accessibilityRole="radio"
+                      accessibilityLabel={`Prototype verification status ${level}`}
+                      accessibilityHint={helper}
+                      accessibilityState={{ checked: active }}
+                    >
+                      <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${level}` : level}</Text>
+                      <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{helper}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {renderSettingMeta("verificationLevel")}
             </View>
 
             <View style={[styles.settingsInlineSwitchRow, isRtl && styles.rtlRow]}>
@@ -5392,12 +5455,12 @@ export default function SettingsScreen() {
           <View style={[styles.deactivateSettingsRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
             <View style={styles.settingCopy}>
               <Text style={[styles.label, styles.deactivateSettingsText, largerText && styles.largeLabel, isRtl && styles.rtlText]}>
-                {accountPaused ? "Account deactivated" : "Deactivate account"}
+                {accountPaused ? "Prototype account paused" : "Pause prototype account"}
               </Text>
               <Text style={[styles.helperText, styles.deactivateSettingsCopy, largerText && styles.largeHelperText, isRtl && styles.rtlText]}>
                 {accountPaused
                   ? `Paused locally for ${accountPauseTimeline}. You can return whenever you feel ready.`
-                  : "Prototype-only pause. Your local profile settings stay saved, and no real account system is changed."}
+                  : "Local-only pause for alpha testing. Your profile settings stay saved, and no real account system is changed."}
               </Text>
               <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
                 <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Saved locally</Text>
@@ -5411,9 +5474,9 @@ export default function SettingsScreen() {
                   onPress={reactivateAccount}
                   style={[styles.deactivatePrimaryButton, styles.reactivateButton]}
                   accessibilityRole="button"
-                  accessibilityLabel="Reactivate account"
+                  accessibilityLabel="Resume prototype account"
                 >
-                  <Text style={styles.reactivateButtonText}>Reactivate account</Text>
+                  <Text style={styles.reactivateButtonText}>Resume prototype account</Text>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.pauseTimelineGrid}>
@@ -5424,7 +5487,7 @@ export default function SettingsScreen() {
                       onPress={() => setAccountConfirmation({ kind: "deactivate", timeline: option.value })}
                       style={styles.pauseTimelineButton}
                       accessibilityRole="button"
-                      accessibilityLabel={`Deactivate account for ${option.label}`}
+                      accessibilityLabel={`Pause prototype account for ${option.label}`}
                       accessibilityHint={screenReaderHints ? `${option.copy} Opens a prototype confirmation dialog.` : undefined}
                     >
                       <Text style={styles.pauseTimelineLabel}>{option.label}</Text>
@@ -5439,20 +5502,20 @@ export default function SettingsScreen() {
             activeOpacity={0.78}
             onPress={() => setAccountConfirmation({ kind: "delete" })}
             accessibilityRole="button"
-            accessibilityLabel="Delete account"
+            accessibilityLabel="Preview account deletion"
             accessibilityHint="Opens a prototype confirmation dialog. No real account will be deleted."
             style={[styles.actionRow, styles.destructiveSettingsRow, isRtl && styles.rtlRow]}
           >
             <View style={styles.settingCopy}>
-              <Text style={[styles.label, styles.destructiveSettingsText, largerText && styles.largeLabel, isRtl && styles.rtlText]}>Delete account</Text>
+              <Text style={[styles.label, styles.destructiveSettingsText, largerText && styles.largeLabel, isRtl && styles.rtlText]}>Preview account deletion</Text>
               <Text style={[styles.helperText, styles.destructiveSettingsCopy, largerText && styles.largeHelperText, isRtl && styles.rtlText]}>
-                Prototype-only deletion preview. Real permanent deletion needs account systems, audit logging, and recovery policy first.
+                Demo-only preview for alpha testers. No real account or profile data is deleted; production deletion needs account systems, audit logging, and recovery policy first.
               </Text>
               <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
                 <Text style={[styles.prototypeBadge, styles.destructivePrototypeBadge]}>Demo</Text>
               </View>
             </View>
-            <Text style={styles.destructiveSettingsAction}>Delete</Text>
+            <Text style={styles.destructiveSettingsAction}>Preview</Text>
           </TouchableOpacity>
         </View>
           </>
@@ -5483,7 +5546,7 @@ export default function SettingsScreen() {
             accessibilityLabel={accountConfirmation?.kind === "delete" ? "Confirm delete account" : "Confirm deactivate account"}
           >
             <Text style={[styles.confirmTitle, isDay && styles.dayTitle]}>
-              {accountConfirmation?.kind === "delete" ? "Delete account?" : "Deactivate account?"}
+              {accountConfirmation?.kind === "delete" ? "Preview account deletion?" : "Pause prototype account?"}
             </Text>
             <Text style={[styles.confirmCopy, isDay && styles.daySubtitle]}>
               {accountConfirmation?.kind === "delete"

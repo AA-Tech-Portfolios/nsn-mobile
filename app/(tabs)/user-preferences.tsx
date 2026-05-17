@@ -14,6 +14,7 @@ import {
   communicationPreferenceOptions,
   getLifeContextFreshnessLabel,
   groupSizePreferenceOptions,
+  languageComfortOptions,
   lifeComfortOptions,
   lifeContextCurrentStateOptions,
   lifeContextFieldOptions,
@@ -33,6 +34,7 @@ import {
   type DatingStylePreference,
   type FriendshipStylePreference,
   type GroupSizePreference,
+  type LanguageComfortPreference,
   type LocationComfortPreference,
   type LifeComfortPreference,
   type LifeContextCurrentStatePreference,
@@ -122,6 +124,7 @@ import {
   availabilityTimingPreferenceDetails,
   datingStylePreferenceDetails,
   friendshipStylePreferenceDetails,
+  languageComfortPreferenceDetails,
   locationComfortPreferenceDetails,
   lifeComfortPreferenceDetails,
   meetupContactPreferenceDetails,
@@ -317,6 +320,7 @@ export default function UserPreferencesScreen() {
     meetupRhythmPreferences,
     availabilityTimingPreferences,
     socialDurationPreferences,
+    languageComfortPreferences,
     locationComfortPreferences,
     contactPreferences,
     suburb,
@@ -846,6 +850,10 @@ export default function UserPreferencesScreen() {
 
   const toggleSocialDurationPreference = async (preference: SocialDurationPreference) => {
     await saveSoftHelloMvpState({ socialDurationPreferences: toggleBackgroundListItem(socialDurationPreferences, preference) });
+  };
+
+  const toggleLanguageComfortPreference = async (preference: LanguageComfortPreference) => {
+    await saveSoftHelloMvpState({ languageComfortPreferences: toggleBackgroundListItem(languageComfortPreferences, preference) });
   };
 
   const toggleLocationComfortPreference = async (preference: LocationComfortPreference) => {
@@ -2398,6 +2406,26 @@ export default function UserPreferencesScreen() {
                 children: (
                   <View style={responsiveChipGridStyle}>
                     {socialDurationPreferenceDetails.map((option) => renderPreferenceDetailChip(option, socialDurationPreferences, toggleSocialDurationPreference))}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "contact-language-comfort",
+                title: "Language Comfort",
+                copy: "Optional English conversation comfort signals. This is for communication ease, not ranking or testing anyone.",
+                icon: "🌐",
+                open: openPreferenceDetailGroups.includes("contact-language-comfort"),
+                onToggle: () => togglePreferenceDetailGroup("contact-language-comfort"),
+                selectedCount: languageComfortPreferences.length,
+                totalCount: languageComfortOptions.length,
+                children: (
+                  <View style={styles.inlinePreferenceStack}>
+                    <Text style={[styles.inlinePreferenceCopy, isDay && styles.dayMutedText]}>
+                      Future idea: multilingual-friendly meetup labels, translated guidance, simple-English mode, and tester feedback from multilingual users.
+                    </Text>
+                    <View style={responsiveChipGridStyle}>
+                      {languageComfortPreferenceDetails.map((option) => renderPreferenceDetailChip(option, languageComfortPreferences, toggleLanguageComfortPreference))}
+                    </View>
                   </View>
                 ),
               })}

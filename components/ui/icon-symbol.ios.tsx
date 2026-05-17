@@ -1,5 +1,8 @@
-import { SymbolView, SymbolViewProps, SymbolWeight } from "expo-symbols";
-import { StyleProp, ViewStyle } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { SymbolWeight } from "expo-symbols";
+import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
+
+import { getMaterialIconName, type IconSymbolName } from "./icon-symbol-map";
 
 export function IconSymbol({
   name,
@@ -8,25 +11,13 @@ export function IconSymbol({
   style,
   weight = "regular",
 }: {
-  name: SymbolViewProps["name"];
+  name: IconSymbolName;
   size?: number;
-  color: string;
-  style?: StyleProp<ViewStyle>;
+  color: string | OpaqueColorValue;
+  style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return (
-    <SymbolView
-      weight={weight}
-      tintColor={color}
-      resizeMode="scaleAspectFit"
-      name={name}
-      style={[
-        {
-          width: size,
-          height: size,
-        },
-        style,
-      ]}
-    />
-  );
+  void weight;
+
+  return <MaterialIcons color={color} size={size} name={getMaterialIconName(name)} style={style} />;
 }

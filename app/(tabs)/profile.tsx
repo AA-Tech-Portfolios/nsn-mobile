@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps 
 import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Alert, Modal, useWindowDimensions, Linking, type ViewStyle } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   backgroundCommunityOptions,
@@ -113,7 +114,7 @@ import {
 import { getPersonalityPresenceSelectedCount, personalityPresencePromptOptions } from "@/lib/preferences/personality-presence";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
-import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
+import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, type SoftHelloVerificationLevel, verificationLevels } from "@/lib/softhello-mvp";
 import { gentleConnectionGuidance, supportBelongingGuidance, type SupportGuidanceId } from "@/lib/support-guidance";
 
 const rows = [
@@ -1191,6 +1192,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const { menu } = useLocalSearchParams<{ menu?: string }>();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const {
     ageConfirmed,
     age,
@@ -1316,7 +1318,7 @@ export default function ProfileScreen() {
       : comfortMode === "Warm Up Mode"
         ? "Profiles are partly visible and reveal more when both people feel comfortable."
         : "People in the event can see basic profile details.";
-  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const getComfortLabel = (preference: SoftHelloComfortPreference) => comfortCopy[preference] ?? preference;
   const comfortSummary = comfortPreferences.length ? comfortPreferences.map(getComfortLabel).join(" · ") : copy.noComfortPreferences;
   const getRowLabel = (key: ProfileShortcutKey) => {
@@ -1402,6 +1404,7 @@ export default function ProfileScreen() {
   const [draftContactPhone, setDraftContactPhone] = useState(contactPhone);
   const [draftIdentitySelfieUri, setDraftIdentitySelfieUri] = useState<string | null>(identitySelfieUri);
   const [draftHasIdentityDocument, setDraftHasIdentityDocument] = useState(hasIdentityDocument);
+  const [draftVerificationLevel, setDraftVerificationLevel] = useState<SoftHelloVerificationLevel>(verificationLevel);
 
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
 
@@ -2301,16 +2304,17 @@ export default function ProfileScreen() {
     setDraftContactPhone(contactPhone);
     setDraftIdentitySelfieUri(identitySelfieUri);
     setDraftHasIdentityDocument(hasIdentityDocument);
+    setDraftVerificationLevel(effectiveVerificationLevel);
     setIsVerificationReviewOpen(true);
   };
 
   const confirmVerificationDetails = async () => {
-    const nextVerificationLevel = deriveVerificationLevel({
+    const nextVerificationLevel = getEffectivePrototypeVerificationLevel({
       contactEmail: draftContactEmail,
       contactPhone: draftContactPhone,
       identitySelfieUri: draftIdentitySelfieUri,
       hasIdentityDocument: draftHasIdentityDocument,
-    });
+    }, draftVerificationLevel);
 
     await saveSoftHelloMvpState({
       contactEmail: draftContactEmail.trim(),
@@ -2320,6 +2324,11 @@ export default function ProfileScreen() {
       verificationLevel: nextVerificationLevel,
     });
     setIsVerificationReviewOpen(false);
+  };
+
+  const savePrototypeVerificationLevel = async (level: SoftHelloVerificationLevel) => {
+    setDraftVerificationLevel(level);
+    await saveSoftHelloMvpState({ verificationLevel: level });
   };
 
   const resetProfileDefaults = async () => {
@@ -2397,33 +2406,36 @@ export default function ProfileScreen() {
       setVibeLimitMessage(copy.vibeLimitMessage);
     }
   };
-  const reviewVerificationLevel = deriveVerificationLevel({
-    contactEmail: draftContactEmail,
-    contactPhone: draftContactPhone,
-    identitySelfieUri: draftIdentitySelfieUri,
-    hasIdentityDocument: draftHasIdentityDocument,
-  });
+  const effectiveReviewVerificationLevel = getEffectivePrototypeVerificationLevel(
+    {
+      contactEmail: draftContactEmail,
+      contactPhone: draftContactPhone,
+      identitySelfieUri: draftIdentitySelfieUri,
+      hasIdentityDocument: draftHasIdentityDocument,
+    },
+    draftVerificationLevel
+  );
   const verificationLevelCards = [
     {
-      level: "Unverified",
+      level: "Unverified" as const,
       title: "Level 0",
       meaning: "New or incomplete account.",
       treatment: "Can browse limited content, but cannot meet in person.",
-      active: reviewVerificationLevel === "Unverified",
+      active: effectiveReviewVerificationLevel === "Unverified",
     },
     {
-      level: "Contact Verified",
+      level: "Contact Verified" as const,
       title: "Level 1",
       meaning: "Email or phone saved locally in this pilot.",
       treatment: "Can create a basic profile and use low-risk interactions.",
-      active: reviewVerificationLevel === "Contact Verified",
+      active: effectiveReviewVerificationLevel === "Contact Verified",
     },
     {
-      level: "Real Person Verified",
+      level: "Real Person Verified" as const,
       title: "Level 2",
       meaning: "Live selfie plus ID check modelled in the prototype.",
       treatment: "Required before in-person meeting eligibility.",
-      active: reviewVerificationLevel === "Real Person Verified",
+      active: effectiveReviewVerificationLevel === "Real Person Verified",
     },
   ];
   const selectedFoodPreferenceLabels = useMemo(
@@ -2963,7 +2975,7 @@ export default function ProfileScreen() {
       ...row,
       summary: canMeetInPerson(effectiveVerificationLevel) ? "Ready for in-person safety checks" : "Review prototype trust status",
       badge: getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase),
-      action: () => openFullPreferenceView("comfort"),
+      action: openVerificationReview,
     }] as const;
   }));
   const getProfileSummaryRows = (rows: ReturnType<typeof getMainProfileSummaryRows>) =>
@@ -3151,8 +3163,8 @@ export default function ProfileScreen() {
       },
       verificationTrust: {
         label: "Manage",
-        onPress: () => openFullPreferenceView("comfort"),
-        accessibilityLabel: "Manage verification and trust display preferences",
+        onPress: openVerificationReview,
+        accessibilityLabel: "Manage prototype verification and trust status",
       },
       personalityPresence: {
         label: "Manage",
@@ -3332,12 +3344,13 @@ export default function ProfileScreen() {
         </View>
         <TouchableOpacity
           activeOpacity={0.82}
-          onPress={() => openSettingsFromProfile({ section: "trustFoundations" })}
+          onPress={openVerificationReview}
           style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
           accessibilityRole="button"
-          accessibilityLabel="Open trust status settings"
+          accessibilityLabel="Open prototype verification controls"
+          accessibilityHint="Opens local-only prototype trust controls. This does not perform real identity verification."
         >
-          <Text style={styles.reviewSettingsText}>Open Safety & Privacy</Text>
+          <Text style={styles.reviewSettingsText}>{profileVerificationCopy.reviewSettings}</Text>
         </TouchableOpacity>
       </View>
 
@@ -3415,7 +3428,7 @@ export default function ProfileScreen() {
       : profileMenuPanel === "privacy"
         ? "Privacy Guide"
         : profileMenuPanel === "preferences"
-          ? "User Preferences"
+          ? "Preferences"
         : profileMenuPanel === "comfortTrust"
           ? "Comfort & Trust"
           : profileMenuPanel === "backgroundCommunity"
@@ -3433,11 +3446,11 @@ export default function ProfileScreen() {
                       : profileMenuPanel === "locationPreferencePanel"
                         ? "Location Preference"
                         : profileMenuPanel === "display"
-                          ? "Display & Layout"
+                          ? "Appearance & Layout"
                         : profileMenuPanel === "layout"
-                            ? "Profile Layout"
+                            ? "Profile display style"
                             : profileMenuPanel === "width"
-                              ? "Width Settings"
+                              ? "Profile width"
                               : profileMenuPanel === "notifications"
                                 ? "Notifications"
                                 : profileMenuPanel === "helpSupport"
@@ -3601,6 +3614,7 @@ export default function ProfileScreen() {
                         })}
                       </View>
                     </View>
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Profile</Text>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("edit")}
@@ -3630,11 +3644,12 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Preferences</Text>
                     {[
-                      { icon: "sliders" as const, title: "User Preferences", copy: "Comfort & Trust, life context, communication, transport, food, and hobbies.", panel: "preferences" as const },
-                      { icon: "layout" as const, title: "Display & Layout", copy: `${homeEventLayout} events, ${homeLayoutDensity.toLowerCase()} Home density.`, panel: "display" as const },
-                      { icon: "group" as const, title: "Profile Layout", copy: isCleanProfile ? "Simple layout selected." : "Detailed layout selected.", panel: "layout" as const },
-                      { icon: "resize" as const, title: "Width Settings", copy: isWideProfile ? "Wide width selected." : "Contained width selected.", panel: "width" as const },
+                      { icon: "sliders" as const, title: "Preferences", copy: "Comfort, trust, communication, transport, food, interests, and life context.", panel: "preferences" as const },
+                      { icon: "layout" as const, title: "Appearance & Layout", copy: `${homeEventLayout} events, ${homeLayoutDensity.toLowerCase()} Home density.`, panel: "display" as const },
+                      { icon: "group" as const, title: "Profile display style", copy: isCleanProfile ? "Simple profile selected." : "Detailed profile selected.", panel: "layout" as const },
+                      { icon: "resize" as const, title: "Profile width", copy: isWideProfile ? "Wide width selected." : "Contained width selected.", panel: "width" as const },
                     ].map((item) => (
                       <TouchableOpacity
                         key={item.title}
@@ -3653,6 +3668,7 @@ export default function ProfileScreen() {
                       </TouchableOpacity>
                     ))}
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Safety & Support</Text>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("notifications")}
@@ -3703,6 +3719,7 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>App Settings</Text>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => {
@@ -3715,7 +3732,7 @@ export default function ProfileScreen() {
                       <IconSymbol name="settings" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getRowLabel("settings")}</Text>
-                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>General settings, privacy, and account controls.</Text> : null}
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Settings, privacy, appearance, and prototype account controls.</Text> : null}
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -4889,9 +4906,9 @@ export default function ProfileScreen() {
                   <>
                     <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("main")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to Profile menu">
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
-                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Display & Layout</Text>
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Appearance & Layout</Text>
                     </TouchableOpacity>
-                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Home & Event Display</Text>
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Home, event, and profile display</Text>
                     <View style={styles.profileDisplayGrid}>
                       <View style={styles.profileDisplayGroup}>
                         <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Event Layout</Text>
@@ -5793,7 +5810,7 @@ export default function ProfileScreen() {
                   </View>
                   <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                 </TouchableOpacity>
-                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>General settings</Text>
+                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Prototype account controls</Text>
                 <TouchableOpacity
                   activeOpacity={0.78}
                   onPress={resetProfileDefaults}
@@ -5813,12 +5830,12 @@ export default function ProfileScreen() {
                   onPress={showDeleteAccountNotice}
                   style={[styles.profileMenuItem, styles.profileMenuDestructiveItem]}
                   accessibilityRole="button"
-                  accessibilityLabel="Delete account"
+                  accessibilityLabel="Preview account deletion"
                 >
                   <IconSymbol name="flag" color="#E23D5A" size={20} />
                   <View style={styles.profileMenuItemBody}>
-                    <Text style={[styles.profileMenuText, styles.profileMenuDestructiveText]}>Delete account</Text>
-                    <Text style={[styles.profileMenuDescription, styles.profileMenuDestructiveDescription]}>Demo deletion preview; real deletion needs account systems first.</Text>
+                    <Text style={[styles.profileMenuText, styles.profileMenuDestructiveText]}>Demo delete account</Text>
+                    <Text style={[styles.profileMenuDescription, styles.profileMenuDestructiveDescription]}>Shows the future deletion flow only. No real account or profile data is deleted in alpha.</Text>
                   </View>
                 </TouchableOpacity>
                   </>
@@ -5835,7 +5852,7 @@ export default function ProfileScreen() {
           <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>Alpha testing</Text>
           <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>What to try on Profile</Text>
           <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Adjust your comfort profile, preview visibility, and local area. Verification, trust, account deletion, block, and report controls are prototype-only until real account systems exist.
+            Adjust your comfort profile, preview visibility, and local area. Verification, trust, account actions, block, and report controls are prototype-only until real account systems exist.
           </Text>
         </View>
 
@@ -6860,22 +6877,45 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <Modal transparent animationType="fade" visible={isVerificationReviewOpen} onRequestClose={() => setIsVerificationReviewOpen(false)}>
-        <View style={styles.modalBackdrop}>
+        <View
+          style={[
+            styles.modalBackdrop,
+            {
+              paddingTop: Math.max(insets.top + 12, 28),
+              paddingBottom: Math.max(insets.bottom + 16, 24),
+            },
+          ]}
+        >
           <View style={[styles.verificationSheet, isDay && styles.dayModalSheet]}>
-            <Text style={[styles.verificationReviewTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{profileVerificationCopy.title}</Text>
-            <Text style={[styles.verificationReviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Choose how much trust evidence you want to model in this local pilot. Real verification still needs a provider before production.
-            </Text>
-            <View style={styles.verificationLevelList}>
+            <ScrollView
+              style={styles.verificationSheetScroll}
+              contentContainerStyle={styles.verificationSheetContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            >
+              <Text style={[styles.verificationReviewTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{profileVerificationCopy.title}</Text>
+              <Text style={[styles.verificationReviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Choose how much trust evidence you want to model in this local pilot. Real verification still needs a provider before production.
+              </Text>
+              <View style={styles.verificationLevelList}>
               {verificationLevelCards.map((item) => (
-                <View key={item.level} style={[styles.verificationLevelCard, isDay && styles.daySoftOption, item.active && styles.verificationLevelCardActive]}>
+                <TouchableOpacity
+                  key={item.level}
+                  activeOpacity={0.82}
+                  onPress={() => savePrototypeVerificationLevel(item.level)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: item.active }}
+                  accessibilityLabel={`Prototype trust level ${item.level}`}
+                  accessibilityHint="Selects a local-only prototype verification level. This does not verify your identity."
+                  style={[styles.verificationLevelCard, isDay && styles.daySoftOption, item.active && styles.verificationLevelCardActive]}
+                >
                   <View style={styles.verificationLevelHeader}>
                     <Text style={[styles.verificationLevelKicker, isDay && styles.dayMutedText, item.active && styles.verificationLevelTextActive]}>{item.title}</Text>
                     <Text style={[styles.verificationLevelName, isDay && styles.dayTitle, item.active && styles.verificationLevelTextActive]}>{item.level}</Text>
                   </View>
                   <Text style={[styles.verificationLevelCopy, isDay && styles.dayMutedText, item.active && styles.verificationLevelTextActive]}>{item.meaning}</Text>
                   <Text style={[styles.verificationLevelTreatment, isDay && styles.dayTitle, item.active && styles.verificationLevelTextActive]}>{item.treatment}</Text>
-                </View>
+                </TouchableOpacity>
               ))}
               <View style={[styles.verificationLevelCard, isDay && styles.daySoftOption]}>
                 <View style={styles.verificationLevelHeader}>
@@ -6885,8 +6925,8 @@ export default function ProfileScreen() {
                 <Text style={[styles.verificationLevelCopy, isDay && styles.dayMutedText]}>Optional ID verification confirming name and age.</Text>
                 <Text style={[styles.verificationLevelTreatment, isDay && styles.dayTitle]}>Post-MVP unless needed for a high-trust flow.</Text>
               </View>
-            </View>
-            <View style={styles.verificationReviewList}>
+              </View>
+              <View style={styles.verificationReviewList}>
               <View style={[styles.verificationInputGroup, isDay && styles.daySoftOption]}>
                 <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Level 1: Contact Verified</Text>
                 <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Add an email or phone number to model contact verification.</Text>
@@ -6924,13 +6964,14 @@ export default function ProfileScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-            </View>
-            <TouchableOpacity activeOpacity={0.86} onPress={confirmVerificationDetails} style={styles.confirmReviewButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? profileVerificationA11yCopy.confirmDetailsHint : undefined}>
-              <Text style={styles.confirmReviewText}>{profileVerificationCopy.confirmDetails}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.82} onPress={() => setIsVerificationReviewOpen(false)} style={[styles.secondaryReviewButton, isDay && styles.daySoftOption]}>
-              <Text style={[styles.secondaryReviewText, isDay && styles.dayTitle]}>{copy.cancel}</Text>
-            </TouchableOpacity>
+              </View>
+              <TouchableOpacity activeOpacity={0.86} onPress={confirmVerificationDetails} style={styles.confirmReviewButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? profileVerificationA11yCopy.confirmDetailsHint : undefined}>
+                <Text style={styles.confirmReviewText}>{profileVerificationCopy.confirmDetails}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity activeOpacity={0.82} onPress={() => setIsVerificationReviewOpen(false)} style={[styles.secondaryReviewButton, isDay && styles.daySoftOption]}>
+                <Text style={[styles.secondaryReviewText, isDay && styles.dayTitle]}>{copy.cancel}</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -7218,8 +7259,10 @@ const styles = StyleSheet.create({
   reviewSettingsButton: { alignSelf: "flex-start", minHeight: 36, borderRadius: 13, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 13, marginTop: 12 },
   simpleReviewButton: { minHeight: 34, marginTop: 10 },
   reviewSettingsText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17 },
-  modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(2,8,20,0.42)", padding: 16 },
-  verificationSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
+  modalBackdrop: { flex: 1, justifyContent: "center", backgroundColor: "rgba(2,8,20,0.42)", paddingHorizontal: 16 },
+  verificationSheet: { width: "100%", maxHeight: "100%", borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, overflow: "hidden" },
+  verificationSheetScroll: { width: "100%" },
+  verificationSheetContent: { padding: 16, paddingBottom: 24 },
   dayModalSheet: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   verificationReviewTitle: { color: nsnColors.text, fontSize: 20, fontWeight: "900", lineHeight: 26 },
   verificationReviewCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 12 },

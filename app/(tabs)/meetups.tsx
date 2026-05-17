@@ -4,7 +4,7 @@ import { useRouter } from "expo-router";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
-import { canChatPrivately, deriveVerificationLevel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
+import { canChatPrivately, getEffectivePrototypeVerificationLevel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const upcoming = [eveningEvents[0], dayEvents[0], eveningEvents[1]];
 
@@ -208,14 +208,14 @@ const meetupsTrustGateTranslations = {
 
 export default function MeetupsScreen() {
   const router = useRouter();
-  const { appLanguage, contactEmail, contactPhone, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage } = useAppSettings();
+  const { appLanguage, contactEmail, contactPhone, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage, verificationLevel } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const translationLanguageBase = getTranslationLanguageBase(translationLanguage);
   const isDay = !isNightMode;
   const copy = meetupsTranslations[appLanguageBase as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
   const meetupCopy = { ...meetupsTranslations.English, ...copy };
   const trustGateCopy = meetupsTrustGateTranslations[appLanguageBase as keyof typeof meetupsTrustGateTranslations] ?? meetupsTrustGateTranslations.English;
-  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canUseMeetups = canChatPrivately(effectiveVerificationLevel);
 
   return (
@@ -261,9 +261,9 @@ export default function MeetupsScreen() {
             <TouchableOpacity key={event.id} activeOpacity={0.85} style={[styles.meetupCard, isDay && styles.dayCard]} onPress={() => router.push(`/event/${event.id}`)} accessibilityRole="button" accessibilityHint={screenReaderHints ? meetupCopy.eventDetailsHint(localizedEvent.title) : undefined}>
               <View style={[styles.emojiBox, { backgroundColor: event.imageTone }]}><Text style={styles.emoji}>{event.emoji}</Text></View>
               <View style={styles.cardBody}>
-                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedEvent.title}</Text>
-                <Text style={[styles.cardMeta, isDay && styles.dayMutedText]}>{event.venue} · {event.time}</Text>
-                <Text style={[styles.cardCopy, isDay && styles.daySuccessText]}>{localizedEvent.people} · {index === 0 ? copy.joined : copy.suggested}</Text>
+                <Text style={[styles.cardTitle, isDay && styles.dayTitle]} numberOfLines={3}>{localizedEvent.title}</Text>
+                <Text style={[styles.cardMeta, isDay && styles.dayMutedText]} numberOfLines={2}>{event.venue} · {event.time}</Text>
+                <Text style={[styles.cardCopy, isDay && styles.daySuccessText]} numberOfLines={2}>{localizedEvent.people} · {index === 0 ? copy.joined : copy.suggested}</Text>
               </View>
               <Text style={[styles.chevron, isDay && styles.dayMutedText]}>›</Text>
             </TouchableOpacity>
@@ -304,12 +304,12 @@ const styles = StyleSheet.create({
   sectionTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "800", lineHeight: 24, marginBottom: 10 },
   list: { gap: 10 },
   meetupCard: { minHeight: 88, borderRadius: 18, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "center", padding: 10 },
-  emojiBox: { width: 64, height: 64, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  emojiBox: { width: 64, height: 64, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   emoji: { fontSize: 29 },
-  cardBody: { flex: 1, paddingHorizontal: 11 },
+  cardBody: { flex: 1, minWidth: 0, paddingHorizontal: 11 },
   cardTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 19 },
   cardMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   cardCopy: { color: nsnColors.green, fontSize: 11, lineHeight: 16, marginTop: 3, fontWeight: "700" },
   daySuccessText: { color: "#2F7A3C" },
-  chevron: { color: nsnColors.muted, fontSize: 30, lineHeight: 34 },
+  chevron: { flexShrink: 0, color: nsnColors.muted, fontSize: 30, lineHeight: 34 },
 });

@@ -12,8 +12,8 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [x] Review checkpoint screenshots for desktop and mobile layout regressions
 - [x] Create an alpha tester feedback checklist after the walkthrough has been exercised
 - [x] Continue button behaviour audit across Profile, Settings & Privacy, modal menus, disabled controls, and saved-locally actions
-- [ ] Decide which prototype-only account actions should stay visible after tester walkthrough, be backed by real auth, or be hidden before alpha
-- [ ] Regenerate stale checkpoint screenshots after the alpha QA smoke pass, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
+- [x] Keep prototype-only account actions visible for alpha as local pause and deletion-preview controls, with calm wording that real deletion/auth/backends are not connected yet
+- [ ] Regenerate stale checkpoint screenshots after the May 17 mobile fixes and alpha UX cleanup, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
 - [ ] If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
 
 ## Post-Alpha Core Features
@@ -44,7 +44,7 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 
 ## Safety, Privacy & Trust
 
-- [ ] Add Community Guidelines, including photo/video consent expectations and no sharing private chats, profiles, or meetup details without consent
+- [x] Add compact alpha Community Guidelines wording for photo/video consent and no sharing private chats, profiles, screenshots, or meetup details without consent
 - [ ] Add event media comfort labels and a future reporting flow for privacy, photo, video, or screenshot violations
 - [ ] Add 18+ compliance copy and safeguards beyond local age entry
 - [ ] Decide the real verification provider strategy and UX handoff before claiming production verification

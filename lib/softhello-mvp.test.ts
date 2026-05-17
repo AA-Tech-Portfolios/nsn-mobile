@@ -8,6 +8,7 @@ import {
   cancelSafetyReport,
   createSafetyReport,
   deriveVerificationLevel,
+  getEffectivePrototypeVerificationLevel,
   getMeetingSafetyCopy,
   getVerificationLevelLabel,
   hideEvent,
@@ -49,6 +50,14 @@ describe("SoftHello MVP domain rules", () => {
         hasIdentityDocument: true,
       })
     ).toBe("Real Person Verified");
+  });
+
+  it("lets alpha prototype trust selection unlock gated surfaces locally", () => {
+    expect(getEffectivePrototypeVerificationLevel({}, "Contact Verified")).toBe("Contact Verified");
+    expect(canChatPrivately(getEffectivePrototypeVerificationLevel({}, "Contact Verified"))).toBe(true);
+    expect(canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Contact Verified"))).toBe(false);
+    expect(canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Real Person Verified"))).toBe(true);
+    expect(getEffectivePrototypeVerificationLevel({ contactEmail: "alon@example.com" }, "Unverified")).toBe("Contact Verified");
   });
 
   it("localizes trust copy while falling back to English", () => {

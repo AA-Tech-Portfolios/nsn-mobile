@@ -96,7 +96,7 @@ describe("home layout presets", () => {
     expect(fitted.mapHeight).toBeLessThan(base.mapHeight);
     expect(fitted.bottomPadding).toBeLessThan(base.bottomPadding);
     expect(fitted.tapTarget).toBe(base.tapTarget);
-    expect(fitted.eventDescriptionLines).toBe(1);
+    expect(fitted.eventDescriptionLines).toBe(2);
     expect(fitted.bottomPadding).toBeLessThanOrEqual(20);
   });
 

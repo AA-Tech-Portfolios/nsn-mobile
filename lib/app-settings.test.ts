@@ -6,9 +6,11 @@ import {
   datingStyleOptions,
   friendshipStyleOptions,
   getTranslationLanguageBase,
+  languageComfortOptions,
   locationComfortPreferenceOptions,
   lifeComfortOptions,
   meetupRhythmOptions,
+  normalizeLanguageComfortPreferences,
   normalizeNsnLanguage,
   normalizeMeetupContactPreferences,
   nsnLocalLanguageOptions,
@@ -17,7 +19,7 @@ import {
   socialDurationOptions,
   toggleMeetupContactPreferenceSelection,
 } from "./app-settings";
-import { availabilityTimingPreferenceDetails, datingStylePreferenceDetails, friendshipStylePreferenceDetails, locationComfortPreferenceDetails, meetupRhythmPreferenceDetails, socialDurationPreferenceDetails } from "./preferences/preference-panel-options";
+import { availabilityTimingPreferenceDetails, datingStylePreferenceDetails, friendshipStylePreferenceDetails, languageComfortPreferenceDetails, locationComfortPreferenceDetails, meetupRhythmPreferenceDetails, socialDurationPreferenceDetails } from "./preferences/preference-panel-options";
 
 describe("NSN alpha language staging", () => {
   it("keeps only reviewed or explicitly staged alpha languages selectable", () => {
@@ -96,6 +98,33 @@ describe("meetup contact preference conflicts", () => {
     expect(toggleMeetupContactPreferenceSelection(["No voice calls"], "Voice call okay")).toEqual(["Voice call okay"]);
     expect(toggleMeetupContactPreferenceSelection(["Chat before meetup", "Group chat okay"], "Details only")).toEqual(["Details only"]);
     expect(toggleMeetupContactPreferenceSelection(["Prefer planning ahead"], "Last-minute plans okay")).toEqual(["Last-minute plans okay"]);
+  });
+});
+
+describe("language comfort preference staging", () => {
+  it("keeps English conversation comfort optional, warm, and non-ranking", () => {
+    expect(languageComfortOptions).toEqual([
+      "Native English speaker",
+      "Fluent English",
+      "Advanced English",
+      "Still learning English",
+      "Prefer simple English",
+      "Comfortable with slower conversation",
+      "Happy to help others practise English",
+      "Prefer multilingual-friendly meetups",
+      "Prefer not to say",
+    ]);
+    expect(languageComfortPreferenceDetails.map((option) => option.group)).toEqual(expect.arrayContaining([
+      "English conversation comfort",
+      "Conversation support",
+      "Multilingual-friendly meetups",
+      "Privacy",
+    ]));
+    expect(languageComfortPreferenceDetails.map((option) => option.copy).join(" ")).not.toMatch(/good english|bad english|score|rank|test/i);
+  });
+
+  it("lets Prefer not to say stay exclusive", () => {
+    expect(normalizeLanguageComfortPreferences(["Still learning English", "Prefer not to say"])).toEqual(["Prefer not to say"]);
   });
 });
 

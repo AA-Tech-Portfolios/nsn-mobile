@@ -7,7 +7,7 @@ import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
-import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel } from "@/lib/softhello-mvp";
+import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
 
@@ -345,7 +345,7 @@ export default function EventsScreen() {
   const copy = eventsTranslations[appLanguageBase as keyof typeof eventsTranslations] ?? eventsTranslations.English;
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
-  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canCreateMeetups = canMeetInPerson(effectiveVerificationLevel);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);

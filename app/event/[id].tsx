@@ -16,7 +16,7 @@ import {
 } from "@/lib/options-hub";
 import {
   canMeetInPerson,
-  deriveVerificationLevel,
+  getEffectivePrototypeVerificationLevel,
   getEventMembership,
   getMeetingSafetyCopy,
   getVerificationLevelLabel,
@@ -856,7 +856,7 @@ export default function EventDetailsScreen() {
     : copy.genericMeetingCopy(event.venue);
   const membership = getEventMembership(event.id, eventMemberships);
   const hasJoined = membership.status === "joined";
-  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canMeet = canMeetInPerson(effectiveVerificationLevel);
   const existingFeedback = postEventFeedback.find((item) => item.eventId === event.id);
   const savedPlaceId = `event:${event.id}:${event.venue}`;

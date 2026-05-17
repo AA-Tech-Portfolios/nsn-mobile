@@ -256,6 +256,16 @@ export type SocialDurationPreference =
   | "Half-day outing"
   | "Flexible timing"
   | "Leave anytime";
+export type LanguageComfortPreference =
+  | "Native English speaker"
+  | "Fluent English"
+  | "Advanced English"
+  | "Still learning English"
+  | "Prefer simple English"
+  | "Comfortable with slower conversation"
+  | "Happy to help others practise English"
+  | "Prefer multilingual-friendly meetups"
+  | "Prefer not to say";
 export type TransportationPreference =
   | "Walking"
   | "Public transport"
@@ -789,6 +799,17 @@ export const socialDurationOptions: SocialDurationPreference[] = [
   "Flexible timing",
   "Leave anytime",
 ];
+export const languageComfortOptions: LanguageComfortPreference[] = [
+  "Native English speaker",
+  "Fluent English",
+  "Advanced English",
+  "Still learning English",
+  "Prefer simple English",
+  "Comfortable with slower conversation",
+  "Happy to help others practise English",
+  "Prefer multilingual-friendly meetups",
+  "Prefer not to say",
+];
 export const meetupContactPreferenceOptions: MeetupContactPreference[] = [
   "In-app chat",
   "Details only",
@@ -980,6 +1001,9 @@ const normalizeBackgroundPreferenceList = <T extends string>(value: T[] | null |
   return filtered.includes("Prefer not to say" as T) ? (["Prefer not to say"] as T[]) : filtered;
 };
 
+export const normalizeLanguageComfortPreferences = (value?: LanguageComfortPreference[] | null): LanguageComfortPreference[] =>
+  normalizeBackgroundPreferenceList(value, languageComfortOptions);
+
 const normalizeSelectablePreferenceList = <T extends string>(value: T[] | null | undefined, options: T[], fallback: T[]): T[] => {
   const filtered = Array.from(new Set((value ?? []).filter((preference): preference is T => options.includes(preference))));
   return filtered.length ? filtered : fallback;
@@ -1116,6 +1140,7 @@ type OnboardingSnapshot = {
   meetupRhythmPreferences?: MeetupRhythmPreference[];
   availabilityTimingPreferences?: AvailabilityTimingPreference[];
   socialDurationPreferences?: SocialDurationPreference[];
+  languageComfortPreferences?: LanguageComfortPreference[];
   transportationPreferences?: TransportationPreference[];
   meetupContactPreferences?: MeetupContactPreference[];
   locationComfortPreferences?: LocationComfortPreference[];
@@ -1429,6 +1454,8 @@ type AppSettings = {
   setAvailabilityTimingPreferences: (value: AvailabilityTimingPreference[]) => void;
   socialDurationPreferences: SocialDurationPreference[];
   setSocialDurationPreferences: (value: SocialDurationPreference[]) => void;
+  languageComfortPreferences: LanguageComfortPreference[];
+  setLanguageComfortPreferences: (value: LanguageComfortPreference[]) => void;
   transportationPreferences: TransportationPreference[];
   setTransportationPreferences: (value: TransportationPreference[]) => void;
   meetupContactPreferences: MeetupContactPreference[];
@@ -1715,6 +1742,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [meetupRhythmPreferences, setMeetupRhythmPreferences] = useState<MeetupRhythmPreference[]>([]);
   const [availabilityTimingPreferences, setAvailabilityTimingPreferences] = useState<AvailabilityTimingPreference[]>([]);
   const [socialDurationPreferences, setSocialDurationPreferences] = useState<SocialDurationPreference[]>([]);
+  const [languageComfortPreferences, setLanguageComfortPreferences] = useState<LanguageComfortPreference[]>([]);
   const [socialEnergyPreference, setSocialEnergyPreference] = useState<SocialEnergyPreference>("Calm");
   const [communicationPreferences, setCommunicationPreferences] = useState<CommunicationPreference[]>(["Low-message mode", "Details only"]);
   const [groupSizePreference, setGroupSizePreference] = useState<GroupSizePreference>("Small groups only");
@@ -1897,6 +1925,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setMeetupRhythmPreferences(normalizeBackgroundPreferenceList(snapshot.meetupRhythmPreferences, meetupRhythmOptions));
         setAvailabilityTimingPreferences(normalizeBackgroundPreferenceList(snapshot.availabilityTimingPreferences, availabilityTimingOptions));
         setSocialDurationPreferences(normalizeBackgroundPreferenceList(snapshot.socialDurationPreferences, socialDurationOptions));
+        setLanguageComfortPreferences(normalizeLanguageComfortPreferences(snapshot.languageComfortPreferences));
         setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
         setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
         setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
@@ -2079,6 +2108,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextMeetupRhythmPreferences = normalizeBackgroundPreferenceList(snapshot.meetupRhythmPreferences, meetupRhythmOptions);
     const nextAvailabilityTimingPreferences = normalizeBackgroundPreferenceList(snapshot.availabilityTimingPreferences, availabilityTimingOptions);
     const nextSocialDurationPreferences = normalizeBackgroundPreferenceList(snapshot.socialDurationPreferences, socialDurationOptions);
+    const nextLanguageComfortPreferences = normalizeLanguageComfortPreferences(snapshot.languageComfortPreferences);
     const nextLifeContextLastUpdatedAt =
       normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt) ??
       (nextLifeContextCurrentStates.length || nextLifeContextFields.length || nextLifeContextLearningInterests.length ? new Date().toISOString() : null);
@@ -2125,6 +2155,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setMeetupRhythmPreferences(nextMeetupRhythmPreferences);
     setAvailabilityTimingPreferences(nextAvailabilityTimingPreferences);
     setSocialDurationPreferences(nextSocialDurationPreferences);
+    setLanguageComfortPreferences(nextLanguageComfortPreferences);
     setLifeContextLastUpdatedAt(nextLifeContextLastUpdatedAt);
     setPersonalityPresenceHair(nextPersonalityPresenceHair);
     setPersonalityPresenceHairCues(nextPersonalityPresenceHairCues);
@@ -2247,6 +2278,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           meetupRhythmPreferences: nextMeetupRhythmPreferences,
           availabilityTimingPreferences: nextAvailabilityTimingPreferences,
           socialDurationPreferences: nextSocialDurationPreferences,
+          languageComfortPreferences: nextLanguageComfortPreferences,
           lifeContextLastUpdatedAt: nextLifeContextLastUpdatedAt,
           personalityPresenceHair: nextPersonalityPresenceHair,
           personalityPresenceHairCues: nextPersonalityPresenceHairCues,
@@ -2388,6 +2420,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       meetupRhythmPreferences,
       availabilityTimingPreferences,
       socialDurationPreferences,
+      languageComfortPreferences,
       transportationPreferences,
       meetupContactPreferences,
       locationComfortPreferences,
@@ -2492,6 +2525,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.meetupRhythmPreferences = normalizeBackgroundPreferenceList(nextSnapshot.meetupRhythmPreferences, meetupRhythmOptions);
     nextSnapshot.availabilityTimingPreferences = normalizeBackgroundPreferenceList(nextSnapshot.availabilityTimingPreferences, availabilityTimingOptions);
     nextSnapshot.socialDurationPreferences = normalizeBackgroundPreferenceList(nextSnapshot.socialDurationPreferences, socialDurationOptions);
+    nextSnapshot.languageComfortPreferences = normalizeLanguageComfortPreferences(nextSnapshot.languageComfortPreferences);
     nextSnapshot.lifeContextLastUpdatedAt = normalizeLifeContextUpdatedAt(
       lifeContextTouched && snapshot.lifeContextLastUpdatedAt === undefined ? new Date().toISOString() : nextSnapshot.lifeContextLastUpdatedAt
     );
@@ -2604,6 +2638,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.meetupRhythmPreferences !== undefined) setMeetupRhythmPreferences(nextSnapshot.meetupRhythmPreferences ?? []);
     if (snapshot.availabilityTimingPreferences !== undefined) setAvailabilityTimingPreferences(nextSnapshot.availabilityTimingPreferences ?? []);
     if (snapshot.socialDurationPreferences !== undefined) setSocialDurationPreferences(nextSnapshot.socialDurationPreferences ?? []);
+    if (snapshot.languageComfortPreferences !== undefined) setLanguageComfortPreferences(nextSnapshot.languageComfortPreferences ?? []);
     if (snapshot.socialEnergyPreference !== undefined) setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
     if (snapshot.communicationPreferences !== undefined) setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
     if (snapshot.groupSizePreference !== undefined) setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
@@ -3040,6 +3075,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setAvailabilityTimingPreferences,
         socialDurationPreferences,
         setSocialDurationPreferences,
+        languageComfortPreferences,
+        setLanguageComfortPreferences,
         transportationPreferences,
         setTransportationPreferences,
         meetupContactPreferences,

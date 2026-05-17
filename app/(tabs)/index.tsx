@@ -743,15 +743,15 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
           <View style={[styles.smallTag, isDay ? styles.daySmallTag : null, ]}>
             <Text style={[styles.smallTagText, isDay ? styles.daySmallTagText : null, isRtl && styles.rtlText]}>{localizedEvent.category}</Text>
           </View>
-          <Text style={[styles.eventTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]} numberOfLines={1}>{localizedEvent.title}</Text>
+          <Text style={[styles.eventTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]} numberOfLines={isCompactLayout ? 3 : 2}>{localizedEvent.title}</Text>
         </View>
         <View style={[styles.eventMetaRow, isRtl && styles.rtlRow]}>
           <IconSymbol name="location" color={isDay ? "#53677A" : nsnColors.muted} size={12} />
-          <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{event.venue}</Text>
+          <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]} numberOfLines={2}>{event.venue}</Text>
         </View>
         <View style={[styles.eventMetaRow, isRtl && styles.rtlRow]}>
           <IconSymbol name="group" color={isDay ? "#53677A" : nsnColors.muted} size={12} />
-          <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]}>{localizedEvent.people}{"  \u00B7  "}{eventTime}</Text>
+          <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]} numberOfLines={2}>{localizedEvent.people}{"  \u00B7  "}{eventTime}</Text>
         </View>
         <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={layoutPreset.eventDescriptionLines}>{localizedEvent.description}</Text>
         <View style={[styles.eventTags, { gap: layoutPreset.chipGap, marginTop: density === "Compact" ? 5 : density === "Spacious" ? 9 : 7 }, density === "Compact" && styles.eventTagsCompact, isRtl && styles.rtlRow]}>
@@ -2307,10 +2307,10 @@ export default function HomeScreen() {
                 </View>
                 {renderPrototypeMapCanvas()}
                 <View style={[styles.locationMapSummary, isDay && styles.dayLocationMapSummary]}>
-                  <Text style={[styles.locationMapEvent, isDay && styles.dayHeadingText, isRtl && styles.rtlText]} numberOfLines={1}>
+                  <Text style={[styles.locationMapEvent, isDay && styles.dayHeadingText, isRtl && styles.rtlText]} numberOfLines={2}>
                     {selectedMapEventCopy?.title ?? "Local area"}
                   </Text>
-                  <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={1}>
+                  <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
                     {selectedMapEvent ? `${selectedMapEvent.venue}, ${selectedMapDetails?.suburb ?? timezone.label} • ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
                   </Text>
                   <View style={[styles.locationMapDetailRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
@@ -2375,10 +2375,10 @@ export default function HomeScreen() {
             </View>
             {renderPrototypeMapCanvas()}
             <View style={[styles.locationMapSummary, isDay && styles.dayLocationMapSummary]}>
-              <Text style={[styles.locationMapEvent, isDay && styles.dayHeadingText, isRtl && styles.rtlText]} numberOfLines={1}>
+              <Text style={[styles.locationMapEvent, isDay && styles.dayHeadingText, isRtl && styles.rtlText]} numberOfLines={2}>
                 {selectedMapEventCopy?.title ?? "Local area"}
               </Text>
-              <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={1}>
+              <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
                 {selectedMapEvent ? `${selectedMapEvent.venue}, ${selectedMapDetails?.suburb ?? timezone.label} • ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
               </Text>
               <View style={[styles.locationMapDetailRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
@@ -2753,7 +2753,7 @@ export default function HomeScreen() {
           <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
             <Text style={[styles.homeAlphaGuideKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Alpha testing</Text>
             <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Tester walkthrough</Text>
-            <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={shouldAutoFitDashboard || effectiveHomeLayoutDensity === "Compact" ? 1 : 2}>
+            <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={shouldAutoFitDashboard ? 2 : 3}>
               A compact guide to what is demo-only, saved locally, and ready for feedback.
             </Text>
           </View>
@@ -3358,10 +3358,10 @@ export default function HomeScreen() {
                         style={[styles.locationResultButton, styles.meetupSearchResultButton, homeLayoutUtilityCardStyle, isDay && styles.dayLocationResultButton]}
                       >
                         <View style={[styles.searchResultTopLine, isRtl && styles.rtlRow]}>
-                          <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCopy.title}</Text>
+                          <Text style={[styles.locationResultTitle, styles.searchResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]} numberOfLines={3}>{eventCopy.title}</Text>
                           <Text style={styles.searchResultBadge}>Meetup</Text>
                         </View>
-                        <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventCopy.venue} - {eventCopy.category}</Text>
+                        <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>{eventCopy.venue} - {eventCopy.category}</Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -3689,8 +3689,9 @@ const styles = StyleSheet.create({
   searchResultGroup: { gap: 7 },
   searchResultGroupTitle: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   searchResultStack: { gap: 8 },
-  searchResultTopLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  searchResultTopLine: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 },
   searchResultBadge: { flexShrink: 0, borderRadius: 8, borderWidth: 1, borderColor: "#2A3C59", color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, paddingHorizontal: 7, paddingVertical: 2 },
+  searchResultTitle: { flex: 1, minWidth: 0 },
   activeSearchResultBadge: { borderColor: nsnColors.day, color: nsnColors.text },
   searchEmptyCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 11, paddingVertical: 10 },
   searchPromptCard: { borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 11, paddingVertical: 10 },
@@ -3826,10 +3827,10 @@ const styles = StyleSheet.create({
   prototypeMapResetButton: {},
   prototypeMapZoomText: { color: "#FFFFFF", fontSize: 20, fontWeight: "900", lineHeight: 24 },
   dayPrototypeMapZoomText: { color: "#284E92" },
-  locationMapEvent: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  locationMapEvent: { flexShrink: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   locationMapSummary: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(120,144,184,0.52)", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 9, paddingVertical: 7, marginTop: 2 },
   dayLocationMapSummary: { borderColor: "#B7C7DD", backgroundColor: "#F4F7F8" },
-  locationMapMeta: { color: "#C7D3EA", fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 1 },
+  locationMapMeta: { flexShrink: 1, color: "#C7D3EA", fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 1 },
   locationMapDetailRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 5 },
   locationMapDetailChip: { flexGrow: 1, flexBasis: 150, minHeight: 20, borderRadius: 9, borderWidth: 1, borderColor: "#38527C", color: "#C7D3EA", fontSize: 9, fontWeight: "800", lineHeight: 13, paddingHorizontal: 7, paddingVertical: 2, overflow: "hidden" },
   dayLocationMapDetailChip: { borderColor: "#C5D0DA", color: "#53677A", backgroundColor: "#FFFFFF" },
@@ -3936,19 +3937,19 @@ const styles = StyleSheet.create({
   eventPreviewOverlay: { position: "absolute", left: 6, right: 6, bottom: 6, minHeight: 20, borderRadius: 9, backgroundColor: "rgba(2,8,20,0.72)", alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
   eventPreviewPlace: { color: "#FFFFFF", fontSize: 9, fontWeight: "900", lineHeight: 12 },
   eventEmojiCompact: { fontSize: 28 },
-  eventBody: { flex: 1, paddingLeft: 11, paddingRight: 4 },
+  eventBody: { flex: 1, minWidth: 0, paddingLeft: 11, paddingRight: 4 },
   eventBodyStacked: { paddingLeft: 0, paddingRight: 0 },
-  eventTopLine: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 3 },
+  eventTopLine: { flexDirection: "row", alignItems: "flex-start", gap: 7, marginBottom: 3 },
   rtlRow: { flexDirection: "row-reverse" },
   rtlBlock: { alignItems: "flex-end" },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
-  smallTag: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 9, backgroundColor: "rgba(114,214,126,0.18)" },
+  smallTag: { flexShrink: 0, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 9, backgroundColor: "rgba(114,214,126,0.18)" },
   smallTagText: { color: nsnColors.green, fontSize: 10, fontWeight: "800" },
   daySmallTag: { backgroundColor: "#D9F0DD", },
   daySmallTagText: { color: "#3E6F47", },
-  eventTitle: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 19 },
-  eventMetaRow: { flexDirection: "row", alignItems: "center", gap: 4 },
-  eventMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 16 },
+  eventTitle: { flex: 1, minWidth: 0, color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 19 },
+  eventMetaRow: { flexDirection: "row", alignItems: "flex-start", gap: 4 },
+  eventMeta: { flex: 1, minWidth: 0, color: nsnColors.muted, fontSize: 11, lineHeight: 16 },
   eventMetaDay: { color: "#CBD7EA", },
   eventDescription: { color: nsnColors.text, fontSize: 12, lineHeight: 17, marginTop: 2 },
   eventTags: { flexDirection: "row", gap: 6, flexWrap: "wrap", marginTop: 7 },
@@ -3967,7 +3968,7 @@ const styles = StyleSheet.create({
   liveBadge: { position: "absolute", left: 6, bottom: 6, minHeight: 19, borderRadius: 10, backgroundColor: "rgba(2,8,20,0.78)", flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 6 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: nsnColors.cyan },
   liveBadgeText: { color: nsnColors.text, fontSize: 9, fontWeight: "900" },
-  cardArrow: { width: 30, alignItems: "center", justifyContent: "center" },
+  cardArrow: { width: 30, flexShrink: 0, alignItems: "center", justifyContent: "center" },
   cardArrowText: { color: nsnColors.text, fontSize: 32, lineHeight: 34 },
   createMeetupButton: { height: 52, borderRadius: 15, marginTop: 18, marginBottom: 2, backgroundColor: "#1F4E9A", overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
   createMeetupButtonText: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 20 },

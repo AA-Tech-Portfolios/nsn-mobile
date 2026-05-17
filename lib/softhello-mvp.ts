@@ -98,6 +98,15 @@ export function deriveVerificationLevel(evidence: TrustEvidence): SoftHelloVerif
   return "Unverified";
 }
 
+export function getEffectivePrototypeVerificationLevel(
+  evidence: TrustEvidence,
+  selectedPrototypeLevel: SoftHelloVerificationLevel = "Unverified"
+): SoftHelloVerificationLevel {
+  const evidenceLevel = deriveVerificationLevel(evidence);
+
+  return verificationRank[selectedPrototypeLevel] > verificationRank[evidenceLevel] ? selectedPrototypeLevel : evidenceLevel;
+}
+
 const meetingSafetyCopyTranslations: Record<string, Record<SoftHelloVerificationLevel, string>> = {
   English: {
     Unverified: "You can browse and prepare, but meeting in person requires Real Person Verified status.",

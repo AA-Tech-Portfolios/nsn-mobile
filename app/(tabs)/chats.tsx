@@ -21,7 +21,7 @@ import {
   cancelSafetyReport,
   canChatPrivately,
   createSafetyReport,
-  deriveVerificationLevel,
+  getEffectivePrototypeVerificationLevel,
   getVerificationLevelLabel,
   leaveEvent,
   unblockUser,
@@ -1133,6 +1133,7 @@ export default function ChatsScreen() {
     contactPhone,
     identitySelfieUri,
     hasIdentityDocument,
+    verificationLevel,
     eventMemberships,
     blockedUserIds,
     safetyReports,
@@ -1156,7 +1157,7 @@ export default function ChatsScreen() {
   const chatEventTitleCopy = chatEventTitleTranslations[appLanguageBase] ?? {};
   const translatedMessages = chatMessageTranslations[translationLanguageBase as keyof typeof chatMessageTranslations];
   const transportationOptionsCopy = getProfilePreferenceCopy(appLanguageBase).transportation.options ?? {};
-  const effectiveVerificationLevel = deriveVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument });
+  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canUsePrivateChats = canChatPrivately(effectiveVerificationLevel);
   const [eventMessagesById, setEventMessagesById] = useState<Record<string, ChatMessage[]>>(() => ({ ...eventChatSeeds }));
   const [directMessagesByPerson, setDirectMessagesByPerson] = useState<Record<string, ChatMessage[]>>(directChatSeedByPerson);
@@ -2116,7 +2117,7 @@ const styles = StyleSheet.create({
   chatMenuStatus: { width: 20, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
   chatMenuItemTextActive: { color: "#FFFFFF" },
   chat: { flex: 1 },
-  chatContent: { paddingTop: 16, paddingBottom: 96 },
+  chatContent: { paddingTop: 16, paddingBottom: 32 },
   chatSelectionContent: { paddingTop: 22, paddingBottom: 112 },
   chatSelectionTitle: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35 },
   chatSelectionCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 4, marginBottom: 18 },
@@ -2189,7 +2190,7 @@ const styles = StyleSheet.create({
   bubbleText: { color: nsnColors.text, fontSize: 14, lineHeight: 20 },
   messageTime: { alignSelf: "flex-end", color: "rgba(245,247,255,0.62)", fontSize: 11, marginTop: 4, lineHeight: 14 },
   dayMessageTime: { color: "#7890AE" },
-  composerWrap: { paddingBottom: 96 },
+  composerWrap: { paddingBottom: 18 },
   arrivalPanel: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginBottom: 9 },
   arrivalTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
   arrivalActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },

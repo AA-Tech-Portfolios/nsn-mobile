@@ -2,6 +2,7 @@ import type {
   AvailabilityTimingPreference,
   DatingStylePreference,
   FriendshipStylePreference,
+  LanguageComfortPreference,
   LocationComfortPreference,
   LifeComfortPreference,
   MeetupContactPreference,
@@ -136,6 +137,18 @@ export const locationComfortPreferenceDetails: PreferenceOptionDetail<LocationCo
   { value: "Share suburb only", icon: "📍", copy: "Suburb-level sharing is enough.", group: "Location privacy" },
   { value: "Share region only", icon: "🗺️", copy: "Region-level sharing is preferred.", group: "Location privacy" },
   { value: "Ask before sharing location", icon: "❔", copy: "Ask before sharing more location context.", group: "Location privacy" },
+];
+
+export const languageComfortPreferenceDetails: PreferenceOptionDetail<LanguageComfortPreference>[] = [
+  { value: "Native English speaker", icon: "💬", copy: "English conversation is usually effortless, without making this a status label.", group: "English conversation comfort" },
+  { value: "Fluent English", icon: "💬", copy: "English conversation feels comfortable in most meetup situations.", group: "English conversation comfort" },
+  { value: "Advanced English", icon: "🌿", copy: "English is comfortable, and a little patience or context can still help.", group: "English conversation comfort" },
+  { value: "Still learning English", icon: "🌱", copy: "English practice is welcome, with kindness and no pressure.", group: "English conversation comfort" },
+  { value: "Prefer simple English", icon: "📝", copy: "Clear everyday wording feels easiest.", group: "Conversation support" },
+  { value: "Comfortable with slower conversation", icon: "🌿", copy: "A slower pace can make conversation easier and more inclusive.", group: "Conversation support" },
+  { value: "Happy to help others practise English", icon: "🤝", copy: "You are open to patient, friendly English practice during suitable meetups.", group: "Multilingual-friendly meetups" },
+  { value: "Prefer multilingual-friendly meetups", icon: "🌐", copy: "Meetups that welcome different language backgrounds feel easier.", group: "Multilingual-friendly meetups" },
+  { value: "Prefer not to say", icon: "🔒", copy: "Skip this entirely. NSN should not pressure anyone to label language ability.", group: "Privacy" },
 ];
 
 export const friendshipStylePreferenceDetails: PreferenceOptionDetail<FriendshipStylePreference>[] = [
