@@ -14,6 +14,7 @@ import {
   communicationPreferenceOptions,
   getLifeContextFreshnessLabel,
   groupSizePreferenceOptions,
+  lifeComfortOptions,
   lifeContextCurrentStateOptions,
   lifeContextFieldOptions,
   lifeContextLearningOptions,
@@ -27,16 +28,22 @@ import {
   type BackgroundVisibilityPreference,
   type BackgroundWorkPreference,
   type BackgroundWorkRhythmPreference,
+  type AvailabilityTimingPreference,
   type CommunicationPreference,
+  type DatingStylePreference,
+  type FriendshipStylePreference,
   type GroupSizePreference,
   type LocationComfortPreference,
+  type LifeComfortPreference,
   type LifeContextCurrentStatePreference,
   type LifeContextFieldPreference,
   type LifeContextLearningPreference,
   type MeetupContactPreference,
+  type MeetupRhythmPreference,
   type NsnComfortMode,
   type PhotoRecordingComfortPreference,
   type PhysicalContactComfortPreference,
+  type SocialDurationPreference,
   type SocialEnergyPreference,
   type SoftHelloIntent,
   type TransportationPreference,
@@ -79,26 +86,47 @@ import {
 } from "@/lib/preferences/interests";
 import {
   getPersonalityPresenceSelectedCount,
+  normalizePersonalityPresencePromptResponses,
+  personalityPresenceAccessoriesOptions,
   personalityPresenceComfortAroundOptions,
   personalityPresenceConnectionOptions,
   personalityPresenceEyeOptions,
   personalityPresenceFacialHairOptions,
+  personalityPresenceGroomingOptions,
+  personalityPresenceHairCueOptions,
   personalityPresenceHairOptions,
   personalityPresencePersonalStyleOptions,
+  personalityPresencePresentationOptions,
+  personalityPresencePromptOptions,
+  personalityPresencePromptResponseMaxLength,
   personalityPresenceSocialStyleOptions,
   personalityPresenceStyleOptions,
+  personalityPresenceVoicePresenceOptions,
+  type PersonalityPresenceAccessories,
   type PersonalityPresenceComfortAround,
   type PersonalityPresenceConnectionPreference,
   type PersonalityPresenceEyes,
   type PersonalityPresenceFacialHair,
+  type PersonalityPresenceGrooming,
   type PersonalityPresenceHair,
+  type PersonalityPresenceHairCue,
   type PersonalityPresencePersonalStyle,
+  type PersonalityPresencePresentation,
+  type PersonalityPresencePromptId,
+  type PersonalityPresencePromptResponse,
   type PersonalityPresenceSocialStyle,
   type PersonalityPresenceStyle,
+  type PersonalityPresenceVoicePresence,
 } from "@/lib/preferences/personality-presence";
 import {
+  availabilityTimingPreferenceDetails,
+  datingStylePreferenceDetails,
+  friendshipStylePreferenceDetails,
   locationComfortPreferenceDetails,
+  lifeComfortPreferenceDetails,
   meetupContactPreferenceDetails,
+  meetupRhythmPreferenceDetails,
+  socialDurationPreferenceDetails,
   transportationMethodByPreference,
   transportationPreferenceDetails,
   type PreferenceOptionDetail,
@@ -186,6 +214,9 @@ const workStudySectionIcons: Record<string, ComponentProps<typeof IconSymbol>["n
   "Current context": "explore",
   "Broad field or area": "badge",
   "Interested in / learning about": "interests",
+  "Social comfort & life pacing": "low-pressure",
+  "Things that can feel difficult sometimes": "help",
+  "Things I'm working through": "life-context",
   Study: "life-context",
   Work: "badge",
   "Volunteering & community": "group",
@@ -252,17 +283,26 @@ export default function UserPreferencesScreen() {
     lifeContextFieldVisibility,
     lifeContextLearningInterests,
     lifeContextLearningVisibility,
+    lifeComfortPreferences,
+    lifeComfortVisibility,
     lifeContextLastUpdatedAt,
     verifiedButPrivate,
     personalityPresenceHair,
+    personalityPresenceHairCues,
     personalityPresenceEyes,
     personalityPresenceFacialHair,
     personalityPresenceStyle,
+    personalityPresencePresentation,
     personalityPresencePersonalStyles,
+    personalityPresenceAccessories,
+    personalityPresenceGrooming,
+    personalityPresenceVoicePresence,
     personalityPresenceSocialStyles,
     personalityPresenceConnectionPreferences,
     personalityPresenceComfortAround,
+    personalityPresencePromptResponses,
     showPersonalityPresenceOnProfile,
+    showPersonalityPresencePromptsOnProfile,
     calendarMomentStates,
     calendarMomentVisibility,
     customCalendarMoments,
@@ -272,6 +312,11 @@ export default function UserPreferencesScreen() {
     transportationMethod,
     transportationPreferences,
     meetupContactPreferences,
+    friendshipStylePreferences,
+    datingStylePreferences,
+    meetupRhythmPreferences,
+    availabilityTimingPreferences,
+    socialDurationPreferences,
     locationComfortPreferences,
     contactPreferences,
     suburb,
@@ -285,12 +330,22 @@ export default function UserPreferencesScreen() {
     homeNearbyOnly,
     homeLayoutDensity,
     userPreferenceTextMode,
+    emojiDisplayMode,
     screenReaderHints,
     saveSoftHelloMvpState,
   } = useAppSettings();
   const isDay = !isNightMode;
   const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const isWide = preferenceLayout.isDesktop;
+  const showPreferenceEmoji = emojiDisplayMode === "Full emoji display" || emojiDisplayMode === "Reduced emojis";
+  const formatChipLabel = (label: string, icon?: string, preserveContextIcon = false) =>
+    formatPreferenceChipLabel(label, icon, emojiDisplayMode, preserveContextIcon);
+  const formatSelectedChipLabel = (label: string, icon?: string, preserveContextIcon = false) =>
+    formatSelectedPreferenceChipLabel(label, icon, emojiDisplayMode, preserveContextIcon);
+  const formatCategoryChipLabel = (label: string, category: PreferenceSection, icon?: string) =>
+    formatPreferenceCategoryChipLabel(label, category, icon, emojiDisplayMode);
+  const getDisplayEmoji = (icon: string) => showPreferenceEmoji ? icon : "";
+  const mobileSectionCardStyle = isWide ? preferenceLayout.sectionCard : styles.mobileStackCard;
   const responsiveCardGridStyle = [styles.cardGrid, isWide && styles.cardGridWide, { gap: preferenceLayout.sectionGap }];
   const responsiveChipGridStyle = [styles.chipGrid, { gap: preferenceLayout.optionGap }];
   const [activeSection, setActiveSection] = useState<PreferenceSection>(() => normalizePreferenceSection(section));
@@ -335,14 +390,21 @@ export default function UserPreferencesScreen() {
   const [openPreferenceDetailGroups, setOpenPreferenceDetailGroups] = useState<string[]>(() =>
     getCalmDefaultOpenGroupIds(
       [
-        { id: "personality-recognition", defaultOpen: true, selectedCount: 0 },
+        { id: "personality-presentation", defaultOpen: true, selectedCount: 0 },
+        { id: "personality-hair-cues", selectedCount: 0 },
+        { id: "personality-facial-hair", selectedCount: 0 },
         { id: "personality-usual-style", selectedCount: 0 },
+        { id: "personality-accessories", selectedCount: 0 },
+        { id: "personality-grooming", selectedCount: 0 },
+        { id: "personality-voice", selectedCount: 0 },
+        { id: "personality-prompts", selectedCount: 0 },
         { id: "personality-social", selectedCount: 0 },
         { id: "personality-connection", selectedCount: 0 },
         { id: "personality-comfort", selectedCount: 0 },
         { id: "background-current", defaultOpen: true, selectedCount: lifeContextCurrentStates.length },
         { id: "background-field", selectedCount: lifeContextFields.length },
         { id: "background-learning", selectedCount: lifeContextLearningInterests.length },
+        { id: "background-life-comfort", selectedCount: lifeComfortPreferences.length },
         { id: "background-study", selectedCount: backgroundStudyStatuses.length + backgroundStudyAreas.length },
         { id: "background-work", selectedCount: backgroundWorkPreferences.length + backgroundWorkRhythms.length },
         { id: "background-community", selectedCount: backgroundCommunityPreferences.length },
@@ -384,13 +446,19 @@ export default function UserPreferencesScreen() {
     () =>
       getPersonalityPresenceSelectedCount({
         hair: personalityPresenceHair,
+        hairCues: personalityPresenceHairCues,
         eyes: personalityPresenceEyes,
         facialHair: personalityPresenceFacialHair,
         style: personalityPresenceStyle,
+        presentation: personalityPresencePresentation,
         personalStyles: personalityPresencePersonalStyles,
+        accessories: personalityPresenceAccessories,
+        grooming: personalityPresenceGrooming,
+        voicePresence: personalityPresenceVoicePresence,
         socialStyles: personalityPresenceSocialStyles,
         connectionPreferences: personalityPresenceConnectionPreferences,
         comfortableAround: personalityPresenceComfortAround,
+        promptResponses: personalityPresencePromptResponses,
       }),
     [
       personalityPresenceComfortAround,
@@ -398,22 +466,37 @@ export default function UserPreferencesScreen() {
       personalityPresenceEyes,
       personalityPresenceFacialHair,
       personalityPresenceHair,
+      personalityPresenceHairCues,
+      personalityPresenceAccessories,
+      personalityPresenceGrooming,
       personalityPresencePersonalStyles,
+      personalityPresencePresentation,
+      personalityPresenceVoicePresence,
       personalityPresenceSocialStyles,
       personalityPresenceStyle,
+      personalityPresencePromptResponses,
     ]
   );
-  const recognitionSelectedCount = [personalityPresenceHair, personalityPresenceEyes, personalityPresenceFacialHair, personalityPresenceStyle].filter(Boolean).length;
+  const hairAppearanceSelectedCount = personalityPresenceHairCues.length;
+  const facialHairSelectedCount = personalityPresenceFacialHair ? 1 : 0;
   const selectedPersonalityPresenceLabels = [
     personalityPresenceHair ? `Hair: ${personalityPresenceHair}` : "",
+    ...personalityPresenceHairCues,
     personalityPresenceEyes ? `Eyes: ${personalityPresenceEyes}` : "",
     personalityPresenceFacialHair ? `Facial hair: ${personalityPresenceFacialHair}` : "",
     personalityPresenceStyle ? `Style: ${personalityPresenceStyle}` : "",
+    personalityPresencePresentation ? `Presentation: ${personalityPresencePresentation}` : "",
     ...personalityPresencePersonalStyles,
+    ...personalityPresenceAccessories,
+    ...personalityPresenceGrooming,
+    ...personalityPresenceVoicePresence,
     ...personalityPresenceSocialStyles,
     ...personalityPresenceConnectionPreferences,
     ...personalityPresenceComfortAround,
+    ...personalityPresencePromptResponses.map((response) => `Prompt: ${response.customResponse || response.option}`),
   ].filter(Boolean);
+  const getPromptResponse = (promptId: PersonalityPresencePromptId) =>
+    personalityPresencePromptResponses.find((response) => response.promptId === promptId);
   const interestComfortLayout = getInterestComfortLayout(width);
   const interestComfortModifierStyle: ViewStyle = {
     flexBasis: interestComfortLayout.modifierFlexBasis,
@@ -507,7 +590,7 @@ export default function UserPreferencesScreen() {
   };
 
   const togglePersonalityPresenceChoice = async <T extends string>(
-    key: "personalityPresenceHair" | "personalityPresenceEyes" | "personalityPresenceFacialHair" | "personalityPresenceStyle",
+    key: "personalityPresenceHair" | "personalityPresenceEyes" | "personalityPresenceFacialHair" | "personalityPresenceStyle" | "personalityPresencePresentation",
     current: T | null,
     option: T
   ) => {
@@ -528,20 +611,51 @@ export default function UserPreferencesScreen() {
       return;
     }
 
+    if (key === "personalityPresencePresentation") {
+      await saveSoftHelloMvpState({ personalityPresencePresentation: nextValue as PersonalityPresencePresentation | null });
+      return;
+    }
+
     await saveSoftHelloMvpState({ personalityPresenceStyle: nextValue as PersonalityPresenceStyle | null });
   };
 
   const togglePersonalityPresenceListItem = async <T extends string>(
-    key: "personalityPresencePersonalStyles" | "personalityPresenceSocialStyles" | "personalityPresenceConnectionPreferences" | "personalityPresenceComfortAround",
+    key:
+      | "personalityPresenceHairCues"
+      | "personalityPresencePersonalStyles"
+      | "personalityPresenceAccessories"
+      | "personalityPresenceGrooming"
+      | "personalityPresenceVoicePresence"
+      | "personalityPresenceSocialStyles"
+      | "personalityPresenceConnectionPreferences"
+      | "personalityPresenceComfortAround",
     current: T[],
     option: T
   ) => {
-    const nextPreferences = current.includes(option)
-      ? current.filter((item) => item !== option)
-      : [...current, option];
+    const nextPreferences = toggleBackgroundListItem(current, option, ["Not applicable" as T]);
+
+    if (key === "personalityPresenceHairCues") {
+      await saveSoftHelloMvpState({ personalityPresenceHairCues: nextPreferences as PersonalityPresenceHairCue[] });
+      return;
+    }
 
     if (key === "personalityPresencePersonalStyles") {
       await saveSoftHelloMvpState({ personalityPresencePersonalStyles: nextPreferences as PersonalityPresencePersonalStyle[] });
+      return;
+    }
+
+    if (key === "personalityPresenceAccessories") {
+      await saveSoftHelloMvpState({ personalityPresenceAccessories: nextPreferences as PersonalityPresenceAccessories[] });
+      return;
+    }
+
+    if (key === "personalityPresenceGrooming") {
+      await saveSoftHelloMvpState({ personalityPresenceGrooming: nextPreferences as PersonalityPresenceGrooming[] });
+      return;
+    }
+
+    if (key === "personalityPresenceVoicePresence") {
+      await saveSoftHelloMvpState({ personalityPresenceVoicePresence: nextPreferences as PersonalityPresenceVoicePresence[] });
       return;
     }
 
@@ -556,6 +670,31 @@ export default function UserPreferencesScreen() {
     }
 
     await saveSoftHelloMvpState({ personalityPresenceComfortAround: nextPreferences as PersonalityPresenceComfortAround[] });
+  };
+
+  const selectPersonalityPresencePromptOption = async (promptId: PersonalityPresencePromptId, option: string) => {
+    const current = getPromptResponse(promptId);
+    const nextResponses = normalizePersonalityPresencePromptResponses([
+      ...personalityPresencePromptResponses.filter((item) => item.promptId !== promptId),
+      ...(current?.option === option ? [] : [{ promptId, option, customResponse: option === "Other..." ? current?.customResponse : undefined } as PersonalityPresencePromptResponse]),
+    ]);
+
+    await saveSoftHelloMvpState({ personalityPresencePromptResponses: nextResponses });
+  };
+
+  const updatePersonalityPresencePromptCustomResponse = async (promptId: PersonalityPresencePromptId, customResponse: string) => {
+    const nextResponses = normalizePersonalityPresencePromptResponses([
+      ...personalityPresencePromptResponses.filter((item) => item.promptId !== promptId),
+      { promptId, option: "Other...", customResponse } as PersonalityPresencePromptResponse,
+    ]);
+
+    await saveSoftHelloMvpState({ personalityPresencePromptResponses: nextResponses });
+  };
+
+  const clearPersonalityPresencePromptResponse = async (promptId: PersonalityPresencePromptId) => {
+    await saveSoftHelloMvpState({
+      personalityPresencePromptResponses: personalityPresencePromptResponses.filter((item) => item.promptId !== promptId),
+    });
   };
 
   const toggleBackgroundStudyStatus = async (preference: BackgroundStudyStatusPreference) => {
@@ -588,6 +727,10 @@ export default function UserPreferencesScreen() {
 
   const toggleLifeContextLearningInterest = async (preference: LifeContextLearningPreference) => {
     await saveSoftHelloMvpState({ lifeContextLearningInterests: toggleBackgroundListItem(lifeContextLearningInterests, preference) });
+  };
+
+  const toggleLifeComfortPreference = async (preference: LifeComfortPreference) => {
+    await saveSoftHelloMvpState({ lifeComfortPreferences: toggleBackgroundListItem(lifeComfortPreferences, preference) });
   };
 
   const updateCalendarMomentState = async (momentId: string, state: CalendarMomentState) => {
@@ -647,7 +790,7 @@ export default function UserPreferencesScreen() {
   };
 
   const updateLifeContextVisibility = async (
-    key: "lifeContextCurrentVisibility" | "lifeContextFieldVisibility" | "lifeContextLearningVisibility",
+    key: "lifeContextCurrentVisibility" | "lifeContextFieldVisibility" | "lifeContextLearningVisibility" | "lifeComfortVisibility",
     preference: BackgroundVisibilityPreference
   ) => {
     if (key === "lifeContextCurrentVisibility") {
@@ -657,6 +800,11 @@ export default function UserPreferencesScreen() {
 
     if (key === "lifeContextFieldVisibility") {
       await saveSoftHelloMvpState({ lifeContextFieldVisibility: preference });
+      return;
+    }
+
+    if (key === "lifeComfortVisibility") {
+      await saveSoftHelloMvpState({ lifeComfortVisibility: preference });
       return;
     }
 
@@ -678,6 +826,26 @@ export default function UserPreferencesScreen() {
     const nextPreferences = toggleMeetupContactPreferenceSelection(meetupContactPreferences, preference);
 
     await saveSoftHelloMvpState({ meetupContactPreferences: nextPreferences });
+  };
+
+  const toggleFriendshipStylePreference = async (preference: FriendshipStylePreference) => {
+    await saveSoftHelloMvpState({ friendshipStylePreferences: toggleBackgroundListItem(friendshipStylePreferences, preference) });
+  };
+
+  const toggleDatingStylePreference = async (preference: DatingStylePreference) => {
+    await saveSoftHelloMvpState({ datingStylePreferences: toggleBackgroundListItem(datingStylePreferences, preference) });
+  };
+
+  const toggleMeetupRhythmPreference = async (preference: MeetupRhythmPreference) => {
+    await saveSoftHelloMvpState({ meetupRhythmPreferences: toggleBackgroundListItem(meetupRhythmPreferences, preference) });
+  };
+
+  const toggleAvailabilityTimingPreference = async (preference: AvailabilityTimingPreference) => {
+    await saveSoftHelloMvpState({ availabilityTimingPreferences: toggleBackgroundListItem(availabilityTimingPreferences, preference) });
+  };
+
+  const toggleSocialDurationPreference = async (preference: SocialDurationPreference) => {
+    await saveSoftHelloMvpState({ socialDurationPreferences: toggleBackgroundListItem(socialDurationPreferences, preference) });
   };
 
   const toggleLocationComfortPreference = async (preference: LocationComfortPreference) => {
@@ -729,8 +897,8 @@ export default function UserPreferencesScreen() {
     wide?: boolean;
     style?: StyleProp<ViewStyle>;
   }) => {
-    const displayLabel = formatPreferenceChipLabel(label, icon);
-    const chipLabel = active ? formatSelectedPreferenceChipLabel(label, icon) : displayLabel;
+    const displayLabel = formatChipLabel(label, icon);
+    const chipLabel = active ? formatSelectedChipLabel(label, icon) : displayLabel;
 
     return (
       <TouchableOpacity
@@ -785,7 +953,7 @@ export default function UserPreferencesScreen() {
     return (
       <View key={moment.id} style={[styles.momentRow, isDay && styles.dayChip]}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardIcon}>{moment.icon ?? "📅"}</Text>
+          <Text style={styles.cardIcon}>{getDisplayEmoji(moment.icon ?? "📅")}</Text>
           <View style={styles.cardBody}>
             <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{moment.label}</Text>
             <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{moment.copy}</Text>
@@ -818,7 +986,7 @@ export default function UserPreferencesScreen() {
         style={[
           styles.card,
           isWide && styles.cardWide,
-          isWide ? preferenceLayout.sectionCard : preferenceLayout.fullWidthCard,
+          mobileSectionCardStyle,
           { borderRadius: preferenceLayout.cardRadius, gap: preferenceLayout.sectionGap, padding: preferenceLayout.cardPadding },
           cardStyle,
           isDay && styles.dayCard,
@@ -830,7 +998,7 @@ export default function UserPreferencesScreen() {
               <IconSymbol name={workStudyIcon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
             </View>
           ) : (
-            <Text style={[styles.cardIcon]}>{icon}</Text>
+            <Text style={[styles.cardIcon]}>{getDisplayEmoji(icon)}</Text>
           )}
           <View style={styles.cardBody}>
             <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{title}</Text>
@@ -882,7 +1050,7 @@ export default function UserPreferencesScreen() {
         style={[
           styles.card,
           wide && isWide && styles.cardWide,
-          wide && (isWide ? preferenceLayout.sectionCard : preferenceLayout.fullWidthCard),
+          wide && mobileSectionCardStyle,
           { borderRadius: preferenceLayout.cardRadius, gap: preferenceLayout.sectionGap, padding: preferenceLayout.cardPadding },
           isDay && styles.dayCard,
         ]}
@@ -900,7 +1068,7 @@ export default function UserPreferencesScreen() {
               <IconSymbol name={workStudyIcon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
             </View>
           ) : (
-            <Text style={[styles.cardIcon]}>{icon}</Text>
+            <Text style={[styles.cardIcon]}>{getDisplayEmoji(icon)}</Text>
           )}
           <View style={styles.cardBody}>
             <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{title}</Text>
@@ -916,7 +1084,7 @@ export default function UserPreferencesScreen() {
 
   const renderSummary = (labels: string[], fallback: string) => (
     <View style={styles.summaryChips}>
-      {labels.length ? labels.map((label) => <Text key={label} style={[styles.summaryChip, isDay && styles.daySummaryChip]}>{formatPreferenceChipLabel(label)}</Text>) : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{fallback}</Text>}
+      {labels.length ? labels.map((label) => <Text key={label} style={[styles.summaryChip, isDay && styles.daySummaryChip]}>{formatChipLabel(label)}</Text>) : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{fallback}</Text>}
     </View>
   );
 
@@ -936,7 +1104,7 @@ export default function UserPreferencesScreen() {
     });
 
   const getPreferenceSummary = (values: string[], fallback: string, limit = 3) =>
-    values.length ? `${values.slice(0, limit).map((value) => formatPreferenceChipLabel(value)).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}` : fallback;
+    values.length ? `${values.slice(0, limit).map((value) => formatChipLabel(value)).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}` : fallback;
   const getPreferenceDetailGroupCount = <T extends string>(
     details: Array<PreferenceOptionDetail<T>>,
     selectedValues: T[],
@@ -966,6 +1134,7 @@ export default function UserPreferencesScreen() {
     "background-current": lifeContextCurrentStates.length,
     "background-field": lifeContextFields.length,
     "background-learning": lifeContextLearningInterests.length,
+    "background-life-comfort": lifeComfortPreferences.length,
     "background-study": backgroundStudyStatuses.length + backgroundStudyAreas.length,
     "background-work": backgroundWorkPreferences.length + backgroundWorkRhythms.length,
     "background-community": backgroundCommunityPreferences.length,
@@ -978,15 +1147,15 @@ export default function UserPreferencesScreen() {
   }, {} as Record<CalendarMomentGroupId, number>);
 
   const overviewCards = [
-    { section: "comfort" as const, title: "Comfort & trust", icon: getPreferenceSectionIcon("comfort", "🛡️"), copy: `${formatPreferenceChipLabel(comfortMode)} / ${formatPreferenceChipLabel(socialEnergyPreference)} energy / ${formatPreferenceChipLabel(groupSizePreference)}`, meta: "Visibility, contact, verification, and consent." },
-    { section: "personality" as const, title: "Personality & presence", icon: getPreferenceSectionIcon("personality", "🌿"), copy: personalityPresenceSelectedCount ? `${personalityPresenceSelectedCount} optional details` : "Hidden by default", meta: selectedPersonalityPresenceLabels.length ? selectedPersonalityPresenceLabels.slice(0, 6).map((label) => formatPreferenceChipLabel(label)).join(", ") : "Gentle recognisability, social style, and connection context for blurred profiles." },
-    { section: "calendar" as const, title: "Calendar & cultural moments", icon: getPreferenceSectionIcon("calendar", "🗓️"), copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
-    { section: "food" as const, title: "Food & beverage", icon: getPreferenceSectionIcon("food", "🍽️"), copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
-    { section: "interests" as const, title: "Hobbies & interests", icon: getPreferenceSectionIcon("interests", "🎨"), copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.map((label) => formatPreferenceChipLabel(label)).join(", ") || "Activities, genres, and comfort-aware tags." },
+    { section: "comfort" as const, title: "Comfort & trust", icon: getPreferenceSectionIcon("comfort", "🛡️"), copy: `${formatChipLabel(comfortMode)} / ${formatChipLabel(socialEnergyPreference)} energy / ${formatChipLabel(groupSizePreference)}`, meta: "Visibility, contact, verification, and consent." },
+    { section: "personality" as const, title: "Personality & presence", icon: getPreferenceSectionIcon("personality", "🌿"), copy: personalityPresenceSelectedCount ? `${personalityPresenceSelectedCount} optional details` : "Hidden by default", meta: selectedPersonalityPresenceLabels.length ? selectedPersonalityPresenceLabels.slice(0, 6).map((label) => formatChipLabel(label)).join(", ") : "Gentle recognisability, social style, and connection context for blurred profiles." },
+    { section: "calendar" as const, title: "Calendar & cultural moments", icon: getPreferenceSectionIcon("calendar", "🗓️"), copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.map((label) => formatChipLabel(label)).join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
+    { section: "food" as const, title: "Food & beverage", icon: getPreferenceSectionIcon("food", "🍽️"), copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.map((label) => formatChipLabel(label)).join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
+    { section: "interests" as const, title: "Hobbies & interests", icon: getPreferenceSectionIcon("interests", "🎨"), copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.map((label) => formatChipLabel(label)).join(", ") || "Activities, genres, and comfort-aware tags." },
     { section: "transport" as const, title: "Transportation method", icon: getPreferenceSectionIcon("transport", "🚆"), copy: getPreferenceSummary(transportationPreferences, transportationMethod), meta: "Arrival comfort, route access, and travel pressure." },
     { section: "contact" as const, title: "Contact preference", icon: getPreferenceSectionIcon("contact", "💬"), copy: getPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"), meta: "How you prefer pre-meetup communication." },
     { section: "location" as const, title: "Location preference", icon: getPreferenceSectionIcon("location", "📍"), copy: getPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"), meta: "Local area, venue comfort, and location privacy." },
-    { section: "background" as const, title: "Work, study & life context", icon: getPreferenceSectionIcon("background", "🎓"), copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary ? backgroundOverviewSummary.split(" / ").map((label) => formatPreferenceChipLabel(label)).join(" / ") : "Broad work, study, learning, and volunteering context with visibility controls." },
+    { section: "background" as const, title: "Work, study & life context", icon: getPreferenceSectionIcon("background", "🎓"), copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary ? backgroundOverviewSummary.split(" / ").map((label) => formatChipLabel(label)).join(" / ") : "Broad work, study, learning, and volunteering context with visibility controls." },
   ];
 
   const getOverviewCardMeta = (item: (typeof overviewCards)[number]) => {
@@ -1028,7 +1197,7 @@ export default function UserPreferencesScreen() {
         </View>
 
         <View style={[styles.headerCard, isDay && styles.dayCard]}>
-          <Text style={styles.headerIcon}>{getPreferenceSectionIcon(activeSection, activeMeta.icon)}</Text>
+          <Text style={styles.headerIcon}>{getDisplayEmoji(getPreferenceSectionIcon(activeSection, activeMeta.icon))}</Text>
           <View style={styles.headerText}>
             <Text style={[styles.eyebrow, isDay && styles.dayMutedText]}>NSN preferences</Text>
             <Text style={[styles.title, isDay && styles.dayTitle]}>{activeMeta.title}</Text>
@@ -1043,8 +1212,8 @@ export default function UserPreferencesScreen() {
             const active = activeSection === item;
             const sectionIcon = getPreferenceSectionIcon(item, meta.icon);
             const sectionLabel = active
-              ? formatSelectedPreferenceChipLabel(meta.title, sectionIcon)
-              : formatPreferenceCategoryChipLabel(meta.title, item, sectionIcon);
+              ? formatSelectedChipLabel(meta.title, sectionIcon, true)
+              : formatCategoryChipLabel(meta.title, item, sectionIcon);
 
             return (
               <TouchableOpacity
@@ -1073,7 +1242,7 @@ export default function UserPreferencesScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={`Open ${item.title}`}
               >
-                <Text style={styles.overviewIcon}>{getPreferenceSectionIcon(item.section, item.icon)}</Text>
+                <Text style={styles.overviewIcon}>{getDisplayEmoji(getPreferenceSectionIcon(item.section, item.icon))}</Text>
                 <View style={styles.cardBody}>
                   <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{item.title}</Text>
                   <Text style={[styles.overviewValue, isDay && styles.dayTitle]}>{item.copy}</Text>
@@ -1172,74 +1341,246 @@ export default function UserPreferencesScreen() {
                     meta: "Still follows your profile privacy settings.",
                     wide: true,
                   })}
+                  {renderChip({
+                    key: "personality-prompts-hidden",
+                    label: "Keep prompts private",
+                    active: !showPersonalityPresencePromptsOnProfile,
+                    onPress: () => saveSoftHelloMvpState({ showPersonalityPresencePromptsOnProfile: false }),
+                    wide: true,
+                  })}
+                  {renderChip({
+                    key: "personality-prompts-visible",
+                    label: "Allow prompts in preview",
+                    active: showPersonalityPresencePromptsOnProfile,
+                    onPress: () => saveSoftHelloMvpState({ showPersonalityPresencePromptsOnProfile: true }),
+                    meta: "Only appears if Personality & Presence is also allowed.",
+                    wide: true,
+                  })}
                 </View>
               ), styles.fullWidthCard)}
               {renderExpandableSectionCard({
-                id: "personality-recognition",
-                title: "What helps people recognise me",
-                copy: "Broad, optional descriptors only. Use Prefer not to say whenever you want, and avoid exact sensitive details.",
+                id: "personality-presentation",
+                title: "Presentation & expression",
+                copy: "Optional context for how you socially present yourself. This is separate from gender identity and never becomes a masculine/feminine personality score.",
+                icon: "🌿",
+                open: openPreferenceDetailGroups.includes("personality-presentation"),
+                onToggle: () => togglePreferenceDetailGroup("personality-presentation"),
+                selectedCount: personalityPresencePresentation ? 1 : 0,
+                totalCount: personalityPresencePresentationOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresencePresentationOptions.map((option) =>
+                      renderChip({
+                        key: `presentation-${option}`,
+                        label: option,
+                        active: personalityPresencePresentation === option,
+                        onPress: () => togglePersonalityPresenceChoice("personalityPresencePresentation", personalityPresencePresentation, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-hair-cues",
+                title: "Hair & appearance",
+                copy: "Broad, optional appearance cues for gentle familiarity. Choose any that fit, or skip the section entirely.",
                 icon: "👤",
-                open: openPreferenceDetailGroups.includes("personality-recognition"),
-                onToggle: () => togglePreferenceDetailGroup("personality-recognition"),
-                selectedCount: recognitionSelectedCount,
-                totalCount: 4,
+                open: openPreferenceDetailGroups.includes("personality-hair-cues"),
+                onToggle: () => togglePreferenceDetailGroup("personality-hair-cues"),
+                selectedCount: hairAppearanceSelectedCount,
+                totalCount: personalityPresenceHairCueOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresenceHairCueOptions.map((option) =>
+                      renderChip({
+                        key: `hair-cue-${option}`,
+                        label: option,
+                        active: personalityPresenceHairCues.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresenceHairCues", personalityPresenceHairCues, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-facial-hair",
+                title: "Facial hair",
+                copy: "Optional and only if it feels relevant. This does not assume facial hair applies to everyone.",
+                icon: "👤",
+                open: openPreferenceDetailGroups.includes("personality-facial-hair"),
+                onToggle: () => togglePreferenceDetailGroup("personality-facial-hair"),
+                selectedCount: facialHairSelectedCount,
+                totalCount: personalityPresenceFacialHairOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresenceFacialHairOptions.map((option) =>
+                      renderChip({
+                        key: `facial-hair-${option}`,
+                        label: option,
+                        active: personalityPresenceFacialHair === option,
+                        onPress: () => togglePersonalityPresenceChoice("personalityPresenceFacialHair", personalityPresenceFacialHair, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-usual-style",
+                title: "Style & dressing",
+                copy: "Optional clothing and styling context for self-expression. This is not a fashion score, appearance ranking, or requirement.",
+                icon: "👕",
+                open: openPreferenceDetailGroups.includes("personality-usual-style"),
+                onToggle: () => togglePreferenceDetailGroup("personality-usual-style"),
+                selectedCount: personalityPresencePersonalStyles.length,
+                totalCount: personalityPresencePersonalStyleOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresencePersonalStyleOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: personalityPresencePersonalStyles.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresencePersonalStyles", personalityPresencePersonalStyles, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-accessories",
+                title: "Accessories & expression",
+                copy: "Small expression cues, never wealth, brand, status, or attractiveness signals.",
+                icon: "💍",
+                open: openPreferenceDetailGroups.includes("personality-accessories"),
+                onToggle: () => togglePreferenceDetailGroup("personality-accessories"),
+                selectedCount: personalityPresenceAccessories.length,
+                totalCount: personalityPresenceAccessoriesOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresenceAccessoriesOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: personalityPresenceAccessories.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresenceAccessories", personalityPresenceAccessories, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-grooming",
+                title: "Makeup & grooming",
+                copy: "Optional, non-gendered cues. Makeup is never expected; choose only what feels useful.",
+                icon: "✨",
+                open: openPreferenceDetailGroups.includes("personality-grooming"),
+                onToggle: () => togglePreferenceDetailGroup("personality-grooming"),
+                selectedCount: personalityPresenceGrooming.length,
+                totalCount: personalityPresenceGroomingOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresenceGroomingOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: personalityPresenceGrooming.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresenceGrooming", personalityPresenceGrooming, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-voice",
+                title: "Voice & communication presence",
+                copy: "Text-only descriptors for communication comfort. NSN does not record or store voice/audio here.",
+                icon: "💬",
+                open: openPreferenceDetailGroups.includes("personality-voice"),
+                onToggle: () => togglePreferenceDetailGroup("personality-voice"),
+                selectedCount: personalityPresenceVoicePresence.length,
+                totalCount: personalityPresenceVoicePresenceOptions.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {personalityPresenceVoicePresenceOptions.map((option) =>
+                      renderChip({
+                        key: option,
+                        label: option,
+                        active: personalityPresenceVoicePresence.includes(option),
+                        onPress: () => togglePersonalityPresenceListItem("personalityPresenceVoicePresence", personalityPresenceVoicePresence, option),
+                        wide: true,
+                      })
+                    )}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "personality-prompts",
+                title: "Conversation sparks",
+                copy: "Optional gentle prompts for curiosity and self-expression. Skip any prompt, keep answers short, or clear them later.",
+                icon: "✨",
+                open: openPreferenceDetailGroups.includes("personality-prompts"),
+                onToggle: () => togglePreferenceDetailGroup("personality-prompts"),
+                selectedCount: personalityPresencePromptResponses.length,
+                totalCount: personalityPresencePromptOptions.length,
                 children: (
                   <View style={styles.inlinePreferenceStack}>
-                    {renderInlinePreferenceGroup("Hair", "Choose one broad descriptor, or leave it blank.", (
-                      <View style={responsiveChipGridStyle}>
-                        {personalityPresenceHairOptions.map((option) =>
-                          renderChip({
-                            key: `hair-${option}`,
-                            label: option,
-                            active: personalityPresenceHair === option,
-                            onPress: () => togglePersonalityPresenceChoice("personalityPresenceHair", personalityPresenceHair, option),
-                          })
-                        )}
-                      </View>
-                    ))}
-                    {renderInlinePreferenceGroup("Eyes", "Choose one broad descriptor, or leave it blank.", (
-                      <View style={responsiveChipGridStyle}>
-                        {personalityPresenceEyeOptions.map((option) =>
-                          renderChip({
-                            key: `eyes-${option}`,
-                            label: option,
-                            active: personalityPresenceEyes === option,
-                            onPress: () => togglePersonalityPresenceChoice("personalityPresenceEyes", personalityPresenceEyes, option),
-                          })
-                        )}
-                      </View>
-                    ))}
-                    {renderInlinePreferenceGroup("Facial hair", "Choose one broad descriptor, or leave it blank.", (
-                      <View style={responsiveChipGridStyle}>
-                        {personalityPresenceFacialHairOptions.map((option) =>
-                          renderChip({
-                            key: `facial-hair-${option}`,
-                            label: option,
-                            active: personalityPresenceFacialHair === option,
-                            onPress: () => togglePersonalityPresenceChoice("personalityPresenceFacialHair", personalityPresenceFacialHair, option),
-                          })
-                        )}
-                      </View>
-                    ))}
-                    {renderInlinePreferenceGroup("Style", "Choose one broad descriptor, or leave it blank.", (
-                      <View style={responsiveChipGridStyle}>
-                        {personalityPresenceStyleOptions.map((option) =>
-                          renderChip({
-                            key: `style-${option}`,
-                            label: option,
-                            active: personalityPresenceStyle === option,
-                            onPress: () => togglePersonalityPresenceChoice("personalityPresenceStyle", personalityPresenceStyle, option),
-                          })
-                        )}
-                      </View>
-                    ))}
+                    <Text style={[styles.inlinePreferenceCopy, isDay && styles.dayMutedText]}>
+                      These stay local in this prototype and are not quizzes, tests, rankings, or compatibility signals.
+                    </Text>
+                    {personalityPresencePromptOptions.map((option) => {
+                      const response = getPromptResponse(option.id);
+                      const customResponse = response?.option === "Other..." ? response.customResponse ?? "" : "";
+
+                      return (
+                        <View key={option.id} style={[styles.inlinePreferenceGroup, isDay && styles.dayChip]}>
+                          <Text style={[styles.inlinePreferenceTitle, isDay && styles.dayTitle]}>{option.prompt}</Text>
+                          <View style={responsiveChipGridStyle}>
+                            {option.options.map((choice) =>
+                              renderChip({
+                                key: `${option.id}-${choice}`,
+                                label: choice,
+                                active: response?.option === choice,
+                                onPress: () => selectPersonalityPresencePromptOption(option.id, choice),
+                                wide: true,
+                              })
+                            )}
+                          </View>
+                          {response?.option === "Other..." ? (
+                            <View style={[styles.searchBox, isDay && styles.dayInput]}>
+                              <TextInput
+                                value={customResponse}
+                                onChangeText={(value) => updatePersonalityPresencePromptCustomResponse(option.id, value)}
+                                placeholder="Optional short answer..."
+                                placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                                style={[styles.searchInput, isDay && styles.dayTitle]}
+                                accessibilityLabel={`Optional custom answer for ${option.prompt}`}
+                                maxLength={personalityPresencePromptResponseMaxLength}
+                                selectionColor="#7786FF"
+                                underlineColorAndroid="transparent"
+                              />
+                            </View>
+                          ) : null}
+                          {response ? (
+                            <TouchableOpacity activeOpacity={0.78} onPress={() => clearPersonalityPresencePromptResponse(option.id)} style={[styles.showMoreButton, isDay && styles.dayChip]} accessibilityRole="button" accessibilityLabel={`Clear answer for ${option.prompt}`}>
+                              <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>Clear choice</Text>
+                            </TouchableOpacity>
+                          ) : null}
+                        </View>
+                      );
+                    })}
                   </View>
                 ),
               })}
               {renderExpandableSectionCard({
                 id: "personality-social",
                 title: "My social style",
-                copy: "Soft context for how you tend to arrive in a conversation. Select any that feel true today.",
+                copy: "Soft context for how you tend to arrive in conversation. This stays separate from appearance, presentation, and connection intent.",
                 icon: "💬",
                 open: openPreferenceDetailGroups.includes("personality-social"),
                 onToggle: () => togglePreferenceDetailGroup("personality-social"),
@@ -1260,32 +1601,9 @@ export default function UserPreferencesScreen() {
                 ),
               })}
               {renderExpandableSectionCard({
-                id: "personality-usual-style",
-                title: "My usual style",
-                copy: "Optional self-expression for how you usually show up. This is not a fashion score, attractiveness signal, or requirement.",
-                icon: "🌿",
-                open: openPreferenceDetailGroups.includes("personality-usual-style"),
-                onToggle: () => togglePreferenceDetailGroup("personality-usual-style"),
-                selectedCount: personalityPresencePersonalStyles.length,
-                totalCount: personalityPresencePersonalStyleOptions.length,
-                children: (
-                  <View style={responsiveChipGridStyle}>
-                    {personalityPresencePersonalStyleOptions.map((option) =>
-                      renderChip({
-                        key: option,
-                        label: option,
-                        active: personalityPresencePersonalStyles.includes(option),
-                        onPress: () => togglePersonalityPresenceListItem("personalityPresencePersonalStyles", personalityPresencePersonalStyles, option),
-                        wide: true,
-                      })
-                    )}
-                  </View>
-                ),
-              })}
-              {renderExpandableSectionCard({
                 id: "personality-connection",
                 title: "Connection preferences",
-                copy: "What you are open to here. This is guidance only, not matching logic or an ideal-type filter.",
+                copy: "What you are open to here. This stays separate from appearance and presentation, and is guidance only.",
                 icon: "🤝",
                 open: openPreferenceDetailGroups.includes("personality-connection"),
                 onToggle: () => togglePreferenceDetailGroup("personality-connection"),
@@ -1348,6 +1666,7 @@ export default function UserPreferencesScreen() {
                   ...lifeContextCurrentStates.slice(0, 3),
                   ...lifeContextFields.slice(0, 3),
                   ...lifeContextLearningInterests.slice(0, 3),
+                  ...lifeComfortPreferences.slice(0, 3),
                   ...backgroundStudyAreas.slice(0, 3),
                   ...backgroundWorkPreferences.slice(0, 3),
                   ...backgroundCommunityPreferences.slice(0, 3),
@@ -1463,7 +1782,54 @@ export default function UserPreferencesScreen() {
                         onPress: () => toggleLifeContextLearningInterest(option),
                       })
                     )}
+                </View>
+              </>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "background-life-comfort",
+                title: "Social comfort & life pacing",
+                copy: "Optional, private-by-default context for things that can affect social energy. This is not medical, diagnostic, or used for matching scores.",
+                icon: "🌿",
+                open: openPreferenceDetailGroups.includes("background-life-comfort"),
+                onToggle: () => togglePreferenceDetailGroup("background-life-comfort"),
+                selectedCount: backgroundGroupCounts["background-life-comfort"],
+                totalCount: lifeComfortOptions.length,
+                children: (
+                <>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Visibility</Text>
+                  <View style={responsiveChipGridStyle}>
+                    {backgroundVisibilityOptions.map((option) =>
+                      renderChip({
+                        key: `life-comfort-${option}`,
+                        label: option,
+                        active: lifeComfortVisibility === option,
+                        onPress: () => updateLifeContextVisibility("lifeComfortVisibility", option),
+                        wide: true,
+                      })
+                    )}
                   </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Things that can feel difficult sometimes</Text>
+                  <View style={responsiveChipGridStyle}>
+                    {lifeComfortPreferenceDetails
+                      .filter((option) => option.group === "Things that can feel difficult sometimes")
+                      .map((option) => renderPreferenceDetailChip(option, lifeComfortPreferences, toggleLifeComfortPreference))}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Social comfort & life pacing</Text>
+                  <View style={responsiveChipGridStyle}>
+                    {lifeComfortPreferenceDetails
+                      .filter((option) => option.group === "Social comfort & life pacing")
+                      .map((option) => renderPreferenceDetailChip(option, lifeComfortPreferences, toggleLifeComfortPreference))}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Things I'm working through</Text>
+                  <View style={responsiveChipGridStyle}>
+                    {lifeComfortPreferenceDetails
+                      .filter((option) => option.group === "Things I'm working through")
+                      .map((option) => renderPreferenceDetailChip(option, lifeComfortPreferences, toggleLifeComfortPreference))}
+                  </View>
+                  <Text style={[styles.notice, isDay && styles.dayMutedText]}>
+                    Keep this broad and skippable. NSN does not ask for diagnoses and does not provide therapy or mental-health matching.
+                  </Text>
                 </>
                 ),
               })}
@@ -1796,7 +2162,7 @@ export default function UserPreferencesScreen() {
                         accessibilityLabel={`${group.title} food preference group`}
                         accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
                       >
-                        <Text style={styles.cardIcon}>{group.icon}</Text>
+                        <Text style={styles.cardIcon}>{getDisplayEmoji(group.icon ?? "")}</Text>
                         <View style={styles.cardBody}>
                           <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{group.title}</Text>
                           <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{group.copy}</Text>
@@ -1900,7 +2266,7 @@ export default function UserPreferencesScreen() {
                         accessibilityLabel={`${category.title} interest group`}
                         accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
                       >
-                        <Text style={styles.cardIcon}>{category.icon}</Text>
+                        <Text style={styles.cardIcon}>{getDisplayEmoji(category.icon ?? "")}</Text>
                         <View style={styles.cardBody}>
                           <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{category.title}</Text>
                           <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{category.copy}</Text>
@@ -1990,6 +2356,51 @@ export default function UserPreferencesScreen() {
                   ),
                 });
               })}
+              {renderExpandableSectionCard({
+                id: "contact-meetup-rhythm",
+                title: "Meetup rhythm & consistency",
+                copy: "How often repeated plans might feel comfortable, without making it a rule.",
+                icon: "📅",
+                open: openPreferenceDetailGroups.includes("contact-meetup-rhythm"),
+                onToggle: () => togglePreferenceDetailGroup("contact-meetup-rhythm"),
+                selectedCount: meetupRhythmPreferences.length,
+                totalCount: meetupRhythmPreferenceDetails.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {meetupRhythmPreferenceDetails.map((option) => renderPreferenceDetailChip(option, meetupRhythmPreferences, toggleMeetupRhythmPreference))}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "contact-availability-timing",
+                title: "Availability & timing",
+                copy: "Broad timing signals for easier scheduling and lower-pressure planning.",
+                icon: "🕰️",
+                open: openPreferenceDetailGroups.includes("contact-availability-timing"),
+                onToggle: () => togglePreferenceDetailGroup("contact-availability-timing"),
+                selectedCount: availabilityTimingPreferences.length,
+                totalCount: availabilityTimingPreferenceDetails.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {availabilityTimingPreferenceDetails.map((option) => renderPreferenceDetailChip(option, availabilityTimingPreferences, toggleAvailabilityTimingPreference))}
+                  </View>
+                ),
+              })}
+              {renderExpandableSectionCard({
+                id: "contact-social-duration",
+                title: "Social duration comfort",
+                copy: "How long a meetup can feel manageable, including easy leave-anytime signals.",
+                icon: "⏱️",
+                open: openPreferenceDetailGroups.includes("contact-social-duration"),
+                onToggle: () => togglePreferenceDetailGroup("contact-social-duration"),
+                selectedCount: socialDurationPreferences.length,
+                totalCount: socialDurationPreferenceDetails.length,
+                children: (
+                  <View style={responsiveChipGridStyle}>
+                    {socialDurationPreferenceDetails.map((option) => renderPreferenceDetailChip(option, socialDurationPreferences, toggleSocialDurationPreference))}
+                  </View>
+                ),
+              })}
             </View>
           </View>
         ) : null}
@@ -2014,8 +2425,29 @@ export default function UserPreferencesScreen() {
                 </>
               ))}
               {renderSectionCard("I am here for", "Keep intent lightweight and changeable.", "🧭", (
-                <View style={responsiveChipGridStyle}>
-                  {intentOptions.map((option) => renderChip({ key: option, label: option, active: intent === option, onPress: () => saveSoftHelloMvpState({ intent: option }) }))}
+                <View style={styles.inlinePreferenceStack}>
+                  <View style={responsiveChipGridStyle}>
+                    {intentOptions.map((option) => renderChip({ key: option, label: option, active: intent === option, onPress: () => saveSoftHelloMvpState({ intent: option }) }))}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                    These are expectation signals only. They do not create scores, rankings, or strict matching rules.
+                  </Text>
+                </View>
+              ))}
+              {renderSectionCard("Friendship style", "Optional cues for how friendship might begin or grow.", "🤝", (
+                <View style={styles.inlinePreferenceStack}>
+                  {renderSummary(friendshipStylePreferences, "No friendship style preferences selected yet.")}
+                  <View style={responsiveChipGridStyle}>
+                    {friendshipStylePreferenceDetails.map((option) => renderPreferenceDetailChip(option, friendshipStylePreferences, toggleFriendshipStylePreference))}
+                  </View>
+                </View>
+              ))}
+              {renderSectionCard("Dating style", "Only if dating is relevant to you, keep it slow, clear, and pressure-free.", "🌱", (
+                <View style={styles.inlinePreferenceStack}>
+                  {renderSummary(datingStylePreferences, "No dating style preferences selected yet.")}
+                  <View style={responsiveChipGridStyle}>
+                    {datingStylePreferenceDetails.map((option) => renderPreferenceDetailChip(option, datingStylePreferences, toggleDatingStylePreference))}
+                  </View>
                 </View>
               ))}
               {renderSectionCard("Location privacy and discovery", "These controls are prototype preference signals for local area display and nearby suggestions.", "🗺️", (
@@ -2026,14 +2458,55 @@ export default function UserPreferencesScreen() {
                   {renderChip({ key: "nearby", label: "Prefer nearby meetups", active: homeNearbyOnly, onPress: () => saveSoftHelloMvpState({ homeNearbyOnly: !homeNearbyOnly }), wide: true })}
                 </View>
               ))}
-              {["Area comfort", "Venue comfort", "Time comfort", "Location privacy"].map((group) => {
+              {[
+                "Area comfort",
+                "Venue comfort",
+                "Smoke & air comfort",
+                "Fragrance & scent comfort",
+                "Conversation comfort",
+                "Meetup tone labels",
+                "Venue accessibility & practical comfort",
+                "Loud environment guidance",
+                "Time comfort",
+                "Location privacy",
+              ].map((group) => {
                 const options = locationComfortPreferenceDetails.filter((option) => option.group === group);
+                const groupCopy =
+                  group === "Location privacy"
+                    ? "Broad sharing controls for safer local context."
+                    : group === "Smoke & air comfort"
+                      ? "Optional air-quality and smoke comfort signals for venue planning."
+                      : group === "Fragrance & scent comfort"
+                        ? "Optional scent preferences for people who find strong fragrances uncomfortable."
+                        : group === "Conversation comfort"
+                          ? "Low-pressure conversation tone preferences without judging how people speak."
+                          : group === "Meetup tone labels"
+                            ? "Optional event tone cues for hosts and attendees, without scoring people or beliefs."
+                          : group === "Venue accessibility & practical comfort"
+                            ? "Practical venue details that can make meetups easier to assess."
+                            : group === "Loud environment guidance"
+                              ? "Helpful context for louder plans without discouraging fun or energetic meetups."
+                            : "Venue and area signals for easier meetup suggestions.";
+                const groupIcon =
+                  group === "Location privacy"
+                    ? "🔒"
+                    : group === "Smoke & air comfort" || group === "Fragrance & scent comfort"
+                      ? "🍃"
+                      : group === "Conversation comfort"
+                        ? "💬"
+                        : group === "Meetup tone labels"
+                          ? "🌿"
+                        : group === "Venue accessibility & practical comfort"
+                          ? "♿"
+                          : group === "Loud environment guidance"
+                            ? "🎧"
+                          : "🌿";
 
                 return renderExpandableSectionCard({
                   id: `location-${group}`,
                   title: group,
-                  copy: group === "Location privacy" ? "Broad sharing controls for safer local context." : "Venue and area signals for easier meetup suggestions.",
-                  icon: group === "Location privacy" ? "🔒" : "🌿",
+                  copy: groupCopy,
+                  icon: groupIcon,
                   open: openPreferenceDetailGroups.includes(`location-${group}`),
                   onToggle: () => togglePreferenceDetailGroup(`location-${group}`),
                   selectedCount: getPreferenceDetailGroupCount(locationComfortPreferenceDetails, locationComfortPreferences, group),
@@ -2091,6 +2564,7 @@ const styles = StyleSheet.create({
   card: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 13 },
   cardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 320 },
   fullWidthCard: { flexBasis: "100%", minWidth: "100%" },
+  mobileStackCard: { width: "100%", minWidth: "100%", alignSelf: "stretch" },
   cardHeader: { flexDirection: "row", alignItems: "flex-start", gap: 11 },
   cardIcon: { width: 34, fontSize: 24, lineHeight: 30, textAlign: "center" },
   cardIconSymbol: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center" },

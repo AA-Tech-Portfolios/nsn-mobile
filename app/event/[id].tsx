@@ -1144,6 +1144,25 @@ export default function EventDetailsScreen() {
           </View>
         </View>
 
+        {event.comfortLabels?.length ? (
+          <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meetup comfort & participation</Text>
+            </View>
+            <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Optional environment cues for joining at your own pace. Energetic and calmer styles can both belong here, and stepping away or rejoining is okay.
+            </Text>
+            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+              {event.comfortLabels.map((label) => (
+                <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
             <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>

@@ -4,6 +4,7 @@ import {
   formatPreferenceCategoryChipLabel,
   formatPreferenceChipLabel,
   formatSelectedPreferenceChipLabel,
+  normalizeEmojiDisplayMode,
   getPreferenceCategoryIcon,
   getPreferenceChipIcon,
   getSettingsBackTarget,
@@ -132,6 +133,18 @@ describe("preference chip metadata", () => {
     expect(formatSelectedPreferenceChipLabel("Selected: Coffee")).toBe("Selected: ☕ Coffee");
     expect(formatSelectedPreferenceChipLabel("☕ Coffee")).toBe("Selected: ☕ Coffee");
     expect(formatSelectedPreferenceChipLabel("Food & beverage", getPreferenceCategoryIcon("food"))).toBe("Selected: 🍽️ Food & beverage");
+  });
+
+  it("supports calmer emoji display modes from the central chip formatter", () => {
+    expect(normalizeEmojiDisplayMode("Reduced emojis")).toBe("Reduced emojis");
+    expect(normalizeEmojiDisplayMode("Lots of sparkles" as never)).toBe("Full emoji display");
+
+    expect(formatPreferenceChipLabel("Coffee", undefined, "Full emoji display")).toBe("☕ Coffee");
+    expect(formatPreferenceChipLabel("Coffee", undefined, "Reduced emojis")).toBe("Coffee");
+    expect(formatPreferenceCategoryChipLabel("Food & beverage", "food", "🍽️", "Reduced emojis")).toBe("🍽️ Food & beverage");
+    expect(formatPreferenceChipLabel("☕ Coffee", undefined, "Minimal icons only")).toBe("Coffee");
+    expect(formatSelectedPreferenceChipLabel("☕ Coffee", undefined, "Text-first mode")).toBe("Selected: Coffee");
+    expect(formatPreferenceChipLabel("Safety, privacy & consent details", "🛡️", "Minimal icons only")).toBe("Safety, privacy & consent details");
   });
 });
 

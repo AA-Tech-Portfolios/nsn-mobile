@@ -48,9 +48,10 @@ import {
   type AlphaActionLabel,
 } from "@/lib/alpha-readiness-controls";
 import { nsnColors } from "@/lib/nsn-data";
+import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { brandThemes, isSoftHelloThemeEnabled, type BrandThemeId } from "@/lib/brand-theme";
 import { createSettingsToggleSections, selectSettingsPalette, toggleSettingsDropdown, type SettingsDropdownName } from "@/lib/settings-controls";
-import { getSettingsBackTarget, getSettingsPreferenceLayout } from "@/lib/preferences-layout";
+import { emojiDisplayModeOptions, getSettingsBackTarget, getSettingsPreferenceLayout, type EmojiDisplayMode } from "@/lib/preferences-layout";
 
 const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
 const comfortModeOptions: { value: NsnComfortMode; copy: string }[] = [
@@ -76,6 +77,12 @@ const userPreferenceTextModeOptions: { value: UserPreferenceTextMode; label: str
   { value: "Simple", label: "Simple preference text", copy: "Use shorter labels and calmer summaries in User preferences." },
   { value: "Detailed", label: "Detailed preference text", copy: "Show fuller explanatory text for each User preferences section." },
 ];
+const emojiDisplayModeDetails: Record<EmojiDisplayMode, { label: string; copy: string }> = {
+  "Full emoji display": { label: "Full emoji display", copy: "Keep the current NSN emoji and visual expression." },
+  "Reduced emojis": { label: "Reduced emojis", copy: "Keep key context icons while reducing repeated decorative emojis." },
+  "Minimal icons only": { label: "Minimal icons only", copy: "Use cleaner icon/text presentation with fewer emoji decorations." },
+  "Text-first mode": { label: "Text-first mode", copy: "Prefer text labels and minimal visual decoration for a calmer interface." },
+};
 const accountPauseTimelineOptions: { value: AccountPauseTimeline; label: string; copy: string }[] = [
   { value: "A few days", label: "A few days", copy: "A short reset without changing your setup." },
   { value: "One week", label: "One week", copy: "Step away for a calmer week." },
@@ -3108,6 +3115,7 @@ export default function SettingsScreen() {
     settingsPrivacyMode,
     profileShortcutLayout,
     userPreferenceTextMode,
+    emojiDisplayMode,
     showProfileControlsShortcut,
     showAlertsSettingsShortcut,
     homeLayoutDensity,
@@ -3928,6 +3936,10 @@ export default function SettingsScreen() {
   const saveUserPreferenceTextMode = (value: UserPreferenceTextMode) => {
     saveSoftHelloMvpState({ userPreferenceTextMode: value });
     showRecentlyChanged("userPreferenceTextMode");
+  };
+  const saveEmojiDisplayMode = (value: EmojiDisplayMode) => {
+    saveSoftHelloMvpState({ emojiDisplayMode: value });
+    showRecentlyChanged("emojiDisplayMode");
   };
   const saveProfileControlsShortcutVisibility = (value: boolean) => {
     saveSoftHelloMvpState({ showProfileControlsShortcut: value });
@@ -4992,6 +5004,37 @@ export default function SettingsScreen() {
           ))}
           <View style={[styles.timeContextBlock, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
             <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
+              Emoji display
+            </Text>
+            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Reduce decorative emojis for a cleaner, calmer, more text-focused interface while keeping important context readable.
+            </Text>
+            {renderSettingMeta("emojiDisplayMode")}
+            <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
+              {emojiDisplayModeOptions.map((option) => {
+                const active = emojiDisplayMode === option;
+                const detail = emojiDisplayModeDetails[option];
+
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    activeOpacity={0.82}
+                    onPress={() => saveEmojiDisplayMode(option)}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: active }}
+                    accessibilityLabel={detail.label}
+                    accessibilityHint={screenReaderHints ? detail.copy : undefined}
+                    style={[styles.timeContextOption, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
+                  >
+                    <Text style={[styles.timeContextOptionTitle, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${detail.label}` : detail.label}</Text>
+                    <Text style={[styles.timeContextOptionCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{detail.copy}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+          <View style={[styles.timeContextBlock, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
+            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
               {copy.cardOutlineStyle ?? englishCopy.cardOutlineStyle}
             </Text>
             <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
@@ -5940,9 +5983,9 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "rgba(155,165,255,0.55)",
-    backgroundColor: "rgba(119,134,255,0.12)",
-    color: "#C7CEFF",
+    borderColor: nsnSupportReadabilityColors.darkBadgeNeutralBorder,
+    backgroundColor: nsnSupportReadabilityColors.darkBadgeNeutralBackground,
+    color: nsnSupportReadabilityColors.badgeDisabledText,
     fontSize: 10,
     fontWeight: "900",
     lineHeight: 14,
@@ -5950,14 +5993,14 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
   },
   dayPrototypeBadge: {
-    borderColor: "#9AADE8",
-    backgroundColor: "#EDF2FF",
-    color: "#445E93",
+    borderColor: nsnSupportReadabilityColors.lightBadgeNeutralBorder,
+    backgroundColor: nsnSupportReadabilityColors.lightBadgeNeutralBackground,
+    color: nsnSupportReadabilityColors.lightBadgeNeutralText,
   },
   destructivePrototypeBadge: {
-    borderColor: "rgba(226,61,90,0.45)",
-    backgroundColor: "rgba(226,61,90,0.1)",
-    color: "#B83A50",
+    borderColor: "#B83A50",
+    backgroundColor: "#FFE9EE",
+    color: "#7A1730",
   },
   recentlyChangedText: {
     color: "#B8F3D0",

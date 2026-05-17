@@ -21,7 +21,7 @@ const transportationOptions: { value: TransportationMethod; label: string; copy:
 export default function TransportationPreferenceScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { appLanguage, homeLayoutDensity, isNightMode, saveSoftHelloMvpState, transportationMethod } = useAppSettings();
+  const { appLanguage, emojiDisplayMode, homeLayoutDensity, isNightMode, saveSoftHelloMvpState, transportationMethod } = useAppSettings();
   const isDay = !isNightMode;
   const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const isWide = preferenceLayout.isDesktop;
@@ -59,8 +59,8 @@ export default function TransportationPreferenceScreen() {
             const localizedOption = copy.options?.[option.value] ?? option;
             const icon = getPreferenceChipIcon(option.value);
             const optionLabel = active
-              ? formatSelectedPreferenceChipLabel(localizedOption.label, icon)
-              : formatPreferenceChipLabel(localizedOption.label, icon);
+              ? formatSelectedPreferenceChipLabel(localizedOption.label, icon, emojiDisplayMode)
+              : formatPreferenceChipLabel(localizedOption.label, icon, emojiDisplayMode);
 
             return (
               <TouchableOpacity

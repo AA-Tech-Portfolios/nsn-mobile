@@ -56,16 +56,38 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [ ] Gather tester feedback on whether comfort/trust settings feel clear, calm, and lightweight
 - [ ] Gather tester feedback on whether background, community, work, study, and life-context sharing feels safe, useful, fresh enough, and appropriately broad
 - [ ] Complete safety, privacy, legal, and regional compliance specifications before implementing emergency, verification, backend trust, or real-auth features
+- [ ] Keep any future emergency-preparedness or first-aid awareness content clearly labelled as guidance only, not emergency medical advice, diagnosis, symptom checking, dispatch, medication storage, or health-data collection
+- [ ] Review any future trusted contact, check-in, share-my-meetup-plan, emergency-awareness, or first-aid resource features for privacy, consent, misuse, legal, regional, and accessibility risks before implementation
 - [ ] Later safety/legal review: optional trusted contacts, discreet emergency help, check-in timers, share-my-meetup-plan controls, location-sharing safeguards, region-aware emergency resources, crisis links, and abuse-prevention rules
+- [ ] Keep future safety-awareness features calm and informational: guidance, reassurance, optional check-ins, external resource links, and emergency-service signposting only, without live tracking, threat detection, risk scoring, or panic-based UX
+- [ ] Explore lightweight post-meetup reassurance flows such as got home safely, leaving now, heading home later, quiet exit/check-in, trusted contact reminder, and share-my-meetup-plan controls, all optional and easy to ignore without guilt
+- [ ] Gather tester feedback on whether optional check-ins feel reassuring or intrusive, and preserve the low-pressure social atmosphere before connecting any check-in ideas to accounts, notifications, or trusted-contact systems
 
 ## Meetup Experience
 
 - [ ] Add gentle RSVP states such as coming, interested, deciding later, needing encouragement, running late, or unable to make it
 - [ ] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, first-time attendee, or guide request
 - [ ] Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
+- [ ] Explore lightweight emergency-awareness guide pages covering staying calm, contacting local emergency services when someone is in immediate danger, asking venue staff for help, locating exits, water, restrooms, and open-air spaces, and leaving/rejoining meetups without stigma
+- [ ] Explore basic first-aid awareness links to external resources such as Australian Red Cross First Aid app, Healthdirect Australia first aid guidance, and St John Ambulance resources, with clear "not emergency medical advice" wording
+- [ ] Add optional outbreak/illness comfort guidance around personal space, staying home when unwell, open-air venues, and respectful non-contact preferences without collecting health status or medical details
+- [ ] Explore gentle event/environment awareness for weather disruption, bushfire/flood awareness, transport disruption guidance, large-event crowd intensity, and quieter meetup alternatives nearby, with clear "guidance only" framing and no real-time emergency claims
+- [ ] Add future wording patterns for meetup safety support: optional check-in, quiet reassurance, leave anytime, let trusted people know you got home safely, and guidance only
 - [ ] Add lightweight transportation and routing support with nearby stops, estimated travel time, suggested arrival windows, selected-event map focus, and links out to maps
 - [ ] Add route-aware recommendations that combine transport comfort, local area preference, venue accessibility, selected event timing, and external map handoff options
 - [ ] Add stronger venue accessibility metadata for step-free routes, parking, lighting, quietness, public transport proximity, dietary safety, quiet seating, alcohol-free comfort, and cafe suitability
+- [ ] Gather tester feedback on whether smoke, scent, conversation tone, and venue accessibility comfort preferences feel helpful without becoming too personal or clinical
+- [ ] Keep sensory and practical venue comfort preferences optional and avoid using them for ranking, exclusionary filters, or judgemental "good/bad venue" scoring
+- [ ] Support quieter meetup alternatives near large public events without implying high-energy events are less welcome
+- [ ] Explore calm corner or reset-area guidance for venues, including clear prototype-only wording until venue details are verified
+- [ ] Gather tester feedback on whether crowd, pet/allergy, sensory, and flexible social-pacing comfort labels feel helpful and low-pressure
+- [ ] Improve accessibility guidance for large public events, including arrival, step-out, crowd-density, noise, seating, transport, and rejoining notes
+- [ ] Gather tester feedback on whether support and life-pacing preferences feel reassuring or too personal
+- [ ] Explore stronger privacy controls before showing or using sensitive life-comfort information outside local-only settings
+- [ ] Avoid turning support preferences into identity labels, compatibility scores, ranking systems, or mental-health matching
+- [ ] Explore trusted contact support, meetup check-ins, share-my-meetup-plan controls, optional emergency contacts, and safety timers only as future planned safety tools after privacy, legal, consent, moderation, and misuse-risk review
+- [ ] Ensure any future safety/check-in tooling is clearly opt-in, never presented as emergency support, and never shipped as production-ready without backend reliability and safety review
+- [ ] Avoid framing future meetup check-ins as surveillance, monitoring, danger alerts, unsafe-user systems, or compliance tasks; they should support quiet reassurance and practical planning only
 - [ ] Add dietary/allergy confirmation reminders before food-based meetups
 - [ ] Define age-appropriate handling for alcohol-related event preferences and labels
 - [ ] Gather user feedback on whether food and beverage categories feel calm, useful, and not overwhelming
@@ -81,6 +103,10 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [ ] Expand profile freshness controls so users can review, hide, or refresh broad context when it may be outdated
 - [ ] Refine local area and suburb APIs so Location Preference can stay broad without relying on exact addresses
 - [ ] Gather tester feedback on contact preference wording, reply pace, and whether communication guidance reduces pressure
+- [ ] Gather tester feedback on whether conversation comfort labels reduce social friction while preserving openness and avoiding ideology filtering
+- [ ] Explore meetup-specific conversation tone guidance without overcomplicating social preference systems
+- [ ] Explore lightweight event recurrence support, meetup pacing recommendations, and tester feedback on whether timing/rhythm preferences reduce social pressure without overcomplicating onboarding
+- [ ] Avoid turning connection expectations, dating style, meetup rhythm, availability, or duration preferences into compatibility scores, strict filters, or optimisation-style matching
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 - [ ] Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
 - [ ] Explore optional header control density preferences with live preview, per-device defaults, and larger accessibility targets
@@ -197,3 +223,15 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - Gather tester feedback on whether appearance/personality descriptors feel helpful or too personal.
 - Gather tester feedback on whether style/personality chips feel expressive without creating social pressure.
 - Add stronger privacy controls before using these fields in recommendations.
+- Gather tester feedback on whether presence descriptors feel helpful or too personal.
+- Gather tester feedback on whether appearance descriptors feel inclusive and low-pressure.
+- Avoid turning appearance systems into attractiveness filters or ranking systems.
+- Explore stronger privacy controls before using these fields in recommendations.
+- Consider voice/audio profile features only after privacy, consent, moderation, and safety review.
+- Gather tester feedback on whether prompts feel welcoming or performative.
+- Explore meetup-specific low-pressure icebreakers later.
+- Explore private/shared visibility controls for prompts.
+- Explore a future Gentle profile helper that asks a few lightweight optional questions, suggests Personality & Presence chips, Conversation Sparks, or comfort preference drafts, and lets users review, edit, remove, ignore, or keep every suggestion before anything appears publicly.
+- Ensure any Gentle profile helper never auto-publishes suggested profile details and avoids compatibility scoring, personality testing, or AI-generated identity labels.
+- Connect emoji density with reduced motion / calm UI mode later.
+- Explore simplified profile mode for users who prefer low visual stimulation.

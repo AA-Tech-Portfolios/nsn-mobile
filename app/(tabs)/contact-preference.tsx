@@ -19,7 +19,7 @@ const contactOptions: { value: ContactPreference; label: string; copy: string }[
 export default function ContactPreferenceScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { appLanguage, contactPreferences, homeLayoutDensity, isNightMode, saveSoftHelloMvpState } = useAppSettings();
+  const { appLanguage, contactPreferences, emojiDisplayMode, homeLayoutDensity, isNightMode, saveSoftHelloMvpState } = useAppSettings();
   const isDay = !isNightMode;
   const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const isWide = preferenceLayout.isDesktop;
@@ -56,8 +56,8 @@ export default function ContactPreferenceScreen() {
               const localizedOption = copy.options?.[option.value] ?? option;
               const icon = getPreferenceChipIcon(option.value);
               const optionLabel = active
-                ? formatSelectedPreferenceChipLabel(localizedOption.label, icon)
-                : formatPreferenceChipLabel(localizedOption.label, icon);
+                ? formatSelectedPreferenceChipLabel(localizedOption.label, icon, emojiDisplayMode)
+                : formatPreferenceChipLabel(localizedOption.label, icon, emojiDisplayMode);
 
               return (
                 <TouchableOpacity

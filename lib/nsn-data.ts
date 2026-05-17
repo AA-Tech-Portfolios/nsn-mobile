@@ -5,20 +5,74 @@ export const nsnColors = {
   surfaceSoft: "#152238",
   border: "#2A3C59",
   text: "#F5F7FF",
-  muted: "#A6B1C7",
-  mutedSoft: "#74819A",
+  muted: "#B8C4D8",
+  mutedSoft: "#8EA0B8",
   primary: "#536C9E",
   primarySoft: "#445E93",
   cyan: "#7CAAC9",
   day: "#C7B07A",
   green: "#72D67E",
-  warning: "#F7C85B",
+  warning: "#FFD66E",
   danger: "#FF7777",
 };
 
 export type NoiseLevel = "Quiet" | "Balanced" | "Lively";
 
 export const noiseLevelOptions: NoiseLevel[] = ["Quiet", "Balanced", "Lively"];
+
+export const eventComfortLabelOptions = [
+  "Calm & quiet",
+  "Casual social",
+  "Cozy indoor",
+  "Explorative/day out",
+  "Food-focused",
+  "Activity-focused",
+  "Conversation-light",
+  "Conversation-heavy",
+  "Energetic/social vibe",
+  "Flexible pacing",
+  "Small groups preferred",
+  "Large crowds okay",
+  "Crowd-sensitive",
+  "Quiet corners available",
+  "Easy step-out/reset nearby",
+  "Calm meetup alternative nearby",
+  "Lower-pressure participation",
+  "High-energy social vibe",
+  "Flexible social pacing",
+  "Small celebrations",
+  "Close-friends vibe",
+  "Pool party",
+  "Calm gathering",
+  "Public event nearby",
+  "Loud music possible",
+  "Loud environment possible",
+  "Bring earbuds/headphones if helpful",
+  "Noise-sensitive friendly",
+  "Quiet recharge nearby",
+  "Lower-noise alternative nearby",
+  "Fireworks/event noise possible",
+  "Chill alternative meetup",
+  "Join/leave flexibly",
+  "Pet-friendly meetup",
+  "Pet-free meetup",
+  "Sensitive to pets/allergies",
+  "Outdoor animal exposure possible",
+  "Calm around animals",
+  "Prefer animal-free indoor spaces",
+  "Quiet recharge space nearby",
+  "Lower sensory stimulation",
+  "Strong smells possible",
+  "Outdoor airflow",
+  "Calm seating area",
+  "Flexible pacing welcome",
+  "Join at your own pace",
+  "Quiet reset areas nearby",
+  "Smaller subgroup available",
+  "Leave whenever you need",
+] as const;
+
+export type EventComfortLabel = typeof eventComfortLabelOptions[number];
 
 export type EventItem = {
   id: string;
@@ -34,6 +88,7 @@ export type EventItem = {
   imageTone: string;
   emoji: string;
   tags: string[];
+  comfortLabels?: EventComfortLabel[];
   mediaComfortLabels?: string[];
   preEventQuestions?: string[];
   postEventQuestions?: string[];
@@ -53,7 +108,8 @@ export const dayEvents: EventItem[] = [
     weather: "Weather dependent",
     imageTone: "#19432D",
     emoji: "🧺",
-    tags: ["Outdoor", "Balanced"],
+    tags: ["Outdoor", "Balanced", "Picnic gathering", "Food-focused", "Conversation-light"],
+    comfortLabels: ["Calm & quiet", "Casual social", "Food-focused", "Conversation-light", "Small groups preferred", "Lower-pressure participation", "Outdoor airflow", "Join at your own pace", "Leave whenever you need"],
     mediaComfortLabels: ["Ask before photos", "Group photos by consent"],
     preEventQuestions: [
       "What's your favorite picnic snack?",
@@ -79,7 +135,8 @@ export const dayEvents: EventItem[] = [
     weather: "Weather dependent",
     imageTone: "#1A4964",
     emoji: "🌊",
-    tags: ["Outdoor", "Balanced"],
+    tags: ["Outdoor", "Balanced", "Beach walk", "Activity-focused", "Explorative/day out"],
+    comfortLabels: ["Explorative/day out", "Activity-focused", "Energetic/social vibe", "Flexible pacing", "Large crowds okay", "Flexible social pacing", "High-energy social vibe", "Loud environment possible", "Outdoor animal exposure possible", "Outdoor airflow", "Join/leave flexibly"],
     mediaComfortLabels: ["Ask before photos", "Venue photos okay"],
   },
   {
@@ -95,7 +152,8 @@ export const dayEvents: EventItem[] = [
     weather: "Rain friendly",
     imageTone: "#29365E",
     emoji: "📚",
-    tags: ["Indoor", "Quiet"],
+    tags: ["Indoor", "Quiet", "Cozy indoor", "Conversation-light"],
+    comfortLabels: ["Calm & quiet", "Cozy indoor", "Conversation-light", "Crowd-sensitive", "Quiet corners available", "Lower sensory stimulation", "Noise-sensitive friendly", "Pet-free meetup", "Calm seating area", "Quiet recharge space nearby"],
     mediaComfortLabels: ["Private meetup", "No public posting"],
   },
   {
@@ -111,7 +169,8 @@ export const dayEvents: EventItem[] = [
     weather: "Indoor backup ready",
     imageTone: "#5A3823",
     emoji: "☕",
-    tags: ["Food", "Indoor", "Balanced"],
+    tags: ["Food", "Indoor", "Balanced", "Café meetup", "Food-focused", "Conversation-light"],
+    comfortLabels: ["Casual social", "Cozy indoor", "Food-focused", "Conversation-light", "Small groups preferred", "Flexible social pacing", "Calm seating area", "Join at your own pace", "Leave whenever you need"],
     mediaComfortLabels: ["Ask before photos", "Private meetup"],
     preEventQuestions: [
       "What's your favorite type of coffee?",
@@ -137,7 +196,8 @@ export const dayEvents: EventItem[] = [
     weather: "Weather dependent",
     imageTone: "#1E4F55",
     emoji: "🚶",
-    tags: ["Active", "Outdoor", "Balanced"],
+    tags: ["Active", "Outdoor", "Balanced", "Beach walk", "Activity-focused", "Conversation-light"],
+    comfortLabels: ["Explorative/day out", "Activity-focused", "Conversation-light", "Flexible pacing", "Small groups preferred", "Easy step-out/reset nearby", "Outdoor animal exposure possible", "Outdoor airflow", "Flexible pacing welcome"],
     mediaComfortLabels: ["Venue photos okay", "Ask before photos"],
   },
 ];
@@ -156,7 +216,8 @@ export const eveningEvents: EventItem[] = [
     weather: "Indoor backup ready",
     imageTone: "#281C45",
     emoji: "🍿",
-    tags: ["Indoor", "Quiet"],
+    tags: ["Indoor", "Quiet", "Movie marathons", "Conversation-light", "Cozy indoor"],
+    comfortLabels: ["Cozy indoor", "Conversation-light", "Flexible pacing", "Large crowds okay", "Loud music possible", "Bring earbuds/headphones if helpful", "Lower-noise alternative nearby", "Lower-pressure participation", "Pet-free meetup", "Join/leave flexibly"],
     mediaComfortLabels: ["No filming", "Private meetup"],
     preEventQuestions: [
       "What's your favorite movie genre?",
@@ -182,7 +243,8 @@ export const eveningEvents: EventItem[] = [
     weather: "Rain friendly",
     imageTone: "#3B2D15",
     emoji: "🎲",
-    tags: ["Indoor", "Food", "Balanced"],
+    tags: ["Indoor", "Food", "Balanced", "Board games", "Café meetup", "Activity-focused"],
+    comfortLabels: ["Casual social", "Cozy indoor", "Activity-focused", "Conversation-heavy", "Close-friends vibe", "Small celebrations", "Flexible social pacing", "Smaller subgroup available", "Calm meetup alternative nearby"],
     mediaComfortLabels: ["Ask before photos", "Private meetup"],
   },
   {
@@ -198,7 +260,8 @@ export const eveningEvents: EventItem[] = [
     weather: "Rain friendly",
     imageTone: "#55331C",
     emoji: "🍜",
-    tags: ["Food", "Indoor", "Balanced"],
+    tags: ["Food", "Indoor", "Balanced", "Casual dining", "Group lunch/dinner", "Food-focused"],
+    comfortLabels: ["Casual social", "Food-focused", "Conversation-heavy", "Small groups preferred", "Close-friends vibe", "Strong smells possible", "Join/leave flexibly"],
     mediaComfortLabels: ["Private meetup", "No public posting"],
   },
   {
@@ -214,7 +277,8 @@ export const eveningEvents: EventItem[] = [
     weather: "Indoor backup ready",
     imageTone: "#1F2B4A",
     emoji: "🎧",
-    tags: ["Indoor", "Quiet"],
+    tags: ["Indoor", "Quiet", "Cozy indoor", "Conversation-light"],
+    comfortLabels: ["Calm & quiet", "Cozy indoor", "Conversation-light", "Calm gathering", "Lower sensory stimulation", "Quiet recharge nearby", "Quiet recharge space nearby", "Calm seating area", "Flexible pacing welcome"],
     mediaComfortLabels: ["No filming", "Private meetup"],
   },
 ];

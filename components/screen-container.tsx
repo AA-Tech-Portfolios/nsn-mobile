@@ -1,4 +1,4 @@
-import { View, type ViewProps } from "react-native";
+import { View, type StyleProp, type ViewProps, type ViewStyle } from "react-native";
 import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 
 import { cn } from "@/lib/utils";
@@ -17,6 +17,11 @@ export interface ScreenContainerProps extends ViewProps {
    * Additional className for the outer container (background layer).
    */
   containerClassName?: string;
+  /**
+   * Inline style for the outer container. Useful when a screen's day/night
+   * background must cover the full browser or device viewport.
+   */
+  containerStyle?: StyleProp<ViewStyle>;
   /**
    * Additional className for the SafeAreaView (content layer).
    */
@@ -43,6 +48,7 @@ export function ScreenContainer({
   edges = ["top", "left", "right"],
   className,
   containerClassName,
+  containerStyle,
   safeAreaClassName,
   style,
   ...props
@@ -54,6 +60,7 @@ export function ScreenContainer({
         "bg-background",
         containerClassName
       )}
+      style={containerStyle}
       {...props}
     >
       <SafeAreaView

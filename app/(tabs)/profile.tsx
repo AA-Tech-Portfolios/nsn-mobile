@@ -64,6 +64,7 @@ import { getUserPreferenceRowDescription, profileSupportRowMetadata, userPrefere
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
 import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
+import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import type { LocalAreaSuggestion } from "@/lib/location-lookup";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
 import {
@@ -109,7 +110,7 @@ import {
   transportationPreferenceDetails,
   type PreferenceOptionDetail,
 } from "@/lib/preferences/preference-panel-options";
-import { getPersonalityPresenceSelectedCount } from "@/lib/preferences/personality-presence";
+import { getPersonalityPresenceSelectedCount, personalityPresencePromptOptions } from "@/lib/preferences/personality-presence";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { canMeetInPerson, deriveVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, verificationLevels } from "@/lib/softhello-mvp";
@@ -160,7 +161,15 @@ const profileEventVisualModeOptions: HomeEventVisualMode[] = ["Emoji/Icon", "Pre
 const profileEventLayoutOptions: HomeEventLayout[] = ["List", "Map"];
 type HelpFeedbackType = "Suggestion" | "Bug/problem" | "Confusing experience" | "Safety/trust concern" | "Accessibility issue" | "Other";
 const helpFeedbackTypes: HelpFeedbackType[] = ["Suggestion", "Bug/problem", "Confusing experience", "Safety/trust concern", "Accessibility issue", "Other"];
-type HelpSupportSectionId = "ways-to-get-help" | "support-belonging" | "connection-guides" | "feedback-draft" | "faq-accessibility";
+type HelpSupportSectionId = "ways-to-get-help" | "support-belonging" | "external-resources" | "connection-guides" | "feedback-draft" | "faq-accessibility";
+const helpSupportSections = [
+  { id: "ways-to-get-help", title: "Ways to get help", icon: "help" },
+  { id: "support-belonging", title: "Support & belonging", icon: "shield" },
+  { id: "external-resources", title: "Outside support", icon: "help" },
+  { id: "connection-guides", title: "Friendship & dating", icon: "heart" },
+  { id: "feedback-draft", title: "Feedback draft", icon: "edit" },
+  { id: "faq-accessibility", title: "FAQs & accessibility", icon: "accessibility" },
+] as const satisfies ReadonlyArray<{ id: HelpSupportSectionId; title: string; icon: ComponentProps<typeof IconSymbol>["name"] }>;
 const helpFaqItems = [
   {
     id: "what-is-nsn",
@@ -194,6 +203,62 @@ const helpFaqItems = [
   },
 ];
 const supportIssueUrl = "https://github.com/AA-Tech-Portfolios/nsn-mobile/issues/new";
+const externalSupportResources = [
+  {
+    category: "Crisis support",
+    title: "Lifeline Australia",
+    copy: "24/7 crisis support and suicide prevention support for people in Australia.",
+    url: "https://www.lifeline.org.au/",
+  },
+  {
+    category: "Mental health support",
+    title: "Beyond Blue",
+    copy: "Mental health information, counselling, and support options.",
+    url: "https://www.beyondblue.org.au/",
+  },
+  {
+    category: "Mental health helplines",
+    title: "Healthdirect",
+    copy: "Australian health information and mental health helpline pathways.",
+    url: "https://www.healthdirect.gov.au/mental-health-helplines",
+  },
+  {
+    category: "Youth support",
+    title: "headspace",
+    copy: "Mental health and wellbeing support for young people and families.",
+    url: "https://headspace.org.au/",
+  },
+  {
+    category: "LGBTQIA+ support",
+    title: "QLife",
+    copy: "Anonymous and free LGBTIQ+ peer support and referral in Australia.",
+    url: "https://qlife.org.au/",
+  },
+  {
+    category: "Loneliness/social connection",
+    title: "FriendLine",
+    copy: "A free service for people who would like a friendly conversation.",
+    url: "https://friendline.org.au/",
+  },
+  {
+    category: "ND/autism support",
+    title: "Autism Connect",
+    copy: "National autism information, support, and referral helpline.",
+    url: "https://www.amaze.org.au/autismconnect/",
+  },
+  {
+    category: "Grief support",
+    title: "Griefline",
+    copy: "Free grief and loss support resources and helpline information.",
+    url: "https://griefline.org.au/",
+  },
+  {
+    category: "Domestic violence support",
+    title: "1800RESPECT",
+    copy: "National domestic, family, and sexual violence counselling and support.",
+    url: "https://www.1800respect.org.au/",
+  },
+] as const;
 
 const comfortOptions: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet", "Flexible pace", "Indoor backup"];
 const profileInterestOptions = [
@@ -1191,7 +1256,9 @@ export default function ProfileScreen() {
     personalityPresenceSocialStyles,
     personalityPresenceConnectionPreferences,
     personalityPresenceComfortAround,
+    personalityPresencePromptResponses,
     showPersonalityPresenceOnProfile,
+    showPersonalityPresencePromptsOnProfile,
     calendarMomentStates,
     calendarMomentVisibility,
     customCalendarMoments,
@@ -1212,6 +1279,7 @@ export default function ProfileScreen() {
     cardOutlineStyle,
     screenReaderHints,
     userPreferenceTextMode,
+    emojiDisplayMode,
     showProfileControlsShortcut,
     softSurfaces,
     clearBorders,
@@ -1265,6 +1333,7 @@ export default function ProfileScreen() {
   const isSoftHelloTheme = brandTheme.id === "softhello";
   const isWideLayout = width >= 880;
   const isDesktopUserOptions = width >= 760;
+  const isDesktopHelpSupport = Platform.OS === "web" && width >= 980;
   const shouldOpenFullPreferenceView = Platform.OS === "web" && width >= 900;
   const compactUserOptionRows = userPreferenceTextMode === "Simple";
   const interestComfortLayout = getInterestComfortLayout(Math.min(width, 560));
@@ -1324,7 +1393,8 @@ export default function ProfileScreen() {
   const [helpContactMe, setHelpContactMe] = useState(false);
   const [helpIncludeContext, setHelpIncludeContext] = useState(true);
   const [helpDraftPrepared, setHelpDraftPrepared] = useState(false);
-  const [openHelpSectionIds, setOpenHelpSectionIds] = useState<HelpSupportSectionId[]>(["support-belonging"]);
+  const [openHelpSectionIds, setOpenHelpSectionIds] = useState<HelpSupportSectionId[]>(["ways-to-get-help"]);
+  const [activeHelpSectionId, setActiveHelpSectionId] = useState<HelpSupportSectionId>("ways-to-get-help");
   const [openSupportGuideIds, setOpenSupportGuideIds] = useState<SupportGuidanceId[]>(["slow-start"]);
   const [openHelpFaqIds, setOpenHelpFaqIds] = useState<string[]>(["what-is-nsn"]);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
@@ -1347,6 +1417,8 @@ export default function ProfileScreen() {
   const [showSuburbSaved, setShowSuburbSaved] = useState(false);
   const profileMenuButtonRef = useRef<any>(null);
   const profileDrawerCloseRef = useRef<any>(null);
+  const profileMenuScrollRef = useRef<any>(null);
+  const helpSectionOffsetsRef = useRef<Partial<Record<HelpSupportSectionId, number>>>({});
 
   const closeProfileMenu = useCallback(() => {
     setShowProfileMenu(false);
@@ -2087,7 +2159,34 @@ export default function ProfileScreen() {
     );
   };
 
+  const registerHelpSectionLayout = (sectionId: HelpSupportSectionId, y: number) => {
+    helpSectionOffsetsRef.current[sectionId] = y;
+  };
+
+  const scrollToHelpSection = (sectionId: HelpSupportSectionId) => {
+    const y = helpSectionOffsetsRef.current[sectionId];
+
+    if (typeof y !== "number") return;
+
+    profileMenuScrollRef.current?.scrollTo?.({ y: Math.max(y - 10, 0), animated: true });
+  };
+
+  const focusHelpSection = (sectionId: HelpSupportSectionId) => {
+    setActiveHelpSectionId(sectionId);
+    setOpenHelpSectionIds([sectionId]);
+
+    if (isDesktopHelpSupport) {
+      setTimeout(() => scrollToHelpSection(sectionId), 80);
+    }
+  };
+
   const toggleHelpSection = (sectionId: HelpSupportSectionId) => {
+    if (isDesktopHelpSupport) {
+      focusHelpSection(sectionId);
+      return;
+    }
+
+    setActiveHelpSectionId(sectionId);
     setOpenHelpSectionIds((current) =>
       current.includes(sectionId) ? current.filter((id) => id !== sectionId) : [...current, sectionId]
     );
@@ -2111,7 +2210,7 @@ export default function ProfileScreen() {
       <TouchableOpacity
         activeOpacity={0.78}
         onPress={() => toggleHelpSection(sectionId)}
-        style={[styles.helpSubsectionHeader, isRtl && styles.rtlRow]}
+        style={[styles.helpSubsectionHeader, isDesktopHelpSupport && styles.helpSubsectionHeaderDesktop, isRtl && styles.rtlRow]}
         accessibilityRole="button"
         accessibilityLabel={title}
         accessibilityValue={{ text: isOpen ? "Expanded" : "Collapsed" }}
@@ -2123,7 +2222,7 @@ export default function ProfileScreen() {
             <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy}</Text>
           </View>
         </View>
-        <IconSymbol name={isOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={19} />
+        {isDesktopHelpSupport ? null : <IconSymbol name={isOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={19} />}
       </TouchableOpacity>
     );
   };
@@ -2154,6 +2253,14 @@ export default function ProfileScreen() {
       await Linking.openURL(supportIssueUrl);
     } catch {
       Alert.alert("Open GitHub issue", "Could not open the issue page from this device. A feedback draft is shown below instead.");
+    }
+  };
+
+  const openExternalSupportResource = async (url: string, title: string) => {
+    try {
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert(title, "Could not open this support link from the current device.");
     }
   };
 
@@ -2327,8 +2434,12 @@ export default function ProfileScreen() {
     () => getSelectedCalendarMomentLabels(calendarMomentStates, customCalendarMoments, 8),
     [calendarMomentStates, customCalendarMoments]
   );
+  const formatProfilePreferenceLabel = (label: string, icon?: string, preserveContextIcon = false) =>
+    formatPreferenceChipLabel(label, icon, emojiDisplayMode, preserveContextIcon);
+  const formatSelectedProfilePreferenceLabel = (label: string, icon?: string, preserveContextIcon = false) =>
+    formatSelectedPreferenceChipLabel(label, icon, emojiDisplayMode, preserveContextIcon);
   const getPreferenceDisplayLabel = (label: string, active: boolean, icon?: string) =>
-    active ? formatSelectedPreferenceChipLabel(label, icon) : formatPreferenceChipLabel(label, icon);
+    active ? formatSelectedProfilePreferenceLabel(label, icon) : formatProfilePreferenceLabel(label, icon);
   const calendarMomentSearchResults = useMemo(
     () => searchCalendarMoments(calendarMomentSearch, customCalendarMoments),
     [calendarMomentSearch, customCalendarMoments]
@@ -2405,7 +2516,7 @@ export default function ProfileScreen() {
 
   const getCompactPreferenceSummary = (values: string[], fallback: string, limit = 3) =>
     values.length
-      ? `${values.slice(0, limit).map((value) => formatPreferenceChipLabel(value)).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}`
+      ? `${values.slice(0, limit).map((value) => formatProfilePreferenceLabel(value)).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}`
       : fallback;
 
   const renderDrawerPreferenceChip = <T extends string,>(
@@ -2762,7 +2873,14 @@ export default function ProfileScreen() {
     socialStyles: personalityPresenceSocialStyles,
     connectionPreferences: personalityPresenceConnectionPreferences,
     comfortableAround: personalityPresenceComfortAround,
+    promptResponses: personalityPresencePromptResponses,
   });
+  const personalityPresencePromptSummary = showPersonalityPresencePromptsOnProfile
+    ? personalityPresencePromptResponses.slice(0, 2).map((response) => {
+        const prompt = personalityPresencePromptOptions.find((option) => option.id === response.promptId)?.prompt ?? "Conversation spark";
+        return `${prompt} ${response.customResponse || response.option}`;
+      })
+    : [];
   const personalityPresenceSummary = [
     personalityPresenceHair ? `Hair: ${personalityPresenceHair}` : "",
     personalityPresenceStyle ? `Style: ${personalityPresenceStyle}` : "",
@@ -2770,6 +2888,7 @@ export default function ProfileScreen() {
     ...personalityPresenceSocialStyles.slice(0, 2),
     ...personalityPresenceConnectionPreferences.slice(0, 2),
     ...personalityPresenceComfortAround.slice(0, 2),
+    ...personalityPresencePromptSummary,
   ].filter(Boolean);
   const profilePreferenceRowTargets: Record<UserPreferenceRowKey, { panel: ProfileDrawerPanel; section: ProfilePreferenceSection }> = {
     comfort: { panel: "comfortTrust", section: "comfort" },
@@ -2794,10 +2913,10 @@ export default function ProfileScreen() {
     return locationComfortPreferences.length ? `${locationComfortPreferences.length} selected` : "Local area";
   };
   const getProfilePreferenceRowSummary = (key: UserPreferenceRowKey) => {
-    if (key === "personality") return personalityPresenceSummary.map((label) => formatPreferenceChipLabel(label)).join(", ");
-    if (key === "calendar") return selectedCalendarMomentLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
-    if (key === "food") return selectedFoodPreferenceLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
-    if (key === "interests") return selectedInterestPreferenceLabels.map((label) => formatPreferenceChipLabel(label)).join(", ");
+    if (key === "personality") return personalityPresenceSummary.map((label) => formatProfilePreferenceLabel(label)).join(", ");
+    if (key === "calendar") return selectedCalendarMomentLabels.map((label) => formatProfilePreferenceLabel(label)).join(", ");
+    if (key === "food") return selectedFoodPreferenceLabels.map((label) => formatProfilePreferenceLabel(label)).join(", ");
+    if (key === "interests") return selectedInterestPreferenceLabels.map((label) => formatProfilePreferenceLabel(label)).join(", ");
     if (key === "transport") return getCompactPreferenceSummary(transportationPreferences, transportationMethod);
     if (key === "contact") return getCompactPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text");
     if (key === "location") return getCompactPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore");
@@ -2967,7 +3086,7 @@ export default function ProfileScreen() {
     showAboutMe: showAboutInPreview,
     vibes: selectedVibes.map((vibe) => vibeCopy[vibe] ?? vibe),
     showVibes: showVibesInPreview,
-    personalityPresenceLabels: personalityPresenceSummary.map((label) => formatPreferenceChipLabel(label)),
+    personalityPresenceLabels: personalityPresenceSummary.map((label) => formatProfilePreferenceLabel(label)),
     showPersonalityPresence: showPersonalityPresenceOnProfile,
     editActions: {
       localArea: {
@@ -3174,7 +3293,7 @@ export default function ProfileScreen() {
         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
           {(hobbiesInterests.length ? hobbiesInterests : ["Coffee", "Movies", "Walks"]).slice(0, 6).map((interest) => (
             <Text key={interest} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
-              {formatPreferenceChipLabel(interest)}
+              {formatProfilePreferenceLabel(interest)}
             </Text>
           ))}
         </View>
@@ -3412,7 +3531,7 @@ export default function ProfileScreen() {
                 accessibilityLabel="Close user options"
               >
                 <Pressable
-                  style={[styles.profileOptionsDrawer, !isDesktopUserOptions && styles.profileOptionsDrawerMobile, isDay && styles.dayProfileOptionsDrawer]}
+                  style={[styles.profileOptionsDrawer, isDesktopHelpSupport && profileMenuPanel === "helpSupport" && styles.profileOptionsDrawerHelpDesktop, !isDesktopUserOptions && styles.profileOptionsDrawerMobile, isDay && styles.dayProfileOptionsDrawer]}
                   onPress={(event) => event.stopPropagation()}
                   accessible
                   accessibilityLabel="User options"
@@ -3440,10 +3559,11 @@ export default function ProfileScreen() {
                       <Text style={[styles.profileOptionsCloseText, isDay && styles.dayTitle]}>Close</Text>
                     </TouchableOpacity>
                   </View>
-                  <View style={[styles.profileMenu, styles.profileMenuDocked, isDay && styles.dayCard]}>
+                  <View style={[styles.profileMenu, styles.profileMenuDocked, isDesktopHelpSupport && profileMenuPanel === "helpSupport" && styles.profileMenuDockedHelpDesktop, isDay && styles.dayCard]}>
               <ScrollView
+                ref={profileMenuScrollRef}
                 style={styles.profileMenuScroll}
-                contentContainerStyle={styles.profileMenuContent}
+                contentContainerStyle={[styles.profileMenuContent, isDesktopHelpSupport && profileMenuPanel === "helpSupport" && styles.profileMenuContentHelpDesktop]}
                 nestedScrollEnabled
                 showsVerticalScrollIndicator
               >
@@ -3780,20 +3900,21 @@ export default function ProfileScreen() {
                       </View>
                       <IconSymbol name="resize" color="#FFFFFF" size={20} />
                     </TouchableOpacity>
-                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                    <View style={[styles.profileMenuInfoCard, isDesktopHelpSupport && styles.helpIntroCardDesktop, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Personality & presence</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         Optional human context for blurred or private profile photos. These details stay local in this prototype and are not used for ranking, swiping, scoring, or matching logic.
                       </Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         {showPersonalityPresenceOnProfile ? "Allowed in profile preview when your privacy settings permit it." : "Hidden from your public profile preview."}
+                        {showPersonalityPresencePromptsOnProfile ? " Conversation sparks can appear too." : " Conversation sparks stay private."}
                       </Text>
                     </View>
                     {personalityPresenceSummary.length ? (
                       <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                         {personalityPresenceSummary.map((label) => (
                           <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
-                            {formatPreferenceChipLabel(label)}
+                            {formatProfilePreferenceLabel(label)}
                           </Text>
                         ))}
                       </View>
@@ -3813,6 +3934,19 @@ export default function ProfileScreen() {
                       <IconSymbol name={showPersonalityPresenceOnProfile ? "visibility" : "visibility.off"} color={showPersonalityPresenceOnProfile ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={16} />
                       <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showPersonalityPresenceOnProfile && styles.localAreaVisibilityTextActive]}>
                         {showPersonalityPresenceOnProfile ? "Allowed in preview" : "Hidden from preview"}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.82}
+                      onPress={() => saveSoftHelloMvpState({ showPersonalityPresencePromptsOnProfile: !showPersonalityPresencePromptsOnProfile })}
+                      style={[styles.previewVisibilityToggle, isDay && styles.daySoftOption, showPersonalityPresencePromptsOnProfile && styles.localAreaVisibilityToggleActive]}
+                      accessibilityRole="switch"
+                      accessibilityState={{ checked: showPersonalityPresencePromptsOnProfile }}
+                      accessibilityLabel={showPersonalityPresencePromptsOnProfile ? "Keep conversation sparks private" : "Allow conversation sparks in profile preview"}
+                    >
+                      <IconSymbol name={showPersonalityPresencePromptsOnProfile ? "visibility" : "visibility.off"} color={showPersonalityPresencePromptsOnProfile ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={16} />
+                      <Text style={[styles.localAreaVisibilityText, isDay && styles.dayTitle, showPersonalityPresencePromptsOnProfile && styles.localAreaVisibilityTextActive]}>
+                        {showPersonalityPresencePromptsOnProfile ? "Sparks allowed" : "Sparks private"}
                       </Text>
                     </TouchableOpacity>
                   </>
@@ -4080,7 +4214,7 @@ export default function ProfileScreen() {
                       {selectedCalendarMomentLabels.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {selectedCalendarMomentLabels.map((label, index) => (
-                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatProfilePreferenceLabel(label)}</Text>
                           ))}
                         </View>
                       ) : (
@@ -4219,7 +4353,7 @@ export default function ProfileScreen() {
                       {selectedFoodPreferenceLabels.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {selectedFoodPreferenceLabels.map((label, index) => (
-                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatProfilePreferenceLabel(label)}</Text>
                           ))}
                           {foodBeveragePreferenceIds.length > selectedFoodPreferenceLabels.length ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
@@ -4369,7 +4503,7 @@ export default function ProfileScreen() {
                       {selectedInterestPreferenceLabels.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {selectedInterestPreferenceLabels.map((label, index) => (
-                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
+                            <Text key={`${label}-${index}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatProfilePreferenceLabel(label)}</Text>
                           ))}
                           {interestPreferenceIds.length > selectedInterestPreferenceLabels.length ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
@@ -4404,7 +4538,7 @@ export default function ProfileScreen() {
                                   style={[styles.interestComfortTargetChip, isDay && styles.daySoftOption, active && styles.foodPreferenceChipActive]}
                                 >
                                   <Text style={[styles.foodPreferenceChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={2}>
-                                    {active ? `Editing: ${formatPreferenceChipLabel(option.label, option.icon)}` : formatPreferenceChipLabel(option.label, option.icon)}
+                                    {active ? `Editing: ${formatProfilePreferenceLabel(option.label, option.icon)}` : formatProfilePreferenceLabel(option.label, option.icon)}
                                   </Text>
                                 </TouchableOpacity>
                               );
@@ -4545,7 +4679,7 @@ export default function ProfileScreen() {
                       {transportationPreferences.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {transportationPreferences.slice(0, 8).map((label) => (
-                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatProfilePreferenceLabel(label)}</Text>
                           ))}
                           {transportationPreferences.length > 8 ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{transportationPreferences.length - 8} more</Text>
@@ -4604,7 +4738,7 @@ export default function ProfileScreen() {
                       {meetupContactPreferences.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {meetupContactPreferences.slice(0, 8).map((label) => (
-                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatProfilePreferenceLabel(label)}</Text>
                           ))}
                           {meetupContactPreferences.length > 8 ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{meetupContactPreferences.length - 8} more</Text>
@@ -4666,7 +4800,7 @@ export default function ProfileScreen() {
                       {locationComfortPreferences.length ? (
                         <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
                           {locationComfortPreferences.slice(0, 8).map((label) => (
-                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatPreferenceChipLabel(label)}</Text>
+                            <Text key={label} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>{formatProfilePreferenceLabel(label)}</Text>
                           ))}
                           {locationComfortPreferences.length > 8 ? (
                             <Text style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>+{locationComfortPreferences.length - 8} more</Text>
@@ -4915,6 +5049,31 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Help & Support</Text>
                     </TouchableOpacity>
+                    <View style={isDesktopHelpSupport && styles.helpDesktopLayout}>
+                      {isDesktopHelpSupport ? (
+                        <View style={[styles.helpDesktopSidebar, isDay && styles.daySoftOption]}>
+                          <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText]}>Support sections</Text>
+                          {helpSupportSections.map((section) => {
+                            const isActive = activeHelpSectionId === section.id;
+
+                            return (
+                              <TouchableOpacity
+                                key={section.id}
+                                activeOpacity={0.78}
+                                onPress={() => focusHelpSection(section.id)}
+                                style={[styles.helpDesktopNavItem, isDay && styles.daySoftOption, isActive && styles.helpDesktopNavItemActive]}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: isActive }}
+                                accessibilityLabel={`Jump to ${section.title}`}
+                              >
+                                <IconSymbol name={section.icon} color={isActive ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={16} />
+                                <Text style={[styles.helpDesktopNavText, isDay && styles.dayTitle, isActive && styles.helpDesktopNavTextActive]}>{section.title}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      ) : null}
+                      <View style={isDesktopHelpSupport && styles.helpDesktopContent}>
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Need help?</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
@@ -4924,7 +5083,7 @@ export default function ProfileScreen() {
                         Help & Support is for app feedback and non-urgent help. NSN does not currently provide emergency support.
                       </Text>
                     </View>
-                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                    <View onLayout={(event) => registerHelpSectionLayout("ways-to-get-help", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
                       {renderHelpSectionHeader("ways-to-get-help", "Ways to get help", "Feedback, problems, developer contact, and feature ideas.", "help")}
                       {openHelpSectionIds.includes("ways-to-get-help") ? (
                         <View style={styles.helpSubsectionBody}>
@@ -4945,7 +5104,7 @@ export default function ProfileScreen() {
                         </View>
                       ) : null}
                     </View>
-                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                    <View onLayout={(event) => registerHelpSectionLayout("support-belonging", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
                       {renderHelpSectionHeader("support-belonging", "Support & belonging", "Low-pressure guidance for feeling unsure, new, isolated, or cautious.", "shield")}
                       {openHelpSectionIds.includes("support-belonging") ? (
                         <View style={styles.helpSubsectionBody}>
@@ -5050,10 +5209,67 @@ export default function ProfileScreen() {
                           Opt-in comfort gestures, such as a consent-first free-hug option at suitable meetups, only where both people clearly agree and the host/community guidelines allow it. This is not active in the local prototype.
                         </Text>
                       </View>
+                      <View style={[styles.profileMenuInfoCard, styles.helpFutureIdeaCard, isDay && styles.daySoftOption]}>
+                        <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Future safety-awareness concept</Text>
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          Planned check-ins should feel like quiet reassurance, not pressure. Possible optional prompts include got home safely, leaving now, heading home later, quiet exit/check-in, share meetup plan, and trusted contact reminders after privacy review.
+                        </Text>
+                        <View style={styles.helpGuidancePointGrid}>
+                          {["Optional check-in", "Leave anytime", "Guidance only", "No live tracking", "External help links"].map((point) => (
+                            <Text key={point} style={[styles.helpGuidancePoint, isDay && styles.dayTrustPill, isRtl && styles.rtlText]}>
+                              {point}
+                            </Text>
+                          ))}
+                        </View>
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          Future event guidance may cover weather disruption, bushfire or flood awareness, transport disruption, large-event crowd intensity, and quieter meetup alternatives nearby, using informational wording only.
+                        </Text>
+                      </View>
                         </View>
                       ) : null}
                     </View>
-                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                    <View onLayout={(event) => registerHelpSectionLayout("external-resources", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
+                      {renderHelpSectionHeader("external-resources", "Outside support", "Optional trusted links for help beyond NSN.", "help")}
+                      {openHelpSectionIds.includes("external-resources") ? (
+                        <View style={styles.helpSubsectionBody}>
+                          <View style={[styles.profileMenuInfoCard, styles.helpExternalNotice, isDay && styles.daySoftOption]}>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Support beyond NSN</Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                              NSN supports social comfort and belonging, but some situations may need additional support outside the app.
+                            </Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                              If someone is in immediate danger, contact local emergency services.
+                            </Text>
+                          </View>
+                          <View style={[styles.externalSupportGrid, isRtl && styles.rtlRow]}>
+                            {externalSupportResources.map((resource) => (
+                              <TouchableOpacity
+                                key={resource.title}
+                                activeOpacity={0.82}
+                                onPress={() => openExternalSupportResource(resource.url, resource.title)}
+                                style={[styles.profileMenuGuideRow, styles.externalSupportCard, isDesktopHelpSupport && styles.externalSupportCardDesktop, isDay && styles.daySoftOption]}
+                                accessibilityRole="link"
+                                accessibilityLabel={`Open ${resource.title}`}
+                              >
+                                <View style={[styles.helpSupportCardRow, isRtl && styles.rtlRow]}>
+                                  <IconSymbol name="help" color={isDay ? "#445E93" : "#C7B07A"} size={18} />
+                                  <View style={styles.profileLayoutBody}>
+                                    <Text style={[styles.profileDisplayGroupLabel, styles.externalSupportCategory, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{resource.category}</Text>
+                                    <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{resource.title}</Text>
+                                    <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{resource.copy}</Text>
+                                    <Text style={[styles.externalSupportLinkText, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Open external link</Text>
+                                  </View>
+                                </View>
+                              </TouchableOpacity>
+                            ))}
+                          </View>
+                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                            These links are optional and external. NSN does not collect medical information, provide diagnosis, offer therapy, or run emergency-response services.
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <View onLayout={(event) => registerHelpSectionLayout("connection-guides", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
                       {renderHelpSectionHeader("connection-guides", "Friendship & dating guides", "Optional guidance for gentle friendships and consent-first dating.", "heart")}
                       {openHelpSectionIds.includes("connection-guides") ? (
                         <View style={styles.helpSubsectionBody}>
@@ -5105,7 +5321,7 @@ export default function ProfileScreen() {
                         </View>
                       ) : null}
                     </View>
-                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                    <View onLayout={(event) => registerHelpSectionLayout("feedback-draft", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
                       {renderHelpSectionHeader("feedback-draft", "Feedback draft", "Prepare a local prototype note for bugs, confusion, or support feedback.", "edit")}
                       {openHelpSectionIds.includes("feedback-draft") ? (
                         <View style={[styles.profileMenuInfoCard, styles.helpSubsectionBody, isDay && styles.daySoftOption]}>
@@ -5212,7 +5428,7 @@ export default function ProfileScreen() {
                         </View>
                       ) : null}
                     </View>
-                    <View style={[styles.helpSubsection, isDay && styles.daySoftOption]}>
+                    <View onLayout={(event) => registerHelpSectionLayout("faq-accessibility", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
                       {renderHelpSectionHeader("faq-accessibility", "FAQs & accessibility", "Quick answers and a reminder to report readability or navigation issues.", "accessibility")}
                       {openHelpSectionIds.includes("faq-accessibility") ? (
                         <View style={styles.helpSubsectionBody}>
@@ -5247,6 +5463,8 @@ export default function ProfileScreen() {
                         </View>
                       ) : null}
                     </View>
+                      </View>
+                    </View>
                     <TouchableOpacity
                       activeOpacity={0.82}
                       onPress={() => setProfileMenuPanel("blockReport")}
@@ -5272,7 +5490,7 @@ export default function ProfileScreen() {
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Safety first</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Demo only: these show the intended safety controls. Account-based blocking and reports will connect when authentication exists.
+                        Demo only: these show the intended safety controls. Account-based blocking and reports will connect when authentication exists. NSN can provide reporting paths, external support links, and guidance, but it is not emergency-response infrastructure.
                       </Text>
                     </View>
                     {[
@@ -5293,14 +5511,21 @@ export default function ProfileScreen() {
                           <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.title}</Text>
                           <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{item.copy}</Text>
                         </View>
-                        <Text style={[styles.profileMenuStatusBadge, item.title.startsWith("Coming soon") && styles.profileMenuComingSoonBadge]}>
+                        <Text
+                          style={[
+                            styles.profileMenuStatusBadge,
+                            item.title.startsWith("Coming soon") && styles.profileMenuComingSoonBadge,
+                            isDay && styles.dayProfileMenuStatusBadge,
+                            isDay && item.title.startsWith("Coming soon") && styles.dayProfileMenuComingSoonBadge,
+                          ]}
+                        >
                           {item.title.startsWith("Coming soon") ? "Coming soon" : "Demo"}
                         </Text>
                       </TouchableOpacity>
                     ))}
-                    <View style={[styles.profileMenuInfoCard, styles.profileMenuWarningCard]}>
-                      <Text style={[styles.profileLayoutTitle, styles.profileMenuWarningTitle]}>Immediate danger</Text>
-                      <Text style={[styles.profileLayoutCopy, styles.profileMenuWarningCopy]}>If you feel unsafe, leave the situation and contact local emergency services.</Text>
+                    <View style={[styles.profileMenuInfoCard, styles.profileMenuWarningCard, isDay && styles.dayProfileMenuWarningCard]}>
+                      <Text style={[styles.profileLayoutTitle, styles.profileMenuWarningTitle, isDay && styles.dayProfileMenuWarningTitle]}>Immediate danger</Text>
+                      <Text style={[styles.profileLayoutCopy, styles.profileMenuWarningCopy, isDay && styles.dayProfileMenuWarningCopy]}>If you feel unsafe, leave the situation and contact local emergency services.</Text>
                     </View>
                   </>
                 ) : null}
@@ -5333,18 +5558,6 @@ export default function ProfileScreen() {
                           </TouchableOpacity>
                         );
                       })}
-                      <View
-                        style={[styles.profileLayoutOption, styles.profileMenuDisabledOption, isDay && styles.daySoftOption]}
-                        accessibilityRole="text"
-                        accessibilityState={{ disabled: true }}
-                        accessibilityLabel="Full-width profile layout coming soon"
-                      >
-                        <View style={styles.profileLayoutBody}>
-                          <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Full-width</Text>
-                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Coming soon for larger dashboards and external displays.</Text>
-                        </View>
-                        <Text style={[styles.profileMenuStatusBadge, styles.profileMenuComingSoonBadge]}>Coming soon</Text>
-                      </View>
                     </View>
                   </>
                 ) : null}
@@ -5377,6 +5590,18 @@ export default function ProfileScreen() {
                           </TouchableOpacity>
                         );
                       })}
+                      <View
+                        style={[styles.profileLayoutOption, styles.profileMenuDisabledOption, isDay && styles.daySoftOption]}
+                        accessibilityRole="text"
+                        accessibilityState={{ disabled: true }}
+                        accessibilityLabel="Full-width width setting coming soon"
+                      >
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Full-width</Text>
+                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Coming soon for larger dashboards and external displays.</Text>
+                        </View>
+                        <Text style={[styles.profileMenuStatusBadge, styles.profileMenuComingSoonBadge, isDay && styles.dayProfileMenuComingSoonBadge]}>Coming soon</Text>
+                      </View>
                     </View>
                   </>
                 ) : null}
@@ -6729,19 +6954,22 @@ const styles = StyleSheet.create({
   profileDrawerBackdrop: { flex: 1, alignItems: "flex-end", justifyContent: "center", backgroundColor: "rgba(2,8,20,0.58)", padding: 18 },
   profileDrawerBackdropMobile: { justifyContent: "flex-end", padding: 10 },
   profileOptionsDrawer: { width: 440, maxWidth: "96%", height: "100%", maxHeight: 820, borderRadius: 24, borderWidth: 1, borderColor: "#536C9E", backgroundColor: "#0B1626", padding: 14, gap: 12, shadowColor: "#000000", shadowOpacity: 0.32, shadowRadius: 24, shadowOffset: { width: -8, height: 10 }, elevation: 16 },
+  profileOptionsDrawerHelpDesktop: { width: 980, maxWidth: "94%", maxHeight: 860, padding: 18 },
   profileOptionsDrawerMobile: { width: "100%", maxWidth: "100%", height: "92%", maxHeight: "92%", borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
   dayProfileOptionsDrawer: { backgroundColor: "#E8EDF2", borderColor: "#9FB2C8" },
   profileOptionsHeader: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: 4, paddingTop: 2 },
-  profileOptionsEyebrow: { color: nsnColors.cyan, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  profileOptionsEyebrow: { color: "#9EC8E1", fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   profileOptionsTitle: { color: nsnColors.text, fontSize: 22, fontWeight: "900", lineHeight: 28 },
-  profileOptionsCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 2 },
+  profileOptionsCopy: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 12, fontWeight: "800", lineHeight: 19, marginTop: 2 },
   profileOptionsCloseButton: { minHeight: 40, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 11 },
   profileOptionsCloseText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   profileMenu: { width: "100%", maxWidth: 410, maxHeight: 720, marginTop: 8, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   profileMenuDocked: { flex: 1, maxWidth: "100%", maxHeight: "100%", marginTop: 0, borderRadius: 18, borderColor: "#3C5277", backgroundColor: "rgba(255,255,255,0.025)" },
+  profileMenuDockedHelpDesktop: { maxWidth: "100%", borderRadius: 20 },
   profileMenuScroll: { width: "100%" },
   profileMenuContent: { padding: 8, gap: 2 },
-  profileMenuTitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, paddingHorizontal: 10, paddingVertical: 5 },
+  profileMenuContentHelpDesktop: { padding: 14, gap: 10 },
+  profileMenuTitle: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 12, fontWeight: "900", lineHeight: 17, paddingHorizontal: 10, paddingVertical: 5 },
   profileMenuItem: { minHeight: 68, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 11 },
   profilePreferenceMenuItem: { minHeight: 74, borderWidth: 1, borderColor: "rgba(124,170,201,0.24)", backgroundColor: "rgba(255,255,255,0.035)" },
   profilePreferenceMenuItemCompact: { minHeight: 48, paddingVertical: 9, borderWidth: 0, backgroundColor: "transparent" },
@@ -6753,12 +6981,14 @@ const styles = StyleSheet.create({
   profileMenuFeaturedItem: { borderWidth: 1, borderColor: "rgba(124,170,201,0.45)", backgroundColor: "rgba(124,170,201,0.1)" },
   profileMenuIconBadge: { width: 34, height: 34, borderRadius: 14, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
   profileMenuDisabledOption: { opacity: 0.72, borderStyle: "dashed" },
-  profileMenuStatusBadge: { color: nsnColors.warning, borderColor: "rgba(247,200,91,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, fontSize: 10, fontWeight: "900", overflow: "hidden" },
-  profileMenuComingSoonBadge: { color: nsnColors.muted, borderColor: "rgba(166,177,199,0.35)" },
+  profileMenuStatusBadge: { color: nsnSupportReadabilityColors.badgeText, borderColor: nsnSupportReadabilityColors.darkBadgeBorder, backgroundColor: nsnSupportReadabilityColors.darkBadgeBackground, borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3, fontSize: 10, fontWeight: "900", overflow: "hidden" },
+  profileMenuComingSoonBadge: { color: nsnSupportReadabilityColors.badgeDisabledText, borderColor: nsnSupportReadabilityColors.darkBadgeNeutralBorder, backgroundColor: nsnSupportReadabilityColors.darkBadgeNeutralBackground },
+  dayProfileMenuStatusBadge: { color: nsnSupportReadabilityColors.lightBadgeText, borderColor: nsnSupportReadabilityColors.lightBadgeBorder, backgroundColor: nsnSupportReadabilityColors.lightBadgeBackground },
+  dayProfileMenuComingSoonBadge: { color: nsnSupportReadabilityColors.lightBadgeNeutralText, borderColor: nsnSupportReadabilityColors.lightBadgeNeutralBorder, backgroundColor: nsnSupportReadabilityColors.lightBadgeNeutralBackground },
   profileMenuBack: { minHeight: 48, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10, marginBottom: 8 },
   profileMenuItemBody: { flex: 1, minWidth: 0, gap: 2 },
-  profileMenuText: { flex: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  profileMenuDescription: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17 },
+  profileMenuText: { flex: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 19 },
+  profileMenuDescription: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 12, fontWeight: "800", lineHeight: 18 },
   profileMenuDescriptionCompact: { fontSize: 11, lineHeight: 15 },
   profileMenuChevron: { color: nsnColors.muted, fontSize: 20, fontWeight: "900", lineHeight: 24 },
   profileMenuDivider: { height: 1, backgroundColor: nsnColors.border, marginVertical: 10 },
@@ -6766,26 +6996,45 @@ const styles = StyleSheet.create({
   profileMenuDestructiveItem: { backgroundColor: "rgba(226,61,90,0.08)" },
   profileMenuDestructiveText: { color: "#E23D5A" },
   profileMenuDestructiveDescription: { color: "#B83A50" },
-  profileMenuInfoCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 12, marginBottom: 8 },
-  profileMenuGuideRow: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 },
+  profileMenuInfoCard: { borderRadius: 14, borderWidth: 1, borderColor: "#3D567E", backgroundColor: "rgba(255,255,255,0.055)", padding: 12, marginBottom: 8 },
+  profileMenuGuideRow: { borderRadius: 14, borderWidth: 1, borderColor: "#3D567E", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8 },
   profileMenuPrimaryAction: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary, marginTop: 2 },
-  profileMenuWarningCard: { borderColor: "rgba(247,200,91,0.55)", backgroundColor: "rgba(247,200,91,0.14)", marginTop: 8 },
-  profileMenuWarningTitle: { color: "#7C5A00" },
-  profileMenuWarningCopy: { color: "#7C5A00" },
+  profileMenuWarningCard: { borderColor: "rgba(255,214,110,0.68)", backgroundColor: nsnSupportReadabilityColors.darkWarningSurface, marginTop: 8 },
+  dayProfileMenuWarningCard: { borderColor: "#D9A827", backgroundColor: nsnSupportReadabilityColors.lightWarningSurface },
+  profileMenuWarningTitle: { color: nsnSupportReadabilityColors.darkWarningText },
+  dayProfileMenuWarningTitle: { color: nsnSupportReadabilityColors.lightWarningText },
+  profileMenuWarningCopy: { color: nsnSupportReadabilityColors.darkWarningBody, fontWeight: "800", lineHeight: 18 },
+  dayProfileMenuWarningCopy: { color: nsnSupportReadabilityColors.lightWarningBody },
   helpSupportSectionStack: { gap: 8, marginBottom: 8 },
   helpSupportCardRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   helpSubsection: { borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 10, marginBottom: 8 },
+  helpIntroCardDesktop: { borderRadius: 18, padding: 16, marginBottom: 12 },
+  helpSubsectionDesktop: { borderRadius: 18, padding: 16, marginBottom: 12, backgroundColor: "rgba(255,255,255,0.035)" },
   helpSubsectionHeader: { minHeight: 48, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 },
+  helpSubsectionHeaderDesktop: { minHeight: 0, paddingBottom: 2 },
   helpSubsectionBody: { gap: 8, marginTop: 8 },
+  helpDesktopLayout: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
+  helpDesktopSidebar: { width: 214, borderRadius: 16, borderWidth: 1, borderColor: "#3D567E", backgroundColor: "rgba(255,255,255,0.045)", padding: 10, gap: 8, ...(Platform.OS === "web" ? ({ position: "sticky", top: 0, alignSelf: "flex-start" } as any) : {}) },
+  helpDesktopContent: { flex: 1, minWidth: 0, gap: 2 },
+  helpDesktopNavItem: { minHeight: 38, borderRadius: 12, borderWidth: 1, borderColor: "rgba(124,170,201,0.18)", backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 9, paddingVertical: 8 },
+  helpDesktopNavItemActive: { borderColor: "#D2E0FF", backgroundColor: nsnColors.primary },
+  helpDesktopNavText: { flex: 1, minWidth: 0, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  helpDesktopNavTextActive: { color: "#FFFFFF" },
   helpGuidanceCard: { gap: 10 },
   helpGuidanceHeader: { minHeight: 42, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 },
   helpGuidancePointGrid: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
-  helpGuidancePoint: { maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.035)", color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, paddingHorizontal: 9, paddingVertical: 6, overflow: "hidden" },
+  helpGuidancePoint: { maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "rgba(184,196,216,0.45)", backgroundColor: "rgba(255,255,255,0.055)", color: nsnSupportReadabilityColors.darkMutedText, fontSize: 11, fontWeight: "900", lineHeight: 16, paddingHorizontal: 9, paddingVertical: 6, overflow: "hidden" },
   helpLearnMoreButton: { alignSelf: "flex-start", backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   helpPathwayGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   helpPathwayButton: { minHeight: 36 },
   helpPathwayButtonDisabled: { opacity: 0.72, borderStyle: "dashed" },
-  helpEmergencyNotice: { borderColor: "rgba(247,200,91,0.4)" },
+  helpEmergencyNotice: { borderColor: "rgba(255,214,110,0.62)", backgroundColor: "rgba(255,214,110,0.08)" },
+  helpExternalNotice: { borderColor: "rgba(124,170,201,0.5)", backgroundColor: "rgba(124,170,201,0.08)" },
+  externalSupportGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  externalSupportCard: { flexGrow: 1, flexBasis: "100%", marginBottom: 0 },
+  externalSupportCardDesktop: { flexGrow: 1, flexBasis: 270, maxWidth: "100%" },
+  externalSupportCategory: { marginBottom: 2 },
+  externalSupportLinkText: { color: "#A8B7DA", fontSize: 11, fontWeight: "900", lineHeight: 16, marginTop: 5 },
   helpFutureIdeaCard: { borderStyle: "dashed" },
   helpFieldLabel: { marginTop: 12, marginBottom: 7 },
   helpFeedbackInput: { minHeight: 108, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, fontSize: 13, fontWeight: "700", lineHeight: 19, paddingHorizontal: 12, paddingVertical: 10, ...(Platform.OS === "web" ? ({ outlineStyle: "none", outlineWidth: 0, outlineColor: "transparent", boxShadow: "none", appearance: "none", caretColor: "#7786FF" } as any) : {}) },
@@ -6944,9 +7193,9 @@ const styles = StyleSheet.create({
   simpleTrustCard: { paddingVertical: 14 },
   trustHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 },
   trustTitle: { fontWeight: "900" },
-  trustPill: { color: nsnColors.warning, borderColor: "rgba(247,200,91,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
+  trustPill: { color: nsnSupportReadabilityColors.badgeText, borderColor: nsnSupportReadabilityColors.darkBadgeBorder, backgroundColor: nsnSupportReadabilityColors.darkBadgeBackground, borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
   trustPillReady: { color: nsnColors.green, borderColor: "rgba(114,214,126,0.45)" },
-  dayTrustPill: { color: "#7C5A00", backgroundColor: "#FFF7D8", borderColor: "#D4A91E" },
+  dayTrustPill: { color: nsnSupportReadabilityColors.lightWarningText, backgroundColor: "#FFF7D8", borderColor: "#D4A91E" },
   dayTrustPillReady: { color: "#0F6B2F", backgroundColor: "#E8F8EE", borderColor: "#55A96E" },
   trustCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
   simpleTrustCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
@@ -7005,7 +7254,7 @@ const styles = StyleSheet.create({
   photoMenuDeleteText: { color: "#FF6B6B", fontSize: 13, fontWeight: "800", textAlign: "center", },
   name: { color: nsnColors.text, fontSize: 26, fontWeight: "800", lineHeight: 33 },
   dayTitle: { color: "#0B1220" },
-  dayMutedText: { color: "#53677A" },
+  dayMutedText: { color: nsnSupportReadabilityColors.lightMutedText },
   dayAccentText: { color: "#445E93" },
   nameInput: { color: nsnColors.text, fontSize: 26, fontWeight: "800", lineHeight: 33, textAlign: "center", minWidth: 120, borderBottomWidth: 1, borderBottomColor: nsnColors.primary, paddingVertical: 2 },
   nameRow: { flexDirection: "row", alignItems: "center", gap: 7, marginTop: 12 },
@@ -7037,3 +7286,4 @@ const styles = StyleSheet.create({
   softSurfaceCard: { backgroundColor: "rgba(220,238,255,0.72)", borderColor: "rgba(184,201,230,0.56)" },
   clearBorderCard: { borderColor: "#6F8BB8", borderWidth: 1.5 },
 });
+

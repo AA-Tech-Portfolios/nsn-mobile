@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { allEvents, chatSeed, dayEvents, eveningEvents, eventChatSeeds, movieNight, nsnColors, profileVibes } from "./nsn-data";
+import { allEvents, chatSeed, dayEvents, eveningEvents, eventChatSeeds, eventComfortLabelOptions, movieNight, nsnColors, profileVibes } from "./nsn-data";
 
 describe("NSN prototype data", () => {
   it("keeps event identifiers unique and route-safe", () => {
@@ -53,6 +53,64 @@ describe("NSN prototype data", () => {
     expect(combinedText).toContain("ask before photos");
     expect(combinedText).toContain("quiet");
     expect(combinedText).toContain("arrival");
+  });
+
+  it("keeps meetup comfort and participation labels optional, broad, and non-ranking", () => {
+    expect(eventComfortLabelOptions).toEqual(expect.arrayContaining([
+      "Small groups preferred",
+      "Calm & quiet",
+      "Casual social",
+      "Cozy indoor",
+      "Explorative/day out",
+      "Food-focused",
+      "Activity-focused",
+      "Conversation-light",
+      "Conversation-heavy",
+      "Energetic/social vibe",
+      "Flexible pacing",
+      "Large crowds okay",
+      "Crowd-sensitive",
+      "High-energy social vibe",
+      "Loud environment possible",
+      "Bring earbuds/headphones if helpful",
+      "Noise-sensitive friendly",
+      "Lower-noise alternative nearby",
+      "Pool party",
+      "Pet-free meetup",
+      "Sensitive to pets/allergies",
+      "Quiet recharge space nearby",
+      "Join at your own pace",
+      "Leave whenever you need",
+    ]));
+
+    const knownLabels = new Set(eventComfortLabelOptions);
+    const seededLabels = allEvents.flatMap((event) => event.comfortLabels ?? []);
+    const seededTags = allEvents.flatMap((event) => event.tags);
+
+    expect(seededLabels).toEqual(expect.arrayContaining([
+      "High-energy social vibe",
+      "Loud environment possible",
+      "Lower-pressure participation",
+      "Noise-sensitive friendly",
+      "Quiet recharge space nearby",
+      "Outdoor animal exposure possible",
+      "Join/leave flexibly",
+    ]));
+    expect(seededTags).toEqual(expect.arrayContaining([
+      "Picnic gathering",
+      "Café meetup",
+      "Casual dining",
+      "Group lunch/dinner",
+      "Beach walk",
+      "Activity-focused",
+    ]));
+
+    for (const event of allEvents) {
+      expect(event.comfortLabels?.length).toBeGreaterThan(0);
+      for (const label of event.comfortLabels ?? []) {
+        expect(knownLabels.has(label)).toBe(true);
+      }
+    }
   });
 
   it("uses a dark, high-contrast NSN palette", () => {

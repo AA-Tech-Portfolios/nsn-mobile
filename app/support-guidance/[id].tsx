@@ -5,6 +5,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
+import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { getSupportGuidanceById, type SupportGuidanceAction } from "@/lib/support-guidance";
 
 export default function SupportGuidanceDetailScreen() {
@@ -28,8 +29,17 @@ export default function SupportGuidanceDetailScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
-      <ScrollView contentContainerStyle={[styles.content, { width: contentWidth }]} showsVerticalScrollIndicator={false}>
+    <ScreenContainer
+      containerClassName="bg-background"
+      safeAreaClassName="bg-background"
+      containerStyle={isDay && styles.dayContainer}
+      style={isDay && styles.dayContainer}
+    >
+      <ScrollView
+        style={[styles.screen, isDay && styles.dayContainer]}
+        contentContainerStyle={[styles.content, { width: contentWidth }]}
+        showsVerticalScrollIndicator={false}
+      >
         <TouchableOpacity
           activeOpacity={0.78}
           onPress={() => router.back()}
@@ -37,7 +47,7 @@ export default function SupportGuidanceDetailScreen() {
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+          <IconSymbol name="chevron.left" color={isDay ? nsnSupportReadabilityColors.lightMutedText : nsnSupportReadabilityColors.darkMutedText} size={18} />
           <Text style={[styles.backText, isDay && styles.dayMutedText]}>Back</Text>
         </TouchableOpacity>
 
@@ -109,30 +119,31 @@ export default function SupportGuidanceDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: nsnSupportReadabilityColors.darkSurface },
   content: { alignSelf: "center", paddingHorizontal: 12, paddingTop: 12, paddingBottom: 36 },
   dayContainer: { backgroundColor: "#F4F7FB" },
   backButton: { alignSelf: "flex-start", minHeight: 38, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 8, marginBottom: 8 },
-  backText: { color: nsnColors.muted, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  heroCard: { borderRadius: 18, borderWidth: 1, borderColor: "#3C5277", backgroundColor: "#0F223D", padding: 16, gap: 12, marginBottom: 12 },
-  dayCard: { borderColor: "#C8D5E8", backgroundColor: "#FFFFFF" },
+  backText: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  heroCard: { borderRadius: 18, borderWidth: 1, borderColor: "#4A6390", backgroundColor: nsnSupportReadabilityColors.darkRaisedSurface, padding: 16, gap: 12, marginBottom: 12 },
+  dayCard: { borderColor: "#BCCCE1", backgroundColor: "#FFFFFF" },
   heroTitleRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   iconBadge: { width: 44, height: 44, borderRadius: 16, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center" },
   dayIconBadge: { backgroundColor: "#EDF3FA", borderColor: "#D4E0EF" },
   flexBody: { flex: 1, minWidth: 0 },
-  eyebrow: { color: nsnColors.warning, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  eyebrow: { color: nsnSupportReadabilityColors.badgeText, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   title: { color: nsnColors.text, fontSize: 24, fontWeight: "900", lineHeight: 31 },
   dayTitle: { color: "#102235" },
-  copy: { color: nsnColors.muted, fontSize: 13, fontWeight: "700", lineHeight: 20 },
-  dayMutedText: { color: "#53677A" },
+  copy: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 13, fontWeight: "800", lineHeight: 21 },
+  dayMutedText: { color: nsnSupportReadabilityColors.lightMutedText },
   pointGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  pointChip: { maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.035)", color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, paddingHorizontal: 9, paddingVertical: 6, overflow: "hidden" },
-  dayChip: { borderColor: "#D4E0EF", backgroundColor: "#F5F8FC", color: "#53677A" },
+  pointChip: { maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "rgba(184,196,216,0.45)", backgroundColor: "rgba(255,255,255,0.055)", color: nsnSupportReadabilityColors.darkMutedText, fontSize: 11, fontWeight: "900", lineHeight: 16, paddingHorizontal: 9, paddingVertical: 6, overflow: "hidden" },
+  dayChip: { borderColor: "#C8D5E8", backgroundColor: "#F3F7FC", color: nsnSupportReadabilityColors.lightMutedText },
   sectionStack: { gap: 10, marginBottom: 12 },
-  detailCard: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, gap: 7, marginBottom: 10 },
+  detailCard: { borderRadius: 16, borderWidth: 1, borderColor: "#3D567E", backgroundColor: "rgba(255,255,255,0.055)", padding: 14, gap: 7, marginBottom: 10 },
   detailTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
   actionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 6 },
-  actionButton: { minHeight: 38, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center", paddingHorizontal: 11, paddingVertical: 7 },
+  actionButton: { minHeight: 38, borderRadius: 13, borderWidth: 1, borderColor: "#5C76A5", backgroundColor: "rgba(255,255,255,0.065)", alignItems: "center", justifyContent: "center", paddingHorizontal: 11, paddingVertical: 7 },
   disabledButton: { opacity: 0.72, borderStyle: "dashed" },
   actionText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
-  noticeCard: { borderRadius: 16, borderWidth: 1, borderStyle: "dashed", borderColor: "rgba(247,200,91,0.45)", backgroundColor: "rgba(247,200,91,0.08)", padding: 14, gap: 7 },
+  noticeCard: { borderRadius: 16, borderWidth: 1, borderStyle: "dashed", borderColor: "rgba(255,214,110,0.65)", backgroundColor: "rgba(255,214,110,0.11)", padding: 14, gap: 7 },
 });

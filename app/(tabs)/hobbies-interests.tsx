@@ -11,18 +11,43 @@ import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel, getPrefer
 const hobbyOptions = [
   "Coffee",
   "Movies",
+  "Movie marathons",
   "Board games",
+  "LEGO/building sets",
+  "LEGO/building hobby meetup",
   "Walks",
+  "Beach walk",
   "Reading",
+  "Bookstore browsing",
   "Libraries",
   "Food spots",
+  "Food court meetup",
+  "Casual dining",
+  "Group lunch/dinner",
+  "Café meetup",
+  "Dessert meetup",
+  "Bubble tea meetup",
+  "Quiet cafés",
   "Live music",
   "Quiet music",
   "Art",
+  "Creative hobbies",
   "Museums",
+  "Aquariums",
+  "Aquarium visit",
   "Markets",
+  "Night market visit",
+  "Shopping centre hangout",
+  "Window shopping",
+  "Theme parks",
+  "Theme park outing",
+  "Water parks",
+  "Water park outing",
+  "Arcades",
+  "Arcade outing",
   "Beach days",
   "Picnics",
+  "Picnic gathering",
   "Fitness",
   "Photography",
   "Gaming",
@@ -33,7 +58,7 @@ const hobbyOptions = [
 export default function HobbiesInterestsScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { appLanguage, hobbiesInterests, homeLayoutDensity, isNightMode, saveSoftHelloMvpState } = useAppSettings();
+  const { appLanguage, emojiDisplayMode, hobbiesInterests, homeLayoutDensity, isNightMode, saveSoftHelloMvpState } = useAppSettings();
   const isDay = !isNightMode;
   const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const isWide = preferenceLayout.isDesktop;
@@ -74,8 +99,8 @@ export default function HobbiesInterestsScreen() {
               const localizedOption = copy.options?.[option] ?? option;
               const icon = getPreferenceChipIcon(option);
               const chipLabel = active
-                ? formatSelectedPreferenceChipLabel(localizedOption, icon)
-                : formatPreferenceChipLabel(localizedOption, icon);
+                ? formatSelectedPreferenceChipLabel(localizedOption, icon, emojiDisplayMode)
+                : formatPreferenceChipLabel(localizedOption, icon, emojiDisplayMode);
 
               return (
                 <TouchableOpacity

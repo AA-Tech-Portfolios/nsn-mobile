@@ -29,9 +29,16 @@ export type HomeLayoutPreset = {
   screenPaddingTop: number;
 };
 
+export type HomeFitToScreenContext = {
+  enabled: boolean;
+  viewportWidth: number;
+  viewportHeight: number;
+};
+
 export const homeLayoutPreferenceRoles = {
   primaryView: "Controls which Home sections appear.",
   layoutComfort: "Controls the spacing and density of the visible Home sections.",
+  fitToScreen: "Adjusts dashboard spacing and layout to better fit your current screen size.",
 } as const;
 
 export const homeLayoutSectionCoverage = [
@@ -139,4 +146,47 @@ const homeLayoutPresets: Record<HomeLayoutPresetName, HomeLayoutPreset> = {
 
 export function getHomeLayoutPreset(name: HomeLayoutPresetName): HomeLayoutPreset {
   return homeLayoutPresets[name];
+}
+
+export function shouldUseHomeFitToScreen({ enabled, viewportWidth, viewportHeight }: HomeFitToScreenContext): boolean {
+  return enabled && viewportWidth >= 900 && (viewportHeight <= 860 || viewportWidth >= 1500);
+}
+
+export function getHomeFitToScreenPreset(name: HomeLayoutPresetName, context: HomeFitToScreenContext): HomeLayoutPreset {
+  const base = getHomeLayoutPreset(name);
+
+  if (!shouldUseHomeFitToScreen(context)) {
+    return base;
+  }
+
+  const compact = homeLayoutPresets.Compact;
+  const shortWindow = context.viewportHeight <= 820;
+  const ratio = shortWindow ? 0.68 : 0.82;
+  const reduce = (value: number, min: number) => Math.max(min, Math.round(value * ratio));
+
+  return {
+    ...base,
+    sectionGap: reduce(base.sectionGap, shortWindow ? 4 : 6),
+    cardPadding: reduce(base.cardPadding, shortWindow ? 7 : compact.cardPadding),
+    cardMinHeight: reduce(base.cardMinHeight, shortWindow ? 58 : compact.cardMinHeight),
+    utilityCardMinHeight: reduce(base.utilityCardMinHeight, shortWindow ? 42 : compact.utilityCardMinHeight),
+    heroPaddingVertical: reduce(base.heroPaddingVertical, shortWindow ? 5 : 8),
+    headerBottomGap: reduce(base.headerBottomGap, shortWindow ? 4 : compact.headerBottomGap),
+    eventCardPadding: reduce(base.eventCardPadding, shortWindow ? 6 : compact.eventCardPadding),
+    eventCardMinHeight: reduce(base.eventCardMinHeight, shortWindow ? 78 : compact.eventCardMinHeight),
+    eventImageWidth: reduce(base.eventImageWidth, shortWindow ? 62 : compact.eventImageWidth),
+    eventImageHeight: reduce(base.eventImageHeight, shortWindow ? 62 : compact.eventImageHeight),
+    eventDescriptionLines: 1,
+    chipGap: reduce(base.chipGap, compact.chipGap),
+    chipPaddingHorizontal: reduce(base.chipPaddingHorizontal, compact.chipPaddingHorizontal),
+    chipPaddingVertical: reduce(base.chipPaddingVertical, shortWindow ? 3 : compact.chipPaddingVertical),
+    smallActionMinHeight: reduce(base.smallActionMinHeight, compact.smallActionMinHeight),
+    mapHeight: shortWindow ? 76 : reduce(base.mapHeight, compact.mapHeight),
+    mapCardMinHeight: shortWindow ? 150 : reduce(base.mapCardMinHeight, compact.mapCardMinHeight),
+    desktopGridGap: reduce(base.desktopGridGap, shortWindow ? 5 : compact.desktopGridGap),
+    mobileStackGap: reduce(base.mobileStackGap, shortWindow ? 5 : compact.mobileStackGap),
+    panelMaxHeight: Math.min(base.panelMaxHeight, Math.max(420, context.viewportHeight - 190)),
+    bottomPadding: shortWindow ? 12 : 20,
+    screenPaddingTop: reduce(base.screenPaddingTop, shortWindow ? 4 : compact.screenPaddingTop),
+  };
 }

@@ -24,7 +24,7 @@ const dietaryOptions: DietaryPreference[] = [
 export default function FoodPreferencesScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
-  const { appLanguage, dietaryPreferences, homeLayoutDensity, isNightMode, saveSoftHelloMvpState } = useAppSettings();
+  const { appLanguage, dietaryPreferences, emojiDisplayMode, homeLayoutDensity, isNightMode, saveSoftHelloMvpState } = useAppSettings();
   const isDay = !isNightMode;
   const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const isWide = preferenceLayout.isDesktop;
@@ -65,8 +65,8 @@ export default function FoodPreferencesScreen() {
               const localizedOption = copy.dietaryOptions?.[option] ?? option;
               const icon = getPreferenceChipIcon(option);
               const chipLabel = active
-                ? formatSelectedPreferenceChipLabel(localizedOption, icon)
-                : formatPreferenceChipLabel(localizedOption, icon);
+                ? formatSelectedPreferenceChipLabel(localizedOption, icon, emojiDisplayMode)
+                : formatPreferenceChipLabel(localizedOption, icon, emojiDisplayMode);
 
               return (
                 <TouchableOpacity

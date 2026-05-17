@@ -1,4 +1,9 @@
 export type PreferenceLayoutDensity = "Compact" | "Comfortable" | "Spacious";
+export type EmojiDisplayMode =
+  | "Full emoji display"
+  | "Reduced emojis"
+  | "Minimal icons only"
+  | "Text-first mode";
 export type PreferenceCategoryKey =
   | "overview"
   | "comfort"
@@ -146,25 +151,49 @@ const calmLabelsWithoutIcons = new Set([
   "verified, but private",
 ]);
 
+export const emojiDisplayModeOptions: EmojiDisplayMode[] = [
+  "Full emoji display",
+  "Reduced emojis",
+  "Minimal icons only",
+  "Text-first mode",
+];
+
+const emojiDisplayModeSet = new Set<string>(emojiDisplayModeOptions);
+
+export function normalizeEmojiDisplayMode(value?: string | null): EmojiDisplayMode {
+  return value && emojiDisplayModeSet.has(value) ? value as EmojiDisplayMode : "Full emoji display";
+}
+
 const preferenceChipIconByLabel = new Map<string, string>([
   ["ice cream", "🍦"],
   ["admin", "🗂️"],
   ["aged care", "🤝"],
   ["ai", "🤖"],
   ["animal welfare", "🐶"],
+  ["approaching people can feel hard", "🌿"],
+  ["aquariums", "🐠"],
+  ["aquarium visit", "🐠"],
   ["art", "🎨"],
   ["arts", "🎨"],
+  ["arcades", "🕹️"],
+  ["arcade outing", "🕹️"],
   ["american", "🍔"],
+  ["accessibility details coming later", "🛠️"],
   ["allergy-aware venues", "🛡️"],
   ["australian", "🇦🇺"],
   ["balanced", "⚖️"],
   ["beach days", "🌊"],
+  ["beach walk", "🌊"],
   ["beef", "🥩"],
   ["beer", "🍺"],
   ["biscuits", "🍪"],
   ["board games", "🎲"],
   ["books", "📚"],
+  ["bookstore browsing", "📚"],
   ["bubble tea", "🧋"],
+  ["bubble tea meetup", "🧋"],
+  ["bring earbuds/headphones if helpful", "🎧"],
+  ["busy/noisy places can feel draining", "🔕"],
   ["building a project", "🛠️"],
   ["burgers", "🍔"],
   ["business", "💼"],
@@ -173,8 +202,15 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["calendar/cultural moments", "🗓️"],
   ["cakes", "🍰"],
   ["calm", "🌿"],
+  ["calm & quiet", "🌿"],
   ["calm and thoughtful", "🌿"],
+  ["calm around animals", "🐾"],
+  ["calm gathering", "🌿"],
+  ["calm meetup alternative nearby", "🌿"],
+  ["calm seating area", "🪑"],
   ["carpool okay", "🤝"],
+  ["casual dining", "🍽️"],
+  ["casual social", "💬"],
   ["caesar salad", "🥗"],
   ["celebrate", "🎉"],
   ["chicken", "🍗"],
@@ -193,16 +229,23 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["community work", "🤝"],
   ["community/group hangouts", "🤝"],
   ["coffee", "☕"],
+  ["café meetup", "☕"],
+  ["comfortable with expressive/social energy", "✨"],
   ["comfortable with venues that serve alcohol", "🍷"],
+  ["conversation-heavy", "💬"],
+  ["conversation-light", "🕯️"],
   ["cookies", "🍪"],
   ["contact", "💬"],
   ["contact preference", "💬"],
   ["crackers", "🍘"],
+  ["crowd-sensitive", "🌿"],
+  ["creative hobbies", "🎨"],
   ["creative work", "🎨"],
   ["creative writing", "✍️"],
   ["cycling", "🚲"],
   ["dairy-free", "🥛"],
   ["design", "🎨"],
+  ["dessert meetup", "🍦"],
   ["donuts", "🍩"],
   ["driving", "🚗"],
   ["education", "🎓"],
@@ -210,8 +253,12 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["email", "✉️"],
   ["ethiopian", "🇪🇹"],
   ["environmental cleanup", "🌿"],
+  ["easy step-out/reset nearby", "🚪"],
+  ["exercise consistency can be difficult", "🚶"],
   ["exploring something new", "🧭"],
+  ["explorative/day out", "🧭"],
   ["faith/community groups", "🤝"],
+  ["family-friendly language preferred", "💬"],
   ["filipino", "🇵🇭"],
   ["fish", "🐟"],
   ["fitness", "👟"],
@@ -220,6 +267,8 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["freelancing", "💻"],
   ["food", "🍽️"],
   ["food & beverage", "🍽️"],
+  ["food court meetup", "🍽️"],
+  ["food-focused", "🍽️"],
   ["food relief", "🍽️"],
   ["food spots", "🍽️"],
   ["french", "🥐"],
@@ -233,6 +282,7 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["gluten-free", "🌾"],
   ["good listener", "💬"],
   ["good listeners", "💬"],
+  ["group lunch/dinner", "🍽️"],
   ["garden salad", "🥗"],
   ["greek", "🇬🇷"],
   ["greek salad", "🥗"],
@@ -243,6 +293,10 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["hard candy", "🍬"],
   ["hobbies", "🎨"],
   ["hobbies & interests", "🎨"],
+  ["i overthink social situations sometimes", "💬"],
+  ["i prefer gentle pacing", "🌿"],
+  ["i recharge alone sometimes", "🕯️"],
+  ["i warm up slowly socially", "🌿"],
   ["hospitality", "🍽️"],
   ["in person", "👥"],
   ["interested", "🌏"],
@@ -267,16 +321,28 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["looking for work", "🔎"],
   ["love this", "💛"],
   ["low-message mode", "🔕"],
+  ["lower-pressure participation", "🌿"],
+  ["lower sensory stimulation", "🌿"],
+  ["low-noise venue", "🔕"],
+  ["lower-noise alternative nearby", "🔕"],
+  ["loud environment possible", "🔊"],
+  ["large crowds okay", "👥"],
+  ["large groups can feel overwhelming", "👥"],
+  ["lego/building sets", "🧱"],
+  ["lego/building hobby meetup", "🧱"],
   ["malaysian", "🇲🇾"],
   ["mango sorbet", "🥭"],
   ["marshmallows", "🍡"],
   ["mental health support", "🤝"],
   ["markets", "🛍️"],
+  ["night market visit", "🛍️"],
   ["mediterranean", "🫒"],
   ["mexican", "🌮"],
   ["middle eastern", "🥙"],
   ["mints", "🌿"],
   ["mocktails", "🍹"],
+  ["mild fragrances okay", "🌿"],
+  ["motivation can fluctuate", "🌊"],
   ["museums", "🖼️"],
   ["movies", "🎬"],
   ["music", "🎧"],
@@ -284,36 +350,61 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["noodles", "🍜"],
   ["no pork", "🚫"],
   ["no seafood", "🚫"],
+  ["noise-sensitive friendly", "🌿"],
+  ["nearby parking", "🅿️"],
+  ["nearby transport", "🚉"],
   ["not interested in alcohol-related meetups", "🚫"],
   ["nut allergy", "⚠️"],
   ["nut-free", "🥜"],
   ["nuts", "🥜"],
   ["observe", "🕯️"],
+  ["okay with casual swearing", "💬"],
   ["open mode", "✨"],
+  ["outdoor airflow", "🍃"],
+  ["outdoor animal exposure possible", "🐾"],
+  ["outdoor smoking okay", "🌳"],
   ["pasta", "🍝"],
   ["pastries", "🥐"],
   ["pies", "🥧"],
   ["pets", "🐾"],
+  ["pet-friendly meetup", "🐾"],
+  ["pet-free meetup", "🚫"],
   ["phone", "📞"],
   ["photography", "📷"],
   ["picnics", "🧺"],
+  ["picnic gathering", "🧺"],
   ["pizza", "🍕"],
   ["popcorn", "🍿"],
   ["pork", "🥓"],
+  ["public restroom access", "🚻"],
   ["prefer alcohol-free venues", "🚫"],
   ["avoid alcohol venues", "🚫"],
+  ["prefer calmer language", "💬"],
+  ["prefer fresh-air/open venues", "🍃"],
+  ["prefer fresh-air spaces", "🍃"],
+  ["prefer low-scent environments", "🍃"],
+  ["prefer lower-intensity conversations", "🌿"],
+  ["prefer animal-free indoor spaces", "🏠"],
   ["prefer nearby only", "🏠"],
   ["prefer non-alcohol venues", "🔕"],
   ["prefer quiet plans", "🌙"],
   ["prefer smaller conversations", "🌙"],
   ["public transport", "🚌"],
+  ["public event nearby", "📍"],
+  ["quiet cafes", "☕"],
+  ["quiet cafés", "☕"],
+  ["quiet corners available", "🌿"],
   ["quiet music", "🎧"],
+  ["quiet recharge nearby", "🌿"],
+  ["quiet recharge space nearby", "🌿"],
+  ["quiet reset areas nearby", "🌿"],
   ["rice bowls", "🍚"],
   ["rice dishes", "🍚"],
   ["reading", "📚"],
   ["reminders only", "🕰️"],
   ["research", "🔬"],
   ["retail", "🛍️"],
+  ["shopping centre hangout", "🛍️"],
   ["rideshare", "🚕"],
   ["salads", "🥗"],
   ["sandwiches", "🥪"],
@@ -321,13 +412,23 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["seafood", "🦐"],
   ["seafood allergy", "⚠️"],
   ["smoothies", "🥤"],
+  ["sleep schedules can vary", "🕰️"],
   ["soft drinks", "🥤"],
   ["science", "🔬"],
   ["small business", "💼"],
+  ["small celebrations", "🎉"],
   ["small groups", "🧑‍🤝‍🧑"],
   ["small groups only", "🧑‍🤝‍🧑"],
+  ["small groups preferred", "🧑‍🤝‍🧑"],
+  ["smaller subgroup available", "🧑‍🤝‍🧑"],
+  ["smoke-free meetup preferred", "🌿"],
   ["somewhere in between", "⚖️"],
   ["social", "💬"],
+  ["sensitive to cigarette smoke", "🌬️"],
+  ["sensitive to pets/allergies", "⚠️"],
+  ["sensitive to strong perfumes/colognes", "🌿"],
+  ["sensitive to vape smoke", "🌬️"],
+  ["seating available", "🪑"],
   ["soups", "🍲"],
   ["sorbet", "🍧"],
   ["sour lollies", "🍬"],
@@ -338,11 +439,17 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["student work", "🎓"],
   ["studied before", "🎓"],
   ["studying", "🎓"],
+  ["step-free access", "♿"],
+  ["strong fragrances uncomfortable", "🌬️"],
+  ["strong smells possible", "🌬️"],
   ["sugar-free sweets", "🍬"],
   ["taking a break", "🌿"],
   ["tea", "🍵"],
   ["teaching", "🎓"],
   ["technology", "💻"],
+  ["theme parks", "🎢"],
+  ["theme park outing", "🎢"],
+  ["indoor backup available", "🏠"],
   ["thai", "🇹🇭"],
   ["text", "📱"],
   ["tofu", "🫘"],
@@ -360,11 +467,29 @@ const preferenceChipIconByLabel = new Map<string, string>([
   ["vanilla", "🍨"],
   ["vietnamese", "🇻🇳"],
   ["water", "💧"],
+  ["water parks", "🌊"],
+  ["water park outing", "🌊"],
+  ["water nearby", "💧"],
+  ["wheelchair-accessible routes", "♿"],
   ["video", "🎥"],
   ["wine", "🍷"],
   ["volunteering", "🤝"],
   ["walking", "🚶"],
   ["walks", "🚶"],
+  ["window shopping", "🛍️"],
+  ["flexible pacing", "↔️"],
+  ["flexible pacing welcome", "↔️"],
+  ["flexible social pacing", "↔️"],
+  ["fireworks/event noise possible", "🎆"],
+  ["energetic/social vibe", "✨"],
+  ["high-energy social vibe", "✨"],
+  ["join at your own pace", "🌿"],
+  ["join/leave flexibly", "🚪"],
+  ["leave whenever you need", "🚪"],
+  ["loud music possible", "🎶"],
+  ["pool party", "🏊"],
+  ["chill alternative meetup", "🌿"],
+  ["close-friends vibe", "🤝"],
   ["warm up mode", "🌤️"],
   ["wraps", "🌯"],
   ["working", "💼"],
@@ -377,6 +502,10 @@ function normalizePreferenceLabel(label: string) {
 
 function stripSelectedPrefix(label: string) {
   return label.trim().replace(/^selected:\s*/i, "");
+}
+
+function stripDisplayIcon(label: string) {
+  return label.trim().replace(/^[\p{Extended_Pictographic}\p{Regional_Indicator}\uFE0F\u200D]+\s*/u, "");
 }
 
 function getLabelParts(label: string) {
@@ -400,8 +529,13 @@ export function getPreferenceCategoryIcon(category: PreferenceCategoryKey | stri
   return categoryKey ? preferenceCategoryDisplayMetadata[categoryKey].icon : fallback;
 }
 
-export function formatPreferenceCategoryChipLabel(label: string, category: PreferenceCategoryKey | string, fallbackIcon?: string) {
-  return formatPreferenceChipLabel(label, getPreferenceCategoryIcon(category, fallbackIcon));
+export function formatPreferenceCategoryChipLabel(
+  label: string,
+  category: PreferenceCategoryKey | string,
+  fallbackIcon?: string,
+  emojiDisplayMode: EmojiDisplayMode = "Full emoji display"
+) {
+  return formatPreferenceChipLabel(label, getPreferenceCategoryIcon(category, fallbackIcon), emojiDisplayMode, true);
 }
 
 export function getPreferenceChipIcon(label: string) {
@@ -417,8 +551,20 @@ export function getPreferenceChipIcon(label: string) {
   return getPreferenceCategoryIcon(normalized);
 }
 
-export function formatPreferenceChipLabel(label: string, iconOverride?: string) {
-  const trimmedLabel = stripSelectedPrefix(label);
+export function formatPreferenceChipLabel(
+  label: string,
+  iconOverride?: string,
+  emojiDisplayMode: EmojiDisplayMode = "Full emoji display",
+  preserveContextIcon = false
+) {
+  const mode = normalizeEmojiDisplayMode(emojiDisplayMode);
+  const rawLabel = stripSelectedPrefix(label);
+  if (mode === "Full emoji display" && startsWithDisplayIcon(rawLabel, iconOverride)) return rawLabel;
+
+  const trimmedLabel = stripDisplayIcon(rawLabel);
+  if (mode === "Text-first mode" || mode === "Minimal icons only") return trimmedLabel;
+  if (mode === "Reduced emojis" && !preserveContextIcon) return trimmedLabel;
+
   const icon = getPreferenceChipIcon(trimmedLabel) ?? iconOverride;
 
   if (!icon) return trimmedLabel;
@@ -428,8 +574,13 @@ export function formatPreferenceChipLabel(label: string, iconOverride?: string) 
   return `${icon} ${trimmedLabel}`;
 }
 
-export function formatSelectedPreferenceChipLabel(label: string, iconOverride?: string) {
-  return `Selected: ${formatPreferenceChipLabel(label, iconOverride)}`;
+export function formatSelectedPreferenceChipLabel(
+  label: string,
+  iconOverride?: string,
+  emojiDisplayMode: EmojiDisplayMode = "Full emoji display",
+  preserveContextIcon = false
+) {
+  return `Selected: ${formatPreferenceChipLabel(label, iconOverride, emojiDisplayMode, preserveContextIcon)}`;
 }
 
 export type SettingsBackTarget = {

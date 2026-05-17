@@ -11,7 +11,7 @@ describe("progressive disclosure helpers", () => {
     const disclosure = getHomePreferenceDisclosure("filters");
 
     expect(disclosure.primary).toEqual(["primaryView", "optionalFilters", "eventDisplay"]);
-    expect(disclosure.advanced).toEqual(["layoutComfort", "headerControls", "dayNightBehaviour", "cardOutlineStyle"]);
+    expect(disclosure.advanced).toEqual(["layoutComfort", "fitToScreen", "headerControls", "dayNightBehaviour", "cardOutlineStyle"]);
   });
 
   it("opens only one calm group by default when many groups are marked default open", () => {

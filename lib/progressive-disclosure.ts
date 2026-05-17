@@ -5,6 +5,7 @@ export type HomePreferenceControlId =
   | "optionalFilters"
   | "eventDisplay"
   | "layoutComfort"
+  | "fitToScreen"
   | "headerControls"
   | "dayNightBehaviour"
   | "cardOutlineStyle"
@@ -40,7 +41,7 @@ export function getHomePreferenceDisclosure(panel: HomePreferenceDisclosurePanel
 
   return {
     primary: ["primaryView", "optionalFilters", "eventDisplay"],
-    advanced: ["layoutComfort", "headerControls", "dayNightBehaviour", "cardOutlineStyle"],
+    advanced: ["layoutComfort", "fitToScreen", "headerControls", "dayNightBehaviour", "cardOutlineStyle"],
   };
 }
 

@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getHomeFitToScreenPreset,
   getHomeLayoutPreset,
   homeLayoutPreferenceRoles,
   homeLayoutSectionCoverage,
+  shouldUseHomeFitToScreen,
 } from "./home-layout-presets";
 
 describe("home layout presets", () => {
   it("keeps Primary view and Layout comfort responsible for different decisions", () => {
     expect(homeLayoutPreferenceRoles.primaryView).toContain("which Home sections appear");
     expect(homeLayoutPreferenceRoles.layoutComfort).toContain("density");
+    expect(homeLayoutPreferenceRoles.fitToScreen).toContain("current screen size");
   });
 
   it("covers the Home sections and small controls that should share density rules", () => {
@@ -75,5 +78,29 @@ describe("home layout presets", () => {
     expect(getHomeLayoutPreset("Compact").bottomPadding).toBeGreaterThanOrEqual(132);
     expect(getHomeLayoutPreset("Comfortable").bottomPadding).toBeGreaterThanOrEqual(148);
     expect(getHomeLayoutPreset("Spacious").bottomPadding).toBeGreaterThanOrEqual(164);
+  });
+
+  it("only enables Fit to screen for desktop-sized constrained or wide browser windows", () => {
+    expect(shouldUseHomeFitToScreen({ enabled: false, viewportWidth: 1280, viewportHeight: 760 })).toBe(false);
+    expect(shouldUseHomeFitToScreen({ enabled: true, viewportWidth: 390, viewportHeight: 760 })).toBe(false);
+    expect(shouldUseHomeFitToScreen({ enabled: true, viewportWidth: 1280, viewportHeight: 760 })).toBe(true);
+    expect(shouldUseHomeFitToScreen({ enabled: true, viewportWidth: 1700, viewportHeight: 940 })).toBe(true);
+  });
+
+  it("reduces spacing and card sizing without shrinking tap targets like browser zoom", () => {
+    const base = getHomeLayoutPreset("Comfortable");
+    const fitted = getHomeFitToScreenPreset("Comfortable", { enabled: true, viewportWidth: 1280, viewportHeight: 760 });
+
+    expect(fitted.sectionGap).toBeLessThan(base.sectionGap);
+    expect(fitted.cardPadding).toBeLessThan(base.cardPadding);
+    expect(fitted.mapHeight).toBeLessThan(base.mapHeight);
+    expect(fitted.bottomPadding).toBeLessThan(base.bottomPadding);
+    expect(fitted.tapTarget).toBe(base.tapTarget);
+    expect(fitted.eventDescriptionLines).toBe(1);
+    expect(fitted.bottomPadding).toBeLessThanOrEqual(20);
+  });
+
+  it("returns the original density preset when Fit to screen is off", () => {
+    expect(getHomeFitToScreenPreset("Spacious", { enabled: false, viewportWidth: 1280, viewportHeight: 760 })).toEqual(getHomeLayoutPreset("Spacious"));
   });
 });
