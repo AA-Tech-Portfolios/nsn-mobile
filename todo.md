@@ -16,6 +16,38 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [ ] Regenerate stale checkpoint screenshots after the May 17 mobile fixes and alpha UX cleanup, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
 - [ ] If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
 
+## Alpha Walkthrough Notes (May 2026)
+
+This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not treat these notes as approval for backend/auth work, real verification providers, emergency tooling, or large navigation rewrites. The next implementation pass should stay focused on mobile UX, tester clarity, prototype-safe trust wording, and reducing clutter.
+
+- Review onboarding calmness and clarity: the flow should explain NSN as a local Sydney/North Shore prototype without sounding like a production matching, safety, or verification system.
+- Review Home Options accordion density: sections should remain scannable on mobile, and Home should not feel overwhelming after recent Options, Preferences, and prototype tools additions.
+- Review mobile overflow and clipping: verification, Profile drawers, Settings accordions, Home cards, Meetup cards, and Event details should scroll naturally and avoid hidden actions.
+- Review bottom-nav spacing: chat composers, scroll views, modals, and card lists should sit above the tab bar/home indicator without excessive empty space.
+- Review Profile/User Options grouping clarity: Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings should feel distinct, with no confusing duplicate concepts.
+- Review Settings & Privacy prototype wording: local-only, demo, coming-soon, saved-locally, and prototype verification copy should be clear without sounding alarming.
+- Review verification flow: testers should be able to set local Contact Verified or Real Person Verified states, see the Profile trust badge update, and understand that no real identity verification occurs.
+- Review chats and keyboard/composer spacing: group and private chat composers should feel calm, reachable, and consistently placed on smaller iPhones.
+- Review meetup details comfort/safety wording: comfort, weather, photo/video consent, safety notes, and Community Guidelines alpha copy should feel practical and low-pressure.
+- Review text wrapping on mobile: titles, descriptions, location text, and important card copy should wrap where readability matters instead of truncating too early.
+- Regenerate checkpoint screenshots after the walkthrough because current checkpoint images are stale after the May 17 mobile verification, chat spacing, icon, text wrapping, and alpha UX cleanup fixes.
+
+## Alpha UX Review Checklist
+
+- [ ] No clipped mobile content
+- [ ] No empty icon containers
+- [ ] All buttons reachable on smaller iPhones
+- [ ] Settings names feel distinct
+- [ ] No confusing duplicate concepts
+- [ ] Prototype/demo wording is clear
+- [ ] Chats feel calm and low-pressure
+- [ ] Home does not feel overwhelming
+- [ ] Bottom-nav spacing is correct
+- [ ] Text wraps instead of truncating where readability matters
+- [ ] Verification works and stays prototype-safe
+- [ ] Community Guidelines alpha copy is visible and calm
+- [ ] Checkpoint screenshots are regenerated after the walkthrough
+
 ## Post-Alpha Core Features
 
 - [ ] Add Guides or buddy-mode support to help first-time attendees feel oriented without creating pressure
