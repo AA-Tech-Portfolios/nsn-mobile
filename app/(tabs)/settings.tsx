@@ -71,11 +71,11 @@ const settingsPrivacyModeOptions: { value: SettingsPrivacyMode; label: string; c
 ];
 const profileShortcutLayoutOptions: { value: ProfileShortcutLayout; label: string; copy: string }[] = [
   { value: "Clean", label: "Simple profile", copy: "Keep Profile lighter, with vibes, preview, local area, and key edit controls." },
-  { value: "Expanded", label: "Detailed profile", copy: "Show the fuller Profile layout with local area, interests, comfort, privacy, and trust detail cards." },
+  { value: "Expanded", label: "Detailed Profile", copy: "Show the fuller Profile Layout with local area, interests, comfort, privacy, and trust detail cards." },
 ];
 const userPreferenceTextModeOptions: { value: UserPreferenceTextMode; label: string; copy: string }[] = [
-  { value: "Simple", label: "Simple preference text", copy: "Use shorter labels and calmer summaries in User preferences." },
-  { value: "Detailed", label: "Detailed preference text", copy: "Show fuller explanatory text for each User preferences section." },
+  { value: "Simple", label: "Simple Preference Text", copy: "Use shorter labels and calmer summaries in User Preferences." },
+  { value: "Detailed", label: "Detailed Preference Text", copy: "Show fuller explanatory text for each User Preferences section." },
 ];
 const emojiDisplayModeDetails: Record<EmojiDisplayMode, { label: string; copy: string }> = {
   "Full emoji display": { label: "Full emoji display", copy: "Keep the current NSN emoji and visual expression." },
@@ -233,7 +233,7 @@ const accordionByJumpSection: Record<SettingsSectionJumpId, SettingsAccordionId>
 };
 
 const settingsAccordionMeta: Record<SettingsAccordionId, { title: string; copy: string; icon: ComponentProps<typeof IconSymbol>["name"] }> = {
-  displayLayout: { title: "Display & layout", copy: "View mode, battery, low-light, and layout comfort.", icon: "palette" },
+  displayLayout: { title: "Display & Layout", copy: "View mode, battery, low-light, and layout comfort.", icon: "palette" },
   privacyVisibility: { title: "Privacy & visibility", copy: "Profile visibility, preview details, and what others can see.", icon: "visibility" },
   profileDetails: { title: "Profile preview details", copy: "Name, photo blur, gender, and profile preview controls.", icon: "preview" },
   comfortSafety: { title: "Comfort & safety", copy: "Trust foundations, safety copy, and low-pressure controls.", icon: "shield" },
@@ -4140,7 +4140,7 @@ export default function SettingsScreen() {
         </Text>
         <View style={[styles.settingsResponsiveGrid, settingsLayout.isDesktop && styles.settingsResponsiveGridWide, { gap: settingsLayout.sectionGap }]}>
           <View style={responsiveSettingsCardStyle()}>
-            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Profile layout</Text>
+            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Profile Layout</Text>
             <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
               Choose whether Profile opens in a simpler layout or the fuller detailed layout.
             </Text>
@@ -4170,7 +4170,7 @@ export default function SettingsScreen() {
           <View style={responsiveSettingsCardStyle()}>
             <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>User preference text</Text>
             <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Switch the Profile drawer and User preferences between short summaries and fuller guidance.
+              Switch the Profile drawer and User Preferences between short summaries and fuller guidance.
             </Text>
             <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
               {userPreferenceTextModeOptions.map((option) => {

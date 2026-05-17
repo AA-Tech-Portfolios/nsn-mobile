@@ -37,7 +37,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   {
     key: "comfort",
     icon: "shield",
-    title: "Comfort & trust",
+    title: "Comfort & Trust",
     description: "Visibility, social energy, communication, group size, verification, and photo comfort.",
     simpleDescription: "Visibility, trust, and meeting comfort.",
     badgeKind: "saved",
@@ -46,7 +46,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   {
     key: "personality",
     icon: "person.fill",
-    title: "Personality & presence",
+    title: "Personality & Presence",
     description: "Optional appearance, social style, and connection context for blurred profiles.",
     simpleDescription: "Optional human context.",
     badgeKind: "count",
@@ -55,7 +55,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   {
     key: "background",
     icon: "life-context",
-    title: "Work, study & life context",
+    title: "Work, Study & Life Context",
     description: "Optional work, study, learning, and volunteering context with visibility controls.",
     simpleDescription: "Optional life context.",
     badgeKind: "count",
@@ -64,7 +64,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   {
     key: "calendar",
     icon: "calendar",
-    title: "Calendar & cultural moments",
+    title: "Calendar & Cultural Moments",
     description: "Holidays, festivals, observances, and personal calendar seasons.",
     simpleDescription: "Dates and moments that matter to you.",
     badgeKind: "private",
@@ -73,7 +73,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   {
     key: "food",
     icon: "food",
-    title: "Food & beverage",
+    title: "Food & Beverage",
     description: "Cuisines, drinks, dietary needs, avoidances, and alcohol comfort.",
     simpleDescription: "Food, drinks, and dietary comfort.",
     badgeKind: "count",
@@ -82,7 +82,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   {
     key: "interests",
     icon: "interests",
-    title: "Hobbies & interests",
+    title: "Hobbies & Interests",
     description: "Activities, genres, local exploring, and comfort-aware tags.",
     simpleDescription: "Activities and easy conversation starters.",
     badgeKind: "count",

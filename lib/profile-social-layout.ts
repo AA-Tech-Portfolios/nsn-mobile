@@ -32,7 +32,7 @@ export const mainProfileSummaryRows: readonly MainProfileSummaryRow[] = [
   {
     id: "localArea",
     icon: "location",
-    title: "Local area",
+    title: "Local Area",
     description: "Broad area used for local plans.",
   },
   {
@@ -44,7 +44,7 @@ export const mainProfileSummaryRows: readonly MainProfileSummaryRow[] = [
   {
     id: "comfortTrust",
     icon: "shield",
-    title: "Comfort & trust",
+    title: "Comfort & Trust",
     description: "Pace, privacy, and low-pressure meeting comfort.",
   },
   {

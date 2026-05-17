@@ -59,7 +59,7 @@ const eventsTranslations = {
     photoAdded: "Photo added",
     photoMissing: "Can be added later",
     confirmDetails: "Review in profile",
-    editProfile: "Edit profile",
+    editProfile: "Edit Profile",
     close: "Close",
     noise: { Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
   },

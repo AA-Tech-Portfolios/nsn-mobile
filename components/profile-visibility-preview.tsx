@@ -230,7 +230,7 @@ export function ProfileVisibilityPreview({
         </Text>
       ) : (
         <View style={styles.detailStack}>
-          {showSuburbArea && suburb.trim() ? renderDetailLine("localArea", `Local area: ${suburb.trim()}`, true) : null}
+          {showSuburbArea && suburb.trim() ? renderDetailLine("localArea", `Local Area: ${suburb.trim()}`, true) : null}
           {showAge && age ? renderDetailLine("age", `Age: ${age}`) : null}
           {showPreferredAgeRange && preferredAgeMin && preferredAgeMax ? (
             renderDetailLine("preferredAgeRange", `Preferred age range: ${preferredAgeMin}-${preferredAgeMax}`)
@@ -245,7 +245,7 @@ export function ProfileVisibilityPreview({
           {visibleCommunication.length ? renderDetailLine("communication", `Communication: ${visibleCommunication.join(", ")}`) : null}
           {visibleGroupSize ? renderDetailLine("groupSize", `Group size: ${visibleGroupSize}`) : null}
           {visiblePhotoRecording.length ? renderDetailLine("photoRecording", `Photo & recording: ${visiblePhotoRecording.join(", ")}`) : null}
-          {visiblePersonalityPresence.length ? renderDetailLine("personalityPresence", `Personality & presence: ${visiblePersonalityPresence.join(", ")}`) : null}
+          {visiblePersonalityPresence.length ? renderDetailLine("personalityPresence", `Personality & Presence: ${visiblePersonalityPresence.join(", ")}`) : null}
           {verifiedButPrivate ? renderDetailLine("verificationTrust", "Verified, but private: trust status can be checked without opening the full profile.") : null}
           {minimalProfileView ? renderDetailLine(null, "Minimal view is on, so only basics are shown.") : null}
         </View>

@@ -193,7 +193,7 @@ const verificationWindowTranslations = {
     photoAdded: "Photo added",
     photoMissing: "Can be added later",
     confirm: "Review in profile",
-    editProfile: "Edit profile",
+    editProfile: "Edit Profile",
     close: "Close",
     defaultMemberName: "NSN member",
     confirmHint: "Confirms these details for this meetup check.",

@@ -121,16 +121,16 @@ export function getSettingsPreferenceLayout(width: number, density: PreferenceLa
 }
 
 export const preferenceCategoryDisplayMetadata: Record<PreferenceCategoryKey, { icon: string; title: string }> = {
-  overview: { icon: "👤", title: "User preferences" },
-  comfort: { icon: "🛡️", title: "Comfort & trust" },
-  personality: { icon: "🌿", title: "Personality & presence" },
-  background: { icon: "🎓", title: "Work, study & life context" },
-  calendar: { icon: "🗓️", title: "Calendar & cultural moments" },
-  food: { icon: "🍽️", title: "Food & beverage" },
-  interests: { icon: "🎨", title: "Hobbies & interests" },
-  transport: { icon: "🚆", title: "Transportation method" },
-  contact: { icon: "💬", title: "Contact preference" },
-  location: { icon: "📍", title: "Location preference" },
+  overview: { icon: "👤", title: "User Preferences" },
+  comfort: { icon: "🛡️", title: "Comfort & Trust" },
+  personality: { icon: "🌿", title: "Personality & Presence" },
+  background: { icon: "🎓", title: "Work, Study & Life Context" },
+  calendar: { icon: "🗓️", title: "Calendar & Cultural Moments" },
+  food: { icon: "🍽️", title: "Food & Beverage" },
+  interests: { icon: "🎨", title: "Hobbies & Interests" },
+  transport: { icon: "🚆", title: "Transportation Method" },
+  contact: { icon: "💬", title: "Contact Preference" },
+  location: { icon: "📍", title: "Location Preference" },
 };
 
 const preferenceCategoryKeyByTitle = new Map(

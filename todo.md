@@ -95,6 +95,9 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 
 ## Profile, Preferences & Settings
 
+- [ ] Future UX architecture cleanup: review naming and grouping across Profile Controls, User Options, User Preferences, Display & Layout, Profile Layout, Width Settings, and Settings & Privacy so the mental model stays clear as NSN grows
+- [ ] Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
+- [ ] Explore merging Display & Layout, Profile Layout, and Width Settings into a unified Appearance & Layout or Display & Appearance area, avoiding deep nesting and preserving the non-corporate NSN tone
 - [ ] Expand richer food preference matching with lightweight comfort signals instead of restaurant recommendations
 - [ ] Add interest-based recommendations that use hobbies, genres, and comfort modifiers
 - [ ] Expand the interest taxonomy after tester feedback on categories, wording, and missing local activities

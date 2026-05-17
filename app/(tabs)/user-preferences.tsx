@@ -147,52 +147,52 @@ type PreferenceSection = "overview" | "comfort" | "personality" | "background" |
 const preferenceSections: Record<PreferenceSection, { icon: string; title: string; copy: string }> = {
   overview: {
     icon: "🧭",
-    title: "User preferences",
+    title: "User Preferences",
     copy: "Choose what makes local meetups feel easier. These settings stay prototype-safe and help shape recommendations without pretending to be a production matching engine.",
   },
   comfort: {
     icon: "🛡️",
-    title: "Comfort & trust",
+    title: "Comfort & Trust",
     copy: "Visibility, social energy, communication, group size, verification, photo comfort, and physical contact preferences in one calmer view.",
   },
   personality: {
     icon: "🌿",
-    title: "Personality & presence",
+    title: "Personality & Presence",
     copy: "Optional appearance, social style, and connection context for blurred profiles. Keep it private, hide it from your public profile, and change it anytime.",
   },
   background: {
     icon: "🎓",
-    title: "Work, study & life context",
+    title: "Work, Study & Life Context",
     copy: "Share what you're doing, learning, or interested in - only if you want to. Keep it broad, optional, and privacy-controlled.",
   },
   calendar: {
     icon: "📅",
-    title: "Calendar & cultural moments",
+    title: "Calendar & Cultural Moments",
     copy: "Choose events, holidays, or local moments that matter to you, so NSN can suggest more comfortable plans.",
   },
   food: {
     icon: "🍽️",
-    title: "Food & beverage",
+    title: "Food & Beverage",
     copy: "Food and drink preferences help NSN suggest comfortable meetups. This is not a food delivery or restaurant recommendation system.",
   },
   interests: {
     icon: "🎨",
-    title: "Hobbies & interests",
+    title: "Hobbies & Interests",
     copy: "Interests help with low-pressure activity ideas and conversation starters without turning Profile into a quiz.",
   },
   transport: {
     icon: "🚆",
-    title: "Transportation method",
+    title: "Transportation Method",
     copy: "Share how you are likely to arrive so meeting points and event notes can feel clearer.",
   },
   contact: {
     icon: "💬",
-    title: "Contact preference",
+    title: "Contact Preference",
     copy: "Let others know the communication style that feels easiest before and around meetups.",
   },
   location: {
     icon: "📍",
-    title: "Location preference",
+    title: "Location Preference",
     copy: "Keep your local area, discovery radius, and privacy signals easy to review.",
   },
 };
@@ -1147,15 +1147,15 @@ export default function UserPreferencesScreen() {
   }, {} as Record<CalendarMomentGroupId, number>);
 
   const overviewCards = [
-    { section: "comfort" as const, title: "Comfort & trust", icon: getPreferenceSectionIcon("comfort", "🛡️"), copy: `${formatChipLabel(comfortMode)} / ${formatChipLabel(socialEnergyPreference)} energy / ${formatChipLabel(groupSizePreference)}`, meta: "Visibility, contact, verification, and consent." },
-    { section: "personality" as const, title: "Personality & presence", icon: getPreferenceSectionIcon("personality", "🌿"), copy: personalityPresenceSelectedCount ? `${personalityPresenceSelectedCount} optional details` : "Hidden by default", meta: selectedPersonalityPresenceLabels.length ? selectedPersonalityPresenceLabels.slice(0, 6).map((label) => formatChipLabel(label)).join(", ") : "Gentle recognisability, social style, and connection context for blurred profiles." },
-    { section: "calendar" as const, title: "Calendar & cultural moments", icon: getPreferenceSectionIcon("calendar", "🗓️"), copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.map((label) => formatChipLabel(label)).join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
-    { section: "food" as const, title: "Food & beverage", icon: getPreferenceSectionIcon("food", "🍽️"), copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.map((label) => formatChipLabel(label)).join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
-    { section: "interests" as const, title: "Hobbies & interests", icon: getPreferenceSectionIcon("interests", "🎨"), copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.map((label) => formatChipLabel(label)).join(", ") || "Activities, genres, and comfort-aware tags." },
-    { section: "transport" as const, title: "Transportation method", icon: getPreferenceSectionIcon("transport", "🚆"), copy: getPreferenceSummary(transportationPreferences, transportationMethod), meta: "Arrival comfort, route access, and travel pressure." },
-    { section: "contact" as const, title: "Contact preference", icon: getPreferenceSectionIcon("contact", "💬"), copy: getPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"), meta: "How you prefer pre-meetup communication." },
-    { section: "location" as const, title: "Location preference", icon: getPreferenceSectionIcon("location", "📍"), copy: getPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"), meta: "Local area, venue comfort, and location privacy." },
-    { section: "background" as const, title: "Work, study & life context", icon: getPreferenceSectionIcon("background", "🎓"), copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary ? backgroundOverviewSummary.split(" / ").map((label) => formatChipLabel(label)).join(" / ") : "Broad work, study, learning, and volunteering context with visibility controls." },
+    { section: "comfort" as const, title: "Comfort & Trust", icon: getPreferenceSectionIcon("comfort", "🛡️"), copy: `${formatChipLabel(comfortMode)} / ${formatChipLabel(socialEnergyPreference)} energy / ${formatChipLabel(groupSizePreference)}`, meta: "Visibility, contact, verification, and consent." },
+    { section: "personality" as const, title: "Personality & Presence", icon: getPreferenceSectionIcon("personality", "🌿"), copy: personalityPresenceSelectedCount ? `${personalityPresenceSelectedCount} optional details` : "Hidden by default", meta: selectedPersonalityPresenceLabels.length ? selectedPersonalityPresenceLabels.slice(0, 6).map((label) => formatChipLabel(label)).join(", ") : "Gentle recognisability, social style, and connection context for blurred profiles." },
+    { section: "calendar" as const, title: "Calendar & Cultural Moments", icon: getPreferenceSectionIcon("calendar", "🗓️"), copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.map((label) => formatChipLabel(label)).join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
+    { section: "food" as const, title: "Food & Beverage", icon: getPreferenceSectionIcon("food", "🍽️"), copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.map((label) => formatChipLabel(label)).join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
+    { section: "interests" as const, title: "Hobbies & Interests", icon: getPreferenceSectionIcon("interests", "🎨"), copy: `${interestPreferenceIds.length} selected`, meta: selectedInterestLabels.map((label) => formatChipLabel(label)).join(", ") || "Activities, genres, and comfort-aware tags." },
+    { section: "transport" as const, title: "Transportation Method", icon: getPreferenceSectionIcon("transport", "🚆"), copy: getPreferenceSummary(transportationPreferences, transportationMethod), meta: "Arrival comfort, route access, and travel pressure." },
+    { section: "contact" as const, title: "Contact Preference", icon: getPreferenceSectionIcon("contact", "💬"), copy: getPreferenceSummary(meetupContactPreferences, contactPreferences.join(", ") || "Text"), meta: "How you prefer pre-meetup communication." },
+    { section: "location" as const, title: "Location Preference", icon: getPreferenceSectionIcon("location", "📍"), copy: getPreferenceSummary(locationComfortPreferences, suburb || "Sydney North Shore"), meta: "Local area, venue comfort, and location privacy." },
+    { section: "background" as const, title: "Work, Study & Life Context", icon: getPreferenceSectionIcon("background", "🎓"), copy: backgroundSelectedCount ? `${backgroundSelectedCount} selected` : "Private by default", meta: backgroundOverviewSummary ? backgroundOverviewSummary.split(" / ").map((label) => formatChipLabel(label)).join(" / ") : "Broad work, study, learning, and volunteering context with visibility controls." },
   ];
 
   const getOverviewCardMeta = (item: (typeof overviewCards)[number]) => {
@@ -1312,7 +1312,7 @@ export default function UserPreferencesScreen() {
         {activeSection === "personality" ? (
           <View style={styles.preferenceStack}>
             <View style={[styles.searchCard, isDay && styles.dayCard]}>
-              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Personality & presence</Text>
+              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Personality & Presence</Text>
               <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
                 These optional details are for gentle human context when photos are blurred or private. They stay local in this prototype and are not used for matching, scoring, ranking, swiping, or compatibility percentages.
               </Text>
@@ -1653,7 +1653,7 @@ export default function UserPreferencesScreen() {
         {activeSection === "background" ? (
           <View style={styles.preferenceStack}>
             <View style={[styles.searchCard, isDay && styles.dayCard]}>
-              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Work, study & life context</Text>
+              <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Work, Study & Life Context</Text>
               <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
                 Share what you're doing, learning, or interested in - only if you want to. NSN recommends broad context first, not exact workplaces, schools, schedules, or daily routines.
               </Text>
@@ -2416,7 +2416,7 @@ export default function UserPreferencesScreen() {
               </>
             ))}
             <View style={responsiveCardGridStyle}>
-              {renderSectionCard("Local area", "Your suburb or local area is used as a gentle prototype signal for nearby plans.", "📍", (
+              {renderSectionCard("Local Area", "Your suburb or local area is used as a gentle prototype signal for nearby plans.", "📍", (
                 <>
                   <Text style={[styles.locationValue, isDay && styles.dayTitle]}>{suburb || "Sydney North Shore"}</Text>
                   <TouchableOpacity activeOpacity={0.78} onPress={() => router.push("/location-preference" as never)} style={[styles.showMoreButton, isDay && styles.dayChip]} accessibilityRole="button" accessibilityLabel="Open local area editor">

@@ -55,7 +55,7 @@ describe("preference chip metadata", () => {
     expect(getPreferenceCategoryIcon("transport")).toBe("🚆");
     expect(getPreferenceCategoryIcon("contact")).toBe("💬");
     expect(getPreferenceCategoryIcon("location")).toBe("📍");
-    expect(formatPreferenceCategoryChipLabel("Food & beverage", "food")).toBe("🍽️ Food & beverage");
+    expect(formatPreferenceCategoryChipLabel("Food & Beverage", "food")).toBe("🍽️ Food & Beverage");
   });
 
   it("returns common calm icons for repeated preference labels", () => {
@@ -110,12 +110,12 @@ describe("preference chip metadata", () => {
     expect(getPreferenceChipIcon("Hobbies")).toBe("🎨");
     expect(getPreferenceChipIcon("Transport")).toBe("🚆");
     expect(getPreferenceChipIcon("Contact")).toBe("💬");
-    expect(getPreferenceChipIcon("Calendar & cultural moments")).toBe("🗓️");
+    expect(getPreferenceChipIcon("Calendar & Cultural Moments")).toBe("🗓️");
   });
 
   it("keeps serious safety and privacy labels unplayful", () => {
     expect(getPreferenceChipIcon("Safety, privacy & consent details")).toBeUndefined();
-    expect(getPreferenceChipIcon("Block & report")).toBeUndefined();
+    expect(getPreferenceChipIcon("Block & Report")).toBeUndefined();
     expect(formatPreferenceChipLabel("Safety, privacy & consent details")).toBe("Safety, privacy & consent details");
   });
 
@@ -132,7 +132,7 @@ describe("preference chip metadata", () => {
     expect(formatSelectedPreferenceChipLabel("Coffee")).toBe("Selected: ☕ Coffee");
     expect(formatSelectedPreferenceChipLabel("Selected: Coffee")).toBe("Selected: ☕ Coffee");
     expect(formatSelectedPreferenceChipLabel("☕ Coffee")).toBe("Selected: ☕ Coffee");
-    expect(formatSelectedPreferenceChipLabel("Food & beverage", getPreferenceCategoryIcon("food"))).toBe("Selected: 🍽️ Food & beverage");
+    expect(formatSelectedPreferenceChipLabel("Food & Beverage", getPreferenceCategoryIcon("food"))).toBe("Selected: 🍽️ Food & Beverage");
   });
 
   it("supports calmer emoji display modes from the central chip formatter", () => {
@@ -141,7 +141,7 @@ describe("preference chip metadata", () => {
 
     expect(formatPreferenceChipLabel("Coffee", undefined, "Full emoji display")).toBe("☕ Coffee");
     expect(formatPreferenceChipLabel("Coffee", undefined, "Reduced emojis")).toBe("Coffee");
-    expect(formatPreferenceCategoryChipLabel("Food & beverage", "food", "🍽️", "Reduced emojis")).toBe("🍽️ Food & beverage");
+    expect(formatPreferenceCategoryChipLabel("Food & Beverage", "food", "🍽️", "Reduced emojis")).toBe("🍽️ Food & Beverage");
     expect(formatPreferenceChipLabel("☕ Coffee", undefined, "Minimal icons only")).toBe("Coffee");
     expect(formatSelectedPreferenceChipLabel("☕ Coffee", undefined, "Text-first mode")).toBe("Selected: Coffee");
     expect(formatPreferenceChipLabel("Safety, privacy & consent details", "🛡️", "Minimal icons only")).toBe("Safety, privacy & consent details");

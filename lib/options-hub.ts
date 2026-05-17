@@ -87,7 +87,7 @@ export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "userPreferences",
     icon: "settings",
-    title: "User preferences",
+    title: "User Preferences",
     description: "Profile comfort settings without crowding Home.",
     rows: [
       row({
