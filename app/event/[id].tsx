@@ -9,10 +9,18 @@ import { getTranslationLanguageBase, type PhotoRecordingComfortPreference, useAp
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   askAboutMeetupQuestionGroups,
+  arrivingAloneReassuranceItems,
+  conversationStarterPrompts,
   firstMeetupSupportOptions,
   getFirstMeetupSupportSummary,
+  meetupComfortRoleOptions,
+  practicalMeetupGuidanceItems,
+  quickReplyOptions,
   type AskAboutMeetupQuestion,
+  type ConversationStarterPrompt,
   type FirstMeetupSupportOption,
+  type MeetupComfortRoleOption,
+  type QuickReplyOption,
 } from "@/lib/options-hub";
 import {
   canMeetInPerson,
@@ -180,8 +188,8 @@ const eventActionTranslations = {
 
 const verificationWindowTranslations = {
   English: {
-    title: "Confirm your details",
-    copy: "Before in-person meetups, NSN asks you to confirm the basics other members rely on for safety.",
+    title: "Review prototype details",
+    copy: "Local preview only: review the basics this alpha uses to explain future meetup readiness. No real identity verification provider is connected.",
     displayName: "Name",
     suburb: "Local area",
     age: "Age confirmation",
@@ -196,10 +204,10 @@ const verificationWindowTranslations = {
     editProfile: "Edit Profile",
     close: "Close",
     defaultMemberName: "NSN member",
-    confirmHint: "Confirms these details for this meetup check.",
+    confirmHint: "Reviews these local prototype details for this meetup preview.",
     editProfileHint: "Opens Profile to update trust, contact, and profile details.",
-    verifiedTitle: "Details confirmed",
-    verifiedCopy: "You are ready for in-person meetups.",
+    verifiedTitle: "Prototype details reviewed",
+    verifiedCopy: "This local preview is marked ready to continue.",
   },
   Hebrew: {
     title: "אישור הפרטים שלך",
@@ -460,9 +468,9 @@ const eventTranslations = {
     weatherAffectedCopy: "Weather may affect this plan, so check the backup option before heading out.",
     weatherFriendlyCopy: "This event has a weather-friendly plan.",
     genericMeetingCopy: (venue: string) => `Meet near ${venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`,
-    meetingSafety: "Meeting safety",
+    meetingSafety: "Prototype meetup readiness",
     softExitTitle: "You can change your mind",
-    softExitCopy: "It is okay to skip this meetup if it does not feel like your pace today. You can find another group, step back from the chat, or come back later.",
+    softExitCopy: "You can leave early, take a quiet break, step back from the chat, or come back later. No pressure to talk constantly.",
     verifyBeforeMeeting: "Verify before meeting",
     openMeetupChat: "Open Meetup Chat",
     openMeetupChatHint: "Opens the meetup group chat.",
@@ -474,8 +482,8 @@ const eventTranslations = {
     feedbackGood: "Good",
     feedbackMixed: "Mixed",
     feedbackUnsafe: "Unsafe",
-    preEventQuestionsTitle: "Icebreaker questions",
-    preEventQuestionsCopy: "These questions can help start conversations at the meetup.",
+    preEventQuestionsTitle: "Conversation starters",
+    preEventQuestionsCopy: "Optional prompts and quick replies for low-pressure chat. Use one, ignore them, or join quietly.",
   },
   Chinese: {
     title: "电影夜 —\n观看 + 聊天",
@@ -761,7 +769,8 @@ export default function EventDetailsScreen() {
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
-  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | null>(null);
+  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
+  const [selectedComfortRoles, setSelectedComfortRoles] = useState<MeetupComfortRoleOption[]>([]);
   const {
     ageConfirmed,
     appLanguage,
@@ -875,6 +884,9 @@ export default function EventDetailsScreen() {
 
       return nextSelection.length > 0 ? nextSelection : ["No extra support"];
     });
+  };
+  const toggleComfortRole = (role: MeetupComfortRoleOption) => {
+    setSelectedComfortRoles((current) => (current.includes(role) ? current.filter((item) => item !== role) : [...current, role]));
   };
 
   const shareEvent = async () => {
@@ -1102,6 +1114,9 @@ export default function EventDetailsScreen() {
           <View style={[styles.tagRow, isRtl && styles.rtlRow]}>
             <Text style={[styles.primaryChip, isRtl && styles.rtlText]}>{eventCategory}</Text>
             <Text style={[styles.quietChip, isDay && styles.dayQuietChip, isRtl && styles.rtlText]}>{eventTone}</Text>
+            {(event.atmosphereLabels ?? []).slice(0, 2).map((label) => (
+              <Text key={label} style={[styles.quietChip, isDay && styles.dayQuietChip, isRtl && styles.rtlText]}>{label}</Text>
+            ))}
           </View>
         </View>
 
@@ -1166,6 +1181,26 @@ export default function EventDetailsScreen() {
         <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
             <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="low-pressure" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Arriving alone is normal here</Text>
+          </View>
+          <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Small NSN meetups should make room for solo arrivals, quiet starts, and warming up slowly.
+          </Text>
+          <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+            {arrivingAloneReassuranceItems.map((item) => (
+              <View key={item.label} style={[styles.meetupReassuranceCard, isDay && styles.dayActionRow]}>
+                <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.label}</Text>
+                <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
               <IconSymbol name="visibility" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
             </View>
             <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
@@ -1207,10 +1242,30 @@ export default function EventDetailsScreen() {
             <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.preEventQuestionsTitle}</Text>
             <Text style={[styles.questionsCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.preEventQuestionsCopy}</Text>
             <View style={styles.questionsList}>
+              {conversationStarterPrompts.map((question) => (
+                <Text key={question} style={[styles.questionText, isDay && styles.dayText, isRtl && styles.rtlText]}>
+                  • {question}
+                </Text>
+              ))}
               {event.preEventQuestions.map((question, index) => (
                 <Text key={index} style={[styles.questionText, isDay && styles.dayText, isRtl && styles.rtlText]}>
                   • {question}
                 </Text>
+              ))}
+            </View>
+            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+              {quickReplyOptions.map((reply) => (
+                <TouchableOpacity
+                  key={reply}
+                  activeOpacity={0.82}
+                  onPress={() => setSelectedMeetupQuestion(reply)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedMeetupQuestion === reply }}
+                  accessibilityLabel={reply}
+                  style={[styles.meetupQuestionChip, isDay && styles.dayActionRow, selectedMeetupQuestion === reply && styles.meetupSupportChipActive]}
+                >
+                  <Text style={[styles.meetupQuestionText, isDay && styles.dayText, selectedMeetupQuestion === reply && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{reply}</Text>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
@@ -1219,6 +1274,28 @@ export default function EventDetailsScreen() {
         <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel, isRtl && styles.rtlBlock]}>
           <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.meetingPoint}</Text>
           <Text style={[styles.meetingCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventMeetingCopy}</Text>
+        </View>
+
+        <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <View style={styles.weatherCopyBlock}>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Practical meetup notes</Text>
+              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Informational only. These are calm reminders for planning your own arrival and return, not live support or monitoring.
+              </Text>
+            </View>
+          </View>
+          <View style={styles.practicalGuidanceList}>
+            {practicalMeetupGuidanceItems.map((item) => (
+              <View key={item.label} style={[styles.practicalGuidanceRow, isDay && styles.dayActionRow]}>
+                <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.label}</Text>
+                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
@@ -1263,10 +1340,47 @@ export default function EventDetailsScreen() {
         <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
             <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="group" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <View style={styles.weatherCopyBlock}>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Optional comfort roles</Text>
+              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Local preview only. These are broad joining cues, not identity labels, rankings, or strict filters.
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+            {meetupComfortRoleOptions.map((option) => {
+              const active = selectedComfortRoles.includes(option.label);
+
+              return (
+                <TouchableOpacity
+                  key={option.label}
+                  activeOpacity={0.82}
+                  onPress={() => toggleComfortRole(option.label)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={option.label}
+                  accessibilityHint={option.description}
+                  style={[styles.meetupSupportChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                >
+                  <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{option.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text style={[styles.meetupSupportSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Current: {selectedComfortRoles.length ? selectedComfortRoles.join(", ") : "None selected"}
+          </Text>
+        </View>
+
+        <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
               <IconSymbol name="message" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
             </View>
             <View style={styles.weatherCopyBlock}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Ask about this meetup</Text>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meetup clarity questions</Text>
               <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                 Demo question chips for clarity. For report, block, leave, or emergency help, use existing safety flows.
               </Text>
@@ -1411,7 +1525,7 @@ const styles = StyleSheet.create({
   eventAvatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: "#21123E", borderWidth: 2, borderColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: -2, marginBottom: 18 },
   avatarEmoji: { fontSize: 43 },
   title: { color: nsnColors.text, fontSize: 28, fontWeight: "800", textAlign: "center", letterSpacing: -0.5, lineHeight: 34 },
-  tagRow: { flexDirection: "row", gap: 8, marginTop: 12 },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
   primaryChip: { color: nsnColors.text, fontSize: 12, fontWeight: "800", backgroundColor: nsnColors.primary, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 14, overflow: "hidden" },
   quietChip: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", backgroundColor: "rgba(255,255,255,0.06)", paddingHorizontal: 13, paddingVertical: 7, borderRadius: 14, overflow: "hidden" },
   metaStack: { gap: 8, marginBottom: 12 },
@@ -1455,16 +1569,19 @@ const styles = StyleSheet.create({
   meetupSupportHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   meetupSupportIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
   meetupSupportChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  meetupReassuranceCard: { flexGrow: 1, flexBasis: 138, minHeight: 70, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 10, paddingVertical: 8, gap: 3 },
   meetupSupportChip: { minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
   meetupSupportChipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
-  meetupSupportChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  meetupSupportChipText: { flexShrink: 1, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   meetupSupportChipTextActive: { color: "#FFFFFF" },
   meetupSupportSummary: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   meetupQuestionGroup: { gap: 6 },
   meetupQuestionPhase: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
   meetupQuestionChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
-  meetupQuestionText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  meetupQuestionText: { flexShrink: 1, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   meetupHelperResult: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(114,214,126,0.3)", backgroundColor: "rgba(114,214,126,0.1)", padding: 10 },
+  practicalGuidanceList: { gap: 8 },
+  practicalGuidanceRow: { borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 10, paddingVertical: 9, gap: 3 },
   softExitCard: { borderRadius: 18, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: nsnColors.border, padding: 15, marginBottom: 18 },
   daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   softExitTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, marginBottom: 4 },

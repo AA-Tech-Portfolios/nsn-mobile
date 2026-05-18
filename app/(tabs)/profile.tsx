@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
-import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Alert, Modal, useWindowDimensions, Linking, type ViewStyle } from "react-native";
+import { View, Text, TextInput, Platform, Pressable, ScrollView, StyleSheet, TouchableOpacity, Alert, Modal, Image, useWindowDimensions, Linking, type ViewStyle } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -116,6 +116,7 @@ import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations"
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, type SoftHelloVerificationLevel, verificationLevels } from "@/lib/softhello-mvp";
 import { gentleConnectionGuidance, supportBelongingGuidance, type SupportGuidanceId } from "@/lib/support-guidance";
+import { getCalmFaviconUrl, preparednessGuidanceCategories, safetyBoundaryGuidanceCategories, type PreparednessGuidanceCategory } from "@/lib/options-hub";
 
 const rows = [
   { icon: "calendar", key: "meetups", route: "/meetups" },
@@ -151,6 +152,7 @@ type ProfileMenuPanel =
   | "width"
   | "notifications"
   | "helpSupport"
+  | "safetyBoundaries"
   | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const simpleProfileShortcutRows: ProfileShortcutRow[] = [rows[0], rows[1], rows[2], rows[8], settingsRow];
@@ -162,15 +164,27 @@ const profileEventVisualModeOptions: HomeEventVisualMode[] = ["Emoji/Icon", "Pre
 const profileEventLayoutOptions: HomeEventLayout[] = ["List", "Map"];
 type HelpFeedbackType = "Suggestion" | "Bug/problem" | "Confusing experience" | "Safety/trust concern" | "Accessibility issue" | "Other";
 const helpFeedbackTypes: HelpFeedbackType[] = ["Suggestion", "Bug/problem", "Confusing experience", "Safety/trust concern", "Accessibility issue", "Other"];
-type HelpSupportSectionId = "ways-to-get-help" | "support-belonging" | "external-resources" | "connection-guides" | "feedback-draft" | "faq-accessibility";
+type HelpSupportSectionId = "ways-to-get-help" | "support-belonging" | "external-resources" | "preparedness-guidance" | "connection-guides" | "feedback-draft" | "faq-accessibility";
 const helpSupportSections = [
   { id: "ways-to-get-help", title: "Ways to Get Help", icon: "help" },
   { id: "support-belonging", title: "Support & Belonging", icon: "shield" },
   { id: "external-resources", title: "Outside Support", icon: "help" },
+  { id: "preparedness-guidance", title: "Preparedness", icon: "transport" },
   { id: "connection-guides", title: "Friendship & Dating", icon: "heart" },
   { id: "feedback-draft", title: "Feedback Draft", icon: "edit" },
   { id: "faq-accessibility", title: "FAQs & Accessibility", icon: "accessibility" },
 ] as const satisfies ReadonlyArray<{ id: HelpSupportSectionId; title: string; icon: ComponentProps<typeof IconSymbol>["name"] }>;
+type HelpSupportSearchResult = {
+  id: string;
+  title: string;
+  copy: string;
+  category: string;
+  sectionId: HelpSupportSectionId;
+  icon: ComponentProps<typeof IconSymbol>["name"];
+  preparednessLabel?: PreparednessGuidanceCategory["label"];
+  supportGuideId?: SupportGuidanceId;
+  faqId?: string;
+};
 const helpFaqItems = [
   {
     id: "what-is-nsn",
@@ -210,54 +224,72 @@ const externalSupportResources = [
     title: "Lifeline Australia",
     copy: "24/7 crisis support and suicide prevention support for people in Australia.",
     url: "https://www.lifeline.org.au/",
+    faviconUrl: getCalmFaviconUrl("lifeline.org.au"),
+    iconFallback: "help",
   },
   {
     category: "Mental health support",
     title: "Beyond Blue",
     copy: "Mental health information, counselling, and support options.",
     url: "https://www.beyondblue.org.au/",
+    faviconUrl: getCalmFaviconUrl("beyondblue.org.au"),
+    iconFallback: "help",
   },
   {
     category: "Mental health helplines",
     title: "Healthdirect",
     copy: "Australian health information and mental health helpline pathways.",
     url: "https://www.healthdirect.gov.au/mental-health-helplines",
+    faviconUrl: getCalmFaviconUrl("healthdirect.gov.au"),
+    iconFallback: "help",
   },
   {
     category: "Youth support",
     title: "headspace",
     copy: "Mental health and wellbeing support for young people and families.",
     url: "https://headspace.org.au/",
+    faviconUrl: getCalmFaviconUrl("headspace.org.au"),
+    iconFallback: "help",
   },
   {
     category: "LGBTQIA+ support",
     title: "QLife",
     copy: "Anonymous and free LGBTIQ+ peer support and referral in Australia.",
     url: "https://qlife.org.au/",
+    faviconUrl: getCalmFaviconUrl("qlife.org.au"),
+    iconFallback: "help",
   },
   {
     category: "Loneliness/social connection",
     title: "FriendLine",
     copy: "A free service for people who would like a friendly conversation.",
     url: "https://friendline.org.au/",
+    faviconUrl: getCalmFaviconUrl("friendline.org.au"),
+    iconFallback: "help",
   },
   {
     category: "ND/autism support",
     title: "Autism Connect",
     copy: "National autism information, support, and referral helpline.",
     url: "https://www.amaze.org.au/autismconnect/",
+    faviconUrl: getCalmFaviconUrl("amaze.org.au"),
+    iconFallback: "accessibility",
   },
   {
     category: "Grief support",
     title: "Griefline",
     copy: "Free grief and loss support resources and helpline information.",
     url: "https://griefline.org.au/",
+    faviconUrl: getCalmFaviconUrl("griefline.org.au"),
+    iconFallback: "help",
   },
   {
     category: "Domestic violence support",
     title: "1800RESPECT",
     copy: "National domestic, family, and sexual violence counselling and support.",
     url: "https://www.1800respect.org.au/",
+    faviconUrl: getCalmFaviconUrl("1800respect.org.au"),
+    iconFallback: "shield",
   },
 ] as const;
 
@@ -1392,12 +1424,15 @@ export default function ProfileScreen() {
   const [activeInterestComfortId, setActiveInterestComfortId] = useState<string | null>(null);
   const [helpFeedbackType, setHelpFeedbackType] = useState<HelpFeedbackType>("Suggestion");
   const [helpFeedbackMessage, setHelpFeedbackMessage] = useState("");
+  const [helpSupportSearch, setHelpSupportSearch] = useState("");
   const [helpContactMe, setHelpContactMe] = useState(false);
   const [helpIncludeContext, setHelpIncludeContext] = useState(true);
   const [helpDraftPrepared, setHelpDraftPrepared] = useState(false);
   const [openHelpSectionIds, setOpenHelpSectionIds] = useState<HelpSupportSectionId[]>(["ways-to-get-help"]);
   const [activeHelpSectionId, setActiveHelpSectionId] = useState<HelpSupportSectionId>("ways-to-get-help");
   const [openSupportGuideIds, setOpenSupportGuideIds] = useState<SupportGuidanceId[]>(["slow-start"]);
+  const [expandedPreparednessCategory, setExpandedPreparednessCategory] = useState<PreparednessGuidanceCategory["label"] | null>(null);
+  const [failedPreparednessResourceIcons, setFailedPreparednessResourceIcons] = useState<Record<string, true>>({});
   const [openHelpFaqIds, setOpenHelpFaqIds] = useState<string[]>(["what-is-nsn"]);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
   const [draftContactEmail, setDraftContactEmail] = useState(contactEmail);
@@ -2156,6 +2191,81 @@ export default function ProfileScreen() {
     [helpContactMe, helpFeedbackMessage, helpFeedbackType, helpIncludeContext, isNightMode, width]
   );
 
+  const normalizedHelpSupportSearch = helpSupportSearch.trim().toLowerCase();
+  const helpSupportSearchResults = useMemo<HelpSupportSearchResult[]>(() => {
+    if (!normalizedHelpSupportSearch) return [];
+
+    const results: HelpSupportSearchResult[] = [
+      ...helpSupportSections.map((section) => ({
+        id: `section-${section.id}`,
+        title: section.title,
+        copy: "Jump to this Help & Support section.",
+        category: "Section",
+        sectionId: section.id,
+        icon: section.icon,
+      })),
+      ...externalSupportResources.map((resource) => ({
+        id: `external-${resource.title}`,
+        title: resource.title,
+        copy: resource.copy,
+        category: resource.category,
+        sectionId: "external-resources" as const,
+        icon: resource.iconFallback,
+      })),
+      ...preparednessGuidanceCategories.flatMap((category) => [
+        {
+          id: `preparedness-${category.label}`,
+          title: category.label,
+          copy: category.description,
+          category: "Preparedness",
+          sectionId: "preparedness-guidance" as const,
+          icon: category.icon,
+          preparednessLabel: category.label,
+        },
+        ...category.resources.map((resource) => ({
+          id: `preparedness-resource-${resource.title}`,
+          title: resource.title,
+          copy: resource.copy,
+          category: category.label,
+          sectionId: "preparedness-guidance" as const,
+          icon: resource.iconFallback ?? category.icon,
+          preparednessLabel: category.label,
+        })),
+      ]),
+      ...supportBelongingGuidance.map((item) => ({
+        id: `belonging-${item.id}`,
+        title: item.title,
+        copy: item.copy,
+        category: "Support & Belonging",
+        sectionId: "support-belonging" as const,
+        icon: item.icon,
+        supportGuideId: item.id,
+      })),
+      ...gentleConnectionGuidance.map((item) => ({
+        id: `connection-${item.id}`,
+        title: item.title,
+        copy: item.copy,
+        category: "Friendship & Dating",
+        sectionId: "connection-guides" as const,
+        icon: item.icon,
+        supportGuideId: item.id,
+      })),
+      ...helpFaqItems.map((item) => ({
+        id: `faq-${item.id}`,
+        title: item.title,
+        copy: item.copy,
+        category: "FAQs & Accessibility",
+        sectionId: "faq-accessibility" as const,
+        icon: "accessibility" as const,
+        faqId: item.id,
+      })),
+    ];
+
+    return results
+      .filter((result) => [result.title, result.copy, result.category].join(" ").toLowerCase().includes(normalizedHelpSupportSearch))
+      .slice(0, 8);
+  }, [normalizedHelpSupportSearch]);
+
   const toggleHelpFaq = (itemId: string) => {
     setOpenHelpFaqIds((current) =>
       current.includes(itemId) ? current.filter((id) => id !== itemId) : [...current, itemId]
@@ -2181,6 +2291,22 @@ export default function ProfileScreen() {
     if (isDesktopHelpSupport) {
       setTimeout(() => scrollToHelpSection(sectionId), 80);
     }
+  };
+
+  const openHelpSearchResult = (result: HelpSupportSearchResult) => {
+    if (result.preparednessLabel) {
+      setExpandedPreparednessCategory(result.preparednessLabel);
+    }
+
+    if (result.supportGuideId) {
+      setOpenSupportGuideIds((current) => current.includes(result.supportGuideId!) ? current : [...current, result.supportGuideId!]);
+    }
+
+    if (result.faqId) {
+      setOpenHelpFaqIds((current) => current.includes(result.faqId!) ? current : [...current, result.faqId!]);
+    }
+
+    focusHelpSection(result.sectionId);
   };
 
   const toggleHelpSection = (sectionId: HelpSupportSectionId) => {
@@ -3455,6 +3581,8 @@ export default function ProfileScreen() {
                                 ? "Notifications"
                                 : profileMenuPanel === "helpSupport"
                                   ? "Help & Support"
+                                : profileMenuPanel === "safetyBoundaries"
+                                  ? "Safety & Boundaries"
                                 : profileMenuPanel === "blockReport"
                                   ? "Block & Report"
                                   : "Profile Controls";
@@ -3706,6 +3834,20 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                     <TouchableOpacity
                       activeOpacity={0.78}
+                      onPress={() => setProfileMenuPanel("safetyBoundaries")}
+                      style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Safety and Boundaries"
+                    >
+                      <IconSymbol name="shield" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Safety & Boundaries</Text>
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Consent, privacy, quiet exits, and low-pressure reminders.</Text> : null}
+                      </View>
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("blockReport")}
                       style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                       accessibilityRole="button"
@@ -3891,7 +4033,7 @@ export default function ProfileScreen() {
                           <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.title}</Text>
                           {!compactRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{getUserPreferenceRowDescription(item.key, userPreferenceTextMode)}</Text> : null}
                           {!compactRows && rowSummary ? (
-                            <Text style={[styles.profileMenuDescription, styles.profileMenuDescriptionCompact, isDay && styles.dayMutedText]} numberOfLines={1}>
+                            <Text style={[styles.profileMenuDescription, styles.profileMenuDescriptionCompact, isDay && styles.dayMutedText]} numberOfLines={3}>
                               {rowSummary}
                             </Text>
                           ) : null}
@@ -5100,6 +5242,59 @@ export default function ProfileScreen() {
                         Help & Support is for app feedback and non-urgent help. NSN does not currently provide emergency support.
                       </Text>
                     </View>
+                    <View style={[styles.helpSearchPanel, isDay && styles.daySoftOption]}>
+                      <View style={styles.foodPreferenceSearchWrap}>
+                        <IconSymbol name="magnifyingglass" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                        <TextInput
+                          value={helpSupportSearch}
+                          onChangeText={setHelpSupportSearch}
+                          placeholder="Search support, transport, weather..."
+                          placeholderTextColor={isDay ? "#6E7B88" : nsnColors.muted}
+                          style={[styles.foodPreferenceSearchInput, isDay && styles.dayTitle]}
+                          accessibilityLabel="Search Help and Support"
+                          selectionColor="#7786FF"
+                          underlineColorAndroid="transparent"
+                          returnKeyType="search"
+                        />
+                        {helpSupportSearch ? (
+                          <TouchableOpacity activeOpacity={0.78} onPress={() => setHelpSupportSearch("")} accessibilityRole="button" accessibilityLabel="Clear Help and Support search" style={styles.foodPreferenceClearButton}>
+                            <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={16} />
+                          </TouchableOpacity>
+                        ) : null}
+                      </View>
+                      {normalizedHelpSupportSearch ? (
+                        <View style={styles.helpSearchResults}>
+                          {helpSupportSearchResults.length ? (
+                            helpSupportSearchResults.map((result) => (
+                              <TouchableOpacity
+                                key={result.id}
+                                activeOpacity={0.82}
+                                onPress={() => openHelpSearchResult(result)}
+                                style={[styles.profileMenuGuideRow, styles.helpSearchResultRow, isDay && styles.daySoftOption]}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Open ${result.title} in Help and Support`}
+                              >
+                                <IconSymbol name={result.icon} color={isDay ? "#445E93" : "#C7B07A"} size={18} />
+                                <View style={styles.profileLayoutBody}>
+                                  <Text style={[styles.profileDisplayGroupLabel, styles.externalSupportCategory, isDay && styles.dayMutedText]}>{result.category}</Text>
+                                  <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{result.title}</Text>
+                                  <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{result.copy}</Text>
+                                </View>
+                                <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                              </TouchableOpacity>
+                            ))
+                          ) : (
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                              No matching support items yet. Try weather, transport, accessibility, feedback, or arriving alone.
+                            </Text>
+                          )}
+                        </View>
+                      ) : (
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                          Search stays local to this screen and only helps you jump to prototype support content.
+                        </Text>
+                      )}
+                    </View>
                     <View onLayout={(event) => registerHelpSectionLayout("ways-to-get-help", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
                       {renderHelpSectionHeader("ways-to-get-help", "Ways to Get Help", "Feedback, problems, developer contact, and feature ideas.", "help")}
                       {openHelpSectionIds.includes("ways-to-get-help") ? (
@@ -5269,7 +5464,18 @@ export default function ProfileScreen() {
                                 accessibilityLabel={`Open ${resource.title}`}
                               >
                                 <View style={[styles.helpSupportCardRow, isRtl && styles.rtlRow]}>
-                                  <IconSymbol name="help" color={isDay ? "#445E93" : "#C7B07A"} size={18} />
+                                  <View style={[styles.profilePreparednessResourceIcon, isDay && styles.dayProfileMenuIconBadge]}>
+                                    {resource.faviconUrl && !failedPreparednessResourceIcons[resource.title] ? (
+                                      <Image
+                                        source={{ uri: resource.faviconUrl }}
+                                        resizeMode="contain"
+                                        style={styles.profilePreparednessResourceImage}
+                                        onError={() => setFailedPreparednessResourceIcons((current) => ({ ...current, [resource.title]: true }))}
+                                      />
+                                    ) : (
+                                      <IconSymbol name={resource.iconFallback} color={isDay ? "#445E93" : "#C7B07A"} size={15} />
+                                    )}
+                                  </View>
                                   <View style={styles.profileLayoutBody}>
                                     <Text style={[styles.profileDisplayGroupLabel, styles.externalSupportCategory, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{resource.category}</Text>
                                     <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{resource.title}</Text>
@@ -5283,6 +5489,79 @@ export default function ProfileScreen() {
                           <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                             These links are optional and external. NSN does not collect medical information, provide diagnosis, offer therapy, or run emergency-response services.
                           </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <View onLayout={(event) => registerHelpSectionLayout("preparedness-guidance", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
+                      {renderHelpSectionHeader("preparedness-guidance", "Preparedness & Guidance", "Optional planning notes for weather, transport, access, arriving alone, and quiet exits.", "transport")}
+                      {openHelpSectionIds.includes("preparedness-guidance") ? (
+                        <View style={styles.helpSubsectionBody}>
+                          <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Calm informational notes</Text>
+                            <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                              Optional prototype guidance for planning a meetup at your own pace. These notes are informational only and stay separate from Block & Report.
+                            </Text>
+                          </View>
+                          {preparednessGuidanceCategories.map((category) => {
+                            const expanded = expandedPreparednessCategory === category.label;
+
+                            return (
+                              <TouchableOpacity
+                                key={category.label}
+                                activeOpacity={0.82}
+                                onPress={() => setExpandedPreparednessCategory((current) => current === category.label ? null : category.label)}
+                                style={[styles.profileLayoutOption, isDay && styles.daySoftOption]}
+                                accessibilityRole="button"
+                                accessibilityState={{ expanded }}
+                                accessibilityLabel={category.label}
+                                accessibilityHint={category.description}
+                              >
+                                <IconSymbol name={category.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                                <View style={styles.profileLayoutBody}>
+                                  <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{category.label}</Text>
+                                  <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{category.description}</Text>
+                                  {expanded ? (
+                                    <View style={styles.profilePreparednessDetail}>
+                                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{category.detailTitle}</Text>
+                                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{category.detailIntro}</Text>
+                                      {category.details.map((detail) => (
+                                        <Text key={detail} style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>• {detail}</Text>
+                                      ))}
+                                      {category.resources.map((resource) => (
+                                        <TouchableOpacity
+                                          key={resource.title}
+                                          activeOpacity={0.82}
+                                          onPress={() => openExternalSupportResource(resource.url, resource.title)}
+                                          style={[styles.profilePreparednessResource, isDay && styles.daySoftOption]}
+                                          accessibilityRole="link"
+                                          accessibilityLabel={`Open ${resource.title}`}
+                                        >
+                                          <View style={styles.profilePreparednessResourceHeader}>
+                                            <View style={[styles.profilePreparednessResourceIcon, isDay && styles.dayProfileMenuIconBadge]}>
+                                              {resource.faviconUrl && !failedPreparednessResourceIcons[resource.title] ? (
+                                                <Image
+                                                  source={{ uri: resource.faviconUrl }}
+                                                  resizeMode="contain"
+                                                  style={styles.profilePreparednessResourceImage}
+                                                  onError={() => setFailedPreparednessResourceIcons((current) => ({ ...current, [resource.title]: true }))}
+                                                />
+                                              ) : (
+                                                <IconSymbol name={resource.iconFallback ?? category.icon} color={isDay ? "#445E93" : "#C7B07A"} size={15} />
+                                              )}
+                                            </View>
+                                            <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{resource.title}</Text>
+                                          </View>
+                                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{resource.copy}</Text>
+                                          <Text style={[styles.externalSupportLinkText, isDay && styles.dayTitle]}>Open External Link</Text>
+                                        </TouchableOpacity>
+                                      ))}
+                                    </View>
+                                  ) : null}
+                                </View>
+                                <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayProfileMenuStatusBadge]}>{category.badge}</Text>
+                              </TouchableOpacity>
+                            );
+                          })}
                         </View>
                       ) : null}
                     </View>
@@ -5498,6 +5777,30 @@ export default function ProfileScreen() {
                     {renderDrawerSavedLocallyCloseAction("Demo support draft")}
                   </>
                 ) : null}
+                {profileMenuPanel === "safetyBoundaries" ? (
+                  <>
+                    <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("main")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to Profile menu">
+                      <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Safety & Boundaries</Text>
+                    </TouchableOpacity>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Low-pressure boundaries</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        Calm prototype reminders for consent, comfort, privacy, and pacing. Block & Report remains the separate place for moderation demos.
+                      </Text>
+                    </View>
+                    {safetyBoundaryGuidanceCategories.map((category) => (
+                      <View key={category.label} style={[styles.profileLayoutOption, isDay && styles.daySoftOption]}>
+                        <IconSymbol name={category.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                        <View style={styles.profileLayoutBody}>
+                          <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{category.label}</Text>
+                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{category.description}</Text>
+                          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>{category.detail}</Text>
+                        </View>
+                      </View>
+                    ))}
+                  </>
+                ) : null}
                 {profileMenuPanel === "blockReport" ? (
                   <>
                     <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("main")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to Profile menu">
@@ -5505,9 +5808,9 @@ export default function ProfileScreen() {
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Block & Report</Text>
                     </TouchableOpacity>
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
-                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Safety First</Text>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Moderation tools preview</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Demo only: these show the intended safety controls. Account-based blocking and reports will connect when authentication exists. NSN can provide reporting paths, external support links, and guidance, but it is not emergency-response infrastructure.
+                        Demo only: these show future block, report, and blocked-user review flows. Account-based moderation tools will connect when authentication exists.
                       </Text>
                     </View>
                     {[
@@ -5540,10 +5843,6 @@ export default function ProfileScreen() {
                         </Text>
                       </TouchableOpacity>
                     ))}
-                    <View style={[styles.profileMenuInfoCard, styles.profileMenuWarningCard, isDay && styles.dayProfileMenuWarningCard]}>
-                      <Text style={[styles.profileLayoutTitle, styles.profileMenuWarningTitle, isDay && styles.dayProfileMenuWarningTitle]}>Immediate Danger</Text>
-                      <Text style={[styles.profileLayoutCopy, styles.profileMenuWarningCopy, isDay && styles.dayProfileMenuWarningCopy]}>If you feel unsafe, leave the situation and contact local emergency services.</Text>
-                    </View>
                   </>
                 ) : null}
                 {profileMenuPanel === "layout" ? (
@@ -7054,6 +7353,9 @@ const styles = StyleSheet.create({
   helpSubsectionHeader: { minHeight: 48, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 },
   helpSubsectionHeaderDesktop: { minHeight: 0, paddingBottom: 2 },
   helpSubsectionBody: { gap: 8, marginTop: 8 },
+  helpSearchPanel: { borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 10, marginBottom: 8, gap: 8 },
+  helpSearchResults: { gap: 8 },
+  helpSearchResultRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   helpDesktopLayout: { flexDirection: "row", alignItems: "flex-start", gap: 14 },
   helpDesktopSidebar: { width: 214, borderRadius: 16, borderWidth: 1, borderColor: "#3D567E", backgroundColor: "rgba(255,255,255,0.045)", padding: 10, gap: 8, ...(Platform.OS === "web" ? ({ position: "sticky", top: 0, alignSelf: "flex-start" } as any) : {}) },
   helpDesktopContent: { flex: 1, minWidth: 0, gap: 2 },
@@ -7124,6 +7426,11 @@ const styles = StyleSheet.create({
   profileLayoutStack: { gap: 8 },
   profileWidthStack: { marginTop: 8 },
   profileLayoutOption: { minHeight: 58, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },
+  profilePreparednessDetail: { gap: 6, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: "rgba(184,196,216,0.24)" },
+  profilePreparednessResource: { gap: 3, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 9, paddingVertical: 8 },
+  profilePreparednessResourceHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  profilePreparednessResourceIcon: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: "rgba(184,196,216,0.34)", backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  profilePreparednessResourceImage: { width: 16, height: 16, opacity: 0.88 },
   daySoftOption: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   dayProfileMenuIconBadge: { backgroundColor: "#E8EEF3", borderColor: "#C5D0DA" },
   profileLayoutOptionActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },

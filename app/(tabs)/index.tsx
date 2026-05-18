@@ -1,5 +1,5 @@
 import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Image, type ImageSourcePropType, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { Animated, Image, type ImageSourcePropType, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Location from "expo-location";
@@ -21,14 +21,21 @@ import { getHomeEventPreviewAsset, type HomeEventPreviewAssetKey } from "@/lib/h
 import { getHomeTodayContextLabel } from "@/lib/home-header-context";
 import {
   askAboutMeetupQuestionGroups,
+  arrivingAloneReassuranceItems,
+  conversationStarterPrompts,
   firstMeetupSupportOptions,
   getFirstMeetupSupportSummary,
   getOptionsHubCategoryCards,
   getOptionsHubSection,
   optionsHubSections,
+  practicalMeetupGuidanceItems,
+  preparednessGuidanceCategories,
+  safetyBoundaryGuidanceCategories,
   type AskAboutMeetupQuestion,
+  type ConversationStarterPrompt,
   type FirstMeetupSupportOption,
   type OptionsHubCategoryCard,
+  type PreparednessGuidanceCategory,
   type OptionsHubRow,
   type OptionsHubSectionId,
 } from "@/lib/options-hub";
@@ -671,7 +678,8 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
   const eventTime = formatEventTimeLabel(event.time, { locale, timeFormatPreference });
   const trustFoundationChips = getTrustFoundationEventChips(event, socialEnergyPreference, groupSizePreference, verifiedButPrivate);
   const mediaComfortChip = getMediaComfortEventChip(event, photoRecordingComfortPreferences);
-  const environmentComfortChips = (event.comfortLabels ?? []).slice(0, density === "Compact" ? 2 : 3);
+  const atmosphereChips = (event.atmosphereLabels ?? []).slice(0, density === "Compact" ? 2 : 3);
+  const environmentComfortChips = (event.comfortLabels ?? []).slice(0, density === "Spacious" ? 2 : 1);
   const foodPreferenceChips = getEventFoodPreferenceMatches(event, foodBeveragePreferenceIds, 2);
   const interestPreferenceChips = getEventInterestPreferenceMatches(event, interestPreferenceIds, interestComfortTagsByInterest, 2);
   const eventOutlineStyle =
@@ -743,7 +751,7 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
           <View style={[styles.smallTag, isDay ? styles.daySmallTag : null, ]}>
             <Text style={[styles.smallTagText, isDay ? styles.daySmallTagText : null, isRtl && styles.rtlText]}>{localizedEvent.category}</Text>
           </View>
-          <Text style={[styles.eventTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]} numberOfLines={isCompactLayout ? 3 : 2}>{localizedEvent.title}</Text>
+          <Text style={[styles.eventTitle, isDay ? styles.dayHeadingText : null, isRtl && styles.rtlText]} numberOfLines={isCompactLayout ? 3 : 4}>{localizedEvent.title}</Text>
         </View>
         <View style={[styles.eventMetaRow, isRtl && styles.rtlRow]}>
           <IconSymbol name="location" color={isDay ? "#53677A" : nsnColors.muted} size={12} />
@@ -753,16 +761,19 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
           <IconSymbol name="group" color={isDay ? "#53677A" : nsnColors.muted} size={12} />
           <Text style={[styles.eventMeta, isDay ? styles.dayMutedText : null, isRtl && styles.rtlText]} numberOfLines={2}>{localizedEvent.people}{"  \u00B7  "}{eventTime}</Text>
         </View>
-        <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={layoutPreset.eventDescriptionLines}>{localizedEvent.description}</Text>
+        <Text style={[styles.eventDescription, isDay ? styles.dayText : null, isRtl && styles.rtlText]} numberOfLines={density === "Compact" ? layoutPreset.eventDescriptionLines : undefined}>{localizedEvent.description}</Text>
         <View style={[styles.eventTags, { gap: layoutPreset.chipGap, marginTop: density === "Compact" ? 5 : density === "Spacious" ? 9 : 7 }, density === "Compact" && styles.eventTagsCompact, isRtl && styles.rtlRow]}>
           <EventTag icon="pace" label={`Pace: ${getSocialPaceLabel(localizedEvent.tone)}`} density={density} isDay={isDay} isRtl={isRtl} />
           <EventTag icon={event.noiseLevel === "Quiet" ? "volume.off" : "volume"} label={getNoiseTagLabel(eventNoise.label)} density={density} isDay={isDay} isRtl={isRtl} />
           <EventTag icon="weather" label={localizedEvent.weather} density={density} isDay={isDay} isRtl={isRtl} />
-          {trustFoundationChips.map((chip) => (
-            <EventTag key={chip} icon="pace" label={chip} density={density} isDay={isDay} isRtl={isRtl} />
+          {atmosphereChips.map((chip) => (
+            <EventTag key={`atmosphere-${chip}`} icon="help" label={chip} density={density} isDay={isDay} isRtl={isRtl} />
           ))}
           {environmentComfortChips.map((chip) => (
             <EventTag key={`comfort-${chip}`} icon="help" label={chip} density={density} isDay={isDay} isRtl={isRtl} />
+          ))}
+          {density !== "Compact" && trustFoundationChips.slice(0, 1).map((chip) => (
+            <EventTag key={chip} icon="pace" label={chip} density={density} isDay={isDay} isRtl={isRtl} />
           ))}
           {foodPreferenceChips.map((chip) => (
             <EventTag key={`food-${chip}`} icon="food" label={chip} density={density} isDay={isDay} isRtl={isRtl} />
@@ -1227,7 +1238,9 @@ export default function HomeScreen() {
   const [activeOptionsSectionId, setActiveOptionsSectionId] = useState<OptionsHubSectionId | null>(null);
   const [activeOptionsDetailId, setActiveOptionsDetailId] = useState<string | null>(null);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
-  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | null>(null);
+  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | null>(null);
+  const [expandedPreparednessCategory, setExpandedPreparednessCategory] = useState<PreparednessGuidanceCategory["label"] | null>(null);
+  const [failedPreparednessResourceIcons, setFailedPreparednessResourceIcons] = useState<Record<string, true>>({});
   const showHomeControls = openHomePanel === "filters";
   const showCustomiseHome = openHomePanel === "customize";
   const showNsnSearch = openHomePanel === "search";
@@ -2009,16 +2022,19 @@ export default function HomeScreen() {
         case "ask-about-this-meetup":
           setActiveOptionsDetailId("ask-about-this-meetup");
           return;
+        case "preparedness-guidance":
+          setActiveOptionsDetailId("preparedness-guidance");
+          return;
+        case "safety-boundaries":
+          setActiveOptionsDetailId("safety-boundaries");
+          return;
         case "chat-plus-tools":
           router.push("/(tabs)/chats" as never);
-          return;
-        case "settings-privacy":
-          router.push({ pathname: "/(tabs)/settings", params: { from: "home" } } as never);
           return;
         case "help-support":
           router.push({ pathname: "/(tabs)/profile", params: { menu: "helpSupport" } } as never);
           return;
-        case "report-block-emergency":
+        case "block-report":
           router.push({ pathname: "/(tabs)/profile", params: { menu: "blockReport" } } as never);
           return;
         case "alpha-walkthrough":
@@ -2032,6 +2048,19 @@ export default function HomeScreen() {
           return;
         default:
           showPrototypeUpdate("Demo action only");
+      }
+    };
+
+    const openPreparednessResource = async (url: string | undefined, title: string) => {
+      if (!url) {
+        showPrototypeUpdate(`${title} link coming soon`);
+        return;
+      }
+
+      try {
+        await Linking.openURL(url);
+      } catch {
+        showPrototypeUpdate("External link could not be opened");
       }
     };
 
@@ -2115,10 +2144,56 @@ export default function HomeScreen() {
 
     const renderAskAboutMeetupPanel = () => (
       <View style={[styles.optionsHubInlinePanel, { borderRadius: Math.max(15, homeLayoutPreset.cardRadius - 5), padding: homeLayoutPreset.cardPadding - 2, gap: homeLayoutPreset.mobileStackGap }, isDay && styles.dayLocationResultButton]}>
-        <Text style={[styles.optionsHubInlineTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Ask about this meetup</Text>
+        <Text style={[styles.optionsHubInlineTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Conversation starters</Text>
         <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-          Demo question chips only. For reporting, blocking, leaving, or emergency help, use the existing safety flows.
+          Optional local-only prompts for easier first messages. No matching, scoring, or forced engagement.
         </Text>
+        <View style={[styles.optionsHubChipRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
+          {conversationStarterPrompts.map((question) => {
+            const active = selectedMeetupQuestion === question;
+
+            return (
+              <TouchableOpacity
+                key={question}
+                activeOpacity={0.82}
+                onPress={() => {
+                  setSelectedMeetupQuestion(question);
+                  showPrototypeUpdate("Conversation starter selected");
+                }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={question}
+                style={[styles.optionsHubQuestionChip, homeLayoutSmallActionStyle, isDay && styles.dayLocationResultButton, active && styles.homeControlChipActive]}
+              >
+                <Text style={[styles.optionsHubQuestionText, isDay && styles.dayHeadingText, active && styles.homeControlChipTextActive, isRtl && styles.rtlText]}>{question}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <View style={[styles.optionsHubQuestionGroup, { gap: homeLayoutPreset.chipGap }]}>
+          <Text style={[styles.optionsHubQuestionPhase, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Arriving alone</Text>
+          <View style={[styles.optionsHubChipRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
+            {arrivingAloneReassuranceItems.slice(0, 3).map((item) => (
+              <View key={item.label} style={[styles.optionsHubHelperResult, { borderRadius: Math.max(13, homeLayoutPreset.cardRadius - 7), padding: homeLayoutPreset.cardPadding - 4 }, isDay && styles.dayLocationResultButton]}>
+                <Text style={[styles.optionsHubChoiceTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{item.label}</Text>
+                <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+        <View style={[styles.optionsHubQuestionGroup, { gap: homeLayoutPreset.chipGap }]}>
+          <Text style={[styles.optionsHubQuestionPhase, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Practical notes</Text>
+          <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Informational only: check your own weather, transport, venue, and return-home details before heading out.
+          </Text>
+          <View style={[styles.optionsHubChipRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
+            {practicalMeetupGuidanceItems.slice(0, 4).map((item) => (
+              <View key={item.label} style={[styles.optionsHubQuestionChip, homeLayoutSmallActionStyle, isDay && styles.dayLocationResultButton]}>
+                <Text style={[styles.optionsHubQuestionText, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{item.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
         {askAboutMeetupQuestionGroups.map((group) => (
           <View key={group.phase} style={[styles.optionsHubQuestionGroup, { gap: homeLayoutPreset.chipGap }]}>
             <Text style={[styles.optionsHubQuestionPhase, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{group.title}</Text>
@@ -2155,6 +2230,102 @@ export default function HomeScreen() {
       </View>
     );
 
+    const renderPreparednessGuidancePanel = () => (
+      <View style={[styles.optionsHubInlinePanel, { borderRadius: Math.max(15, homeLayoutPreset.cardRadius - 5), padding: homeLayoutPreset.cardPadding - 2, gap: homeLayoutPreset.mobileStackGap }, isDay && styles.dayLocationResultButton]}>
+        <Text style={[styles.optionsHubInlineTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Preparedness & Guidance</Text>
+        <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+          Optional informational notes for planning calmly. These are separate from reporting, moderation, health care, and urgent-response tools.
+        </Text>
+        <View style={[styles.optionsHubChipRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
+          {preparednessGuidanceCategories.map((category) => {
+            const expanded = expandedPreparednessCategory === category.label;
+
+            return (
+            <TouchableOpacity
+              key={category.label}
+              activeOpacity={0.84}
+              onPress={() => setExpandedPreparednessCategory((current) => current === category.label ? null : category.label)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded }}
+              accessibilityLabel={category.label}
+              accessibilityHint={category.description}
+              style={[styles.optionsHubHelperResult, { borderRadius: Math.max(13, homeLayoutPreset.cardRadius - 7), padding: homeLayoutPreset.cardPadding - 4 }, isDay && styles.dayLocationResultButton]}
+            >
+              <View style={[styles.optionsHubRowHeader, isRtl && styles.rtlRow]}>
+                <View style={[styles.optionsHubIconBadge, isDay && styles.daySectionToggle]}>
+                  <IconSymbol name={category.icon} color={isDay ? "#445E93" : "#C7B07A"} size={16} />
+                </View>
+                <Text style={[styles.optionsHubChoiceTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{category.label}</Text>
+              </View>
+              <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{category.description}</Text>
+              <Text style={[styles.optionsHubInlineMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{category.badge}</Text>
+              {expanded ? (
+                <View style={styles.optionsHubPreparednessDetail}>
+                  <Text style={[styles.optionsHubInlineTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{category.detailTitle}</Text>
+                  <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{category.detailIntro}</Text>
+                  {category.details.map((detail) => (
+                    <Text key={detail} style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>• {detail}</Text>
+                  ))}
+                  {category.resources.map((resource) => (
+                    <TouchableOpacity
+                      key={resource.title}
+                      activeOpacity={0.82}
+                      onPress={() => openPreparednessResource(resource.url, resource.title)}
+                      style={[styles.optionsHubResourceRow, isDay && styles.dayLocationResultButton]}
+                      accessibilityRole="link"
+                      accessibilityLabel={`Open ${resource.title}`}
+                    >
+                      <View style={[styles.optionsHubResourceHeader, isRtl && styles.rtlRow]}>
+                        <View style={[styles.optionsHubResourceIcon, isDay && styles.daySectionToggle]}>
+                          {resource.faviconUrl && !failedPreparednessResourceIcons[resource.title] ? (
+                            <Image
+                              source={{ uri: resource.faviconUrl }}
+                              resizeMode="contain"
+                              style={styles.optionsHubResourceImage}
+                              onError={() => setFailedPreparednessResourceIcons((current) => ({ ...current, [resource.title]: true }))}
+                            />
+                          ) : (
+                            <IconSymbol name={resource.iconFallback ?? category.icon} color={isDay ? "#445E93" : "#C7B07A"} size={15} />
+                          )}
+                        </View>
+                        <Text style={[styles.optionsHubChoiceTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{resource.title}</Text>
+                      </View>
+                      <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{resource.copy}</Text>
+                      <Text style={[styles.optionsHubInlineMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Open External Link</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : null}
+            </TouchableOpacity>
+          );
+          })}
+        </View>
+      </View>
+    );
+
+    const renderSafetyBoundariesPanel = () => (
+      <View style={[styles.optionsHubInlinePanel, { borderRadius: Math.max(15, homeLayoutPreset.cardRadius - 5), padding: homeLayoutPreset.cardPadding - 2, gap: homeLayoutPreset.mobileStackGap }, isDay && styles.dayLocationResultButton]}>
+        <Text style={[styles.optionsHubInlineTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Safety & Boundaries</Text>
+        <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+          Calm prototype reminders for consent, comfort, privacy, and low-pressure participation. Reporting and blocking stay in Block & Report.
+        </Text>
+        <View style={[styles.optionsHubChipRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
+          {safetyBoundaryGuidanceCategories.map((category) => (
+            <View key={category.label} style={[styles.optionsHubHelperResult, { borderRadius: Math.max(13, homeLayoutPreset.cardRadius - 7), padding: homeLayoutPreset.cardPadding - 4 }, isDay && styles.dayLocationResultButton]}>
+              <View style={[styles.optionsHubRowHeader, isRtl && styles.rtlRow]}>
+                <View style={[styles.optionsHubIconBadge, isDay && styles.daySectionToggle]}>
+                  <IconSymbol name={category.icon} color={isDay ? "#445E93" : "#C7B07A"} size={16} />
+                </View>
+                <Text style={[styles.optionsHubChoiceTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{category.label}</Text>
+              </View>
+              <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{category.description}</Text>
+              <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{category.detail}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+
     const renderOptionsHub = () => {
       const activeSection = getOptionsHubSection(activeOptionsSectionId, optionsHubSections);
 
@@ -2171,7 +2342,7 @@ export default function HomeScreen() {
         );
       }
 
-      if (activeOptionsDetailId === "first-meetup-support" || activeOptionsDetailId === "ask-about-this-meetup") {
+      if (activeOptionsDetailId === "first-meetup-support" || activeOptionsDetailId === "ask-about-this-meetup" || activeOptionsDetailId === "preparedness-guidance" || activeOptionsDetailId === "safety-boundaries") {
         return (
           <View style={[styles.optionsHubStack, { gap: homeLayoutPreset.mobileStackGap }]}>
             <TouchableOpacity
@@ -2184,7 +2355,13 @@ export default function HomeScreen() {
               <IconSymbol name={isRtl ? "chevron.right" : "chevron.left"} color={isDay ? "#53677A" : nsnColors.muted} size={16} />
               <Text style={[styles.optionsHubQuestionText, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{activeSection.title}</Text>
             </TouchableOpacity>
-            {activeOptionsDetailId === "first-meetup-support" ? renderFirstMeetupSupportPanel() : renderAskAboutMeetupPanel()}
+            {activeOptionsDetailId === "first-meetup-support"
+              ? renderFirstMeetupSupportPanel()
+              : activeOptionsDetailId === "preparedness-guidance"
+                ? renderPreparednessGuidancePanel()
+                : activeOptionsDetailId === "safety-boundaries"
+                  ? renderSafetyBoundariesPanel()
+                : renderAskAboutMeetupPanel()}
           </View>
         );
       }
@@ -3566,6 +3743,7 @@ const styles = StyleSheet.create({
   optionsHubCategoryCard: { flexGrow: 1, flexShrink: 1, flexBasis: 250, minWidth: 220, borderRadius: 15, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(16,29,49,0.74)", flexDirection: "row", alignItems: "center", gap: 9 },
   optionsHubBackButton: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
   optionsHubSection: { borderRadius: 16, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.04)", overflow: "hidden" },
+  optionsHubRowHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   optionsHubSectionHeader: { minHeight: 58, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 12, paddingVertical: 10 },
   optionsHubIconBadge: { width: 34, height: 34, borderRadius: 13, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center" },
   optionsHubSectionTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
@@ -3589,6 +3767,11 @@ const styles = StyleSheet.create({
   optionsHubQuestionChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "#101D31", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
   optionsHubQuestionText: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15 },
   optionsHubHelperResult: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(114,214,126,0.3)", backgroundColor: "rgba(114,214,126,0.1)", padding: 10 },
+  optionsHubPreparednessDetail: { gap: 6, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: "rgba(184,196,216,0.24)" },
+  optionsHubResourceRow: { gap: 3, borderRadius: 12, borderWidth: 1, borderColor: "rgba(184,196,216,0.28)", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 9, paddingVertical: 8 },
+  optionsHubResourceHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
+  optionsHubResourceIcon: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: "rgba(184,196,216,0.34)", backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  optionsHubResourceImage: { width: 16, height: 16, opacity: 0.88 },
   optionsHubSafetyNote: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, fontWeight: "700" },
   homeControlGroup: { gap: 6 },
   homeControlGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
@@ -3954,9 +4137,9 @@ const styles = StyleSheet.create({
   eventDescription: { color: nsnColors.text, fontSize: 12, lineHeight: 17, marginTop: 2 },
   eventTags: { flexDirection: "row", gap: 6, flexWrap: "wrap", marginTop: 7 },
   eventTagsCompact: { marginTop: 5 },
-  eventTag: { minHeight: 22, flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8 },
+  eventTag: { maxWidth: "100%", minHeight: 22, flexDirection: "row", alignItems: "flex-start", gap: 4, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8 },
   dayEventTag: { backgroundColor: "#F4F7F8", borderWidth: 1, borderColor: "#C5D0DA" },
-  eventTagText: { color: nsnColors.muted, fontSize: 10, lineHeight: 14 },
+  eventTagText: { flexShrink: 1, color: nsnColors.muted, fontSize: 10, lineHeight: 14 },
   livePreview: { width: 82, height: 104, borderRadius: 15, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#081A2F", overflow: "hidden", marginLeft: 6 },
   miniMap: { height: 42, backgroundColor: "#102743", overflow: "hidden", justifyContent: "flex-end", paddingHorizontal: 7, paddingBottom: 5 },
   mapRoad: { position: "absolute", backgroundColor: "rgba(148,163,184,0.28)", borderRadius: 10 },

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { lookupLocalAreaSuggestions } from "./location-lookup";
 import { searchNsnEvents, searchNsnSydneyLocalAreas } from "./nsn-search";
 import { allEvents } from "./nsn-data";
+import { officialSydneySuburbNames, sydneyLocalities } from "./sydney-localities";
 
 describe("NSN local search", () => {
   it("does not show suburb suggestions before the user searches", () => {
@@ -49,6 +50,21 @@ describe("NSN local search", () => {
     expect(northernBeachesResults.map((area) => `${area.label} - ${area.region}`)).toEqual(
       expect.arrayContaining(["Manly - Northern Beaches", "Dee Why - Northern Beaches"])
     );
+  });
+
+  it("includes the official Sydney suburb-name fallback list for broader local search", () => {
+    expect(officialSydneySuburbNames).toHaveLength(660);
+    expect(sydneyLocalities.filter((locality) => locality.kind === "Suburb").length).toBeGreaterThanOrEqual(660);
+
+    expect(searchNsnSydneyLocalAreas("Bankstown Aerodrome")[0]).toMatchObject({
+      label: "Bankstown Aerodrome",
+      region: "Greater Sydney",
+      resultType: "Suburb",
+    });
+    expect(searchNsnSydneyLocalAreas("Len Waters Estate")[0]?.label).toBe("Len Waters Estate");
+    expect(searchNsnSydneyLocalAreas("Nirimba Fields")[0]?.label).toBe("Nirimba Fields");
+    expect(searchNsnSydneyLocalAreas("Wisemans Ferry")[0]?.label).toBe("Wisemans Ferry");
+    expect(searchNsnSydneyLocalAreas("Yowie Bay")[0]?.label).toBe("Yowie Bay");
   });
 
   it("matches meetup activities and venues", () => {

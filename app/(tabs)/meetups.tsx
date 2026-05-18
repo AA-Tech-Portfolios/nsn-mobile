@@ -67,10 +67,10 @@ const meetupsTranslations = {
     upcoming: "Upcoming",
     joined: "Joined",
     suggested: "Suggested",
-    trustRequiredTitle: "Contact Verified required",
-    trustRequiredCopy: "Meetups and private chats open once both people have verified contact details.",
-    reviewSettings: "Review Trust status",
-    reviewTrustStatusHint: "Opens Profile so you can add contact details for chat access.",
+    trustRequiredTitle: "Prototype meetup preview",
+    trustRequiredCopy: "Meetups and private chats are gated by a local demo trust state. No real verification provider or live chat is connected.",
+    reviewSettings: "Review prototype trust",
+    reviewTrustStatusHint: "Opens Profile so you can review local prototype trust details.",
     nextMeetupHint: "Opens the next meetup details and safety information.",
     eventDetailsHint: (title: string) => `Opens details for ${title}.`,
   },
@@ -180,9 +180,9 @@ const meetupsTranslations = {
 
 const meetupsTrustGateTranslations = {
   English: {
-    trustRequiredTitle: "Contact Verified required",
-    trustRequiredCopy: "Meetups and private chats open once both people have verified contact details.",
-    reviewSettings: "Review Trust status",
+    trustRequiredTitle: "Prototype meetup preview",
+    trustRequiredCopy: "Meetups and private chats are gated by a local demo trust state. No real verification provider or live chat is connected.",
+    reviewSettings: "Review prototype trust",
   },
   Japanese: {
     trustRequiredTitle: "連絡先認証が必要です",
@@ -261,9 +261,9 @@ export default function MeetupsScreen() {
             <TouchableOpacity key={event.id} activeOpacity={0.85} style={[styles.meetupCard, isDay && styles.dayCard]} onPress={() => router.push(`/event/${event.id}`)} accessibilityRole="button" accessibilityHint={screenReaderHints ? meetupCopy.eventDetailsHint(localizedEvent.title) : undefined}>
               <View style={[styles.emojiBox, { backgroundColor: event.imageTone }]}><Text style={styles.emoji}>{event.emoji}</Text></View>
               <View style={styles.cardBody}>
-                <Text style={[styles.cardTitle, isDay && styles.dayTitle]} numberOfLines={3}>{localizedEvent.title}</Text>
-                <Text style={[styles.cardMeta, isDay && styles.dayMutedText]} numberOfLines={2}>{event.venue} · {event.time}</Text>
-                <Text style={[styles.cardCopy, isDay && styles.daySuccessText]} numberOfLines={2}>{localizedEvent.people} · {index === 0 ? copy.joined : copy.suggested}</Text>
+                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedEvent.title}</Text>
+                <Text style={[styles.cardMeta, isDay && styles.dayMutedText]}>{event.venue} · {event.time}</Text>
+                <Text style={[styles.cardCopy, isDay && styles.daySuccessText]}>{localizedEvent.people} · {index === 0 ? copy.joined : copy.suggested}</Text>
               </View>
               <Text style={[styles.chevron, isDay && styles.dayMutedText]}>›</Text>
             </TouchableOpacity>

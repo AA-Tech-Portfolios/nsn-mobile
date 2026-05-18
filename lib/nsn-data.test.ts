@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { allEvents, chatSeed, dayEvents, eveningEvents, eventChatSeeds, eventComfortLabelOptions, movieNight, nsnColors, profileVibes } from "./nsn-data";
+import { allEvents, chatSeed, dayEvents, eveningEvents, eventChatSeeds, eventComfortLabelOptions, eventAtmosphereLabelOptions, movieNight, nsnColors, profileVibes } from "./nsn-data";
 
 describe("NSN prototype data", () => {
   it("keeps event identifiers unique and route-safe", () => {
@@ -109,6 +109,29 @@ describe("NSN prototype data", () => {
       expect(event.comfortLabels?.length).toBeGreaterThan(0);
       for (const label of event.comfortLabels ?? []) {
         expect(knownLabels.has(label)).toBe(true);
+      }
+    }
+  });
+
+  it("uses atmosphere labels for venue feel rather than popularity", () => {
+    expect(eventAtmosphereLabelOptions).toEqual(expect.arrayContaining([
+      "Quiet",
+      "Balanced",
+      "Lively",
+      "Cozy",
+      "Small group",
+      "Low-pressure",
+      "Outdoor calm",
+      "Indoor backup",
+      "First-time friendly",
+    ]));
+
+    const forbidden = /trending|hot|popular|score|rank|likes|views/i;
+    for (const event of allEvents) {
+      expect(event.atmosphereLabels?.length).toBeGreaterThan(0);
+      expect(event.atmosphereLabels?.join(" ")).not.toMatch(forbidden);
+      for (const label of event.atmosphereLabels ?? []) {
+        expect(eventAtmosphereLabelOptions).toContain(label);
       }
     }
   });

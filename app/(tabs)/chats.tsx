@@ -11,10 +11,18 @@ import { allEvents, eventChatSeeds, nsnColors, type ChatMessage, type EventItem 
 import { getChatProfilePreview } from "@/lib/chat-profile-preview";
 import {
   askAboutMeetupQuestionGroups,
+  arrivingAloneReassuranceItems,
+  conversationStarterPrompts,
   firstMeetupSupportOptions,
   getFirstMeetupSupportSummary,
+  meetupComfortRoleOptions,
+  practicalMeetupGuidanceItems,
+  quickReplyOptions,
   type AskAboutMeetupQuestion,
+  type ConversationStarterPrompt,
   type FirstMeetupSupportOption,
+  type MeetupComfortRoleOption,
+  type QuickReplyOption,
 } from "@/lib/options-hub";
 import {
   blockUser,
@@ -580,11 +588,11 @@ const chatTranslations = {
     you: "You",
     now: "Now",
     joined: "You joined the group",
-    private: "This chat is only for this meetup.",
+    private: "This prototype chat is only for this meetup preview.",
     placeholder: "Type a message...",
-    disclaimer: "Chat disappears after the meetup.",
+    disclaimer: "Local preview only. No live chat or backend messaging is connected.",
     softExitTitle: "Soft Exit",
-    softExitCopy: "You can step back without making it a big thing. This group not being your group does not mean you are behind.",
+    softExitCopy: "You can leave early, take a quiet break, or step back without making it a big thing. No pressure to talk constantly.",
     softExitQuiet: "Your chat is quiet for now. You can look for another group when you are ready.",
     safetyTitle: "Safety options",
     safetyCopy: "Use these when something feels off. They stay private in this prototype.",
@@ -613,10 +621,10 @@ const chatTranslations = {
     findAnotherGroup: "Find another group",
     findAnotherGroupCopy: "Look for a better fit.",
     reopenOptions: "Reopen chat options",
-    trustRequiredTitle: "Contact Verified required",
-    trustRequiredCopy: "Private chats open only when both people have verified contact details.",
-    reviewSettings: "Review Trust status",
-    reviewTrustStatusHint: "Opens Profile so you can review and add contact verification details.",
+    trustRequiredTitle: "Prototype contact preview",
+    trustRequiredCopy: "Private chats are gated by a local demo trust state. No real verification provider or live private messaging is connected.",
+    reviewSettings: "Review prototype trust",
+    reviewTrustStatusHint: "Opens Profile so you can review local prototype trust details.",
     backToChatChooserHint: "Returns to the chat chooser.",
     openChatListHint: "Opens the list of meetup groups and people you can chat with.",
     safetyOptionsHint: "Opens private safety, report, and block options for this chat.",
@@ -1038,9 +1046,9 @@ const chatTranslations = {
 
 const chatTrustGateTranslations = {
   English: {
-    trustRequiredTitle: "Contact Verified required",
-    trustRequiredCopy: "Private chats open only when both people have verified contact details.",
-    reviewSettings: "Review Trust status",
+    trustRequiredTitle: "Prototype contact preview",
+    trustRequiredCopy: "Private chats are gated by a local demo trust state. No real verification provider or live private messaging is connected.",
+    reviewSettings: "Review prototype trust",
   },
   Japanese: {
     trustRequiredTitle: "連絡先認証が必要です",
@@ -1181,7 +1189,8 @@ export default function ChatsScreen() {
   const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
   const [chatPlusOpen, setChatPlusOpen] = useState(false);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
-  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | null>(null);
+  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
+  const [selectedComfortRoles, setSelectedComfortRoles] = useState<MeetupComfortRoleOption[]>([]);
   const softExitMessage = softExitChoice ? copy.softExitPresets[softExitChoice] : null;
   useEffect(() => {
     if (!requestedEventId || !allEvents.some((event) => event.id === requestedEventId)) return;
@@ -1320,6 +1329,9 @@ export default function ChatsScreen() {
 
       return nextSelection.length > 0 ? nextSelection : ["No extra support"];
     });
+  };
+  const toggleComfortRole = (role: MeetupComfortRoleOption) => {
+    setSelectedComfortRoles((current) => (current.includes(role) ? current.filter((item) => item !== role) : [...current, role]));
   };
 
   const reportConcern = async (reason: SafetyReportReason) => {
@@ -1983,10 +1995,100 @@ export default function ChatsScreen() {
           )}
           {chatPlusOpen ? (
             <View style={[styles.chatPlusPanel, isDay && styles.dayCard]}>
-              <Text style={[styles.chatPlusTitle, isDay && styles.dayTitle]}>Prototype meetup tools</Text>
+              <Text style={[styles.chatPlusTitle, isDay && styles.dayTitle]}>Conversation starters</Text>
               <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>
-                Local helper chips only. Reports, blocks, leaving, or emergency help stay in the safety menu.
+                Optional local helper chips only. They do not score, match, or force engagement.
               </Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Gentle prompts</Text>
+              <View style={styles.chatPlusChipRow}>
+                {conversationStarterPrompts.map((question) => {
+                  const active = selectedMeetupQuestion === question;
+
+                  return (
+                    <TouchableOpacity
+                      key={question}
+                      activeOpacity={0.82}
+                      onPress={() => {
+                        setSelectedMeetupQuestion(question);
+                        setDraft(question);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={question}
+                      accessibilityHint="Adds this optional starter to the composer."
+                      style={[styles.chatPlusQuestionChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                    >
+                      <Text style={[styles.chatPlusQuestionText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{question}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Quick replies</Text>
+              <View style={styles.chatPlusChipRow}>
+                {quickReplyOptions.map((reply) => {
+                  const active = selectedMeetupQuestion === reply;
+
+                  return (
+                    <TouchableOpacity
+                      key={reply}
+                      activeOpacity={0.82}
+                      onPress={() => {
+                        setSelectedMeetupQuestion(reply);
+                        setDraft(reply);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={reply}
+                      accessibilityHint="Adds this optional quick reply to the composer."
+                      style={[styles.chatPlusChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                    >
+                      <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{reply}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Optional comfort roles</Text>
+              <View style={styles.chatPlusChipRow}>
+                {meetupComfortRoleOptions.map((option) => {
+                  const active = selectedComfortRoles.includes(option.label);
+
+                  return (
+                    <TouchableOpacity
+                      key={option.label}
+                      activeOpacity={0.82}
+                      onPress={() => toggleComfortRole(option.label)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      accessibilityLabel={option.label}
+                      accessibilityHint={option.description}
+                      style={[styles.chatPlusChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                    >
+                      <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{option.label}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={[styles.chatPlusMeta, isDay && styles.dayMutedText]}>
+                Roles: {selectedComfortRoles.length ? selectedComfortRoles.join(", ") : "None selected"}
+              </Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Arriving alone</Text>
+              <View style={styles.chatPlusGuidanceList}>
+                {arrivingAloneReassuranceItems.map((item) => (
+                  <View key={item.label} style={[styles.chatPlusGuidanceRow, isDay && styles.daySoftExitAction]}>
+                    <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle]}>{item.label}</Text>
+                    <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>{item.copy}</Text>
+                  </View>
+                ))}
+              </View>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Practical notes</Text>
+              <View style={styles.chatPlusGuidanceList}>
+                {practicalMeetupGuidanceItems.map((item) => (
+                  <View key={item.label} style={[styles.chatPlusGuidanceRow, isDay && styles.daySoftExitAction]}>
+                    <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle]}>{item.label}</Text>
+                    <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>{item.copy}</Text>
+                  </View>
+                ))}
+              </View>
               <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>First meetup support</Text>
               <View style={styles.chatPlusChipRow}>
                 {firstMeetupSupportOptions.map((option) => {
@@ -2215,9 +2317,11 @@ const styles = StyleSheet.create({
   chatPlusChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
   chatPlusQuestionGroup: { gap: 6 },
   chatPlusQuestionChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  chatPlusGuidanceList: { gap: 7 },
+  chatPlusGuidanceRow: { borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 10, paddingVertical: 8, gap: 3 },
   chatPlusChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
-  chatPlusChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
-  chatPlusQuestionText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  chatPlusChipText: { flexShrink: 1, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  chatPlusQuestionText: { flexShrink: 1, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   chatPlusChipTextActive: { color: "#FFFFFF" },
   chatPlusMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15 },
   addButtonActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(80,104,255,0.18)" },

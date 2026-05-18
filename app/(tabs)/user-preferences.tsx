@@ -928,7 +928,7 @@ export default function UserPreferencesScreen() {
         accessibilityState={{ selected: active }}
         accessibilityHint={meta}
       >
-        <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]} numberOfLines={wide ? 2 : 1}>
+        <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]}>
           {chipLabel}
         </Text>
         {meta ? <Text style={[styles.chipMeta, isDay && styles.dayMutedText, active && styles.activeText]} numberOfLines={2}>{meta}</Text> : null}
@@ -1254,7 +1254,7 @@ export default function UserPreferencesScreen() {
                 <View style={styles.cardBody}>
                   <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{item.title}</Text>
                   <Text style={[styles.overviewValue, isDay && styles.dayTitle]}>{item.copy}</Text>
-                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]} numberOfLines={3}>{getOverviewCardMeta(item)}</Text>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{getOverviewCardMeta(item)}</Text>
                 </View>
                 <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={21} />
               </TouchableOpacity>
