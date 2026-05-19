@@ -151,7 +151,7 @@ describe("options hub metadata", () => {
     const blockReport = safetySection?.rows.find((row) => row.title === "Block & Report");
 
     expect(meetupSection?.rows.some((row) => row.title === "Conversation starters" && row.badge === "Demo")).toBe(true);
-    expect(safetySection?.title).toBe("Safety & Boundaries");
+    expect(safetySection?.title).toBe("Support & Safety");
     expect(safetySection?.rows.some((row) => row.title === "Block & Report")).toBe(true);
     expect(safetySection?.rows.some((row) => row.title === "Preparedness & Guidance")).toBe(false);
     expect(safetySection?.rows.find((row) => row.title === "Help & Support")?.description).toMatch(/preparedness guidance/i);
@@ -173,8 +173,15 @@ describe("options hub metadata", () => {
     expect(safetySection?.rows.map((row) => row.title)).toEqual(expect.arrayContaining([
       "Safety & Boundaries",
       "Help & Support",
+      "Support & Resources",
       "Block & Report",
     ]));
+    expect(safetySection?.rows.map((row) => row.title)).toEqual([
+      "Safety & Boundaries",
+      "Help & Support",
+      "Support & Resources",
+      "Block & Report",
+    ]);
 
     const combined = safetyBoundaryGuidanceCategories
       .flatMap((category) => [category.label, category.description, category.detail])

@@ -87,6 +87,7 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="support-guidance/[id]" />
+            <Stack.Screen name="support-resources" />
             <Stack.Screen name="oauth/callback" />
           </Stack>
           <LowLightOverlay />

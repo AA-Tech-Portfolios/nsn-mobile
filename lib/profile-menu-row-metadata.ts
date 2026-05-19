@@ -8,7 +8,8 @@ export type ProfileMenuIcon =
   | "transport"
   | "contact"
   | "location"
-  | "help";
+  | "help"
+  | "heart";
 
 export type UserPreferenceRowKey =
   | "comfort"
@@ -131,5 +132,14 @@ export const profileSupportRowMetadata = {
   title: "Help & Support",
   description: "Get help, send feedback, or suggest improvements.",
   badge: "Demo",
+  chevron: true,
+};
+
+export const profileResourceSupportRowMetadata = {
+  key: "supportResources",
+  icon: "heart" as const,
+  title: "Support & Resources",
+  description: "Explore gentle community, accessibility, wellbeing, and practical life resources.",
+  badge: "Alpha demo",
   chevron: true,
 };

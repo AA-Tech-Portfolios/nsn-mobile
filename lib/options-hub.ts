@@ -7,6 +7,7 @@ type OptionsHubIcon =
   | "contact"
   | "location"
   | "help"
+  | "heart"
   | "group"
   | "message"
   | "shield"
@@ -163,8 +164,8 @@ export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "safetyPrivacy",
     icon: "shield",
-    title: "Safety & Boundaries",
-    description: "Reporting, blocking, privacy, and boundary controls.",
+    title: "Support & Safety",
+    description: "Warm support, resources, reporting, privacy, and boundary controls.",
     rows: [
       row({
         id: "safety-boundaries",
@@ -179,6 +180,13 @@ export const optionsHubSections: OptionsHubSection[] = [
         title: "Help & Support",
         description: "Open non-urgent help, outside support, and preparedness guidance.",
         badge: "Support",
+      }),
+      row({
+        id: "support-resources",
+        icon: "heart",
+        title: "Support & Resources",
+        description: "Prototype community, accessibility, wellbeing, and practical life resources.",
+        badge: "Alpha demo",
       }),
       row({
         id: "block-report",

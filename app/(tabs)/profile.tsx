@@ -61,7 +61,7 @@ import {
   type ProfileDrawerPanel,
   type ProfilePreferenceSection,
 } from "@/lib/alpha-readiness-controls";
-import { getUserPreferenceRowDescription, profileSupportRowMetadata, userPreferenceRowMetadata, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
+import { getUserPreferenceRowDescription, profileResourceSupportRowMetadata, profileSupportRowMetadata, userPreferenceRowMetadata, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
 import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
@@ -3804,7 +3804,7 @@ export default function ProfileScreen() {
                       </TouchableOpacity>
                     ))}
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
-                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Safety & Support</Text>
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Support & Safety</Text>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("notifications")}
@@ -3838,6 +3838,30 @@ export default function ProfileScreen() {
                         {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{profileSupportRowMetadata.description}</Text> : null}
                       </View>
                       {!compactUserOptionRows ? <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{profileSupportRowMetadata.badge}</Text> : null}
+                      <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      onPress={() => {
+                        setShowProfileMenu(false);
+                        router.push("/support-resources" as any);
+                      }}
+                      style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Support and Resources"
+                    >
+                      {compactUserOptionRows ? (
+                        <IconSymbol name={profileResourceSupportRowMetadata.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                      ) : (
+                      <View style={[styles.profileMenuIconBadge, isDay && styles.dayProfileMenuIconBadge]}>
+                        <IconSymbol name={profileResourceSupportRowMetadata.icon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
+                      </View>
+                      )}
+                      <View style={styles.profileMenuItemBody}>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{profileResourceSupportRowMetadata.title}</Text>
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{profileResourceSupportRowMetadata.description}</Text> : null}
+                      </View>
+                      {!compactUserOptionRows ? <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{profileResourceSupportRowMetadata.badge}</Text> : null}
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     <TouchableOpacity

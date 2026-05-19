@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { getUserPreferenceRowDescription, profileSupportRowMetadata, userPreferenceRowMetadata } from "./profile-menu-row-metadata";
+import {
+  getUserPreferenceRowDescription,
+  profileResourceSupportRowMetadata,
+  profileSupportRowMetadata,
+  userPreferenceRowMetadata,
+} from "./profile-menu-row-metadata";
 
 describe("profile menu row metadata", () => {
   it("keeps every user preference category row visually complete", () => {
@@ -19,6 +24,8 @@ describe("profile menu row metadata", () => {
     expect(userPreferenceRowMetadata.find((row) => row.key === "contact")?.icon).toBe("contact");
     expect(userPreferenceRowMetadata.find((row) => row.key === "location")?.icon).toBe("location");
     expect(profileSupportRowMetadata.icon).toBe("help");
+    expect(profileResourceSupportRowMetadata.icon).toBe("heart");
+    expect(profileResourceSupportRowMetadata.title).toBe("Support & Resources");
   });
 
   it("can switch preference row copy between simple and detailed text", () => {

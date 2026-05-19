@@ -2008,6 +2008,9 @@ export default function HomeScreen() {
         case "help-support":
           router.push({ pathname: "/(tabs)/profile", params: { menu: "helpSupport" } } as never);
           return;
+        case "support-resources":
+          router.push("/support-resources" as never);
+          return;
         case "block-report":
           router.push({ pathname: "/(tabs)/profile", params: { menu: "blockReport" } } as never);
           return;
