@@ -12,7 +12,7 @@ import { allEvents, dayEvents, eveningEvents, type EventItem, noiseLevelOptions,
 import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAreaSuggestion, searchNsnEvents } from "@/lib/nsn-search";
 import { getComfortEventScore, isNearbyEvent, isSmallGroupEvent, isWeatherSafeEvent } from "@/lib/home-view-filters";
 import { prioritizeEventsForComfort } from "@/lib/softhello-mvp";
-import { formatEventTimeLabel, formatPreferredDate, formatPreferredTime, formatTemperatureLabel } from "@/lib/regional-format";
+import { formatEventTimeLabel, formatPreferredDate, formatTemperatureLabel } from "@/lib/regional-format";
 import { getEventFoodPreferenceMatches } from "@/lib/preferences/food-preferences";
 import { getEventInterestPreferenceMatches } from "@/lib/preferences/interests";
 import { getHomePreferenceDisclosure } from "@/lib/progressive-disclosure";
@@ -1180,7 +1180,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeFitToScreen, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, clockDisplayStyle, showDigitalTimeWithAnalog, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, largerTouchTargets, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeFitToScreen, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, largerTouchTargets, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -1709,9 +1709,12 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-  const timer = setInterval(() => { setNow(new Date()); }, batterySaver && clockDisplayStyle !== "Analog" ? 60 * 1000 : 1000);
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 60 * 1000);
 
-  return () => clearInterval(timer);}, [batterySaver, clockDisplayStyle]
+    return () => clearInterval(timer);
+  }, []
   );
 
   useEffect(() => {
@@ -1719,34 +1722,14 @@ export default function HomeScreen() {
     setHighlightedEventId(displayedEvents[0]?.id ?? null);
   }, [displayedEvents, highlightedEventId]);
 
-  const localTimeZone = timeContextMode === "Automatic device time" ? undefined : timezone.timeZone;
   const formattedDate = formatPreferredDate(now, {
     locale: "en-AU",
     timeZone: timezone.timeZone,
     dateFormatPreference: "Device / locale",
     showWeekday: true,
   });
-  const formattedTime = formatPreferredTime(now, {
-    locale,
-    timeZone: localTimeZone,
-    timeFormatPreference,
-  });
-  const clockParts = new Intl.DateTimeFormat("en-AU", {
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
-    hour12: false,
-    ...(localTimeZone ? { timeZone: localTimeZone } : {}),
-  }).formatToParts(now);
-  const clockHour = Number(clockParts.find((part) => part.type === "hour")?.value ?? now.getHours());
-  const clockMinute = Number(clockParts.find((part) => part.type === "minute")?.value ?? now.getMinutes());
-  const clockSecond = Number(clockParts.find((part) => part.type === "second")?.value ?? now.getSeconds());
-  const analogHourRotation = `${(clockHour % 12) * 30 + clockMinute * 0.5 + clockSecond / 120}deg`;
-  const analogMinuteRotation = `${clockMinute * 6 + clockSecond * 0.1}deg`;
-  const analogSecondRotation = `${clockSecond * 6}deg`;
-  const shouldShowDigitalClock = clockDisplayStyle !== "Analog" || showDigitalTimeWithAnalog;
 
-  // ===== LIVE TIME =====
+  // ===== LOCAL TIME CONTEXT =====
   const getHourForTimeZone = (timeZone?: string) =>
     Number(
       new Intl.DateTimeFormat(locale, {
@@ -2744,7 +2727,7 @@ export default function HomeScreen() {
     };
 
     return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={styles.screen}>
+    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={[styles.screen, isDay && styles.dayScreen]}>
       <Animated.View style={[styles.animatedScreen, { backgroundColor: animatedScreenColor }]}>
         <Animated.View
           style={[
@@ -2870,39 +2853,6 @@ export default function HomeScreen() {
             <View style={[styles.localMetaRow, shouldAutoFitDashboard && styles.localMetaRowAutoFit, isRtl && styles.rtlRow]}>
               <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={15} />
               <Text style={[styles.localMetaText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{timezone.label}, {timezone.country}</Text>
-            </View>
-            <View
-              style={[styles.localTimePill, { minHeight: homeLayoutPreset.tapTarget, paddingVertical: homeLayoutPreset.chipPaddingVertical, paddingHorizontal: homeLayoutPreset.chipPaddingHorizontal }, shouldAutoFitDashboard && styles.localTimePillAutoFit, isDay && styles.dayLocalTimePill]}
-              accessible
-              accessibilityRole="text"
-              accessibilityLabel={`Current time: ${formattedTime}`}
-            >
-              {clockDisplayStyle === "Analog" ? (
-                <View style={[styles.analogClock, isDay && styles.dayAnalogClock]} accessible={false}>
-                  {Array.from({ length: 12 }).map((_, tickIndex) => (
-                    <View key={tickIndex} style={[styles.analogClockTickRail, { transform: [{ rotate: `${tickIndex * 30}deg` }] }]}>
-                      <View style={[styles.analogClockTick, tickIndex % 3 === 0 && styles.analogClockHourTick, isDay && styles.dayAnalogClockTick]} />
-                    </View>
-                  ))}
-                  <Text style={[styles.analogClockNumber, styles.analogClockNumber12, isDay && styles.dayAnalogClockNumber]}>12</Text>
-                  <Text style={[styles.analogClockNumber, styles.analogClockNumber3, isDay && styles.dayAnalogClockNumber]}>3</Text>
-                  <Text style={[styles.analogClockNumber, styles.analogClockNumber6, isDay && styles.dayAnalogClockNumber]}>6</Text>
-                  <Text style={[styles.analogClockNumber, styles.analogClockNumber9, isDay && styles.dayAnalogClockNumber]}>9</Text>
-                  <View style={[styles.analogHandRail, { transform: [{ rotate: analogHourRotation }] }]}>
-                    <View style={[styles.analogHandStem, styles.analogHandHour, isDay && styles.dayAnalogHand]} />
-                  </View>
-                  <View style={[styles.analogHandRail, { transform: [{ rotate: analogMinuteRotation }] }]}>
-                    <View style={[styles.analogHandStem, styles.analogHandMinute, isDay && styles.dayAnalogHand]} />
-                  </View>
-                  <View style={[styles.analogHandRail, { transform: [{ rotate: analogSecondRotation }] }]}>
-                    <View style={[styles.analogHandStem, styles.analogHandSecond]} />
-                  </View>
-                  <View style={[styles.analogClockDot, isDay && styles.dayAnalogClockDot]} />
-                </View>
-              ) : null}
-              {shouldShowDigitalClock ? (
-                <Text style={[styles.localTimeText, isDay && styles.dayHeadingText]}>{formattedTime}</Text>
-              ) : null}
             </View>
           </View>
         </View>
@@ -3640,6 +3590,7 @@ export default function HomeScreen() {
 // Styling
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#0B1626" },
+  dayScreen: { backgroundColor: "#E8EDF2" },
   animatedScreen: { flex: 1 },
   scrollSurface: { flex: 1, backgroundColor: "transparent" },
   scrollSurfaceLocked: { overflow: "hidden" },
@@ -3667,7 +3618,6 @@ const styles = StyleSheet.create({
   dayPillActive: { backgroundColor: "#536C9E", borderColor: "#536C9E", },
   dayPillText: { color: "#0B1220", },
   dayPillTextActive: { color: "#FFFFFF", },
-  dayScreen: { backgroundColor: "#E8EDF2" },
   dayText: { color: "#1E252C", },
   dayNoiseLevelItem: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   dayNoiseLevelItemActive: { backgroundColor: "#DFE8EF", borderColor: "#6F87A1" },
@@ -3702,31 +3652,6 @@ const styles = StyleSheet.create({
   localMetaRow: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 5 },
   localMetaRowAutoFit: { marginTop: 0 },
   localMetaText: { color: nsnColors.muted, fontSize: 14, fontWeight: "800", lineHeight: 19, textAlign: "center" },
-  localTimePill: { alignSelf: "center", minHeight: 42, flexDirection: "row", gap: 12, borderRadius: 28, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#132B52", paddingHorizontal: 12, paddingVertical: 9, alignItems: "center", justifyContent: "center", marginTop: 10 },
-  localTimePillAutoFit: { marginTop: 0 },
-  dayLocalTimePill: { backgroundColor: "#E4ECF4", borderColor: "#B7C7DD" },
-  localTimeText: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 23 },
-  localDateText: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 7, textAlign: "center" },
-  analogClock: { width: 96, height: 96, borderRadius: 48, borderWidth: 4, borderColor: "#C7B07A", alignItems: "center", justifyContent: "center", backgroundColor: "#F8FAFC" },
-  dayAnalogClock: { borderColor: "#284E92", backgroundColor: "#FFFFFF" },
-  analogClockNumber: { position: "absolute", color: "#3F4754", fontSize: 16, fontWeight: "900", lineHeight: 19, zIndex: 2 },
-  dayAnalogClockNumber: { color: "#284E92" },
-  analogClockNumber12: { top: 8, alignSelf: "center" },
-  analogClockNumber3: { right: 10, top: 38 },
-  analogClockNumber6: { bottom: 7, alignSelf: "center" },
-  analogClockNumber9: { left: 10, top: 38 },
-  analogClockTickRail: { position: "absolute", left: 0, top: 0, width: 96, height: 96, alignItems: "center" },
-  analogClockTick: { width: 3, height: 9, borderRadius: 2, backgroundColor: "#3F4754", marginTop: 7 },
-  analogClockHourTick: { width: 5, height: 15, marginTop: 5 },
-  dayAnalogClockTick: { backgroundColor: "#284E92" },
-  analogClockDot: { position: "absolute", width: 13, height: 13, borderRadius: 7, borderWidth: 3, borderColor: "#D8342A", backgroundColor: "#FFFFFF", zIndex: 5 },
-  dayAnalogClockDot: { backgroundColor: "#FFFFFF", borderColor: "#D8342A" },
-  analogHandRail: { position: "absolute", left: 0, top: 0, width: 96, height: 96, zIndex: 3 },
-  analogHandStem: { position: "absolute", left: 45, bottom: 47, borderRadius: 999, backgroundColor: "#3F4754" },
-  analogHandHour: { left: 44.5, width: 7, height: 29 },
-  analogHandMinute: { left: 45.5, width: 5, height: 39 },
-  analogHandSecond: { left: 47, width: 2, height: 41, backgroundColor: "#D8342A" },
-  dayAnalogHand: { backgroundColor: "#284E92" },
   headerPlaceholderCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
   homeSearchEntryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12 },
   homeAlphaGuideCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", marginBottom: 12 },

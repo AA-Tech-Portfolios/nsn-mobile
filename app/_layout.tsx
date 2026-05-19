@@ -21,9 +21,11 @@ import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 
 import { AppSettingsProvider, useAppSettings } from "@/lib/app-settings";
+import { nsnColors } from "@/lib/nsn-data";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
+const NSN_DAY_BACKGROUND = "#E8EDF2";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -148,12 +150,13 @@ function OnboardingGate() {
 
 function AppStatusBar() {
   const { isNightMode } = useAppSettings();
+  const backgroundColor = isNightMode ? nsnColors.background : NSN_DAY_BACKGROUND;
 
   return (
     <StatusBar
-      backgroundColor="transparent"
+      backgroundColor={backgroundColor}
       style={isNightMode ? "light" : "dark"}
-      translucent
+      translucent={false}
     />
   );
 }
