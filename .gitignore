@@ -59,6 +59,11 @@ app-example
 # Logs
 logs
 *.log
+.tmp-*
+
+# Local tunnel config
+ngrok.yml
+.ngrok2/
 
 # OS
 Thumbs.db

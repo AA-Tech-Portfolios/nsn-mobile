@@ -3,5 +3,8 @@ allowBuilds:
   ngrok: true
   unrs-resolver: true
 overrides:
+  "@esbuild-kit/esm-loader": npm:tsx@4.21.0
+  glob: 13.0.6
+  rimraf: 6.1.3
   uuid: 11.1.0
 storeDir: .pnpm-store
