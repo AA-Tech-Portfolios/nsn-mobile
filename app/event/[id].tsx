@@ -471,6 +471,7 @@ const eventTranslations = {
     meetingSafety: "Prototype meetup readiness",
     softExitTitle: "You can change your mind",
     softExitCopy: "You can leave early, take a quiet break, step back from the chat, or come back later. No pressure to talk constantly.",
+    ctaReassurance: "Arrive solo, leave anytime, or just listen first.",
     verifyBeforeMeeting: "Verify before meeting",
     openMeetupChat: "Open Meetup Chat",
     openMeetupChatHint: "Opens the meetup group chat.",
@@ -1433,6 +1434,8 @@ export default function EventDetailsScreen() {
           <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.softExitCopy}</Text>
         </View>
 
+        <Text style={[styles.ctaReassurance, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventCopy.ctaReassurance}</Text>
+
         <TouchableOpacity
           activeOpacity={0.88}
           onPress={handleJoin}
@@ -1586,6 +1589,7 @@ const styles = StyleSheet.create({
   daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   softExitTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, marginBottom: 4 },
   softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
+  ctaReassurance: { color: nsnColors.muted, fontSize: 13, fontWeight: "800", lineHeight: 19, textAlign: "center", marginBottom: 9 },
   safetyPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
   safetyHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 6 },
   safetyTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },

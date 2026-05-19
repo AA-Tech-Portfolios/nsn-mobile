@@ -52,10 +52,10 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 
 - [ ] Add Guides or buddy-mode support to help first-time attendees feel oriented without creating pressure
 - [ ] Add host templates for common meetup types
-- [ ] Add conversation starter cards and pre-made replies for low-pressure chats and meetups
+- [x] Add conversation starter cards and pre-made replies for low-pressure chats and meetups (implemented in prototype form as local-only helper chips)
 - [ ] Gather tester feedback on whether gentle friendship/dating guidance feels reassuring or unnecessary
 - [ ] Gather tester feedback on whether belonging/support guidance feels reassuring or too personal
-- [ ] Explore low-pressure first-meetup guidance
+- [x] Explore low-pressure first-meetup guidance (implemented in prototype form through first-meetup support, arriving-alone reassurance, and calm meetup guidance copy)
 - [ ] Future idea, not production-ready: explore Pre-meetups as an optional comfort step before larger meetups, where users can choose a casual public first meeting such as a cafe, set their own pace, and indicate whether they would feel safer starting 1:1 or with a small group
 - [ ] Explore consent-first buddy/guide systems
 - [ ] Explore buddy/guide support for first-time attendees
@@ -78,7 +78,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 ## Safety, Privacy & Trust
 
 - [x] Add compact alpha Community Guidelines wording for photo/video consent and no sharing private chats, profiles, screenshots, or meetup details without consent
-- [ ] Add event media comfort labels and a future reporting flow for privacy, photo, video, or screenshot violations
+- [x] Add event media comfort labels and prototype privacy/photo/video/screenshot reporting reminders (media labels and local report-shaped flows exist; production reporting remains deferred)
 - [ ] Add 18+ compliance copy and safeguards beyond local age entry
 - [ ] Decide the real verification provider strategy and UX handoff before claiming production verification
 - [ ] Add a real trust-state backend before treating verification or privacy gates as production systems
@@ -99,14 +99,14 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 ## Meetup Experience
 
 - [ ] Add gentle RSVP states such as coming, interested, deciding later, needing encouragement, running late, or unable to make it
-- [ ] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, first-time attendee, or guide request
+- [x] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, first-time attendee, or guide request (implemented in prototype form as local-only role chips)
 - [ ] Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
 - [ ] Explore Pre-meetup UX only as a future safety/social comfort feature: support gradual trust before group activities, keep first meetings public and casual, make 1:1 or small-group comfort optional, and avoid creating pressure to prove readiness for the main meetup
 - [ ] Explore lightweight emergency-awareness guide pages covering staying calm, contacting local emergency services when someone is in immediate danger, asking venue staff for help, locating exits, water, restrooms, and open-air spaces, and leaving/rejoining meetups without stigma
 - [ ] Explore basic first-aid awareness links to external resources such as Australian Red Cross First Aid app, Healthdirect Australia first aid guidance, and St John Ambulance resources, with clear "not emergency medical advice" wording
 - [ ] Add optional outbreak/illness comfort guidance around personal space, staying home when unwell, open-air venues, and respectful non-contact preferences without collecting health status or medical details
 - [ ] Explore gentle event/environment awareness for weather disruption, bushfire/flood awareness, transport disruption guidance, large-event crowd intensity, and quieter meetup alternatives nearby, with clear "guidance only" framing and no real-time emergency claims
-- [ ] Add future wording patterns for meetup safety support: optional check-in, quiet reassurance, leave anytime, let trusted people know you got home safely, and guidance only
+- [x] Add future wording patterns for meetup safety support: optional check-in, quiet reassurance, leave anytime, let trusted people know you got home safely, and guidance only (implemented in prototype form as quiet-exit, arriving-alone, and practical guidance copy)
 - [ ] Add lightweight transportation and routing support with nearby stops, estimated travel time, suggested arrival windows, selected-event map focus, and links out to maps
 - [ ] Add route-aware recommendations that combine transport comfort, local area preference, venue accessibility, selected event timing, and external map handoff options
 - [ ] Add stronger venue accessibility metadata for step-free routes, parking, lighting, quietness, public transport proximity, dietary safety, quiet seating, alcohol-free comfort, and cafe suitability

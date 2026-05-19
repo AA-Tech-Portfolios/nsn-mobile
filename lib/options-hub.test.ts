@@ -101,6 +101,8 @@ describe("options hub metadata", () => {
       "Happy to chat",
       "Still warming up",
       "I might join closer to the time",
+      "Deciding later",
+      "Need encouragement",
     ]));
     expect([...conversationStarterPrompts, ...quickReplyOptions].join(" ").toLowerCase()).not.toMatch(/ai|score|match|rank|compatib/);
   });

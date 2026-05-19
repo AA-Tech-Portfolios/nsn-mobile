@@ -316,6 +316,8 @@ export const quickReplyOptions = [
   "Happy to chat",
   "Still warming up",
   "I might join closer to the time",
+  "Deciding later",
+  "Need encouragement",
 ] as const;
 
 export type QuickReplyOption = (typeof quickReplyOptions)[number];
