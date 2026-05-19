@@ -6,7 +6,7 @@ North Shore Nights (NSN) is a Sydney/North Shore alpha prototype for low-pressur
 
 ## Current Prototype Status
 
-The active app identity is **North Shore Nights**, focused on Sydney's North Shore and Australia/Sydney local context. The prototype currently supports local onboarding, Home discovery, event details, meetup/chat previews, profile/privacy settings, comfort preferences, and saved-local prototype states.
+The active app identity is **North Shore Nights**, focused on Sydney's North Shore and Australia/Sydney local context. The prototype currently supports local onboarding, Home discovery, event details, meetup/chat previews, profile/privacy settings, comfort preferences, a prototype Support & Resources surface, and saved-local prototype states.
 
 For the real current state, including what is working, what is mocked, and what is not implemented yet, see [`docs/current-state.md`](docs/current-state.md).
 
@@ -24,6 +24,7 @@ NSN-specific docs:
 - [`docs/nsn-alpha-readiness.md`](docs/nsn-alpha-readiness.md) - readiness requirements for controlled alpha testing.
 - [`docs/alpha-tester-guide.md`](docs/alpha-tester-guide.md) - human-facing guide for trusted controlled alpha testers.
 - [`docs/alpha-tester-feedback-checklist.md`](docs/alpha-tester-feedback-checklist.md) - short feedback questions for alpha walkthroughs and debriefs.
+- [`docs/community-support-vision.md`](docs/community-support-vision.md) - support, resources, gentle independence, accessibility, and boundary principles.
 - [`docs/brand-systems.md`](docs/brand-systems.md) - NSN local visual identity and future SoftHello brand context.
 - [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes.
 - [`todo.md`](todo.md) - active implementation roadmap.
@@ -60,6 +61,7 @@ SoftHello remains the future/global direction. These docs are retained for produ
 - Meetups and chat prototype screens with calm alpha guidance.
 - Five-stage local onboarding with adult age validation, local-area selection, comfort preferences, and profile preview controls.
 - Profile, vibes, optional photo, blur controls, visibility settings, contact preferences, food/interests, saved places, and user preference panels.
+- Support & Resources prototype with expandable demo placeholders for life skills, community connection, accessibility, animals and wildlife, and crisis/emergency pathways.
 - Settings for language, translation language, accessibility, appearance, regional formats, notification preferences, account pause/delete demo actions, and privacy controls.
 - NSN and SoftHello brand theme support for design exploration, with NSN as the active identity.
 

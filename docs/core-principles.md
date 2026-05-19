@@ -34,3 +34,23 @@ Users may verify privately. In the current NSN prototype, verification is only a
 No follower counts.
 No like counts.
 No swipe streaks.
+
+## 8. Gentle Independence
+
+Support should help users take small, self-directed steps without pressure, shame, or productivity language.
+
+## 9. Accessibility Is Core Trust
+
+Accessibility, disability inclusion, sensory comfort, language access, and practical constraints are part of trust-first design, not optional polish.
+
+## 10. Dignity Before Disclosure
+
+Users should not need to disclose loneliness, disability, anxiety, trauma, finances, or support needs to receive calmer and more respectful UX.
+
+## 11. Supportive Community, Not Social Performance
+
+SoftHello and NSN should make room for quiet participation, slow connection, practical wellbeing support, and leaving or trying later.
+
+## 12. Clear Support Boundaries
+
+The app may surface prototype resources and preparedness guidance, but it must not present itself as therapy, emergency services, crisis intervention, professional advice, or a replacement for qualified support.
