@@ -56,6 +56,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Gather tester feedback on whether gentle friendship/dating guidance feels reassuring or unnecessary
 - [ ] Gather tester feedback on whether belonging/support guidance feels reassuring or too personal
 - [ ] Explore low-pressure first-meetup guidance
+- [ ] Future idea, not production-ready: explore Pre-meetups as an optional comfort step before larger meetups, where users can choose a casual public first meeting such as a cafe, set their own pace, and indicate whether they would feel safer starting 1:1 or with a small group
 - [ ] Explore consent-first buddy/guide systems
 - [ ] Explore buddy/guide support for first-time attendees
 - [ ] Explore consent-first comfort gestures only after community guidelines and safety review
@@ -100,6 +101,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Add gentle RSVP states such as coming, interested, deciding later, needing encouragement, running late, or unable to make it
 - [ ] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, first-time attendee, or guide request
 - [ ] Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
+- [ ] Explore Pre-meetup UX only as a future safety/social comfort feature: support gradual trust before group activities, keep first meetings public and casual, make 1:1 or small-group comfort optional, and avoid creating pressure to prove readiness for the main meetup
 - [ ] Explore lightweight emergency-awareness guide pages covering staying calm, contacting local emergency services when someone is in immediate danger, asking venue staff for help, locating exits, water, restrooms, and open-air spaces, and leaving/rejoining meetups without stigma
 - [ ] Explore basic first-aid awareness links to external resources such as Australian Red Cross First Aid app, Healthdirect Australia first aid guidance, and St John Ambulance resources, with clear "not emergency medical advice" wording
 - [ ] Add optional outbreak/illness comfort guidance around personal space, staying home when unwell, open-air venues, and respectful non-contact preferences without collecting health status or medical details

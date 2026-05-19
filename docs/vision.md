@@ -26,6 +26,8 @@ The north star is simple:
 
 SoftHello should make trust feel possible before interaction begins. It should make privacy feel normal, not suspicious. It should make quiet days feel allowed.
 
+Future ideas such as Pre-meetups should follow the same philosophy. A first hello can be smaller than the main plan: a public cafe, a casual shared place, a 1:1 introduction, or a few people meeting gently before a larger group activity. These ideas are not production-ready features yet; they belong only if they give users more control over pacing, reduce anxiety, and help trust form gradually without making anyone perform readiness.
+
 The goal is not to maximize attention.
 
 The goal is to help people feel human with each other.
