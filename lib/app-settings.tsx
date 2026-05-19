@@ -1088,7 +1088,7 @@ export const getLifeContextFreshnessLabel = (updatedAt?: string | null, now = ne
   return { label: "May be outdated", stale: true };
 };
 
-type OnboardingSnapshot = {
+export type OnboardingSnapshot = {
   hasCompletedOnboarding: boolean;
   accountPaused?: boolean;
   accountPauseTimeline?: AccountPauseTimeline;

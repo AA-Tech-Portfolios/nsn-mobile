@@ -11,65 +11,33 @@ const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"])
 
 const walkthroughSteps = [
   {
-    title: "Welcome to NSN",
+    title: "Start gently",
     eyebrow: "Prototype",
-    copy: "North Shore Nights is a calm local prototype for low-pressure meetups around Sydney's North Shore. It is for trying the feel of the experience, not for live public matching yet.",
-    actionLabel: "Start with local area",
+    copy: "NSN is a Sydney/North Shore alpha for trying low-pressure meetup ideas. Nothing here joins a real public meetup yet.",
+    actionLabel: "Open Home",
     route: "/(tabs)",
     icon: "low-pressure",
   },
   {
-    title: "Search suburbs, regions, and meetups",
-    eyebrow: "For alpha testing",
-    copy: "Use Search NSN on Home to look up a Sydney suburb or broader region, then switch to Meetups when you want activity ideas like coffee, walks, or board games. Profile uses the same location picker.",
-    actionLabel: "Open Home",
-    route: "/(tabs)",
-    icon: "location",
-  },
-  {
-    title: "Review comfort and privacy",
-    eyebrow: "Saved locally",
-    copy: "Settings & Privacy lets you try Basic or Advanced controls, profile blur, visibility, battery saver, low light mode, and prototype safety states. Some account and safety actions are demo-only.",
-    actionLabel: "Open Settings & Privacy",
-    route: "/(tabs)/settings",
-    icon: "visibility",
-  },
-  {
-    title: "Try trust foundations",
-    eyebrow: "Phase 1 prototype",
-    copy: "Set progressive visibility, social energy, communication style, group size comfort, and a verified-but-private trust state. These controls are local prototype signals until real verification and matching systems exist.",
-    actionLabel: "Open comfort & trust",
-    route: "/(tabs)/settings",
-    icon: "shield",
-  },
-  {
-    title: "Browse meetups",
+    title: "Browse one meetup",
     eyebrow: "Demo meetups",
-    copy: "Browse small plans like coffee, walks, films, games, and quiet indoor options. Nothing joins a real public meetup during alpha testing.",
+    copy: "Look for a calm activity like coffee, a walk, or a quiet indoor plan. Focus on whether the wording feels safe and clear.",
     actionLabel: "Browse meetups",
     route: "/(tabs)/meetups",
     icon: "calendar",
   },
   {
-    title: "Open alerts and notifications",
-    eyebrow: "Demo only",
-    copy: "Alerts show how weather-aware reminders and gentle meetup prompts may work later. Notification snooze is labelled as a prototype setting.",
-    actionLabel: "Open Alerts",
-    route: "/(tabs)/notifications",
-    icon: "bell",
-  },
-  {
-    title: "Visit your profile",
-    eyebrow: "Local profile",
-    copy: "Try comfort preferences, profile preview, visibility controls, and the user menu. Trust, verification, report, and account features are clearly labelled while unfinished.",
+    title: "Check comfort controls",
+    eyebrow: "Saved locally",
+    copy: "Review Profile for privacy, comfort, local area, and prototype trust status. These settings stay local in the alpha.",
     actionLabel: "Open Profile",
     route: "/(tabs)/profile",
     icon: "person.fill",
   },
   {
-    title: "Ready to explore",
+    title: "Explore at your pace",
     eyebrow: "No pressure",
-    copy: "Take it slowly. You can browse, adjust privacy, open a meetup, or leave without committing. Alpha feedback should focus on clarity, comfort, and what feels too heavy.",
+    copy: "You can skip chats, use tester shortcuts, or leave a flow anytime. Feedback should focus on what feels too heavy on mobile.",
     actionLabel: "Finish walkthrough",
     route: "/(tabs)",
     icon: "checkmark",
@@ -92,11 +60,6 @@ export default function AlphaWalkthroughScreen() {
   const canGoNext = stepIndex < walkthroughSteps.length - 1;
 
   const openStepRoute = () => {
-    if (step.route === "/(tabs)/settings") {
-      router.push({ pathname: "/(tabs)/settings", params: { from: "alpha-walkthrough" } } as never);
-      return;
-    }
-
     router.push(step.route as never);
   };
 

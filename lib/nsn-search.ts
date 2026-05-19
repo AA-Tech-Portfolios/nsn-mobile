@@ -1,5 +1,11 @@
 import type { EventItem } from "@/lib/nsn-data";
-import { findNearestLocalAreaSuggestion, lookupLocalAreaSuggestions, normalizeLocationLookupQuery, type LocalAreaSuggestion } from "./location-lookup";
+import {
+  findNearestLocalAreaSuggestion,
+  lookupAustralianLocalitySuggestions,
+  lookupLocalAreaSuggestions,
+  normalizeLocationLookupQuery,
+  type LocalAreaSuggestion,
+} from "./location-lookup";
 
 export type NsnLocalAreaSuggestion = LocalAreaSuggestion;
 
@@ -9,6 +15,10 @@ export function normalizeNsnSearchQuery(query: string) {
 
 export function searchNsnSydneyLocalAreas(query: string, limit = 7) {
   return lookupLocalAreaSuggestions(query, limit);
+}
+
+export function searchNsnAustralianLocalities(query: string, limit = 7) {
+  return lookupAustralianLocalitySuggestions(query, limit);
 }
 
 export function findNearestNsnSydneyLocalArea(latitude: number, longitude: number) {

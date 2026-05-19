@@ -1222,7 +1222,7 @@ const profileVerificationTranslations = {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { menu } = useLocalSearchParams<{ menu?: string }>();
+  const { menu, from } = useLocalSearchParams<{ menu?: string; from?: string }>();
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const {
@@ -1335,6 +1335,7 @@ export default function ProfileScreen() {
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(appLanguageBase);
+  const openedVerificationFromChats = from === "chats";
   const copy = profileTranslations[appLanguageBase as keyof typeof profileTranslations] ?? profileTranslations.English;
   const profileCopy = { ...profileTranslations.English, ...copy, rows: { ...profileTranslations.English.rows, ...copy.rows } };
   const vibeCopy = profileVibeTranslations[appLanguageBase] ?? {};
@@ -1435,6 +1436,7 @@ export default function ProfileScreen() {
   const [failedPreparednessResourceIcons, setFailedPreparednessResourceIcons] = useState<Record<string, true>>({});
   const [openHelpFaqIds, setOpenHelpFaqIds] = useState<string[]>(["what-is-nsn"]);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
+  const [isVerificationGuideOpen, setIsVerificationGuideOpen] = useState(false);
   const [draftContactEmail, setDraftContactEmail] = useState(contactEmail);
   const [draftContactPhone, setDraftContactPhone] = useState(contactPhone);
   const [draftIdentitySelfieUri, setDraftIdentitySelfieUri] = useState<string | null>(identitySelfieUri);
@@ -2433,6 +2435,12 @@ export default function ProfileScreen() {
     setDraftVerificationLevel(effectiveVerificationLevel);
     setIsVerificationReviewOpen(true);
   };
+
+  useEffect(() => {
+    if (menu === "verificationTrust") {
+      openVerificationReview();
+    }
+  }, [menu]);
 
   const confirmVerificationDetails = async () => {
     const nextVerificationLevel = getEffectivePrototypeVerificationLevel({
@@ -6672,71 +6680,7 @@ export default function ProfileScreen() {
           ) : null}
         </View>
 
-        {isCleanProfile ? (
-          <View style={[styles.profileDetailsGroup, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
-            {ageAndGroupPreferenceCard}
-            <View style={[styles.simpleProfileOverviewGrid, styles.profileDetailsOverviewGrid, isWideLayout && styles.simpleProfileOverviewGridWide]}>
-          <View style={[styles.simpleVisibilityPreviewSection, styles.simpleVisibilityPreviewPane, { maxWidth: simpleVisibilitySectionMaxWidth }]}>
-            <View style={[styles.simpleVisibilityHeader, isRtl && styles.rtlRow]}>
-              <View style={styles.profileLayoutBody}>
-                <Text style={[styles.simpleVisibilityPreviewTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{visibilityCopy.title}</Text>
-                <Text style={[styles.simpleVisibilityPreviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText, isRtl && styles.ltrInlineCopy]}>
-                  Preview what others can see before they open a full profile.
-                </Text>
-              </View>
-              <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{comfortMode}</Text>
-            </View>
-            <View style={[styles.simpleVisibilityModeCard, isDay && styles.dayVisibilityModeCard]}>
-              <View style={[styles.simpleVisibilityModeGrid, isRtl && styles.rtlRow]}>
-                {([
-                  { value: "Comfort Mode" as const, label: "Private / matched" },
-                  { value: "Warm Up Mode" as const, label: "Warm Up" },
-                  { value: "Open Mode" as const, label: "Open / visible" },
-                ]).map((option) => {
-                  const active = comfortMode === option.value;
-
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      activeOpacity={0.82}
-                      onPress={() => updateComfortMode(option.value)}
-                      accessibilityRole="button"
-                      accessibilityLabel={option.label}
-                      accessibilityState={{ selected: active }}
-                      style={[styles.simpleVisibilityModeOption, isDay && styles.daySoftOption, active && styles.simpleVisibilityModeOptionActive]}
-                    >
-                      <Text style={[styles.simpleVisibilityModeOptionText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={2}>
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              <Text style={[styles.simpleVisibilityModeCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText, isRtl && styles.ltrInlineCopy]}>{visibilityModeDetail}</Text>
-              {comfortMode === "Warm Up Mode" ? (
-                <TouchableOpacity
-                  activeOpacity={0.82}
-                  onPress={() => updateWarmUpLowerBlur(!warmUpLowerBlur)}
-                  style={[styles.warmUpBlurOption, styles.simpleWarmUpBlurOption, isDay && styles.daySoftOption, warmUpLowerBlur && styles.warmUpBlurOptionActive, isRtl && styles.rtlRow]}
-                  accessibilityRole="switch"
-                  accessibilityState={{ checked: warmUpLowerBlur }}
-                >
-                  <View style={styles.profileLayoutBody}>
-                    <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Lower blur in Warm Up</Text>
-                    <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                      {warmUpLowerBlur ? "Using a softer blur for partial visibility." : "Keeping your selected blur level."}
-                    </Text>
-                  </View>
-                  <View style={styles.profileLayoutCheck}>{warmUpLowerBlur ? <IconSymbol name="checkmark" color="#FFFFFF" size={18} /> : null}</View>
-                </TouchableOpacity>
-              ) : null}
-            </View>
-            <ProfileVisibilityPreview {...profileVisibilityPreviewProps} />
-          </View>
-          {renderLocalAreaFeatureSection("simple")}
-            </View>
-          </View>
-        ) : ageAndGroupPreferenceCard}
+        {!isCleanProfile ? ageAndGroupPreferenceCard : null}
 
         <View style={[styles.profileSectionCard, !isCleanProfile && styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
@@ -6844,25 +6788,6 @@ export default function ProfileScreen() {
         </View>
 
         {isCleanProfile ? (
-          <View style={[styles.simpleProfileList, styles.simpleProfileShortcutList, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
-            {simpleProfileShortcutRows.map((row, index, rows) => (
-              <TouchableOpacity
-                key={row.key}
-                activeOpacity={0.78}
-                onPress={() => openProfileShortcutRow(row)}
-                accessibilityRole="button"
-                accessibilityLabel={getRowLabel(row.key)}
-                accessibilityHint={row.key === "settings" ? "Opens Settings & Privacy from Profile." : profileCopy.opensSectionHint}
-                style={[styles.simpleProfileRow, index < rows.length - 1 && styles.rowBorder, isDay && index < rows.length - 1 && styles.dayRowBorder, isRtl && styles.rtlRow]}
-              >
-                <IconSymbol name={row.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
-                <Text style={[styles.rowLabel, styles.simpleShortcutLabel, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{getRowLabel(row.key)}</Text>
-                <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
-              </TouchableOpacity>
-            ))}
-          </View>
-        ) : null}
-        {isCleanProfile ? (
           <View style={[styles.simpleProfileList, styles.socialProfileSummaryList, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
             {simpleProfileSummaryRows.map((row, index, rows) => (
               <TouchableOpacity
@@ -6916,6 +6841,26 @@ export default function ProfileScreen() {
                     </>
                   ) : null}
                 </View>
+                <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : null}
+
+        {isCleanProfile ? (
+          <View style={[styles.simpleProfileList, styles.simpleProfileShortcutList, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
+            {simpleProfileShortcutRows.map((row, index, rows) => (
+              <TouchableOpacity
+                key={row.key}
+                activeOpacity={0.78}
+                onPress={() => openProfileShortcutRow(row)}
+                accessibilityRole="button"
+                accessibilityLabel={getRowLabel(row.key)}
+                accessibilityHint={row.key === "settings" ? "Opens Settings & Privacy from Profile." : profileCopy.opensSectionHint}
+                style={[styles.simpleProfileRow, index < rows.length - 1 && styles.rowBorder, isDay && index < rows.length - 1 && styles.dayRowBorder, isRtl && styles.rtlRow]}
+              >
+                <IconSymbol name={row.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                <Text style={[styles.rowLabel, styles.simpleShortcutLabel, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{getRowLabel(row.key)}</Text>
                 <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
               </TouchableOpacity>
             ))}
@@ -7059,6 +7004,72 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
+        {isCleanProfile ? (
+          <View style={[styles.profileDetailsGroup, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
+            {ageAndGroupPreferenceCard}
+            <View style={[styles.simpleProfileOverviewGrid, styles.profileDetailsOverviewGrid, isWideLayout && styles.simpleProfileOverviewGridWide]}>
+          <View style={[styles.simpleVisibilityPreviewSection, styles.simpleVisibilityPreviewPane, { maxWidth: simpleVisibilitySectionMaxWidth }]}>
+            <View style={[styles.simpleVisibilityHeader, isRtl && styles.rtlRow]}>
+              <View style={styles.profileLayoutBody}>
+                <Text style={[styles.simpleVisibilityPreviewTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{visibilityCopy.title}</Text>
+                <Text style={[styles.simpleVisibilityPreviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText, isRtl && styles.ltrInlineCopy]}>
+                  Preview what others can see before they open a full profile.
+                </Text>
+              </View>
+              <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>{comfortMode}</Text>
+            </View>
+            <View style={[styles.simpleVisibilityModeCard, isDay && styles.dayVisibilityModeCard]}>
+              <View style={[styles.simpleVisibilityModeGrid, isRtl && styles.rtlRow]}>
+                {([
+                  { value: "Comfort Mode" as const, label: "Private / matched" },
+                  { value: "Warm Up Mode" as const, label: "Warm Up" },
+                  { value: "Open Mode" as const, label: "Open / visible" },
+                ]).map((option) => {
+                  const active = comfortMode === option.value;
+
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      activeOpacity={0.82}
+                      onPress={() => updateComfortMode(option.value)}
+                      accessibilityRole="button"
+                      accessibilityLabel={option.label}
+                      accessibilityState={{ selected: active }}
+                      style={[styles.simpleVisibilityModeOption, isDay && styles.daySoftOption, active && styles.simpleVisibilityModeOptionActive]}
+                    >
+                      <Text style={[styles.simpleVisibilityModeOptionText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]} numberOfLines={2}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              <Text style={[styles.simpleVisibilityModeCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText, isRtl && styles.ltrInlineCopy]}>{visibilityModeDetail}</Text>
+              {comfortMode === "Warm Up Mode" ? (
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() => updateWarmUpLowerBlur(!warmUpLowerBlur)}
+                  style={[styles.warmUpBlurOption, styles.simpleWarmUpBlurOption, isDay && styles.daySoftOption, warmUpLowerBlur && styles.warmUpBlurOptionActive, isRtl && styles.rtlRow]}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: warmUpLowerBlur }}
+                >
+                  <View style={styles.profileLayoutBody}>
+                    <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Lower blur in Warm Up</Text>
+                    <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                      {warmUpLowerBlur ? "Using a softer blur for partial visibility." : "Keeping your selected blur level."}
+                    </Text>
+                  </View>
+                  <View style={styles.profileLayoutCheck}>{warmUpLowerBlur ? <IconSymbol name="checkmark" color="#FFFFFF" size={18} /> : null}</View>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            <ProfileVisibilityPreview {...profileVisibilityPreviewProps} />
+          </View>
+          {renderLocalAreaFeatureSection("simple")}
+            </View>
+          </View>
+        ) : null}
+
         {false ? (
           <>
         <View style={[styles.profileSectionCard, styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
@@ -7196,35 +7207,83 @@ export default function ProfileScreen() {
               <Text style={[styles.verificationReviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                 Choose how much trust evidence you want to model in this local pilot. Real verification still needs a provider before production.
               </Text>
-              <View style={styles.verificationLevelList}>
-              {verificationLevelCards.map((item) => (
-                <TouchableOpacity
-                  key={item.level}
-                  activeOpacity={0.82}
-                  onPress={() => savePrototypeVerificationLevel(item.level)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: item.active }}
-                  accessibilityLabel={`Prototype trust level ${item.level}`}
-                  accessibilityHint="Selects a local-only prototype verification level. This does not verify your identity."
-                  style={[styles.verificationLevelCard, isDay && styles.daySoftOption, item.active && styles.verificationLevelCardActive]}
-                >
-                  <View style={styles.verificationLevelHeader}>
-                    <Text style={[styles.verificationLevelKicker, isDay && styles.dayMutedText, item.active && styles.verificationLevelTextActive]}>{item.title}</Text>
-                    <Text style={[styles.verificationLevelName, isDay && styles.dayTitle, item.active && styles.verificationLevelTextActive]}>{item.level}</Text>
-                  </View>
-                  <Text style={[styles.verificationLevelCopy, isDay && styles.dayMutedText, item.active && styles.verificationLevelTextActive]}>{item.meaning}</Text>
-                  <Text style={[styles.verificationLevelTreatment, isDay && styles.dayTitle, item.active && styles.verificationLevelTextActive]}>{item.treatment}</Text>
-                </TouchableOpacity>
-              ))}
-              <View style={[styles.verificationLevelCard, isDay && styles.daySoftOption]}>
-                <View style={styles.verificationLevelHeader}>
-                  <Text style={[styles.verificationLevelKicker, isDay && styles.dayMutedText]}>Level 3</Text>
-                  <Text style={[styles.verificationLevelName, isDay && styles.dayTitle]}>Identity Verified</Text>
+              {openedVerificationFromChats ? (
+                <View style={[styles.verificationReturnGrid, isRtl && styles.rtlRow]}>
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    onPress={() => {
+                      setIsVerificationReviewOpen(false);
+                      router.replace("/(tabs)" as never);
+                    }}
+                    style={[styles.verificationReturnButton, isDay && styles.daySoftOption]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Return to Home"
+                  >
+                    <Text style={[styles.verificationReturnText, isDay && styles.dayTitle]}>Return to Home</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.82}
+                    onPress={() => {
+                      setIsVerificationReviewOpen(false);
+                      router.replace("/(tabs)/chats" as never);
+                    }}
+                    style={[styles.verificationReturnButton, styles.verificationReturnButtonPrimary]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Return to Chats"
+                  >
+                    <Text style={styles.verificationReturnTextPrimary}>Return to Chats</Text>
+                  </TouchableOpacity>
                 </View>
-                <Text style={[styles.verificationLevelCopy, isDay && styles.dayMutedText]}>Optional ID verification confirming name and age.</Text>
-                <Text style={[styles.verificationLevelTreatment, isDay && styles.dayTitle]}>Post-MVP unless needed for a high-trust flow.</Text>
-              </View>
-              </View>
+              ) : null}
+              <View style={[styles.verificationGuide, isDay && styles.daySoftOption]}>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() => setIsVerificationGuideOpen((current) => !current)}
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: isVerificationGuideOpen }}
+                  accessibilityLabel={`${isVerificationGuideOpen ? "Collapse" : "Expand"} trust level guide`}
+                  style={[styles.verificationGuideHeader, isRtl && styles.rtlRow]}
+                >
+                  <View style={styles.profileLayoutBody}>
+                    <Text style={[styles.verificationGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Trust level guide</Text>
+                    <Text style={[styles.verificationGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                      {getVerificationLevelLabel(effectiveReviewVerificationLevel, appLanguageBase)} selected. Expand to compare prototype levels.
+                    </Text>
+                  </View>
+                  <IconSymbol name={isVerificationGuideOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                </TouchableOpacity>
+                {isVerificationGuideOpen ? (
+                  <View style={styles.verificationLevelList}>
+                    {verificationLevelCards.map((item) => (
+                      <TouchableOpacity
+                        key={item.level}
+                        activeOpacity={0.82}
+                        onPress={() => savePrototypeVerificationLevel(item.level)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: item.active }}
+                        accessibilityLabel={`Prototype trust level ${item.level}`}
+                        accessibilityHint="Selects a local-only prototype verification level. This does not verify your identity."
+                        style={[styles.verificationLevelCard, isDay && styles.daySoftOption, item.active && styles.verificationLevelCardActive, item.active && isDay && styles.dayVerificationLevelCardActive]}
+                      >
+                        <View style={styles.verificationLevelHeader}>
+                          <Text style={[styles.verificationLevelKicker, isDay && styles.dayMutedText, item.active && styles.verificationLevelTextActive, item.active && isDay && styles.dayVerificationLevelTextActive]}>{item.title}</Text>
+                          <Text style={[styles.verificationLevelName, isDay && styles.dayTitle, item.active && styles.verificationLevelTextActive, item.active && isDay && styles.dayVerificationLevelTextActive]}>{item.level}</Text>
+                        </View>
+                        <Text style={[styles.verificationLevelCopy, isDay && styles.dayMutedText, item.active && styles.verificationLevelTextActive, item.active && isDay && styles.dayVerificationLevelTextActive]}>{item.meaning}</Text>
+                        <Text style={[styles.verificationLevelTreatment, isDay && styles.dayTitle, item.active && styles.verificationLevelTextActive, item.active && isDay && styles.dayVerificationLevelTextActive]}>{item.treatment}</Text>
+                      </TouchableOpacity>
+                    ))}
+                    <View style={[styles.verificationLevelCard, isDay && styles.daySoftOption]}>
+                      <View style={styles.verificationLevelHeader}>
+                        <Text style={[styles.verificationLevelKicker, isDay && styles.dayMutedText]}>Level 3</Text>
+                        <Text style={[styles.verificationLevelName, isDay && styles.dayTitle]}>Identity Verified</Text>
+                      </View>
+                      <Text style={[styles.verificationLevelCopy, isDay && styles.dayMutedText]}>Optional ID verification confirming name and age.</Text>
+                      <Text style={[styles.verificationLevelTreatment, isDay && styles.dayTitle]}>Post-MVP unless needed for a high-trust flow.</Text>
+                    </View>
+                  </View>
+                ) : null}
+                </View>
               <View style={styles.verificationReviewList}>
               <View style={[styles.verificationInputGroup, isDay && styles.daySoftOption]}>
                 <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Level 1: Contact Verified</Text>
@@ -7306,8 +7365,8 @@ const styles = StyleSheet.create({
   profileMenu: { width: "100%", maxWidth: 410, maxHeight: 720, marginTop: 8, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   profileMenuDocked: { flex: 1, maxWidth: "100%", maxHeight: "100%", marginTop: 0, borderRadius: 18, borderColor: "#3C5277", backgroundColor: "rgba(255,255,255,0.025)" },
   profileMenuDockedHelpDesktop: { maxWidth: "100%", borderRadius: 20 },
-  profileMenuScroll: { width: "100%" },
-  profileMenuContent: { padding: 8, gap: 2 },
+  profileMenuScroll: { flex: 1, width: "100%" },
+  profileMenuContent: { padding: 8, paddingBottom: 18, gap: 2 },
   profileMenuContentHelpDesktop: { padding: 14, gap: 10 },
   profileMenuTitle: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 12, fontWeight: "900", lineHeight: 17, paddingHorizontal: 10, paddingVertical: 5 },
   profileMenuItem: { minHeight: 68, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 12, paddingVertical: 11 },
@@ -7573,15 +7632,26 @@ const styles = StyleSheet.create({
   dayModalSheet: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   verificationReviewTitle: { color: nsnColors.text, fontSize: 20, fontWeight: "900", lineHeight: 26 },
   verificationReviewCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 12 },
-  verificationLevelList: { gap: 8, marginBottom: 10 },
+  verificationReturnGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
+  verificationReturnButton: { flexGrow: 1, flexBasis: 160, minHeight: 42, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
+  verificationReturnButtonPrimary: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  verificationReturnText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
+  verificationReturnTextPrimary: { color: "#FFFFFF", fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
+  verificationGuide: { borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", marginBottom: 10, overflow: "hidden" },
+  verificationGuideHeader: { minHeight: 58, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, paddingHorizontal: 12, paddingVertical: 10 },
+  verificationGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19 },
+  verificationGuideCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 2 },
+  verificationLevelList: { gap: 8, paddingHorizontal: 10, paddingBottom: 10 },
   verificationLevelCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 10 },
   verificationLevelCardActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.18)" },
+  dayVerificationLevelCardActive: { borderColor: "#536C9E", backgroundColor: "#E1E7FF" },
   verificationLevelHeader: { flexDirection: "row", justifyContent: "space-between", gap: 10, marginBottom: 4 },
   verificationLevelKicker: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   verificationLevelName: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   verificationLevelCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17 },
   verificationLevelTreatment: { color: nsnColors.text, fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 3 },
   verificationLevelTextActive: { color: "#FFFFFF" },
+  dayVerificationLevelTextActive: { color: "#12213A" },
   verificationReviewList: { gap: 8 },
   verificationReviewRow: { minHeight: 56, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 9 },
   verificationReviewLabel: { flex: 1, color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },

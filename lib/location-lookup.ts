@@ -1,9 +1,10 @@
 import type { TimezoneSetting } from "@/lib/app-settings";
+import { australianLocalities, getAustralianLocalityLabel, type AustralianLocality } from "./australian-localities";
 import { sydneyLocalities, type SydneyLocality } from "./sydney-localities";
 
 export type LocalAreaSuggestion = TimezoneSetting & {
-  region: SydneyLocality["region"];
-  resultType: SydneyLocality["kind"];
+  region: string;
+  resultType: SydneyLocality["kind"] | "Postcode";
   aliases: string[];
 };
 
@@ -31,8 +32,34 @@ const localityToSuggestion = (locality: SydneyLocality): LocalAreaSuggestion => 
   aliases: locality.aliases ?? [],
 });
 
+const australianLocalityToSuggestion = (locality: AustralianLocality): LocalAreaSuggestion => ({
+  id: `au-${locality.state}-${locality.postcode}-${toSearchToken(locality.suburb).replace(/\s+/g, "-")}`,
+  label: getAustralianLocalityLabel(locality),
+  city: locality.suburb,
+  country: `${locality.state}, Australia`,
+  timeZone: getAustralianTimeZone(locality.state),
+  latitude: locality.latitude,
+  longitude: locality.longitude,
+  region: `${locality.state}, Australia`,
+  resultType: "Postcode",
+  aliases: [locality.suburb, locality.state, locality.postcode],
+});
+
+const getAustralianTimeZone = (state: AustralianLocality["state"]) => {
+  if (state === "WA") return "Australia/Perth";
+  if (state === "NT") return "Australia/Darwin";
+  if (state === "SA") return "Australia/Adelaide";
+  if (state === "QLD") return "Australia/Brisbane";
+  if (state === "TAS") return "Australia/Hobart";
+  if (state === "VIC") return "Australia/Melbourne";
+  return "Australia/Sydney";
+};
+
 const getLocalitySearchText = (locality: SydneyLocality) =>
   [locality.displayName, locality.region, locality.kind, ...(locality.aliases ?? [])].map(toSearchToken).join(" ");
+
+const getAustralianLocalitySearchText = (locality: AustralianLocality) =>
+  [locality.suburb, locality.state, locality.postcode, getAustralianLocalityLabel(locality)].map(toSearchToken).join(" ");
 
 // Prototype currently uses local fallback suburb data. Future version should use
 // an Australian suburb/locality API or maintained dataset behind this service.
@@ -59,6 +86,31 @@ export function lookupLocalAreaSuggestions(query: string, limit = 7) {
   }
 
   return [...exactMatches, ...partialMatches].slice(0, limit).map(localityToSuggestion);
+}
+
+export function lookupAustralianLocalitySuggestions(query: string, limit = 7) {
+  const normalized = normalizeLocationLookupQuery(query);
+
+  if (!normalized) {
+    return [];
+  }
+
+  const exactMatches: AustralianLocality[] = [];
+  const partialMatches: AustralianLocality[] = [];
+
+  for (const locality of australianLocalities) {
+    const tokens = [locality.suburb, locality.state, locality.postcode, getAustralianLocalityLabel(locality)].map(toSearchToken);
+    const isExact = tokens.some((token) => token === normalized);
+    const isPartial = getAustralianLocalitySearchText(locality).includes(normalized);
+
+    if (isExact) {
+      exactMatches.push(locality);
+    } else if (isPartial) {
+      partialMatches.push(locality);
+    }
+  }
+
+  return [...exactMatches, ...partialMatches].slice(0, limit).map(australianLocalityToSuggestion);
 }
 
 export function findNearestLocalAreaSuggestion(latitude: number, longitude: number) {

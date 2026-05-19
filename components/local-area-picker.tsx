@@ -2,7 +2,12 @@ import { useMemo } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { lookupLocalAreaSuggestions, normalizeLocationLookupQuery, type LocalAreaSuggestion } from "@/lib/location-lookup";
+import {
+  lookupAustralianLocalitySuggestions,
+  lookupLocalAreaSuggestions,
+  normalizeLocationLookupQuery,
+  type LocalAreaSuggestion,
+} from "@/lib/location-lookup";
 import { nsnColors } from "@/lib/nsn-data";
 
 type LocalAreaPickerProps = {
@@ -17,6 +22,7 @@ type LocalAreaPickerProps = {
   placeholder?: string;
   promptCopy?: string;
   fallbackNote?: string;
+  searchScope?: "local" | "australia";
 };
 
 export function LocalAreaPicker({
@@ -31,9 +37,21 @@ export function LocalAreaPicker({
   placeholder = "Search suburb or region...",
   promptCopy = "Search for a suburb, region, or locality to personalise NSN.",
   fallbackNote = "Prototype location lookup uses local fallback suburb data while API-backed search is being prepared.",
+  searchScope = "local",
 }: LocalAreaPickerProps) {
   const normalizedQuery = normalizeLocationLookupQuery(query);
-  const suggestions = useMemo(() => lookupLocalAreaSuggestions(query, limit), [limit, query]);
+  const suggestions = useMemo(
+    () => searchScope === "australia" ? lookupAustralianLocalitySuggestions(query, limit) : lookupLocalAreaSuggestions(query, limit),
+    [limit, query, searchScope]
+  );
+  const exampleCopy =
+    searchScope === "australia"
+      ? "Try 3000, Melbourne, Brisbane, Perth, Hobart, or Adelaide."
+      : "Try CBD, St. Ives, Parra, Northern Beaches, or West Pymble.";
+  const emptyCopy =
+    searchScope === "australia"
+      ? "Try another postcode, suburb, city, or state abbreviation."
+      : "Try another Sydney suburb, region, or common shorthand.";
 
   return (
     <View style={styles.container}>
@@ -55,7 +73,7 @@ export function LocalAreaPicker({
         <View style={[styles.promptCard, isDay && styles.dayResultButton]}>
           <Text style={[styles.resultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{promptCopy}</Text>
           <Text style={[styles.resultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Try CBD, St. Ives, Parra, Northern Beaches, or West Pymble.
+            {exampleCopy}
           </Text>
           <Text style={[styles.fallbackNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{fallbackNote}</Text>
         </View>
@@ -91,7 +109,7 @@ export function LocalAreaPicker({
         <View style={[styles.emptyCard, isDay && styles.dayResultButton]}>
           <Text style={[styles.resultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching suburb or region yet.</Text>
           <Text style={[styles.resultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Try another Sydney suburb, region, or common shorthand.
+            {emptyCopy}
           </Text>
         </View>
       ) : null}

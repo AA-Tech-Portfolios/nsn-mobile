@@ -1,7 +1,7 @@
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 
 import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
 import { ScreenContainer } from "@/components/screen-container";
@@ -10,6 +10,7 @@ import type { NsnBlurLevel, NsnComfortMode, ProfileGender, SoftHelloIntent } fro
 import { defaultPhotoRecordingComfortPreferences, defaultPhysicalContactComfortPreferences, useAppSettings } from "@/lib/app-settings";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
+import { createAlphaTesterOnboardingSnapshot } from "@/lib/onboarding-snapshot";
 import { defaultFoodBeveragePreferenceIds } from "@/lib/preferences/food-preferences";
 import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds } from "@/lib/preferences/interests";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
@@ -46,9 +47,11 @@ const chatswoodLocality = australianLocalities.find((locality) => locality.subur
 
 export default function OnboardingScreen() {
   const router = useRouter();
+  const { width: viewportWidth } = useWindowDimensions();
   const { stage: stageParam } = useLocalSearchParams<{ stage?: string }>();
   const settings = useAppSettings();
   const isDay = !settings.isNightMode;
+  const isMobileOnboarding = viewportWidth < 560;
   const brandTheme = settings.brandTheme;
   const requestedStage = Number.parseInt(Array.isArray(stageParam) ? stageParam[0] : stageParam ?? "", 10);
   const hasDirectStage = Number.isFinite(requestedStage);
@@ -287,6 +290,17 @@ export default function OnboardingScreen() {
     router.replace("/(tabs)");
   };
 
+  const skipOnboardingForTesting = async () => {
+    await settings.completeOnboarding(
+      createAlphaTesterOnboardingSnapshot({
+        appLanguage: settings.appLanguage,
+        translationLanguage: settings.translationLanguage,
+        brandThemeId: settings.brandThemeId,
+      })
+    );
+    router.replace("/(tabs)");
+  };
+
   const stageTitles = ["Welcome", "About you", "Meeting comfort", "Privacy", "Review"];
   const selectedSuburb = selectedLocality ? getAustralianLocalityLabel(selectedLocality) : suburb.trim();
 
@@ -318,16 +332,22 @@ export default function OnboardingScreen() {
             <View key={title} style={[styles.progressDot, index <= stage && styles.progressDotActive]} />
           ))}
         </View>
-        <Text style={[styles.stepLabel, isDay && styles.dayAccentText]}>Stage {stage + 1} of 5 - {stageTitles[stage]}</Text>
+        <Text style={[styles.stepLabel, isDay && styles.dayAccentText]}>
+          {isMobileOnboarding ? `Step ${stage + 1}/5 - ${stageTitles[stage]}` : `Stage ${stage + 1} of 5 - ${stageTitles[stage]}`}
+        </Text>
 
         {stage === 0 ? (
           <View style={[styles.panel, isDay && styles.dayPanel]}>
             <Text style={[styles.title, isDay && styles.dayTitle]}>Meet nearby, without the pressure.</Text>
             <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-              NSN is a Sydney North Shore pilot for safe, respectful and genuine first meetups: coffee, walks, movies, dinner, games and small local events.
+              {isMobileOnboarding
+                ? "NSN is a Sydney North Shore alpha for trying calm, low-pressure meetup ideas."
+                : "NSN is a Sydney North Shore pilot for safe, respectful and genuine first meetups: coffee, walks, movies, dinner, games and small local events."}
             </Text>
             <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-              You control what others can see. Start private, warm up gradually, or keep things more open at an event.
+              {isMobileOnboarding
+                ? "You can keep things private, move slowly, or skip setup for testing."
+                : "You control what others can see. Start private, warm up gradually, or keep things more open at an event."}
             </Text>
           </View>
         ) : null}
@@ -588,6 +608,19 @@ export default function OnboardingScreen() {
             <Text style={styles.primaryButtonText}>{stage === 0 ? "Get Started" : stage === 4 ? "Finish setup" : "Continue"}</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          activeOpacity={0.84}
+          onPress={skipOnboardingForTesting}
+          accessibilityRole="button"
+          accessibilityLabel="Skip onboarding for now and finish registration later"
+          accessibilityHint="Uses a private local tester profile so you can explore the alpha prototype."
+          style={[styles.skipButton, isDay && styles.dayCard]}
+        >
+          <Text style={[styles.skipButtonText, isDay && styles.dayTitle]}>Skip onboarding for now</Text>
+          <Text style={[styles.skipButtonCopy, isDay && styles.dayMutedText]}>
+            Alpha tester shortcut. You can finish registration/setup later from Profile.
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
     </ScreenContainer>
   );
@@ -680,6 +713,9 @@ const styles = StyleSheet.create({
   primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
   secondaryButton: { minHeight: 54, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
   secondaryButtonText: { color: nsnColors.text, fontSize: 14, fontWeight: "900" },
+  skipButton: { minHeight: 60, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10, gap: 2 },
+  skipButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
+  skipButtonCopy: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 16, textAlign: "center" },
   dayCard: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   dayTitle: { color: "#0B1220" },
   dayMutedText: { color: "#53677A" },

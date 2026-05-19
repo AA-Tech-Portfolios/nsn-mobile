@@ -87,6 +87,7 @@ type ChatMenuCopy = {
   title: string;
   current: string;
   openLabel: string;
+  returnLabel: string;
   landingTitle: string;
   landingCopy: string;
   meetupGroups: string;
@@ -464,6 +465,7 @@ const chatMenuTranslations = {
     title: "Meetup chats",
     current: "Current chat",
     openLabel: "Choose meetup chat",
+    returnLabel: "Return",
     landingTitle: "Choose a chat",
     landingCopy: "Select a meetup group or verified person to open the right conversation.",
     meetupGroups: "Meetup groups",
@@ -476,6 +478,7 @@ const chatMenuTranslations = {
     title: "צ'אטים של מפגשים",
     current: "הצ'אט הנוכחי",
     openLabel: "בחירת צ'אט מפגש",
+    returnLabel: "חזרה",
     landingTitle: "בחירת צ'אט",
     landingCopy: "בחר/י קבוצת מפגש או אדם מאומת כדי לפתוח את השיחה המתאימה.",
     meetupGroups: "קבוצות מפגש",
@@ -488,6 +491,7 @@ const chatMenuTranslations = {
     title: "聚会聊天",
     current: "当前聊天",
     openLabel: "选择聚会聊天",
+    returnLabel: "返回",
     landingTitle: "选择聊天",
     landingCopy: "选择聚会群组或已验证成员，打开合适的对话。",
     meetupGroups: "聚会群组",
@@ -500,6 +504,7 @@ const chatMenuTranslations = {
     title: "ミートアップチャット",
     current: "現在のチャット",
     openLabel: "ミートアップチャットを選択",
+    returnLabel: "戻る",
     landingTitle: "チャットを選択",
     landingCopy: "ミートアップグループまたは確認済みの人を選んで、適切な会話を開きます。",
     meetupGroups: "ミートアップグループ",
@@ -512,6 +517,7 @@ const chatMenuTranslations = {
     title: "모임 채팅",
     current: "현재 채팅",
     openLabel: "모임 채팅 선택",
+    returnLabel: "돌아가기",
     landingTitle: "채팅 선택",
     landingCopy: "모임 그룹이나 인증된 사람을 선택해 알맞은 대화를 여세요.",
     meetupGroups: "모임 그룹",
@@ -1188,6 +1194,7 @@ export default function ChatsScreen() {
   const [cannotMakeItOpen, setCannotMakeItOpen] = useState(false);
   const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
   const [chatPlusOpen, setChatPlusOpen] = useState(false);
+  const [bypassAlphaChatGate, setBypassAlphaChatGate] = useState(false);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
   const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
   const [selectedComfortRoles, setSelectedComfortRoles] = useState<MeetupComfortRoleOption[]>([]);
@@ -1248,7 +1255,7 @@ export default function ChatsScreen() {
   const lastReport = lastReportId ? safetyReports.find((report) => report.id === lastReportId) : undefined;
   const canCancelLastReport = Boolean(lastReport && !lastReport.cancelledAt && lastReport.cancelUntil && Date.now() <= Date.parse(lastReport.cancelUntil));
 
-  if (!canUsePrivateChats) {
+  if (!canUsePrivateChats && !bypassAlphaChatGate) {
     return (
       <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
         <View style={[styles.screen, isDay && styles.dayContainer]}>
@@ -1269,7 +1276,25 @@ export default function ChatsScreen() {
             <Text style={[styles.trustGateStatus, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
               {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
-            <TouchableOpacity activeOpacity={0.85} onPress={() => router.push("/(tabs)/profile")} style={styles.trustGateButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? chatCopy.reviewTrustStatusHint : undefined}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setBypassAlphaChatGate(true)}
+              style={[styles.trustGateButton, styles.trustGateBypassButton, isDay && styles.dayTrustGateBypassButton]}
+              accessibilityRole="button"
+              accessibilityLabel="Browse prototype chats for alpha testing"
+              accessibilityHint="Bypasses this local prototype gate for the current session without changing verification status."
+            >
+              <Text style={[styles.trustGateButtonText, styles.trustGateBypassButtonText, isDay && styles.dayTrustGateBypassButtonText]}>
+                Browse prototype chats for now
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => router.push({ pathname: "/(tabs)/profile", params: { menu: "verificationTrust", from: "chats" } } as never)}
+              style={styles.trustGateButton}
+              accessibilityRole="button"
+              accessibilityHint={screenReaderHints ? chatCopy.reviewTrustStatusHint : undefined}
+            >
               <Text style={styles.trustGateButtonText}>{trustGateCopy.reviewSettings}</Text>
             </TouchableOpacity>
           </View>
@@ -1444,6 +1469,15 @@ export default function ChatsScreen() {
     setReportNotice("");
   };
 
+  const returnFromChatChooser = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.push("/(tabs)" as never);
+  };
+
   const renderChatTargetButton = (target: ChatTarget) => {
     const active = selectedChatTarget?.id === target.id;
     const targetProfile = target.type === "person" ? getChatProfilePreview(target.personId) : undefined;
@@ -1489,6 +1523,16 @@ export default function ChatsScreen() {
       <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
         <View style={[styles.screen, isDay && styles.dayContainer]}>
           <ScrollView style={styles.chat} contentContainerStyle={styles.chatSelectionContent} showsVerticalScrollIndicator={false}>
+            <TouchableOpacity
+              activeOpacity={0.78}
+              onPress={returnFromChatChooser}
+              style={[styles.chatSelectionReturnButton, isDay && styles.daySoftExitAction]}
+              accessibilityRole="button"
+              accessibilityLabel={chatMenuCopy.returnLabel}
+            >
+              <IconSymbol name={isRtl ? "chevron.right" : "chevron.left"} color={isDay ? "#0B1220" : nsnColors.text} size={18} />
+              <Text style={[styles.chatSelectionReturnText, isDay && styles.dayTitle]}>{chatMenuCopy.returnLabel}</Text>
+            </TouchableOpacity>
             <Text style={[styles.chatSelectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{chatMenuCopy.landingTitle}</Text>
             <Text style={[styles.chatSelectionCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.landingCopy}</Text>
 
@@ -2221,6 +2265,21 @@ const styles = StyleSheet.create({
   chat: { flex: 1 },
   chatContent: { paddingTop: 16, paddingBottom: 32 },
   chatSelectionContent: { paddingTop: 22, paddingBottom: 112 },
+  chatSelectionReturnButton: {
+    alignSelf: "flex-start",
+    minHeight: 40,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  chatSelectionReturnText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   chatSelectionTitle: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35 },
   chatSelectionCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 4, marginBottom: 18 },
   chatSelectionList: { gap: 8, marginBottom: 18 },
@@ -2241,6 +2300,10 @@ const styles = StyleSheet.create({
   trustGateStatus: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 12 },
   trustGateButton: { width: "100%", minHeight: 46, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10 },
   trustGateButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "center" },
+  trustGateBypassButton: { backgroundColor: "rgba(255,255,255,0.045)", borderWidth: 1, borderColor: nsnColors.border, marginBottom: 10 },
+  trustGateBypassButtonText: { color: nsnColors.text },
+  dayTrustGateBypassButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
+  dayTrustGateBypassButtonText: { color: "#0B1220" },
   softExitPanel: { borderRadius: 18, backgroundColor: "#0D1B2F", borderWidth: 1, borderColor: "#2B4578", padding: 14, marginBottom: 18 },
   daySoftExitPanel: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   softExitTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "800", lineHeight: 21, marginBottom: 4 },

@@ -247,6 +247,7 @@ const noiseGuideTranslations = {
 } as const;
 
 const remotePreview = (uri: string): ImageSourcePropType => ({ uri });
+const alphaHomeCustomizationEnabled = false;
 
 const photoStylePreviewSources: Record<HomeEventPreviewAssetKey, ImageSourcePropType> = {
   picnic: remotePreview("https://unsplash.com/photos/Bsyj_GezIQQ/download?force=true"),
@@ -1156,36 +1157,6 @@ function HeaderActionButton({
   onPress: () => void;
   children: ReactNode;
 }) {
-  if (Platform.OS === "web") {
-    const buttonSize = density === "Compact" ? 38 : density === "Spacious" ? 46 : 42;
-
-    return (
-      <button
-        type="button"
-        role="button"
-        aria-label={accessibilityLabel}
-        title={accessibilityLabel}
-        onClick={onPress}
-        style={{
-          width: buttonSize,
-          height: buttonSize,
-          borderRadius: buttonSize / 2,
-          alignItems: "center",
-          justifyContent: "center",
-          borderWidth: 1,
-          borderStyle: "solid",
-          borderColor: isDay ? "#C5D0DA" : "#5F79A9",
-          backgroundColor: isDay ? "#F4F7F8" : "#163F8D",
-          display: "flex",
-          padding: 0,
-          cursor: "pointer",
-        }}
-      >
-        {children}
-      </button>
-    );
-  }
-
   return (
     <Pressable
       onPress={onPress}
@@ -1229,6 +1200,8 @@ export default function HomeScreen() {
   const [homeUpdateNotice, setHomeUpdateNotice] = useState<string | null>(null);
   const [homeSearchMode, setHomeSearchMode] = useState<HomeSearchMode>("areas");
   const [nsnSearchQuery, setNsnSearchQuery] = useState("");
+  const [advancedAustraliaQuery, setAdvancedAustraliaQuery] = useState("");
+  const [showAdvancedAustraliaSearch, setShowAdvancedAustraliaSearch] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null);
   const [mapZoomLevel, setMapZoomLevel] = useState(0);
@@ -1330,6 +1303,7 @@ export default function HomeScreen() {
   const dayButtonOutlineStyle = cardOutlineStyle === "Minimal" ? styles.dayButtonOutlineMinimal : cardOutlineStyle === "Standard" ? styles.dayButtonOutlineStandard : styles.dayButtonOutlineStrong;
   const outlinedButtonStyle = [buttonOutlineStyle, isDay && dayButtonOutlineStyle];
   const homeLayoutPreset = getHomeFitToScreenPreset(effectiveHomeLayoutDensity, { enabled: homeFitToScreen, viewportWidth, viewportHeight });
+  const isMobileHome = viewportWidth < 560;
   const homeLayoutCardStyle = {
     borderRadius: homeLayoutPreset.cardRadius,
     minHeight: homeLayoutPreset.cardMinHeight,
@@ -1672,17 +1646,36 @@ export default function HomeScreen() {
     setOpenHomePanel((current) => current === "filters" ? "none" : "filters");
   }, []);
 
+  const showHomeCustomizationPausedNotice = useCallback(() => {
+    setExpandedInsight(null);
+    setOpenHomePanel("none");
+    setHeaderPlaceholder({
+      title: "Home customization paused for alpha",
+      copy: "For mobile clarity, Customize Home and View Preferences are disabled for now. The recommended Home layout stays on while we polish the alpha.",
+    });
+  }, []);
+
   const showCustomizeHomePanel = useCallback(() => {
+    if (!alphaHomeCustomizationEnabled) {
+      showHomeCustomizationPausedNotice();
+      return;
+    }
+
     setHeaderPlaceholder(null);
     setExpandedInsight(null);
     setOpenHomePanel((current) => current === "customize" ? "none" : "customize");
-  }, []);
+  }, [showHomeCustomizationPausedNotice]);
 
   const showLayoutPreferencesPanel = useCallback(() => {
+    if (!alphaHomeCustomizationEnabled) {
+      showHomeCustomizationPausedNotice();
+      return;
+    }
+
     setHeaderPlaceholder(null);
     setExpandedInsight(null);
     setOpenHomePanel((current) => current === "preferences" ? "none" : "preferences");
-  }, []);
+  }, [showHomeCustomizationPausedNotice]);
 
   const showOptionsHubPanel = useCallback(() => {
     setHeaderPlaceholder(null);
@@ -2001,10 +1994,10 @@ export default function HomeScreen() {
           showViewFilterPlaceholder();
           return;
         case "customize-home":
-          showCustomizeHomePanel();
+          showHomeCustomizationPausedNotice();
           return;
         case "view-preferences":
-          showLayoutPreferencesPanel();
+          showHomeCustomizationPausedNotice();
           return;
         case "transportation-method":
           router.push({ pathname: "/(tabs)/profile", params: { menu: "transportPreferences" } } as never);
@@ -2929,9 +2922,13 @@ export default function HomeScreen() {
           </View>
           <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
             <Text style={[styles.homeAlphaGuideKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Alpha testing</Text>
-            <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Tester walkthrough</Text>
-            <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={shouldAutoFitDashboard ? 2 : 3}>
-              A compact guide to what is demo-only, saved locally, and ready for feedback.
+            <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+              {isMobileHome ? "Quick tester guide" : "Tester walkthrough"}
+            </Text>
+            <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={isMobileHome ? 2 : shouldAutoFitDashboard ? 2 : 3}>
+              {isMobileHome
+                ? "Four short steps for testing the alpha without getting stuck."
+                : "A compact guide to what is demo-only, saved locally, and ready for feedback."}
             </Text>
           </View>
           <IconSymbol name={isRtl ? "chevron.left" : "chevron.right"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
@@ -3205,22 +3202,28 @@ export default function HomeScreen() {
               <TouchableOpacity
                 activeOpacity={0.82}
                 onPress={showCustomizeHomePanel}
+                disabled={!alphaHomeCustomizationEnabled}
                 accessibilityRole="button"
                 accessibilityLabel="Customize Home sections"
-                style={[styles.homeControlChip, styles.homePanelNavChip, homeLayoutChipStyle, isDay && styles.dayLocationResultButton]}
+                accessibilityState={{ disabled: !alphaHomeCustomizationEnabled }}
+                accessibilityHint="Disabled for the alpha while the mobile Home layout is simplified."
+                style={[styles.homeControlChip, styles.homePanelNavChip, homeLayoutChipStyle, isDay && styles.dayLocationResultButton, !alphaHomeCustomizationEnabled && styles.disabledMoveButton]}
               >
                 <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
-                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Customize Home</Text>
+                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Customize Home paused</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.82}
                 onPress={showLayoutPreferencesPanel}
+                disabled={!alphaHomeCustomizationEnabled}
                 accessibilityRole="button"
                 accessibilityLabel="View event layout preferences"
-                style={[styles.homeControlChip, styles.homePanelNavChip, homeLayoutChipStyle, isDay && styles.dayLocationResultButton]}
+                accessibilityState={{ disabled: !alphaHomeCustomizationEnabled }}
+                accessibilityHint="Disabled for the alpha while the mobile Home layout is simplified."
+                style={[styles.homeControlChip, styles.homePanelNavChip, homeLayoutChipStyle, isDay && styles.dayLocationResultButton, !alphaHomeCustomizationEnabled && styles.disabledMoveButton]}
               >
                 <IconSymbol name="visibility" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
-                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>View Preferences</Text>
+                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>View prefs paused</Text>
               </TouchableOpacity>
             </View>
               </>
@@ -3448,10 +3451,12 @@ export default function HomeScreen() {
                   <TouchableOpacity
                     key={modeKey}
                     activeOpacity={0.82}
-                    onPress={() => {
-                      setHomeSearchMode(modeKey);
-                      setNsnSearchQuery("");
-                    }}
+                onPress={() => {
+                  setHomeSearchMode(modeKey);
+                  setNsnSearchQuery("");
+                  setAdvancedAustraliaQuery("");
+                  setShowAdvancedAustraliaSearch(false);
+                }}
                     accessibilityRole="tab"
                     accessibilityState={{ selected: active }}
                     accessibilityLabel={label}
@@ -3488,6 +3493,27 @@ export default function HomeScreen() {
               isRtl={isRtl}
               limit={7}
             />
+            {renderHomeDisclosureToggle({
+              title: "Advanced Australia search",
+              copy: "Search by postcode, state, city, or suburb. Alpha uses curated fallback data while a fuller postcode service is prepared.",
+              open: showAdvancedAustraliaSearch,
+              onPress: () => setShowAdvancedAustraliaSearch((current) => !current),
+            })}
+            {showAdvancedAustraliaSearch ? (
+              <LocalAreaPicker
+                query={advancedAustraliaQuery}
+                onQueryChange={setAdvancedAustraliaQuery}
+                onSelect={chooseLocalArea}
+                selectedAreaId={timezone.id}
+                isDay={isDay}
+                isRtl={isRtl}
+                limit={8}
+                searchScope="australia"
+                placeholder="Search postcode, suburb, city, or state..."
+                promptCopy="Search across Australian states, cities, suburbs, or postcodes."
+                fallbackNote="Prototype note: this mirrors an Australia Post-style postcode/suburb lookup, but uses curated local fallback data until a maintained national dataset or API is connected."
+              />
+            ) : null}
               </>
             ) : null}
             {homeSearchMode === "meetups" ? (
@@ -4073,7 +4099,7 @@ const styles = StyleSheet.create({
   eventCardHighlighted: { borderColor: "#D2E0FF", backgroundColor: "#122A55" },
   dayEventCardHighlighted: { borderColor: "#6F87A1", backgroundColor: "#E4ECF4" },
   rtlEventCard: { flexDirection: "row-reverse" },
-  eventImage: { width: 104, height: 104, minHeight: 104, maxHeight: 104, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" },
+  eventImage: { position: "relative", width: 104, height: 104, minHeight: 104, maxHeight: 104, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" },
   eventImagePhoto: { overflow: "hidden", backgroundColor: "#102743" },
   eventImageCompact: { width: 86, height: 86, minHeight: 86, maxHeight: 86, borderRadius: 12 },
   eventImageSpacious: { width: 118, height: 118, minHeight: 118, maxHeight: 118 },
@@ -4116,7 +4142,7 @@ const styles = StyleSheet.create({
   prototypeLocalEmoji: { fontSize: 32 },
   prototypeEventSceneLabel: { position: "absolute", left: 6, right: 6, bottom: 6, minHeight: 20, borderRadius: 9, backgroundColor: "rgba(2,8,20,0.72)", alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
   prototypeEventSceneLabelText: { color: "#FFFFFF", fontSize: 9, fontWeight: "900", lineHeight: 12 },
-  eventPreviewPhoto: { width: "100%", height: "100%" },
+  eventPreviewPhoto: { position: "absolute", top: 0, right: 0, bottom: 0, left: 0, width: "100%", height: "100%" },
   eventPreviewOverlay: { position: "absolute", left: 6, right: 6, bottom: 6, minHeight: 20, borderRadius: 9, backgroundColor: "rgba(2,8,20,0.72)", alignItems: "center", justifyContent: "center", paddingHorizontal: 6 },
   eventPreviewPlace: { color: "#FFFFFF", fontSize: 9, fontWeight: "900", lineHeight: 12 },
   eventEmojiCompact: { fontSize: 28 },

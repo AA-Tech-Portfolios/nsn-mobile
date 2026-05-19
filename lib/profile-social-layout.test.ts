@@ -14,14 +14,14 @@ describe("profile social layout", () => {
       "avatarPhoto",
       "name",
       "myVibes",
-      "profileVisibilityPreview",
       "aboutMe",
+      "verificationTrust",
       "profileShortcuts",
       "localArea",
       "interests",
       "comfortTrust",
       "privacy",
-      "verificationTrust",
+      "profileVisibilityPreview",
     ]);
   });
 

@@ -210,10 +210,6 @@ const allSettingsAccordionIds: SettingsAccordionId[] = [
   "account",
 ];
 
-const basicOpenSettingsAccordions: SettingsAccordionId[] = ["displayLayout", "privacyVisibility", "comfortSafety", "advancedDisplay"];
-
-const advancedOpenSettingsAccordions: SettingsAccordionId[] = ["comfortSafety", "privacyVisibility"];
-
 const accordionByJumpSection: Record<SettingsSectionJumpId, SettingsAccordionId> = {
   settingsView: "displayLayout",
   batteryPerformance: "displayLayout",
@@ -3214,7 +3210,7 @@ export default function SettingsScreen() {
   const [recentlyChangedKey, setRecentlyChangedKey] = useState<string | null>(null);
   const [accountConfirmation, setAccountConfirmation] = useState<AccountConfirmation>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [openAccordionSections, setOpenAccordionSections] = useState<SettingsAccordionId[]>(basicOpenSettingsAccordions);
+  const [openAccordionSections, setOpenAccordionSections] = useState<SettingsAccordionId[]>([]);
   const [highlightedAccordionSection, setHighlightedAccordionSection] = useState<SettingsAccordionId | null>(null);
   const recentlyChangedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
@@ -3615,9 +3611,9 @@ export default function SettingsScreen() {
   useEffect(() => {
     setOpenAccordionSections((current) => {
       const valid = current.filter((id) => visibleSettingsAccordionIds.includes(id));
-      return valid.length ? valid : isAdvancedSettings ? advancedOpenSettingsAccordions : basicOpenSettingsAccordions;
+      return valid;
     });
-  }, [isAdvancedSettings]);
+  }, [visibleSettingsAccordionIds]);
   useEffect(() => {
     if (!normalizedQuickJumpSearch || filteredQuickJumpOptions.length === 0) return;
 

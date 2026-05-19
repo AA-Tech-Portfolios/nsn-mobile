@@ -69,7 +69,7 @@ describe("home layout presets", () => {
     expect(compact.eventImageWidth).toBe(compact.eventImageHeight);
     expect(comfortable.eventImageWidth).toBe(comfortable.eventImageHeight);
     expect(spacious.eventImageWidth).toBe(spacious.eventImageHeight);
-    expect(compact.eventImageWidth).toBeGreaterThanOrEqual(86);
+    expect(compact.eventImageWidth).toBeGreaterThanOrEqual(96);
     expect(compact.eventImageWidth).toBeLessThan(comfortable.eventImageWidth);
     expect(comfortable.eventImageWidth).toBeLessThan(spacious.eventImageWidth);
   });

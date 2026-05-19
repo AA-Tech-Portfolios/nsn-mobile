@@ -2,14 +2,14 @@ export const profileHomeSectionOrder = [
   "avatarPhoto",
   "name",
   "myVibes",
-  "profileVisibilityPreview",
   "aboutMe",
+  "verificationTrust",
   "profileShortcuts",
   "localArea",
   "interests",
   "comfortTrust",
   "privacy",
-  "verificationTrust",
+  "profileVisibilityPreview",
 ] as const;
 
 export type ProfileHomeSectionId = (typeof profileHomeSectionOrder)[number];

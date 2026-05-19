@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { lookupLocalAreaSuggestions } from "./location-lookup";
-import { searchNsnEvents, searchNsnSydneyLocalAreas } from "./nsn-search";
+import { searchNsnAustralianLocalities, searchNsnEvents, searchNsnSydneyLocalAreas } from "./nsn-search";
 import { allEvents } from "./nsn-data";
 import { officialSydneySuburbNames, sydneyLocalities } from "./sydney-localities";
 
@@ -65,6 +65,22 @@ describe("NSN local search", () => {
     expect(searchNsnSydneyLocalAreas("Nirimba Fields")[0]?.label).toBe("Nirimba Fields");
     expect(searchNsnSydneyLocalAreas("Wisemans Ferry")[0]?.label).toBe("Wisemans Ferry");
     expect(searchNsnSydneyLocalAreas("Yowie Bay")[0]?.label).toBe("Yowie Bay");
+  });
+
+  it("supports advanced Australia-wide locality and postcode search", () => {
+    expect(searchNsnAustralianLocalities("3000")[0]).toMatchObject({
+      label: "Melbourne, VIC 3000",
+      region: "VIC, Australia",
+      resultType: "Postcode",
+      timeZone: "Australia/Melbourne",
+    });
+    expect(searchNsnAustralianLocalities("Brisbane")[0]).toMatchObject({
+      label: "Brisbane, QLD 4000",
+      timeZone: "Australia/Brisbane",
+    });
+    expect(searchNsnAustralianLocalities("WA").map((area) => area.label)).toEqual(
+      expect.arrayContaining(["Perth, WA 6000", "Fremantle, WA 6160"])
+    );
   });
 
   it("matches meetup activities and venues", () => {

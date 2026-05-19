@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useState } from "react";
-import { Alert, Modal, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Alert, Modal, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -56,6 +56,8 @@ type CreatedEvent = {
   preEventQuestions?: string[];
   postEventQuestions?: string[];
 };
+
+type EventDetailSection = "overview" | "comfort" | "conversation" | "meetingPoint" | "safety" | "practical";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
@@ -765,9 +767,13 @@ function DetailMetaRow({
 
 export default function EventDetailsScreen() {
   const router = useRouter();
+  const { width: viewportWidth } = useWindowDimensions();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+  const [isMobileReadingExpanded, setIsMobileReadingExpanded] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<EventDetailSection[]>(["overview"]);
+  const [focusedSection, setFocusedSection] = useState<EventDetailSection | null>("overview");
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
   const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
@@ -805,7 +811,10 @@ export default function EventDetailsScreen() {
   const eventVerificationCopy = { ...verificationWindowTranslations.English, ...verificationCopy };
   const isRtl = rtlLanguages.has(appLanguageBase);
   const isDay = !isNightMode;
+  const isMobileEventPage = viewportWidth < 640;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
+  const scrollRef = useRef<ScrollView | null>(null);
+  const sectionOffsetsRef = useRef<Partial<Record<EventDetailSection, number>>>({});
 
   useEffect(() => {
     let isMounted = true;
@@ -873,6 +882,51 @@ export default function EventDetailsScreen() {
   const isPlaceSaved = savedPlaces.some((place) => place.id === savedPlaceId);
   const isEventPinned = pinnedEventIds.includes(event.id);
   const isEventHidden = hiddenEventIds.includes(event.id);
+  const showFullEventReading = !isMobileEventPage || isMobileReadingExpanded;
+  const quickReferenceItems = [
+    { label: "Essentials", copy: `${event.venue} · ${eventDate}` },
+    { label: "Comfort", copy: `${eventNoise.label} noise · ${eventTone.replace("Pace: ", "")}` },
+    { label: "Pacing", copy: "Low pressure · quiet starts welcome." },
+    { label: "After joining", copy: "Use chat for the exact spot and low-pressure questions." },
+  ];
+  const quickJumpItems: { section: EventDetailSection; label: string }[] = [
+    { section: "overview", label: "Overview" },
+    { section: "comfort", label: "Comfort" },
+    { section: "conversation", label: "Conversation" },
+    { section: "meetingPoint", label: "Meeting point" },
+    { section: "safety", label: "Safety" },
+    { section: "practical", label: "Practical" },
+  ];
+  const isSectionExpanded = (section: EventDetailSection) => expandedSections.includes(section);
+  const toggleEventDetailSection = (section: EventDetailSection) => {
+    setExpandedSections((current) => {
+      const isOpen = current.includes(section);
+
+      if (isOpen) {
+        setFocusedSection((focused) => (focused === section ? null : focused));
+        return current.filter((item) => item !== section);
+      }
+
+      setFocusedSection(section);
+      return [...current, section];
+    });
+  };
+  const scrollToEventSection = (section: EventDetailSection) => {
+    const y = sectionOffsetsRef.current[section] ?? 0;
+    scrollRef.current?.scrollTo({ y: Math.max(y - 8, 0), animated: true });
+  };
+  const openEventDetailSection = (section: EventDetailSection, shouldScroll = false) => {
+    setFocusedSection(section);
+    setExpandedSections((current) => (current.includes(section) ? current : [...current, section]));
+
+    if (shouldScroll) {
+      setTimeout(() => scrollToEventSection(section), 80);
+    }
+  };
+  const scrollToEventTop = () => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    setFocusedSection(null);
+  };
 
   const toggleFirstMeetupSupportOption = (option: FirstMeetupSupportOption) => {
     setSelectedFirstMeetupSupport((current) => {
@@ -986,10 +1040,39 @@ export default function EventDetailsScreen() {
     Alert.alert(isEventHidden ? actionCopy.unhiddenMessage : actionCopy.hiddenMessage, event.title);
   };
 
+  const renderAccordionSection = (section: EventDetailSection, title: string, summary: string, children: ReactNode) => {
+    const expanded = isSectionExpanded(section);
+
+    return (
+      <View
+        onLayout={(event) => {
+          sectionOffsetsRef.current[section] = event.nativeEvent.layout.y;
+        }}
+        style={[styles.eventAccordion, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
+      >
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => toggleEventDetailSection(section)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded }}
+          accessibilityLabel={`${expanded ? "Collapse" : "Expand"} ${title}`}
+          style={[styles.eventAccordionHeader, isRtl && styles.rtlRow]}
+        >
+          <View style={styles.eventAccordionTitleBlock}>
+            <Text style={[styles.eventAccordionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{title}</Text>
+            <Text style={[styles.eventAccordionSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{summary}</Text>
+          </View>
+          <IconSymbol name={expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+        </TouchableOpacity>
+        {expanded ? <View style={styles.eventAccordionBody}>{children}</View> : null}
+      </View>
+    );
+  };
+
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.topBar, isRtl && styles.rtlRow]}>
           <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.iconButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={eventActionCopy.goBack} accessibilityHint={screenReaderHints ? eventActionCopy.goBackHint : undefined}>
             <IconSymbol name="chevron.left" color={iconColor} size={26} />
@@ -1140,7 +1223,85 @@ export default function EventDetailsScreen() {
 
         <Text style={[styles.description, isDay && styles.dayText, isRtl && styles.rtlText]}>{eventDescription}</Text>
 
-        <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
+        {!isMobileEventPage ? (
+          <View style={[styles.quickReferenceSection, isRtl && styles.rtlBlock]}>
+            <View style={[styles.quickReferenceHeader, isRtl && styles.rtlBlock]}>
+              <Text style={[styles.quickReferenceKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Quick reference</Text>
+              <Text style={[styles.quickReferenceTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Scan before reading the full event details</Text>
+            </View>
+            <View style={[styles.quickReferenceGrid, isRtl && styles.rtlRow]}>
+              {quickReferenceItems.map((item) => (
+                <View key={item.label} style={[styles.quickReferenceCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+                  <Text style={[styles.quickReferenceCardTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{item.label}</Text>
+                  <Text style={[styles.quickReferenceCardCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
+        {isMobileEventPage ? (
+          <View style={[styles.mobileReadingGuideCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.mobileReadingGuideHeader, isRtl && styles.rtlRow]}>
+              <View style={styles.mobileReadingGuideBody}>
+                <Text style={[styles.mobileReadingGuideKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Quick read</Text>
+                <Text style={[styles.mobileReadingGuideTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>The essentials first</Text>
+              </View>
+              <Text style={[styles.verificationChip, isDay && styles.dayVerificationChip]}>{canMeet ? "Ready" : "Prototype gate"}</Text>
+            </View>
+            <View style={styles.mobileReadingGuideList}>
+              <Text style={[styles.mobileReadingGuideLine, isDay && styles.dayText, isRtl && styles.rtlText]}>Where: {event.venue}</Text>
+              <Text style={[styles.mobileReadingGuideLine, isDay && styles.dayText, isRtl && styles.rtlText]}>When: {eventDate}</Text>
+              <Text style={[styles.mobileReadingGuideLine, isDay && styles.dayText, isRtl && styles.rtlText]}>Feel: {eventNoise.label} noise, {eventTone.toLowerCase()}</Text>
+              <Text style={[styles.mobileReadingGuideLine, isDay && styles.dayText, isRtl && styles.rtlText]}>Comfort: low pressure, quiet starts welcome.</Text>
+            </View>
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={() => setIsMobileReadingExpanded((current) => !current)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: isMobileReadingExpanded }}
+              accessibilityLabel={isMobileReadingExpanded ? "Hide full event reading" : "Show full event reading"}
+              style={[styles.mobileReadingGuideButton, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
+            >
+              <Text style={[styles.mobileReadingGuideButtonText, isDay && styles.dayText]}>
+                {isMobileReadingExpanded ? "Hide extra reading" : "Show full details"}
+              </Text>
+              <IconSymbol name={isMobileReadingExpanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        <View style={[styles.quickJumpSection, isRtl && styles.rtlBlock]}>
+          <Text style={[styles.quickReferenceKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Quick jump</Text>
+          <View style={[styles.quickJumpRow, isRtl && styles.rtlRow]}>
+            {quickJumpItems.map((item) => {
+              const active = focusedSection === item.section;
+
+              return (
+                <TouchableOpacity
+                  key={item.section}
+                  activeOpacity={0.82}
+                  onPress={() => {
+                    if (isMobileEventPage) setIsMobileReadingExpanded(true);
+                    openEventDetailSection(item.section, true);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={`Open ${item.label} section`}
+                  style={[styles.quickJumpChip, isDay && styles.dayActionRow, active && styles.quickJumpChipActive]}
+                >
+                  <Text style={[styles.quickJumpChipText, isDay && styles.dayText, active && styles.quickJumpChipTextActive]}>{item.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {showFullEventReading ? (
+        <View style={styles.eventAccordionStack}>
+        {renderAccordionSection("overview", "Overview", "Weather, sound level, and what to expect.", (
+          <>
+          <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
           <View style={[styles.weatherIconWrap, isDay && styles.dayMetaIconWrap]}>
             <IconSymbol name="weather" color={isDay ? "#53677A" : "#8FAFD1"} size={24} />
           </View>
@@ -1158,65 +1319,6 @@ export default function EventDetailsScreen() {
             <Text style={[styles.noiseTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{noiseCopy.title}: {eventNoise.label}</Text>
             <Text style={[styles.noiseDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventNoise.copy}. {noiseCopy.copy}</Text>
           </View>
-        </View>
-
-        {event.comfortLabels?.length ? (
-          <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-              </View>
-              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meetup comfort & participation</Text>
-            </View>
-            <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Optional environment cues for joining at your own pace. Energetic and calmer styles can both belong here, and stepping away or rejoining is okay.
-            </Text>
-            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-              {event.comfortLabels.map((label) => (
-                <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
-              ))}
-            </View>
-          </View>
-        ) : null}
-
-        <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-            <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-              <IconSymbol name="low-pressure" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            </View>
-            <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Arriving alone is normal here</Text>
-          </View>
-          <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Small NSN meetups should make room for solo arrivals, quiet starts, and warming up slowly.
-          </Text>
-          <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-            {arrivingAloneReassuranceItems.map((item) => (
-              <View key={item.label} style={[styles.meetupReassuranceCard, isDay && styles.dayActionRow]}>
-                <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.label}</Text>
-                <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-            <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-              <IconSymbol name="visibility" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            </View>
-            <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
-          </View>
-          <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
-          </Text>
-          <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-            {mediaComfortLabels.map((label) => (
-              <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
-            ))}
-          </View>
-          <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Please don't screenshot or share someone's profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention.
-          </Text>
         </View>
 
         <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
@@ -1237,8 +1339,12 @@ export default function EventDetailsScreen() {
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.flexibleCopy}</Text>
           </View>
         </View>
+          </>
+        ))}
 
-        {event.preEventQuestions && event.preEventQuestions.length > 0 && (
+        {renderAccordionSection("conversation", "Conversation", "Optional starters and calm clarity questions.", (
+          <>
+          {event.preEventQuestions && event.preEventQuestions.length > 0 && (
           <View style={[styles.questionsPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
             <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.preEventQuestionsTitle}</Text>
             <Text style={[styles.questionsCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.preEventQuestionsCopy}</Text>
@@ -1271,109 +1377,6 @@ export default function EventDetailsScreen() {
             </View>
           </View>
         )}
-
-        <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel, isRtl && styles.rtlBlock]}>
-          <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.meetingPoint}</Text>
-          <Text style={[styles.meetingCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventMeetingCopy}</Text>
-        </View>
-
-        <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-              <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            </View>
-            <View style={styles.weatherCopyBlock}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Practical meetup notes</Text>
-              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Informational only. These are calm reminders for planning your own arrival and return, not live support or monitoring.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.practicalGuidanceList}>
-            {practicalMeetupGuidanceItems.map((item) => (
-              <View key={item.label} style={[styles.practicalGuidanceRow, isDay && styles.dayActionRow]}>
-                <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.label}</Text>
-                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-              <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            </View>
-            <View style={styles.weatherCopyBlock}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>First meetup support</Text>
-              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Local prototype choices only. No guide, matching, or private 1:1 flow is created.
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
-            {firstMeetupSupportOptions.map((option) => {
-              const active = selectedFirstMeetupSupport.includes(option.label);
-
-              return (
-                <TouchableOpacity
-                  key={option.label}
-                  activeOpacity={0.82}
-                  onPress={() => toggleFirstMeetupSupportOption(option.label)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={option.label}
-                  accessibilityHint={option.description}
-                  style={[styles.meetupSupportChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
-                >
-                  <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <Text style={[styles.meetupSupportSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Current: {getFirstMeetupSupportSummary(selectedFirstMeetupSupport)}
-          </Text>
-        </View>
-
-        <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-              <IconSymbol name="group" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            </View>
-            <View style={styles.weatherCopyBlock}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Optional comfort roles</Text>
-              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Local preview only. These are broad joining cues, not identity labels, rankings, or strict filters.
-              </Text>
-            </View>
-          </View>
-          <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
-            {meetupComfortRoleOptions.map((option) => {
-              const active = selectedComfortRoles.includes(option.label);
-
-              return (
-                <TouchableOpacity
-                  key={option.label}
-                  activeOpacity={0.82}
-                  onPress={() => toggleComfortRole(option.label)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={option.label}
-                  accessibilityHint={option.description}
-                  style={[styles.meetupSupportChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
-                >
-                  <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{option.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <Text style={[styles.meetupSupportSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Current: {selectedComfortRoles.length ? selectedComfortRoles.join(", ") : "None selected"}
-          </Text>
-        </View>
 
         <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
@@ -1418,8 +1421,200 @@ export default function EventDetailsScreen() {
             </View>
           ) : null}
         </View>
+          </>
+        ))}
 
-        <View style={[styles.safetyPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+        {renderAccordionSection("meetingPoint", "Meeting point", "Where to meet and how the host can clarify the exact spot.", (
+          <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel, isRtl && styles.rtlBlock]}>
+            <Text style={[styles.meetingCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventMeetingCopy}</Text>
+          </View>
+        ))}
+
+        {renderAccordionSection("comfort", "Comfort", "Arrival comfort, participation style, and media preferences.", (
+          <>
+          {event.comfortLabels?.length ? (
+            <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+              <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                  <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                </View>
+                <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meetup comfort & participation</Text>
+              </View>
+              <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Optional environment cues for joining at your own pace. Energetic and calmer styles can both belong here, and stepping away or rejoining is okay.
+              </Text>
+              <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                {event.comfortLabels.map((label) => (
+                  <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
+          <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="low-pressure" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Arriving alone is normal here</Text>
+            </View>
+            <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Small NSN meetups should make room for solo arrivals, quiet starts, and warming up slowly.
+            </Text>
+            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+              {arrivingAloneReassuranceItems.map((item) => (
+                <View key={item.label} style={[styles.meetupReassuranceCard, isDay && styles.dayActionRow]}>
+                  <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.label}</Text>
+                  <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="visibility" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+            </View>
+            <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+            </Text>
+            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+              {mediaComfortLabels.map((label) => (
+                <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
+              ))}
+            </View>
+            <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Please don't screenshot or share someone's profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention.
+            </Text>
+          </View>
+
+          <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <View style={styles.weatherCopyBlock}>
+                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>First meetup support</Text>
+                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  Local prototype choices only. No guide, matching, or private 1:1 flow is created.
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+              {firstMeetupSupportOptions.map((option) => {
+                const active = selectedFirstMeetupSupport.includes(option.label);
+
+                return (
+                  <TouchableOpacity
+                    key={option.label}
+                    activeOpacity={0.82}
+                    onPress={() => toggleFirstMeetupSupportOption(option.label)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={option.label}
+                    accessibilityHint={option.description}
+                    style={[styles.meetupSupportChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                  >
+                    <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={[styles.meetupSupportSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Current: {getFirstMeetupSupportSummary(selectedFirstMeetupSupport)}
+            </Text>
+          </View>
+
+          <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="group" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <View style={styles.weatherCopyBlock}>
+                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Optional comfort roles</Text>
+                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  Local preview only. These are broad joining cues, not identity labels, rankings, or strict filters.
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+              {meetupComfortRoleOptions.map((option) => {
+                const active = selectedComfortRoles.includes(option.label);
+
+                return (
+                  <TouchableOpacity
+                    key={option.label}
+                    activeOpacity={0.82}
+                    onPress={() => toggleComfortRole(option.label)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={option.label}
+                    accessibilityHint={option.description}
+                    style={[styles.meetupSupportChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                  >
+                    <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{option.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={[styles.meetupSupportSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Current: {selectedComfortRoles.length ? selectedComfortRoles.join(", ") : "None selected"}
+            </Text>
+          </View>
+          </>
+        ))}
+
+        {renderAccordionSection("safety", "Safety", "Soft exits, consent reminders, and prototype limits.", (
+          <>
+          <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
+            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.softExitTitle}</Text>
+            <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.softExitCopy}</Text>
+          </View>
+          </>
+        ))}
+
+        {renderAccordionSection("practical", "Practical", "Planning notes for arrival, weather, and getting home.", (
+          <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <View style={styles.weatherCopyBlock}>
+                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Practical meetup notes</Text>
+                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  Informational only. These are calm reminders for planning your own arrival and return, not live support or monitoring.
+                </Text>
+              </View>
+            </View>
+            <View style={styles.practicalGuidanceList}>
+              {practicalMeetupGuidanceItems.map((item) => (
+                <View key={item.label} style={[styles.practicalGuidanceRow, isDay && styles.dayActionRow]}>
+                  <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.label}</Text>
+                  <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={scrollToEventTop}
+          accessibilityRole="button"
+          accessibilityLabel="Back to top"
+          style={[styles.backToTopButton, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
+        >
+          <IconSymbol name="chevron.up" color={isDay ? "#53677A" : nsnColors.muted} size={16} />
+          <Text style={[styles.backToTopText, isDay && styles.dayText]}>Back to top</Text>
+        </TouchableOpacity>
+        </View>
+        ) : null}
+
+        <View style={[styles.safetyPanel, styles.compactReadinessPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
             <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCopy.meetingSafety}</Text>
             <Text style={[styles.verificationChip, isDay && styles.dayVerificationChip, canMeet && styles.verificationChipReady, isDay && canMeet && styles.dayVerificationChipReady]}>
@@ -1427,11 +1622,6 @@ export default function EventDetailsScreen() {
             </Text>
           </View>
           <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
-        </View>
-
-        <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
-          <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.softExitTitle}</Text>
-          <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.softExitCopy}</Text>
         </View>
 
         <Text style={[styles.ctaReassurance, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventCopy.ctaReassurance}</Text>
@@ -1539,6 +1729,38 @@ const styles = StyleSheet.create({
   metaIconWrap: { width: 32, height: 32, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(148,163,184,0.18)" },
   metaLine: { flex: 1, color: nsnColors.text, fontSize: 14, lineHeight: 20 },
   description: { color: nsnColors.text, fontSize: 15, lineHeight: 23, marginBottom: 14 },
+  quickReferenceSection: { marginBottom: 18 },
+  quickReferenceHeader: { marginBottom: 9 },
+  quickReferenceKicker: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
+  quickReferenceTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21, marginTop: 1 },
+  quickReferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  quickReferenceCard: { flexGrow: 1, flexBasis: 190, minHeight: 86, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", paddingHorizontal: 12, paddingVertical: 11, gap: 4 },
+  quickReferenceCardTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  quickReferenceCardCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
+  quickJumpSection: { marginBottom: 14 },
+  quickJumpRow: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 7 },
+  quickJumpChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  quickJumpChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  quickJumpChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15, textAlign: "center" },
+  quickJumpChipTextActive: { color: "#FFFFFF" },
+  eventAccordionStack: { gap: 10, marginBottom: 14 },
+  eventAccordion: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", overflow: "hidden" },
+  eventAccordionHeader: { minHeight: 62, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, paddingHorizontal: 14, paddingVertical: 11 },
+  eventAccordionTitleBlock: { flex: 1, minWidth: 0 },
+  eventAccordionTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  eventAccordionSummary: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  eventAccordionBody: { paddingHorizontal: 12, paddingBottom: 12 },
+  backToTopButton: { alignSelf: "center", minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8 },
+  backToTopText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  mobileReadingGuideCard: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 10, marginBottom: 14 },
+  mobileReadingGuideHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  mobileReadingGuideBody: { flex: 1, minWidth: 0 },
+  mobileReadingGuideKicker: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
+  mobileReadingGuideTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21, marginTop: 1 },
+  mobileReadingGuideList: { gap: 5 },
+  mobileReadingGuideLine: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 19 },
+  mobileReadingGuideButton: { minHeight: 42, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 12 },
+  mobileReadingGuideButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   weatherCard: { minHeight: 78, flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#284476", marginBottom: 19 },
   weatherCopyBlock: { flex: 1 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
@@ -1591,6 +1813,7 @@ const styles = StyleSheet.create({
   softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
   ctaReassurance: { color: nsnColors.muted, fontSize: 13, fontWeight: "800", lineHeight: 19, textAlign: "center", marginBottom: 9 },
   safetyPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
+  compactReadinessPanel: { marginTop: 2, marginBottom: 10 },
   safetyHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 6 },
   safetyTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   safetyCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
