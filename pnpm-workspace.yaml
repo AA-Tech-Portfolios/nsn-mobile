@@ -1,3 +1,7 @@
 allowBuilds:
   esbuild: true
+  ngrok: true
   unrs-resolver: true
+overrides:
+  uuid: 11.1.0
+storeDir: .pnpm-store
