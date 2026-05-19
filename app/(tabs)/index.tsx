@@ -1200,8 +1200,6 @@ export default function HomeScreen() {
   const [homeUpdateNotice, setHomeUpdateNotice] = useState<string | null>(null);
   const [homeSearchMode, setHomeSearchMode] = useState<HomeSearchMode>("areas");
   const [nsnSearchQuery, setNsnSearchQuery] = useState("");
-  const [advancedAustraliaQuery, setAdvancedAustraliaQuery] = useState("");
-  const [showAdvancedAustraliaSearch, setShowAdvancedAustraliaSearch] = useState(false);
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null);
   const [mapZoomLevel, setMapZoomLevel] = useState(0);
@@ -3454,8 +3452,6 @@ export default function HomeScreen() {
                 onPress={() => {
                   setHomeSearchMode(modeKey);
                   setNsnSearchQuery("");
-                  setAdvancedAustraliaQuery("");
-                  setShowAdvancedAustraliaSearch(false);
                 }}
                     accessibilityRole="tab"
                     accessibilityState={{ selected: active }}
@@ -3493,27 +3489,14 @@ export default function HomeScreen() {
               isRtl={isRtl}
               limit={7}
             />
-            {renderHomeDisclosureToggle({
-              title: "Advanced Australia search",
-              copy: "Search by postcode, state, city, or suburb. Alpha uses curated fallback data while a fuller postcode service is prepared.",
-              open: showAdvancedAustraliaSearch,
-              onPress: () => setShowAdvancedAustraliaSearch((current) => !current),
-            })}
-            {showAdvancedAustraliaSearch ? (
-              <LocalAreaPicker
-                query={advancedAustraliaQuery}
-                onQueryChange={setAdvancedAustraliaQuery}
-                onSelect={chooseLocalArea}
-                selectedAreaId={timezone.id}
-                isDay={isDay}
-                isRtl={isRtl}
-                limit={8}
-                searchScope="australia"
-                placeholder="Search postcode, suburb, city, or state..."
-                promptCopy="Search across Australian states, cities, suburbs, or postcodes."
-                fallbackNote="Prototype note: this mirrors an Australia Post-style postcode/suburb lookup, but uses curated local fallback data until a maintained national dataset or API is connected."
-              />
-            ) : null}
+            <View style={[styles.searchPromptCard, homeLayoutUtilityCardStyle, isDay && styles.dayLocationResultButton]}>
+              <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+                Advanced Australia search paused
+              </Text>
+              <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Prototype build: use Sydney and North Shore suburb search while broader Australian locality data is reviewed.
+              </Text>
+            </View>
               </>
             ) : null}
             {homeSearchMode === "meetups" ? (

@@ -68,18 +68,10 @@ export default function RootLayout() {
   );
   const [trpcClient] = useState(() => createTRPCClient());
 
-  // Ensure minimum 8px padding for top and bottom on mobile
-  const providerInitialMetrics = useMemo(() => {
-    const metrics = initialWindowMetrics ?? { insets: initialInsets, frame: initialFrame };
-    return {
-      ...metrics,
-      insets: {
-        ...metrics.insets,
-        top: Math.max(metrics.insets.top, 16),
-        bottom: Math.max(metrics.insets.bottom, 12),
-      },
-    };
-  }, [initialInsets, initialFrame]);
+  const webInitialMetrics = useMemo(
+    () => initialWindowMetrics ?? { insets: initialInsets, frame: initialFrame },
+    [initialInsets, initialFrame],
+  );
 
   const content = (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -96,7 +88,7 @@ export default function RootLayout() {
             <Stack.Screen name="oauth/callback" />
           </Stack>
           <LowLightOverlay />
-          <StatusBar style="auto" />
+          <AppStatusBar />
         </QueryClientProvider>
       </trpc.Provider>
     </GestureHandlerRootView>
@@ -108,7 +100,7 @@ export default function RootLayout() {
     return (
       <ThemeProvider>
         <AppSettingsProvider>
-          <SafeAreaProvider initialMetrics={providerInitialMetrics}>
+          <SafeAreaProvider initialMetrics={webInitialMetrics}>
             <SafeAreaFrameContext.Provider value={frame}>
               <SafeAreaInsetsContext.Provider value={insets}>
                 {content}
@@ -123,7 +115,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AppSettingsProvider>
-        <SafeAreaProvider initialMetrics={providerInitialMetrics}>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
           {content}
         </SafeAreaProvider>
       </AppSettingsProvider>
@@ -152,6 +144,18 @@ function OnboardingGate() {
   }, [hasCompletedOnboarding, isOnboardingLoaded, routeGroup, router]);
 
   return null;
+}
+
+function AppStatusBar() {
+  const { isNightMode } = useAppSettings();
+
+  return (
+    <StatusBar
+      backgroundColor="transparent"
+      style={isNightMode ? "light" : "dark"}
+      translucent
+    />
+  );
 }
 
 function LowLightOverlay() {
