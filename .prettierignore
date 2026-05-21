@@ -1,0 +1,13 @@
+.gitignore
+.editorconfig
+.prettierignore
+android/
+ios/
+.expo/
+.pnpm-store/
+coverage/
+dist/
+node_modules/
+web-build/
+*.log
+pnpm-lock.yaml

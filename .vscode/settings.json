@@ -1,0 +1,41 @@
+{
+  "css.validate": false,
+  "editor.bracketPairColorization.enabled": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.expo": true,
+    "**/.pnpm-store": true,
+    "**/.turbo": true,
+    "**/android": true,
+    "**/ios": true,
+    "**/node_modules": true
+  },
+  "npm.packageManager": "pnpm",
+  "prettier.requireConfig": true,
+  "search.exclude": {
+    "**/.expo": true,
+    "**/.pnpm-store": true,
+    "**/.turbo": true,
+    "**/android": true,
+    "**/ios": true,
+    "**/node_modules": true
+  },
+  "tailwindCSS.classAttributes": ["class", "className"],
+  "tailwindCSS.experimental.classRegex": [
+    ["className\\s*[:=]\\s*[\"'`]([^\"'`]*)[\"'`]", "[\"'`]([^\"'`]*)[\"'`]"]
+  ],
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.tsdk": "node_modules/typescript/lib"
+}

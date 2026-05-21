@@ -13,13 +13,29 @@ expo-env.d.ts
 coverage/
 
 # Native
+.android/
+.gradle/
 .kotlin/
+*.aab
+*.apk
+*.ap_
+*.hprof
+hs_err_pid*
 *.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+local.properties
+android/.cxx/
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/local.properties
+android/**/*.iml
+*.avd/
 
 # Metro
 .metro-health-check*
@@ -50,7 +66,10 @@ app-example
 /android
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
 .idea/
 *.swp
 *.swo

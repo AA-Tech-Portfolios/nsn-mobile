@@ -1,0 +1,54 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Expo: Start web/dev",
+      "type": "shell",
+      "command": "pnpm dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Expo: Start Android",
+      "type": "shell",
+      "command": "pnpm android",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Expo: Start iOS",
+      "type": "shell",
+      "command": "pnpm ios",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "TypeScript: Check",
+      "type": "shell",
+      "command": "pnpm check",
+      "group": "build",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "ESLint: Lint",
+      "type": "shell",
+      "command": "pnpm lint",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Prettier: Check",
+      "type": "shell",
+      "command": "pnpm format:check",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Vitest: Run",
+      "type": "shell",
+      "command": "pnpm test",
+      "group": "test",
+      "problemMatcher": []
+    }
+  ]
+}
