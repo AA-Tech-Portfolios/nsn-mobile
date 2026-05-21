@@ -827,7 +827,7 @@ export default function EventDetailsScreen() {
           setCreatedEvents(JSON.parse(storedEvents) as CreatedEvent[]);
         }
       } catch (error) {
-        console.log("Created events could not load:", error);
+        console.warn("Created events could not load:", error);
       }
     }
 

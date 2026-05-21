@@ -1628,7 +1628,7 @@ export default function HomeScreen() {
       const nearestArea = findNearestNsnSydneyLocalArea(currentLocation.coords.latitude, currentLocation.coords.longitude);
       chooseLocalArea(nearestArea);
     } catch (error) {
-      console.log("Location detection failed:", error);
+      console.warn("Location detection failed:", error);
       setHeaderPlaceholder({
         title: "Location could not be detected",
         copy: "Try again in a moment, or choose your local area manually.",

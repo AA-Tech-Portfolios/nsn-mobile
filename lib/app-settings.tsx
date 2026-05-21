@@ -2020,7 +2020,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
         setBlurProfilePhoto(snapshot.blurProfilePhoto ?? (snapshot.visibilityPreference ?? "Blurred") === "Blurred");
       } catch (error) {
-        console.log("NSN onboarding could not load:", error);
+        console.warn("NSN onboarding could not load:", error);
       } finally {
         if (isMounted) {
           setIsOnboardingLoaded(true);
@@ -2320,7 +2320,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         } satisfies OnboardingSnapshot)
       );
     } catch (error) {
-      console.log("NSN onboarding could not save:", error);
+      console.warn("NSN onboarding could not save:", error);
     }
   };
 
@@ -2755,7 +2755,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
     } catch (error) {
-      console.log("NSN state could not save:", error);
+      console.warn("NSN state could not save:", error);
     }
   };
 
@@ -2851,7 +2851,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           action: "home",
         });
       } catch (error) {
-        console.log("Live weather notification fetch failed:", error);
+        console.warn("Live weather notification fetch failed:", error);
         if (!cancelled) {
           setLiveWeatherAlert({
             icon: "!",
@@ -2881,7 +2881,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     try {
       await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
     } catch (error) {
-      console.log("NSN onboarding could not reset:", error);
+      console.warn("NSN onboarding could not reset:", error);
     }
   };
 

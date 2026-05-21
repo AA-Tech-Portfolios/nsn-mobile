@@ -21,18 +21,9 @@ export default function OAuthCallback() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      console.log("[OAuth] Callback handler triggered");
-      console.log("[OAuth] Callback params received:", {
-        hasCode: !!params.code,
-        hasState: !!params.state,
-        hasError: !!params.error,
-        hasSessionToken: !!params.sessionToken,
-        hasUser: !!params.user,
-      });
       try {
         // Check for sessionToken in params first (web OAuth callback from server redirect)
         if (params.sessionToken) {
-          console.log("[OAuth] Session token found in params (web callback)");
           await Auth.setSessionToken(params.sessionToken);
 
           // Decode and store user info if available
@@ -53,14 +44,12 @@ export default function OAuthCallback() {
                 lastSignedIn: new Date(userData.lastSignedIn || Date.now()),
               };
               await Auth.setUserInfo(userInfo);
-              console.log("[OAuth] User info stored");
             } catch (err) {
               console.error("[OAuth] Failed to parse user data:", err);
             }
           }
 
           setStatus("success");
-          console.log("[OAuth] Web authentication successful, redirecting to home...");
           setTimeout(() => {
             router.replace("/(tabs)");
           }, 1000);
@@ -72,19 +61,15 @@ export default function OAuthCallback() {
 
         // Try to get from local search params first (works with expo-router)
         if (params.code || params.state || params.error) {
-          console.log("[OAuth] Found params in route params");
           // Extract from params
           const urlParams = new URLSearchParams();
           if (params.code) urlParams.set("code", params.code);
           if (params.state) urlParams.set("state", params.state);
           if (params.error) urlParams.set("error", params.error);
           url = `?${urlParams.toString()}`;
-          console.log("[OAuth] Callback URL constructed from params");
         } else {
-          console.log("[OAuth] No params found, checking Linking.getInitialURL()...");
           // Fallback: try to get from Linking
           const initialUrl = await Linking.getInitialURL();
-          console.log("[OAuth] Initial URL present:", !!initialUrl);
           if (initialUrl) {
             url = initialUrl;
           }
@@ -107,24 +92,16 @@ export default function OAuthCallback() {
 
         // Try to get from params first
         if (params.code && params.state) {
-          console.log("[OAuth] Using code and state from route params");
           code = params.code;
           state = params.state;
         } else if (url) {
-          console.log("[OAuth] Parsing code and state from callback URL");
           // Parse from URL
           try {
             const urlObj = new URL(url);
             code = urlObj.searchParams.get("code");
             state = urlObj.searchParams.get("state");
             sessionToken = urlObj.searchParams.get("sessionToken");
-            console.log("[OAuth] Extracted from URL:", {
-              hasCode: !!code,
-              hasState: !!state,
-              hasSessionToken: !!sessionToken,
-            });
-          } catch (e) {
-            console.log("[OAuth] Failed to parse as full URL, trying regex:", e);
+          } catch {
             // Try parsing as relative URL with query params
             const match = url.match(/[?&](code|state|sessionToken)=([^&]+)/g);
             if (match) {
@@ -134,30 +111,16 @@ export default function OAuthCallback() {
                 if (key === "state") state = decodeURIComponent(value);
                 if (key === "sessionToken") sessionToken = decodeURIComponent(value);
               });
-              console.log("[OAuth] Extracted from regex:", {
-                hasCode: !!code,
-                hasState: !!state,
-                hasSessionToken: !!sessionToken,
-              });
             }
           }
         }
 
-        console.log("[OAuth] Final extracted values:", {
-          hasCode: !!code,
-          hasState: !!state,
-          hasSessionToken: !!sessionToken,
-        });
-
         // If we have sessionToken directly from URL, use it
         if (sessionToken) {
-          console.log("[OAuth] Session token found in URL, storing...");
           await Auth.setSessionToken(sessionToken);
-          console.log("[OAuth] Session token stored successfully");
           // User info is already in the OAuth callback response
           // No need to fetch from API
           setStatus("success");
-          console.log("[OAuth] Redirecting to home...");
           setTimeout(() => {
             router.replace("/(tabs)");
           }, 1000);
@@ -176,22 +139,14 @@ export default function OAuthCallback() {
         }
 
         // Exchange code for session token
-        console.log("[OAuth] Exchanging code for session token...");
         const result = await Api.exchangeOAuthCode(code, state);
-        console.log("[OAuth] Exchange result:", {
-          hasSessionToken: !!result.sessionToken,
-          hasUser: !!result.user,
-        });
 
         if (result.sessionToken) {
-          console.log("[OAuth] Session token received, storing...");
           // Store session token
           await Auth.setSessionToken(result.sessionToken);
-          console.log("[OAuth] Session token stored successfully");
 
           // Store user info if available
           if (result.user) {
-            console.log("[OAuth] User data received");
             const userInfo: Auth.User = {
               id: result.user.id,
               openId: result.user.openId,
@@ -201,17 +156,12 @@ export default function OAuthCallback() {
               lastSignedIn: new Date(result.user.lastSignedIn || Date.now()),
             };
             await Auth.setUserInfo(userInfo);
-            console.log("[OAuth] User info stored");
-          } else {
-            console.log("[OAuth] No user data in result");
           }
 
           setStatus("success");
-          console.log("[OAuth] Authentication successful, redirecting to home...");
 
           // Redirect to home after a short delay
           setTimeout(() => {
-            console.log("[OAuth] Executing redirect...");
             router.replace("/(tabs)");
           }, 1000);
         } else {

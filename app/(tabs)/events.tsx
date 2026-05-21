@@ -369,7 +369,7 @@ export default function EventsScreen() {
           setCreatedEvents(JSON.parse(storedEvents) as CreatedEvent[]);
         }
       } catch (error) {
-        console.log("Created events could not load:", error);
+        console.warn("Created events could not load:", error);
       }
     }
 
@@ -386,7 +386,7 @@ export default function EventsScreen() {
     try {
       await AsyncStorage.setItem(CREATED_EVENTS_KEY, JSON.stringify(events));
     } catch (error) {
-      console.log("Created events could not save:", error);
+      console.warn("Created events could not save:", error);
     }
   };
 

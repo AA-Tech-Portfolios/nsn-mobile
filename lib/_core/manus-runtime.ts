@@ -11,14 +11,6 @@
 import { Platform } from "react-native";
 import type { Metrics } from "react-native-safe-area-context";
 
-// Debug logging with timestamps
-const DEBUG = true;
-const log = (msg: string) => {
-  if (!DEBUG) return;
-  const ts = new Date().toISOString();
-  console.log(`[ManusRuntime ${ts}] ${msg}`);
-};
-
 type MessageType = "appDevServerReady";
 type SafeAreaInsets = { top: number; right: number; bottom: number; left: number };
 type SafeAreaCallback = (metrics: Metrics) => void;
@@ -55,7 +47,6 @@ function sendToParent(type: MessageType, payload: Record<string, unknown> = {}):
     payload: { type, from: "content", to: "container", payload },
   };
   window.parent.postMessage(message, "*");
-  log(`Sent to parent: ${type}`);
 }
 
 let initialized = false;
@@ -82,9 +73,6 @@ function handleMessage(event: MessageEvent<unknown>): void {
     const insets = payload.payload;
     const frame = { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
     safeAreaCallback({ insets, frame });
-    log(
-      `Received safe area insets from parent: top=${insets.top}, bottom=${insets.bottom}, left=${insets.left}, right=${insets.right}`,
-    );
   }
 }
 
@@ -108,7 +96,6 @@ export function initManusRuntime(): void {
   if (initialized) return;
   initialized = true;
 
-  log("initManusRuntime called");
   window.addEventListener("message", handleMessage);
   sendToParent("appDevServerReady", {});
 }
