@@ -1114,7 +1114,7 @@ export default function UserPreferencesScreen() {
   const getPreferenceSummary = (values: string[], fallback: string, limit = 3) =>
     values.length ? `${values.slice(0, limit).map((value) => formatChipLabel(value)).join(", ")}${values.length > limit ? ` +${values.length - limit} more` : ""}` : fallback;
   const getPreferenceDetailGroupCount = <T extends string>(
-    details: Array<PreferenceOptionDetail<T>>,
+    details: PreferenceOptionDetail<T>[],
     selectedValues: T[],
     group: string
   ) => details.filter((option) => option.group === group && selectedValues.includes(option.value)).length;
@@ -1663,7 +1663,7 @@ export default function UserPreferencesScreen() {
             <View style={[styles.searchCard, isDay && styles.dayCard]}>
               <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Work, Study & Life Context</Text>
               <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                Share what you're doing, learning, or interested in - only if you want to. NSN recommends broad context first, not exact workplaces, schools, schedules, or daily routines.
+                Share what you&apos;re doing, learning, or interested in - only if you want to. NSN recommends broad context first, not exact workplaces, schools, schedules, or daily routines.
               </Text>
               <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
                 {lifeContextFreshness.label}
@@ -1829,7 +1829,7 @@ export default function UserPreferencesScreen() {
                       .filter((option) => option.group === "Social comfort & life pacing")
                       .map((option) => renderPreferenceDetailChip(option, lifeComfortPreferences, toggleLifeComfortPreference))}
                   </View>
-                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Things I'm working through</Text>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>Things I&apos;m working through</Text>
                   <View style={responsiveChipGridStyle}>
                     {lifeComfortPreferenceDetails
                       .filter((option) => option.group === "Things I'm working through")

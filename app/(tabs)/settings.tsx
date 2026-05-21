@@ -3439,7 +3439,7 @@ export default function SettingsScreen() {
   const renderPlannedLanguageGroup = (
     title: string,
     copy: string,
-    languages: ReadonlyArray<{ label: string; nativeName: string; flag: string; code: string; status: string; note: string }>
+    languages: readonly { label: string; nativeName: string; flag: string; code: string; status: string; note: string }[]
   ) => (
     <View style={[styles.plannedLanguageGroup, isDay && styles.dayDropdownOption]}>
       <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{title}</Text>
@@ -4472,7 +4472,7 @@ export default function SettingsScreen() {
             <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
               <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
               <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+                Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can&apos;t fully prevent someone from using another device.
               </Text>
               <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
                 {photoRecordingComfortOptions.map((option) => {
@@ -4493,7 +4493,7 @@ export default function SettingsScreen() {
                 })}
               </View>
               <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Please don't screenshot or share someone's profile, chat, or meetup details without permission.
+                Please don&apos;t screenshot or share someone&apos;s profile, chat, or meetup details without permission.
               </Text>
               {renderSettingMeta("photoRecordingComfortPreferences")}
             </View>

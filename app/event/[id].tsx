@@ -1479,7 +1479,7 @@ export default function EventDetailsScreen() {
               <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
             </View>
             <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+              Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can&apos;t fully prevent someone from using another device.
             </Text>
             <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
               {mediaComfortLabels.map((label) => (
@@ -1487,7 +1487,7 @@ export default function EventDetailsScreen() {
               ))}
             </View>
             <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Please don't screenshot or share someone's profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention.
+              Please don&apos;t screenshot or share someone&apos;s profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention.
             </Text>
           </View>
 

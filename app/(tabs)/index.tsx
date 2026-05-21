@@ -136,25 +136,25 @@ const homeSectionIcons: Record<HomeSectionKey, ComponentProps<typeof IconSymbol>
   nightEvents: "low-pressure",
 };
 
-const homeDensityOptions: Array<{ value: HomeLayoutDensity; icon: string; label: string; copy: string }> = [
+const homeDensityOptions: { value: HomeLayoutDensity; icon: string; label: string; copy: string }[] = [
   { value: "Compact", icon: "▦", label: "Compact", copy: "Tighter cards" },
   { value: "Comfortable", icon: "◐", label: "Comfortable", copy: "Easy scan" },
   { value: "Spacious", icon: "□", label: "Spacious", copy: "More room" },
 ];
 
-const homeHeaderControlDensityOptions: Array<{ value: HomeHeaderControlsDensity; icon: ComponentProps<typeof IconSymbol>["name"]; label: string; copy: string }> = [
+const homeHeaderControlDensityOptions: { value: HomeHeaderControlsDensity; icon: ComponentProps<typeof IconSymbol>["name"]; label: string; copy: string }[] = [
   { value: "Compact", icon: "ellipsis", label: "Compact", copy: "Smallest header buttons" },
   { value: "Comfortable", icon: "settings", label: "Comfortable", copy: "Balanced spacing" },
   { value: "Spacious", icon: "palette", label: "Spacious", copy: "Larger tap targets" },
 ];
 
-const cardOutlineOptions: Array<{ value: CardOutlineStyle; label: string; copy: string }> = [
+const cardOutlineOptions: { value: CardOutlineStyle; label: string; copy: string }[] = [
   { value: "Minimal", label: "Minimal", copy: "Softer borders" },
   { value: "Standard", label: "Standard", copy: "Balanced outline" },
   { value: "Strong", label: "Strong", copy: "Bold NSN outline" },
 ];
 
-const homeCardLayoutOptions: Array<{ value: HomeCardLayout; icon: string; label: string; copy: string }> = [
+const homeCardLayoutOptions: { value: HomeCardLayout; icon: string; label: string; copy: string }[] = [
   { value: "Vertical list", icon: "☰", label: "Vertical list", copy: "Classic top-to-bottom" },
   { value: "Horizontal cards", icon: "↔", label: "Horizontal", copy: "Side-by-side scroll" },
   { value: "Boxed grid", icon: "▦", label: "Boxed grid", copy: "Grid of cards" },
@@ -162,7 +162,7 @@ const homeCardLayoutOptions: Array<{ value: HomeCardLayout; icon: string; label:
   { value: "Magazine", icon: "◨", label: "Magazine", copy: "Large featured cards" },
 ];
 
-const homeEventVisualModeOptions: Array<{ value: HomeEventVisualMode; icon: string; label: string; copy: string }> = [
+const homeEventVisualModeOptions: { value: HomeEventVisualMode; icon: string; label: string; copy: string }[] = [
   { value: "Emoji/Icon", icon: "◌", label: "Emoji/Icon", copy: "Clear symbolic cards" },
   { value: "Preview image", icon: "◧", label: "Preview image", copy: "Use venue previews" },
 ];

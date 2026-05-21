@@ -173,7 +173,7 @@ const helpSupportSections = [
   { id: "connection-guides", title: "Friendship & Dating", icon: "heart" },
   { id: "feedback-draft", title: "Feedback Draft", icon: "edit" },
   { id: "faq-accessibility", title: "FAQs & Accessibility", icon: "accessibility" },
-] as const satisfies ReadonlyArray<{ id: HelpSupportSectionId; title: string; icon: ComponentProps<typeof IconSymbol>["name"] }>;
+] as const satisfies readonly { id: HelpSupportSectionId; title: string; icon: ComponentProps<typeof IconSymbol>["name"] }[];
 type HelpSupportSearchResult = {
   id: string;
   title: string;
@@ -2882,7 +2882,7 @@ export default function ProfileScreen() {
       <View style={styles.trustFoundationGroup}>
         <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
         <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-          Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device.
+          Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can&apos;t fully prevent someone from using another device.
         </Text>
         <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
           {photoRecordingComfortOptions.map((option) => {
@@ -2905,7 +2905,7 @@ export default function ProfileScreen() {
           })}
         </View>
         <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-          Please don't screenshot or share someone's profile, chat, or meetup details without permission.
+          Please don&apos;t screenshot or share someone&apos;s profile, chat, or meetup details without permission.
         </Text>
       </View>
 
@@ -3159,7 +3159,7 @@ export default function ProfileScreen() {
         <View style={styles.profileLayoutBody}>
           <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Work, Study & Life Context</Text>
           <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Share what you're doing, learning, or interested in - only if you want to.
+            Share what you&apos;re doing, learning, or interested in - only if you want to.
           </Text>
         </View>
         <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>{backgroundCommunitySelectedCount ? `${backgroundCommunitySelectedCount} selected` : "Private"}</Text>
@@ -4160,7 +4160,7 @@ export default function ProfileScreen() {
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Work, Study & Life Context</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Share what you're doing, learning, or interested in - only if you want to.
+                        Share what you&apos;re doing, learning, or interested in - only if you want to.
                       </Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         {lifeContextFreshness.label}
