@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
@@ -326,6 +326,7 @@ const createEventId = (title: string) => {
 
 export default function EventsScreen() {
   const router = useRouter();
+  const { action } = useLocalSearchParams<{ action?: string }>();
   const {
     ageConfirmed,
     appLanguage,
@@ -409,7 +410,7 @@ export default function EventsScreen() {
     setIsCreatorOpen(false);
   };
 
-  const openCreator = () => {
+  const openCreator = useCallback(() => {
     if (!canCreateMeetups) {
       setShowVerificationGate(true);
       return;
@@ -417,7 +418,13 @@ export default function EventsScreen() {
 
     setShowVerificationGate(false);
     setIsCreatorOpen(true);
-  };
+  }, [canCreateMeetups]);
+
+  useEffect(() => {
+    if (action === "create") {
+      openCreator();
+    }
+  }, [action, openCreator]);
 
   const confirmVerificationDetails = async () => {
     setIsVerificationReviewOpen(false);
