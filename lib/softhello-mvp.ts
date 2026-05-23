@@ -11,13 +11,14 @@ export type TrustEvidence = {
   hasIdentityDocument?: boolean;
 };
 
-export type EventMembershipStatus = "none" | "joined" | "left";
+export type EventMembershipStatus = "none" | "interested" | "going" | "not_this_time" | "left" | "joined";
 
 export type EventMembership = {
   eventId: string;
   status: EventMembershipStatus;
   joinedAt?: string;
   leftAt?: string;
+  updatedAt?: string;
 };
 
 export type SafetyReportReason =
@@ -239,22 +240,55 @@ export function getEventMembership(eventId: string, memberships: EventMembership
   return memberships.find((membership) => membership.eventId === eventId) ?? { eventId, status: "none" as const };
 }
 
-export function joinEvent(eventId: string, memberships: EventMembership[], now = new Date().toISOString()): EventMembership[] {
+export function getRsvpLabel(status: EventMembershipStatus) {
+  if (status === "interested") return "Interested";
+  if (status === "going" || status === "joined") return "Going";
+  if (status === "not_this_time") return "Not this time";
+  if (status === "left") return "Left plan";
+
+  return "No RSVP yet";
+}
+
+export function getRsvpDescription(status: EventMembershipStatus) {
+  if (status === "interested") return "This RSVP is saved on this device only. You can decide later without joining the meetup chat.";
+  if (status === "going" || status === "joined") return "Marked as going on this device. Meetup chat opens as a prototype preview.";
+  if (status === "not_this_time") return "This plan is marked as not for you this time. You can change it later.";
+  if (status === "left") return "You left this local plan preview. You can still choose another RSVP state.";
+
+  return "No RSVP has been saved for this local prototype preview.";
+}
+
+export function shouldOpenMeetupChat(status: EventMembershipStatus) {
+  return status === "going" || status === "joined";
+}
+
+export function setEventRsvpStatus(
+  eventId: string,
+  memberships: EventMembership[],
+  status: EventMembershipStatus,
+  now = new Date().toISOString()
+): EventMembership[] {
   const existing = getEventMembership(eventId, memberships);
-  const next: EventMembership = { ...existing, eventId, status: "joined", joinedAt: existing.joinedAt ?? now, leftAt: undefined };
+  const next: EventMembership = {
+    ...existing,
+    eventId,
+    status,
+    updatedAt: now,
+    joinedAt: status === "going" || status === "joined" ? existing.joinedAt ?? now : existing.joinedAt,
+    leftAt: status === "left" ? now : undefined,
+  };
 
   return memberships.some((membership) => membership.eventId === eventId)
     ? memberships.map((membership) => (membership.eventId === eventId ? next : membership))
     : [...memberships, next];
 }
 
-export function leaveEvent(eventId: string, memberships: EventMembership[], now = new Date().toISOString()): EventMembership[] {
-  const existing = getEventMembership(eventId, memberships);
-  const next: EventMembership = { ...existing, eventId, status: "left", leftAt: now };
+export function joinEvent(eventId: string, memberships: EventMembership[], now = new Date().toISOString()): EventMembership[] {
+  return setEventRsvpStatus(eventId, memberships, "going", now);
+}
 
-  return memberships.some((membership) => membership.eventId === eventId)
-    ? memberships.map((membership) => (membership.eventId === eventId ? next : membership))
-    : [...memberships, next];
+export function leaveEvent(eventId: string, memberships: EventMembership[], now = new Date().toISOString()): EventMembership[] {
+  return setEventRsvpStatus(eventId, memberships, "left", now);
 }
 
 export function blockUser(userId: string, blockedUserIds: string[]) {

@@ -27,6 +27,8 @@ import {
   getEffectivePrototypeVerificationLevel,
   getEventMembership,
   getMeetingSafetyCopy,
+  getRsvpDescription,
+  getRsvpLabel,
   getVerificationLevelLabel,
   hideEvent,
   joinEvent,
@@ -34,6 +36,9 @@ import {
   savePlace,
   savePostEventFeedback,
   pinEvent,
+  setEventRsvpStatus,
+  shouldOpenMeetupChat,
+  type EventMembershipStatus,
   type PostEventFeedback,
   unhideEvent,
   unpinEvent,
@@ -874,7 +879,14 @@ export default function EventDetailsScreen() {
     ? copy.meetingCopy
     : copy.genericMeetingCopy(event.venue);
   const membership = getEventMembership(event.id, eventMemberships);
-  const hasJoined = membership.status === "joined";
+  const canOpenMeetupChat = shouldOpenMeetupChat(membership.status);
+  const rsvpChoices: { status: EventMembershipStatus; label: string }[] = [
+    { status: "interested", label: "Interested" },
+    { status: "going", label: "Going" },
+    { status: "not_this_time", label: "Not this time" },
+    { status: "left", label: "Left plan" },
+    { status: "none", label: "Clear" },
+  ];
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canMeet = canMeetInPerson(effectiveVerificationLevel);
   const existingFeedback = postEventFeedback.find((item) => item.eventId === event.id);
@@ -972,7 +984,22 @@ export default function EventDetailsScreen() {
     }
   };
 
+  const saveRsvpStatus = async (status: EventMembershipStatus) => {
+    if (status === "going" && !canMeet) {
+      setIsVerificationOpen(true);
+      return;
+    }
+
+    const nextMemberships = setEventRsvpStatus(event.id, eventMemberships, status);
+    await saveSoftHelloMvpState({ eventMemberships: nextMemberships });
+  };
+
   const handleJoin = async () => {
+    if (canOpenMeetupChat) {
+      router.push({ pathname: "/(tabs)/chats", params: { eventId: event.id } } as never);
+      return;
+    }
+
     if (!canMeet) {
       setIsVerificationOpen(true);
       return;
@@ -1624,6 +1651,37 @@ export default function EventDetailsScreen() {
           <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
         </View>
 
+        <View style={[styles.rsvpPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
+            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Local RSVP preview</Text>
+            <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>
+              {getRsvpLabel(membership.status)}
+            </Text>
+          </View>
+          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Prototype only: this RSVP is saved locally on this device. It does not reserve a real spot or notify a host.
+          </Text>
+          <Text style={[styles.rsvpDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getRsvpDescription(membership.status)}</Text>
+          <View style={styles.rsvpActions}>
+            {rsvpChoices.map((choice) => {
+              const active = choice.status === membership.status || (choice.status === "going" && membership.status === "joined");
+
+              return (
+                <TouchableOpacity
+                  key={choice.status}
+                  activeOpacity={0.82}
+                  onPress={() => saveRsvpStatus(choice.status)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={[styles.rsvpChoice, isDay && styles.dayActionRow, active && styles.rsvpChoiceActive]}
+                >
+                  <Text style={[styles.rsvpChoiceText, isDay && styles.dayText, active && styles.rsvpChoiceTextActive]}>{choice.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         <Text style={[styles.ctaReassurance, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventCopy.ctaReassurance}</Text>
 
         <TouchableOpacity
@@ -1631,15 +1689,15 @@ export default function EventDetailsScreen() {
           onPress={handleJoin}
           style={[styles.joinButton, !canMeet && styles.joinButtonLocked]}
           accessibilityRole="button"
-          accessibilityHint={screenReaderHints ? (hasJoined ? eventCopy.openMeetupChatHint : canMeet ? eventCopy.joinHint : eventCopy.verifyBeforeMeetingHint) : undefined}
+          accessibilityHint={screenReaderHints ? (canOpenMeetupChat ? eventCopy.openMeetupChatHint : canMeet ? eventCopy.joinHint : eventCopy.verifyBeforeMeetingHint) : undefined}
         >
           <Text style={styles.joinText}>
-            {hasJoined ? eventCopy.openMeetupChat : canMeet ? copy.join : eventCopy.verifyBeforeMeeting}
+            {canOpenMeetupChat ? eventCopy.openMeetupChat : canMeet ? copy.join : eventCopy.verifyBeforeMeeting}
           </Text>
         </TouchableOpacity>
         <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{copy.spotsLeft}</Text>
 
-        {hasJoined ? (
+        {canOpenMeetupChat ? (
           <View style={[styles.feedbackPanel, isDay && styles.dayCard]}>
             <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText]}>{eventCopy.postEventCheckIn}</Text>
             <Text style={[styles.safetyCopy, isDay && styles.dayMutedText]}>
@@ -1821,6 +1879,14 @@ const styles = StyleSheet.create({
   verificationChipReady: { color: nsnColors.green, borderColor: "rgba(114,214,126,0.45)" },
   dayVerificationChip: { color: "#7C5A00", backgroundColor: "#FFF7D8", borderColor: "#D4A91E" },
   dayVerificationChipReady: { color: "#0F6B2F", backgroundColor: "#E8F8EE", borderColor: "#55A96E" },
+  rsvpPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
+  rsvpStatusChip: { color: nsnColors.day, borderColor: "rgba(124,170,201,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
+  rsvpDescription: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 7 },
+  rsvpActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
+  rsvpChoice: { minHeight: 38, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 11, paddingVertical: 8 },
+  rsvpChoiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  rsvpChoiceText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  rsvpChoiceTextActive: { color: "#FFFFFF" },
   joinButton: { height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary },
   joinButtonLocked: { backgroundColor: "#3A4358" },
   joinText: { color: nsnColors.text, fontSize: 16, fontWeight: "800" },

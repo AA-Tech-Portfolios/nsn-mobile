@@ -11,6 +11,8 @@ import {
   getEffectivePrototypeVerificationLevel,
   getMeetingSafetyCopy,
   getVerificationLevelLabel,
+  getRsvpDescription,
+  getRsvpLabel,
   hideEvent,
   joinEvent,
   leaveEvent,
@@ -19,6 +21,8 @@ import {
   removeSavedPlace,
   savePlace,
   savePostEventFeedback,
+  setEventRsvpStatus,
+  shouldOpenMeetupChat,
   unblockUser,
   unhideEvent,
   unpinEvent,
@@ -71,11 +75,35 @@ describe("SoftHello MVP domain rules", () => {
 
   it("tracks join and soft-exit membership state", () => {
     const joined = joinEvent("movie-night-watch-chat", [], "2026-05-07T00:00:00.000Z");
-    expect(joined[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "joined" });
+    expect(joined[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "going" });
 
     const left = leaveEvent("movie-night-watch-chat", joined, "2026-05-07T01:00:00.000Z");
     expect(left).toHaveLength(1);
     expect(left[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "left" });
+  });
+
+  it("supports reversible local RSVP statuses", () => {
+    const interested = setEventRsvpStatus("movie-night-watch-chat", [], "interested", "2026-05-07T00:00:00.000Z");
+    const going = setEventRsvpStatus("movie-night-watch-chat", interested, "going", "2026-05-07T01:00:00.000Z");
+    const notThisTime = setEventRsvpStatus("movie-night-watch-chat", going, "not_this_time", "2026-05-07T02:00:00.000Z");
+    const cleared = setEventRsvpStatus("movie-night-watch-chat", notThisTime, "none", "2026-05-07T03:00:00.000Z");
+
+    expect(interested[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "interested", updatedAt: "2026-05-07T00:00:00.000Z" });
+    expect(going[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "going", joinedAt: "2026-05-07T01:00:00.000Z" });
+    expect(notThisTime[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "not_this_time", leftAt: undefined });
+    expect(cleared[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "none" });
+  });
+
+  it("labels RSVP states and only opens chat for going-style states", () => {
+    expect(getRsvpLabel("none")).toBe("No RSVP yet");
+    expect(getRsvpLabel("interested")).toBe("Interested");
+    expect(getRsvpLabel("going")).toBe("Going");
+    expect(getRsvpLabel("not_this_time")).toBe("Not this time");
+    expect(getRsvpLabel("left")).toBe("Left plan");
+    expect(getRsvpDescription("interested")).toContain("saved on this device");
+    expect(shouldOpenMeetupChat("going")).toBe(true);
+    expect(shouldOpenMeetupChat("joined")).toBe(true);
+    expect(shouldOpenMeetupChat("interested")).toBe(false);
   });
 
   it("keeps block state private and idempotent", () => {
