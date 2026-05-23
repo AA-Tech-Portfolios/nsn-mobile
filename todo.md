@@ -127,6 +127,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Define age-appropriate handling for alcohol-related event preferences and labels
 - [ ] Gather user feedback on whether food and beverage categories feel calm, useful, and not overwhelming
 - [ ] Explore broad background-based suggestions for study groups, volunteering meetups, and shared industry conversation starters without exposing exact institutions or routines
+- [ ] Future co-host permissions planning only: hosts may invite or approve co-hosts, co-hosts may help with welcoming, logistics, meetup chat, or meetup details, and volunteers/helpers should stay framed as community support roles rather than authority, moderation, verification, or safety-enforcement roles
 
 ## Profile, Preferences & Settings
 
@@ -183,6 +184,15 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Broaden Home module layout customisation beyond simple ordering into dashboard, grid, magazine, and boxed module presets
 - [ ] Add toggle animations when switching between Day and Night settings, including alternatives to the current circular glow
 - [ ] Add optional donation button
+
+### Future AI Agents Concept (Prototype-Safe Planning Only)
+
+These ideas are future planning notes only. Do not add API calls, backend implementation, OpenAI keys, autonomous actions, safety decisions, verification decisions, emergency flows, or production assistant behaviour from this section. Any future assistant must be opt-in, reviewable, easy to ignore, privacy-first, low-pressure, and clearly separate from human support or moderation.
+
+- [ ] Meetup question helper: help users draft gentle questions to ask a host or group before attending, such as accessibility, meeting point, timing, food, transport, or social pace. Suggestions should be editable, never sent automatically, and avoid pressuring users to disclose sensitive personal details.
+- [ ] Host planning assistant: help hosts think through calm meetup details such as clear arrival notes, quieter options, weather backup, consent reminders, accessibility notes, and low-pressure icebreakers. It should support planning only and never create events, message attendees, change RSVPs, or make safety claims on behalf of the host.
+- [ ] Personal comfort/preferences assistant: help users reflect on optional comfort settings, communication preferences, social energy, group size, sensory needs, and profile wording. It should keep everything private until the user chooses otherwise, never auto-publish profile content, and avoid labels, scoring, diagnosis, or compatibility judgements.
+- [ ] Support/resources routing assistant: help users find existing guidance pages, community support resources, privacy settings, report-shaped prototype flows, or external help links where appropriate. It should route and explain options only, never replace crisis support, emergency services, professional advice, moderation review, or trusted human help.
 
 ## Repository Presentation
 

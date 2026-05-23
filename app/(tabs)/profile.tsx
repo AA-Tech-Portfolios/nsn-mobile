@@ -117,9 +117,11 @@ import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-valid
 import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, type SoftHelloVerificationLevel, verificationLevels } from "@/lib/softhello-mvp";
 import { gentleConnectionGuidance, supportBelongingGuidance, type SupportGuidanceId } from "@/lib/support-guidance";
 import { getCalmFaviconUrl, preparednessGuidanceCategories, safetyBoundaryGuidanceCategories, type PreparednessGuidanceCategory } from "@/lib/options-hub";
+import { communityRoleOptions, meetupAccessShortcutRows } from "@/lib/profile-community-roles";
 
 const rows = [
   { icon: "calendar", key: "meetups", route: "/meetups" },
+  ...meetupAccessShortcutRows,
   { icon: "message", key: "chats", route: "/chats" },
   { icon: "group", key: "events", route: "/events" },
   { icon: "explore", key: "locationPreference", route: "/location-preference" },
@@ -155,7 +157,7 @@ type ProfileMenuPanel =
   | "safetyBoundaries"
   | "blockReport";
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
-const simpleProfileShortcutRows: ProfileShortcutRow[] = [rows[0], rows[1], rows[2], rows[8], settingsRow];
+const simpleProfileShortcutRows: ProfileShortcutRow[] = [rows[0], rows[1], rows[2], rows[4], rows[10], settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
 const profileWidthPreferenceOptions: ProfileWidthPreference[] = ["Contained", "Wide"];
 const profileHomeLayoutDensityOptions: HomeLayoutDensity[] = ["Compact", "Comfortable", "Spacious"];
@@ -1355,13 +1357,18 @@ export default function ProfileScreen() {
   const getComfortLabel = (preference: SoftHelloComfortPreference) => comfortCopy[preference] ?? preference;
   const comfortSummary = comfortPreferences.length ? comfortPreferences.map(getComfortLabel).join(" · ") : copy.noComfortPreferences;
   const getRowLabel = (key: ProfileShortcutKey) => {
+    const meetupAccessShortcut = meetupAccessShortcutRows.find((row) => row.key === key);
+    if (meetupAccessShortcut) return meetupAccessShortcut.title;
     if (key === "locationPreference") return profilePreferenceCopy.rows.locationPreference;
     if (key === "transportation") return profilePreferenceCopy.rows.transportation;
     if (key === "contactPreference") return profilePreferenceCopy.rows.contactPreference ?? "Contact Preference";
     if (key === "foodPreferences") return profilePreferenceCopy.rows.foodPreferences;
     if (key === "hobbiesInterests") return profilePreferenceCopy.rows.hobbiesInterests;
+    if (key === "settings" || key === "meetups" || key === "chats" || key === "events" || key === "places") {
+      return copy.rows[key];
+    }
 
-    return copy.rows[key];
+    return key;
   };
   const isCleanProfile = profileShortcutLayout === "Clean";
   const isWideProfile = profileWidthPreference === "Wide";
@@ -1503,6 +1510,11 @@ export default function ProfileScreen() {
 
       if (row.key === "settings") {
         openSettingsFromProfile(undefined, "profile");
+        return;
+      }
+
+      if ("params" in row && row.params) {
+        router.push({ pathname: row.route, params: row.params } as never);
         return;
       }
 
@@ -6891,6 +6903,34 @@ export default function ProfileScreen() {
           </View>
         ) : null}
 
+        <View style={[styles.profileSectionCard, styles.communityRolesCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard, { maxWidth: profileSectionMaxWidth }]}>
+          <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
+            <View style={styles.profileLayoutBody}>
+              <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Community roles</Text>
+              <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Optional, non-exclusive, local prototype roles. They do not create backend permissions yet.
+              </Text>
+            </View>
+            <Text style={[styles.profileRoleBadge, isDay && styles.dayProfileMenuStatusBadge]}>Prototype</Text>
+          </View>
+          <View style={[styles.communityRoleGrid, isRtl && styles.rtlRow]}>
+            {communityRoleOptions.map((role) => (
+              <View key={role.key} style={[styles.communityRoleCard, isDay && styles.daySoftOption, clearBorders && styles.clearBorderCard]}>
+                <View style={[styles.communityRoleTitleRow, isRtl && styles.rtlRow]}>
+                  <View style={[styles.communityRoleIconBadge, isDay && styles.dayProfileMenuIconBadge]}>
+                    <IconSymbol name={role.icon} color={isDay ? "#53677A" : nsnColors.muted} size={17} />
+                  </View>
+                  <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{role.title}</Text>
+                </View>
+                <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{role.copy}</Text>
+              </View>
+            ))}
+          </View>
+          <Text style={[styles.communityRoleBoundaryCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            You can imagine yourself in more than one role, or none. NSN still treats these as planning labels only.
+          </Text>
+        </View>
+
         {detailedProfileSummarySections}
 
         {false ? (
@@ -7546,6 +7586,13 @@ const styles = StyleSheet.create({
   simpleProfileRow: { minHeight: 66, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14, paddingVertical: 11 },
   simpleProfileShortcutList: { alignSelf: "center", marginTop: 0, marginBottom: 14 },
   simpleShortcutLabel: { fontWeight: "800" },
+  communityRolesCard: { alignSelf: "center", marginBottom: 18 },
+  communityRoleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  communityRoleCard: { flexGrow: 1, flexShrink: 1, flexBasis: 220, minWidth: 200, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", padding: 12, gap: 8 },
+  communityRoleTitleRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  communityRoleIconBadge: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center" },
+  communityRoleBoundaryCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
+  profileRoleBadge: { alignSelf: "flex-start", color: "#DDEBFF", borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, fontSize: 11, fontWeight: "900", overflow: "hidden" },
   socialProfileSummaryList: { alignSelf: "center", marginTop: 0, marginBottom: 18 },
   socialProfileSummaryRow: { minHeight: 74, alignItems: "flex-start" },
   socialProfileSummaryTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
