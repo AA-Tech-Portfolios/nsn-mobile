@@ -75,8 +75,11 @@ app-example
 *.swo
 *~
 
-# Logs
-logs
+# Logs and temp artifacts
+logs/*
+!logs/.gitkeep
+tmp/*
+!tmp/.gitkeep
 *.log
 .tmp-*
 
