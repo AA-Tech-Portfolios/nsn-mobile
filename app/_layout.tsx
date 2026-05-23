@@ -2,8 +2,8 @@ import "@/global.css";
 import "@/lib/ignore-known-web-warnings";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { StatusBar, setStatusBarBackgroundColor, setStatusBarStyle } from "expo-status-bar";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { Platform, View } from "react-native";
@@ -21,12 +21,10 @@ import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 
 import { AppSettingsProvider, useAppSettings } from "@/lib/app-settings";
-import { nsnColors } from "@/lib/nsn-data";
-import { getAppStatusBarStyle } from "@/lib/status-bar-style";
+import { getAppStatusBarBackgroundColor, getAppStatusBarStyle } from "@/lib/status-bar-style";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
-const NSN_DAY_BACKGROUND = "#E8EDF2";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -152,12 +150,21 @@ function OnboardingGate() {
 
 function AppStatusBar() {
   const { isNightMode } = useAppSettings();
-  const backgroundColor = isNightMode ? nsnColors.background : NSN_DAY_BACKGROUND;
+  const statusBarStyle = getAppStatusBarStyle(isNightMode);
+  const backgroundColor = getAppStatusBarBackgroundColor(isNightMode);
+
+  useLayoutEffect(() => {
+    setStatusBarStyle(statusBarStyle, false);
+    if (Platform.OS === "android") {
+      setStatusBarBackgroundColor(backgroundColor, false);
+    }
+  }, [backgroundColor, statusBarStyle]);
 
   return (
     <StatusBar
+      animated={false}
       backgroundColor={backgroundColor}
-      style={getAppStatusBarStyle(isNightMode)}
+      style={statusBarStyle}
       translucent={false}
     />
   );

@@ -1507,10 +1507,13 @@ export default function HomeScreen() {
     const pinLabelTop = Math.max(mapPinY - 10, 18);
     const mapTransitStops = (selectedMapDetails?.transit ?? ["Train/metro nearby", "Bus stop nearby"]).slice(0, 2);
     const mapRouteLabels = (selectedMapDetails?.roads ?? ["Pacific Hwy", "Local route"]).slice(0, 2);
+    const prototypeMapHeight = shouldAutoFitDashboard
+      ? homeLayoutPreset.mapHeight
+      : homeLayoutPreset.mapHeight + (isMobileHome ? 36 : 56);
 
     return (
-    <View style={[styles.prototypeMapCanvas, shouldAutoFitDashboard && styles.prototypeMapCanvasAutoFit, { height: homeLayoutPreset.mapHeight, minHeight: homeLayoutPreset.mapHeight, borderRadius: Math.max(14, homeLayoutPreset.cardRadius - 4) }, isDay && styles.dayPrototypeMapCanvas]}>
-      <View pointerEvents="none" style={[styles.prototypeMapContent, { minHeight: homeLayoutPreset.mapHeight, transform: [{ scale: mapZoomScale }] }]}>
+    <View style={[styles.prototypeMapCanvas, shouldAutoFitDashboard && styles.prototypeMapCanvasAutoFit, { height: prototypeMapHeight, minHeight: prototypeMapHeight, borderRadius: Math.max(14, homeLayoutPreset.cardRadius - 4) }, isDay && styles.dayPrototypeMapCanvas]}>
+      <View pointerEvents="none" style={[styles.prototypeMapContent, { minHeight: prototypeMapHeight, transform: [{ scale: mapZoomScale }] }]}>
         <View style={[styles.prototypeMapWater, isDay && styles.dayPrototypeMapWater]} />
         <View style={[styles.prototypeMapGreen, styles.prototypeMapGreenTop]} />
         <View style={[styles.prototypeMapGreen, styles.prototypeMapGreenBottom]} />
@@ -2412,7 +2415,7 @@ export default function HomeScreen() {
 
       if (sectionKey === "weather") {
         return homeVisibleSections.weather ? (
-          <View key={sectionKey} style={[styles.localContextGroup, { gap: homeLayoutPreset.mobileStackGap }, shouldAutoFitDashboard && styles.localContextGroupAutoFit, autoFitLocalContextStyle]}>
+          <View key={sectionKey} style={[styles.localContextGroup, styles.localContextZone, { gap: homeLayoutPreset.mobileStackGap }, shouldAutoFitDashboard && styles.localContextGroupAutoFit, autoFitLocalContextStyle, isDay && styles.dayLocalContextZone, outlinedCardStyle]}>
             <View style={[styles.dashboardPair, { gap: homeLayoutPreset.desktopGridGap }]}>
             <TouchableOpacity
               activeOpacity={0.86}
@@ -2420,7 +2423,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
               accessibilityLabel="Open demo weather guidance"
               accessibilityHint={weatherMessage}
-              style={[styles.weatherCard, styles.dashboardCard, homeLayoutCardStyle, isDay && styles.dayCard, outlinedCardStyle, isRtl && styles.rtlRow]}
+              style={[styles.weatherCard, styles.dashboardCard, styles.dashboardContextTile, homeLayoutCardStyle, isDay && styles.dayDashboardContextTile, isRtl && styles.rtlRow]}
             >
               <View style={[styles.weatherBody, isRtl && styles.rtlBlock]}>
                 <View style={[styles.weatherTitleRow, isRtl && styles.rtlRow]}>
@@ -2438,7 +2441,7 @@ export default function HomeScreen() {
                 {weatherIcon}
               </Animated.Text>
             </TouchableOpacity>
-            <View style={[styles.todayCard, styles.dashboardCard, homeLayoutCardStyle, isDay && styles.dayCard, outlinedCardStyle]}>
+            <View style={[styles.todayCard, styles.dashboardCard, styles.dashboardContextTile, homeLayoutCardStyle, isDay && styles.dayDashboardContextTile]}>
               <View style={[styles.sectionTitleRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
                 <IconSymbol name="calendar" color={isDay ? "#284E92" : "#C7B07A"} size={17} />
                 <Text style={[styles.todayTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Today</Text>
@@ -2453,10 +2456,10 @@ export default function HomeScreen() {
             </View>
             </View>
             {homeVisibleSections.map ? (
-              <View style={[styles.locationMapCard, styles.dashboardCard, homeLayoutMapCardStyle, isDay && styles.dayCard, outlinedCardStyle]}>
+              <View style={[styles.locationMapCard, styles.locationMapCardIntegrated, styles.dashboardCard, homeLayoutMapCardStyle, isDay && styles.dayLocationMapCardIntegrated]}>
                 <View style={[styles.sectionTitleRow, styles.locationMapTitleRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
                   <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={17} />
-                  <Text style={[styles.locationMapTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Sydney North Shore map</Text>
+                  <Text style={[styles.locationMapTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Nearby atmosphere & map</Text>
                   <Text style={[styles.prototypeMapModeBadge, isDay && styles.dayPrototypeMapModeBadge]}>Prototype</Text>
                 </View>
                 {renderPrototypeMapCanvas()}
@@ -3870,9 +3873,13 @@ const styles = StyleSheet.create({
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   changeText: { color: "#A8B7DA", fontSize: 12, fontWeight: "700" },
   homeSectionFlow: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 10, marginBottom: 8, width: "100%" },
-  localContextGroup: { flexGrow: 1, flexShrink: 1, flexBasis: 430, alignSelf: "stretch", gap: 10, minWidth: 0 },
+  localContextGroup: { flexGrow: 1, flexShrink: 1, flexBasis: 520, alignSelf: "stretch", gap: 10, minWidth: 0 },
+  localContextZone: { borderRadius: 24, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(10,24,43,0.72)", padding: 12 },
+  dayLocalContextZone: { borderColor: "#C5D0DA", backgroundColor: "rgba(244,247,248,0.74)" },
   localContextGroupAutoFit: { flexBasis: 410, gap: 9 },
   dashboardCard: { flexGrow: 1, flexShrink: 1, flexBasis: 210 },
+  dashboardContextTile: { borderWidth: 0, backgroundColor: "rgba(255,255,255,0.035)" },
+  dayDashboardContextTile: { backgroundColor: "rgba(255,255,255,0.72)" },
   dashboardUtilityCard: { flexGrow: 1, flexShrink: 1, flexBasis: "100%" },
   dashboardWideCard: { flexGrow: 1.65, flexShrink: 1, flexBasis: 560, minWidth: 0 },
   homeMajorSection: { alignSelf: "stretch", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.045)", padding: 13 },
@@ -3893,6 +3900,8 @@ const styles = StyleSheet.create({
   todayCopy: { color: "#C7D3EA", fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 3 },
   todayNote: { color: "#9FB0CD", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 5 },
   locationMapCard: { minHeight: 266, flexGrow: 1, borderRadius: 20, padding: 13, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
+  locationMapCardIntegrated: { minHeight: 318, borderWidth: 0, backgroundColor: "rgba(255,255,255,0.035)" },
+  dayLocationMapCardIntegrated: { backgroundColor: "rgba(255,255,255,0.78)" },
   locationMapTitleRow: { flex: 0 },
   locationMapTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   prototypeMapModeBadge: { flexShrink: 0, borderRadius: 999, borderWidth: 1, borderColor: "#4D6794", color: "#C7D3EA", fontSize: 9, fontWeight: "900", lineHeight: 12, paddingHorizontal: 7, paddingVertical: 2, overflow: "hidden" },

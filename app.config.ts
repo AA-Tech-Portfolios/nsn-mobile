@@ -52,6 +52,7 @@ const config: ExpoConfig = {
     bundleIdentifier: env.iosBundleId,
     "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent",
         "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to detect your local area for weather, timezone, and nearby meetup prompts."
       }
   },
