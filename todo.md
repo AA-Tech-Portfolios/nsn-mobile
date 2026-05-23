@@ -61,6 +61,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Future community culture concept, planning only: explore Gentle Belonging and Cupcake Moments in `docs/community-support-vision.md`, including quiet optional milestones, shared food and care rituals, community sharing, environmental awareness, helper appreciation, community anniversaries, and later identity merchandise. Keep this privacy-first, low-pressure, non-competitive, allergy-aware, culturally respectful, and separate from UI, backend, gamification, rewards, payments, donations, commerce, moderation, permission systems, API calls, or AI logic.
 - [ ] Explore consent-first buddy/guide systems
 - [ ] Explore buddy/guide support for first-time attendees
+- [ ] Future event detail display planning only: explore a Quick view / Detailed view toggle where Quick view shows calm essentials and Detailed view keeps documentation-style information for users who prefer reading before attending. Do not implement until section state, accessibility expectations, and tester feedback make it clearly worthwhile.
 - [ ] Explore consent-first comfort gestures only after community guidelines and safety review
 - [ ] Add crisis/resource links only after regional safety/legal review
 - [ ] Ensure support features are privacy-safe and do not expose sensitive personal information
@@ -97,6 +98,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Keep future safety-awareness features calm and informational: guidance, reassurance, optional check-ins, external resource links, and emergency-service signposting only, without live tracking, threat detection, risk scoring, or panic-based UX
 - [ ] Explore lightweight post-meetup reassurance flows such as got home safely, leaving now, heading home later, quiet exit/check-in, trusted contact reminder, and share-my-meetup-plan controls, all optional and easy to ignore without guilt
 - [ ] Gather tester feedback on whether optional check-ins feel reassuring or intrusive, and preserve the low-pressure social atmosphere before connecting any check-in ideas to accounts, notifications, or trusted-contact systems
+- [ ] Future QR/invite trust planning only: explore QR code meetup joining, invite links, unverified guest/family/friend invites, and host/admin controls to disable QR or invite links. QR/invite links should create a request or introduction, not automatic trust, attendance, verification, or access. Hosts/admins may verify or approve where appropriate, and attendees should see clear guest or introduced-by context so no one is surprised. Do not implement backend, auth, permissions, moderation, real QR generation, or trust automation from this note.
 
 ## Meetup Experience
 
@@ -203,6 +205,7 @@ These ideas are future planning notes only. Do not add API calls, backend implem
 ## Brand & Operations
 
 - [ ] Post-pilot: evaluate transition toward SoftHello branding based on demand, testing, and regional expansion
+- [ ] Future platform roadmap, not current scope: explore an official website, Windows app, macOS app, and watchOS companion only after the mobile/web prototype, safety boundaries, and demand are clearer
 - [ ] Remove AI Expo related settings as the app develops
 - [ ] Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
 

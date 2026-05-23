@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Modal, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { Alert, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -13,6 +13,7 @@ import {
   initialExpandedEventDetailSections,
   type EventDetailSectionId,
 } from "@/lib/event-detail-sections";
+import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   askAboutMeetupQuestionGroups,
@@ -757,21 +758,32 @@ const eventTranslations = {
 function DetailMetaRow({
   iconName,
   label,
+  onPress,
   isDay,
   isRtl,
 }: {
   iconName: "location" | "calendar" | "group";
   label: string;
+  onPress?: () => void;
   isDay?: boolean;
   isRtl?: boolean;
 }) {
+  const RowContainer = onPress ? TouchableOpacity : View;
+
   return (
-    <View style={[styles.metaRow, isRtl && styles.rtlRow]}>
+    <RowContainer
+      activeOpacity={0.82}
+      onPress={onPress}
+      accessibilityRole={onPress ? "link" : undefined}
+      accessibilityLabel={onPress ? `Open maps for ${label}` : undefined}
+      style={[styles.metaRow, onPress && styles.metaRowAction, isRtl && styles.rtlRow]}
+    >
       <View style={[styles.metaIconWrap, isDay && styles.dayMetaIconWrap]}>
         <IconSymbol name={iconName} color={isDay ? "#2F80ED" : "#E5E7EB"} size={19} />
       </View>
       <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>{label}</Text>
-    </View>
+      {onPress ? <IconSymbol name="explore" color={isDay ? "#53677A" : nsnColors.muted} size={17} /> : null}
+    </RowContainer>
   );
 }
 
@@ -944,6 +956,17 @@ export default function EventDetailsScreen() {
   const scrollToEventTop = () => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
     setFocusedSection(null);
+  };
+  const openEventLocation = async () => {
+    const mapsUrl = buildEventLocationSearchUrl(event.venue);
+
+    if (Platform.OS === "web") {
+      const webWindow = typeof window !== "undefined" ? window : undefined;
+      webWindow?.open(mapsUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    await Linking.openURL(mapsUrl);
   };
   const handleEventDetailScroll = (scrollY: number) => {
     const measuredSections = eventDetailSectionPlan
@@ -1259,7 +1282,7 @@ export default function EventDetailsScreen() {
         </View>
 
         <View style={styles.metaStack}>
-          <DetailMetaRow iconName="location" label={event.venue} isDay={isDay} isRtl={isRtl} />
+          <DetailMetaRow iconName="location" label={event.venue} onPress={openEventLocation} isDay={isDay} isRtl={isRtl} />
           <DetailMetaRow iconName="calendar" label={eventDate} isDay={isDay} isRtl={isRtl} />
           <DetailMetaRow iconName="group" label={eventPeople} isDay={isDay} isRtl={isRtl} />
         </View>
@@ -1819,6 +1842,7 @@ const styles = StyleSheet.create({
   daySavePlaceButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   savePlaceText: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   metaRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  metaRowAction: { minHeight: 38, borderRadius: 14, paddingRight: 8 },
   metaIconWrap: { width: 32, height: 32, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(148,163,184,0.18)" },
   metaLine: { flex: 1, color: nsnColors.text, fontSize: 14, lineHeight: 20 },
   description: { color: nsnColors.text, fontSize: 15, lineHeight: 23, marginBottom: 14 },

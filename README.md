@@ -26,7 +26,7 @@ NSN-specific docs:
 - [`docs/alpha-tester-feedback-checklist.md`](docs/alpha-tester-feedback-checklist.md) - short feedback questions for alpha walkthroughs and debriefs.
 - [`docs/community-support-vision.md`](docs/community-support-vision.md) - support, resources, gentle independence, accessibility, and boundary principles.
 - [`docs/brand-systems.md`](docs/brand-systems.md) - NSN local visual identity and future SoftHello brand context.
-- [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes.
+- [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes, verification commands, and Expo web/native testing guidance.
 - [`todo.md`](todo.md) - active implementation roadmap.
 
 ## SoftHello Future / Global Context
