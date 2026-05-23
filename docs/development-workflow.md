@@ -46,6 +46,8 @@ pnpm dev:metro
 
 Open the local Expo web URL shown in the terminal, usually on `localhost`. Use this for quick layout checks, copy/share feedback, keyboard navigation, and responsive browser smoke tests.
 
+For browser priority, version policy, and NSN-specific web compatibility checks, see [`browser-testing.md`](browser-testing.md).
+
 ### Android Emulator Or Expo Go
 
 Start Metro:
@@ -81,6 +83,8 @@ pnpm dev:tunnel
 ```
 
 Treat physical-device testing as a smoke test for touch targets, scrolling, safe-area spacing, native share/link handoffs, and Expo Go behavior. Do not add API keys or production services just to test the prototype.
+
+Browser testing is separate from native Expo testing, but both matter for handoffs such as maps, external links, invite or QR links later, and login/auth browser flows later.
 
 ## Future Platform Roadmap
 

@@ -27,6 +27,7 @@ NSN-specific docs:
 - [`docs/community-support-vision.md`](docs/community-support-vision.md) - support, resources, gentle independence, accessibility, and boundary principles.
 - [`docs/brand-systems.md`](docs/brand-systems.md) - NSN local visual identity and future SoftHello brand context.
 - [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes, verification commands, and Expo web/native testing guidance.
+- [`docs/browser-testing.md`](docs/browser-testing.md) - practical alpha browser coverage, web checks, and future platform testing boundaries.
 - [`todo.md`](todo.md) - active implementation roadmap.
 
 ## SoftHello Future / Global Context
