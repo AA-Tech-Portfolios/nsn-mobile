@@ -5,7 +5,14 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import type { IconSymbolName } from "@/components/ui/icon-symbol-map";
 import { getTranslationLanguageBase, type PhotoRecordingComfortPreference, useAppSettings } from "@/lib/app-settings";
+import {
+  eventDetailSectionPlan,
+  getEventDetailQuickJumpItems,
+  initialExpandedEventDetailSections,
+  type EventDetailSectionId,
+} from "@/lib/event-detail-sections";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   askAboutMeetupQuestionGroups,
@@ -61,8 +68,6 @@ type CreatedEvent = {
   preEventQuestions?: string[];
   postEventQuestions?: string[];
 };
-
-type EventDetailSection = "overview" | "comfort" | "conversation" | "meetingPoint" | "safety" | "practical";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
@@ -777,8 +782,9 @@ export default function EventDetailsScreen() {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
   const [isMobileReadingExpanded, setIsMobileReadingExpanded] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<EventDetailSection[]>(["overview"]);
-  const [focusedSection, setFocusedSection] = useState<EventDetailSection | null>("overview");
+  const [expandedSections, setExpandedSections] = useState<EventDetailSectionId[]>(initialExpandedEventDetailSections);
+  const [focusedSection, setFocusedSection] = useState<EventDetailSectionId | null>("whatToExpect");
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
   const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
@@ -819,7 +825,7 @@ export default function EventDetailsScreen() {
   const isMobileEventPage = viewportWidth < 640;
   const iconColor = isDay ? "#0B1220" : nsnColors.text;
   const scrollRef = useRef<ScrollView | null>(null);
-  const sectionOffsetsRef = useRef<Partial<Record<EventDetailSection, number>>>({});
+  const sectionOffsetsRef = useRef<Partial<Record<EventDetailSectionId, number>>>({});
 
   useEffect(() => {
     let isMounted = true;
@@ -842,6 +848,13 @@ export default function EventDetailsScreen() {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!copyFeedback) return undefined;
+
+    const feedbackTimer = setTimeout(() => setCopyFeedback(null), 2600);
+    return () => clearTimeout(feedbackTimer);
+  }, [copyFeedback]);
 
   const rawEvent = allEvents.find((item) => item.id === id) ?? createdEvents.find((item) => item.id === id) ?? movieNight;
   const isCreatedEvent = createdEvents.some((item) => item.id === id);
@@ -896,21 +909,14 @@ export default function EventDetailsScreen() {
   const isEventHidden = hiddenEventIds.includes(event.id);
   const showFullEventReading = !isMobileEventPage || isMobileReadingExpanded;
   const quickReferenceItems = [
-    { label: "Essentials", copy: `${event.venue} · ${eventDate}` },
-    { label: "Comfort", copy: `${eventNoise.label} noise · ${eventTone.replace("Pace: ", "")}` },
-    { label: "Pacing", copy: "Low pressure · quiet starts welcome." },
-    { label: "After joining", copy: "Use chat for the exact spot and low-pressure questions." },
-  ];
-  const quickJumpItems: { section: EventDetailSection; label: string }[] = [
-    { section: "overview", label: "Overview" },
-    { section: "comfort", label: "Comfort" },
-    { section: "conversation", label: "Conversation" },
-    { section: "meetingPoint", label: "Meeting point" },
-    { section: "safety", label: "Safety" },
-    { section: "practical", label: "Practical" },
-  ];
-  const isSectionExpanded = (section: EventDetailSection) => expandedSections.includes(section);
-  const toggleEventDetailSection = (section: EventDetailSection) => {
+    { iconName: "location", label: "Essentials", copy: `${event.venue} · ${eventDate}` },
+    { iconName: "volume", label: "Comfort", copy: `${eventNoise.label} noise · ${eventTone.replace("Pace: ", "")}` },
+    { iconName: "low-pressure", label: "Pacing", copy: "Low pressure · quiet starts welcome." },
+    { iconName: "message", label: "After joining", copy: "Chat can clarify the exact spot." },
+  ] satisfies { iconName: IconSymbolName; label: string; copy: string }[];
+  const quickJumpItems = getEventDetailQuickJumpItems();
+  const isSectionExpanded = (section: EventDetailSectionId) => expandedSections.includes(section);
+  const toggleEventDetailSection = (section: EventDetailSectionId) => {
     setExpandedSections((current) => {
       const isOpen = current.includes(section);
 
@@ -923,11 +929,11 @@ export default function EventDetailsScreen() {
       return [...current, section];
     });
   };
-  const scrollToEventSection = (section: EventDetailSection) => {
+  const scrollToEventSection = (section: EventDetailSectionId) => {
     const y = sectionOffsetsRef.current[section] ?? 0;
     scrollRef.current?.scrollTo({ y: Math.max(y - 8, 0), animated: true });
   };
-  const openEventDetailSection = (section: EventDetailSection, shouldScroll = false) => {
+  const openEventDetailSection = (section: EventDetailSectionId, shouldScroll = false) => {
     setFocusedSection(section);
     setExpandedSections((current) => (current.includes(section) ? current : [...current, section]));
 
@@ -938,6 +944,15 @@ export default function EventDetailsScreen() {
   const scrollToEventTop = () => {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
     setFocusedSection(null);
+  };
+  const handleEventDetailScroll = (scrollY: number) => {
+    const measuredSections = eventDetailSectionPlan
+      .map((section) => ({ id: section.id, y: sectionOffsetsRef.current[section.id] }))
+      .filter((section): section is { id: EventDetailSectionId; y: number } => typeof section.y === "number")
+      .sort((a, b) => a.y - b.y);
+
+    const activeSection = [...measuredSections].reverse().find((section) => scrollY >= section.y - 96);
+    if (activeSection && activeSection.id !== focusedSection) setFocusedSection(activeSection.id);
   };
 
   const toggleFirstMeetupSupportOption = (option: FirstMeetupSupportOption) => {
@@ -970,7 +985,7 @@ export default function EventDetailsScreen() {
 
         if (webNavigator?.clipboard?.writeText) {
           await webNavigator.clipboard.writeText(message);
-          Alert.alert(actionCopy.shareTitle, actionCopy.copiedMessage);
+          setCopyFeedback(actionCopy.copiedMessage);
           return;
         }
       }
@@ -1067,7 +1082,7 @@ export default function EventDetailsScreen() {
     Alert.alert(isEventHidden ? actionCopy.unhiddenMessage : actionCopy.hiddenMessage, event.title);
   };
 
-  const renderAccordionSection = (section: EventDetailSection, title: string, summary: string, children: ReactNode) => {
+  const renderAccordionSection = (section: EventDetailSectionId, title: string, summary: string, iconName: IconSymbolName, children: ReactNode) => {
     const expanded = isSectionExpanded(section);
 
     return (
@@ -1085,9 +1100,14 @@ export default function EventDetailsScreen() {
           accessibilityLabel={`${expanded ? "Collapse" : "Expand"} ${title}`}
           style={[styles.eventAccordionHeader, isRtl && styles.rtlRow]}
         >
-          <View style={styles.eventAccordionTitleBlock}>
-            <Text style={[styles.eventAccordionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{title}</Text>
-            <Text style={[styles.eventAccordionSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{summary}</Text>
+          <View style={[styles.eventAccordionTitleRow, isRtl && styles.rtlRow]}>
+            <View style={[styles.eventAccordionIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name={iconName} color={isDay ? "#53677A" : "#8FAFD1"} size={18} />
+            </View>
+            <View style={styles.eventAccordionTitleBlock}>
+              <Text style={[styles.eventAccordionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{title}</Text>
+              <Text style={[styles.eventAccordionSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{summary}</Text>
+            </View>
           </View>
           <IconSymbol name={expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
         </TouchableOpacity>
@@ -1099,7 +1119,14 @@ export default function EventDetailsScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView ref={scrollRef} style={[styles.screen, isDay && styles.dayScreen]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        ref={scrollRef}
+        style={[styles.screen, isDay && styles.dayScreen]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        onScroll={(event) => handleEventDetailScroll(event.nativeEvent.contentOffset.y)}
+      >
         <View style={[styles.topBar, isRtl && styles.rtlRow]}>
           <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.iconButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={eventActionCopy.goBack} accessibilityHint={screenReaderHints ? eventActionCopy.goBackHint : undefined}>
             <IconSymbol name="chevron.left" color={iconColor} size={26} />
@@ -1259,7 +1286,10 @@ export default function EventDetailsScreen() {
             <View style={[styles.quickReferenceGrid, isRtl && styles.rtlRow]}>
               {quickReferenceItems.map((item) => (
                 <View key={item.label} style={[styles.quickReferenceCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-                  <Text style={[styles.quickReferenceCardTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{item.label}</Text>
+                  <View style={[styles.quickReferenceCardHeader, isRtl && styles.rtlRow]}>
+                    <IconSymbol name={item.iconName} color={isDay ? "#53677A" : "#8FAFD1"} size={16} />
+                    <Text style={[styles.quickReferenceCardTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{item.label}</Text>
+                  </View>
                   <Text style={[styles.quickReferenceCardCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
                 </View>
               ))}
@@ -1317,6 +1347,7 @@ export default function EventDetailsScreen() {
                   accessibilityLabel={`Open ${item.label} section`}
                   style={[styles.quickJumpChip, isDay && styles.dayActionRow, active && styles.quickJumpChipActive]}
                 >
+                  <IconSymbol name={item.iconName} color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={14} />
                   <Text style={[styles.quickJumpChipText, isDay && styles.dayText, active && styles.quickJumpChipTextActive]}>{item.label}</Text>
                 </TouchableOpacity>
               );
@@ -1326,7 +1357,7 @@ export default function EventDetailsScreen() {
 
         {showFullEventReading ? (
         <View style={styles.eventAccordionStack}>
-        {renderAccordionSection("overview", "Overview", "Weather, sound level, and what to expect.", (
+        {renderAccordionSection("whatToExpect", "What to expect", "The plan, sound level, weather, and practical basics.", "experience", (
           <>
           <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
           <View style={[styles.weatherIconWrap, isDay && styles.dayMetaIconWrap]}>
@@ -1366,10 +1397,31 @@ export default function EventDetailsScreen() {
             <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.flexibleCopy}</Text>
           </View>
         </View>
+        <View style={[styles.meetupSupportPanel, styles.guidancePanelTight, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <View style={styles.weatherCopyBlock}>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Practical notes</Text>
+              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Calm planning reminders, not live support.
+              </Text>
+            </View>
+          </View>
+          <View style={styles.practicalGuidanceList}>
+            {practicalMeetupGuidanceItems.slice(0, 3).map((item) => (
+              <View key={item.label} style={[styles.practicalGuidanceRow, isDay && styles.dayActionRow]}>
+                <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>• {item.label}</Text>
+                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
           </>
         ))}
 
-        {renderAccordionSection("conversation", "Conversation", "Optional starters and calm clarity questions.", (
+        {renderAccordionSection("optionalConversation", "Optional conversation", "Gentle prompts and clarity questions only if they help.", "message", (
           <>
           {event.preEventQuestions && event.preEventQuestions.length > 0 && (
           <View style={[styles.questionsPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
@@ -1451,13 +1503,13 @@ export default function EventDetailsScreen() {
           </>
         ))}
 
-        {renderAccordionSection("meetingPoint", "Meeting point", "Where to meet and how the host can clarify the exact spot.", (
+        {renderAccordionSection("arrival", "Arrival", "Where to meet and how the host can clarify the exact spot.", "location", (
           <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel, isRtl && styles.rtlBlock]}>
             <Text style={[styles.meetingCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventMeetingCopy}</Text>
           </View>
         ))}
 
-        {renderAccordionSection("comfort", "Comfort", "Arrival comfort, participation style, and media preferences.", (
+        {renderAccordionSection("comfortPacing", "Comfort & pacing", "Ways to arrive, participate, pause, and be around photos.", "low-pressure", (
           <>
           {event.comfortLabels?.length ? (
             <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
@@ -1506,7 +1558,7 @@ export default function EventDetailsScreen() {
               <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
             </View>
             <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can&apos;t fully prevent someone from using another device.
+              {"Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device."}
             </Text>
             <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
               {mediaComfortLabels.map((label) => (
@@ -1514,7 +1566,7 @@ export default function EventDetailsScreen() {
               ))}
             </View>
             <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Please don&apos;t screenshot or share someone&apos;s profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention.
+              {"Please don't screenshot or share someone's profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention."}
             </Text>
           </View>
 
@@ -1596,7 +1648,7 @@ export default function EventDetailsScreen() {
           </>
         ))}
 
-        {renderAccordionSection("safety", "Safety", "Soft exits, consent reminders, and prototype limits.", (
+        {renderAccordionSection("safetyBoundaries", "Safety & boundaries", "Soft exits, consent reminders, and prototype limits.", "shield", (
           <>
           <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
             <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.softExitTitle}</Text>
@@ -1605,29 +1657,6 @@ export default function EventDetailsScreen() {
           </>
         ))}
 
-        {renderAccordionSection("practical", "Practical", "Planning notes for arrival, weather, and getting home.", (
-          <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-              <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-              </View>
-              <View style={styles.weatherCopyBlock}>
-                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Practical meetup notes</Text>
-                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Informational only. These are calm reminders for planning your own arrival and return, not live support or monitoring.
-                </Text>
-              </View>
-            </View>
-            <View style={styles.practicalGuidanceList}>
-              {practicalMeetupGuidanceItems.map((item) => (
-                <View key={item.label} style={[styles.practicalGuidanceRow, isDay && styles.dayActionRow]}>
-                  <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.label}</Text>
-                  <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        ))}
         <TouchableOpacity
           activeOpacity={0.82}
           onPress={scrollToEventTop}
@@ -1726,6 +1755,12 @@ export default function EventDetailsScreen() {
           </View>
         ) : null}
       </ScrollView>
+      {copyFeedback ? (
+        <View pointerEvents="none" style={[styles.copyFeedbackToast, isDay && styles.dayActionSheet]}>
+          <IconSymbol name="checkmark" color={isDay ? "#0F6B2F" : nsnColors.green} size={18} />
+          <Text style={[styles.copyFeedbackText, isDay && styles.dayText]}>{copyFeedback}</Text>
+        </View>
+      ) : null}
     </ScreenContainer>
   );
 }
@@ -1744,7 +1779,7 @@ const styles = StyleSheet.create({
   dayText: { color: "#0B1220" },
   dayActionSheet: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   dayActionRow: { backgroundColor: "#E8EDF2", borderColor: "#C5D0DA" },
-  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 32 },
+  content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 44 },
   topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   topActions: { flexDirection: "row", gap: 8 },
   rtlRow: { flexDirection: "row-reverse" },
@@ -1793,21 +1828,24 @@ const styles = StyleSheet.create({
   quickReferenceTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21, marginTop: 1 },
   quickReferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   quickReferenceCard: { flexGrow: 1, flexBasis: 190, minHeight: 86, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", paddingHorizontal: 12, paddingVertical: 11, gap: 4 },
+  quickReferenceCardHeader: { flexDirection: "row", alignItems: "center", gap: 7 },
   quickReferenceCardTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   quickReferenceCardCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
   quickJumpSection: { marginBottom: 14 },
   quickJumpRow: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 7 },
-  quickJumpChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  quickJumpChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 7 },
   quickJumpChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
   quickJumpChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15, textAlign: "center" },
   quickJumpChipTextActive: { color: "#FFFFFF" },
-  eventAccordionStack: { gap: 10, marginBottom: 14 },
+  eventAccordionStack: { gap: 13, marginBottom: 18 },
   eventAccordion: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", overflow: "hidden" },
-  eventAccordionHeader: { minHeight: 62, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, paddingHorizontal: 14, paddingVertical: 11 },
+  eventAccordionHeader: { minHeight: 68, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 15, paddingVertical: 12 },
+  eventAccordionTitleRow: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 10 },
+  eventAccordionIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
   eventAccordionTitleBlock: { flex: 1, minWidth: 0 },
   eventAccordionTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   eventAccordionSummary: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  eventAccordionBody: { paddingHorizontal: 12, paddingBottom: 12 },
+  eventAccordionBody: { paddingHorizontal: 13, paddingBottom: 15 },
   backToTopButton: { alignSelf: "center", minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8 },
   backToTopText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   mobileReadingGuideCard: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 10, marginBottom: 14 },
@@ -1849,6 +1887,7 @@ const styles = StyleSheet.create({
   meetingPanel: { borderTopWidth: 1, borderColor: nsnColors.border, paddingTop: 14, marginTop: 2, marginBottom: 18 },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   meetupSupportPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 10, marginBottom: 14 },
+  guidancePanelTight: { marginBottom: 2 },
   meetupSupportHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   meetupSupportIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
   meetupSupportChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
@@ -1896,6 +1935,8 @@ const styles = StyleSheet.create({
   feedbackButton: { flex: 1, minHeight: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: nsnColors.border },
   feedbackButtonDanger: { borderColor: "rgba(255,119,119,0.45)" },
   feedbackButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900" },
+  copyFeedbackToast: { position: "absolute", left: 20, right: 20, bottom: 20, minHeight: 46, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0F1B2C", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 14 },
+  copyFeedbackText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
   questionsPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
   questionsCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginBottom: 10 },
   questionsList: { gap: 6 },
