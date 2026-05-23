@@ -303,6 +303,16 @@ Phase 3 makes the prototype testable with real people while keeping expectations
 - "Do not rely on NSN for real-world plans unless the alpha organiser has confirmed the meetup separately."
 - "Your feedback helps us make NSN clearer for local users before wider testing."
 
+### 11. Future audience and safeguarding boundaries
+
+**Planning only**
+
+NSN currently focuses on young adults because that is the clearest and safest early audience for the alpha prototype. It keeps onboarding, meetup assumptions, consent expectations, and moderation scope simpler while the product is still local-first and not production hardened.
+
+Future expansion could explore supervised youth or community experiences, older-adult community circles, or other age-specific experiences with dedicated safeguards. These are not current alpha scope.
+
+Children or teen experiences would require much stricter safety, moderation, guardian involvement, verification, privacy, and legal systems. NSN should not support underage meetup systems casually or without proper review. Any future age-specific expansion should happen only after substantial trust/safety maturity, production-grade controls, and region-appropriate legal and safeguarding review.
+
 ## Must-Have Checklist Before Alpha
 
 - Complete 5-stage onboarding.
