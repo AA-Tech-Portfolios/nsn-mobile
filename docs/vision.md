@@ -28,6 +28,16 @@ SoftHello should make trust feel possible before interaction begins. It should m
 
 Future ideas such as Pre-meetups should follow the same philosophy. A first hello can be smaller than the main plan: a public cafe, a casual shared place, a 1:1 introduction, or a few people meeting gently before a larger group activity. These ideas are not production-ready features yet; they belong only if they give users more control over pacing, reduce anxiety, and help trust form gradually without making anyone perform readiness.
 
+## Environment, Not Stage
+
+NSN should feel more like a calm shared place than a performance platform. The product should be designed around atmosphere, pacing, emotional comfort, and the small cues that help people feel safe enough to arrive gradually.
+
+This means reducing overwhelm and constant self-presentation. Users should not feel that every profile choice, reply, RSVP, or meetup is an audition for visibility. The system should make room for quiet observation, low-pressure participation, careful trust, and slow return after pauses.
+
+The work is closer to designing an environment people can inhabit than a feed people must compete inside. In that sense, it can help to think carefully about the feeling of building a small spaceship: not as sci-fi branding, but as a reminder that every surface, rule, signal, and rhythm affects how people feel while spending time inside it.
+
+Future systems should support calm cooperation and community care before attention competition. Discovery, feedback, hosting, recommendations, and recognition should help people understand each other, coordinate gently, and belong at different speeds.
+
 The goal is not to maximize attention.
 
 The goal is to help people feel human with each other.
