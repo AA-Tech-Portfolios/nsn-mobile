@@ -51,6 +51,7 @@ import {
   type TransportationPreference,
   useAppSettings,
 } from "@/lib/app-settings";
+import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { ScreenContainer } from "@/components/screen-container";
@@ -61,7 +62,7 @@ import {
   type ProfileDrawerPanel,
   type ProfilePreferenceSection,
 } from "@/lib/alpha-readiness-controls";
-import { getUserPreferenceRowDescription, profileResourceSupportRowMetadata, profileSupportRowMetadata, userPreferenceRowMetadata, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
+import { getUserPreferenceRowDescription, getUserPreferenceRows, profileResourceSupportRowMetadata, profileSupportRowMetadata, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
 import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
@@ -114,6 +115,7 @@ import {
 import { getPersonalityPresenceSelectedCount, personalityPresencePromptOptions } from "@/lib/preferences/personality-presence";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
+import { getGuideTipForSurface } from "@/lib/guides-and-tips";
 import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, type SoftHelloVerificationLevel, verificationLevels } from "@/lib/softhello-mvp";
 import { gentleConnectionGuidance, supportBelongingGuidance, type SupportGuidanceId } from "@/lib/support-guidance";
 import { getCalmFaviconUrl, preparednessGuidanceCategories, safetyBoundaryGuidanceCategories, type PreparednessGuidanceCategory } from "@/lib/options-hub";
@@ -156,6 +158,18 @@ type ProfileMenuPanel =
   | "helpSupport"
   | "safetyBoundaries"
   | "blockReport";
+const profileReturnPanelByPreferenceSection: Record<ProfilePreferenceSection, ProfileMenuPanel> = {
+  overview: "preferences",
+  comfort: "comfortTrust",
+  personality: "personalityPresence",
+  background: "backgroundCommunity",
+  calendar: "calendarMoments",
+  food: "foodBeverage",
+  interests: "hobbiesInterests",
+  transport: "transportPreferences",
+  contact: "contactPreferencePanel",
+  location: "locationPreferencePanel",
+};
 const expandedProfileRows: ProfileShortcutRow[] = [...rows, settingsRow];
 const simpleProfileShortcutRows: ProfileShortcutRow[] = [rows[0], rows[1], rows[2], rows[4], rows[10], settingsRow];
 const profileShortcutLayoutOptions: ProfileShortcutLayout[] = ["Clean", "Expanded"];
@@ -1405,6 +1419,8 @@ export default function ProfileScreen() {
   const [showAgeSaved, setShowAgeSaved] = useState(false);
   const [nameError, setNameError] = useState("");
   const [showNameSaved, setShowNameSaved] = useState(false);
+  const [showGuideTip, setShowGuideTip] = useState(true);
+  const guideTip = getGuideTipForSurface("profile");
 
   const [selectedVibes, setSelectedVibes] = useState(profileVibes.slice(0, 5));
   const [isEditingVibes, setIsEditingVibes] = useState(false);
@@ -1488,13 +1504,13 @@ export default function ProfileScreen() {
       setShowPhotoMenu(false);
       setIsVerificationReviewOpen(false);
       closeProfileMenu();
-      router.push({ pathname: "/user-preferences", params: { section } } as never);
+      router.push({ pathname: "/user-preferences", params: { section, returnPanel: profileReturnPanelByPreferenceSection[section] } } as never);
     },
     [closeProfileMenu, router]
   );
 
   const openSettingsFromProfile = useCallback(
-    (params?: Record<string, string>, source: "profile" | "user-options" = "profile") => {
+    (params?: Record<string, string>, source = "profile") => {
       setShowPhotoMenu(false);
       setIsVerificationReviewOpen(false);
       closeProfileMenu();
@@ -3816,6 +3832,29 @@ export default function ProfileScreen() {
                       </TouchableOpacity>
                     ))}
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Community & Meetups</Text>
+                    {[
+                      { icon: "calendar" as const, title: "My Meetups", copy: "Joined, interested, and local meetup plans.", action: () => { closeProfileMenu(); router.push("/(tabs)/meetups" as any); } },
+                      { icon: "sliders" as const, title: "Meetup Preferences", copy: "Comfort, contact, arrival, and location preferences.", action: () => setProfileMenuPanel("preferences") },
+                      { icon: "layout" as const, title: "Event Display", copy: `${homeEventLayout} view with ${homeEventVisualMode.toLowerCase()} cards.`, action: () => setProfileMenuPanel("display") },
+                    ].map((item) => (
+                      <TouchableOpacity
+                        key={item.title}
+                        activeOpacity={0.78}
+                        onPress={item.action}
+                        style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
+                        accessibilityRole="button"
+                        accessibilityLabel={item.title}
+                      >
+                        <IconSymbol name={item.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                        <View style={styles.profileMenuItemBody}>
+                          <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.title}</Text>
+                          {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{item.copy}</Text> : null}
+                        </View>
+                        <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                      </TouchableOpacity>
+                    ))}
+                    <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
                     <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Support & Safety</Text>
                     <TouchableOpacity
                       activeOpacity={0.78}
@@ -3905,7 +3944,7 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
-                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>App Settings</Text>
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>App, Privacy & Layout</Text>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => {
@@ -3918,7 +3957,7 @@ export default function ProfileScreen() {
                       <IconSymbol name="settings" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getRowLabel("settings")}</Text>
-                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Settings, privacy, appearance, and prototype account controls.</Text> : null}
+                        {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Language, privacy, appearance, and prototype account controls.</Text> : null}
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -4047,7 +4086,7 @@ export default function ProfileScreen() {
                         })}
                       </View>
                     </View>
-                    {userPreferenceRowMetadata.map((item) => {
+                    {getUserPreferenceRows("Grouped").map((item) => {
                       const target = profilePreferenceRowTargets[item.key];
                       const rowSummary = getProfilePreferenceRowSummary(item.key);
                       const compactRows = userPreferenceTextMode === "Simple";
@@ -5074,7 +5113,7 @@ export default function ProfileScreen() {
                     <TouchableOpacity
                       activeOpacity={0.82}
                       onPress={() => {
-                        openSettingsFromProfile(undefined, "user-options");
+                        openSettingsFromProfile(undefined, "comfortTrust");
                       }}
                       style={[styles.profileLayoutOption, styles.profileMenuPrimaryAction]}
                       accessibilityRole="button"
@@ -5198,7 +5237,7 @@ export default function ProfileScreen() {
                         <TouchableOpacity
                           activeOpacity={0.82}
                           onPress={() => {
-                            openSettingsFromProfile({ section: "regionalFormats" }, "user-options");
+                            openSettingsFromProfile({ section: "regionalFormats" }, "display");
                           }}
                           accessibilityRole="button"
                           accessibilityLabel="View regional format preferences"
@@ -6327,6 +6366,8 @@ export default function ProfileScreen() {
           </View>
         </View>
         ) : null}
+
+        {showGuideTip ? <GuidesAndTipsCard tip={guideTip} isDay={isDay} onDismiss={() => setShowGuideTip(false)} /> : null}
 
         <View
           style={[

@@ -13,8 +13,8 @@ describe("event detail section plan", () => {
     ]);
   });
 
-  it("keeps only the primary reading sections expanded initially", () => {
-    expect(initialExpandedEventDetailSections).toEqual(["whatToExpect", "comfortPacing"]);
+  it("keeps event detail sections collapsed initially for a calmer first read", () => {
+    expect(initialExpandedEventDetailSections).toEqual([]);
   });
 
   it("uses the same simplified labels for quick jump chips", () => {

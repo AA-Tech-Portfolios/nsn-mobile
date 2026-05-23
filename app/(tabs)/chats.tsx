@@ -3,12 +3,14 @@ import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View 
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ChatProfilePreviewSheet } from "@/components/chat-profile-preview-sheet";
+import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { allEvents, eventChatSeeds, nsnColors, type ChatMessage, type EventItem } from "@/lib/nsn-data";
 import { getChatProfilePreview } from "@/lib/chat-profile-preview";
+import { getGuideTipForSurface } from "@/lib/guides-and-tips";
 import {
   askAboutMeetupQuestionGroups,
   arrivingAloneReassuranceItems,
@@ -1195,9 +1197,11 @@ export default function ChatsScreen() {
   const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
   const [chatPlusOpen, setChatPlusOpen] = useState(false);
   const [bypassAlphaChatGate, setBypassAlphaChatGate] = useState(false);
+  const [showGuideTip, setShowGuideTip] = useState(true);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
   const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
   const [selectedComfortRoles, setSelectedComfortRoles] = useState<MeetupComfortRoleOption[]>([]);
+  const guideTip = getGuideTipForSurface("chats");
   const softExitMessage = softExitChoice ? copy.softExitPresets[softExitChoice] : null;
   useEffect(() => {
     if (!requestedEventId || !allEvents.some((event) => event.id === requestedEventId)) return;
@@ -1536,6 +1540,8 @@ export default function ChatsScreen() {
             <Text style={[styles.chatSelectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{chatMenuCopy.landingTitle}</Text>
             <Text style={[styles.chatSelectionCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.landingCopy}</Text>
 
+            {showGuideTip ? <GuidesAndTipsCard tip={guideTip} isDay={isDay} onDismiss={() => setShowGuideTip(false)} /> : null}
+
             <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
               <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
               <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>Demo conversations</Text>
@@ -1657,6 +1663,8 @@ export default function ChatsScreen() {
         ) : null}
 
         <ScrollView style={styles.chat} contentContainerStyle={styles.chatContent} showsVerticalScrollIndicator={false} scrollEnabled={!chatMenuOpen}>
+          {showGuideTip ? <GuidesAndTipsCard tip={guideTip} isDay={isDay} onDismiss={() => setShowGuideTip(false)} /> : null}
+
           <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
             <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
             <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>

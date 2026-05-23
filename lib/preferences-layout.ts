@@ -607,6 +607,9 @@ const settingsBackTargetBySource: Record<string, SettingsBackTarget> = {
   profile: profileBackTarget,
   "alpha-walkthrough": { pathname: "/(tabs)/alpha-walkthrough" },
   "user-options": { pathname: "/(tabs)/profile", params: { menu: "options" } },
+  comfortTrust: { pathname: "/(tabs)/profile", params: { menu: "comfortTrust" } },
+  display: { pathname: "/(tabs)/profile", params: { menu: "display" } },
+  preferences: { pathname: "/(tabs)/profile", params: { menu: "preferences" } },
 };
 
 export function getSettingsBackTarget(source?: string | string[]): SettingsBackTarget {

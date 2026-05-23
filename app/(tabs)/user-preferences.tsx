@@ -263,7 +263,7 @@ const normalizePreferenceSection = (section?: string | string[]): PreferenceSect
 
 export default function UserPreferencesScreen() {
   const router = useRouter();
-  const { section } = useLocalSearchParams<{ section?: string }>();
+  const { section, returnPanel } = useLocalSearchParams<{ section?: string; returnPanel?: string }>();
   const { width } = useWindowDimensions();
   const {
     comfortMode,
@@ -514,7 +514,7 @@ export default function UserPreferencesScreen() {
   };
 
   const openCompactView = () => {
-    router.replace({ pathname: "/(tabs)/profile", params: { menu: compactPanelBySection[activeSection] } } as never);
+    router.replace({ pathname: "/(tabs)/profile", params: { menu: returnPanel ?? compactPanelBySection[activeSection] } } as never);
   };
 
   const toggleFoodPreference = async (preferenceId: string) => {
@@ -1185,7 +1185,7 @@ export default function UserPreferencesScreen() {
         <View style={styles.topActions}>
           <TouchableOpacity
             activeOpacity={0.75}
-            onPress={() => router.replace({ pathname: "/(tabs)/profile", params: { menu: "preferences" } } as never)}
+            onPress={openCompactView}
             style={[styles.iconButton, isDay && styles.dayIconButton]}
             accessibilityRole="button"
             accessibilityLabel="Back to Profile"

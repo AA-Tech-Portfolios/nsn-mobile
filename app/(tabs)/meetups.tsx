@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
+import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
+import { getGuideTipForSurface } from "@/lib/guides-and-tips";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
 import { canChatPrivately, getEffectivePrototypeVerificationLevel, getEventMembership, getRsvpLabel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
@@ -209,6 +212,7 @@ const meetupsTrustGateTranslations = {
 export default function MeetupsScreen() {
   const router = useRouter();
   const { appLanguage, contactEmail, contactPhone, eventMemberships, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage, verificationLevel } = useAppSettings();
+  const [showGuideTip, setShowGuideTip] = useState(true);
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const translationLanguageBase = getTranslationLanguageBase(translationLanguage);
   const isDay = !isNightMode;
@@ -217,12 +221,15 @@ export default function MeetupsScreen() {
   const trustGateCopy = meetupsTrustGateTranslations[appLanguageBase as keyof typeof meetupsTrustGateTranslations] ?? meetupsTrustGateTranslations.English;
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canUseMeetups = canChatPrivately(effectiveVerificationLevel);
+  const guideTip = getGuideTipForSurface("meetups");
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={[styles.title, isDay && styles.dayTitle]}>{copy.title}</Text>
         <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{copy.subtitle}</Text>
+
+        {showGuideTip ? <GuidesAndTipsCard tip={guideTip} isDay={isDay} onDismiss={() => setShowGuideTip(false)} /> : null}
 
         <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
           <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>

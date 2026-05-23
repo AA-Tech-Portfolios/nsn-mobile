@@ -16,7 +16,7 @@ export const eventDetailSectionPlan: EventDetailSectionPlan[] = [
     title: "What to expect",
     summary: "The plan, sound level, weather, and practical basics in one place.",
     iconName: "experience",
-    initiallyExpanded: true,
+    initiallyExpanded: false,
   },
   {
     id: "optionalConversation",
@@ -37,7 +37,7 @@ export const eventDetailSectionPlan: EventDetailSectionPlan[] = [
     title: "Comfort & pacing",
     summary: "Ways to arrive, participate, pause, and be around photos.",
     iconName: "low-pressure",
-    initiallyExpanded: true,
+    initiallyExpanded: false,
   },
   {
     id: "safetyBoundaries",

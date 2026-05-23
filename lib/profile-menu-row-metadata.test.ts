@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getUserPreferenceRows,
   getUserPreferenceRowDescription,
   profileResourceSupportRowMetadata,
   profileSupportRowMetadata,
@@ -35,5 +36,20 @@ describe("profile menu row metadata", () => {
     );
     expect(getUserPreferenceRowDescription("personality", "Simple")).toBe("Optional human context.");
     expect(getUserPreferenceRowDescription("food", "Simple")).toBe("Food, drinks, and dietary comfort.");
+  });
+
+  it("supports a future alphabetical preference category order without changing the grouped default", () => {
+    expect(getUserPreferenceRows().map((row) => row.key)).toEqual(userPreferenceRowMetadata.map((row) => row.key));
+    expect(getUserPreferenceRows("Alphabetical").map((row) => row.title)).toEqual([
+      "Calendar & Cultural Moments",
+      "Comfort & Trust",
+      "Contact Preference",
+      "Food & Beverage",
+      "Hobbies & Interests",
+      "Location Preference",
+      "Personality & Presence",
+      "Transportation Method",
+      "Work, Study & Life Context",
+    ]);
   });
 });

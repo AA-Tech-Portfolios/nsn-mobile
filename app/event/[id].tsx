@@ -894,6 +894,7 @@ export default function EventDetailsScreen() {
   const eventTone = isMovieNight ? copy.tone : `Pace: ${getDetailSocialPaceLabel(localizedEvent.tone)}`;
   const eventDate = isMovieNight ? copy.date : isCreatedEvent ? `${(rawEvent as CreatedEvent).date} · ${(rawEvent as CreatedEvent).time}` : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
   const eventPeople = isMovieNight ? copy.people : localizedEvent.people;
+  const groupPlanCopy = isMovieNight ? "Around 2-4 people expected" : `${eventPeople} expected`;
   const eventDescription = isMovieNight ? copy.description : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
   const eventNoise = noiseCopy.levels[event.noiseLevel];
   const eventWeatherCopy = event.weather.includes("Weather")
@@ -941,8 +942,14 @@ export default function EventDetailsScreen() {
       return [...current, section];
     });
   };
-  const scrollToEventSection = (section: EventDetailSectionId) => {
-    const y = sectionOffsetsRef.current[section] ?? 0;
+  const scrollToEventSection = (section: EventDetailSectionId, attempt = 0) => {
+    const y = sectionOffsetsRef.current[section];
+
+    if (typeof y !== "number") {
+      if (attempt < 4) setTimeout(() => scrollToEventSection(section, attempt + 1), 90);
+      return;
+    }
+
     scrollRef.current?.scrollTo({ y: Math.max(y - 8, 0), animated: true });
   };
   const openEventDetailSection = (section: EventDetailSectionId, shouldScroll = false) => {
@@ -950,7 +957,7 @@ export default function EventDetailsScreen() {
     setExpandedSections((current) => (current.includes(section) ? current : [...current, section]));
 
     if (shouldScroll) {
-      setTimeout(() => scrollToEventSection(section), 80);
+      setTimeout(() => scrollToEventSection(section), 120);
     }
   };
   const scrollToEventTop = () => {
@@ -1747,7 +1754,7 @@ export default function EventDetailsScreen() {
             {canOpenMeetupChat ? eventCopy.openMeetupChat : canMeet ? copy.join : eventCopy.verifyBeforeMeeting}
           </Text>
         </TouchableOpacity>
-        <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{copy.spotsLeft}</Text>
+        <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{groupPlanCopy}</Text>
 
         {canOpenMeetupChat ? (
           <View style={[styles.feedbackPanel, isDay && styles.dayCard]}>

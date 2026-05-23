@@ -62,6 +62,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Explore consent-first buddy/guide systems
 - [ ] Explore buddy/guide support for first-time attendees
 - [ ] Future event detail display planning only: explore a Quick view / Detailed view toggle where Quick view shows calm essentials and Detailed view keeps documentation-style information for users who prefer reading before attending. Do not implement until section state, accessibility expectations, and tester feedback make it clearly worthwhile.
+- [ ] Future Guides & Tips preferences, planning only: explore Minimal, Gentle guidance, and Detailed onboarding modes for optional contextual help. Tips should stay dismissible per tab or screen, short, non-blocking, non-gamified, privacy-first, and free of analytics or engagement tracking unless reviewed later.
 - [ ] Explore consent-first comfort gestures only after community guidelines and safety review
 - [ ] Add crisis/resource links only after regional safety/legal review
 - [ ] Ensure support features are privacy-safe and do not expose sensitive personal information

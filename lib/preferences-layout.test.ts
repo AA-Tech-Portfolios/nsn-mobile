@@ -155,6 +155,9 @@ describe("settings back navigation", () => {
   it("returns to Profile when opened from profile surfaces", () => {
     expect(getSettingsBackTarget("profile")).toEqual({ pathname: "/(tabs)/profile" });
     expect(getSettingsBackTarget("user-options")).toEqual({ pathname: "/(tabs)/profile", params: { menu: "options" } });
+    expect(getSettingsBackTarget("comfortTrust")).toEqual({ pathname: "/(tabs)/profile", params: { menu: "comfortTrust" } });
+    expect(getSettingsBackTarget("display")).toEqual({ pathname: "/(tabs)/profile", params: { menu: "display" } });
+    expect(getSettingsBackTarget("preferences")).toEqual({ pathname: "/(tabs)/profile", params: { menu: "preferences" } });
   });
 
   it("returns to another known source route when provided", () => {

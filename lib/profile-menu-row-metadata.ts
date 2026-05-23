@@ -118,6 +118,16 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   },
 ];
 
+export type UserPreferenceRowSortMode = "Grouped" | "Alphabetical";
+
+export function getUserPreferenceRows(sortMode: UserPreferenceRowSortMode = "Grouped") {
+  if (sortMode === "Alphabetical") {
+    return [...userPreferenceRowMetadata].sort((left, right) => left.title.localeCompare(right.title));
+  }
+
+  return userPreferenceRowMetadata;
+}
+
 export function getUserPreferenceRowDescription(key: UserPreferenceRowKey, mode: UserPreferenceTextMode = "Detailed") {
   const row = userPreferenceRowMetadata.find((item) => item.key === key);
 

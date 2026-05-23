@@ -38,6 +38,16 @@ Future work:
 - Optional atmosphere features such as music, widgets, wallpapers, or gentle prompts.
 - Careful testing to ensure personalisation does not become pressure.
 
+## Future Guides & Tips Preferences
+
+Planning only. NSN may later offer optional guidance levels so people can choose how much contextual help they want:
+
+- Minimal: keep guidance mostly hidden unless someone asks for help.
+- Gentle guidance: show short, dismissible tips in relevant tabs or screens.
+- Detailed onboarding: offer more structured reading for people who like to understand a flow before using it.
+
+This should stay non-blocking, non-gamified, privacy-first, and free of analytics or engagement tracking unless a later privacy review explicitly approves a safer production approach.
+
 ## See Also
 
 - [`current-state.md`](current-state.md) - current implemented state.
