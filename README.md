@@ -28,6 +28,7 @@ NSN-specific docs:
 - [`docs/brand-systems.md`](docs/brand-systems.md) - NSN local visual identity and future SoftHello brand context.
 - [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes, verification commands, and Expo web/native testing guidance.
 - [`docs/browser-testing.md`](docs/browser-testing.md) - practical alpha browser coverage, web checks, and future platform testing boundaries.
+- [`docs/database-auth-planning.md`](docs/database-auth-planning.md) - early staged planning for real auth, database entities, and trust/safety guardrails.
 - [`todo.md`](todo.md) - active implementation roadmap.
 
 ## SoftHello Future / Global Context

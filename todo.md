@@ -85,6 +85,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [x] Add event media comfort labels and prototype privacy/photo/video/screenshot reporting reminders (media labels and local report-shaped flows exist; production reporting remains deferred)
 - [ ] Add 18+ compliance copy and safeguards beyond local age entry
 - [ ] Decide the real verification provider strategy and UX handoff before claiming production verification
+- [ ] Use `docs/database-auth-planning.md` to guide staged database/auth planning before replacing local prototype state or collecting live personal data
 - [ ] Add a real trust-state backend before treating verification or privacy gates as production systems
 - [ ] Expand privacy rules for progressive visibility, matched/shared visibility, event-visible fields, warm-up disclosure, and mutual profile-photo reveal
 - [ ] Add mutual pre-meetup consent for optional 1-1 chats between members
