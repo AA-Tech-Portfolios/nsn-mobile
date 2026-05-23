@@ -2,6 +2,7 @@ import { type ComponentProps, type ReactNode, useEffect, useMemo, useState } fro
 import { Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View, type StyleProp, type ViewStyle } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
+import { PrototypeLocalNote } from "@/components/prototype-local-note";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
@@ -358,29 +359,29 @@ export default function UserPreferencesScreen() {
   const [calendarSearch, setCalendarSearch] = useState("");
   const [customCalendarMomentDraft, setCustomCalendarMomentDraft] = useState("");
   const [openFoodGroups, setOpenFoodGroups] = useState<FoodPreferenceGroupId[]>(() =>
-    getCalmDefaultOpenGroupIds(
+    isWide ? getCalmDefaultOpenGroupIds(
       foodPreferenceGroups.map((group) => ({
         id: group.id,
         defaultOpen: group.defaultOpen,
         selectedCount: getFoodPreferenceGroupSelectedCount(foodBeveragePreferenceIds, group.id),
       })),
       { maxOpen: 1 }
-    )
+    ) : []
   );
   const [showAllFoodGroups, setShowAllFoodGroups] = useState<FoodPreferenceGroupId[]>([]);
   const [openInterestCategories, setOpenInterestCategories] = useState<InterestCategoryId[]>(() =>
-    getCalmDefaultOpenGroupIds(
+    isWide ? getCalmDefaultOpenGroupIds(
       interestCategories.map((category) => ({
         id: category.id,
         defaultOpen: category.defaultOpen,
         selectedCount: getInterestCategorySelectedCount(interestPreferenceIds, category.id),
       })),
       { maxOpen: 1 }
-    )
+    ) : []
   );
   const [showAllInterestCategories, setShowAllInterestCategories] = useState<InterestCategoryId[]>([]);
   const [openCalendarGroups, setOpenCalendarGroups] = useState<CalendarMomentGroupId[]>(() =>
-    getCalmDefaultOpenGroupIds(
+    isWide ? getCalmDefaultOpenGroupIds(
       calendarMomentGroups.map((group) => ({
         id: group.id,
         defaultOpen: group.defaultOpen,
@@ -389,10 +390,10 @@ export default function UserPreferencesScreen() {
           (group.id === "personal" ? customCalendarMoments.length : 0),
       })),
       { maxOpen: 1 }
-    )
+    ) : []
   );
   const [openPreferenceDetailGroups, setOpenPreferenceDetailGroups] = useState<string[]>(() =>
-    getCalmDefaultOpenGroupIds(
+    isWide ? getCalmDefaultOpenGroupIds(
       [
         { id: "personality-presentation", defaultOpen: true, selectedCount: 0 },
         { id: "personality-hair-cues", selectedCount: 0 },
@@ -414,9 +415,15 @@ export default function UserPreferencesScreen() {
         { id: "background-community", selectedCount: backgroundCommunityPreferences.length },
       ],
       { maxOpen: 1 }
-    )
+    ) : []
   );
+  const [openMobileSectionCards, setOpenMobileSectionCards] = useState<string[]>([]);
   const [activeInterestComfortId, setActiveInterestComfortId] = useState<string | null>(interestPreferenceIds[0] ?? null);
+
+  useEffect(() => {
+    if (!isWide) return;
+    setOpenMobileSectionCards([]);
+  }, [isWide]);
 
   useEffect(() => {
     setActiveSection(normalizePreferenceSection(section));
@@ -985,8 +992,51 @@ export default function UserPreferencesScreen() {
     );
   };
 
+  const getMobileSectionSummary = (title: string): { values: string[]; fallback: string } => {
+    if (title === "Progressive visibility") return { values: [comfortMode], fallback: "Choose how visible you want to feel." };
+    if (title === "Social energy") return { values: [socialEnergyPreference], fallback: "Pick the energy that feels easiest." };
+    if (title === "Communication preferences") return { values: communicationPreferences, fallback: "Choose one communication cue." };
+    if (title === "Group size preferences") return { values: [groupSizePreference], fallback: "Choose the group size that feels easiest." };
+    if (title === "Profile display control") {
+      return {
+        values: [
+          showPersonalityPresenceOnProfile ? "Profile preview allowed" : "Hidden from profile preview",
+          showPersonalityPresencePromptsOnProfile ? "Prompts allowed" : "Prompts private",
+        ],
+        fallback: "Keep personality context private or preview-only.",
+      };
+    }
+    if (title === "Transportation Method") return { values: transportationPreferences, fallback: transportationMethod };
+    if (title === "Contact Preference") return { values: meetupContactPreferences, fallback: contactPreferences.join(", ") || "Text" };
+    if (title === "Local Area") return { values: [suburb || "Sydney North Shore"], fallback: "Choose a broad local area." };
+    if (title === "I am here for") return { values: [intent], fallback: "Keep intent lightweight and changeable." };
+    if (title === "Friendship style") return { values: friendshipStylePreferences, fallback: "Optional cues for gentle friendship pacing." };
+    if (title === "Dating style") return { values: datingStylePreferences, fallback: "Optional and pressure-free." };
+    if (title === "Location privacy and discovery") {
+      return {
+        values: [
+          useApproximateLocation ? "Approximate location" : "Precise location off",
+          showDistanceInMeetups ? "Distance visible" : "Distance hidden",
+        ],
+        fallback: "Review local discovery controls.",
+      };
+    }
+    if (title === "Location Preference") return { values: locationComfortPreferences, fallback: "Choose venue comfort details." };
+
+    return { values: [], fallback: "View details when you are ready." };
+  };
+
   const renderSectionCard = (title: string, copy: string, icon: string, children: ReactNode, cardStyle?: StyleProp<ViewStyle>) => {
     const workStudyIcon = workStudySectionIcons[title];
+    const mobileCardId = title.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const mobileOpen = isWide || openMobileSectionCards.includes(mobileCardId);
+    const toggleMobileCard = () => {
+      if (isWide) return;
+      setOpenMobileSectionCards((current) =>
+        current.includes(mobileCardId) ? current.filter((item) => item !== mobileCardId) : [mobileCardId]
+      );
+    };
+    const mobileSummary = getMobileSectionSummary(title);
 
     return (
       <View
@@ -1000,7 +1050,15 @@ export default function UserPreferencesScreen() {
           isDay && styles.dayCard,
         ]}
       >
-        <View style={styles.cardHeader}>
+        <TouchableOpacity
+          activeOpacity={isWide ? 1 : 0.78}
+          onPress={toggleMobileCard}
+          disabled={isWide}
+          style={styles.cardHeader}
+          accessibilityRole={isWide ? undefined : "button"}
+          accessibilityLabel={isWide ? undefined : `${mobileOpen ? "Hide" : "View"} ${title} details`}
+          accessibilityState={isWide ? undefined : { expanded: mobileOpen }}
+        >
           {workStudyIcon ? (
             <View style={[styles.cardIconSymbol, isDay && styles.dayChip]}>
               <IconSymbol name={workStudyIcon} color={isDay ? "#445E93" : "#C7B07A"} size={20} />
@@ -1010,10 +1068,18 @@ export default function UserPreferencesScreen() {
           )}
           <View style={styles.cardBody}>
             <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{title}</Text>
-            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy}</Text>
+            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]} numberOfLines={!isWide && !mobileOpen ? 2 : undefined}>
+              {copy}
+            </Text>
           </View>
-        </View>
-        {children}
+          {!isWide ? <IconSymbol name={mobileOpen ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={21} /> : null}
+        </TouchableOpacity>
+        {!isWide && !mobileOpen ? (
+          <View style={styles.mobileSummaryBlock}>
+            {renderSummary(mobileSummary.values, mobileSummary.fallback, 2)}
+            <Text style={[styles.mobileDetailLink, isDay && styles.dayLinkText]}>View details</Text>
+          </View>
+        ) : children}
       </View>
     );
   };
@@ -1090,11 +1156,17 @@ export default function UserPreferencesScreen() {
     );
   };
 
-  const renderSummary = (labels: string[], fallback: string) => (
-    <View style={styles.summaryChips}>
-      {labels.length ? labels.map((label) => <Text key={label} style={[styles.summaryChip, isDay && styles.daySummaryChip]}>{formatChipLabel(label)}</Text>) : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{fallback}</Text>}
-    </View>
-  );
+  const renderSummary = (labels: string[], fallback: string, limit = isWide ? 8 : 2) => {
+    const visibleLabels = labels.slice(0, limit);
+    const hiddenCount = Math.max(0, labels.length - visibleLabels.length);
+
+    return (
+      <View style={styles.summaryChips}>
+        {visibleLabels.length ? visibleLabels.map((label) => <Text key={label} style={[styles.summaryChip, isDay && styles.daySummaryChip]}>{formatChipLabel(label)}</Text>) : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{fallback}</Text>}
+        {hiddenCount > 0 ? <Text style={[styles.summaryChip, styles.summaryMoreChip, isDay && styles.daySummaryChip]}>+{hiddenCount} more</Text> : null}
+      </View>
+    );
+  };
 
   const renderPreferenceDetailChip = <T extends string>(
     option: PreferenceOptionDetail<T>,
@@ -1211,7 +1283,7 @@ export default function UserPreferencesScreen() {
             <Text style={[styles.title, isDay && styles.dayTitle]}>{activeMeta.title}</Text>
             <Text style={[styles.copy, isDay && styles.dayMutedText]}>{getPreferenceSectionCopy(activeSection)}</Text>
           </View>
-          <Text style={[styles.prototypeBadge, isDay && styles.daySummaryChip]}>Updated locally for this prototype</Text>
+          <PrototypeLocalNote isDay={isDay} />
         </View>
 
         <ScrollView horizontal={!isWide} showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.sectionNav, isWide && styles.sectionNavWide]}>
@@ -1254,7 +1326,7 @@ export default function UserPreferencesScreen() {
                 <View style={styles.cardBody}>
                   <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{item.title}</Text>
                   <Text style={[styles.overviewValue, isDay && styles.dayTitle]}>{item.copy}</Text>
-                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{getOverviewCardMeta(item)}</Text>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]} numberOfLines={!isWide ? 2 : undefined}>{getOverviewCardMeta(item)}</Text>
                 </View>
                 <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={21} />
               </TouchableOpacity>
@@ -2621,6 +2693,9 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "800" },
   summaryChips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   summaryChip: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 16, borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 9, paddingVertical: 5 },
+  summaryMoreChip: { borderStyle: "dashed" },
+  mobileSummaryBlock: { gap: 9 },
+  mobileDetailLink: { color: "#A8B7DA", fontSize: 12, fontWeight: "900", lineHeight: 17 },
   accordionHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   countBadge: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 16, borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "rgba(255,255,255,0.055)" },
   notice: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
@@ -2640,5 +2715,6 @@ const styles = StyleSheet.create({
   dayInput: { backgroundColor: "#F8FAFC", borderColor: "#C5D0DA" },
   dayTitle: { color: "#0B1220" },
   dayMutedText: { color: "#53677A" },
+  dayLinkText: { color: "#445E93" },
   activeText: { color: "#FFFFFF" },
 });
