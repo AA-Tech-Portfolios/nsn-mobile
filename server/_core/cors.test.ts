@@ -72,6 +72,20 @@ describe("createCorsMiddleware", () => {
     expect(next).toHaveBeenCalledOnce();
   });
 
+  it("does not throw or set credentialed headers for malformed origin values", async () => {
+    process.env = {
+      ...ORIGINAL_ENV,
+      NODE_ENV: "production",
+      CORS_ALLOWED_ORIGINS: "https://app.example.com",
+    };
+
+    const { res, next } = await runCors("not a url");
+
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBeUndefined();
+    expect(res.headers.get("Access-Control-Allow-Credentials")).toBeUndefined();
+    expect(next).toHaveBeenCalledOnce();
+  });
+
   it("permits localhost origins only in development", async () => {
     process.env = { ...ORIGINAL_ENV, NODE_ENV: "development", CORS_ALLOWED_ORIGINS: "" };
 

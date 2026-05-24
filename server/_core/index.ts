@@ -11,19 +11,22 @@ import { createContext } from "./context";
 
 const LOCAL_CORS_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
 
+function normalizeCorsOrigin(origin: string) {
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return null;
+  }
+}
+
 function parseAllowedOrigins() {
   return new Set(
     (process.env.CORS_ALLOWED_ORIGINS ?? "")
       .split(",")
       .map((origin) => origin.trim())
       .filter(Boolean)
-      .map((origin) => {
-        try {
-          return new URL(origin).origin;
-        } catch {
-          return origin.replace(/\/+$/, "");
-        }
-      }),
+      .map(normalizeCorsOrigin)
+      .filter((origin): origin is string => Boolean(origin)),
   );
 }
 
@@ -39,7 +42,9 @@ function isLocalDevOrigin(origin: string) {
 }
 
 function isAllowedCorsOrigin(origin: string) {
-  const normalizedOrigin = new URL(origin).origin;
+  const normalizedOrigin = normalizeCorsOrigin(origin);
+  if (!normalizedOrigin) return false;
+
   return parseAllowedOrigins().has(normalizedOrigin) || isLocalDevOrigin(normalizedOrigin);
 }
 
@@ -47,7 +52,7 @@ export function createCorsMiddleware(): RequestHandler {
   return (req, res, next) => {
     const origin = req.headers.origin;
     const allowedOrigin =
-      typeof origin === "string" && isAllowedCorsOrigin(origin) ? new URL(origin).origin : null;
+      typeof origin === "string" && isAllowedCorsOrigin(origin) ? normalizeCorsOrigin(origin) : null;
 
     if (allowedOrigin) {
       res.header("Access-Control-Allow-Origin", allowedOrigin);

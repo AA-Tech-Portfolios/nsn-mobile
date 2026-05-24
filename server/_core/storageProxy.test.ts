@@ -108,6 +108,21 @@ describe("createStorageProxyHandler", () => {
     expect(fetchMock).toHaveBeenCalledOnce();
   });
 
+  it("allows unauthenticated generated assets under the generated prefix", async () => {
+    const fetchMock = mockFetch();
+    const handler = createStorageProxyHandler({
+      forgeApiUrl: "https://forge.example.com",
+      forgeApiKey: "forge-key",
+      authenticateRequest: async () => null,
+    });
+    const res = createResponse();
+
+    await handler(createRequest("generated/preview.png") as never, res as never, vi.fn());
+
+    expect(res.redirected).toEqual({ status: 307, url: "https://signed.example.com/object" });
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
   it("allows private object requests for the owning user", async () => {
     const fetchMock = mockFetch();
     const handler = createStorageProxyHandler({

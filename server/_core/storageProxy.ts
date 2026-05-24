@@ -42,6 +42,10 @@ function normalizeStorageKey(rawKey: string | undefined) {
     return { key: parts.join("/"), visibility: "public" as const };
   }
 
+  if (parts[0] === "generated" && parts.length > 1) {
+    return { key: parts.join("/"), visibility: "public" as const };
+  }
+
   if (parts[0] === "users" && /^\d+$/.test(parts[1] ?? "") && parts.length > 2) {
     return { key: parts.join("/"), visibility: "private" as const, ownerId: Number(parts[1]) };
   }
