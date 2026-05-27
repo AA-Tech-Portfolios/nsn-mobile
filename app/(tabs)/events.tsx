@@ -451,12 +451,12 @@ export default function EventsScreen() {
       description: draft.description.trim(),
       preEventQuestions: [
         "What's something you're looking forward to this week?",
-        "What's your favorite way to spend a weekend?",
+        "What's your favourite way to spend a weekend?",
         "What's a hobby or interest you'd like to share?"
       ],
       postEventQuestions: [
         "How did you find the atmosphere?",
-        "What was your favorite part of the meetup?",
+        "What was your favourite part of the meetup?",
         "Would you like to meet again?"
       ],
     };

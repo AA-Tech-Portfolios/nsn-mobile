@@ -6,7 +6,7 @@ Use this checklist before real authentication, shared databases, invite links, Q
 
 ## Alpha Boundary
 
-- Keep current prototype/local-first behavior clearly labelled.
+- Keep current prototype/local-first behaviour clearly labelled.
 - Do not collect production personal data during alpha planning.
 - Do not imply that local prototype verification, reporting, blocking, RSVP, invite, or moderation states are production safety systems.
 - Require security, privacy, legal, and trust/safety review before any production launch or app-store release.
@@ -30,7 +30,7 @@ Use this checklist before real authentication, shared databases, invite links, Q
 
 - Use HTTPS only in production.
 - Use secure authentication flows and secure session storage across Expo native and web.
-- Review token lifetime, refresh behavior, logout behavior, device loss, and session revocation before production.
+- Review token lifetime, refresh behaviour, logout behaviour, device loss, and session revocation before production.
 - Protect account-only routes and avoid exposing private state to logged-out users.
 
 ## Database And Access Control

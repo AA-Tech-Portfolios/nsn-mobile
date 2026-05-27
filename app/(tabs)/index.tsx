@@ -1652,7 +1652,7 @@ export default function HomeScreen() {
     setOpenHomePanel("none");
     setHeaderPlaceholder({
       title: "Home customization paused for alpha",
-      copy: "For mobile clarity, Customize Home and View Preferences are disabled for now. The recommended Home layout stays on while we polish the alpha.",
+      copy: "For mobile clarity, Customise Home and View Preferences are disabled for now. The recommended Home layout stays on while we polish the alpha.",
     });
   }, []);
 
@@ -2316,7 +2316,7 @@ export default function HomeScreen() {
               {getOptionsHubCategoryCards(optionsHubSections).map(renderOptionsHubCategoryCard)}
             </View>
             <Text style={[styles.optionsHubSafetyNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Choose a category to view its details. Prototype tools remain local and do not add backend, auth, or matching behavior.
+              Choose a category to view its details. Prototype tools remain local and do not add backend, auth, or matching behaviour.
             </Text>
           </View>
         );
@@ -2380,7 +2380,7 @@ export default function HomeScreen() {
               ) : null}
               {activeSection.id === "prototypeTools" ? (
                 <Text style={[styles.optionsHubSafetyNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Demo actions stay local to this prototype and do not add backend, auth, or matching behavior.
+                  Demo actions stay local to this prototype and do not add backend, auth, or matching behaviour.
                 </Text>
               ) : null}
             </View>
@@ -2900,7 +2900,7 @@ export default function HomeScreen() {
             <View style={[styles.locationSearchHeader, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
               <View style={[styles.headerPlaceholderBody, isRtl && styles.rtlBlock]}>
                 <Text style={[styles.headerPlaceholderTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
-                  {showOptionsHub ? "Options" : showLayoutPreferences ? "View Preferences" : showCustomiseHome ? "Customize Home" : "Home Preferences"}
+                  {showOptionsHub ? "Options" : showLayoutPreferences ? "View Preferences" : showCustomiseHome ? "Customise Home" : "Home Preferences"}
                 </Text>
                 <Text style={[styles.headerPlaceholderCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                   {showOptionsHub
@@ -3158,13 +3158,13 @@ export default function HomeScreen() {
                 onPress={showCustomizeHomePanel}
                 disabled={!alphaHomeCustomizationEnabled}
                 accessibilityRole="button"
-                accessibilityLabel="Customize Home sections"
+                accessibilityLabel="Customise Home sections"
                 accessibilityState={{ disabled: !alphaHomeCustomizationEnabled }}
                 accessibilityHint="Disabled for the alpha while the mobile Home layout is simplified."
                 style={[styles.homeControlChip, styles.homePanelNavChip, homeLayoutChipStyle, isDay && styles.dayLocationResultButton, !alphaHomeCustomizationEnabled && styles.disabledMoveButton]}
               >
                 <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
-                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Customize Home paused</Text>
+                <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Customise Home paused</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.82}

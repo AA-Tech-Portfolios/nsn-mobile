@@ -11,7 +11,7 @@ Recommended sequence:
 1. Document the first database schema shape before replacing local state.
 2. Keep auth and database code behind explicit feature flags when implementation begins.
 3. Add authentication later, after route, session, privacy, and trust boundaries are agreed.
-4. Migrate one small feature at a time, starting with low-risk data that has clear rollback behavior.
+4. Migrate one small feature at a time, starting with low-risk data that has clear rollback behaviour.
 5. Keep prototype copy honest until a feature is truly backed by production-grade auth, storage, moderation, and support processes.
 
 Avoid a large all-at-once migration. NSN has safety, privacy, and social trust requirements that need careful transitions, especially around identity, visibility, RSVP, messaging, reports, blocks, and invite flows.

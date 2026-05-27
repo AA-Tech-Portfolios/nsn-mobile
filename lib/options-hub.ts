@@ -75,7 +75,7 @@ export const optionsHubSections: OptionsHubSection[] = [
       row({
         id: "customize-home",
         icon: "layout",
-        title: "Customize Home",
+        title: "Customise Home",
         description: "Paused during alpha so mobile testers see the recommended Home layout.",
         badge: "Paused",
       }),

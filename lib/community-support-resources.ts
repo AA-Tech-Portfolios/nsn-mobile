@@ -25,7 +25,7 @@ export const communitySupportResourceCategories: CommunitySupportResourceCategor
     title: "Life Skills",
     description: "Small practical resources for everyday confidence and independence.",
     badge: "Alpha demo",
-    boundaryNote: "Prototype placeholders only; not verified, personalized, or a substitute for qualified services.",
+    boundaryNote: "Prototype placeholders only; not verified, personalised, or a substitute for qualified services.",
     resources: [
       { title: "Cooking basics", copy: "Simple starter guides for low-cost meals and kitchen confidence.", badge: demoPlaceholder },
       { title: "Budgeting help", copy: "Gentle money-planning prompts for weekly expenses and saving basics.", badge: demoPlaceholder },

@@ -82,7 +82,7 @@ For easier physical-device testing across networks, use the Expo tunnel:
 pnpm dev:tunnel
 ```
 
-Treat physical-device testing as a smoke test for touch targets, scrolling, safe-area spacing, native share/link handoffs, and Expo Go behavior. Do not add API keys or production services just to test the prototype.
+Treat physical-device testing as a smoke test for touch targets, scrolling, safe-area spacing, native share/link handoffs, and Expo Go behaviour. Do not add API keys or production services just to test the prototype.
 
 Browser testing is separate from native Expo testing, but both matter for handoffs such as maps, external links, invite or QR links later, and login/auth browser flows later.
 
@@ -97,6 +97,6 @@ These are future-facing notes, not current implementation scope:
 
 ## Comments
 
-Keep comments focused on product rules, safety behavior, accessibility choices, and platform
+Keep comments focused on product rules, safety behaviour, accessibility choices, and platform
 quirks that are not obvious from the code. Prefer clear names and small helpers over comments
 that repeat what the next line already says.

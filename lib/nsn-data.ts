@@ -170,7 +170,7 @@ export const dayEvents: EventItem[] = [
     atmosphereLabels: ["Quiet", "Small group", "Low-pressure", "Outdoor calm", "First-time friendly"],
     mediaComfortLabels: ["Ask before photos", "Group photos by consent"],
     preEventQuestions: [
-      "What's your favorite picnic snack?",
+      "What's your favourite picnic snack?",
       "What's one thing you're looking forward to today?",
       "Do you have a go-to outdoor activity?"
     ],
@@ -259,7 +259,7 @@ export const dayEvents: EventItem[] = [
     atmosphereLabels: ["Balanced", "Cozy", "Small group", "Low-pressure", "Indoor backup"],
     mediaComfortLabels: ["Ask before photos", "Private meetup"],
     preEventQuestions: [
-      "What's your favorite type of coffee?",
+      "What's your favourite type of coffee?",
       "Do you have a morning routine?",
       "What's a book or podcast you enjoy?"
     ],
@@ -324,13 +324,13 @@ export const eveningEvents: EventItem[] = [
     atmosphereLabels: ["Quiet", "Cozy", "Low-pressure", "Indoor backup", "First-time friendly"],
     mediaComfortLabels: ["No filming", "Private meetup"],
     preEventQuestions: [
-      "What's your favorite movie genre?",
+      "What's your favourite movie genre?",
       "Have you seen this movie before?",
       "What's a movie that made you laugh/cry?"
     ],
     postEventQuestions: [
       "What did you think of the movie?",
-      "How was the theater experience?",
+      "How was the theatre experience?",
       "Would you watch a movie together again?"
     ],
     trustProfile: {

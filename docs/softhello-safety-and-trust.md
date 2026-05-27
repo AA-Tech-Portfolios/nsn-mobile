@@ -56,7 +56,7 @@ Report concern:
 
 SoftHello moderation should be proportional once a real moderation workflow exists:
 
-- Gentle warning for minor first-time behavior.
+- Gentle warning for minor first-time behaviour.
 - Temporary limits or timeouts for repeated boundary issues.
 - Additional verification when trust is uncertain.
 - Escalation for safety threats, harassment, underage risk, impersonation, or fraud.

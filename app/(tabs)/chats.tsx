@@ -121,7 +121,7 @@ type ChatTarget =
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
 const escalationReportReasons: SafetyReportReasonOption[] = [
-  { reason: "Safety threat", copy: "Immediate risk, coercion, stalking, threats, or unsafe meetup behavior." },
+  { reason: "Safety threat", copy: "Immediate risk, coercion, stalking, threats, or unsafe meetup behaviour." },
   { reason: "Unsafe behaviour", copy: "Unsafe in-person conduct, ignoring safety plans, or making the meetup feel physically unsafe." },
   { reason: "Harassment", copy: "Repeated unwanted contact, intimidation, sexual pressure, or abusive messages." },
   { reason: "Underage risk", copy: "Someone may be under 18 or trying to involve a minor." },
@@ -130,8 +130,8 @@ const escalationReportReasons: SafetyReportReasonOption[] = [
 ];
 
 const otherReportReasons: SafetyReportReasonOption[] = [
-  { reason: "Fake identity", copy: "Identity details, voice, images, or profile behavior may be misleading or synthetic." },
-  { reason: "Fake profile", copy: "Profile details, photos, or behavior do not seem genuine." },
+  { reason: "Fake identity", copy: "Identity details, voice, images, or profile behaviour may be misleading or synthetic." },
+  { reason: "Fake profile", copy: "Profile details, photos, or behaviour do not seem genuine." },
   { reason: "Spam", copy: "Promotional messages, repetitive outreach, or unrelated links." },
   { reason: "Spam/bot behaviour", copy: "Bot-like replies, throwaway account patterns, suspicious links, or mass outreach." },
   { reason: "Boundary violation", copy: "Ignoring stated boundaries, photo consent, privacy preferences, or contact limits." },

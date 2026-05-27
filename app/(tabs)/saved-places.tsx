@@ -137,7 +137,7 @@ const savedPlacesTranslations = {
 
 const regionalEnglishSavedPlaces = {
   "English (US)": {
-    subtitle: "Your favorite cafés, parks, libraries and quiet meetup spots will appear here.",
+    subtitle: "Your favourite cafés, parks, libraries and quiet meetup spots will appear here.",
   },
 } as const;
 

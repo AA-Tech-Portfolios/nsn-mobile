@@ -31,7 +31,7 @@ Secondary/privacy browsers:
 - DuckDuckGo browser
 - Opera
 
-Chrome, Safari, Edge, Firefox, Samsung Internet, and Opera are the main practical coverage targets because current global browser share is led by Chrome, Safari, Edge, Firefox, Samsung Internet, and Opera. Brave and DuckDuckGo are useful secondary checks for privacy-conscious users, stricter tracking defaults, and external-link behavior.
+Chrome, Safari, Edge, Firefox, Samsung Internet, and Opera are the main practical coverage targets because current global browser share is led by Chrome, Safari, Edge, Firefox, Samsung Internet, and Opera. Brave and DuckDuckGo are useful secondary checks for privacy-conscious users, stricter tracking defaults, and external-link behaviour.
 
 ## Version Policy
 
@@ -47,7 +47,7 @@ Do not promise support for very old browsers yet. If an issue appears only in an
 Use browser testing to confirm that core NSN interactions stay calm, legible, and low-friction:
 
 - dark/light theme switching
-- iOS/Safari status bar and safe-area behavior
+- iOS/Safari status bar and safe-area behaviour
 - bottom navigation spacing
 - responsive mobile layouts
 - drawers, sheets, and modals
@@ -57,7 +57,7 @@ Use browser testing to confirm that core NSN interactions stay calm, legible, an
 - external browser handoff
 - QR and invite links later
 - login/auth browser handoff later
-- keyboard behavior in chat and input fields
+- keyboard behaviour in chat and input fields
 - local storage and prototype persistence
 - accessibility basics: tap targets, contrast, readable text, reduced clutter, and controls that do not feel cramped
 
