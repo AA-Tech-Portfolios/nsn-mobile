@@ -122,6 +122,7 @@ const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"])
 
 const escalationReportReasons: SafetyReportReasonOption[] = [
   { reason: "Safety threat", copy: "Immediate risk, coercion, stalking, threats, or unsafe meetup behavior." },
+  { reason: "Unsafe behaviour", copy: "Unsafe in-person conduct, ignoring safety plans, or making the meetup feel physically unsafe." },
   { reason: "Harassment", copy: "Repeated unwanted contact, intimidation, sexual pressure, or abusive messages." },
   { reason: "Underage risk", copy: "Someone may be under 18 or trying to involve a minor." },
   { reason: "Impersonation", copy: "Pretending to be another person, using stolen details, or misleading identity." },
@@ -129,8 +130,12 @@ const escalationReportReasons: SafetyReportReasonOption[] = [
 ];
 
 const otherReportReasons: SafetyReportReasonOption[] = [
+  { reason: "Fake identity", copy: "Identity details, voice, images, or profile behavior may be misleading or synthetic." },
   { reason: "Fake profile", copy: "Profile details, photos, or behavior do not seem genuine." },
   { reason: "Spam", copy: "Promotional messages, repetitive outreach, or unrelated links." },
+  { reason: "Spam/bot behaviour", copy: "Bot-like replies, throwaway account patterns, suspicious links, or mass outreach." },
+  { reason: "Boundary violation", copy: "Ignoring stated boundaries, photo consent, privacy preferences, or contact limits." },
+  { reason: "No-show pattern", copy: "Repeatedly joining plans and not attending in a way that affects small groups." },
   { reason: "Hate or discrimination", copy: "Abuse targeting identity, culture, religion, disability, gender, or sexuality." },
   { reason: "Privacy concern", copy: "Sharing private information, screenshots, or personal details without consent." },
   { reason: "Other", copy: "Something else feels wrong and should be reviewed." },

@@ -1,4 +1,4 @@
-import { allEvents, type EventItem } from "./nsn-data";
+import { allEvents, type EventItem, type MeetupTrustProfile, type PrototypeVerificationState } from "./nsn-data";
 
 export type SoftHelloComfortPreference = "Small groups" | "Text-first" | "Quiet" | "Flexible pace" | "Indoor backup";
 
@@ -24,13 +24,18 @@ export type EventMembership = {
 export type SafetyReportReason =
   | "Safety concern"
   | "Safety threat"
+  | "Unsafe behaviour"
   | "Harassment"
   | "Underage risk"
   | "Underage concern"
   | "Impersonation"
   | "Fraud"
+  | "Fake identity"
   | "Fake profile"
   | "Spam"
+  | "Spam/bot behaviour"
+  | "Boundary violation"
+  | "No-show pattern"
   | "Hate or discrimination"
   | "Privacy concern"
   | "Other";
@@ -69,6 +74,8 @@ export type SavedPlace = {
 export const defaultComfortPreferences: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet"];
 
 export const verificationLevels: SoftHelloVerificationLevel[] = ["Unverified", "Contact Verified", "Real Person Verified"];
+
+export const prototypeVerificationStates: PrototypeVerificationState[] = ["unverified", "pending", "verified", "host-verified"];
 
 export const verificationRank: Record<SoftHelloVerificationLevel, number> = {
   Unverified: 0,
@@ -234,6 +241,43 @@ export function getVerificationLevelLabel(level: SoftHelloVerificationLevel, lan
   const localizedLabels = verificationLevelLabelTranslations[languageBase] ?? verificationLevelLabelTranslations.English;
 
   return localizedLabels[level];
+}
+
+export function getPrototypeVerificationStateLabel(state: PrototypeVerificationState) {
+  if (state === "host-verified") return "Verified host";
+  if (state === "verified") return "Verified";
+  if (state === "pending") return "Verification pending";
+
+  return "Unverified";
+}
+
+export function isAccountablePrototypeVerificationState(state: PrototypeVerificationState) {
+  return state === "verified" || state === "host-verified";
+}
+
+export function getEventTrustSummary(trustProfile: MeetupTrustProfile | undefined) {
+  if (!trustProfile) {
+    return "Prototype trust details are not set for this meetup yet.";
+  }
+
+  const hostLabel = getPrototypeVerificationStateLabel(trustProfile.host.verificationState);
+  const coHostCount = trustProfile.coHosts?.length ?? 0;
+  const coHostCopy = coHostCount > 0 ? ` · ${coHostCount} co-host${coHostCount === 1 ? "" : "s"}` : "";
+
+  return `${hostLabel} · ${trustProfile.participantLimit.min}-${trustProfile.participantLimit.max} people${coHostCopy}`;
+}
+
+export function getWeatherFallbackSuggestions(event: EventItem, condition: "clear" | "rainy" | "windy" = "rainy") {
+  const fallbackSuggestions = event.trustProfile?.weatherAlternatives ?? [];
+  const isWeatherSensitive = event.weather.toLowerCase().includes("weather") || event.tags.includes("Outdoor");
+
+  if (!isWeatherSensitive && fallbackSuggestions.length === 0) return [];
+
+  if (condition === "clear" && !isWeatherSensitive) return [];
+
+  return fallbackSuggestions.length > 0
+    ? fallbackSuggestions
+    : ["indoor cafe", "library meetup", "movie", "casual dining", "board games"];
 }
 
 export function getEventMembership(eventId: string, memberships: EventMembership[]) {

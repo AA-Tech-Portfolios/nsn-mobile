@@ -7,7 +7,7 @@ import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { getGuideTipForSurface } from "@/lib/guides-and-tips";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
-import { canChatPrivately, getEffectivePrototypeVerificationLevel, getEventMembership, getRsvpLabel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
+import { canChatPrivately, getEffectivePrototypeVerificationLevel, getEventMembership, getEventTrustSummary, getRsvpLabel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const upcoming = [eveningEvents[0], dayEvents[0], eveningEvents[1]];
 
@@ -273,6 +273,9 @@ export default function MeetupsScreen() {
                 <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedEvent.title}</Text>
                 <Text style={[styles.cardMeta, isDay && styles.dayMutedText]}>{event.venue} · {event.time}</Text>
                 <Text style={[styles.cardCopy, isDay && styles.daySuccessText]}>{localizedEvent.people} · {rsvpLabel}</Text>
+                {event.trustProfile ? (
+                  <Text style={[styles.cardTrust, isDay && styles.dayAccentText]}>{getEventTrustSummary(event.trustProfile)}</Text>
+                ) : null}
               </View>
               <Text style={[styles.chevron, isDay && styles.dayMutedText]}>›</Text>
             </TouchableOpacity>
@@ -319,6 +322,7 @@ const styles = StyleSheet.create({
   cardTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 19 },
   cardMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   cardCopy: { color: nsnColors.green, fontSize: 11, lineHeight: 16, marginTop: 3, fontWeight: "700" },
+  cardTrust: { color: nsnColors.day, fontSize: 11, lineHeight: 16, marginTop: 2, fontWeight: "900" },
   daySuccessText: { color: "#2F7A3C" },
   chevron: { flexShrink: 0, color: nsnColors.muted, fontSize: 30, lineHeight: 34 },
 });

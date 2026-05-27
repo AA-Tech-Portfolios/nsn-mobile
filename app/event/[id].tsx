@@ -33,10 +33,13 @@ import {
 import {
   canMeetInPerson,
   getEffectivePrototypeVerificationLevel,
+  getEventTrustSummary,
   getEventMembership,
   getMeetingSafetyCopy,
+  getPrototypeVerificationStateLabel,
   getRsvpDescription,
   getRsvpLabel,
+  getWeatherFallbackSuggestions,
   getVerificationLevelLabel,
   hideEvent,
   joinEvent,
@@ -900,6 +903,8 @@ export default function EventDetailsScreen() {
   const eventWeatherCopy = event.weather.includes("Weather")
     ? copy.weatherAffectedCopy
     : copy.weatherFriendlyCopy;
+  const eventWeatherFallbacks = getWeatherFallbackSuggestions(event, event.weather.includes("Weather") ? "rainy" : "clear");
+  const eventTrustSummary = getEventTrustSummary(event.trustProfile);
   const mediaComfortLabels = getDetailMediaComfortLabels(event, photoRecordingComfortPreferences);
   const eventMeetingCopy = isMovieNight
     ? copy.meetingCopy
@@ -925,7 +930,7 @@ export default function EventDetailsScreen() {
     { iconName: "location", label: "Essentials", copy: `${event.venue} · ${eventDate}` },
     { iconName: "volume", label: "Comfort", copy: `${eventNoise.label} noise · ${eventTone.replace("Pace: ", "")}` },
     { iconName: "low-pressure", label: "Pacing", copy: "Low pressure · quiet starts welcome." },
-    { iconName: "message", label: "After joining", copy: "Chat can clarify the exact spot." },
+    { iconName: "shield", label: "Trust", copy: eventTrustSummary },
   ] satisfies { iconName: IconSymbolName; label: string; copy: string }[];
   const quickJumpItems = getEventDetailQuickJumpItems();
   const isSectionExpanded = (section: EventDetailSectionId) => expandedSections.includes(section);
@@ -1396,6 +1401,11 @@ export default function EventDetailsScreen() {
           <View style={[styles.weatherCopyBlock, isRtl && styles.rtlBlock]}>
             <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherTitle}</Text>
             <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{isMovieNight ? copy.weatherCopy : eventWeatherCopy}</Text>
+            {eventWeatherFallbacks.length > 0 ? (
+              <Text style={[styles.weatherCopy, styles.weatherFallbackCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Rain or wind fallback: {eventWeatherFallbacks.slice(0, 4).join(", ")}.
+              </Text>
+            ) : null}
           </View>
         </TouchableOpacity>
 
@@ -1408,6 +1418,36 @@ export default function EventDetailsScreen() {
             <Text style={[styles.noiseDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventNoise.copy}. {noiseCopy.copy}</Text>
           </View>
         </View>
+
+        {event.trustProfile ? (
+          <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="shield" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Trust & small group shape</Text>
+            </View>
+            <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              {eventTrustSummary}. Host: {event.trustProfile.host.displayName}. {event.trustProfile.accountabilityNote}
+            </Text>
+            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+              <Text style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
+                {getPrototypeVerificationStateLabel(event.trustProfile.host.verificationState)}
+              </Text>
+              {event.trustProfile.coHosts?.map((coHost) => (
+                <Text key={coHost.id} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
+                  Co-host: {coHost.displayName}
+                </Text>
+              ))}
+              <Text style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
+                {event.trustProfile.participantLimit.min}-{event.trustProfile.participantLimit.max} people
+              </Text>
+              <Text style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
+                {event.trustProfile.venueType.replace("-", " ")}
+              </Text>
+            </View>
+          </View>
+        ) : null}
 
         <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
         <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
@@ -1541,6 +1581,27 @@ export default function EventDetailsScreen() {
 
         {renderAccordionSection("comfortPacing", "Comfort & pacing", "Ways to arrive, participate, pause, and be around photos.", "low-pressure", (
           <>
+          {event.trustProfile?.comfortTags.length ? (
+            <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+              <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                  <IconSymbol name="sliders" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                </View>
+                <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Comfort tags</Text>
+              </View>
+              <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Tags describe the meetup setting. They are not labels for people, and they can help you choose a calmer fit.
+              </Text>
+              <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                {event.trustProfile.comfortTags.map((tag) => (
+                  <Text key={tag} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
+                    {tag.replace(/-/g, " ")}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          ) : null}
+
           {event.comfortLabels?.length ? (
             <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
               <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
@@ -1683,6 +1744,18 @@ export default function EventDetailsScreen() {
           <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
             <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.softExitTitle}</Text>
             <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.softExitCopy}</Text>
+          </View>
+          <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
+            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Mismatch is not failure</Text>
+            <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              This group may not be the right fit. You can leave, switch plans, mute or block in chat, hide this event, or look for another small meetup without making it a public rejection.
+            </Text>
+          </View>
+          <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
+            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Reports are reviewed</Text>
+            <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Prototype reports are saved locally for now. Production NSN should review harassment, unsafe behaviour, fake identity, spam/bot behaviour, boundary violations, no-show patterns, and other concerns with calm consequences.
+            </Text>
           </View>
           </>
         ))}
@@ -1892,6 +1965,7 @@ const styles = StyleSheet.create({
   weatherCopyBlock: { flex: 1 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 250 },
+  weatherFallbackCopy: { marginTop: 4, maxWidth: 320, fontWeight: "800" },
   weatherIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
   weatherIcon: { fontSize: 28 },
   noiseGuideCard: { minHeight: 74, flexDirection: "row", alignItems: "center", gap: 12, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 13, marginBottom: 16 },

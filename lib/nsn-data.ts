@@ -88,6 +88,47 @@ export const eventComfortLabelOptions = [
 
 export type EventComfortLabel = typeof eventComfortLabelOptions[number];
 
+export type PrototypeVerificationState = "unverified" | "pending" | "verified" | "host-verified";
+
+export type MeetupParticipantRole = "host" | "co-host" | "participant";
+
+export type MeetupVenueType = "park" | "beach" | "cafe" | "cinema" | "library" | "community-room" | "restaurant" | "walk" | "activity";
+
+export type MeetupComfortTag =
+  | "quiet"
+  | "low-noise"
+  | "beginner-friendly"
+  | "public-place"
+  | "library-friendly"
+  | "indoor-backup"
+  | "transport-friendly"
+  | "quiet-conversation"
+  | "study-work-session"
+  | "reading"
+  | "board-game"
+  | "cafe-nearby"
+  | "public-transport-access";
+
+export type MeetupTrustParticipant = {
+  id: string;
+  displayName: string;
+  role: MeetupParticipantRole;
+  verificationState: PrototypeVerificationState;
+};
+
+export type MeetupTrustProfile = {
+  host: MeetupTrustParticipant;
+  coHosts?: MeetupTrustParticipant[];
+  participantLimit: {
+    min: number;
+    max: number;
+  };
+  venueType: MeetupVenueType;
+  comfortTags: MeetupComfortTag[];
+  weatherAlternatives?: string[];
+  accountabilityNote: string;
+};
+
 export type EventItem = {
   id: string;
   title: string;
@@ -107,6 +148,7 @@ export type EventItem = {
   mediaComfortLabels?: string[];
   preEventQuestions?: string[];
   postEventQuestions?: string[];
+  trustProfile?: MeetupTrustProfile;
 };
 
 export const dayEvents: EventItem[] = [
@@ -137,6 +179,15 @@ export const dayEvents: EventItem[] = [
       "Did you try any new snacks?",
       "Would you like to do this again?"
     ],
+    trustProfile: {
+      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      coHosts: [{ id: "alon-member", displayName: "Alon", role: "co-host", verificationState: "verified" }],
+      participantLimit: { min: 2, max: 4 },
+      venueType: "park",
+      comfortTags: ["quiet", "beginner-friendly", "public-place", "indoor-backup", "transport-friendly"],
+      weatherAlternatives: ["Chatswood shopping centre", "casual cafe table", "library meetup", "board games indoors"],
+      accountabilityNote: "Privacy keeps personal details limited, while hosts and participants still carry a prototype trust state.",
+    },
   },
   {
     id: "beach-day-chill-vibes",
@@ -155,6 +206,14 @@ export const dayEvents: EventItem[] = [
     comfortLabels: ["Explorative/day out", "Activity-focused", "Energetic/social vibe", "Flexible pacing", "Large crowds okay", "Flexible social pacing", "High-energy social vibe", "Loud environment possible", "Outdoor animal exposure possible", "Outdoor airflow", "Join/leave flexibly"],
     atmosphereLabels: ["Balanced", "Lively", "Outdoor calm"],
     mediaComfortLabels: ["Ask before photos", "Venue photos okay"],
+    trustProfile: {
+      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      participantLimit: { min: 3, max: 6 },
+      venueType: "beach",
+      comfortTags: ["public-place", "transport-friendly", "beginner-friendly"],
+      weatherAlternatives: ["movie", "arcade", "bowling", "casual dining near transport"],
+      accountabilityNote: "Beach plans stay public and small; privacy preferences do not remove host accountability.",
+    },
   },
   {
     id: "library-calm-study",
@@ -173,6 +232,14 @@ export const dayEvents: EventItem[] = [
     comfortLabels: ["Calm & quiet", "Cozy indoor", "Conversation-light", "Crowd-sensitive", "Quiet corners available", "Lower sensory stimulation", "Noise-sensitive friendly", "Pet-free meetup", "Calm seating area", "Quiet recharge space nearby"],
     atmosphereLabels: ["Quiet", "Cozy", "Small group", "Low-pressure", "First-time friendly"],
     mediaComfortLabels: ["Private meetup", "No public posting"],
+    trustProfile: {
+      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      participantLimit: { min: 2, max: 5 },
+      venueType: "library",
+      comfortTags: ["quiet", "low-noise", "library-friendly", "quiet-conversation", "study-work-session", "reading", "cafe-nearby", "public-transport-access"],
+      weatherAlternatives: ["stay at the library", "nearby cafe break", "quiet board game table"],
+      accountabilityNote: "Library meetups are small, quiet, optional, and reviewed as real local plans, not anonymous drop-ins.",
+    },
   },
   {
     id: "coffee-lane-cove",
@@ -201,6 +268,14 @@ export const dayEvents: EventItem[] = [
       "Did you discover anything new?",
       "Would you meet for coffee again?"
     ],
+    trustProfile: {
+      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      participantLimit: { min: 2, max: 4 },
+      venueType: "cafe",
+      comfortTags: ["quiet", "beginner-friendly", "public-place", "indoor-backup", "transport-friendly", "cafe-nearby"],
+      weatherAlternatives: ["stay indoors at the cafe", "Chatswood shopping centre", "library meetup"],
+      accountabilityNote: "Small table plans show trust status without exposing private identity documents.",
+    },
   },
   {
     id: "harbour-walk-waverton",
@@ -219,6 +294,14 @@ export const dayEvents: EventItem[] = [
     comfortLabels: ["Explorative/day out", "Activity-focused", "Conversation-light", "Flexible pacing", "Small groups preferred", "Easy step-out/reset nearby", "Outdoor animal exposure possible", "Outdoor airflow", "Flexible pacing welcome"],
     atmosphereLabels: ["Quiet", "Balanced", "Small group", "Outdoor calm", "Low-pressure"],
     mediaComfortLabels: ["Venue photos okay", "Ask before photos"],
+    trustProfile: {
+      host: { id: "alon-member", displayName: "Alon", role: "host", verificationState: "verified" },
+      participantLimit: { min: 3, max: 6 },
+      venueType: "walk",
+      comfortTags: ["quiet", "public-place", "transport-friendly", "beginner-friendly"],
+      weatherAlternatives: ["cafe nearby", "library meetup", "casual dining", "movie"],
+      accountabilityNote: "Walks stay public, flexible, and tied to participant trust signals.",
+    },
   },
 ];
 
@@ -250,6 +333,15 @@ export const eveningEvents: EventItem[] = [
       "How was the theater experience?",
       "Would you watch a movie together again?"
     ],
+    trustProfile: {
+      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      coHosts: [{ id: "alon-member", displayName: "Alon", role: "co-host", verificationState: "verified" }],
+      participantLimit: { min: 2, max: 4 },
+      venueType: "cinema",
+      comfortTags: ["quiet", "beginner-friendly", "public-place", "indoor-backup", "transport-friendly"],
+      weatherAlternatives: ["same cinema plan", "casual dining", "arcade", "Chatswood shopping centre"],
+      accountabilityNote: "The host can keep the plan clear, but reports still go through calm app review in this prototype.",
+    },
   },
   {
     id: "board-games-coffee",
@@ -268,6 +360,14 @@ export const eveningEvents: EventItem[] = [
     comfortLabels: ["Casual social", "Cozy indoor", "Activity-focused", "Conversation-heavy", "Close-friends vibe", "Small celebrations", "Flexible social pacing", "Smaller subgroup available", "Calm meetup alternative nearby"],
     atmosphereLabels: ["Balanced", "Cozy", "Small group", "First-time friendly"],
     mediaComfortLabels: ["Ask before photos", "Private meetup"],
+    trustProfile: {
+      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      participantLimit: { min: 3, max: 5 },
+      venueType: "cafe",
+      comfortTags: ["beginner-friendly", "public-place", "indoor-backup", "transport-friendly", "board-game", "cafe-nearby"],
+      weatherAlternatives: ["keep the indoor table", "arcade", "bowling", "casual dining"],
+      accountabilityNote: "Game tables stay small enough for consent checks and easy switching.",
+    },
   },
   {
     id: "ramen-small-table",
@@ -286,6 +386,14 @@ export const eveningEvents: EventItem[] = [
     comfortLabels: ["Casual social", "Food-focused", "Conversation-heavy", "Small groups preferred", "Close-friends vibe", "Strong smells possible", "Join/leave flexibly"],
     atmosphereLabels: ["Balanced", "Small group", "Low-pressure", "Indoor backup"],
     mediaComfortLabels: ["Private meetup", "No public posting"],
+    trustProfile: {
+      host: { id: "alon-member", displayName: "Alon", role: "host", verificationState: "verified" },
+      participantLimit: { min: 3, max: 5 },
+      venueType: "restaurant",
+      comfortTags: ["public-place", "indoor-backup", "transport-friendly", "beginner-friendly"],
+      weatherAlternatives: ["stay indoors", "movie", "cafe", "board games"],
+      accountabilityNote: "Food meetups keep names and profiles limited, but behaviour can still be reported.",
+    },
   },
   {
     id: "quiet-music-listening",
@@ -304,6 +412,14 @@ export const eveningEvents: EventItem[] = [
     comfortLabels: ["Calm & quiet", "Cozy indoor", "Conversation-light", "Calm gathering", "Lower sensory stimulation", "Quiet recharge nearby", "Quiet recharge space nearby", "Calm seating area", "Flexible pacing welcome"],
     atmosphereLabels: ["Quiet", "Cozy", "Small group", "Low-pressure", "First-time friendly"],
     mediaComfortLabels: ["No filming", "Private meetup"],
+    trustProfile: {
+      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      participantLimit: { min: 2, max: 5 },
+      venueType: "community-room",
+      comfortTags: ["quiet", "low-noise", "beginner-friendly", "public-place", "indoor-backup", "quiet-conversation", "transport-friendly"],
+      weatherAlternatives: ["stay indoors", "library meetup", "quiet cafe", "board games"],
+      accountabilityNote: "Quiet rooms are for low-pressure presence, not forced sharing.",
+    },
   },
 ];
 

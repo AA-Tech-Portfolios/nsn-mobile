@@ -10,6 +10,9 @@ import {
   deriveVerificationLevel,
   getEffectivePrototypeVerificationLevel,
   getMeetingSafetyCopy,
+  getEventTrustSummary,
+  getPrototypeVerificationStateLabel,
+  getWeatherFallbackSuggestions,
   getVerificationLevelLabel,
   getRsvpDescription,
   getRsvpLabel,
@@ -45,31 +48,43 @@ describe("SoftHello MVP domain rules", () => {
     expect(deriveVerificationLevel({})).toBe("Unverified");
     expect(deriveVerificationLevel({ contactEmail: "alon@example.com" })).toBe("Contact Verified");
     expect(deriveVerificationLevel({ contactPhone: "+61400000000" })).toBe("Contact Verified");
-    expect(deriveVerificationLevel({ contactEmail: "alon@example.com", contactPhone: "+61400000000" })).toBe("Contact Verified");
+    expect(
+      deriveVerificationLevel({ contactEmail: "alon@example.com", contactPhone: "+61400000000" }),
+    ).toBe("Contact Verified");
     expect(
       deriveVerificationLevel({
         contactEmail: "alon@example.com",
         contactPhone: "+61400000000",
         identitySelfieUri: "file://selfie.jpg",
         hasIdentityDocument: true,
-      })
+      }),
     ).toBe("Real Person Verified");
   });
 
   it("lets alpha prototype trust selection unlock gated surfaces locally", () => {
     expect(getEffectivePrototypeVerificationLevel({}, "Contact Verified")).toBe("Contact Verified");
-    expect(canChatPrivately(getEffectivePrototypeVerificationLevel({}, "Contact Verified"))).toBe(true);
-    expect(canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Contact Verified"))).toBe(false);
-    expect(canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Real Person Verified"))).toBe(true);
-    expect(getEffectivePrototypeVerificationLevel({ contactEmail: "alon@example.com" }, "Unverified")).toBe("Contact Verified");
+    expect(canChatPrivately(getEffectivePrototypeVerificationLevel({}, "Contact Verified"))).toBe(
+      true,
+    );
+    expect(canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Contact Verified"))).toBe(
+      false,
+    );
+    expect(
+      canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Real Person Verified")),
+    ).toBe(true);
+    expect(
+      getEffectivePrototypeVerificationLevel({ contactEmail: "alon@example.com" }, "Unverified"),
+    ).toBe("Contact Verified");
   });
 
   it("localizes trust copy while falling back to English", () => {
     expect(getMeetingSafetyCopy("Contact Verified", "Yiddish")).toContain("באשטעטיגטן קאנטאקט");
     expect(getMeetingSafetyCopy("Contact Verified", "Unknown")).toBe(
-      "Contact Verified users can chat, but in-person meetups require Real Person Verified status."
+      "Contact Verified users can chat, but in-person meetups require Real Person Verified status.",
     );
-    expect(getVerificationLevelLabel("Real Person Verified", "Yiddish")).toBe("אמתער מענטש באשטעטיגט");
+    expect(getVerificationLevelLabel("Real Person Verified", "Yiddish")).toBe(
+      "אמתער מענטש באשטעטיגט",
+    );
     expect(getVerificationLevelLabel("Unverified", "Unknown")).toBe("Unverified");
   });
 
@@ -83,14 +98,46 @@ describe("SoftHello MVP domain rules", () => {
   });
 
   it("supports reversible local RSVP statuses", () => {
-    const interested = setEventRsvpStatus("movie-night-watch-chat", [], "interested", "2026-05-07T00:00:00.000Z");
-    const going = setEventRsvpStatus("movie-night-watch-chat", interested, "going", "2026-05-07T01:00:00.000Z");
-    const notThisTime = setEventRsvpStatus("movie-night-watch-chat", going, "not_this_time", "2026-05-07T02:00:00.000Z");
-    const cleared = setEventRsvpStatus("movie-night-watch-chat", notThisTime, "none", "2026-05-07T03:00:00.000Z");
+    const interested = setEventRsvpStatus(
+      "movie-night-watch-chat",
+      [],
+      "interested",
+      "2026-05-07T00:00:00.000Z",
+    );
+    const going = setEventRsvpStatus(
+      "movie-night-watch-chat",
+      interested,
+      "going",
+      "2026-05-07T01:00:00.000Z",
+    );
+    const notThisTime = setEventRsvpStatus(
+      "movie-night-watch-chat",
+      going,
+      "not_this_time",
+      "2026-05-07T02:00:00.000Z",
+    );
+    const cleared = setEventRsvpStatus(
+      "movie-night-watch-chat",
+      notThisTime,
+      "none",
+      "2026-05-07T03:00:00.000Z",
+    );
 
-    expect(interested[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "interested", updatedAt: "2026-05-07T00:00:00.000Z" });
-    expect(going[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "going", joinedAt: "2026-05-07T01:00:00.000Z" });
-    expect(notThisTime[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "not_this_time", leftAt: undefined });
+    expect(interested[0]).toMatchObject({
+      eventId: "movie-night-watch-chat",
+      status: "interested",
+      updatedAt: "2026-05-07T00:00:00.000Z",
+    });
+    expect(going[0]).toMatchObject({
+      eventId: "movie-night-watch-chat",
+      status: "going",
+      joinedAt: "2026-05-07T01:00:00.000Z",
+    });
+    expect(notThisTime[0]).toMatchObject({
+      eventId: "movie-night-watch-chat",
+      status: "not_this_time",
+      leftAt: undefined,
+    });
     expect(cleared[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "none" });
   });
 
@@ -114,16 +161,35 @@ describe("SoftHello MVP domain rules", () => {
   });
 
   it("creates structured reports and replaces post-event feedback per event", () => {
-    const report = createSafetyReport("movie-night-watch-chat", "james", "Safety concern", "2026-05-07T02:00:00.000Z");
-    expect(report).toMatchObject({ eventId: "movie-night-watch-chat", reportedUserId: "james", reason: "Safety concern" });
+    const report = createSafetyReport(
+      "movie-night-watch-chat",
+      "james",
+      "Safety concern",
+      "2026-05-07T02:00:00.000Z",
+    );
+    expect(report).toMatchObject({
+      eventId: "movie-night-watch-chat",
+      reportedUserId: "james",
+      reason: "Safety concern",
+    });
 
     const first = savePostEventFeedback(
-      { eventId: "movie-night-watch-chat", comfort: "Mixed", wouldMeetAgain: false, createdAt: "2026-05-07T03:00:00.000Z" },
-      []
+      {
+        eventId: "movie-night-watch-chat",
+        comfort: "Mixed",
+        wouldMeetAgain: false,
+        createdAt: "2026-05-07T03:00:00.000Z",
+      },
+      [],
     );
     const second = savePostEventFeedback(
-      { eventId: "movie-night-watch-chat", comfort: "Good", wouldMeetAgain: true, createdAt: "2026-05-07T04:00:00.000Z" },
-      first
+      {
+        eventId: "movie-night-watch-chat",
+        comfort: "Good",
+        wouldMeetAgain: true,
+        createdAt: "2026-05-07T04:00:00.000Z",
+      },
+      first,
     );
 
     expect(second).toHaveLength(1);
@@ -131,10 +197,16 @@ describe("SoftHello MVP domain rules", () => {
   });
 
   it("supports escalation safety report reasons", () => {
-    const report = createSafetyReport("movie-night-watch-chat", "maya-host", "Underage risk", "2026-05-07T02:30:00.000Z", {
-      reportedUserName: "Maya",
-      route: "app_review",
-    });
+    const report = createSafetyReport(
+      "movie-night-watch-chat",
+      "maya-host",
+      "Underage risk",
+      "2026-05-07T02:30:00.000Z",
+      {
+        reportedUserName: "Maya",
+        route: "app_review",
+      },
+    );
 
     expect(report).toMatchObject({
       eventId: "movie-night-watch-chat",
@@ -147,10 +219,39 @@ describe("SoftHello MVP domain rules", () => {
     expect(report.cancelUntil).toBe("2026-05-07T02:40:00.000Z");
   });
 
+  it("models prototype host trust without exposing private identity details", () => {
+    const event = dayEvents.find((item) => item.id === "library-calm-study");
+
+    expect(event?.trustProfile?.host.verificationState).toBe("host-verified");
+    expect(getPrototypeVerificationStateLabel("host-verified")).toBe("Verified host");
+    expect(getEventTrustSummary(event?.trustProfile)).toBe("Verified host · 2-5 people");
+    expect(event?.trustProfile?.comfortTags).toEqual(
+      expect.arrayContaining(["library-friendly", "quiet-conversation", "public-transport-access"]),
+    );
+  });
+
+  it("suggests indoor Sydney fallbacks for weather-sensitive meetups", () => {
+    const picnic = dayEvents.find((item) => item.id === "picnic-easy-hangout");
+    const library = dayEvents.find((item) => item.id === "library-calm-study");
+
+    expect(picnic ? getWeatherFallbackSuggestions(picnic, "rainy") : []).toEqual(
+      expect.arrayContaining(["Chatswood shopping centre", "library meetup"]),
+    );
+    expect(library ? getWeatherFallbackSuggestions(library, "rainy") : []).toEqual(
+      expect.arrayContaining(["stay at the library"]),
+    );
+  });
+
   it("allows reports to be cancelled within the cancel window only", () => {
-    const report = createSafetyReport("movie-night-watch-chat", "james-member", "Harassment", "2026-05-07T02:30:00.000Z", {
-      route: "host_review",
-    });
+    const report = createSafetyReport(
+      "movie-night-watch-chat",
+      "james-member",
+      "Harassment",
+      "2026-05-07T02:30:00.000Z",
+      {
+        route: "host_review",
+      },
+    );
     const cancelled = cancelSafetyReport(report.id, [report], "2026-05-07T02:35:00.000Z");
     const tooLate = cancelSafetyReport(report.id, [report], "2026-05-07T02:45:00.000Z");
 
@@ -163,7 +264,9 @@ describe("SoftHello MVP domain rules", () => {
 
     expect(prioritized).toHaveLength(dayEvents.length);
     expect(prioritized[0].id).toBe("library-calm-study");
-    expect(prioritized.map((event) => event.id)).toEqual(expect.arrayContaining(dayEvents.map((event) => event.id)));
+    expect(prioritized.map((event) => event.id)).toEqual(
+      expect.arrayContaining(dayEvents.map((event) => event.id)),
+    );
   });
 
   it("saves places idempotently and removes them by id", () => {
@@ -178,7 +281,10 @@ describe("SoftHello MVP domain rules", () => {
     };
 
     const saved = savePlace(place, []);
-    const resaved = savePlace({ ...place, category: "Quiet", savedAt: "2026-05-07T06:00:00.000Z" }, saved);
+    const resaved = savePlace(
+      { ...place, category: "Quiet", savedAt: "2026-05-07T06:00:00.000Z" },
+      saved,
+    );
 
     expect(resaved).toHaveLength(1);
     expect(resaved[0]).toMatchObject({ category: "Quiet", savedAt: "2026-05-07T05:00:00.000Z" });
@@ -188,10 +294,14 @@ describe("SoftHello MVP domain rules", () => {
   it("pins and hides events idempotently", () => {
     expect(pinEvent("library-calm-study", [])).toEqual(["library-calm-study"]);
     expect(pinEvent("library-calm-study", ["library-calm-study"])).toEqual(["library-calm-study"]);
-    expect(unpinEvent("library-calm-study", ["library-calm-study", "coffee-lane-cove"])).toEqual(["coffee-lane-cove"]);
+    expect(unpinEvent("library-calm-study", ["library-calm-study", "coffee-lane-cove"])).toEqual([
+      "coffee-lane-cove",
+    ]);
 
     expect(hideEvent("library-calm-study", [])).toEqual(["library-calm-study"]);
     expect(hideEvent("library-calm-study", ["library-calm-study"])).toEqual(["library-calm-study"]);
-    expect(unhideEvent("library-calm-study", ["library-calm-study", "coffee-lane-cove"])).toEqual(["coffee-lane-cove"]);
+    expect(unhideEvent("library-calm-study", ["library-calm-study", "coffee-lane-cove"])).toEqual([
+      "coffee-lane-cove",
+    ]);
   });
 });
