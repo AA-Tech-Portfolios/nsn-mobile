@@ -32,6 +32,7 @@ export type SafetyReportReason =
   | "Fraud"
   | "Fake identity"
   | "Fake profile"
+  | "Possible account compromise"
   | "Spam"
   | "Spam/bot behaviour"
   | "Boundary violation"

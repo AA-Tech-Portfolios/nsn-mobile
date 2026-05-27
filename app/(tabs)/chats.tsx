@@ -45,6 +45,7 @@ type CannotMakeItReason = "unwell" | "work" | "appointment" | "somethingCameUp" 
 type SafetyReportReasonOption = {
   reason: SafetyReportReason;
   copy: string;
+  reviewCopy?: string;
 };
 type ReportFlowCopy = {
   targetTitle: string;
@@ -60,6 +61,8 @@ type ReportFlowCopy = {
   cancelReport: string;
   reportCancelled: string;
   reportSaved: string;
+  reportReceivedStatus?: string;
+  accountCompromiseReviewCopy?: string;
 };
 type ArrivalUpdateCopy = {
   title: string;
@@ -132,6 +135,11 @@ const escalationReportReasons: SafetyReportReasonOption[] = [
 const otherReportReasons: SafetyReportReasonOption[] = [
   { reason: "Fake identity", copy: "Identity details, voice, images, or profile behaviour may be misleading or synthetic." },
   { reason: "Fake profile", copy: "Profile details, photos, or behaviour do not seem genuine." },
+  {
+    reason: "Possible account compromise",
+    copy: "Use this if an account suddenly seems unusual, sends suspicious links, changes tone, or may no longer be controlled by the original person.",
+    reviewCopy: "We'll review this calmly and may apply temporary protections while checking whether the account is secure.",
+  },
   { reason: "Spam", copy: "Promotional messages, repetitive outreach, or unrelated links." },
   { reason: "Spam/bot behaviour", copy: "Bot-like replies, throwaway account patterns, suspicious links, or mass outreach." },
   { reason: "Boundary violation", copy: "Ignoring stated boundaries, photo consent, privacy preferences, or contact limits." },
@@ -219,6 +227,8 @@ const reportFlowCopy: ReportFlowCopy = {
   cancelReport: "Cancel report",
   reportCancelled: "Report cancelled",
   reportSaved: "Report saved",
+  reportReceivedStatus: "Report received · under review",
+  accountCompromiseReviewCopy: "We'll review this calmly and may apply temporary protections while checking whether the account is secure.",
 };
 
 const arrivalUpdateCopy: ArrivalUpdateCopy = {
@@ -1169,7 +1179,7 @@ export default function ChatsScreen() {
   const copy = chatTranslations[appLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
   const chatCopy = { ...chatTranslations.English, ...copy };
   const trustGateCopy = chatTrustGateTranslations[appLanguageBase as keyof typeof chatTrustGateTranslations] ?? chatTrustGateTranslations.English;
-  const localizedReportFlowCopy = reportFlowTranslations[appLanguageBase as keyof typeof reportFlowTranslations] ?? reportFlowCopy;
+  const localizedReportFlowCopy: ReportFlowCopy = reportFlowTranslations[appLanguageBase as keyof typeof reportFlowTranslations] ?? reportFlowCopy;
   const localizedArrivalUpdateCopy =
     arrivalUpdateTranslations[appLanguageBase as keyof typeof arrivalUpdateTranslations] ?? arrivalUpdateCopy;
   const localizedSafetyReasons = safetyReasonTranslations[appLanguageBase] ?? {};
@@ -1198,6 +1208,7 @@ export default function ChatsScreen() {
   const [selectedReportRoute, setSelectedReportRoute] = useState<SafetyReportRoute>("app_review");
   const [lastReportId, setLastReportId] = useState<string | null>(null);
   const [reportNotice, setReportNotice] = useState("");
+  const [reportStatusNotice, setReportStatusNotice] = useState("");
   const [cannotMakeItOpen, setCannotMakeItOpen] = useState(false);
   const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
   const [chatPlusOpen, setChatPlusOpen] = useState(false);
@@ -1369,6 +1380,9 @@ export default function ChatsScreen() {
   };
 
   const reportConcern = async (reason: SafetyReportReason) => {
+    const accountCompromiseCopy =
+      localizedReportFlowCopy.accountCompromiseReviewCopy ?? reportFlowCopy.accountCompromiseReviewCopy ?? "";
+    const reportReceivedStatus = localizedReportFlowCopy.reportReceivedStatus ?? reportFlowCopy.reportReceivedStatus ?? localizedReportFlowCopy.cancelWindow;
     const report = createSafetyReport(conversationId, selectedReportTarget.id, reason, new Date().toISOString(), {
       reportedUserName: selectedReportTarget.name,
       route: effectiveReportRoute,
@@ -1382,6 +1396,7 @@ export default function ChatsScreen() {
         ? `${reason} about ${selectedReportTarget.name} was sent to the host.`
         : `${reason} about ${selectedReportTarget.name} was submitted for app review.`
     );
+    setReportStatusNotice(reason === "Possible account compromise" ? `${reportReceivedStatus}. ${accountCompromiseCopy}` : reportReceivedStatus);
     Alert.alert(localizedReportFlowCopy.reportSaved, `${localizedReportFlowCopy.cancelWindow}`);
   };
 
@@ -1391,6 +1406,7 @@ export default function ChatsScreen() {
     const nextReports = cancelSafetyReport(lastReportId, safetyReports);
     await saveSoftHelloMvpState({ safetyReports: nextReports });
     setReportNotice(localizedReportFlowCopy.reportCancelled);
+    setReportStatusNotice("");
     setLastReportId(null);
   };
 
@@ -1476,6 +1492,7 @@ export default function ChatsScreen() {
     setChatPlusOpen(false);
     setBlockNotice("");
     setReportNotice("");
+    setReportStatusNotice("");
   };
 
   const returnFromChatChooser = () => {
@@ -1777,6 +1794,9 @@ export default function ChatsScreen() {
                         >
                           <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{localizedOption.label}</Text>
                           <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{localizedOption.copy}</Text>
+                          {option.reviewCopy ? (
+                            <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{option.reviewCopy}</Text>
+                          ) : null}
                         </TouchableOpacity>
                       );
                     })}
@@ -1803,6 +1823,9 @@ export default function ChatsScreen() {
                 {reportNotice ? (
                   <View style={[styles.softExitResult, isDay && styles.daySoftExitResult]}>
                     <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>{reportNotice}</Text>
+                    {reportStatusNotice ? (
+                      <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{reportStatusNotice}</Text>
+                    ) : null}
                     {canCancelLastReport ? (
                       <TouchableOpacity activeOpacity={0.82} onPress={cancelLastReport} style={styles.cancelReportButton}>
                         <Text style={styles.cancelReportText}>{localizedReportFlowCopy.cancelReport}</Text>

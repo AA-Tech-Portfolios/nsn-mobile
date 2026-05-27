@@ -219,6 +219,27 @@ describe("SoftHello MVP domain rules", () => {
     expect(report.cancelUntil).toBe("2026-05-07T02:40:00.000Z");
   });
 
+  it("supports account compromise reports without accusing the account owner", () => {
+    const report = createSafetyReport(
+      "movie-night-watch-chat",
+      "james-member",
+      "Possible account compromise",
+      "2026-05-07T02:35:00.000Z",
+      {
+        reportedUserName: "James",
+        route: "app_review",
+      },
+    );
+
+    expect(report).toMatchObject({
+      eventId: "movie-night-watch-chat",
+      reportedUserId: "james-member",
+      reportedUserName: "James",
+      reason: "Possible account compromise",
+      route: "app_review",
+    });
+  });
+
   it("models prototype host trust without exposing private identity details", () => {
     const event = dayEvents.find((item) => item.id === "library-calm-study");
 
