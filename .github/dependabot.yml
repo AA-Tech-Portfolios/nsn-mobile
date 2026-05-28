@@ -1,0 +1,72 @@
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Australia/Sydney"
+    open-pull-requests-limit: 5
+    versioning-strategy: "increase-if-necessary"
+    labels:
+      - "dependencies"
+      - "maintenance"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      expo-runtime-patches:
+        patterns:
+          - "expo"
+          - "expo-*"
+          - "@expo/*"
+        update-types:
+          - "patch"
+      react-native-patches:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "react-native"
+          - "react-native-*"
+          - "@react-native*"
+          - "@react-navigation/*"
+        update-types:
+          - "patch"
+      app-dependency-minor-patches:
+        dependency-type: "production"
+        exclude-patterns:
+          - "expo"
+          - "expo-*"
+          - "@expo/*"
+          - "react"
+          - "react-dom"
+          - "react-native"
+          - "react-native-*"
+          - "@react-native*"
+          - "@react-navigation/*"
+        update-types:
+          - "minor"
+          - "patch"
+      tooling-minor-patches:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:30"
+      timezone: "Australia/Sydney"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "maintenance"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
