@@ -46,14 +46,14 @@ describe("SoftHello MVP domain rules", () => {
 
   it("derives trust status from contact and identity evidence", () => {
     expect(deriveVerificationLevel({})).toBe("Unverified");
-    expect(deriveVerificationLevel({ contactEmail: "alon@example.com" })).toBe("Contact Verified");
+    expect(deriveVerificationLevel({ contactEmail: "nsn.tester@example.com" })).toBe("Contact Verified");
     expect(deriveVerificationLevel({ contactPhone: "+61400000000" })).toBe("Contact Verified");
     expect(
-      deriveVerificationLevel({ contactEmail: "alon@example.com", contactPhone: "+61400000000" }),
+      deriveVerificationLevel({ contactEmail: "nsn.tester@example.com", contactPhone: "+61400000000" }),
     ).toBe("Contact Verified");
     expect(
       deriveVerificationLevel({
-        contactEmail: "alon@example.com",
+        contactEmail: "nsn.tester@example.com",
         contactPhone: "+61400000000",
         identitySelfieUri: "file://selfie.jpg",
         hasIdentityDocument: true,
@@ -73,7 +73,7 @@ describe("SoftHello MVP domain rules", () => {
       canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Real Person Verified")),
     ).toBe(true);
     expect(
-      getEffectivePrototypeVerificationLevel({ contactEmail: "alon@example.com" }, "Unverified"),
+      getEffectivePrototypeVerificationLevel({ contactEmail: "nsn.tester@example.com" }, "Unverified"),
     ).toBe("Contact Verified");
   });
 

@@ -17,19 +17,19 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 
 ### 🟢 Easy Alpha Polish
 
-- [ ] 🟢 Regenerate stale checkpoint screenshots after the May 17 mobile fixes and alpha UX cleanup, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
+- [x] 🟢 Regenerate checkpoint screenshots after the alpha UX cleanup, including Home, Meetups, Event Details, Chats, Profile, Settings & Privacy, and onboarding stages
 - [ ] 🟢 Review onboarding calmness and clarity so NSN reads as a local Sydney/North Shore alpha, not a production matching, safety, or verification system
 - [ ] 🟢 Review Settings & Privacy prototype wording so local-only, demo, coming-soon, saved-locally, and prototype verification copy feels clear without sounding alarming
 - [ ] 🟢 Review text wrapping on mobile for titles, descriptions, location text, and important card copy
 - [ ] 🟢 Review bottom-nav spacing so chat composers, scroll views, modals, and card lists sit above the tab bar/home indicator without excessive empty space
-- [ ] 🟢 Add empty-state timing messages for no active events, sleeping time, and quiet hours
-- [ ] 🟢 Add README screenshots or mockups for the home screen, blur settings, profile privacy, and meetups page
-- [ ] 🟢 Keep checkpoint screenshots current for core tabs, Settings & Privacy, and onboarding stages after major UI changes
+- [x] 🟢 Add empty-state timing messages for no active events, sleeping time, and quiet hours
+- [x] 🟢 Add README screenshots or mockups for the home screen, profile privacy, event details, Settings & Privacy, and onboarding
+- [x] 🟢 Refresh checkpoint screenshots for core tabs, Settings & Privacy, and onboarding stages after recent UI changes
 - [ ] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
 
 ### 🟡 Medium Local UX Flows
 
-- [ ] 🟡 Add gentle RSVP states such as coming, interested, deciding later, needing encouragement, running late, or unable to make it
+- [x] 🟡 Add gentle local RSVP states: Going, Interested, Deciding later, Running late, Unable to make it, and Clear
 - [ ] 🟡 Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
 - [ ] 🟡 Add interactive tutorials for privacy, preview visibility, comfort modes, and key meetup flows
 - [ ] 🟡 Add opt-out and group-change flows that reassure users it is okay to skip, leave, find a better-suited group, or create their own
@@ -63,7 +63,7 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 
 These are the safest near-term alpha tasks. They should remain frontend-only/local-only and should avoid backend/auth, real verification, production moderation, emergency tooling, payments, AI agents, or navigation rewrites.
 
-1. **Refresh checkpoint screenshots**  
+1. **Refresh checkpoint screenshots** ✅ Completed  
    **Difficulty:** 🟢 Easy  
    **Why it matters for alpha:** Keeps the visible product record aligned with the current mobile fixes and reduces confusion during tester walkthroughs.  
    **Suggested files:** `scripts/capture-checkpoint-screenshots.mjs`, `screenshots/checkpoint/*`, `docs/alpha-tester-guide.md`, `README.md`  
@@ -98,14 +98,14 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, mobile tab smoke test
 
-6. **Gentle empty states for quiet times**  
+6. **Gentle empty states for quiet times** ✅ Completed  
    **Difficulty:** 🟢 Easy  
    **Why it matters for alpha:** Helps no-event, sleeping-time, and quiet-hour states feel intentional rather than broken.  
    **Suggested files:** `app/(tabs)/index.tsx`, `app/(tabs)/meetups.tsx`, `lib/nsn-data.ts`, `lib/home-view-filters.ts`  
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, empty-state visual smoke test
 
-7. **Gentle RSVP state prototype**  
+7. **Gentle RSVP state prototype** ✅ Completed  
    **Difficulty:** 🟡 Medium  
    **Why it matters for alpha:** Lets testers express interest without binary pressure, while staying local-only and reversible.  
    **Suggested files:** `app/event/[id].tsx`, `app/(tabs)/meetups.tsx`, `lib/nsn-data.ts`, possible focused test file under `lib/*test.ts` if state helpers are extracted  
@@ -133,7 +133,7 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
     **Scope:** documentation/frontend-only/local-only  
     **Checks:** `pnpm check`, `pnpm test`, read-through for prototype-safe claims
 
-11. **README screenshot/mockup update**  
+11. **README screenshot/mockup update** ✅ Completed  
     **Difficulty:** 🟢 Easy  
     **Why it matters for alpha:** Makes the repository presentation match the current NSN direction and helps future review sessions start with the right expectations.  
     **Suggested files:** `README.md`, `screenshots/home-web-mobile.png`, `screenshots/home-web-desktop.png`, `screenshots/checkpoint/*`  
@@ -214,7 +214,7 @@ Names to consider:
 - [x] Create an alpha tester feedback checklist after the walkthrough has been exercised
 - [x] Continue button behaviour audit across Profile, Settings & Privacy, modal menus, disabled controls, and saved-locally actions
 - [x] Keep prototype-only account actions visible for alpha as local pause and deletion-preview controls, with calm wording that real deletion/auth/backends are not connected yet
-- [ ] 🟢 Regenerate stale checkpoint screenshots after the May 17 mobile fixes and alpha UX cleanup, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
+- [x] 🟢 Regenerate checkpoint screenshots after the alpha UX cleanup, including refreshed profile/demo identity assets
 - [ ] 🟢 If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
 
 ## Alpha Walkthrough Notes (May 2026)
@@ -231,7 +231,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - Review chats and keyboard/composer spacing: group and private chat composers should feel calm, reachable, and consistently placed on smaller iPhones.
 - Review meetup details comfort/safety wording: comfort, weather, photo/video consent, safety notes, and Community Guidelines alpha copy should feel practical and low-pressure.
 - Review text wrapping on mobile: titles, descriptions, location text, and important card copy should wrap where readability matters instead of truncating too early.
-- Regenerate checkpoint screenshots after the walkthrough because current checkpoint images are stale after the May 17 mobile verification, chat spacing, icon, text wrapping, and alpha UX cleanup fixes.
+- Keep checkpoint screenshots current after future walkthroughs and UI changes.
 
 ## Alpha UX Review Checklist
 
@@ -247,7 +247,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Text wraps instead of truncating where readability matters
 - [ ] Verification works and stays prototype-safe
 - [ ] Community Guidelines alpha copy is visible and calm
-- [ ] Checkpoint screenshots are regenerated after the walkthrough
+- [x] Checkpoint screenshots are regenerated after the walkthrough
 
 ## Post-Alpha Core Features
 
@@ -272,7 +272,6 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Add personality or preference-based recommendations that prioritise comfort, intent, pacing, shared interests, communication style, and group-size comfort without turning NSN into a quiz
 - [ ] Connect social energy, communication style, group size, interests, food, and other comfort preferences to real preference-based recommendations
 - [ ] Separate Day Events and Evening Events into clearer availability states and notify users when it is time to switch views
-- [ ] Add empty-state timing messages for no active events, sleeping time, and quiet hours
 - [ ] Add event troubleshooting tools to help participants coordinate around busy work, study, and timetable constraints
 - [ ] Evaluate whether group voting helps plan meetups or creates extra pressure for participants
 - [ ] Unlock phone or video call preferences after a meetup, with users choosing the contact mode they are comfortable with
@@ -307,7 +306,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 
 ## Meetup Experience
 
-- [ ] Add gentle RSVP states such as coming, interested, deciding later, needing encouragement, running late, or unable to make it
+- [x] Add gentle local RSVP states: Going, Interested, Deciding later, Running late, Unable to make it, and Clear
 - [x] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, first-time attendee, or guide request (implemented in prototype form as local-only role chips)
 - [ ] Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
 - [ ] Explore Pre-meetup UX only as a future safety/social comfort feature: support gradual trust before group activities, keep first meetings public and casual, make 1:1 or small-group comfort optional, and avoid creating pressure to prove readiness for the main meetup
@@ -364,6 +363,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Continue suburb/locality refinement with an API-backed or maintained Australian locality dataset
 - [ ] Add better suburb/locality dataset/API integration for accurate local time, weather, routing, and search matching
 - [ ] Add real Sydney/OpenStreetMap integration with proper attribution and no paid map-key dependency
+- [ ] Review OpenStreetMap attribution wrapping in narrow screenshots before public launch or external website/social previews
 - [ ] Broaden regional/date/time/unit localisation beyond the current prototype preferences, including more countries, calendars, weather units, distance units, currency display, and accessibility expectations
 - [ ] Expand distance unit handling across meetups, profile, saved places, and transportation views
 - [ ] Add currency display preference support when paid events, donations, or pricing features are introduced
@@ -405,8 +405,8 @@ These ideas are future planning notes only. Do not add API calls, backend implem
 
 ## Repository Presentation
 
-- [ ] 🟢 Add README screenshots or mockups for the home screen, blur settings, profile privacy, and meetups page
-- [ ] 🟢 Keep checkpoint screenshots current for core tabs, Settings & Privacy, and onboarding stages after major UI changes
+- [x] 🟢 Add README screenshots/mockups for the home screen, profile privacy, event details, Settings & Privacy, and onboarding
+- [x] 🟢 Refresh checkpoint screenshots for core tabs, Settings & Privacy, and onboarding stages after recent UI changes
 
 ## Brand & Operations
 
@@ -414,6 +414,7 @@ These ideas are future planning notes only. Do not add API calls, backend implem
 - [ ] 🔴 Future platform roadmap, not current scope: explore an official website, Windows app, macOS app, and watchOS companion only after the mobile/web prototype, safety boundaries, and demand are clearer
 - [ ] 🟢 Remove AI Expo related settings as the app develops
 - [ ] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
+- [x] 🟢 Add a lightweight Dependabot maintenance workflow for weekly dependency review without automerge
 
 ## Historical Milestones / Release Notes
 
@@ -439,6 +440,7 @@ These ideas are future planning notes only. Do not add API calls, backend implem
 - [x] Add mobile drawer and desktop full-view panels for Transportation Method, Contact Preference, and Location Preference
 - [x] Add alpha tester walkthrough covering NSN purpose, local prototype scope, comfort/privacy settings, meetup browsing, alerts, profile review, and demo-only safety language
 - [x] Add controlled alpha tester guide and feedback checklist docs for trusted walkthroughs
+- [x] Add reusable fictional demo personas and anonymise screenshot/demo identity fixtures for repo presentation
 - [x] Refine Home search into compact Search NSN suburb and meetup matching for the Sydney/North Shore prototype
 - [x] Improve Search NSN autocomplete with Sydney locality data, region matching, aliases, and no default suburb list
 - [x] Refine Home/Profile local area editing with shared location picker and API-ready fallback lookup service
