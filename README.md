@@ -10,6 +10,22 @@ The active app identity is **North Shore Nights**, focused on Sydney's North Sho
 
 For the real current state, including what is working, what is mocked, and what is not implemented yet, see [`docs/current-state.md`](docs/current-state.md).
 
+## Visual Preview
+
+NSN is currently a Sydney/North Shore alpha prototype for calmer first meetups: small groups, clear expectations, privacy-conscious profile controls, and local-only demo states that are easy to review with trusted testers.
+
+The screenshots below are checkpoint assets from the current prototype. They are presentation aids only; they do not imply production verification, live matching, emergency tooling, payments, or connected moderation systems.
+
+| Home discovery | Event details | Profile & privacy |
+| --- | --- | --- |
+| ![NSN Home discovery screenshot](screenshots/home-web-desktop.png) | ![NSN Event Details screenshot](screenshots/checkpoint/event-details.png) | ![NSN Profile screenshot](screenshots/checkpoint/05-profile.png) |
+
+| Settings & Privacy | Onboarding |
+| --- | --- |
+| ![NSN Settings and Privacy screenshot](screenshots/checkpoint/06-settings-privacy.png) | ![NSN onboarding welcome screenshot](screenshots/checkpoint/07-onboarding-stage-1-welcome.png) |
+
+NSN's tone should stay low-pressure and plain-spoken: people can browse quietly, decide later, keep profile details private, and treat every alpha action as feedback rather than a commitment.
+
 ## Product Intent
 
 Many social apps assume users are ready for big groups, loud events, or open-ended networking. NSN is designed for people who may be shy, reserved, new to an area, neurodivergent, privacy-conscious, or simply more comfortable with structured, smaller meetups.
@@ -131,6 +147,16 @@ Windows and PowerShell-safe command notes live in [`docs/development-workflow.md
 The design language is calm, night-friendly, and privacy-conscious: deep navy surfaces, soft blue accents, readable cards, friendly icons, and clear social expectations.
 
 See [`design.md`](design.md) for the broader interface plan and [`docs/brand-systems.md`](docs/brand-systems.md) for product identity boundaries.
+
+## Future Website And Social Preview Notes
+
+A lightweight future website can reuse these same prototype-safe messages:
+
+- North Shore Nights is a Sydney/North Shore alpha for small, low-pressure local meetups.
+- SoftHello remains the future/global direction once the local learning is clearer.
+- Privacy and trust are design principles first; production safety, verification, matching, payments, and moderation claims should wait until those systems are real and reviewed.
+- Good preview assets for a future landing page or social profile are Home discovery, Event Details, Settings & Privacy, and Onboarding. These show the app's calm feel without overpromising live operations.
+- Reserving names or preparing preview images is separate from public marketing. The near-term goal is brand protection, tester clarity, and future discoverability.
 
 ## Roadmap
 
