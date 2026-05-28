@@ -3701,15 +3701,15 @@ export default function ProfileScreen() {
           ) : null}
           {showProfileMenu ? (
             <Modal transparent animationType={isDesktopUserOptions ? "fade" : "slide"} visible={showProfileMenu} onRequestClose={closeProfileMenu}>
-              <Pressable
-                style={[styles.profileDrawerBackdrop, !isDesktopUserOptions && styles.profileDrawerBackdropMobile]}
-                onPress={closeProfileMenu}
-                accessibilityRole="button"
-                accessibilityLabel="Close User Options"
-              >
+              <View style={[styles.profileDrawerBackdrop, !isDesktopUserOptions && styles.profileDrawerBackdropMobile]}>
                 <Pressable
+                  style={StyleSheet.absoluteFill}
+                  onPress={closeProfileMenu}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close User Options"
+                />
+                <View
                   style={[styles.profileOptionsDrawer, isDesktopHelpSupport && profileMenuPanel === "helpSupport" && styles.profileOptionsDrawerHelpDesktop, !isDesktopUserOptions && styles.profileOptionsDrawerMobile, isDay && styles.dayProfileOptionsDrawer]}
-                  onPress={(event) => event.stopPropagation()}
                   accessible
                   accessibilityLabel="User Options"
                   accessibilityViewIsModal
@@ -6224,8 +6224,8 @@ export default function ProfileScreen() {
                 ) : null}
               </ScrollView>
                   </View>
-                </Pressable>
-              </Pressable>
+                </View>
+              </View>
             </Modal>
           ) : null}
         </View>
