@@ -151,50 +151,50 @@ const otherReportReasons: SafetyReportReasonOption[] = [
 
 const reportTargets: ReportTarget[] = [
   { id: "maya-host", name: "Maya", role: "host" },
-  { id: "alon-member", name: "Alon", role: "member" },
-  { id: "james-member", name: "James", role: "member" },
+  { id: "nsn-tester", name: "NSN Tester", role: "member" },
+  { id: "jordan-member", name: "Jordan", role: "member" },
   { id: "movie-night-watch-chat", name: "Whole chat", role: "chat" },
 ];
 
 const memberBlockTargets = reportTargets.filter((target) => target.role === "member");
 const directChatTargets = [
   { id: "person-maya-host", personId: "maya-host", name: "Maya", role: "host", emoji: "M", tone: "#174667" },
-  { id: "person-alon-member", personId: "alon-member", name: "Alon", role: "member", emoji: "A", tone: "#1590C9" },
-  { id: "person-james-member", personId: "james-member", name: "James", role: "member", emoji: "J", tone: "#0F5B7C" },
+  { id: "person-nsn-tester", personId: "nsn-tester", name: "NSN Tester", role: "member", emoji: "N", tone: "#1590C9" },
+  { id: "person-jordan-member", personId: "jordan-member", name: "Jordan", role: "member", emoji: "J", tone: "#0F5B7C" },
 ] as const;
 
 const directChatSeedByPerson: Record<string, ChatMessage[]> = {
   "maya-host": [
     { id: "maya-direct-1", personId: "maya-host", name: "Maya", avatar: "M", text: "Hi, happy to help if you have any questions before the meetup.", time: "4:28pm", mine: false },
   ],
-  "alon-member": [
-    { id: "alon-direct-1", personId: "alon-member", name: "Alon", avatar: "A", text: "Hey, nice to meet you here.", time: "4:30pm", mine: false },
+  "nsn-tester": [
+    { id: "nsn-tester-direct-1", personId: "nsn-tester", name: "NSN Tester", avatar: "N", text: "Hey, nice to meet you here.", time: "4:30pm", mine: false },
   ],
-  "james-member": [
-    { id: "james-direct-1", personId: "james-member", name: "James", avatar: "J", text: "Hi, are you going to the movie night too?", time: "4:31pm", mine: false },
+  "jordan-member": [
+    { id: "jordan-direct-1", personId: "jordan-member", name: "Jordan", avatar: "J", text: "Hi, are you going to the movie night too?", time: "4:31pm", mine: false },
   ],
 };
 
 const directChatMessageTranslations: Record<string, Record<string, string>> = {
   Chinese: {
     "maya-direct-1": "你好，如果聚会前有任何问题，我很乐意帮忙。",
-    "alon-direct-1": "你好，很高兴在这里认识你。",
-    "james-direct-1": "你好，你也会去电影夜吗？",
+    "nsn-tester-direct-1": "你好，很高兴在这里认识你。",
+    "jordan-direct-1": "你好，你也会去电影夜吗？",
   },
   Japanese: {
     "maya-direct-1": "こんにちは。ミートアップ前に質問があれば、いつでもどうぞ。",
-    "alon-direct-1": "こんにちは、ここで会えてうれしいです。",
-    "james-direct-1": "こんにちは。映画ナイトにも参加しますか？",
+    "nsn-tester-direct-1": "こんにちは、ここで会えてうれしいです。",
+    "jordan-direct-1": "こんにちは。映画ナイトにも参加しますか？",
   },
   Korean: {
     "maya-direct-1": "안녕하세요. 모임 전에 궁금한 점이 있으면 도와드릴게요.",
-    "alon-direct-1": "안녕하세요, 여기서 만나서 반가워요.",
-    "james-direct-1": "안녕하세요, 영화 밤에도 가시나요?",
+    "nsn-tester-direct-1": "안녕하세요, 여기서 만나서 반가워요.",
+    "jordan-direct-1": "안녕하세요, 영화 밤에도 가시나요?",
   },
   Hebrew: {
     "maya-direct-1": "היי, אשמח לעזור אם יש לך שאלות לפני המפגש.",
-    "alon-direct-1": "היי, נעים להכיר אותך כאן.",
-    "james-direct-1": "היי, גם את/ה מגיע/ה לערב הסרט?",
+    "nsn-tester-direct-1": "היי, נעים להכיר אותך כאן.",
+    "jordan-direct-1": "היי, גם את/ה מגיע/ה לערב הסרט?",
   },
 };
 

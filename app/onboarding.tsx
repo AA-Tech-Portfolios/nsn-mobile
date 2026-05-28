@@ -57,7 +57,7 @@ export default function OnboardingScreen() {
   const hasDirectStage = Number.isFinite(requestedStage);
   const initialStage = hasDirectStage ? Math.min(Math.max(requestedStage, 0), 4) : 0;
   const [stage, setStage] = useState(initialStage);
-  const [displayName, setDisplayName] = useState(settings.displayName === "Alon" ? (hasDirectStage ? "Sam" : "") : settings.displayName);
+  const [displayName, setDisplayName] = useState(settings.displayName === "NSN Tester" ? (hasDirectStage ? "Maya" : "") : settings.displayName);
   const [middleName, setMiddleName] = useState(settings.middleName);
   const [lastName, setLastName] = useState(settings.lastName);
   const [gender, setGender] = useState<ProfileGender>(settings.gender);

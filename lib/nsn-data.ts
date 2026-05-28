@@ -1,3 +1,5 @@
+import { demoPersonas } from "./demo-personas";
+
 export const nsnColors = {
   background: "#0B1626",
   surface: "#0F1B2C",
@@ -151,6 +153,14 @@ export type EventItem = {
   trustProfile?: MeetupTrustProfile;
 };
 
+const mayaPersona = demoPersonas["maya-host"];
+const nsnTesterPersona = demoPersonas["nsn-tester"];
+const jordanPersona = demoPersonas["jordan-member"];
+
+const mayaHost: MeetupTrustParticipant = { id: mayaPersona.id, displayName: mayaPersona.displayName, role: "host", verificationState: "host-verified" };
+const nsnTesterCoHost: MeetupTrustParticipant = { id: nsnTesterPersona.id, displayName: nsnTesterPersona.displayName, role: "co-host", verificationState: "verified" };
+const jordanHost: MeetupTrustParticipant = { id: jordanPersona.id, displayName: jordanPersona.displayName, role: "host", verificationState: "verified" };
+
 export const dayEvents: EventItem[] = [
   {
     id: "picnic-easy-hangout",
@@ -180,8 +190,8 @@ export const dayEvents: EventItem[] = [
       "Would you like to do this again?"
     ],
     trustProfile: {
-      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
-      coHosts: [{ id: "alon-member", displayName: "Alon", role: "co-host", verificationState: "verified" }],
+      host: mayaHost,
+      coHosts: [nsnTesterCoHost],
       participantLimit: { min: 2, max: 4 },
       venueType: "park",
       comfortTags: ["quiet", "beginner-friendly", "public-place", "indoor-backup", "transport-friendly"],
@@ -207,7 +217,7 @@ export const dayEvents: EventItem[] = [
     atmosphereLabels: ["Balanced", "Lively", "Outdoor calm"],
     mediaComfortLabels: ["Ask before photos", "Venue photos okay"],
     trustProfile: {
-      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      host: mayaHost,
       participantLimit: { min: 3, max: 6 },
       venueType: "beach",
       comfortTags: ["public-place", "transport-friendly", "beginner-friendly"],
@@ -233,7 +243,7 @@ export const dayEvents: EventItem[] = [
     atmosphereLabels: ["Quiet", "Cozy", "Small group", "Low-pressure", "First-time friendly"],
     mediaComfortLabels: ["Private meetup", "No public posting"],
     trustProfile: {
-      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      host: mayaHost,
       participantLimit: { min: 2, max: 5 },
       venueType: "library",
       comfortTags: ["quiet", "low-noise", "library-friendly", "quiet-conversation", "study-work-session", "reading", "cafe-nearby", "public-transport-access"],
@@ -269,7 +279,7 @@ export const dayEvents: EventItem[] = [
       "Would you meet for coffee again?"
     ],
     trustProfile: {
-      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      host: mayaHost,
       participantLimit: { min: 2, max: 4 },
       venueType: "cafe",
       comfortTags: ["quiet", "beginner-friendly", "public-place", "indoor-backup", "transport-friendly", "cafe-nearby"],
@@ -295,7 +305,7 @@ export const dayEvents: EventItem[] = [
     atmosphereLabels: ["Quiet", "Balanced", "Small group", "Outdoor calm", "Low-pressure"],
     mediaComfortLabels: ["Venue photos okay", "Ask before photos"],
     trustProfile: {
-      host: { id: "alon-member", displayName: "Alon", role: "host", verificationState: "verified" },
+      host: jordanHost,
       participantLimit: { min: 3, max: 6 },
       venueType: "walk",
       comfortTags: ["quiet", "public-place", "transport-friendly", "beginner-friendly"],
@@ -334,8 +344,8 @@ export const eveningEvents: EventItem[] = [
       "Would you watch a movie together again?"
     ],
     trustProfile: {
-      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
-      coHosts: [{ id: "alon-member", displayName: "Alon", role: "co-host", verificationState: "verified" }],
+      host: mayaHost,
+      coHosts: [nsnTesterCoHost],
       participantLimit: { min: 2, max: 4 },
       venueType: "cinema",
       comfortTags: ["quiet", "beginner-friendly", "public-place", "indoor-backup", "transport-friendly"],
@@ -361,7 +371,7 @@ export const eveningEvents: EventItem[] = [
     atmosphereLabels: ["Balanced", "Cozy", "Small group", "First-time friendly"],
     mediaComfortLabels: ["Ask before photos", "Private meetup"],
     trustProfile: {
-      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      host: mayaHost,
       participantLimit: { min: 3, max: 5 },
       venueType: "cafe",
       comfortTags: ["beginner-friendly", "public-place", "indoor-backup", "transport-friendly", "board-game", "cafe-nearby"],
@@ -387,7 +397,7 @@ export const eveningEvents: EventItem[] = [
     atmosphereLabels: ["Balanced", "Small group", "Low-pressure", "Indoor backup"],
     mediaComfortLabels: ["Private meetup", "No public posting"],
     trustProfile: {
-      host: { id: "alon-member", displayName: "Alon", role: "host", verificationState: "verified" },
+      host: jordanHost,
       participantLimit: { min: 3, max: 5 },
       venueType: "restaurant",
       comfortTags: ["public-place", "indoor-backup", "transport-friendly", "beginner-friendly"],
@@ -413,7 +423,7 @@ export const eveningEvents: EventItem[] = [
     atmosphereLabels: ["Quiet", "Cozy", "Small group", "Low-pressure", "First-time friendly"],
     mediaComfortLabels: ["No filming", "Private meetup"],
     trustProfile: {
-      host: { id: "maya-host", displayName: "Maya", role: "host", verificationState: "host-verified" },
+      host: mayaHost,
       participantLimit: { min: 2, max: 5 },
       venueType: "community-room",
       comfortTags: ["quiet", "low-noise", "beginner-friendly", "public-place", "indoor-backup", "quiet-conversation", "transport-friendly"],
@@ -457,45 +467,45 @@ export type ChatMessage = {
 export const eventChatSeeds: Record<string, ChatMessage[]> = {
   "picnic-easy-hangout": [
     { id: "picnic-1", personId: "maya-host", name: "Maya", avatar: "M", text: "I will be near the picnic tables by the main path at 10:55. No rush if your arrival is quiet.", time: "9:42am", mine: false },
-    { id: "picnic-2", personId: "james-member", name: "James", avatar: "J", text: "Could we ask before photos? I am keeping my profile and pictures limited today.", time: "9:48am", mine: false },
-    { id: "picnic-3", personId: "alon-member", name: "Alon", avatar: "A", text: "Works for me. I can bring cut fruit and keep it easy.", time: "9:50am", mine: false },
+    { id: "picnic-2", personId: "jordan-member", name: "Jordan", avatar: "J", text: "Could we ask before photos? I am keeping my profile and pictures limited today.", time: "9:48am", mine: false },
+    { id: "picnic-3", personId: "nsn-tester", name: "NSN Tester", avatar: "N", text: "Works for me. I can bring cut fruit and keep it easy.", time: "9:50am", mine: false },
     { id: "picnic-4", name: "You", avatar: "Y", text: "I might join quietly at first, but I am looking forward to it.", time: "9:53am", mine: true },
   ],
   "coffee-lane-cove": [
     { id: "coffee-1", personId: "maya-host", name: "Maya", avatar: "M", text: "I booked a small table near the side wall. Easy to step outside if it gets loud.", time: "8:36am", mine: false },
-    { id: "coffee-2", personId: "james-member", name: "James", avatar: "J", text: "Thanks. I may arrive right on time and keep my details light until we meet.", time: "8:44am", mine: false },
-    { id: "coffee-3", personId: "alon-member", name: "Alon", avatar: "A", text: "Low-key hello sounds perfect. I will grab a coffee first.", time: "8:51am", mine: false },
+    { id: "coffee-2", personId: "jordan-member", name: "Jordan", avatar: "J", text: "Thanks. I may arrive right on time and keep my details light until we meet.", time: "8:44am", mine: false },
+    { id: "coffee-3", personId: "nsn-tester", name: "NSN Tester", avatar: "N", text: "Low-key hello sounds perfect. I will grab a coffee first.", time: "8:51am", mine: false },
     { id: "coffee-4", name: "You", avatar: "Y", text: "Can we keep photos off unless everyone says yes?", time: "8:55am", mine: true },
   ],
   "library-calm-study": [
     { id: "library-1", personId: "maya-host", name: "Maya", avatar: "M", text: "I will pick a table in the open study area. Quiet arrival is completely fine.", time: "1:42pm", mine: false },
-    { id: "library-2", personId: "james-member", name: "James", avatar: "J", text: "I am likely to wave and settle in first, then chat during the break.", time: "1:48pm", mine: false },
-    { id: "library-3", personId: "alon-member", name: "Alon", avatar: "A", text: "I can bring spare sticky notes if anyone needs them.", time: "1:52pm", mine: false },
+    { id: "library-2", personId: "jordan-member", name: "Jordan", avatar: "J", text: "I am likely to wave and settle in first, then chat during the break.", time: "1:48pm", mine: false },
+    { id: "library-3", personId: "nsn-tester", name: "NSN Tester", avatar: "N", text: "I can bring spare sticky notes if anyone needs them.", time: "1:52pm", mine: false },
     { id: "library-4", name: "You", avatar: "Y", text: "Thanks. I like the plan of short chat breaks and mostly quiet time.", time: "1:55pm", mine: true },
   ],
   "movie-night-watch-chat": [
-    { id: "movie-1", personId: "alon-member", name: "Alon", avatar: "A", text: "Hey! I will be there around 6:45pm and can wait near the cinema entrance.", time: "4:32pm", mine: false },
+    { id: "movie-1", personId: "nsn-tester", name: "NSN Tester", avatar: "N", text: "Hey! I will be there around 6:45pm and can wait near the cinema entrance.", time: "4:32pm", mine: false },
     { id: "movie-2", personId: "maya-host", name: "Maya", avatar: "M", text: "Lovely. Watch first, optional chat after. No pressure if you want to head home.", time: "4:34pm", mine: false },
-    { id: "movie-3", personId: "james-member", name: "James", avatar: "J", text: "Same here, I have not seen this movie yet. Please ask before photos.", time: "4:35pm", mine: false },
+    { id: "movie-3", personId: "jordan-member", name: "Jordan", avatar: "J", text: "Same here, I have not seen this movie yet. Please ask before photos.", time: "4:35pm", mine: false },
     { id: "movie-4", name: "You", avatar: "Y", text: "Can not wait. I may do a quiet arrival and say hi after tickets.", time: "4:36pm", mine: true },
   ],
   "board-games-coffee": [
     { id: "board-1", personId: "maya-host", name: "Maya", avatar: "M", text: "I will bring two simple games and keep rules-light options ready.", time: "5:15pm", mine: false },
-    { id: "board-2", personId: "james-member", name: "James", avatar: "J", text: "Rules-light sounds good. I am okay joining a round after watching one first.", time: "5:19pm", mine: false },
-    { id: "board-3", personId: "alon-member", name: "Alon", avatar: "A", text: "I can grab the first coffees. No table photos unless everyone opts in.", time: "5:26pm", mine: false },
+    { id: "board-2", personId: "jordan-member", name: "Jordan", avatar: "J", text: "Rules-light sounds good. I am okay joining a round after watching one first.", time: "5:19pm", mine: false },
+    { id: "board-3", personId: "nsn-tester", name: "NSN Tester", avatar: "N", text: "I can grab the first coffees. No table photos unless everyone opts in.", time: "5:26pm", mine: false },
     { id: "board-4", name: "You", avatar: "Y", text: "Watching one round first would help me too. Thanks for making room for that.", time: "5:30pm", mine: true },
   ],
   "beach-day-chill-vibes": [
     { id: "beach-1", personId: "maya-host", name: "Maya", avatar: "M", text: "I will set a broad meeting point near the main path, then we can choose a quieter patch.", time: "11:10am", mine: false },
-    { id: "beach-2", personId: "james-member", name: "James", avatar: "J", text: "I prefer to keep personal details light, but I will post an arrival update once I am nearby.", time: "11:18am", mine: false },
-    { id: "beach-3", personId: "alon-member", name: "Alon", avatar: "A", text: "I will bring sunscreen. Ask before photos, especially if people are in frame.", time: "11:22am", mine: false },
+    { id: "beach-2", personId: "jordan-member", name: "Jordan", avatar: "J", text: "I prefer to keep personal details light, but I will post an arrival update once I am nearby.", time: "11:18am", mine: false },
+    { id: "beach-3", personId: "nsn-tester", name: "NSN Tester", avatar: "N", text: "I will bring sunscreen. Ask before photos, especially if people are in frame.", time: "11:22am", mine: false },
     { id: "beach-4", name: "You", avatar: "Y", text: "Sounds good. I may sit a little back from the busiest area at first.", time: "11:25am", mine: true },
   ],
 };
 
 export const chatSeed: ChatMessage[] = [
-  { id: "1", name: "Alon", avatar: "A", text: "Hey! I'll be there around 6:45pm 😊", time: "4:32pm", mine: false },
+  { id: "1", name: "NSN Tester", avatar: "N", text: "Hey! I'll be there around 6:45pm.", time: "4:32pm", mine: false },
   { id: "2", name: "Maya", avatar: "M", text: "Awesome! Looking forward to it 🎬", time: "4:34pm", mine: false },
-  { id: "3", name: "James", avatar: "J", text: "Same here, haven’t seen this movie yet!", time: "4:35pm", mine: false },
+  { id: "3", name: "Jordan", avatar: "J", text: "Same here, I have not seen this movie yet.", time: "4:35pm", mine: false },
   { id: "4", name: "You", avatar: "Y", text: "Can’t wait! See you all there 🙂", time: "4:36pm", mine: true },
 ];

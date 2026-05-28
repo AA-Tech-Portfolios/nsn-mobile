@@ -13,10 +13,10 @@ describe("chat profile previews", () => {
     expect(preview?.photoBoundary).toContain("Ask before photos");
   });
 
-  it("keeps James more private and hides richer details", () => {
-    const preview = getChatProfilePreview("james-member");
+  it("keeps Jordan more private and hides richer details", () => {
+    const preview = getChatProfilePreview("jordan-member");
 
-    expect(preview?.displayName).toBe("James");
+    expect(preview?.displayName).toBe("Jordan");
     expect(preview?.privacyMode).toBe("Comfort Mode");
     expect(preview?.avatarPrivate).toBe(true);
     expect(preview?.about).toBeUndefined();
@@ -25,7 +25,7 @@ describe("chat profile previews", () => {
   });
 
   it("does not expose exact addresses, schedules, routines, or hidden profile details", () => {
-    const visibleText = ["maya-host", "james-member"]
+    const visibleText = ["nsn-tester", "maya-host", "jordan-member"]
       .map((personId) => JSON.stringify(getChatProfilePreview(personId)))
       .join(" ")
       .toLowerCase();

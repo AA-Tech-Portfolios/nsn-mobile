@@ -1701,7 +1701,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [preferredAgeMax, setPreferredAgeMax] = useState(40);
   const [suburb, setSuburb] = useState("");
   const [intent, setIntent] = useState<SoftHelloIntent>("Exploring");
-  const [displayName, setDisplayName] = useState("Alon");
+  const [displayName, setDisplayName] = useState("NSN Tester");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState<ProfileGender>("Not specified");
@@ -1882,7 +1882,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setPreferredAgeMax(storedAgeRange.max);
         setSuburb(snapshot.suburb ?? "");
         setIntent(snapshot.intent ?? "Exploring");
-        setDisplayName(snapshot.displayName || "Alon");
+        setDisplayName(snapshot.displayName || "NSN Tester");
         setMiddleName(snapshot.middleName ?? "");
         setLastName(snapshot.lastName ?? "");
         setGender(snapshot.gender ?? "Not specified");

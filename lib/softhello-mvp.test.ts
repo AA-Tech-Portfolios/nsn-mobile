@@ -250,19 +250,19 @@ describe("SoftHello MVP domain rules", () => {
   it("supports account compromise reports without accusing the account owner", () => {
     const report = createSafetyReport(
       "movie-night-watch-chat",
-      "james-member",
+      "jordan-member",
       "Possible account compromise",
       "2026-05-07T02:35:00.000Z",
       {
-        reportedUserName: "James",
+        reportedUserName: "Jordan",
         route: "app_review",
       },
     );
 
     expect(report).toMatchObject({
       eventId: "movie-night-watch-chat",
-      reportedUserId: "james-member",
-      reportedUserName: "James",
+      reportedUserId: "jordan-member",
+      reportedUserName: "Jordan",
       reason: "Possible account compromise",
       route: "app_review",
     });
@@ -294,7 +294,7 @@ describe("SoftHello MVP domain rules", () => {
   it("allows reports to be cancelled within the cancel window only", () => {
     const report = createSafetyReport(
       "movie-night-watch-chat",
-      "james-member",
+      "jordan-member",
       "Harassment",
       "2026-05-07T02:30:00.000Z",
       {

@@ -19,7 +19,7 @@ export function createAlphaTesterOnboardingSnapshot(options: {
     preferredAgeMax: 35,
     suburb: "Chatswood",
     intent: "Exploring",
-    displayName: "NSN tester",
+    displayName: "NSN Tester",
     middleName: "",
     lastName: "",
     gender: "Not specified",

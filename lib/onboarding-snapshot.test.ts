@@ -13,7 +13,7 @@ describe("alpha tester onboarding snapshot", () => {
     expect(snapshot).toMatchObject({
       ageConfirmed: false,
       age: null,
-      displayName: "NSN tester",
+      displayName: "NSN Tester",
       intent: "Exploring",
       verificationLevel: "Unverified",
       privateProfile: true,

@@ -43,7 +43,8 @@ describe("NSN prototype data", () => {
     for (const eventId of requiredEventIds) {
       expect(eventChatSeeds[eventId]?.length).toBeGreaterThanOrEqual(4);
       expect(eventChatSeeds[eventId].some((message) => message.personId === "maya-host")).toBe(true);
-      expect(eventChatSeeds[eventId].some((message) => message.personId === "james-member")).toBe(true);
+      expect(eventChatSeeds[eventId].some((message) => message.personId === "jordan-member")).toBe(true);
+      expect(eventChatSeeds[eventId].some((message) => message.personId === "nsn-tester")).toBe(true);
     }
 
     const combinedText = requiredEventIds

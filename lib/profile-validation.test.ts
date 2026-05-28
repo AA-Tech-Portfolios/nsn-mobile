@@ -4,7 +4,7 @@ import { isAllowedDisplayName } from "./profile-validation";
 
 describe("profile validation", () => {
   it("accepts real-looking display names and nicknames", () => {
-    expect(isAllowedDisplayName("Alon")).toBe(true);
+    expect(isAllowedDisplayName("Jordan")).toBe(true);
     expect(isAllowedDisplayName("Sam Lee")).toBe(true);
     expect(isAllowedDisplayName("Maya-Rose")).toBe(true);
   });
