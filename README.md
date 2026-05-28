@@ -18,7 +18,7 @@ The screenshots below are checkpoint assets from the current prototype. They are
 
 | Home discovery | Event details | Profile & privacy |
 | --- | --- | --- |
-| ![NSN Home discovery screenshot](screenshots/home-web-desktop.png) | ![NSN Event Details screenshot](screenshots/checkpoint/event-details.png) | ![NSN Profile screenshot](screenshots/checkpoint/05-profile.png) |
+| ![NSN Home discovery screenshot](screenshots/home-web-desktop.png) | ![NSN Event Details screenshot](screenshots/checkpoint/event-details.png) | ![NSN Profile screenshot](screenshots/checkpoint/profile-privacy.png) |
 
 | Settings & Privacy | Onboarding |
 | --- | --- |
