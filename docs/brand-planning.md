@@ -26,7 +26,7 @@ NSN should avoid sounding like:
 
 2. **ShoreLights**
 
-   Preferred backup or future social-handle candidate. It is not active and not a rename plan. It is useful because it preserves shore/local/evening-light atmosphere while reducing nightlife-only assumptions.
+   Light/glow emotional inspiration. It is not active, not a rename plan, and not currently cleared as a backup product name. Existing public usage means it should be treated as visual and emotional direction only until proper domain, handle, business-name, and trade mark checks are completed.
 
 3. **SoftHello**
 
@@ -34,11 +34,11 @@ NSN should avoid sounding like:
 
 4. **ShoreLife**
 
-   Possible future program or community theme. It may be useful for beach, outdoor, coastal, or recurring local community programs, but it is not the core product identity.
+   Possible future program or community theme. It may be useful for beach, outdoor, coastal, or recurring local community ideas, but it is not the core product identity and is not currently cleared as a product name.
 
 ## Emotional Naming Direction
 
-This list is an inspiration bank only, not an active rename shortlist. ShoreLights is currently the strongest backup candidate because it keeps the shore/local feeling while softening the "nights only" interpretation.
+This list is an inspiration bank only, not an active rename shortlist. ShoreLights remains useful as a light/glow direction reference, but it should not be treated as a cleared backup product name.
 
 **Soft / Gentle**
 
@@ -105,6 +105,20 @@ Preferred emotional direction:
 - softly social
 - atmospheric
 - welcoming without being clinical
+
+## Name Clearance Checklist
+
+Before any backup name is used publicly, filed, or treated as a serious product identity, run a proper clearance pass:
+
+- web search
+- domain search
+- social handle search
+- ASIC business name availability search
+- IP Australia trade mark search / TM Checker
+- check similar names and similar service categories
+- consider professional legal or trade mark advice before public launch or filing
+
+A name appearing online does not automatically make it unusable. But existing public usage lowers confidence for clean social handles, domains, and brand distinctiveness. Until checked properly, names such as ShoreLights and ShoreLife should be treated as inspiration only.
 
 ## Social Media / Handle Note
 
