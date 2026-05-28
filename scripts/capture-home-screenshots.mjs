@@ -22,7 +22,7 @@ const onboardingSnapshot = {
   ageConfirmed: true,
   suburb: "Chatswood, NSW 2067",
   intent: "Exploring",
-  displayName: "Alon",
+  displayName: "NSN Tester",
   profilePhotoUri: null,
   visibilityPreference: "Blurred",
 };

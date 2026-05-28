@@ -26,7 +26,7 @@ const profileSnapshot = {
   preferredAgeMax: 40,
   suburb: "Chatswood, NSW 2067",
   intent: "Exploring",
-  displayName: "Alon",
+  displayName: "NSN Tester",
   middleName: "",
   lastName: "",
   gender: "Male",
