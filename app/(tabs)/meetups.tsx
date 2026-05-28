@@ -303,7 +303,7 @@ export default function MeetupsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 112 },
+  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 136 },
   title: { color: nsnColors.text, fontSize: 28, fontWeight: "800", lineHeight: 35 },
   dayTitle: { color: "#0B1220" },
   subtitle: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginBottom: 18 },
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   gateButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "center" },
   sectionTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "800", lineHeight: 24, marginBottom: 10 },
   list: { gap: 10 },
-  meetupCard: { minHeight: 88, borderRadius: 18, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "center", padding: 10 },
+  meetupCard: { minHeight: 88, borderRadius: 18, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "flex-start", padding: 10 },
   emojiBox: { width: 64, height: 64, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   emoji: { fontSize: 29 },
   cardBody: { flex: 1, minWidth: 0, paddingHorizontal: 11 },

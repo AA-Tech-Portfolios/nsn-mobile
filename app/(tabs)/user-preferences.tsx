@@ -938,7 +938,7 @@ export default function UserPreferencesScreen() {
         <Text style={[styles.chipText, isDay && styles.dayTitle, active && styles.activeText]}>
           {chipLabel}
         </Text>
-        {meta ? <Text style={[styles.chipMeta, isDay && styles.dayMutedText, active && styles.activeText]} numberOfLines={2}>{meta}</Text> : null}
+        {meta ? <Text style={[styles.chipMeta, isDay && styles.dayMutedText, active && styles.activeText]}>{meta}</Text> : null}
       </TouchableOpacity>
     );
   };
@@ -1068,7 +1068,7 @@ export default function UserPreferencesScreen() {
           )}
           <View style={styles.cardBody}>
             <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{title}</Text>
-            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]} numberOfLines={!isWide && !mobileOpen ? 2 : undefined}>
+            <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
               {copy}
             </Text>
           </View>
@@ -1326,7 +1326,7 @@ export default function UserPreferencesScreen() {
                 <View style={styles.cardBody}>
                   <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{item.title}</Text>
                   <Text style={[styles.overviewValue, isDay && styles.dayTitle]}>{item.copy}</Text>
-                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]} numberOfLines={!isWide ? 2 : undefined}>{getOverviewCardMeta(item)}</Text>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{getOverviewCardMeta(item)}</Text>
                 </View>
                 <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={21} />
               </TouchableOpacity>
@@ -2632,13 +2632,13 @@ export default function UserPreferencesScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 128, gap: 14 },
+  content: { paddingHorizontal: 18, paddingTop: 10, paddingBottom: 144, gap: 14 },
   contentWide: { width: "100%", maxWidth: 1220, alignSelf: "center", paddingHorizontal: 24, paddingTop: 18 },
-  topActions: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  topActions: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)" },
   dayIconButton: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
-  secondaryButton: { minHeight: 40, borderRadius: 14, borderWidth: 1, borderColor: "#5A6EA5", backgroundColor: "rgba(85, 111, 186, 0.2)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 14 },
-  secondaryButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  secondaryButton: { minHeight: 40, maxWidth: "100%", borderRadius: 14, borderWidth: 1, borderColor: "#5A6EA5", backgroundColor: "rgba(85, 111, 186, 0.2)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 14, flexShrink: 1 },
+  secondaryButtonText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
   headerCard: { borderRadius: 20, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 18, gap: 13, flexDirection: "row", alignItems: "flex-start", flexWrap: "wrap" },
   headerIcon: { fontSize: 34, lineHeight: 42 },
   headerText: { flex: 1, minWidth: 240, gap: 4 },
@@ -2654,15 +2654,15 @@ const styles = StyleSheet.create({
   navPillText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   overviewGrid: { gap: 12 },
   overviewGridWide: { flexDirection: "row", flexWrap: "wrap" },
-  overviewCard: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 12, flexDirection: "row", alignItems: "flex-start" },
-  overviewCardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 320 },
+  overviewCard: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 12, flexDirection: "row", alignItems: "flex-start", minWidth: 0 },
+  overviewCardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 0 },
   overviewIcon: { fontSize: 27, lineHeight: 34 },
   overviewValue: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginTop: 2 },
   preferenceStack: { gap: 14 },
   cardGrid: { gap: 14 },
   cardGridWide: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start" },
   card: { borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 15, gap: 13 },
-  cardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 320 },
+  cardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 320, minWidth: 0 },
   fullWidthCard: { flexBasis: "100%", minWidth: "100%" },
   mobileStackCard: { width: "100%", minWidth: "100%", alignSelf: "stretch" },
   cardHeader: { flexDirection: "row", alignItems: "flex-start", gap: 11 },
@@ -2677,11 +2677,11 @@ const styles = StyleSheet.create({
   interestComfortTabRow: { width: "100%", flexDirection: "row", flexWrap: "wrap", gap: 8, paddingBottom: 2, overflow: "visible" },
   interestComfortTabChip: { flexShrink: 1 },
   interestComfortModifierGrid: { width: "100%", overflow: "visible" },
-  chip: { minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "flex-start", justifyContent: "center", paddingHorizontal: 12, paddingVertical: 8, maxWidth: "100%" },
+  chip: { minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "flex-start", justifyContent: "center", paddingHorizontal: 12, paddingVertical: 8, maxWidth: "100%", flexShrink: 1 },
   chipWide: { flexBasis: 160, flexGrow: 1, flexShrink: 1 },
   chipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
-  chipText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  chipMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "700", lineHeight: 16, marginTop: 2 },
+  chipText: { minWidth: 0, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  chipMeta: { minWidth: 0, color: nsnColors.muted, fontSize: 11, fontWeight: "700", lineHeight: 16, marginTop: 2 },
   inlinePreferenceStack: { gap: 10 },
   inlinePreferenceGroup: { borderRadius: 15, borderWidth: 1, borderColor: "#3C5277", backgroundColor: "rgba(255,255,255,0.025)", padding: 12, gap: 9 },
   inlinePreferenceTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
@@ -2700,8 +2700,8 @@ const styles = StyleSheet.create({
   countBadge: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 16, borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: "rgba(255,255,255,0.055)" },
   notice: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
   showMoreButton: { minHeight: 38, alignSelf: "flex-start", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
-  optionCard: { minHeight: 88, borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, flexDirection: "row", alignItems: "center", gap: 13, padding: 14 },
-  optionCardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 300 },
+  optionCard: { minHeight: 88, borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, flexDirection: "row", alignItems: "flex-start", gap: 13, padding: 14, minWidth: 0 },
+  optionCardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0 },
   optionCardActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   optionEmoji: { width: 34, fontSize: 24, lineHeight: 30, textAlign: "center" },
   optionTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },

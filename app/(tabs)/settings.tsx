@@ -5680,6 +5680,7 @@ const styles = StyleSheet.create({
   },
   quickJumpButton: {
     minHeight: 36,
+    maxWidth: "100%",
     borderRadius: 18,
     borderWidth: 1,
     borderColor: nsnColors.border,
@@ -5689,16 +5690,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 6,
     paddingHorizontal: 13,
+    paddingVertical: 7,
+    flexShrink: 1,
   },
   dayQuickJumpButton: {
     backgroundColor: "#EEF3F4",
     borderColor: "#C5D0DA",
   },
   quickJumpText: {
+    flexShrink: 1,
+    minWidth: 0,
     color: "#7786FF",
     fontSize: 12,
     fontWeight: "900",
     lineHeight: 17,
+    textAlign: "center",
   },
   accordionQuickActions: {
     flexDirection: "row",
@@ -5739,7 +5745,7 @@ const styles = StyleSheet.create({
   accordionHeader: {
     minHeight: 74,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -5753,6 +5759,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.04)",
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
   accordionTitle: {
     color: nsnColors.text,
@@ -5768,9 +5775,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   accordionState: {
-    minWidth: 68,
+    minWidth: 0,
+    flexShrink: 1,
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "flex-end",
     gap: 5,
   },
@@ -5838,6 +5846,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     paddingHorizontal: 12,
     paddingVertical: 10,
+    minWidth: 0,
   },
   settingsInlineSwitchRow: {
     minHeight: 68,
@@ -6030,6 +6039,7 @@ const styles = StyleSheet.create({
   },
   settingCopy: {
     flex: 1,
+    minWidth: 0,
   },
   settingMetaRow: {
     flexDirection: "row",
