@@ -19,6 +19,7 @@ import { getHomePreferenceDisclosure } from "@/lib/progressive-disclosure";
 import { getHomeFitToScreenPreset, getHomeLayoutPreset, homeLayoutPreferenceRoles, shouldUseHomeFitToScreen } from "@/lib/home-layout-presets";
 import { getHomeEventPreviewAsset, type HomeEventPreviewAssetKey } from "@/lib/home-event-preview-assets";
 import { getHomeTodayContextLabel } from "@/lib/home-header-context";
+import { getMeetupEmptyStateCopy } from "@/lib/meetup-empty-state";
 import {
   askAboutMeetupQuestionGroups,
   arrivingAloneReassuranceItems,
@@ -1467,6 +1468,11 @@ export default function HomeScreen() {
   const displayedEvents = isMeetupSearch ? matchingMeetups : activeEvents.slice(0, recommendedEventLimit);
   const hasNoMeetupSearchResults = isMeetupSearch && matchingMeetups.length === 0;
   const hasNoFilteredEvents = !isMeetupSearch && activeEvents.length === 0;
+  const meetupEmptyStateCopy = getMeetupEmptyStateCopy({
+    hour: now.getHours(),
+    mode,
+    reason: hasNoMeetupSearchResults ? "search" : hasNoFilteredEvents ? "filtered" : "no-active-events",
+  });
   const selectedMapEvent = displayedEvents.find((event) => event.id === highlightedEventId) ?? displayedEvents[0] ?? activeEvents[0] ?? allEvents[0];
   const selectedMapEventCopy = selectedMapEvent ? { ...selectedMapEvent, ...(eventTranslations[appLanguageBase]?.[selectedMapEvent.id] ?? {}) } : null;
   const selectedMapEventIndex = selectedMapEvent ? displayedEvents.findIndex((event) => event.id === selectedMapEvent.id) : -1;
@@ -2720,10 +2726,13 @@ export default function HomeScreen() {
             {hasNoMeetupSearchResults || hasNoFilteredEvents ? (
               <View style={[styles.searchEmptyCard, homeLayoutUtilityCardStyle, isDay && styles.dayLocationResultButton]}>
                 <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
-                  {hasNoFilteredEvents && activeFilter !== "All" ? "No matching meetups in this category yet." : "No matching meetups right now."}
+                  {meetupEmptyStateCopy.title}
                 </Text>
                 <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  {hasNoFilteredEvents && activeFilter !== "All" ? "Try another filter — NSN is still an early prototype." : "Try relaxing a filter - NSN is still an early prototype."}
+                  {meetupEmptyStateCopy.copy}
+                </Text>
+                <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  {meetupEmptyStateCopy.suggestion}
                 </Text>
               </View>
             ) : null}
@@ -3512,9 +3521,12 @@ export default function HomeScreen() {
             ) : null}
             {hasNoMeetupSearchResults ? (
               <View style={[styles.searchEmptyCard, homeLayoutUtilityCardStyle, isDay && styles.dayLocationResultButton]}>
-                <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching meetups yet.</Text>
+                <Text style={[styles.locationResultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{meetupEmptyStateCopy.title}</Text>
                 <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Try another suburb, region, or activity - NSN is still an early local prototype.
+                  {meetupEmptyStateCopy.copy}
+                </Text>
+                <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  {meetupEmptyStateCopy.suggestion}
                 </Text>
               </View>
             ) : null}

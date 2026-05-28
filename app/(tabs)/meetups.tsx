@@ -6,6 +6,7 @@ import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { getGuideTipForSurface } from "@/lib/guides-and-tips";
+import { getMeetupEmptyStateCopy } from "@/lib/meetup-empty-state";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
 import { canChatPrivately, getEffectivePrototypeVerificationLevel, getEventMembership, getEventTrustSummary, getRsvpLabel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
@@ -222,6 +223,11 @@ export default function MeetupsScreen() {
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canUseMeetups = canChatPrivately(effectiveVerificationLevel);
   const guideTip = getGuideTipForSurface("meetups");
+  const timingCopy = getMeetupEmptyStateCopy({
+    hour: new Date().getHours(),
+    mode: isNightMode ? "night" : "day",
+    reason: "no-active-events",
+  });
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -237,6 +243,13 @@ export default function MeetupsScreen() {
           <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
             Browse the demo meetup cards, open event details, and notice whether the plan feels low-pressure. Joining, trust gates, and private meetup access are prototype states for now.
           </Text>
+        </View>
+
+        <View style={[styles.timingCard, isDay && styles.dayCard]}>
+          <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Local alpha timing</Text>
+          <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>{timingCopy.title}</Text>
+          <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>{timingCopy.copy}</Text>
+          <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>{timingCopy.suggestion}</Text>
         </View>
 
         {!canUseMeetups ? (
@@ -304,6 +317,7 @@ const styles = StyleSheet.create({
   summaryButton: { alignSelf: "flex-start", backgroundColor: nsnColors.primary, borderRadius: 15, paddingHorizontal: 16, paddingVertical: 9 },
   summaryButtonText: { color: nsnColors.text, fontWeight: "800", fontSize: 13 },
   alphaGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
+  timingCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", padding: 14, marginBottom: 14 },
   alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
   alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },

@@ -912,10 +912,11 @@ export default function EventDetailsScreen() {
   const membership = getEventMembership(event.id, eventMemberships);
   const canOpenMeetupChat = shouldOpenMeetupChat(membership.status);
   const rsvpChoices: { status: EventMembershipStatus; label: string }[] = [
-    { status: "interested", label: "Interested" },
     { status: "going", label: "Going" },
-    { status: "not_this_time", label: "Not this time" },
-    { status: "left", label: "Left plan" },
+    { status: "interested", label: "Interested" },
+    { status: "deciding_later", label: "Deciding later" },
+    { status: "running_late", label: "Running late" },
+    { status: "unable", label: "Unable to make it" },
     { status: "none", label: "Clear" },
   ];
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
@@ -1791,7 +1792,7 @@ export default function EventDetailsScreen() {
             </Text>
           </View>
           <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Prototype only: this RSVP is saved locally on this device. It does not reserve a real spot or notify a host.
+            Prototype only: this RSVP is saved locally on this device. It does not reserve a real spot, notify a host, or change the meetup plan.
           </Text>
           <Text style={[styles.rsvpDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getRsvpDescription(membership.status)}</Text>
           <View style={styles.rsvpActions}>

@@ -11,7 +11,16 @@ export type TrustEvidence = {
   hasIdentityDocument?: boolean;
 };
 
-export type EventMembershipStatus = "none" | "interested" | "going" | "not_this_time" | "left" | "joined";
+export type EventMembershipStatus =
+  | "none"
+  | "interested"
+  | "going"
+  | "deciding_later"
+  | "running_late"
+  | "unable"
+  | "not_this_time"
+  | "left"
+  | "joined";
 
 export type EventMembership = {
   eventId: string;
@@ -288,6 +297,9 @@ export function getEventMembership(eventId: string, memberships: EventMembership
 export function getRsvpLabel(status: EventMembershipStatus) {
   if (status === "interested") return "Interested";
   if (status === "going" || status === "joined") return "Going";
+  if (status === "deciding_later") return "Deciding later";
+  if (status === "running_late") return "Running late";
+  if (status === "unable") return "Unable to make it";
   if (status === "not_this_time") return "Not this time";
   if (status === "left") return "Left plan";
 
@@ -297,6 +309,9 @@ export function getRsvpLabel(status: EventMembershipStatus) {
 export function getRsvpDescription(status: EventMembershipStatus) {
   if (status === "interested") return "This RSVP is saved on this device only. You can decide later without joining the meetup chat.";
   if (status === "going" || status === "joined") return "Marked as going on this device. Meetup chat opens as a prototype preview.";
+  if (status === "deciding_later") return "Saved locally as deciding later, without pressure to join or explain yet.";
+  if (status === "running_late") return "Saved locally as running late. This does not notify a host or change the meetup plan.";
+  if (status === "unable") return "Saved locally as unable to make it. This does not send a cancellation or notify anyone.";
   if (status === "not_this_time") return "This plan is marked as not for you this time. You can change it later.";
   if (status === "left") return "You left this local plan preview. You can still choose another RSVP state.";
 

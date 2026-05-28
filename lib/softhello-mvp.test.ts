@@ -116,9 +116,27 @@ describe("SoftHello MVP domain rules", () => {
       "not_this_time",
       "2026-05-07T02:00:00.000Z",
     );
-    const cleared = setEventRsvpStatus(
+    const decidingLater = setEventRsvpStatus(
       "movie-night-watch-chat",
       notThisTime,
+      "deciding_later",
+      "2026-05-07T02:20:00.000Z",
+    );
+    const runningLate = setEventRsvpStatus(
+      "movie-night-watch-chat",
+      decidingLater,
+      "running_late",
+      "2026-05-07T02:40:00.000Z",
+    );
+    const unable = setEventRsvpStatus(
+      "movie-night-watch-chat",
+      runningLate,
+      "unable",
+      "2026-05-07T02:50:00.000Z",
+    );
+    const cleared = setEventRsvpStatus(
+      "movie-night-watch-chat",
+      unable,
       "none",
       "2026-05-07T03:00:00.000Z",
     );
@@ -138,6 +156,9 @@ describe("SoftHello MVP domain rules", () => {
       status: "not_this_time",
       leftAt: undefined,
     });
+    expect(decidingLater[0]).toMatchObject({ status: "deciding_later" });
+    expect(runningLate[0]).toMatchObject({ status: "running_late" });
+    expect(unable[0]).toMatchObject({ status: "unable" });
     expect(cleared[0]).toMatchObject({ eventId: "movie-night-watch-chat", status: "none" });
   });
 
@@ -145,12 +166,19 @@ describe("SoftHello MVP domain rules", () => {
     expect(getRsvpLabel("none")).toBe("No RSVP yet");
     expect(getRsvpLabel("interested")).toBe("Interested");
     expect(getRsvpLabel("going")).toBe("Going");
+    expect(getRsvpLabel("deciding_later")).toBe("Deciding later");
+    expect(getRsvpLabel("running_late")).toBe("Running late");
+    expect(getRsvpLabel("unable")).toBe("Unable to make it");
     expect(getRsvpLabel("not_this_time")).toBe("Not this time");
     expect(getRsvpLabel("left")).toBe("Left plan");
     expect(getRsvpDescription("interested")).toContain("saved on this device");
+    expect(getRsvpDescription("deciding_later")).toContain("without pressure");
+    expect(getRsvpDescription("running_late")).toContain("does not notify a host");
+    expect(getRsvpDescription("unable")).toContain("does not send a cancellation");
     expect(shouldOpenMeetupChat("going")).toBe(true);
     expect(shouldOpenMeetupChat("joined")).toBe(true);
     expect(shouldOpenMeetupChat("interested")).toBe(false);
+    expect(shouldOpenMeetupChat("running_late")).toBe(false);
   });
 
   it("keeps block state private and idempotent", () => {
