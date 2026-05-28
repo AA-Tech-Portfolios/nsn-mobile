@@ -4,6 +4,207 @@
 
 NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, small-group social meetups. The alpha should prioritise calm onboarding, tester-friendly UX, progressive privacy controls, comfort settings, and broad local-area discovery without overpromising production safety, verification, backend trust, or real authentication. SoftHello remains the future/global product direction after the local pilot has been validated.
 
+## Difficulty Labels
+
+- 🟢 Easy: frontend-only polish, copy, layout, local state, screenshots, small UI fixes
+- 🟡 Medium: multi-screen UX, local flows, reusable components, more involved state
+- 🟠 Hard: backend/auth/database, verification, map APIs, production trust/safety systems
+- 🔴 Future / Planning only: ideas that should stay as notes until alpha feedback or legal/privacy review
+
+## Difficulty-Labelled Alpha Buckets
+
+These labels are a prioritisation pass for the outstanding backlog. They do not approve backend/auth work, production trust systems, emergency tooling, payments, AI agents, or large navigation rewrites.
+
+### 🟢 Easy Alpha Polish
+
+- [ ] 🟢 Regenerate stale checkpoint screenshots after the May 17 mobile fixes and alpha UX cleanup, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
+- [ ] 🟢 Review onboarding calmness and clarity so NSN reads as a local Sydney/North Shore alpha, not a production matching, safety, or verification system
+- [ ] 🟢 Review Settings & Privacy prototype wording so local-only, demo, coming-soon, saved-locally, and prototype verification copy feels clear without sounding alarming
+- [ ] 🟢 Review text wrapping on mobile for titles, descriptions, location text, and important card copy
+- [ ] 🟢 Review bottom-nav spacing so chat composers, scroll views, modals, and card lists sit above the tab bar/home indicator without excessive empty space
+- [ ] 🟢 Add empty-state timing messages for no active events, sleeping time, and quiet hours
+- [ ] 🟢 Add README screenshots or mockups for the home screen, blur settings, profile privacy, and meetups page
+- [ ] 🟢 Keep checkpoint screenshots current for core tabs, Settings & Privacy, and onboarding stages after major UI changes
+- [ ] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
+
+### 🟡 Medium Local UX Flows
+
+- [ ] 🟡 Add gentle RSVP states such as coming, interested, deciding later, needing encouragement, running late, or unable to make it
+- [ ] 🟡 Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
+- [ ] 🟡 Add interactive tutorials for privacy, preview visibility, comfort modes, and key meetup flows
+- [ ] 🟡 Add opt-out and group-change flows that reassure users it is okay to skip, leave, find a better-suited group, or create their own
+- [ ] 🟡 Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
+- [ ] 🟡 Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
+
+### 🟠 Hard / Not Alpha Implementation Scope
+
+- [ ] 🟠 Add 18+ compliance copy and safeguards beyond local age entry
+- [ ] 🟠 Decide the real verification provider strategy and UX handoff before claiming production verification
+- [ ] 🟠 Use `docs/database-auth-planning.md` to guide staged database/auth planning before replacing local prototype state or collecting live personal data
+- [ ] 🟠 Add a real trust-state backend before treating verification or privacy gates as production systems
+- [ ] 🟠 Continue suburb/locality refinement with an API-backed or maintained Australian locality dataset
+- [ ] 🟠 Add real Sydney/OpenStreetMap integration with proper attribution and no paid map-key dependency
+- [ ] 🟠 Add lightweight transportation and routing support with nearby stops, estimated travel time, suggested arrival windows, selected-event map focus, and links out to maps
+- [ ] 🟠 Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
+
+### 🔴 Future / Planning Only
+
+- [ ] 🔴 Future optional concept: explore Care & Connections as a friendship-first layer for recurring, interest-based small community circles after alpha feedback
+- [ ] 🔴 Future community culture concept: explore Gentle Belonging and Cupcake Moments in `docs/community-support-vision.md`
+- [ ] 🔴 Future event detail display planning only: explore a Quick view / Detailed view toggle after section state, accessibility expectations, and tester feedback are clearer
+- [ ] 🔴 Future Guides & Tips preferences, planning only: explore Minimal, Gentle guidance, and Detailed onboarding modes
+- [ ] 🔴 Later safety/legal review: optional trusted contacts, discreet emergency help, check-in timers, share-my-meetup-plan controls, location-sharing safeguards, region-aware emergency resources, crisis links, and abuse-prevention rules
+- [ ] 🔴 Future QR/invite trust planning only: explore QR code meetup joining, invite links, introduced guest context, and host/admin controls without implementing backend, auth, permissions, moderation, real QR generation, or trust automation
+- [ ] 🔴 Future co-host permissions planning only: explore helper roles without framing them as authority, moderation, verification, or safety-enforcement roles
+- [ ] 🔴 Explore an optional AI assistant only after alpha feedback, and keep it separate from human support, safety reporting, verification, emergency flows, backend storage, notifications, analytics, or autonomous actions
+- [ ] 🔴 Post-pilot: evaluate transition toward SoftHello branding based on demand, testing, and regional expansion
+
+## Recommended Next Implementation Queue
+
+These are the safest near-term alpha tasks. They should remain frontend-only/local-only and should avoid backend/auth, real verification, production moderation, emergency tooling, payments, AI agents, or navigation rewrites.
+
+1. **Refresh checkpoint screenshots**  
+   **Difficulty:** 🟢 Easy  
+   **Why it matters for alpha:** Keeps the visible product record aligned with the current mobile fixes and reduces confusion during tester walkthroughs.  
+   **Suggested files:** `scripts/capture-checkpoint-screenshots.mjs`, `screenshots/checkpoint/*`, `docs/alpha-tester-guide.md`, `README.md`  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, then visually review changed screenshots
+
+2. **Calm onboarding wording pass**  
+   **Difficulty:** 🟢 Easy  
+   **Why it matters for alpha:** Helps testers understand NSN as a small Sydney/North Shore prototype without implying production matching, safety, or verification.  
+   **Suggested files:** `app/onboarding.tsx`, `lib/onboarding-snapshot.ts`, `docs/alpha-tester-guide.md`  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, mobile onboarding smoke test
+
+3. **Prototype-safe Settings & Privacy copy pass**  
+   **Difficulty:** 🟢 Easy  
+   **Why it matters for alpha:** Makes local-only, demo, coming-soon, saved-locally, and prototype verification wording reassuring instead of alarming.  
+   **Suggested files:** `app/(tabs)/settings.tsx`, `lib/settings-controls.ts`, `components/prototype-local-note.tsx`  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, mobile Settings & Privacy smoke test
+
+4. **Mobile text wrapping audit**  
+   **Difficulty:** 🟢 Easy  
+   **Why it matters for alpha:** Prevents clipped titles, locations, descriptions, badges, and action text from making the app feel unfinished.  
+   **Suggested files:** `app/(tabs)/index.tsx`, `app/(tabs)/meetups.tsx`, `app/event/[id].tsx`, `app/(tabs)/profile.tsx`  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, small-iPhone smoke test
+
+5. **Bottom-nav spacing polish**  
+   **Difficulty:** 🟢 Easy  
+   **Why it matters for alpha:** Keeps cards, composers, modals, and buttons reachable without creating awkward empty space.  
+   **Suggested files:** `app/(tabs)/_layout.tsx`, `components/screen-container.tsx`, `app/(tabs)/chats.tsx`, `app/(tabs)/index.tsx`, `app/(tabs)/meetups.tsx`  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, mobile tab smoke test
+
+6. **Gentle empty states for quiet times**  
+   **Difficulty:** 🟢 Easy  
+   **Why it matters for alpha:** Helps no-event, sleeping-time, and quiet-hour states feel intentional rather than broken.  
+   **Suggested files:** `app/(tabs)/index.tsx`, `app/(tabs)/meetups.tsx`, `lib/nsn-data.ts`, `lib/home-view-filters.ts`  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, empty-state visual smoke test
+
+7. **Gentle RSVP state prototype**  
+   **Difficulty:** 🟡 Medium  
+   **Why it matters for alpha:** Lets testers express interest without binary pressure, while staying local-only and reversible.  
+   **Suggested files:** `app/event/[id].tsx`, `app/(tabs)/meetups.tsx`, `lib/nsn-data.ts`, possible focused test file under `lib/*test.ts` if state helpers are extracted  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, RSVP interaction smoke test
+
+8. **Running late / cannot make it wording review**  
+   **Difficulty:** 🟢 Easy  
+   **Why it matters for alpha:** Keeps attendance changes low-pressure and kind without implying live notifications or backend delivery.  
+   **Suggested files:** `app/(tabs)/chats.tsx`, `app/event/[id].tsx`, `lib/nsn-data.ts`  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, chat/event detail smoke test
+
+9. **Profile/User Options grouping clarity pass**  
+   **Difficulty:** 🟡 Medium  
+   **Why it matters for alpha:** Reduces duplicate concepts across Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings.  
+   **Suggested files:** `app/(tabs)/profile.tsx`, `app/(tabs)/user-preferences.tsx`, `lib/profile-menu-row-metadata.ts`, `lib/options-hub.ts`  
+   **Scope:** frontend-only/local-only  
+   **Checks:** `pnpm check`, `pnpm test`, mobile drawer smoke test
+
+10. **Alpha walkthrough checklist copy refresh**  
+    **Difficulty:** 🟢 Easy  
+    **Why it matters for alpha:** Gives trusted testers a clearer path through privacy, comfort, meetup browsing, profile review, and demo-only safety language.  
+    **Suggested files:** `docs/alpha-tester-guide.md`, `docs/alpha-tester-feedback-checklist.md`, `app/(tabs)/alpha-walkthrough.tsx`  
+    **Scope:** documentation/frontend-only/local-only  
+    **Checks:** `pnpm check`, `pnpm test`, read-through for prototype-safe claims
+
+11. **README screenshot/mockup update**  
+    **Difficulty:** 🟢 Easy  
+    **Why it matters for alpha:** Makes the repository presentation match the current NSN direction and helps future review sessions start with the right expectations.  
+    **Suggested files:** `README.md`, `screenshots/home-web-mobile.png`, `screenshots/home-web-desktop.png`, `screenshots/checkpoint/*`  
+    **Scope:** documentation/frontend-only/local-only  
+    **Checks:** `pnpm check`, `pnpm test`, README render/read-through
+
+12. **Community Guidelines visibility check**  
+    **Difficulty:** 🟢 Easy  
+    **Why it matters for alpha:** Ensures photo/video consent and privacy reminders are visible without feeling heavy or corporate.  
+    **Suggested files:** `app/event/[id].tsx`, `app/(tabs)/settings.tsx`, `lib/community-support-resources.ts`, `docs/alpha-tester-guide.md`  
+    **Scope:** frontend-only/local-only  
+    **Checks:** `pnpm check`, `pnpm test`, event detail and Settings smoke test
+
+13. **Home density readability pass**  
+    **Difficulty:** 🟢 Easy  
+    **Why it matters for alpha:** Keeps Compact, Comfortable, and Spacious modes useful without making Home feel overloaded.  
+    **Suggested files:** `app/(tabs)/index.tsx`, `lib/home-layout-presets.ts`, `lib/home-view-filters.ts`, `lib/home-header-context.ts`  
+    **Scope:** frontend-only/local-only  
+    **Checks:** `pnpm check`, `pnpm test`, desktop/mobile density smoke test
+
+14. **Prototype badge consistency review**  
+    **Difficulty:** 🟢 Easy  
+    **Why it matters for alpha:** Keeps Demo, Coming soon, Saved locally, and Prototype labels consistent so testers do not mistake local controls for live systems.  
+    **Suggested files:** `app/(tabs)/settings.tsx`, `app/(tabs)/profile.tsx`, `app/event/[id].tsx`, `components/prototype-local-note.tsx`  
+    **Scope:** frontend-only/local-only  
+    **Checks:** `pnpm check`, `pnpm test`, copy audit for production-sounding claims
+
+15. **Tester feedback prompt tidy-up**  
+    **Difficulty:** 🟢 Easy  
+    **Why it matters for alpha:** Makes feedback easier to give around comfort, clarity, privacy, text wrapping, and low-pressure meetup flow.  
+    **Suggested files:** `docs/alpha-tester-feedback-checklist.md`, `app/(tabs)/alpha-walkthrough.tsx`  
+    **Scope:** documentation/frontend-only/local-only  
+    **Checks:** `pnpm check`, `pnpm test`, read-through against alpha tone
+
+## Future Website Planning
+
+This is a post-alpha or near-alpha planning note only. Do not implement a website, waitlist backend, analytics, marketing automation, production safety claims, verification claims, matching claims, payment flows, or emergency claims from this section.
+
+- [ ] 🔴 Plan a simple landing page that introduces North Shore Nights as a Sydney/North Shore alpha for low-pressure, small-group social meetups
+- [ ] 🔴 Explain that SoftHello is the future/global direction, while NSN is the local learning pilot
+- [ ] 🔴 Include current screenshots or mockups so testers can understand the product before installing or joining a walkthrough
+- [ ] 🔴 Write a short privacy/trust philosophy in plain language: local prototype, minimal pressure, careful disclosure, no production verification claims
+- [ ] 🔴 Add a tester/waitlist/contact section only when there is a clear privacy-safe way to collect or route interest
+- [ ] 🔴 Use clear prototype/alpha wording throughout, including what is local-only or demo-only
+- [ ] 🔴 Avoid claims about production safety, real identity verification, matching quality, emergency support, moderation coverage, payment handling, or automated trust decisions
+- [ ] 🔴 Keep the first version small: landing page, product explanation, screenshots/mockups, privacy/trust note, tester/contact path, and SoftHello direction
+
+## Social Handle Reservation Checklist
+
+This is brand protection and future discoverability planning only. Reserving handles is separate from launching public marketing. For now, the goal is not audience growth, posting automation, or social media operations.
+
+Platforms to consider later:
+
+- [ ] 🔴 Instagram
+- [ ] 🔴 Facebook Page
+- [ ] 🔴 TikTok
+- [ ] 🔴 YouTube
+- [ ] 🔴 X/Twitter
+- [ ] 🔴 LinkedIn Page
+- [ ] 🔴 Threads
+- [ ] 🔴 Domain names
+
+Names to consider:
+
+- [ ] 🔴 NorthShoreNights
+- [ ] 🔴 NorthShoreNightsAU
+- [ ] 🔴 NSNApp
+- [ ] 🔴 NSNSydney
+- [ ] 🔴 SoftHello
+- [ ] 🔴 SoftHelloApp
+
 ## Immediate Alpha Priorities
 
 - [x] Run a rendered mobile drawer smoke test on device or Expo web after dependency/type checks, focusing on drawer scrolling, close behaviour, and long label wrapping
@@ -13,8 +214,8 @@ NSN is currently focused on a Sydney/North Shore alpha pilot for low-pressure, s
 - [x] Create an alpha tester feedback checklist after the walkthrough has been exercised
 - [x] Continue button behaviour audit across Profile, Settings & Privacy, modal menus, disabled controls, and saved-locally actions
 - [x] Keep prototype-only account actions visible for alpha as local pause and deletion-preview controls, with calm wording that real deletion/auth/backends are not connected yet
-- [ ] Regenerate stale checkpoint screenshots after the May 17 mobile fixes and alpha UX cleanup, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
-- [ ] If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
+- [ ] 🟢 Regenerate stale checkpoint screenshots after the May 17 mobile fixes and alpha UX cleanup, especially `screenshots/checkpoint/01-home.png`, `screenshots/checkpoint/06-settings-privacy.png`, mobile Home density states, Profile User Options drawer, Settings & Privacy, and User Preferences
+- [ ] 🟢 If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
 
 ## Alpha Walkthrough Notes (May 2026)
 
@@ -202,15 +403,15 @@ These ideas are future planning notes only. Do not add API calls, backend implem
 
 ## Repository Presentation
 
-- [ ] Add README screenshots or mockups for the home screen, blur settings, profile privacy, and meetups page
-- [ ] Keep checkpoint screenshots current for core tabs, Settings & Privacy, and onboarding stages after major UI changes
+- [ ] 🟢 Add README screenshots or mockups for the home screen, blur settings, profile privacy, and meetups page
+- [ ] 🟢 Keep checkpoint screenshots current for core tabs, Settings & Privacy, and onboarding stages after major UI changes
 
 ## Brand & Operations
 
-- [ ] Post-pilot: evaluate transition toward SoftHello branding based on demand, testing, and regional expansion
-- [ ] Future platform roadmap, not current scope: explore an official website, Windows app, macOS app, and watchOS companion only after the mobile/web prototype, safety boundaries, and demand are clearer
-- [ ] Remove AI Expo related settings as the app develops
-- [ ] Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
+- [ ] 🔴 Post-pilot: evaluate transition toward SoftHello branding based on demand, testing, and regional expansion
+- [ ] 🔴 Future platform roadmap, not current scope: explore an official website, Windows app, macOS app, and watchOS companion only after the mobile/web prototype, safety boundaries, and demand are clearer
+- [ ] 🟢 Remove AI Expo related settings as the app develops
+- [ ] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
 
 ## Historical Milestones / Release Notes
 
