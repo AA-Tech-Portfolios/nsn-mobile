@@ -197,7 +197,7 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
   location: {
     icon: "📍",
     title: "Location Preference",
-    copy: "Keep your local area, discovery radius, and privacy signals easy to review.",
+    copy: "Keep your local area and privacy signals easy to review, with broad area discovery as the default.",
   },
 };
 
@@ -1015,8 +1015,9 @@ export default function UserPreferencesScreen() {
     if (title === "Location privacy and discovery") {
       return {
         values: [
-          useApproximateLocation ? "Approximate location" : "Precise location off",
+          useApproximateLocation ? "Approximate area default" : "Manual area only",
           showDistanceInMeetups ? "Distance visible" : "Distance hidden",
+          "No live sharing",
         ],
         fallback: "Review local discovery controls.",
       };
@@ -2507,16 +2508,16 @@ export default function UserPreferencesScreen() {
 
         {activeSection === "location" ? (
           <View style={styles.sectionStack}>
-            {renderSectionCard("Location Preference", "Choose the kinds of places and local areas that feel easiest for meetups.", "📍", (
+            {renderSectionCard("Location Preference", "Choose the kinds of places and broad local areas that feel easiest for meetups.", "📍", (
               <>
                 {renderSummary(locationComfortPreferences, "No location comfort preferences selected yet.")}
                 <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                  NSN recommends sharing broad location context first. Avoid sharing exact home, work, school, or routine locations.
+                  NSN recommends broad context first. Avoid sharing exact home, work, school, or routine locations.
                 </Text>
               </>
             ))}
             <View style={responsiveCardGridStyle}>
-              {renderSectionCard("Local Area", "Your suburb or local area is used as a gentle prototype signal for nearby plans.", "📍", (
+              {renderSectionCard("Local Area", "Your suburb or local area is used as a gentle prototype signal for nearby plans. Manual selection is valid.", "📍", (
                 <>
                   <Text style={[styles.locationValue, isDay && styles.dayTitle]}>{suburb || "Sydney North Shore"}</Text>
                   <TouchableOpacity activeOpacity={0.78} onPress={() => router.push("/location-preference" as never)} style={[styles.showMoreButton, isDay && styles.dayChip]} accessibilityRole="button" accessibilityLabel="Open local area editor">
@@ -2551,11 +2552,16 @@ export default function UserPreferencesScreen() {
                 </View>
               ))}
               {renderSectionCard("Location privacy and discovery", "These controls are prototype preference signals for local area display and nearby suggestions.", "🗺️", (
-                <View style={responsiveChipGridStyle}>
-                  {renderChip({ key: "show-area", label: "Show suburb/local area", active: showSuburbArea, onPress: () => saveSoftHelloMvpState({ showSuburbArea: !showSuburbArea }), wide: true })}
-                  {renderChip({ key: "approximate", label: "Use approximate location", active: useApproximateLocation, onPress: () => setUseApproximateLocation(!useApproximateLocation), wide: true })}
-                  {renderChip({ key: "distance", label: "Show distance in meetups", active: showDistanceInMeetups, onPress: () => setShowDistanceInMeetups(!showDistanceInMeetups), wide: true })}
-                  {renderChip({ key: "nearby", label: "Prefer nearby meetups", active: homeNearbyOnly, onPress: () => saveSoftHelloMvpState({ homeNearbyOnly: !homeNearbyOnly }), wide: true })}
+                <View style={styles.inlinePreferenceStack}>
+                  <View style={responsiveChipGridStyle}>
+                    {renderChip({ key: "show-area", label: "Show suburb/local area", active: showSuburbArea, onPress: () => saveSoftHelloMvpState({ showSuburbArea: !showSuburbArea }), wide: true })}
+                    {renderChip({ key: "approximate", label: "Use approximate area", active: useApproximateLocation, onPress: () => setUseApproximateLocation(!useApproximateLocation), wide: true })}
+                    {renderChip({ key: "distance", label: "Show approximate distance", active: showDistanceInMeetups, onPress: () => setShowDistanceInMeetups(!showDistanceInMeetups), wide: true })}
+                    {renderChip({ key: "nearby", label: "Prefer nearby meetups", active: homeNearbyOnly, onPress: () => saveSoftHelloMvpState({ homeNearbyOnly: !homeNearbyOnly }), wide: true })}
+                  </View>
+                  <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                    Exact live location is not shared with other users. Any future precise sharing should be optional, temporary, event-specific, and easy to stop.
+                  </Text>
                 </View>
               ))}
               {[

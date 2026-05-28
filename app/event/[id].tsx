@@ -1577,6 +1577,9 @@ export default function EventDetailsScreen() {
         {renderAccordionSection("arrival", "Arrival", "Where to meet and how the host can clarify the exact spot.", "location", (
           <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel, isRtl && styles.rtlBlock]}>
             <Text style={[styles.meetingCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventMeetingCopy}</Text>
+            <Text style={[styles.meetingCopy, styles.meetingPrivacyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              NSN uses broad local area details here. Future precise sharing should be opt-in, temporary, event-specific, and show who can see it, for how long, and how to stop it.
+            </Text>
           </View>
         ))}
 
@@ -1992,6 +1995,7 @@ const styles = StyleSheet.create({
   expectCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 1 },
   meetingPanel: { borderTopWidth: 1, borderColor: nsnColors.border, paddingTop: 14, marginTop: 2, marginBottom: 18 },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
+  meetingPrivacyCopy: { marginTop: 8, fontSize: 12, lineHeight: 18 },
   meetupSupportPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 10, marginBottom: 14 },
   guidancePanelTight: { marginBottom: 2 },
   meetupSupportHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },

@@ -16,7 +16,8 @@ const copyByLanguage = {
   English: {
     back: "Go back",
     title: "Location Preference",
-    copy: "Keep your local area and what you are here for up to date.",
+    copy: "Keep your local area and what you are here for up to date. A manually chosen suburb is enough for this prototype.",
+    privacyNote: "NSN uses broad local area discovery by default. No continuous background location is connected here.",
     suburbLabel: "Suburb or local area",
     suburbPlaceholder: "Chatswood",
     recognised: "Recognised:",
@@ -215,6 +216,7 @@ export default function LocationPreferenceScreen() {
         <View style={[styles.headerCard, { borderRadius: preferenceLayout.cardRadius, padding: preferenceLayout.cardPadding }, isDay && styles.dayCard]}>
           <Text style={[styles.title, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.title}</Text>
           <Text style={[styles.copy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.copy}</Text>
+          <Text style={[styles.copy, styles.privacyNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{locationCopy.privacyNote}</Text>
         </View>
 
         <View style={[styles.summaryCard, { borderRadius: preferenceLayout.cardRadius, padding: preferenceLayout.cardPadding }, isDay && styles.dayCard]}>
@@ -330,6 +332,7 @@ const styles = StyleSheet.create({
   headerCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16 },
   title: { color: nsnColors.text, fontSize: 26, fontWeight: "900", lineHeight: 32 },
   copy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 6 },
+  privacyNote: { fontSize: 12, lineHeight: 18, opacity: 0.9 },
   summaryCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 14 },
   summaryLabel: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 17, textTransform: "uppercase" },
   summaryText: { color: nsnColors.text, fontSize: 15, fontWeight: "800", lineHeight: 22, marginTop: 4 },

@@ -439,6 +439,9 @@ export default function OnboardingScreen() {
             <View>
               <Text style={[styles.label, isDay && styles.dayTitle]}>Usual suburb or area</Text>
               <TextInput value={suburb} onChangeText={updateSuburb} placeholder="Chatswood" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.input, isDay && styles.dayInput]} />
+              <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+                Manual suburb selection is okay. NSN uses broad local context by default, not continuous background location.
+              </Text>
               {localitySuggestions.length ? (
                 <View style={[styles.localityList, isDay && styles.dayCard]}>
                   {localitySuggestions.map((locality) => (
@@ -512,7 +515,7 @@ export default function OnboardingScreen() {
                 {blurLevels.map((level) => <Choice key={level} label={level} active={blurLevel === level} isDay={isDay} onPress={() => setBlurLevel(level)} />)}
               </View>
             </View>
-            <ToggleRow label="Show suburb / area" copy="Use a local area, never your precise location." value={showSuburbArea} onPress={() => setShowSuburbArea((current) => !current)} isDay={isDay} />
+            <ToggleRow label="Show suburb / area" copy="Share a broad local area only. Exact live location is not shared with other users." value={showSuburbArea} onPress={() => setShowSuburbArea((current) => !current)} isDay={isDay} />
             <ToggleRow label="Show middle name" copy="Only available if you entered an optional middle name." value={Boolean(middleName.trim() && showMiddleName)} onPress={() => setShowMiddleName((current) => !current)} isDay={isDay} />
             <ToggleRow label="Show last name" copy="Only available if you entered an optional last name." value={Boolean(lastName.trim() && showLastName)} onPress={() => setShowLastName((current) => !current)} isDay={isDay} />
             <ToggleRow label="Show age" copy="Let others see your age in the preview." value={showAge} onPress={() => setShowAge((current) => !current)} isDay={isDay} />

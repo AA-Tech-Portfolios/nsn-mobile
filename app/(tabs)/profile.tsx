@@ -6713,8 +6713,8 @@ export default function ProfileScreen() {
                 <Text style={[styles.visibilityModeTitle, styles.leftAlignedTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Local Area</Text>
                 <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                   {comfortMode === "Open Mode"
-                    ? "Used for local events and shown when your visibility setting allows it."
-                    : "Used for local matching. You control whether it appears in the preview."}
+                    ? "Used as broad local context and shown when your visibility setting allows it."
+                    : "Used as broad local context. You control whether it appears in the preview."}
                 </Text>
               </View>
               <Text style={styles.editText} onPress={toggleSuburbEditing}>
@@ -6732,7 +6732,7 @@ export default function ProfileScreen() {
                 autoFocus
                 limit={7}
                 placeholder="Search suburb or region..."
-                promptCopy="Search and select a suburb, region, or locality for your profile."
+                promptCopy="Search and select a suburb, region, or locality. Manual area selection is valid and does not share exact live location."
               />
             ) : (
               <Text style={[styles.localAreaValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{suburb || "Local area not set"}</Text>

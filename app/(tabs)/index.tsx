@@ -1614,8 +1614,8 @@ export default function HomeScreen() {
     setHeaderPlaceholder({
       title: `${area.resultType} set to ${area.label}`,
       copy: area.resultType === "Region"
-        ? "Region selected for prototype browsing. Weather and local prompts use a nearby Sydney fallback point."
-        : `Weather, local time, and nearby prompts now use the closest Sydney prototype point for ${area.label}.`,
+        ? "Region selected for prototype browsing. Weather and local prompts use broad Sydney-area fallback data without background updates."
+        : `Weather, local time, and nearby prompts now use broad prototype context for ${area.label}.`,
     });
   };
   const detectLocalArea = async () => {
@@ -1627,7 +1627,7 @@ export default function HomeScreen() {
       if (permission.status !== "granted") {
         setHeaderPlaceholder({
           title: "Location permission not enabled",
-          copy: "You can still choose a Sydney or North Shore suburb manually from Search NSN.",
+          copy: "Manual suburb selection works just as well for this prototype.",
         });
         return;
       }
@@ -1640,7 +1640,7 @@ export default function HomeScreen() {
       console.warn("Location detection failed:", error);
       setHeaderPlaceholder({
         title: "Location could not be detected",
-        copy: "Try again in a moment, or choose your local area manually.",
+        copy: "Try again in a moment, or choose a suburb/local area manually.",
       });
     } finally {
       setDetectingLocation(false);
@@ -1820,7 +1820,7 @@ export default function HomeScreen() {
   const weatherRainChance = weather.rainChance === null ? "--" : `${weather.rainChance}% rain`;
   const weatherAdvice =
     weather.temperature === null || weather.rainChance === null || temperatureLabel === null
-      ? "Live weather is loading for the selected local area."
+      ? "Weather is loading for your selected local area."
       : weather.rainChance >= 70
         ? "Indoor alternatives recommended."
         : weather.rainChance >= 35
@@ -1828,6 +1828,7 @@ export default function HomeScreen() {
           : weather.temperature >= 28
             ? "Choose shade and water-friendly plans."
             : `${timezone.city} looks meetup-friendly.`;
+  const locationContextNote = "Uses your selected local area; it does not update in the background.";
   const showWeatherDemoDetails = () => {
     setOpenHomePanel("none");
     setHeaderPlaceholder({
@@ -2442,6 +2443,9 @@ export default function HomeScreen() {
                   <Text style={[styles.weatherMetric, { paddingHorizontal: homeLayoutPreset.chipPaddingHorizontal - 2, paddingVertical: Math.max(3, homeLayoutPreset.chipPaddingVertical - 4) }, isDay && styles.dayMutedText]}>{weatherRainChance}</Text>
                 </View>
                 <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{weatherAdvice}</Text>
+                <Text style={[styles.weatherCopy, styles.locationPrivacyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                  {locationContextNote}
+                </Text>
               </View>
               <Animated.Text style={[styles.weatherIcon, { transform: [{ translateY: weatherFloat }] }]}>
                 {weatherIcon}
@@ -2475,6 +2479,9 @@ export default function HomeScreen() {
                   </Text>
                   <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
                     {selectedMapEvent ? `${selectedMapEvent.venue}, ${selectedMapDetails?.suburb ?? timezone.label} • ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
+                  </Text>
+                  <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
+                    Prototype preview only - broad local discovery, not exact live location sharing.
                   </Text>
                   <View style={[styles.locationMapDetailRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
                     {(shouldUseVeryTightDashboardFit ? [] : [selectedMapDetails?.routeHint, selectedMapDetails?.accessibilityHint].filter(Boolean)).map((detail) => (
@@ -2543,6 +2550,9 @@ export default function HomeScreen() {
               </Text>
               <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
                 {selectedMapEvent ? `${selectedMapEvent.venue}, ${selectedMapDetails?.suburb ?? timezone.label} • ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
+              </Text>
+              <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
+                Prototype preview only - broad local discovery, not exact live location sharing.
               </Text>
               <View style={[styles.locationMapDetailRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
                 {(shouldUseVeryTightDashboardFit ? [] : [selectedMapDetails?.routeHint, selectedMapDetails?.accessibilityHint].filter(Boolean)).map((detail) => (
@@ -3436,13 +3446,13 @@ export default function HomeScreen() {
               disabled={detectingLocation}
               accessibilityRole="button"
               accessibilityLabel="Use current location"
-              accessibilityHint="Requests permission and detects the closest supported Sydney or North Shore prototype area."
+              accessibilityHint="Requests permission once to choose the closest supported Sydney or North Shore prototype area. Manual suburb selection is also available."
               accessibilityState={{ disabled: detectingLocation }}
               style={[styles.detectLocationButton, { minHeight: homeLayoutPreset.tapTarget, borderRadius: Math.max(14, homeLayoutPreset.cardRadius - 8), paddingHorizontal: homeLayoutPreset.chipPaddingHorizontal }, detectingLocation && styles.detectLocationButtonDisabled]}
             >
               <IconSymbol name="location" color={nsnColors.text} size={18} />
               <Text style={styles.detectLocationButtonText}>
-                {detectingLocation ? "Detecting local area..." : "Use current location"}
+                {detectingLocation ? "Detecting local area..." : "Use current location once"}
               </Text>
             </TouchableOpacity>
             <LocalAreaPicker
@@ -3459,7 +3469,7 @@ export default function HomeScreen() {
                 Advanced Australia search paused
               </Text>
               <Text style={[styles.locationResultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Prototype build: use Sydney and North Shore suburb search while broader Australian locality data is reviewed.
+                Prototype build: choose a suburb or local area manually while broader Australian locality data is reviewed.
               </Text>
             </View>
               </>
@@ -3905,6 +3915,7 @@ const styles = StyleSheet.create({
   weatherMetricRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
   weatherMetric: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15, borderRadius: 999, borderWidth: 1, borderColor: "#4D6794", paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden" },
   weatherCopy: { color: "#C7D3EA", fontSize: 11, lineHeight: 16, maxWidth: 290, marginTop: 5 },
+  locationPrivacyCopy: { opacity: 0.88 },
   weatherIcon: { fontSize: 28, marginLeft: 8 },
   todayCard: { minHeight: 92, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
   todayTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },

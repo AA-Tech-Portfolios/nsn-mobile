@@ -291,6 +291,7 @@ type SettingsCopy = {
   notificationSnoozeDurationCopy?: string;
   notificationSnoozeSafetyNote?: string;
   locationDiscovery?: string;
+  locationDiscoveryCopy?: string;
   useApproximateLocation?: string;
   useApproximateLocationCopy?: string;
   showDistanceInMeetups?: string;
@@ -373,14 +374,15 @@ const englishCopy: SettingsCopy = {
   notificationSnoozeDuration: "Snooze duration",
   notificationSnoozeDurationCopy: "Safety check-ins can still appear while routine notifications are snoozed.",
   notificationSnoozeSafetyNote: "Safety check-ins stay controlled by Safety & Contact.",
-  locationDiscovery: "Location & Discovery",
+  locationDiscovery: "Location & local area",
+  locationDiscoveryCopy: "Approximate area is the default. You can choose a suburb manually, and this prototype does not run continuous background location.",
   useApproximateLocation: "Use approximate location",
-  useApproximateLocationCopy: "Show nearby options without sharing a precise location.",
+  useApproximateLocationCopy: "Show nearby options from a broad local area. Your exact live location is not shared with other users.",
   showDistanceInMeetups: "Show distance in meetups",
-  showDistanceInMeetupsCopy: "Display approximate distance on event and meetup cards.",
+  showDistanceInMeetupsCopy: "Display approximate distance on event and meetup cards, not precise live positioning.",
   timeLocalContext: "Time & local context",
-  timeLocalContextCopy: "Choose how NSN decides local time for the Home greeting, Day/Night mode, and local prompts.",
-  timeLocalContextPrototypeNote: "Prototype only: selected-area and manual override both use local saved fallback data for now.",
+  timeLocalContextCopy: "Choose how NSN decides local time for the Home greeting, Day/Night mode, weather, and local prompts.",
+  timeLocalContextPrototypeNote: "Prototype only: selected-area and manual override use saved local fallback data for now. No background location updates are connected.",
   regionalFormats: "Time, date & units",
   regionalFormatsCopy: "Start from this device's locale, or override how NSN displays shared event times, weather, and future pricing.",
   regionalFormatsPrototypeNote: "Event data stays standardized internally; NSN formats labels for each viewer to reduce date and time ambiguity.",
@@ -4759,6 +4761,9 @@ export default function SettingsScreen() {
           <>
         <Text onLayout={registerSectionLayout("locationDiscovery")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
           {copy.locationDiscovery ?? englishCopy.locationDiscovery}
+        </Text>
+        <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+          {copy.locationDiscoveryCopy ?? englishCopy.locationDiscoveryCopy}
         </Text>
         <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
           {locationRows.map((row, index) => (

@@ -284,6 +284,8 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 
 - [x] Add compact alpha Community Guidelines wording for photo/video consent and no sharing private chats, profiles, screenshots, or meetup details without consent
 - [x] Add event media comfort labels and prototype privacy/photo/video/screenshot reporting reminders (media labels and local report-shaped flows exist; production reporting remains deferred)
+- [x] Add alpha copy clarifying broad local-area discovery, manual suburb selection, and no continuous background location in the prototype
+- [ ] 🔴 Future location privacy planning only: if precise location sharing is ever added, keep it opt-in, temporary, event-specific, revocable, and clearly labelled with who can see it, how long it lasts, and how to stop it. Avoid permanent live maps, background tracking, proximity radar, exact home/routine exposure, or safety/emergency claims.
 - [ ] Add 18+ compliance copy and safeguards beyond local age entry
 - [ ] Decide the real verification provider strategy and UX handoff before claiming production verification
 - [ ] Use `docs/database-auth-planning.md` to guide staged database/auth planning before replacing local prototype state or collecting live personal data
