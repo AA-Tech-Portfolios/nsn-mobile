@@ -1,4 +1,18 @@
-import { Alert, Modal, ScrollView, View, Text, TextInput, StyleSheet, Switch, TouchableOpacity, useWindowDimensions, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from "react-native";
+import {
+  Alert,
+  Modal,
+  ScrollView,
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
 import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
@@ -50,14 +64,49 @@ import {
 import { nsnColors } from "@/lib/nsn-data";
 import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { brandThemes, isSoftHelloThemeEnabled, type BrandThemeId } from "@/lib/brand-theme";
-import { createSettingsToggleSections, selectSettingsPalette, toggleSettingsDropdown, type SettingsDropdownName } from "@/lib/settings-controls";
-import { emojiDisplayModeOptions, getSettingsBackTarget, getSettingsPreferenceLayout, type EmojiDisplayMode } from "@/lib/preferences-layout";
-import { getEffectivePrototypeVerificationLevel, verificationLevels, type SoftHelloVerificationLevel } from "@/lib/softhello-mvp";
+import {
+  createSettingsToggleSections,
+  selectSettingsPalette,
+  toggleSettingsDropdown,
+  type SettingsDropdownName,
+} from "@/lib/settings-controls";
+import {
+  emojiDisplayModeOptions,
+  getSettingsBackTarget,
+  getSettingsPreferenceLayout,
+  type EmojiDisplayMode,
+} from "@/lib/preferences-layout";
+import {
+  getEffectivePrototypeVerificationLevel,
+  verificationLevels,
+  type SoftHelloVerificationLevel,
+} from "@/lib/softhello-mvp";
+import type { SoftRevealPace } from "@/lib/soft-reveal";
 
 const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
+const softRevealPaceOptions: { value: SoftRevealPace; label: string; copy: string }[] = [
+  {
+    value: "Comfortable sooner",
+    label: "Comfortable sooner",
+    copy: "Suggestions can appear earlier, while reveal still needs both people to agree.",
+  },
+  {
+    value: "Gradual reveal",
+    label: "Gradual reveal",
+    copy: "Use calmer milestones and keep each reveal step mutual.",
+  },
+  {
+    value: "Manual only",
+    label: "Manual only",
+    copy: "No milestone suggestions; you can still ask when it feels right.",
+  },
+];
 const comfortModeOptions: { value: NsnComfortMode; copy: string }[] = [
   { value: "Comfort Mode", copy: "Profiles stay blurred with matched or shared visibility only." },
-  { value: "Warm Up Mode", copy: "Profiles are partly visible and can use a softer blur while warming up." },
+  {
+    value: "Warm Up Mode",
+    copy: "Profiles are partly visible and can use a softer blur while warming up.",
+  },
   { value: "Open Mode", copy: "Basic profile details are visible to people in the event." },
 ];
 const genderOptions: ProfileGender[] = ["Not specified", "Male", "Female", "Other"];
@@ -67,80 +116,193 @@ const nameDisplayOptions: { value: ProfileNameDisplayMode; label: string; copy: 
   { value: "Full", label: "Full", copy: "Show the saved name." },
 ];
 const settingsPrivacyModeOptions: { value: SettingsPrivacyMode; label: string; copy: string }[] = [
-  { value: "Basic", label: "Basic", copy: "Show the essentials for profile visibility, comfort and account controls." },
-  { value: "Advanced", label: "Advanced", copy: "Show every privacy, notification, language and appearance setting." },
+  {
+    value: "Basic",
+    label: "Basic",
+    copy: "Show the essentials for profile visibility, comfort and account controls.",
+  },
+  {
+    value: "Advanced",
+    label: "Advanced",
+    copy: "Show every privacy, notification, language and appearance setting.",
+  },
 ];
-const profileShortcutLayoutOptions: { value: ProfileShortcutLayout; label: string; copy: string }[] = [
-  { value: "Clean", label: "Simple profile", copy: "Keep Profile lighter, with vibes, preview, local area, and key edit controls." },
-  { value: "Expanded", label: "Detailed Profile", copy: "Show the fuller Profile Layout with local area, interests, comfort, privacy, and trust detail cards." },
+const profileShortcutLayoutOptions: {
+  value: ProfileShortcutLayout;
+  label: string;
+  copy: string;
+}[] = [
+  {
+    value: "Clean",
+    label: "Simple profile",
+    copy: "Keep Profile lighter, with vibes, preview, local area, and key edit controls.",
+  },
+  {
+    value: "Expanded",
+    label: "Detailed Profile",
+    copy: "Show the fuller Profile Layout with local area, interests, comfort, privacy, and trust detail cards.",
+  },
 ];
-const userPreferenceTextModeOptions: { value: UserPreferenceTextMode; label: string; copy: string }[] = [
-  { value: "Simple", label: "Simple Preference Text", copy: "Use shorter labels and calmer summaries in User Preferences." },
-  { value: "Detailed", label: "Detailed Preference Text", copy: "Show fuller explanatory text for each User Preferences section." },
+const userPreferenceTextModeOptions: {
+  value: UserPreferenceTextMode;
+  label: string;
+  copy: string;
+}[] = [
+  {
+    value: "Simple",
+    label: "Simple Preference Text",
+    copy: "Use shorter labels and calmer summaries in User Preferences.",
+  },
+  {
+    value: "Detailed",
+    label: "Detailed Preference Text",
+    copy: "Show fuller explanatory text for each User Preferences section.",
+  },
 ];
 const emojiDisplayModeDetails: Record<EmojiDisplayMode, { label: string; copy: string }> = {
-  "Full emoji display": { label: "Full emoji display", copy: "Keep the current NSN emoji and visual expression." },
-  "Reduced emojis": { label: "Reduced emojis", copy: "Keep key context icons while reducing repeated decorative emojis." },
-  "Minimal icons only": { label: "Minimal icons only", copy: "Use cleaner icon/text presentation with fewer emoji decorations." },
-  "Text-first mode": { label: "Text-first mode", copy: "Prefer text labels and minimal visual decoration for a calmer interface." },
+  "Full emoji display": {
+    label: "Full emoji display",
+    copy: "Keep the current NSN emoji and visual expression.",
+  },
+  "Reduced emojis": {
+    label: "Reduced emojis",
+    copy: "Keep key context icons while reducing repeated decorative emojis.",
+  },
+  "Minimal icons only": {
+    label: "Minimal icons only",
+    copy: "Use cleaner icon/text presentation with fewer emoji decorations.",
+  },
+  "Text-first mode": {
+    label: "Text-first mode",
+    copy: "Prefer text labels and minimal visual decoration for a calmer interface.",
+  },
 };
-const accountPauseTimelineOptions: { value: AccountPauseTimeline; label: string; copy: string }[] = [
-  { value: "A few days", label: "A few days", copy: "A short reset without changing your setup." },
-  { value: "One week", label: "One week", copy: "Step away for a calmer week." },
-  { value: "One month", label: "One month", copy: "Take a longer break from discovery." },
-  { value: "Until I return", label: "Until I return", copy: "Stay deactivated until you choose to come back." },
-];
+const accountPauseTimelineOptions: { value: AccountPauseTimeline; label: string; copy: string }[] =
+  [
+    {
+      value: "A few days",
+      label: "A few days",
+      copy: "A short reset without changing your setup.",
+    },
+    { value: "One week", label: "One week", copy: "Step away for a calmer week." },
+    { value: "One month", label: "One month", copy: "Take a longer break from discovery." },
+    {
+      value: "Until I return",
+      label: "Until I return",
+      copy: "Stay deactivated until you choose to come back.",
+    },
+  ];
 const lowLightLevelOptions: { value: LowLightLevel; label: string; copy: string }[] = [
   { value: "Gentle", label: "Gentle", copy: "A light dim for bright rooms." },
   { value: "Medium", label: "Medium", copy: "Balanced dimming for evening use." },
   { value: "Deep", label: "Deep", copy: "The softest screen for darker rooms." },
 ];
 const timeContextModeOptions: { value: TimeContextMode; label: string; copy: string }[] = [
-  { value: "Automatic device time", label: "Automatic device time", copy: "Use the clock from this device for local prompts." },
-  { value: "Use selected suburb/local area", label: "Selected local area", copy: "Use the suburb or North Shore area selected in NSN." },
-  { value: "Manual city/suburb override", label: "Manual override", copy: "Prototype: falls back to the selected local area until city search is connected." },
+  {
+    value: "Automatic device time",
+    label: "Automatic device time",
+    copy: "Use the clock from this device for local prompts.",
+  },
+  {
+    value: "Use selected suburb/local area",
+    label: "Selected local area",
+    copy: "Use the suburb or North Shore area selected in NSN.",
+  },
+  {
+    value: "Manual city/suburb override",
+    label: "Manual override",
+    copy: "Prototype: falls back to the selected local area until city search is connected.",
+  },
 ];
 const dayNightModeOptions: { value: DayNightModePreference; label: string; copy: string }[] = [
-  { value: "Manual toggle", label: "Manual toggle", copy: "Use the header toggle until you change it again." },
-  { value: "Follow system/device time", label: "Follow device time", copy: "Automatically switches using this device's current hour." },
-  { value: "Follow selected suburb/local time", label: "Follow selected local time", copy: "Automatically switches using the selected NSN suburb or local area." },
+  {
+    value: "Manual toggle",
+    label: "Manual toggle",
+    copy: "Use the header toggle until you change it again.",
+  },
+  {
+    value: "Follow system/device time",
+    label: "Follow device time",
+    copy: "Automatically switches using this device's current hour.",
+  },
+  {
+    value: "Follow selected suburb/local time",
+    label: "Follow selected local time",
+    copy: "Automatically switches using the selected NSN suburb or local area.",
+  },
 ];
 const cardOutlineOptions: { value: CardOutlineStyle; label: string; copy: string }[] = [
   { value: "Minimal", label: "Minimal", copy: "Softer borders and lighter separation." },
   { value: "Standard", label: "Standard", copy: "Balanced NSN card borders." },
-  { value: "Strong", label: "Strong", copy: "Bolder outlined cards with the current dashboard character." },
+  {
+    value: "Strong",
+    label: "Strong",
+    copy: "Bolder outlined cards with the current dashboard character.",
+  },
 ];
-const dateFormatOptions: DateFormatPreference[] = ["Device / locale", "DD/MM/YYYY", "MM/DD/YYYY", "YYYY/MM/DD", "YY/MM/DD", "DD.MM.YYYY", "DD-MM-YYYY", "YYYY-MM-DD"];
-const timeFormatOptions: TimeFormatPreference[] = ["Device / locale", "12-hour clock", "24-hour clock"];
+const dateFormatOptions: DateFormatPreference[] = [
+  "Device / locale",
+  "DD/MM/YYYY",
+  "MM/DD/YYYY",
+  "YYYY/MM/DD",
+  "YY/MM/DD",
+  "DD.MM.YYYY",
+  "DD-MM-YYYY",
+  "YYYY-MM-DD",
+];
+const timeFormatOptions: TimeFormatPreference[] = [
+  "Device / locale",
+  "12-hour clock",
+  "24-hour clock",
+];
 const clockDisplayOptions: ClockDisplayStyle[] = ["Digital", "Analog"];
-const temperatureUnitOptions: TemperatureUnitPreference[] = ["Device / locale", "Celsius", "Fahrenheit"];
+const temperatureUnitOptions: TemperatureUnitPreference[] = [
+  "Device / locale",
+  "Celsius",
+  "Fahrenheit",
+];
 const distanceUnitOptions: DistanceUnitPreference[] = ["Device / locale", "Kilometres", "Miles"];
-const currencyDisplayOptions: CurrencyDisplayPreference[] = ["Device / locale", "AUD", "USD", "EUR", "GBP"];
-const notificationSnoozeOptions: { value: NotificationSnoozePreset; label: string; copy: string }[] = [
+const currencyDisplayOptions: CurrencyDisplayPreference[] = [
+  "Device / locale",
+  "AUD",
+  "USD",
+  "EUR",
+  "GBP",
+];
+const notificationSnoozeOptions: {
+  value: NotificationSnoozePreset;
+  label: string;
+  copy: string;
+}[] = [
   { value: "1 hour", label: "1 hour", copy: "Pause routine pings briefly." },
   { value: "Tonight", label: "Tonight", copy: "Keep the rest of today quiet." },
   { value: "24 hours", label: "24 hours", copy: "Take a full-day notification break." },
-  { value: "Until I turn it back on", label: "Until I turn it back on", copy: "Stay snoozed until you return here." },
+  {
+    value: "Until I turn it back on",
+    label: "Until I turn it back on",
+    copy: "Stay snoozed until you return here.",
+  },
 ];
-const jumpIconBySection: Record<SettingsSectionJumpId, ComponentProps<typeof IconSymbol>["name"]> = {
-  settingsView: "settings",
-  batteryPerformance: "battery",
-  generalPrivacy: "visibility",
-  profileVisibility: "person.fill",
-  trustFoundations: "shield",
-  profilePreview: "preview",
-  nameDisplay: "badge",
-  photoBlur: "visibility.off",
-  gender: "person.fill",
-  notifications: "bell",
-  locationDiscovery: "location",
-  regionalFormats: "language",
-  safetyContact: "shield",
-  accessibility: "accessibility",
-  appearance: "palette",
-  language: "language",
-  generalSettings: "account",
-};
+const jumpIconBySection: Record<SettingsSectionJumpId, ComponentProps<typeof IconSymbol>["name"]> =
+  {
+    settingsView: "settings",
+    batteryPerformance: "battery",
+    generalPrivacy: "visibility",
+    profileVisibility: "person.fill",
+    trustFoundations: "shield",
+    profilePreview: "preview",
+    nameDisplay: "badge",
+    photoBlur: "visibility.off",
+    gender: "person.fill",
+    notifications: "bell",
+    locationDiscovery: "location",
+    regionalFormats: "language",
+    safetyContact: "shield",
+    accessibility: "accessibility",
+    appearance: "palette",
+    language: "language",
+    generalSettings: "account",
+  };
 const prototypeBadgeBySetting: Record<string, AlphaActionLabel> = {
   privateProfile: "Saved locally",
   sameAgeGroupsOnly: "Demo",
@@ -230,16 +392,55 @@ const accordionByJumpSection: Record<SettingsSectionJumpId, SettingsAccordionId>
   generalSettings: "account",
 };
 
-const settingsAccordionMeta: Record<SettingsAccordionId, { title: string; copy: string; icon: ComponentProps<typeof IconSymbol>["name"] }> = {
-  displayLayout: { title: "Appearance & Layout", copy: "View mode, battery, low-light, and layout comfort.", icon: "palette" },
-  privacyVisibility: { title: "Privacy & visibility", copy: "Profile visibility, preview details, and what others can see.", icon: "visibility" },
-  profileDetails: { title: "Profile preview details", copy: "Name, photo blur, gender, and profile preview controls.", icon: "preview" },
-  comfortSafety: { title: "Comfort & safety", copy: "Trust foundations, safety copy, and low-pressure controls.", icon: "shield" },
-  notifications: { title: "Notifications", copy: "Meetup reminders, chats, weather alerts, and snooze controls.", icon: "bell" },
-  timeUnits: { title: "Time, date & units", copy: "Local time, Day/Night logic, dates, weather units, and regional formats.", icon: "language" },
-  safetyContact: { title: "Safety & contact", copy: "Prototype-safe safety states, onboarding restart, and contact controls.", icon: "shield" },
-  advancedDisplay: { title: "Appearance & advanced display", copy: "Appearance is available in Basic; accessibility and language controls appear in Advanced.", icon: "accessibility" },
-  account: { title: "Prototype account controls", copy: "Alpha walkthrough, reset controls, and local-only account action previews.", icon: "account" },
+const settingsAccordionMeta: Record<
+  SettingsAccordionId,
+  { title: string; copy: string; icon: ComponentProps<typeof IconSymbol>["name"] }
+> = {
+  displayLayout: {
+    title: "Appearance & Layout",
+    copy: "View mode, battery, low-light, and layout comfort.",
+    icon: "palette",
+  },
+  privacyVisibility: {
+    title: "Privacy & visibility",
+    copy: "Profile visibility, preview details, and what others can see.",
+    icon: "visibility",
+  },
+  profileDetails: {
+    title: "Profile preview details",
+    copy: "Name, photo blur, gender, and profile preview controls.",
+    icon: "preview",
+  },
+  comfortSafety: {
+    title: "Comfort & safety",
+    copy: "Trust foundations, safety copy, and low-pressure controls.",
+    icon: "shield",
+  },
+  notifications: {
+    title: "Notifications",
+    copy: "Meetup reminders, chats, weather alerts, and snooze controls.",
+    icon: "bell",
+  },
+  timeUnits: {
+    title: "Time, date & units",
+    copy: "Local time, Day/Night logic, dates, weather units, and regional formats.",
+    icon: "language",
+  },
+  safetyContact: {
+    title: "Safety & contact",
+    copy: "Prototype-safe safety states, onboarding restart, and contact controls.",
+    icon: "shield",
+  },
+  advancedDisplay: {
+    title: "Appearance & advanced display",
+    copy: "Appearance is available in Basic; accessibility and language controls appear in Advanced.",
+    icon: "accessibility",
+  },
+  account: {
+    title: "Prototype account controls",
+    copy: "Alpha walkthrough, reset controls, and local-only account action previews.",
+    icon: "account",
+  },
 };
 
 type SettingsCopy = {
@@ -267,6 +468,10 @@ type SettingsCopy = {
   revealAfterRsvpCopy: string;
   friendsOfFriendsOnly: string;
   friendsOfFriendsOnlyCopy: string;
+  softRevealSuggestions?: string;
+  softRevealSuggestionsCopy?: string;
+  preferSoftRevealPeople?: string;
+  preferSoftRevealPeopleCopy?: string;
   appLanguage: string;
   appLanguageCopy: string;
   translateMeetupsChats: string;
@@ -351,6 +556,12 @@ const englishCopy: SettingsCopy = {
   revealAfterRsvpCopy: "Show your profile once both sides have committed to the plan.",
   friendsOfFriendsOnly: "Friends-of-friends only",
   friendsOfFriendsOnlyCopy: "Prefer people connected through your trusted network.",
+  softRevealSuggestions: "Enable Soft Reveal suggestions",
+  softRevealSuggestionsCopy:
+    "Show gentle chat milestones for lowering blur together when both people use them.",
+  preferSoftRevealPeople: "Prefer people who also use Soft Reveal",
+  preferSoftRevealPeopleCopy:
+    "A quiet preference for similar privacy pacing where the prototype can use it.",
   appLanguage: "Preferred language",
   appLanguageCopy: "Choose the language NSN uses for the North Shore pilot.",
   translateMeetupsChats: "Community language",
@@ -370,26 +581,37 @@ const englishCopy: SettingsCopy = {
   notificationSnoozed: "Snooze notifications",
   notificationSnoozedCopy: "Pause non-safety notifications for a set time.",
   suggestNightModeInEvenings: "Suggest Night mode in evenings",
-  suggestNightModeInEveningsCopy: "Show a quiet Home suggestion when local time and the current mode do not match.",
+  suggestNightModeInEveningsCopy:
+    "Show a quiet Home suggestion when local time and the current mode do not match.",
   notificationSnoozeDuration: "Snooze duration",
-  notificationSnoozeDurationCopy: "Safety check-ins can still appear while routine notifications are snoozed.",
+  notificationSnoozeDurationCopy:
+    "Safety check-ins can still appear while routine notifications are snoozed.",
   notificationSnoozeSafetyNote: "Safety check-ins stay controlled by Safety & Contact.",
   locationDiscovery: "Location & local area",
-  locationDiscoveryCopy: "Approximate area is the default. You can choose a suburb manually, and this prototype does not run continuous background location.",
+  locationDiscoveryCopy:
+    "Approximate area is the default. You can choose a suburb manually, and this prototype does not run continuous background location.",
   useApproximateLocation: "Use approximate location",
-  useApproximateLocationCopy: "Show nearby options from a broad local area. Your exact live location is not shared with other users.",
+  useApproximateLocationCopy:
+    "Show nearby options from a broad local area. Your exact live location is not shared with other users.",
   showDistanceInMeetups: "Show distance in meetups",
-  showDistanceInMeetupsCopy: "Display approximate distance on event and meetup cards, not precise live positioning.",
+  showDistanceInMeetupsCopy:
+    "Display approximate distance on event and meetup cards, not precise live positioning.",
   timeLocalContext: "Time & local context",
-  timeLocalContextCopy: "Choose how NSN decides local time for the Home greeting, Day/Night mode, weather, and local prompts.",
-  timeLocalContextPrototypeNote: "Prototype only: selected-area and manual override use saved local fallback data for now. No background location updates are connected.",
+  timeLocalContextCopy:
+    "Choose how NSN decides local time for the Home greeting, Day/Night mode, weather, and local prompts.",
+  timeLocalContextPrototypeNote:
+    "Prototype only: selected-area and manual override use saved local fallback data for now. No background location updates are connected.",
   regionalFormats: "Time, date & units",
-  regionalFormatsCopy: "Start from this device's locale, or override how NSN displays shared event times, weather, and future pricing.",
-  regionalFormatsPrototypeNote: "Event data stays standardized internally; NSN formats labels for each viewer to reduce date and time ambiguity.",
+  regionalFormatsCopy:
+    "Start from this device's locale, or override how NSN displays shared event times, weather, and future pricing.",
+  regionalFormatsPrototypeNote:
+    "Event data stays standardized internally; NSN formats labels for each viewer to reduce date and time ambiguity.",
   dayNightMode: "Day/Night behaviour",
-  dayNightModeCopy: "Choose whether the dashboard follows your manual toggle, this device's clock, or the selected NSN local area.",
+  dayNightModeCopy:
+    "Choose whether the dashboard follows your manual toggle, this device's clock, or the selected NSN local area.",
   cardOutlineStyle: "Card outline style",
-  cardOutlineStyleCopy: "Adjust how strongly NSN outlines cards, panels, and local context modules.",
+  cardOutlineStyleCopy:
+    "Adjust how strongly NSN outlines cards, panels, and local context modules.",
   safetyContact: "Safety & Contact",
   allowMessageRequests: "Allow message requests",
   allowMessageRequestsCopy: "Let people message before you join the same meetup.",
@@ -397,13 +619,15 @@ const englishCopy: SettingsCopy = {
   safetyCheckInsCopy: "Enable gentle check-in prompts around joined meetups.",
   batteryPerformance: "Battery & Performance",
   batterySaver: "Battery saver",
-  batterySaverCopy: "Reduce animations, weather refresh, and haptics when you want NSN to use less power.",
+  batterySaverCopy:
+    "Reduce animations, weather refresh, and haptics when you want NSN to use less power.",
   lowLightMode: "Low light mode",
   lowLightModeCopy: "Dim bright surfaces for softer viewing in darker rooms.",
   lowLightLevel: "Brightness level",
   lowLightLevelCopy: "Choose how much Low light mode dims the app.",
   restartOnboarding: "Restart NSN onboarding",
-  restartOnboardingCopy: "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
+  restartOnboardingCopy:
+    "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
   restartOnboardingAction: "Start",
   searchLanguage: "Search local languages...",
   noLanguageFound: "No language found",
@@ -485,7 +709,8 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     translateMeetupsChats: "Traduire les rencontres et discussions",
     translateMeetupsChatsCopy: "Afficher les détails et messages dans cette langue.",
     restartOnboarding: "Recommencer l'accueil NSN",
-    restartOnboardingCopy: "Revoir l'âge, le quartier, l'intention, le pseudo, la photo et la visibilité.",
+    restartOnboardingCopy:
+      "Revoir l'âge, le quartier, l'intention, le pseudo, la photo et la visibilité.",
     restartOnboardingAction: "Commencer",
     searchLanguage: "Rechercher une langue...",
     noLanguageFound: "Aucune langue trouvée",
@@ -511,7 +736,8 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     translateMeetupsChats: "Treffen und Chats übersetzen",
     translateMeetupsChatsCopy: "Zeige Eventdetails und Chatnachrichten in dieser Sprache.",
     restartOnboarding: "NSN-Einstieg neu starten",
-    restartOnboardingCopy: "Alter, Ort, Absicht, Spitzname, Foto und Sichtbarkeit erneut festlegen.",
+    restartOnboardingCopy:
+      "Alter, Ort, Absicht, Spitzname, Foto und Sichtbarkeit erneut festlegen.",
     restartOnboardingAction: "Starten",
     searchLanguage: "Sprache suchen...",
     noLanguageFound: "Keine Sprache gefunden",
@@ -830,7 +1056,8 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     translateMeetupsChats: "Isalin ang meetups at chats",
     translateMeetupsChatsCopy: "Ipakita ang event details at chat messages sa wikang ito.",
     restartOnboarding: "Simulan muli ang NSN onboarding",
-    restartOnboardingCopy: "Balikan ang edad, lugar, layunin, pangalan, larawan at visibility choices.",
+    restartOnboardingCopy:
+      "Balikan ang edad, lugar, layunin, pangalan, larawan at visibility choices.",
     restartOnboardingAction: "Simulan",
     searchLanguage: "Maghanap ng wika…",
     noLanguageFound: "Walang nahanap na wika",
@@ -1107,7 +1334,8 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     translateMeetupsChats: "Meetup ve sohbetleri çevir",
     translateMeetupsChatsCopy: "Etkinlik ayrıntılarını ve sohbet mesajlarını bu dilde gösterin.",
     restartOnboarding: "NSN başlangıcını yeniden başlat",
-    restartOnboardingCopy: "Yaş, bölge, niyet, ad, fotoğraf ve görünürlük seçimlerini yeniden gözden geçir.",
+    restartOnboardingCopy:
+      "Yaş, bölge, niyet, ad, fotoğraf ve görünürlük seçimlerini yeniden gözden geçir.",
     restartOnboardingAction: "Başla",
     searchLanguage: "Dil ara…",
     noLanguageFound: "Dil bulunamadı",
@@ -1173,7 +1401,8 @@ const supplementalSettingsTranslations: Record<string, Partial<SettingsCopy>> = 
     showFirstNameOnly: "Wys net voornaam",
     showFirstNameOnlyCopy: "Gebruik jou voornaam in ontmoetings en geselsies.",
     sameAgeGroupsOnly: "Wys net soortgelyke ouderdomsgroepe",
-    sameAgeGroupsOnlyCopy: "Gee voorkeur aan ontmoetings met mense in 'n soortgelyke ouderdomsgroep.",
+    sameAgeGroupsOnlyCopy:
+      "Gee voorkeur aan ontmoetings met mense in 'n soortgelyke ouderdomsgroep.",
     revealAfterRsvp: "Wys profiel eers ná RSVP",
     revealAfterRsvpCopy: "Wys jou profiel sodra albei kante tot die plan verbind is.",
     friendsOfFriendsOnly: "Net vriende van vriende",
@@ -1243,7 +1472,8 @@ const supplementalSettingsTranslations: Record<string, Partial<SettingsCopy>> = 
     appLanguage: "Հավելվածի լեզու",
     appLanguageCopy: "Ընտրեք NSN-ում օգտագործվող լեզուն։",
     translateMeetupsChats: "Թարգմանել հանդիպումները և զրույցները",
-    translateMeetupsChatsCopy: "Ցույց տալ միջոցառման մանրամասները և հաղորդագրությունները այս լեզվով։",
+    translateMeetupsChatsCopy:
+      "Ցույց տալ միջոցառման մանրամասները և հաղորդագրությունները այս լեզվով։",
     appearance: "Տեսք",
     colorPalette: "Գունապնակ",
     colorPaletteCopy: "Ընտրեք նախընտրած տրամադրությունն ու շեշտադրման գույները։",
@@ -1361,9 +1591,11 @@ const supplementalSettingsTranslations: Record<string, Partial<SettingsCopy>> = 
     sameAgeGroupsOnly: "Csak hasonló korcsoportokat mutass",
     sameAgeGroupsOnlyCopy: "Részesítsd előnyben a hasonló korú emberekkel való találkozókat.",
     revealAfterRsvp: "Profil megjelenítése csak RSVP után",
-    revealAfterRsvpCopy: "A profil akkor jelenjen meg, amikor mindkét fél elköteleződött a terv mellett.",
+    revealAfterRsvpCopy:
+      "A profil akkor jelenjen meg, amikor mindkét fél elköteleződött a terv mellett.",
     friendsOfFriendsOnly: "Csak barátok barátai",
-    friendsOfFriendsOnlyCopy: "Részesítsd előnyben a megbízható hálózatodon keresztül kapcsolódó embereket.",
+    friendsOfFriendsOnlyCopy:
+      "Részesítsd előnyben a megbízható hálózatodon keresztül kapcsolódó embereket.",
     appLanguage: "Alkalmazás nyelve",
     appLanguageCopy: "Válaszd ki az NSN-ben használt nyelvet.",
     translateMeetupsChats: "Találkozók és chatek fordítása",
@@ -1431,7 +1663,8 @@ const supplementalSettingsTranslations: Record<string, Partial<SettingsCopy>> = 
     safetyCheckIns: "Verifikasyon sekirite",
     safetyCheckInsCopy: "Aktive rapèl dou pou tcheke kijan ou ye bò kote rankont ou antre yo.",
     restartOnboarding: "Rekòmanse entwodiksyon NSN",
-    restartOnboardingCopy: "Revizite konfimasyon laj, katye, entansyon, tinon, foto ak chwa vizibilite.",
+    restartOnboardingCopy:
+      "Revizite konfimasyon laj, katye, entansyon, tinon, foto ak chwa vizibilite.",
     restartOnboardingAction: "Kòmanse",
     searchLanguage: "Chèche lang...",
     noLanguageFound: "Pa jwenn okenn lang",
@@ -1608,11 +1841,13 @@ const supplementalSettingsTranslations: Record<string, Partial<SettingsCopy>> = 
     showDistanceInMeetupsCopy: "ווייז אומגעפער דיסטאנץ אויף געשעעניש- און מיטאפ-קארטלעך.",
     safetyContact: "זיכערקייט און קאנטאקט",
     allowMessageRequests: "דערלויב מעסעדזש-בקשות",
-    allowMessageRequestsCopy: "לאז מענטשן דיר שיקן א מעסעדזש איידער דו טרעסט אריין אין דער זעלבער מיטאפ.",
+    allowMessageRequestsCopy:
+      "לאז מענטשן דיר שיקן א מעסעדזש איידער דו טרעסט אריין אין דער זעלבער מיטאפ.",
     safetyCheckIns: "זיכערקייט-טשעק-אינס",
     safetyCheckInsCopy: "אקטיוויזיר מילדע פרעגן ארום מיטאפס וואו דו ביסט איינגעשריבן.",
     restartOnboarding: "אנהייבן NSN ווידער",
-    restartOnboardingCopy: "גיי נאכאמאל דורך עלטער-באשטעטיקונג, געגנט, כוונה, צונאמען, בילד און זעבארקייט.",
+    restartOnboardingCopy:
+      "גיי נאכאמאל דורך עלטער-באשטעטיקונג, געגנט, כוונה, צונאמען, בילד און זעבארקייט.",
     restartOnboardingAction: "אנהייבן",
     searchLanguage: "זוך שפראך...",
     noLanguageFound: "קיין שפראך נישט געפונען",
@@ -1751,10 +1986,12 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     useApproximateLocation: "Utiliser une position approximative",
     useApproximateLocationCopy: "Afficher des options proches sans partager une position précise.",
     showDistanceInMeetups: "Afficher la distance dans les rencontres",
-    showDistanceInMeetupsCopy: "Afficher une distance approximative sur les cartes d'événement et de rencontre.",
+    showDistanceInMeetupsCopy:
+      "Afficher une distance approximative sur les cartes d'événement et de rencontre.",
     safetyContact: "Sécurité et contact",
     allowMessageRequests: "Autoriser les demandes de message",
-    allowMessageRequestsCopy: "Permettre aux personnes d'envoyer un message avant de rejoindre la même rencontre.",
+    allowMessageRequestsCopy:
+      "Permettre aux personnes d'envoyer un message avant de rejoindre la même rencontre.",
     safetyCheckIns: "Points de sécurité",
     safetyCheckInsCopy: "Activer des rappels doux autour des rencontres rejointes.",
   },
@@ -1958,14 +2195,17 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     meetupReminders: "Meetup reminders",
     meetupRemindersCopy: "Makatanggap ng paalala bago ang meetups na sinalihan mo.",
     weatherAlerts: "Weather alerts",
-    weatherAlertsCopy: "Makatanggap ng update kapag maaaring maapektuhan ng panahon ang outdoor plan.",
+    weatherAlertsCopy:
+      "Makatanggap ng update kapag maaaring maapektuhan ng panahon ang outdoor plan.",
     chatNotifications: "Chat notifications",
     chatNotificationsCopy: "I-notify ako kapag may bagong mensahe sa meetup group chats.",
     quietNotifications: "Tahimik na notifications",
-    quietNotificationsCopy: "Panatilihing banayad ang tono at iwasan ang alerts na masyadong agaw-pansin.",
+    quietNotificationsCopy:
+      "Panatilihing banayad ang tono at iwasan ang alerts na masyadong agaw-pansin.",
     locationDiscovery: "Lokasyon at discovery",
     useApproximateLocation: "Gamitin ang tinatayang lokasyon",
-    useApproximateLocationCopy: "Magpakita ng malapit na options nang hindi ibinabahagi ang eksaktong lokasyon.",
+    useApproximateLocationCopy:
+      "Magpakita ng malapit na options nang hindi ibinabahagi ang eksaktong lokasyon.",
     showDistanceInMeetups: "Ipakita ang distance sa meetups",
     showDistanceInMeetupsCopy: "Ipakita ang tinatayang distance sa event at meetup cards.",
     safetyContact: "Safety at contact",
@@ -1986,7 +2226,8 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     chatNotifications: "Notifikasi chat",
     chatNotificationsCopy: "Beri tahu saya saat chat grup meetup memiliki pesan baru.",
     quietNotifications: "Notifikasi tenang",
-    quietNotificationsCopy: "Jaga nada notifikasi tetap lembut dan hindari peringatan yang terlalu menarik perhatian.",
+    quietNotificationsCopy:
+      "Jaga nada notifikasi tetap lembut dan hindari peringatan yang terlalu menarik perhatian.",
     locationDiscovery: "Lokasi & penemuan",
     useApproximateLocation: "Gunakan lokasi perkiraan",
     useApproximateLocationCopy: "Tampilkan opsi terdekat tanpa membagikan lokasi tepat.",
@@ -2010,7 +2251,8 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     chatNotifications: "Pemberitahuan chat",
     chatNotificationsCopy: "Beritahu saya apabila chat kumpulan meetup ada mesej baharu.",
     quietNotifications: "Pemberitahuan lembut",
-    quietNotificationsCopy: "Kekalkan nada pemberitahuan yang lembut dan elakkan amaran yang terlalu menarik perhatian.",
+    quietNotificationsCopy:
+      "Kekalkan nada pemberitahuan yang lembut dan elakkan amaran yang terlalu menarik perhatian.",
     locationDiscovery: "Lokasi & penemuan",
     useApproximateLocation: "Guna lokasi anggaran",
     useApproximateLocationCopy: "Tunjukkan pilihan berdekatan tanpa berkongsi lokasi tepat.",
@@ -2102,11 +2344,13 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     meetupReminders: "Recordatorios de quedadas",
     meetupRemindersCopy: "Recibe recordatorios antes de las quedadas a las que te uniste.",
     weatherAlerts: "Alertas del clima",
-    weatherAlertsCopy: "Recibe actualizaciones cuando el clima pueda afectar un plan al aire libre.",
+    weatherAlertsCopy:
+      "Recibe actualizaciones cuando el clima pueda afectar un plan al aire libre.",
     chatNotifications: "Notificaciones de chat",
     chatNotificationsCopy: "Avísame cuando los chats de quedadas tengan mensajes nuevos.",
     quietNotifications: "Notificaciones tranquilas",
-    quietNotificationsCopy: "Mantén un tono suave y evita alertas que llamen demasiado la atención.",
+    quietNotificationsCopy:
+      "Mantén un tono suave y evita alertas que llamen demasiado la atención.",
     locationDiscovery: "Ubicación y descubrimiento",
     useApproximateLocation: "Usar ubicación aproximada",
     useApproximateLocationCopy: "Muestra opciones cercanas sin compartir una ubicación precisa.",
@@ -2162,7 +2406,8 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     showDistanceInMeetupsCopy: "Toon geschatte afstand op event- en meetupkaarten.",
     safetyContact: "Veiligheid en contact",
     allowMessageRequests: "Berichtverzoeken toestaan",
-    allowMessageRequestsCopy: "Laat mensen berichten sturen voordat jullie bij dezelfde meetup zitten.",
+    allowMessageRequestsCopy:
+      "Laat mensen berichten sturen voordat jullie bij dezelfde meetup zitten.",
     safetyCheckIns: "Veiligheidscheck-ins",
     safetyCheckInsCopy: "Schakel zachte check-in prompts in rond meetups waaraan je meedoet.",
   },
@@ -2188,7 +2433,8 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     allowMessageRequests: "Salli viestipyynnöt",
     allowMessageRequestsCopy: "Anna ihmisten lähettää viesti ennen samaan tapaamiseen liittymistä.",
     safetyCheckIns: "Turvallisuustarkistukset",
-    safetyCheckInsCopy: "Ota käyttöön lempeät tarkistusmuistutukset liittymiesi tapaamisten ympärillä.",
+    safetyCheckInsCopy:
+      "Ota käyttöön lempeät tarkistusmuistutukset liittymiesi tapaamisten ympärillä.",
   },
   Greek: {
     appearance: "Εμφάνιση",
@@ -2200,17 +2446,22 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     weatherAlerts: "Ειδοποιήσεις καιρού",
     weatherAlertsCopy: "Λάβετε ενημερώσεις όταν ο καιρός μπορεί να επηρεάσει ένα εξωτερικό σχέδιο.",
     chatNotifications: "Ειδοποιήσεις συνομιλίας",
-    chatNotificationsCopy: "Ειδοποιήστε με όταν οι ομαδικές συνομιλίες συναντήσεων έχουν νέα μηνύματα.",
+    chatNotificationsCopy:
+      "Ειδοποιήστε με όταν οι ομαδικές συνομιλίες συναντήσεων έχουν νέα μηνύματα.",
     quietNotifications: "Ήρεμες ειδοποιήσεις",
-    quietNotificationsCopy: "Κρατήστε τον τόνο των ειδοποιήσεων ήπιο και χωρίς έντονες ειδοποιήσεις.",
+    quietNotificationsCopy:
+      "Κρατήστε τον τόνο των ειδοποιήσεων ήπιο και χωρίς έντονες ειδοποιήσεις.",
     locationDiscovery: "Τοποθεσία και ανακάλυψη",
     useApproximateLocation: "Χρήση κατά προσέγγιση τοποθεσίας",
-    useApproximateLocationCopy: "Εμφανίστε κοντινές επιλογές χωρίς κοινοποίηση ακριβούς τοποθεσίας.",
+    useApproximateLocationCopy:
+      "Εμφανίστε κοντινές επιλογές χωρίς κοινοποίηση ακριβούς τοποθεσίας.",
     showDistanceInMeetups: "Εμφάνιση απόστασης στις συναντήσεις",
-    showDistanceInMeetupsCopy: "Εμφανίστε κατά προσέγγιση απόσταση σε κάρτες εκδηλώσεων και συναντήσεων.",
+    showDistanceInMeetupsCopy:
+      "Εμφανίστε κατά προσέγγιση απόσταση σε κάρτες εκδηλώσεων και συναντήσεων.",
     safetyContact: "Ασφάλεια και επικοινωνία",
     allowMessageRequests: "Να επιτρέπονται αιτήματα μηνυμάτων",
-    allowMessageRequestsCopy: "Επιτρέψτε σε άτομα να στείλουν μήνυμα πριν μπείτε στην ίδια συνάντηση.",
+    allowMessageRequestsCopy:
+      "Επιτρέψτε σε άτομα να στείλουν μήνυμα πριν μπείτε στην ίδια συνάντηση.",
     safetyCheckIns: "Έλεγχοι ασφαλείας",
     safetyCheckInsCopy: "Ενεργοποιήστε ήπιες υπενθυμίσεις ελέγχου γύρω από τις συναντήσεις σας.",
   },
@@ -2260,7 +2511,8 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     allowMessageRequests: "Zezwalaj na prośby o wiadomość",
     allowMessageRequestsCopy: "Pozwól ludziom pisać przed dołączeniem do tego samego spotkania.",
     safetyCheckIns: "Kontrole bezpieczeństwa",
-    safetyCheckInsCopy: "Włącz łagodne przypomnienia kontrolne wokół spotkań, do których dołączasz.",
+    safetyCheckInsCopy:
+      "Włącz łagodne przypomnienia kontrolne wokół spotkań, do których dołączasz.",
   },
   Portuguese: {
     appearance: "Aparência",
@@ -2272,9 +2524,11 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     weatherAlerts: "Alertas meteorológicos",
     weatherAlertsCopy: "Receba atualizações quando o tempo puder afetar um plano ao ar livre.",
     chatNotifications: "Notificações de chat",
-    chatNotificationsCopy: "Avise-me quando os chats de grupo dos encontros tiverem novas mensagens.",
+    chatNotificationsCopy:
+      "Avise-me quando os chats de grupo dos encontros tiverem novas mensagens.",
     quietNotifications: "Notificações discretas",
-    quietNotificationsCopy: "Mantenha as notificações suaves e evite alertas que chamem muita atenção.",
+    quietNotificationsCopy:
+      "Mantenha as notificações suaves e evite alertas que chamem muita atenção.",
     locationDiscovery: "Localização e descoberta",
     useApproximateLocation: "Usar localização aproximada",
     useApproximateLocationCopy: "Mostre opções próximas sem partilhar uma localização precisa.",
@@ -2303,7 +2557,8 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     useApproximateLocation: "Folosește locația aproximativă",
     useApproximateLocationCopy: "Afișează opțiuni apropiate fără a partaja locația exactă.",
     showDistanceInMeetups: "Arată distanța în întâlniri",
-    showDistanceInMeetupsCopy: "Afișează distanța aproximativă pe cardurile de eveniment și întâlnire.",
+    showDistanceInMeetupsCopy:
+      "Afișează distanța aproximativă pe cardurile de eveniment și întâlnire.",
     safetyContact: "Siguranță și contact",
     allowMessageRequests: "Permite cereri de mesaj",
     allowMessageRequestsCopy: "Permite oamenilor să trimită mesaj înainte de aceeași întâlnire.",
@@ -2384,7 +2639,10 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
   },
 };
 
-const paletteTranslations: Record<string, Record<string, { label: string; description: string }>> = {
+const paletteTranslations: Record<
+  string,
+  Record<string, { label: string; description: string }>
+> = {
   Arabic: {
     midnight: { label: "منتصف الليل NSN", description: "كحلي عميق مع لمسات نيلي وفيروزية." },
     ocean: { label: "هدوء المحيط", description: "درجات الأزرق والأكوا والسماء الناعمة." },
@@ -2400,18 +2658,42 @@ const paletteTranslations: Record<string, Record<string, { label: string; descri
     lavender: { label: "安静薰衣草", description: "柔和紫色强调，营造更平静的社交感。" },
   },
   French: {
-    midnight: { label: "Minuit NSN", description: "Bleu nuit profond avec accents indigo et turquoise." },
+    midnight: {
+      label: "Minuit NSN",
+      description: "Bleu nuit profond avec accents indigo et turquoise.",
+    },
     ocean: { label: "Calme océan", description: "Bleu, aqua et tons doux de ciel." },
-    forest: { label: "Forêt sociale", description: "Surfaces vert forêt avec touches chaleureuses." },
-    sunset: { label: "Coucher chaud", description: "Accents corail et or pour une humeur plus douce." },
-    lavender: { label: "Lavande calme", description: "Accents violets doux pour une sensation sociale plus calme." },
+    forest: {
+      label: "Forêt sociale",
+      description: "Surfaces vert forêt avec touches chaleureuses.",
+    },
+    sunset: {
+      label: "Coucher chaud",
+      description: "Accents corail et or pour une humeur plus douce.",
+    },
+    lavender: {
+      label: "Lavande calme",
+      description: "Accents violets doux pour une sensation sociale plus calme.",
+    },
   },
   German: {
-    midnight: { label: "Mitternacht NSN", description: "Tiefes Marineblau mit Indigo- und Türkisakzenten." },
+    midnight: {
+      label: "Mitternacht NSN",
+      description: "Tiefes Marineblau mit Indigo- und Türkisakzenten.",
+    },
     ocean: { label: "Ozeanruhe", description: "Blau-, Aqua- und weiche Himmelstöne." },
-    forest: { label: "Sozialer Wald", description: "Immergrüne Flächen mit warmen freundlichen Highlights." },
-    sunset: { label: "Warmer Sonnenuntergang", description: "Koralle und Gold für eine weichere Stimmung." },
-    lavender: { label: "Ruhiger Lavendel", description: "Weiche violette Akzente für ein ruhigeres soziales Gefühl." },
+    forest: {
+      label: "Sozialer Wald",
+      description: "Immergrüne Flächen mit warmen freundlichen Highlights.",
+    },
+    sunset: {
+      label: "Warmer Sonnenuntergang",
+      description: "Koralle und Gold für eine weichere Stimmung.",
+    },
+    lavender: {
+      label: "Ruhiger Lavendel",
+      description: "Weiche violette Akzente für ein ruhigeres soziales Gefühl.",
+    },
   },
   Hebrew: {
     midnight: { label: "חצות NSN", description: "כחול עמוק עם הדגשות אינדיגו וטורקיז." },
@@ -2425,279 +2707,664 @@ const paletteTranslations: Record<string, Record<string, { label: string; descri
     ocean: { label: "ओशन calm", description: "नीले, एक्वा और नरम आसमानी रंग।" },
     forest: { label: "फॉरेस्ट सोशल", description: "गरम दोस्ताना हाइलाइट्स के साथ एवरग्रीन सतहें।" },
     sunset: { label: "सनसेट वार्म", description: "नरम मूड के लिए कोरल और गोल्ड ऐक्सेंट।" },
-    lavender: { label: "लैवेंडर quiet", description: "शांत सामाजिक एहसास के लिए नरम बैंगनी ऐक्सेंट।" },
+    lavender: {
+      label: "लैवेंडर quiet",
+      description: "शांत सामाजिक एहसास के लिए नरम बैंगनी ऐक्सेंट।",
+    },
   },
   Italian: {
-    midnight: { label: "Mezzanotte NSN", description: "Blu navy profondo con accenti indaco e teal." },
+    midnight: {
+      label: "Mezzanotte NSN",
+      description: "Blu navy profondo con accenti indaco e teal.",
+    },
     ocean: { label: "Calma oceano", description: "Toni blu, acqua e cielo morbido." },
-    forest: { label: "Foresta sociale", description: "Superfici sempreverdi con accenti caldi e amichevoli." },
-    sunset: { label: "Tramonto caldo", description: "Accenti corallo e oro per un mood più morbido." },
-    lavender: { label: "Lavanda quieta", description: "Accenti viola morbidi per una sensazione sociale più calma." },
+    forest: {
+      label: "Foresta sociale",
+      description: "Superfici sempreverdi con accenti caldi e amichevoli.",
+    },
+    sunset: {
+      label: "Tramonto caldo",
+      description: "Accenti corallo e oro per un mood più morbido.",
+    },
+    lavender: {
+      label: "Lavanda quieta",
+      description: "Accenti viola morbidi per una sensazione sociale più calma.",
+    },
   },
   Japanese: {
-    midnight: { label: "ミッドナイト NSN", description: "深いネイビーにインディゴとティールのアクセント。" },
+    midnight: {
+      label: "ミッドナイト NSN",
+      description: "深いネイビーにインディゴとティールのアクセント。",
+    },
     ocean: { label: "オーシャン Calm", description: "ブルー、アクア、やわらかな空色のトーン。" },
     forest: { label: "フォレスト Social", description: "常緑の面に温かく親しみやすいハイライト。" },
-    sunset: { label: "サンセット Warm", description: "やわらかな気分のためのコーラルとゴールドのアクセント。" },
-    lavender: { label: "ラベンダー Quiet", description: "より落ち着いた社交感のための淡い紫のアクセント。" },
+    sunset: {
+      label: "サンセット Warm",
+      description: "やわらかな気分のためのコーラルとゴールドのアクセント。",
+    },
+    lavender: {
+      label: "ラベンダー Quiet",
+      description: "より落ち着いた社交感のための淡い紫のアクセント。",
+    },
   },
   Korean: {
     midnight: { label: "미드나이트 NSN", description: "인디고와 틸 포인트가 있는 깊은 네이비." },
     ocean: { label: "오션 Calm", description: "블루, 아쿠아, 부드러운 하늘색 톤." },
-    forest: { label: "포레스트 Social", description: "따뜻하고 친근한 포인트가 있는 에버그린 표면." },
+    forest: {
+      label: "포레스트 Social",
+      description: "따뜻하고 친근한 포인트가 있는 에버그린 표면.",
+    },
     sunset: { label: "선셋 Warm", description: "부드러운 분위기의 코랄과 골드 포인트." },
-    lavender: { label: "라벤더 Quiet", description: "더 차분한 사회적 느낌을 위한 부드러운 보라 포인트." },
+    lavender: {
+      label: "라벤더 Quiet",
+      description: "더 차분한 사회적 느낌을 위한 부드러운 보라 포인트.",
+    },
   },
   Persian: {
     midnight: { label: "نیمه‌شب NSN", description: "سرمه‌ای عمیق با لمسه‌های نیلی و فیروزه‌ای." },
     ocean: { label: "آرامش اقیانوس", description: "رنگ‌های آبی، آکوا و آسمانی نرم." },
-    forest: { label: "جنگل اجتماعی", description: "سطح‌های سبز همیشه‌بهار با برجسته‌های گرم و دوستانه." },
+    forest: {
+      label: "جنگل اجتماعی",
+      description: "سطح‌های سبز همیشه‌بهار با برجسته‌های گرم و دوستانه.",
+    },
     sunset: { label: "غروب گرم", description: "لمسه‌های مرجانی و طلایی برای حال‌وهوایی نرم‌تر." },
-    lavender: { label: "اسطوخودوس آرام", description: "لمسه‌های بنفش نرم برای حس اجتماعی آرام‌تر." },
+    lavender: {
+      label: "اسطوخودوس آرام",
+      description: "لمسه‌های بنفش نرم برای حس اجتماعی آرام‌تر.",
+    },
   },
   Urdu: {
     midnight: { label: "نصف شب NSN", description: "انڈیگو اور ٹیل جھلکوں کے ساتھ گہرا نیوی۔" },
     ocean: { label: "سمندری سکون", description: "نیلے، ایکوا اور نرم آسمانی رنگ۔" },
     forest: { label: "سماجی جنگل", description: "گرم دوستانہ جھلکوں کے ساتھ evergreen سطحیں۔" },
     sunset: { label: "گرم غروب", description: "نرم مزاج کے لیے کورل اور سنہری جھلکیں۔" },
-    lavender: { label: "پرسکون لیونڈر", description: "زیادہ پرسکون سماجی احساس کے لیے نرم جامنی جھلکیں۔" },
+    lavender: {
+      label: "پرسکون لیونڈر",
+      description: "زیادہ پرسکون سماجی احساس کے لیے نرم جامنی جھلکیں۔",
+    },
   },
   Bengali: {
     midnight: { label: "মিডনাইট NSN", description: "ইন্ডিগো ও টিল অ্যাকসেন্টসহ গভীর নেভি।" },
     ocean: { label: "ওশান শান্তি", description: "নীল, অ্যাকোয়া ও নরম আকাশি টোন।" },
     forest: { label: "সামাজিক বন", description: "উষ্ণ বন্ধুত্বপূর্ণ হাইলাইটসহ চিরসবুজ পৃষ্ঠ।" },
     sunset: { label: "উষ্ণ সূর্যাস্ত", description: "নরম মুডের জন্য কোরাল ও সোনালি অ্যাকসেন্ট।" },
-    lavender: { label: "শান্ত ল্যাভেন্ডার", description: "আরও শান্ত সামাজিক অনুভূতির জন্য নরম বেগুনি অ্যাকসেন্ট।" },
+    lavender: {
+      label: "শান্ত ল্যাভেন্ডার",
+      description: "আরও শান্ত সামাজিক অনুভূতির জন্য নরম বেগুনি অ্যাকসেন্ট।",
+    },
   },
   Filipino: {
-    midnight: { label: "Midnight NSN", description: "Malalim na navy na may indigo at teal accents." },
+    midnight: {
+      label: "Midnight NSN",
+      description: "Malalim na navy na may indigo at teal accents.",
+    },
     ocean: { label: "Ocean Calm", description: "Blue, aqua at malambot na sky tones." },
-    forest: { label: "Forest Social", description: "Evergreen surfaces na may mainit at friendly highlights." },
-    sunset: { label: "Sunset Warm", description: "Coral at gold accents para sa mas banayad na mood." },
-    lavender: { label: "Lavender Quiet", description: "Malambot na purple accents para sa mas kalmadong social feel." },
+    forest: {
+      label: "Forest Social",
+      description: "Evergreen surfaces na may mainit at friendly highlights.",
+    },
+    sunset: {
+      label: "Sunset Warm",
+      description: "Coral at gold accents para sa mas banayad na mood.",
+    },
+    lavender: {
+      label: "Lavender Quiet",
+      description: "Malambot na purple accents para sa mas kalmadong social feel.",
+    },
   },
   Indonesian: {
     midnight: { label: "Midnight NSN", description: "Navy gelap dengan aksen indigo dan teal." },
     ocean: { label: "Ocean Calm", description: "Nuansa biru, aqua, dan langit lembut." },
-    forest: { label: "Forest Social", description: "Permukaan hijau abadi dengan sorotan hangat dan ramah." },
-    sunset: { label: "Sunset Warm", description: "Aksen koral dan emas untuk suasana yang lebih lembut." },
-    lavender: { label: "Lavender Quiet", description: "Aksen ungu lembut untuk rasa sosial yang lebih tenang." },
+    forest: {
+      label: "Forest Social",
+      description: "Permukaan hijau abadi dengan sorotan hangat dan ramah.",
+    },
+    sunset: {
+      label: "Sunset Warm",
+      description: "Aksen koral dan emas untuk suasana yang lebih lembut.",
+    },
+    lavender: {
+      label: "Lavender Quiet",
+      description: "Aksen ungu lembut untuk rasa sosial yang lebih tenang.",
+    },
   },
   Malay: {
-    midnight: { label: "Midnight NSN", description: "Biru navy gelap dengan aksen indigo dan teal." },
+    midnight: {
+      label: "Midnight NSN",
+      description: "Biru navy gelap dengan aksen indigo dan teal.",
+    },
     ocean: { label: "Ocean Calm", description: "Nada biru, aqua dan langit lembut." },
-    forest: { label: "Forest Social", description: "Permukaan hijau dengan sorotan hangat dan mesra." },
-    sunset: { label: "Sunset Warm", description: "Aksen karang dan emas untuk suasana lebih lembut." },
-    lavender: { label: "Lavender Quiet", description: "Aksen ungu lembut untuk rasa sosial yang lebih tenang." },
+    forest: {
+      label: "Forest Social",
+      description: "Permukaan hijau dengan sorotan hangat dan mesra.",
+    },
+    sunset: {
+      label: "Sunset Warm",
+      description: "Aksen karang dan emas untuk suasana lebih lembut.",
+    },
+    lavender: {
+      label: "Lavender Quiet",
+      description: "Aksen ungu lembut untuk rasa sosial yang lebih tenang.",
+    },
   },
   Thai: {
     midnight: { label: "Midnight NSN", description: "น้ำเงินเข้มพร้อมสีเน้นอินดิโกและทีล" },
     ocean: { label: "Ocean Calm", description: "โทนฟ้า อะควา และสีท้องฟ้านุ่มๆ" },
     forest: { label: "Forest Social", description: "พื้นผิวเขียวเข้มพร้อมไฮไลต์อบอุ่นและเป็นมิตร" },
     sunset: { label: "Sunset Warm", description: "สีเน้นคอรัลและทองเพื่ออารมณ์ที่นุ่มขึ้น" },
-    lavender: { label: "Lavender Quiet", description: "สีม่วงนุ่มๆ สำหรับความรู้สึกทางสังคมที่สงบขึ้น" },
+    lavender: {
+      label: "Lavender Quiet",
+      description: "สีม่วงนุ่มๆ สำหรับความรู้สึกทางสังคมที่สงบขึ้น",
+    },
   },
   Turkish: {
     midnight: { label: "Gece Yarısı NSN", description: "İndigo ve teal vurgulu derin lacivert." },
     ocean: { label: "Okyanus Sakinliği", description: "Mavi, aqua ve yumuşak gökyüzü tonları." },
-    forest: { label: "Sosyal Orman", description: "Sıcak ve dostça vurgularla yaprak dökmeyen yüzeyler." },
-    sunset: { label: "Sıcak Gün Batımı", description: "Daha yumuşak bir ruh hali için mercan ve altın vurgular." },
-    lavender: { label: "Sakin Lavanta", description: "Daha sakin bir sosyal his için yumuşak mor vurgular." },
+    forest: {
+      label: "Sosyal Orman",
+      description: "Sıcak ve dostça vurgularla yaprak dökmeyen yüzeyler.",
+    },
+    sunset: {
+      label: "Sıcak Gün Batımı",
+      description: "Daha yumuşak bir ruh hali için mercan ve altın vurgular.",
+    },
+    lavender: {
+      label: "Sakin Lavanta",
+      description: "Daha sakin bir sosyal his için yumuşak mor vurgular.",
+    },
   },
   Vietnamese: {
     midnight: { label: "Midnight NSN", description: "Xanh navy sâu với điểm nhấn chàm và teal." },
     ocean: { label: "Ocean Calm", description: "Tông xanh, aqua và màu trời dịu." },
-    forest: { label: "Forest Social", description: "Bề mặt xanh lá với điểm nhấn ấm áp và thân thiện." },
-    sunset: { label: "Sunset Warm", description: "Điểm nhấn san hô và vàng cho tâm trạng mềm hơn." },
-    lavender: { label: "Lavender Quiet", description: "Điểm nhấn tím dịu cho cảm giác xã hội bình tĩnh hơn." },
+    forest: {
+      label: "Forest Social",
+      description: "Bề mặt xanh lá với điểm nhấn ấm áp và thân thiện.",
+    },
+    sunset: {
+      label: "Sunset Warm",
+      description: "Điểm nhấn san hô và vàng cho tâm trạng mềm hơn.",
+    },
+    lavender: {
+      label: "Lavender Quiet",
+      description: "Điểm nhấn tím dịu cho cảm giác xã hội bình tĩnh hơn.",
+    },
   },
   Russian: {
-    midnight: { label: "Полночь NSN", description: "Глубокий тёмно-синий с индиго и бирюзовыми акцентами." },
+    midnight: {
+      label: "Полночь NSN",
+      description: "Глубокий тёмно-синий с индиго и бирюзовыми акцентами.",
+    },
     ocean: { label: "Океанское спокойствие", description: "Синие, аква и мягкие небесные тона." },
-    forest: { label: "Лесное общение", description: "Вечнозелёные поверхности с тёплыми дружелюбными акцентами." },
-    sunset: { label: "Тёплый закат", description: "Коралловые и золотые акценты для более мягкого настроения." },
-    lavender: { label: "Тихая лаванда", description: "Мягкие фиолетовые акценты для более спокойного общения." },
+    forest: {
+      label: "Лесное общение",
+      description: "Вечнозелёные поверхности с тёплыми дружелюбными акцентами.",
+    },
+    sunset: {
+      label: "Тёплый закат",
+      description: "Коралловые и золотые акценты для более мягкого настроения.",
+    },
+    lavender: {
+      label: "Тихая лаванда",
+      description: "Мягкие фиолетовые акценты для более спокойного общения.",
+    },
   },
   Spanish: {
-    midnight: { label: "Medianoche NSN", description: "Azul marino profundo con acentos índigo y turquesa." },
+    midnight: {
+      label: "Medianoche NSN",
+      description: "Azul marino profundo con acentos índigo y turquesa.",
+    },
     ocean: { label: "Calma océano", description: "Tonos azules, aqua y cielo suave." },
-    forest: { label: "Bosque social", description: "Superficies verdes con detalles cálidos y amables." },
-    sunset: { label: "Atardecer cálido", description: "Acentos coral y dorado para un ánimo más suave." },
-    lavender: { label: "Lavanda tranquila", description: "Acentos morados suaves para una sensación social más calmada." },
+    forest: {
+      label: "Bosque social",
+      description: "Superficies verdes con detalles cálidos y amables.",
+    },
+    sunset: {
+      label: "Atardecer cálido",
+      description: "Acentos coral y dorado para un ánimo más suave.",
+    },
+    lavender: {
+      label: "Lavanda tranquila",
+      description: "Acentos morados suaves para una sensación social más calmada.",
+    },
   },
   Afrikaans: {
-    midnight: { label: "Middernag NSN", description: "Diep vlootblou met indigo- en tealkleur-aksente." },
+    midnight: {
+      label: "Middernag NSN",
+      description: "Diep vlootblou met indigo- en tealkleur-aksente.",
+    },
     ocean: { label: "Oseaan-kalmte", description: "Blou, aqua en sagte lugtone." },
-    forest: { label: "Sosiale woud", description: "Immergroen oppervlaktes met warm, vriendelike hoogtepunte." },
-    sunset: { label: "Warm sonsondergang", description: "Koraal- en goudaksente vir 'n sagter stemming." },
-    lavender: { label: "Stil laventel", description: "Sagte pers aksente vir 'n rustiger sosiale gevoel." },
+    forest: {
+      label: "Sosiale woud",
+      description: "Immergroen oppervlaktes met warm, vriendelike hoogtepunte.",
+    },
+    sunset: {
+      label: "Warm sonsondergang",
+      description: "Koraal- en goudaksente vir 'n sagter stemming.",
+    },
+    lavender: {
+      label: "Stil laventel",
+      description: "Sagte pers aksente vir 'n rustiger sosiale gevoel.",
+    },
   },
   Albanian: {
     midnight: { label: "Mesnatë NSN", description: "Blu e errët me thekse indigo dhe teal." },
     ocean: { label: "Qetësi oqeani", description: "Tone blu, aqua dhe qielli të butë." },
-    forest: { label: "Pyll social", description: "Sipërfaqe të gjelbra me thekse të ngrohta e miqësore." },
-    sunset: { label: "Perëndim i ngrohtë", description: "Thekse korali dhe ari për një humor më të butë." },
-    lavender: { label: "Livando e qetë", description: "Thekse vjollce të buta për një ndjesi sociale më të qetë." },
+    forest: {
+      label: "Pyll social",
+      description: "Sipërfaqe të gjelbra me thekse të ngrohta e miqësore.",
+    },
+    sunset: {
+      label: "Perëndim i ngrohtë",
+      description: "Thekse korali dhe ari për një humor më të butë.",
+    },
+    lavender: {
+      label: "Livando e qetë",
+      description: "Thekse vjollce të buta për një ndjesi sociale më të qetë.",
+    },
   },
   Armenian: {
     midnight: { label: "Կեսգիշեր NSN", description: "Խորը մուգ կապույտ՝ ինդիգո և թիլ շեշտերով։" },
-    ocean: { label: "Օվկիանոսի հանգստություն", description: "Կապույտ, ակվա և մեղմ երկնագույն երանգներ։" },
-    forest: { label: "Սոցիալական անտառ", description: "Մշտադալար մակերեսներ՝ ջերմ և ընկերական շեշտերով։" },
-    sunset: { label: "Ջերմ մայրամուտ", description: "Կորալային և ոսկեգույն շեշտեր՝ ավելի մեղմ տրամադրության համար։" },
-    lavender: { label: "Հանգիստ նարդոս", description: "Մեղմ մանուշակագույն շեշտեր՝ ավելի հանգիստ սոցիալական զգացողության համար։" },
+    ocean: {
+      label: "Օվկիանոսի հանգստություն",
+      description: "Կապույտ, ակվա և մեղմ երկնագույն երանգներ։",
+    },
+    forest: {
+      label: "Սոցիալական անտառ",
+      description: "Մշտադալար մակերեսներ՝ ջերմ և ընկերական շեշտերով։",
+    },
+    sunset: {
+      label: "Ջերմ մայրամուտ",
+      description: "Կորալային և ոսկեգույն շեշտեր՝ ավելի մեղմ տրամադրության համար։",
+    },
+    lavender: {
+      label: "Հանգիստ նարդոս",
+      description: "Մեղմ մանուշակագույն շեշտեր՝ ավելի հանգիստ սոցիալական զգացողության համար։",
+    },
   },
   Croatian: {
-    midnight: { label: "Ponoćni NSN", description: "Duboka mornarsko plava s indigo i teal naglascima." },
+    midnight: {
+      label: "Ponoćni NSN",
+      description: "Duboka mornarsko plava s indigo i teal naglascima.",
+    },
     ocean: { label: "Oceanska smirenost", description: "Plavi, aqua i nježni nebeski tonovi." },
-    forest: { label: "Društvena šuma", description: "Zimzelene površine s toplim i prijateljskim naglascima." },
-    sunset: { label: "Topli zalazak", description: "Koraljni i zlatni naglasci za mekše raspoloženje." },
-    lavender: { label: "Mirna lavanda", description: "Nježni ljubičasti naglasci za mirniji društveni osjećaj." },
+    forest: {
+      label: "Društvena šuma",
+      description: "Zimzelene površine s toplim i prijateljskim naglascima.",
+    },
+    sunset: {
+      label: "Topli zalazak",
+      description: "Koraljni i zlatni naglasci za mekše raspoloženje.",
+    },
+    lavender: {
+      label: "Mirna lavanda",
+      description: "Nježni ljubičasti naglasci za mirniji društveni osjećaj.",
+    },
   },
   Czech: {
-    midnight: { label: "Půlnoční NSN", description: "Hluboká námořnická modř s indigovými a tyrkysovými akcenty." },
+    midnight: {
+      label: "Půlnoční NSN",
+      description: "Hluboká námořnická modř s indigovými a tyrkysovými akcenty.",
+    },
     ocean: { label: "Oceánský klid", description: "Modré, akvamarínové a jemné nebeské tóny." },
-    forest: { label: "Sociální les", description: "Stálezelené plochy s teplými a přátelskými akcenty." },
+    forest: {
+      label: "Sociální les",
+      description: "Stálezelené plochy s teplými a přátelskými akcenty.",
+    },
     sunset: { label: "Teplý západ", description: "Korálové a zlaté akcenty pro jemnější náladu." },
-    lavender: { label: "Tichá levandule", description: "Jemné fialové akcenty pro klidnější společenský pocit." },
+    lavender: {
+      label: "Tichá levandule",
+      description: "Jemné fialové akcenty pro klidnější společenský pocit.",
+    },
   },
   Danish: {
     midnight: { label: "Midnat NSN", description: "Dyb marineblå med indigo- og teal-accenter." },
     ocean: { label: "Havro", description: "Blå, aqua og bløde himmeltoner." },
-    forest: { label: "Social skov", description: "Stedsegrønne flader med varme, venlige highlights." },
-    sunset: { label: "Varm solnedgang", description: "Koral- og guldaccenter for en blødere stemning." },
-    lavender: { label: "Rolig lavendel", description: "Bløde lilla accenter for en roligere social følelse." },
+    forest: {
+      label: "Social skov",
+      description: "Stedsegrønne flader med varme, venlige highlights.",
+    },
+    sunset: {
+      label: "Varm solnedgang",
+      description: "Koral- og guldaccenter for en blødere stemning.",
+    },
+    lavender: {
+      label: "Rolig lavendel",
+      description: "Bløde lilla accenter for en roligere social følelse.",
+    },
   },
   Dutch: {
-    midnight: { label: "Middernacht NSN", description: "Diep marineblauw met indigo- en tealaccenten." },
+    midnight: {
+      label: "Middernacht NSN",
+      description: "Diep marineblauw met indigo- en tealaccenten.",
+    },
     ocean: { label: "Oceaankalmte", description: "Blauwe, aqua en zachte luchttinten." },
-    forest: { label: "Sociaal bos", description: "Groene oppervlakken met warme, vriendelijke accenten." },
-    sunset: { label: "Warme zonsondergang", description: "Koraal- en goudaccenten voor een zachtere stemming." },
-    lavender: { label: "Rustige lavendel", description: "Zachte paarse accenten voor een kalmer sociaal gevoel." },
+    forest: {
+      label: "Sociaal bos",
+      description: "Groene oppervlakken met warme, vriendelijke accenten.",
+    },
+    sunset: {
+      label: "Warme zonsondergang",
+      description: "Koraal- en goudaccenten voor een zachtere stemming.",
+    },
+    lavender: {
+      label: "Rustige lavendel",
+      description: "Zachte paarse accenten voor een kalmer sociaal gevoel.",
+    },
   },
   English: {
     midnight: { label: "Midnight NSN", description: "Deep navy with indigo and teal accents." },
     ocean: { label: "Ocean Calm", description: "Blue, aqua, and soft sky tones." },
-    forest: { label: "Forest Social", description: "Evergreen surfaces with warm friendly highlights." },
+    forest: {
+      label: "Forest Social",
+      description: "Evergreen surfaces with warm friendly highlights.",
+    },
     sunset: { label: "Sunset Warm", description: "Warm coral and gold accents for a softer mood." },
-    lavender: { label: "Lavender Quiet", description: "Soft purple accents for a calmer social feel." },
+    lavender: {
+      label: "Lavender Quiet",
+      description: "Soft purple accents for a calmer social feel.",
+    },
   },
   Estonian: {
     midnight: { label: "Kesköö NSN", description: "Sügav tumesinine indigo ja teal-aktsentidega." },
     ocean: { label: "Ookeani rahu", description: "Sinised, aqua ja pehmed taeva toonid." },
-    forest: { label: "Sotsiaalne mets", description: "Igihaljad pinnad soojade ja sõbralike rõhutustega." },
-    sunset: { label: "Soe päikeseloojang", description: "Koralli ja kulla aktsendid pehmema meeleolu jaoks." },
-    lavender: { label: "Vaikne lavendel", description: "Pehmed lillad aktsendid rahulikuma sotsiaalse tunde jaoks." },
+    forest: {
+      label: "Sotsiaalne mets",
+      description: "Igihaljad pinnad soojade ja sõbralike rõhutustega.",
+    },
+    sunset: {
+      label: "Soe päikeseloojang",
+      description: "Koralli ja kulla aktsendid pehmema meeleolu jaoks.",
+    },
+    lavender: {
+      label: "Vaikne lavendel",
+      description: "Pehmed lillad aktsendid rahulikuma sotsiaalse tunde jaoks.",
+    },
   },
   Finnish: {
-    midnight: { label: "Keskiyö NSN", description: "Syvä laivastonsininen indigo- ja teal-korostuksilla." },
+    midnight: {
+      label: "Keskiyö NSN",
+      description: "Syvä laivastonsininen indigo- ja teal-korostuksilla.",
+    },
     ocean: { label: "Meren rauha", description: "Sinisiä, aqua- ja pehmeitä taivaan sävyjä." },
-    forest: { label: "Sosiaalinen metsä", description: "Ikivihreitä pintoja lämpimillä ja ystävällisillä korostuksilla." },
-    sunset: { label: "Lämmin auringonlasku", description: "Koralli- ja kultakorostuksia pehmeämpään tunnelmaan." },
-    lavender: { label: "Rauhallinen laventeli", description: "Pehmeitä violetteja korostuksia rauhallisempaan sosiaaliseen tunteeseen." },
+    forest: {
+      label: "Sosiaalinen metsä",
+      description: "Ikivihreitä pintoja lämpimillä ja ystävällisillä korostuksilla.",
+    },
+    sunset: {
+      label: "Lämmin auringonlasku",
+      description: "Koralli- ja kultakorostuksia pehmeämpään tunnelmaan.",
+    },
+    lavender: {
+      label: "Rauhallinen laventeli",
+      description: "Pehmeitä violetteja korostuksia rauhallisempaan sosiaaliseen tunteeseen.",
+    },
   },
   Greek: {
-    midnight: { label: "Μεσάνυχτα NSN", description: "Βαθύ ναυτικό μπλε με indigo και teal τόνους." },
+    midnight: {
+      label: "Μεσάνυχτα NSN",
+      description: "Βαθύ ναυτικό μπλε με indigo και teal τόνους.",
+    },
     ocean: { label: "Ηρεμία ωκεανού", description: "Μπλε, aqua και απαλοί ουράνιοι τόνοι." },
-    forest: { label: "Κοινωνικό δάσος", description: "Αειθαλή επίπεδα με ζεστές και φιλικές πινελιές." },
-    sunset: { label: "Ζεστό ηλιοβασίλεμα", description: "Κοραλλί και χρυσές πινελιές για πιο απαλή διάθεση." },
-    lavender: { label: "Ήρεμη λεβάντα", description: "Απαλοί μωβ τόνοι για πιο ήρεμη κοινωνική αίσθηση." },
+    forest: {
+      label: "Κοινωνικό δάσος",
+      description: "Αειθαλή επίπεδα με ζεστές και φιλικές πινελιές.",
+    },
+    sunset: {
+      label: "Ζεστό ηλιοβασίλεμα",
+      description: "Κοραλλί και χρυσές πινελιές για πιο απαλή διάθεση.",
+    },
+    lavender: {
+      label: "Ήρεμη λεβάντα",
+      description: "Απαλοί μωβ τόνοι για πιο ήρεμη κοινωνική αίσθηση.",
+    },
   },
   "Haitian Creole": {
     midnight: { label: "Minwi NSN", description: "Ble maren fon ak aksan endigo ak teal." },
     ocean: { label: "Kalm oseyan", description: "Ton ble, aqua ak syèl dou." },
     forest: { label: "Forè sosyal", description: "Sifas vèt ak aksan cho, zanmitay." },
     sunset: { label: "Kouche solèy cho", description: "Aksan koray ak lò pou yon atitid pi dou." },
-    lavender: { label: "Lavand trankil", description: "Aksan mov dou pou yon santiman sosyal pi kalm." },
+    lavender: {
+      label: "Lavand trankil",
+      description: "Aksan mov dou pou yon santiman sosyal pi kalm.",
+    },
   },
   Hungarian: {
-    midnight: { label: "Éjféli NSN", description: "Mély tengerészkék indigó és türkiz hangsúlyokkal." },
+    midnight: {
+      label: "Éjféli NSN",
+      description: "Mély tengerészkék indigó és türkiz hangsúlyokkal.",
+    },
     ocean: { label: "Óceáni nyugalom", description: "Kék, aqua és lágy égbolt tónusok." },
-    forest: { label: "Közösségi erdő", description: "Örökzöld felületek meleg, barátságos kiemelésekkel." },
-    sunset: { label: "Meleg naplemente", description: "Korall és arany hangsúlyok egy lágyabb hangulathoz." },
-    lavender: { label: "Csendes levendula", description: "Lágy lila hangsúlyok egy nyugodtabb közösségi érzéshez." },
+    forest: {
+      label: "Közösségi erdő",
+      description: "Örökzöld felületek meleg, barátságos kiemelésekkel.",
+    },
+    sunset: {
+      label: "Meleg naplemente",
+      description: "Korall és arany hangsúlyok egy lágyabb hangulathoz.",
+    },
+    lavender: {
+      label: "Csendes levendula",
+      description: "Lágy lila hangsúlyok egy nyugodtabb közösségi érzéshez.",
+    },
   },
   Latvian: {
-    midnight: { label: "Pusnakts NSN", description: "Dziļi tumši zils ar indigo un tirkīza akcentiem." },
+    midnight: {
+      label: "Pusnakts NSN",
+      description: "Dziļi tumši zils ar indigo un tirkīza akcentiem.",
+    },
     ocean: { label: "Okeāna miers", description: "Zili, akva un maigi debesu toņi." },
-    forest: { label: "Sociālais mežs", description: "Mūžzaļas virsmas ar siltiem un draudzīgiem akcentiem." },
-    sunset: { label: "Silts saulriets", description: "Koraļļu un zelta akcenti maigākai noskaņai." },
-    lavender: { label: "Klusa lavanda", description: "Maigi violeti akcenti mierīgākai sociālajai sajūtai." },
+    forest: {
+      label: "Sociālais mežs",
+      description: "Mūžzaļas virsmas ar siltiem un draudzīgiem akcentiem.",
+    },
+    sunset: {
+      label: "Silts saulriets",
+      description: "Koraļļu un zelta akcenti maigākai noskaņai.",
+    },
+    lavender: {
+      label: "Klusa lavanda",
+      description: "Maigi violeti akcenti mierīgākai sociālajai sajūtai.",
+    },
   },
   Lithuanian: {
-    midnight: { label: "Vidurnakčio NSN", description: "Gili tamsiai mėlyna su indigo ir teal akcentais." },
+    midnight: {
+      label: "Vidurnakčio NSN",
+      description: "Gili tamsiai mėlyna su indigo ir teal akcentais.",
+    },
     ocean: { label: "Vandenyno ramybė", description: "Mėlyni, aqua ir švelnūs dangaus tonai." },
-    forest: { label: "Socialinis miškas", description: "Visžalės plokštumos su šiltais ir draugiškais akcentais." },
-    sunset: { label: "Šiltas saulėlydis", description: "Koralų ir aukso akcentai švelnesnei nuotaikai." },
-    lavender: { label: "Rami levanda", description: "Švelnūs violetiniai akcentai ramesniam socialiniam jausmui." },
+    forest: {
+      label: "Socialinis miškas",
+      description: "Visžalės plokštumos su šiltais ir draugiškais akcentais.",
+    },
+    sunset: {
+      label: "Šiltas saulėlydis",
+      description: "Koralų ir aukso akcentai švelnesnei nuotaikai.",
+    },
+    lavender: {
+      label: "Rami levanda",
+      description: "Švelnūs violetiniai akcentai ramesniam socialiniam jausmui.",
+    },
   },
   Luxembourgish: {
-    midnight: { label: "Mëtternuecht NSN", description: "Déift Marineblo mat Indigo- an Teal-Akzenter." },
+    midnight: {
+      label: "Mëtternuecht NSN",
+      description: "Déift Marineblo mat Indigo- an Teal-Akzenter.",
+    },
     ocean: { label: "Ozeanrou", description: "Blo, Aqua a mëll Himmelstéin." },
-    forest: { label: "Soziale Bësch", description: "Immergréng Flächen mat waarmen a frëndlechen Akzenter." },
-    sunset: { label: "Waarme Sonnenënnergang", description: "Korall- a Goldakzenter fir eng méi mëll Stëmmung." },
-    lavender: { label: "Rouege Lavendel", description: "Mëll violett Akzenter fir e méi rouegt soziaalt Gefill." },
+    forest: {
+      label: "Soziale Bësch",
+      description: "Immergréng Flächen mat waarmen a frëndlechen Akzenter.",
+    },
+    sunset: {
+      label: "Waarme Sonnenënnergang",
+      description: "Korall- a Goldakzenter fir eng méi mëll Stëmmung.",
+    },
+    lavender: {
+      label: "Rouege Lavendel",
+      description: "Mëll violett Akzenter fir e méi rouegt soziaalt Gefill.",
+    },
   },
   Norwegian: {
     midnight: { label: "Midnatt NSN", description: "Dyp marineblå med indigo- og tealaksenter." },
     ocean: { label: "Havro", description: "Blå, aqua og myke himmeltoner." },
-    forest: { label: "Sosial skog", description: "Eviggrønne flater med varme og vennlige høydepunkter." },
-    sunset: { label: "Varm solnedgang", description: "Korall- og gullaksenter for en mykere stemning." },
-    lavender: { label: "Rolig lavendel", description: "Myke lilla aksenter for en roligere sosial følelse." },
+    forest: {
+      label: "Sosial skog",
+      description: "Eviggrønne flater med varme og vennlige høydepunkter.",
+    },
+    sunset: {
+      label: "Varm solnedgang",
+      description: "Korall- og gullaksenter for en mykere stemning.",
+    },
+    lavender: {
+      label: "Rolig lavendel",
+      description: "Myke lilla aksenter for en roligere sosial følelse.",
+    },
   },
   Polish: {
     midnight: { label: "Północ NSN", description: "Głęboki granat z akcentami indygo i teal." },
-    ocean: { label: "Oceaniczny spokój", description: "Niebieskie, aqua i miękkie odcienie nieba." },
-    forest: { label: "Społeczny las", description: "Wiecznie zielone powierzchnie z ciepłymi, przyjaznymi akcentami." },
-    sunset: { label: "Ciepły zachód", description: "Koralowe i złote akcenty dla łagodniejszego nastroju." },
-    lavender: { label: "Cicha lawenda", description: "Miękkie fioletowe akcenty dla spokojniejszego społecznego odczucia." },
+    ocean: {
+      label: "Oceaniczny spokój",
+      description: "Niebieskie, aqua i miękkie odcienie nieba.",
+    },
+    forest: {
+      label: "Społeczny las",
+      description: "Wiecznie zielone powierzchnie z ciepłymi, przyjaznymi akcentami.",
+    },
+    sunset: {
+      label: "Ciepły zachód",
+      description: "Koralowe i złote akcenty dla łagodniejszego nastroju.",
+    },
+    lavender: {
+      label: "Cicha lawenda",
+      description: "Miękkie fioletowe akcenty dla spokojniejszego społecznego odczucia.",
+    },
   },
   Portuguese: {
-    midnight: { label: "Meia-noite NSN", description: "Azul-marinho profundo com acentos índigo e teal." },
+    midnight: {
+      label: "Meia-noite NSN",
+      description: "Azul-marinho profundo com acentos índigo e teal.",
+    },
     ocean: { label: "Calma oceano", description: "Tons azuis, aqua e céu suave." },
-    forest: { label: "Floresta social", description: "Superfícies verdes com destaques quentes e amigáveis." },
-    sunset: { label: "Pôr do sol quente", description: "Acentos coral e dourados para um ambiente mais suave." },
-    lavender: { label: "Lavanda tranquila", description: "Acentos roxos suaves para uma sensação social mais calma." },
+    forest: {
+      label: "Floresta social",
+      description: "Superfícies verdes com destaques quentes e amigáveis.",
+    },
+    sunset: {
+      label: "Pôr do sol quente",
+      description: "Acentos coral e dourados para um ambiente mais suave.",
+    },
+    lavender: {
+      label: "Lavanda tranquila",
+      description: "Acentos roxos suaves para uma sensação social mais calma.",
+    },
   },
   Romanian: {
-    midnight: { label: "Miez de noapte NSN", description: "Bleumarin profund cu accente indigo și teal." },
+    midnight: {
+      label: "Miez de noapte NSN",
+      description: "Bleumarin profund cu accente indigo și teal.",
+    },
     ocean: { label: "Calm oceanic", description: "Tonuri albastre, aqua și cer blând." },
-    forest: { label: "Pădure socială", description: "Suprafețe verzi cu accente calde și prietenoase." },
-    sunset: { label: "Apus cald", description: "Accente corai și aurii pentru o stare mai blândă." },
-    lavender: { label: "Lavandă liniștită", description: "Accente mov delicate pentru o senzație socială mai calmă." },
+    forest: {
+      label: "Pădure socială",
+      description: "Suprafețe verzi cu accente calde și prietenoase.",
+    },
+    sunset: {
+      label: "Apus cald",
+      description: "Accente corai și aurii pentru o stare mai blândă.",
+    },
+    lavender: {
+      label: "Lavandă liniștită",
+      description: "Accente mov delicate pentru o senzație socială mai calmă.",
+    },
   },
   Slovak: {
-    midnight: { label: "Polnočný NSN", description: "Hlboká námornícka modrá s indigovými a tyrkysovými akcentmi." },
+    midnight: {
+      label: "Polnočný NSN",
+      description: "Hlboká námornícka modrá s indigovými a tyrkysovými akcentmi.",
+    },
     ocean: { label: "Oceánsky pokoj", description: "Modré, aqua a jemné nebeské tóny." },
-    forest: { label: "Spoločenský les", description: "Vždyzelené povrchy s teplými a priateľskými akcentmi." },
+    forest: {
+      label: "Spoločenský les",
+      description: "Vždyzelené povrchy s teplými a priateľskými akcentmi.",
+    },
     sunset: { label: "Teplý západ", description: "Koralové a zlaté akcenty pre jemnejšiu náladu." },
-    lavender: { label: "Tichá levanduľa", description: "Jemné fialové akcenty pre pokojnejší spoločenský pocit." },
+    lavender: {
+      label: "Tichá levanduľa",
+      description: "Jemné fialové akcenty pre pokojnejší spoločenský pocit.",
+    },
   },
   Swedish: {
     midnight: { label: "Midnatt NSN", description: "Djup marinblå med indigo- och tealaccenter." },
     ocean: { label: "Oceanro", description: "Blå, aqua och mjuka himmelstoner." },
     forest: { label: "Social skog", description: "Vintergröna ytor med varma, vänliga accenter." },
-    sunset: { label: "Varm solnedgång", description: "Korall- och guldaccenter för en mjukare stämning." },
-    lavender: { label: "Stilla lavendel", description: "Mjuka lila accenter för en lugnare social känsla." },
+    sunset: {
+      label: "Varm solnedgång",
+      description: "Korall- och guldaccenter för en mjukare stämning.",
+    },
+    lavender: {
+      label: "Stilla lavendel",
+      description: "Mjuka lila accenter för en lugnare social känsla.",
+    },
   },
   Ukrainian: {
-    midnight: { label: "Північ NSN", description: "Глибокий темно-синій з акцентами індиго та бірюзи." },
+    midnight: {
+      label: "Північ NSN",
+      description: "Глибокий темно-синій з акцентами індиго та бірюзи.",
+    },
     ocean: { label: "Океанський спокій", description: "Сині, аква та м'які небесні тони." },
-    forest: { label: "Соціальний ліс", description: "Вічнозелені поверхні з теплими дружніми акцентами." },
-    sunset: { label: "Теплий захід", description: "Коралові та золоті акценти для м'якшого настрою." },
-    lavender: { label: "Тиха лаванда", description: "М'які фіолетові акценти для спокійнішого соціального відчуття." },
+    forest: {
+      label: "Соціальний ліс",
+      description: "Вічнозелені поверхні з теплими дружніми акцентами.",
+    },
+    sunset: {
+      label: "Теплий захід",
+      description: "Коралові та золоті акценти для м'якшого настрою.",
+    },
+    lavender: {
+      label: "Тиха лаванда",
+      description: "М'які фіолетові акценти для спокійнішого соціального відчуття.",
+    },
   },
   Yiddish: {
-    midnight: { label: "האלבע נאכט NSN", description: "טיף מארינבלוי מיט אינדיגא און טיל אקצענטן." },
+    midnight: {
+      label: "האלבע נאכט NSN",
+      description: "טיף מארינבלוי מיט אינדיגא און טיל אקצענטן.",
+    },
     ocean: { label: "אקעאן-רואיקייט", description: "בלויע, אקווא און ווייכע הימל-טאנען." },
-    forest: { label: "געזעלשאפטלעכער וואלד", description: "אייביג-גרינע אויבערפלעכן מיט ווארעמע פריינטלעכע אקצענטן." },
-    sunset: { label: "ווארעמער זונפארגאנג", description: "קאראל און גאלד אקצענטן פאר א ווייכערער שטימונג." },
-    lavender: { label: "שטילער לאווענדער", description: "ווייכע פערפל אקצענטן פאר א רואיגערער געזעלשאפטלעכער געפיל." },
+    forest: {
+      label: "געזעלשאפטלעכער וואלד",
+      description: "אייביג-גרינע אויבערפלעכן מיט ווארעמע פריינטלעכע אקצענטן.",
+    },
+    sunset: {
+      label: "ווארעמער זונפארגאנג",
+      description: "קאראל און גאלד אקצענטן פאר א ווייכערער שטימונג.",
+    },
+    lavender: {
+      label: "שטילער לאווענדער",
+      description: "ווייכע פערפל אקצענטן פאר א רואיגערער געזעלשאפטלעכער געפיל.",
+    },
   },
 };
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
-const accessibilityTranslations: Record<string, Required<Pick<SettingsCopy, "accessibility" | "largerText" | "largerTextCopy" | "highContrast" | "highContrastCopy" | "reduceMotion" | "reduceMotionCopy" | "screenReaderHints" | "screenReaderHintsCopy">>> = {
+const accessibilityTranslations: Record<
+  string,
+  Required<
+    Pick<
+      SettingsCopy,
+      | "accessibility"
+      | "largerText"
+      | "largerTextCopy"
+      | "highContrast"
+      | "highContrastCopy"
+      | "reduceMotion"
+      | "reduceMotionCopy"
+      | "screenReaderHints"
+      | "screenReaderHintsCopy"
+    >
+  >
+> = {
   English: {
     accessibility: "Accessibility",
     largerText: "Larger text",
@@ -2993,7 +3660,8 @@ const accessibilityTranslations: Record<string, Required<Pick<SettingsCopy, "acc
     reduceMotion: "Уменьшить движение",
     reduceMotionCopy: "Использовать более спокойные переходы и меньше движения.",
     screenReaderHints: "Подсказки для экранного диктора",
-    screenReaderHintsCopy: "Добавить дополнительные метки и подсказки для вспомогательных технологий.",
+    screenReaderHintsCopy:
+      "Добавить дополнительные метки и подсказки для вспомогательных технологий.",
   },
   Swedish: {
     accessibility: "Tillgänglighet",
@@ -3054,7 +3722,10 @@ const accessibilityTranslations: Record<string, Required<Pick<SettingsCopy, "acc
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { section: requestedSection, from: settingsBackSource } = useLocalSearchParams<{ section?: string | string[]; from?: string | string[] }>();
+  const { section: requestedSection, from: settingsBackSource } = useLocalSearchParams<{
+    section?: string | string[];
+    from?: string | string[];
+  }>();
   const { width } = useWindowDimensions();
   const scrollViewRef = useRef<ScrollView | null>(null);
   const sectionOffsets = useRef<Partial<Record<SettingsSectionJumpId, number>>>({});
@@ -3068,6 +3739,12 @@ export default function SettingsScreen() {
     setBlurProfilePhoto,
     blurLevel,
     setBlurLevel,
+    softRevealSuggestions,
+    setSoftRevealSuggestions,
+    softRevealPace,
+    setSoftRevealPace,
+    preferSoftRevealPeople,
+    setPreferSoftRevealPeople,
     age,
     preferredAgeMin,
     preferredAgeMax,
@@ -3208,12 +3885,15 @@ export default function SettingsScreen() {
   const [appLanguageSearch, setAppLanguageSearch] = useState("");
   const [translationLanguageSearch, setTranslationLanguageSearch] = useState("");
   const [appLanguageRegionBase, setAppLanguageRegionBase] = useState<string | null>(null);
-  const [translationLanguageRegionBase, setTranslationLanguageRegionBase] = useState<string | null>(null);
+  const [translationLanguageRegionBase, setTranslationLanguageRegionBase] = useState<string | null>(
+    null,
+  );
   const [recentlyChangedKey, setRecentlyChangedKey] = useState<string | null>(null);
   const [accountConfirmation, setAccountConfirmation] = useState<AccountConfirmation>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [openAccordionSections, setOpenAccordionSections] = useState<SettingsAccordionId[]>([]);
-  const [highlightedAccordionSection, setHighlightedAccordionSection] = useState<SettingsAccordionId | null>(null);
+  const [highlightedAccordionSection, setHighlightedAccordionSection] =
+    useState<SettingsAccordionId | null>(null);
   const recentlyChangedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy: SettingsCopy = {
@@ -3224,51 +3904,57 @@ export default function SettingsScreen() {
     ...(regionalEnglishSettings[appLanguage] ?? {}),
   };
   const paletteCopy = paletteTranslations[appLanguageBase] ?? {};
-  const appearanceOptionCopy = appLanguageBase === "Hebrew"
-    ? {
-        softSurfaces: "משטחים רכים",
-        softSurfacesCopy: "רכך רקעים וגבולות כדי שהמסכים ירגישו רגועים יותר.",
-        clearBorders: "גבולות ברורים",
-        clearBordersCopy: "חזק את קווי ההפרדה סביב כרטיסים ותפריטים.",
-      }
+  const appearanceOptionCopy =
+    appLanguageBase === "Hebrew"
+      ? {
+          softSurfaces: "משטחים רכים",
+          softSurfacesCopy: "רכך רקעים וגבולות כדי שהמסכים ירגישו רגועים יותר.",
+          clearBorders: "גבולות ברורים",
+          clearBordersCopy: "חזק את קווי ההפרדה סביב כרטיסים ותפריטים.",
+        }
       : appLanguageBase === "Chinese"
         ? {
-        softSurfaces: "柔和界面",
-        softSurfacesCopy: "柔化面板和边框，让界面更安静。",
-        clearBorders: "清晰边框",
-        clearBordersCopy: "加强卡片和菜单轮廓，方便区分内容。",
-      }
-      : appLanguageBase === "Japanese"
-        ? {
-        softSurfaces: "やわらかい面",
-        softSurfacesCopy: "パネルと境界線をやわらげ、画面をより落ち着かせます。",
-        clearBorders: "はっきりした境界線",
-        clearBordersCopy: "カードやメニューの輪郭を強め、区切りを分かりやすくします。",
-      }
-      : appLanguageBase === "Korean"
-        ? {
-        softSurfaces: "부드러운 표면",
-        softSurfacesCopy: "패널과 테두리를 부드럽게 해 화면을 더 차분하게 만듭니다.",
-        clearBorders: "선명한 테두리",
-        clearBordersCopy: "카드와 메뉴 윤곽을 강화해 구분을 더 명확하게 합니다.",
-      }
-      : {
-        softSurfaces: "Soft surfaces",
-        softSurfacesCopy: "Soften panels and borders so screens feel calmer.",
-        clearBorders: "Clear borders",
-        clearBordersCopy: "Strengthen card and menu outlines for clearer separation.",
-      };
+            softSurfaces: "柔和界面",
+            softSurfacesCopy: "柔化面板和边框，让界面更安静。",
+            clearBorders: "清晰边框",
+            clearBordersCopy: "加强卡片和菜单轮廓，方便区分内容。",
+          }
+        : appLanguageBase === "Japanese"
+          ? {
+              softSurfaces: "やわらかい面",
+              softSurfacesCopy: "パネルと境界線をやわらげ、画面をより落ち着かせます。",
+              clearBorders: "はっきりした境界線",
+              clearBordersCopy: "カードやメニューの輪郭を強め、区切りを分かりやすくします。",
+            }
+          : appLanguageBase === "Korean"
+            ? {
+                softSurfaces: "부드러운 표면",
+                softSurfacesCopy: "패널과 테두리를 부드럽게 해 화면을 더 차분하게 만듭니다.",
+                clearBorders: "선명한 테두리",
+                clearBordersCopy: "카드와 메뉴 윤곽을 강화해 구분을 더 명확하게 합니다.",
+              }
+            : {
+                softSurfaces: "Soft surfaces",
+                softSurfacesCopy: "Soften panels and borders so screens feel calmer.",
+                clearBorders: "Clear borders",
+                clearBordersCopy: "Strengthen card and menu outlines for clearer separation.",
+              };
   const isRtl = rtlLanguages.has(appLanguageBase);
   const paletteAccent = appPalette.swatches[2];
-  const brandThemeOptions = (isSoftHelloThemeEnabled ? [brandThemes.nsn, brandThemes.softhello] : [brandThemes.nsn]);
+  const brandThemeOptions = isSoftHelloThemeEnabled
+    ? [brandThemes.nsn, brandThemes.softhello]
+    : [brandThemes.nsn];
   const isAdvancedSettings = settingsPrivacyMode === "Advanced";
   const settingsLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
-  const contrastTextStyle = highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
-  const contrastMutedStyle = highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
-  const accessibilityCopy = accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
+  const contrastTextStyle =
+    highContrast && (isDay ? styles.dayHighContrastText : styles.nightHighContrastText);
+  const contrastMutedStyle =
+    highContrast && (isDay ? styles.dayHighContrastMutedText : styles.nightHighContrastMutedText);
+  const accessibilityCopy =
+    accessibilityTranslations[appLanguageBase] ?? accessibilityTranslations.English;
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel(
     { contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument },
-    verificationLevel
+    verificationLevel,
   );
   const quickJumpOptions: { id: SettingsSectionJumpId; label: string }[] = [
     { id: "settingsView", label: "View" },
@@ -3281,7 +3967,9 @@ export default function SettingsScreen() {
     ...(isAdvancedSettings
       ? [
           { id: "nameDisplay" as const, label: "Names" },
-          ...(comfortMode !== "Open Mode" ? [{ id: "photoBlur" as const, label: "Photo blur" }] : []),
+          ...(comfortMode !== "Open Mode"
+            ? [{ id: "photoBlur" as const, label: "Photo blur" }]
+            : []),
           { id: "gender" as const, label: "Gender" },
           { id: "notifications" as const, label: "Notifications" },
           { id: "locationDiscovery" as const, label: "Location" },
@@ -3295,16 +3983,22 @@ export default function SettingsScreen() {
   ];
   const normalizedQuickJumpSearch = quickJumpSearch.trim().toLocaleLowerCase();
   const filteredQuickJumpOptions = useMemo(
-    () => normalizedQuickJumpSearch
-      ? quickJumpOptions.filter((option) => option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch))
-      : quickJumpOptions,
-    [normalizedQuickJumpSearch, quickJumpOptions]
+    () =>
+      normalizedQuickJumpSearch
+        ? quickJumpOptions.filter((option) =>
+            option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch),
+          )
+        : quickJumpOptions,
+    [normalizedQuickJumpSearch, quickJumpOptions],
   );
   const visibleSettingsAccordionIds = useMemo(
-    () => isAdvancedSettings
-      ? allSettingsAccordionIds
-      : allSettingsAccordionIds.filter((id) => id !== "notifications" && id !== "timeUnits" && id !== "safetyContact"),
-    [isAdvancedSettings]
+    () =>
+      isAdvancedSettings
+        ? allSettingsAccordionIds
+        : allSettingsAccordionIds.filter(
+            (id) => id !== "notifications" && id !== "timeUnits" && id !== "safetyContact",
+          ),
+    [isAdvancedSettings],
   );
   const expandAllSettingsAccordions = () => {
     setOpenAccordionSections(visibleSettingsAccordionIds);
@@ -3314,9 +4008,7 @@ export default function SettingsScreen() {
   };
   const toggleSettingsAccordion = (id: SettingsAccordionId) => {
     setOpenAccordionSections((current) =>
-      current.includes(id)
-        ? current.filter((sectionId) => sectionId !== id)
-        : [...current, id]
+      current.includes(id) ? current.filter((sectionId) => sectionId !== id) : [...current, id],
     );
   };
   const showRecentlyChanged = (key: string) => {
@@ -3339,11 +4031,12 @@ export default function SettingsScreen() {
     if (!badge && !updated) return null;
 
     return (
-      <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]} accessibilityLiveRegion="polite">
+      <View
+        style={[styles.settingMetaRow, isRtl && styles.rtlRow]}
+        accessibilityLiveRegion="polite"
+      >
         {badge ? (
-          <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
-            {badge}
-          </Text>
+          <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>{badge}</Text>
         ) : null}
         {showRecentStatus ? (
           <Text style={[styles.recentlyChangedText, isDay && styles.dayRecentlyChangedText]}>
@@ -3353,79 +4046,89 @@ export default function SettingsScreen() {
       </View>
     );
   };
-  const onToggleChange = (key: string, onValueChange: (value: boolean) => void) => (value: boolean) => {
-    if (getSettingDisabled(key)) return;
-    onValueChange(value);
-    showRecentlyChanged(key);
-  };
-  const extraAccessibilityCopy = appLanguageBase === "Hebrew"
-    ? {
-        largerTouchTargets: "אזורי לחיצה גדולים",
-        largerTouchTargetsCopy: "הגדל כפתורים ואזורים לחיצים כדי שיהיה קל יותר ללחוץ בבטחה.",
-        reduceTransparency: "פחות שקיפות",
-        reduceTransparencyCopy: "השתמש ברקעים אטומים יותר כדי לשפר קריאות.",
-        boldText: "טקסט מודגש",
-        boldTextCopy: "חזק משקלי טקסט בממשק לסריקה קלה יותר.",
-        simplifiedInterface: "ממשק פשוט יותר",
-        simplifiedInterfaceCopy: "הפחת פרטים משניים כדי שהמסכים יהיו רגועים יותר.",
-        slowerTransitions: "מעברים איטיים יותר",
-        slowerTransitionsCopy: "האט שינויי מצב כמו יום ולילה כדי שיהיה יותר זמן להתמצא.",
-      }
+  const onToggleChange =
+    (key: string, onValueChange: (value: boolean) => void) => (value: boolean) => {
+      if (getSettingDisabled(key)) return;
+      onValueChange(value);
+      showRecentlyChanged(key);
+    };
+  const extraAccessibilityCopy =
+    appLanguageBase === "Hebrew"
+      ? {
+          largerTouchTargets: "אזורי לחיצה גדולים",
+          largerTouchTargetsCopy: "הגדל כפתורים ואזורים לחיצים כדי שיהיה קל יותר ללחוץ בבטחה.",
+          reduceTransparency: "פחות שקיפות",
+          reduceTransparencyCopy: "השתמש ברקעים אטומים יותר כדי לשפר קריאות.",
+          boldText: "טקסט מודגש",
+          boldTextCopy: "חזק משקלי טקסט בממשק לסריקה קלה יותר.",
+          simplifiedInterface: "ממשק פשוט יותר",
+          simplifiedInterfaceCopy: "הפחת פרטים משניים כדי שהמסכים יהיו רגועים יותר.",
+          slowerTransitions: "מעברים איטיים יותר",
+          slowerTransitionsCopy: "האט שינויי מצב כמו יום ולילה כדי שיהיה יותר זמן להתמצא.",
+        }
       : appLanguageBase === "Chinese"
         ? {
-        largerTouchTargets: "更大的点击区域",
-        largerTouchTargetsCopy: "放大按钮和可点击区域，让操作更稳妥。",
-        reduceTransparency: "减少透明度",
-        reduceTransparencyCopy: "使用更实的背景来提升可读性。",
-        boldText: "加粗界面文字",
-        boldTextCopy: "加强界面标签字重，方便快速浏览。",
-        simplifiedInterface: "简化界面",
-        simplifiedInterfaceCopy: "减少次要细节，让页面更平静、更容易理解。",
-        slowerTransitions: "放慢过渡",
-        slowerTransitionsCopy: "放慢日间和夜间等模式切换，留出更多适应时间。",
-      }
-      : appLanguageBase === "Japanese"
-        ? {
-        largerTouchTargets: "タッチ範囲を大きく",
-        largerTouchTargetsCopy: "ボタンやタップ範囲を大きくして、安心して押しやすくします。",
-        reduceTransparency: "透明度を下げる",
-        reduceTransparencyCopy: "より不透明な面を使い、読みやすさを高めます。",
-        boldText: "インターフェース文字を太く",
-        boldTextCopy: "ラベルの太さを強め、画面を見つけやすくします。",
-        simplifiedInterface: "シンプルなインターフェース",
-        simplifiedInterfaceCopy: "二次的な情報を減らし、画面を落ち着いて分かりやすくします。",
-        slowerTransitions: "遷移をゆっくりに",
-        slowerTransitionsCopy: "昼/夜モードなどの切り替えをゆっくりにして、把握しやすくします。",
-      }
-      : appLanguageBase === "Korean"
-        ? {
-        largerTouchTargets: "더 큰 터치 영역",
-        largerTouchTargetsCopy: "버튼과 탭 영역을 키워 더 자신 있게 누를 수 있게 합니다.",
-        reduceTransparency: "투명도 줄이기",
-        reduceTransparencyCopy: "더 단단한 배경을 사용해 읽기 쉽게 만듭니다.",
-        boldText: "인터페이스 글자 굵게",
-        boldTextCopy: "라벨 굵기를 강화해 화면을 더 쉽게 훑어볼 수 있게 합니다.",
-        simplifiedInterface: "간소화된 인터페이스",
-        simplifiedInterfaceCopy: "부가 정보를 줄여 화면을 더 차분하고 이해하기 쉽게 만듭니다.",
-        slowerTransitions: "전환 속도 늦추기",
-        slowerTransitionsCopy: "낮/밤 모드 같은 전환을 느리게 해 적응할 시간을 더 줍니다.",
-      }
-      : {
-        largerTouchTargets: "Larger touch targets",
-        largerTouchTargetsCopy: "Make buttons and tap areas larger so they are easier to press confidently.",
-        reduceTransparency: "Reduce transparency",
-        reduceTransparencyCopy: "Use more solid surfaces to improve readability.",
-        boldText: "Bold interface text",
-        boldTextCopy: "Strengthen label weights across the interface for easier scanning.",
-        simplifiedInterface: "Simplified interface",
-        simplifiedInterfaceCopy: "Reduce secondary detail so screens feel calmer and easier to parse.",
-        slowerTransitions: "Slower transitions",
-        slowerTransitionsCopy: "Slow down mode changes like Day and Night so there is more time to orient.",
-      };
+            largerTouchTargets: "更大的点击区域",
+            largerTouchTargetsCopy: "放大按钮和可点击区域，让操作更稳妥。",
+            reduceTransparency: "减少透明度",
+            reduceTransparencyCopy: "使用更实的背景来提升可读性。",
+            boldText: "加粗界面文字",
+            boldTextCopy: "加强界面标签字重，方便快速浏览。",
+            simplifiedInterface: "简化界面",
+            simplifiedInterfaceCopy: "减少次要细节，让页面更平静、更容易理解。",
+            slowerTransitions: "放慢过渡",
+            slowerTransitionsCopy: "放慢日间和夜间等模式切换，留出更多适应时间。",
+          }
+        : appLanguageBase === "Japanese"
+          ? {
+              largerTouchTargets: "タッチ範囲を大きく",
+              largerTouchTargetsCopy: "ボタンやタップ範囲を大きくして、安心して押しやすくします。",
+              reduceTransparency: "透明度を下げる",
+              reduceTransparencyCopy: "より不透明な面を使い、読みやすさを高めます。",
+              boldText: "インターフェース文字を太く",
+              boldTextCopy: "ラベルの太さを強め、画面を見つけやすくします。",
+              simplifiedInterface: "シンプルなインターフェース",
+              simplifiedInterfaceCopy: "二次的な情報を減らし、画面を落ち着いて分かりやすくします。",
+              slowerTransitions: "遷移をゆっくりに",
+              slowerTransitionsCopy:
+                "昼/夜モードなどの切り替えをゆっくりにして、把握しやすくします。",
+            }
+          : appLanguageBase === "Korean"
+            ? {
+                largerTouchTargets: "더 큰 터치 영역",
+                largerTouchTargetsCopy: "버튼과 탭 영역을 키워 더 자신 있게 누를 수 있게 합니다.",
+                reduceTransparency: "투명도 줄이기",
+                reduceTransparencyCopy: "더 단단한 배경을 사용해 읽기 쉽게 만듭니다.",
+                boldText: "인터페이스 글자 굵게",
+                boldTextCopy: "라벨 굵기를 강화해 화면을 더 쉽게 훑어볼 수 있게 합니다.",
+                simplifiedInterface: "간소화된 인터페이스",
+                simplifiedInterfaceCopy:
+                  "부가 정보를 줄여 화면을 더 차분하고 이해하기 쉽게 만듭니다.",
+                slowerTransitions: "전환 속도 늦추기",
+                slowerTransitionsCopy: "낮/밤 모드 같은 전환을 느리게 해 적응할 시간을 더 줍니다.",
+              }
+            : {
+                largerTouchTargets: "Larger touch targets",
+                largerTouchTargetsCopy:
+                  "Make buttons and tap areas larger so they are easier to press confidently.",
+                reduceTransparency: "Reduce transparency",
+                reduceTransparencyCopy: "Use more solid surfaces to improve readability.",
+                boldText: "Bold interface text",
+                boldTextCopy: "Strengthen label weights across the interface for easier scanning.",
+                simplifiedInterface: "Simplified interface",
+                simplifiedInterfaceCopy:
+                  "Reduce secondary detail so screens feel calmer and easier to parse.",
+                slowerTransitions: "Slower transitions",
+                slowerTransitionsCopy:
+                  "Slow down mode changes like Day and Night so there is more time to orient.",
+              };
 
   const languageOptions = [...nsnLocalLanguageOptions];
   const getRegionalLanguages = (baseLanguage: string) =>
-    languageOptions.filter((language) => language.label !== baseLanguage && getLanguageBase(language.label) === baseLanguage);
+    languageOptions.filter(
+      (language) =>
+        language.label !== baseLanguage && getLanguageBase(language.label) === baseLanguage,
+    );
   const hasRegionalLanguages = () => false;
   const filterLanguages = (query: string, regionBase: string | null) => {
     const normalized = query.trim().toLocaleLowerCase();
@@ -3433,31 +4136,74 @@ export default function SettingsScreen() {
 
     if (!normalized) return options;
     return options.filter((language) =>
-      `${language.label} ${language.nativeName} ${language.code} ${language.status} ${getLanguageBase(language.label)}`.toLocaleLowerCase().includes(normalized)
+      `${language.label} ${language.nativeName} ${language.code} ${language.status} ${getLanguageBase(language.label)}`
+        .toLocaleLowerCase()
+        .includes(normalized),
     );
   };
   const appLanguageOptions = filterLanguages(appLanguageSearch, appLanguageRegionBase);
-  const translationLanguageOptions = filterLanguages(translationLanguageSearch, translationLanguageRegionBase);
+  const translationLanguageOptions = filterLanguages(
+    translationLanguageSearch,
+    translationLanguageRegionBase,
+  );
   const renderPlannedLanguageGroup = (
     title: string,
     copy: string,
-    languages: readonly { label: string; nativeName: string; flag: string; code: string; status: string; note: string }[]
+    languages: readonly {
+      label: string;
+      nativeName: string;
+      flag: string;
+      code: string;
+      status: string;
+      note: string;
+    }[],
   ) => (
     <View style={[styles.plannedLanguageGroup, isDay && styles.dayDropdownOption]}>
-      <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{title}</Text>
-      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{copy}</Text>
+      <Text
+        style={[
+          styles.dropdownOptionText,
+          isDay && styles.dayLabel,
+          isRtl && styles.rtlAlignedText,
+        ]}
+      >
+        {title}
+      </Text>
+      <Text
+        style={[
+          styles.dropdownNativeText,
+          isDay && styles.daySubtitle,
+          isRtl && styles.rtlAlignedText,
+        ]}
+      >
+        {copy}
+      </Text>
       <View style={styles.plannedLanguageList}>
         {languages.map((language) => (
           <View key={language.label} style={[styles.plannedLanguageRow, isRtl && styles.rtlRow]}>
             <View style={styles.languageOptionCopy}>
-              <Text style={[styles.dropdownOptionText, styles.languageLabelText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>
+              <Text
+                style={[
+                  styles.dropdownOptionText,
+                  styles.languageLabelText,
+                  isDay && styles.dayLabel,
+                  isRtl && styles.rtlAlignedText,
+                ]}
+              >
                 {language.flag} {language.label}
               </Text>
-              <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
+              <Text
+                style={[
+                  styles.dropdownNativeText,
+                  isDay && styles.daySubtitle,
+                  isRtl && styles.rtlAlignedText,
+                ]}
+              >
                 {language.nativeName} · {language.code} · {language.note}
               </Text>
             </View>
-            <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>{language.status}</Text>
+            <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+              {language.status}
+            </Text>
           </View>
         ))}
       </View>
@@ -3507,7 +4253,7 @@ export default function SettingsScreen() {
       distanceUnitPreference: DistanceUnitPreference;
       currencyDisplayPreference: CurrencyDisplayPreference;
       dayNightModePreference: DayNightModePreference;
-    }>
+    }>,
   ) => {
     saveSoftHelloMvpState(snapshot);
     showRecentlyChanged(Object.keys(snapshot)[0] ?? "regionalFormats");
@@ -3537,7 +4283,9 @@ export default function SettingsScreen() {
   const jumpToSection = (id: SettingsSectionJumpId) => {
     const accordionId = accordionByJumpSection[id];
 
-    setOpenAccordionSections((current) => current.includes(accordionId) ? current : [...current, accordionId]);
+    setOpenAccordionSections((current) =>
+      current.includes(accordionId) ? current : [...current, accordionId],
+    );
     setHighlightedAccordionSection(accordionId);
 
     setTimeout(() => {
@@ -3555,7 +4303,12 @@ export default function SettingsScreen() {
     return (
       <View
         onLayout={registerAccordionLayout(id)}
-        style={[styles.accordionSection, isDay && styles.dayAccordionSection, highContrast && styles.highContrastCard, highlighted && styles.accordionSectionHighlighted]}
+        style={[
+          styles.accordionSection,
+          isDay && styles.dayAccordionSection,
+          highContrast && styles.highContrastCard,
+          highlighted && styles.accordionSectionHighlighted,
+        ]}
       >
         <TouchableOpacity
           activeOpacity={0.82}
@@ -3569,16 +4322,51 @@ export default function SettingsScreen() {
             <IconSymbol name={meta.icon} color={isDay ? "#445E93" : "#A8B7DA"} size={18} />
           </View>
           <View style={styles.settingCopy}>
-            <Text style={[styles.accordionTitle, largerText && styles.largeLabel, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{meta.title}</Text>
-            <Text style={[styles.accordionCopy, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{meta.copy}</Text>
+            <Text
+              style={[
+                styles.accordionTitle,
+                largerText && styles.largeLabel,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {meta.title}
+            </Text>
+            <Text
+              style={[
+                styles.accordionCopy,
+                largerText && styles.largeHelperText,
+                isDay && styles.daySubtitle,
+                contrastMutedStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {meta.copy}
+            </Text>
           </View>
           <View style={styles.accordionState}>
-            <Text style={[styles.accordionStateText, isDay && styles.daySubtitle]}>{expanded ? "Open" : "Closed"}</Text>
-            <IconSymbol name={expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+            <Text style={[styles.accordionStateText, isDay && styles.daySubtitle]}>
+              {expanded ? "Open" : "Closed"}
+            </Text>
+            <IconSymbol
+              name={expanded ? "chevron.up" : "chevron.down"}
+              color={isDay ? "#53677A" : nsnColors.muted}
+              size={18}
+            />
           </View>
         </TouchableOpacity>
         {expanded ? (
-          <View style={[styles.accordionBody, { gap: settingsLayout.sectionGap, paddingHorizontal: settingsLayout.accordionPadding, paddingBottom: settingsLayout.accordionPadding }]}>
+          <View
+            style={[
+              styles.accordionBody,
+              {
+                gap: settingsLayout.sectionGap,
+                paddingHorizontal: settingsLayout.accordionPadding,
+                paddingBottom: settingsLayout.accordionPadding,
+              },
+            ]}
+          >
             {children}
           </View>
         ) : null}
@@ -3593,7 +4381,8 @@ export default function SettingsScreen() {
       gap: settingsLayout.optionGap,
       padding: settingsLayout.cardPadding,
     },
-    settingsLayout.isDesktop && (fullWidth ? settingsLayout.fullWidthCard : settingsLayout.sectionCard),
+    settingsLayout.isDesktop &&
+      (fullWidth ? settingsLayout.fullWidthCard : settingsLayout.sectionCard),
     !settingsLayout.isDesktop && settingsLayout.fullWidthCard,
     isDay && styles.dayCard,
     highContrast && styles.highContrastCard,
@@ -3609,7 +4398,9 @@ export default function SettingsScreen() {
     isDay && styles.dayDropdownButton,
     active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
   ];
-  const normalizedRequestedSection = Array.isArray(requestedSection) ? requestedSection[0] : requestedSection;
+  const normalizedRequestedSection = Array.isArray(requestedSection)
+    ? requestedSection[0]
+    : requestedSection;
   useEffect(() => {
     setOpenAccordionSections((current) => {
       const valid = current.filter((id) => visibleSettingsAccordionIds.includes(id));
@@ -3646,7 +4437,10 @@ export default function SettingsScreen() {
     });
   };
   useEffect(() => {
-    if (normalizedRequestedSection !== "notifications" && normalizedRequestedSection !== "regionalFormats") {
+    if (
+      normalizedRequestedSection !== "notifications" &&
+      normalizedRequestedSection !== "regionalFormats"
+    ) {
       handledRequestedSection.current = false;
       return;
     }
@@ -3669,7 +4463,10 @@ export default function SettingsScreen() {
       }
     };
   }, []);
-  const saveBooleanPrivacy = (key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView", value: boolean) => {
+  const saveBooleanPrivacy = (
+    key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView",
+    value: boolean,
+  ) => {
     if (key === "showSuburbArea") setShowSuburbArea(value);
     if (key === "showInterests") setShowInterests(value);
     if (key === "showComfortPreferences") setShowComfortPreferences(value);
@@ -3683,6 +4480,18 @@ export default function SettingsScreen() {
   const saveWarmUpLowerBlur = (value: boolean) => {
     setWarmUpLowerBlur(value);
     saveSoftHelloMvpState({ warmUpLowerBlur: value });
+  };
+  const saveSoftRevealSuggestions = (value: boolean) => {
+    setSoftRevealSuggestions(value);
+    saveSoftHelloMvpState({ softRevealSuggestions: value });
+  };
+  const savePreferSoftRevealPeople = (value: boolean) => {
+    setPreferSoftRevealPeople(value);
+    saveSoftHelloMvpState({ preferSoftRevealPeople: value });
+  };
+  const saveSoftRevealPace = (value: SoftRevealPace) => {
+    setSoftRevealPace(value);
+    saveSoftHelloMvpState({ softRevealPace: value });
   };
   const getComfortModePreviewDefaults = (value: NsnComfortMode) => {
     if (value === "Comfort Mode") {
@@ -3785,7 +4594,7 @@ export default function SettingsScreen() {
   const selectExactLanguage = (
     value: string,
     selectLanguage: (language: string) => void,
-    setRegionBase: (language: string | null) => void
+    setRegionBase: (language: string | null) => void,
   ) => {
     const exactMatch = languageOptions.find((language) => {
       const query = value.trim().toLocaleLowerCase();
@@ -3808,7 +4617,7 @@ export default function SettingsScreen() {
     language: (typeof languageOptions)[number],
     selectLanguage: (language: string) => void,
     setSearch: (value: string) => void,
-    setRegionBase: (language: string | null) => void
+    setRegionBase: (language: string | null) => void,
   ) => {
     if (language.label === getLanguageBase(language.label) && hasRegionalLanguages()) {
       setRegionBase(language.label);
@@ -3822,7 +4631,14 @@ export default function SettingsScreen() {
     setOpenDropdown(null);
   };
 
-  const { privacyRows, notificationRows, locationRows, safetyRows, performanceRows, accessibilityRows } = createSettingsToggleSections({
+  const {
+    privacyRows,
+    notificationRows,
+    locationRows,
+    safetyRows,
+    performanceRows,
+    accessibilityRows,
+  } = createSettingsToggleSections({
     copy,
     englishCopy,
     accessibilityCopy,
@@ -3833,6 +4649,8 @@ export default function SettingsScreen() {
       sameAgeGroupsOnly,
       revealAfterRsvp,
       friendsOfFriendsOnly,
+      softRevealSuggestions,
+      preferSoftRevealPeople,
       meetupReminders,
       weatherAlerts,
       chatNotifications,
@@ -3857,12 +4675,15 @@ export default function SettingsScreen() {
       setSameAgeGroupsOnly,
       setRevealAfterRsvp,
       setFriendsOfFriendsOnly,
+      setSoftRevealSuggestions: saveSoftRevealSuggestions,
+      setPreferSoftRevealPeople: savePreferSoftRevealPeople,
       setMeetupReminders,
       setWeatherAlerts,
       setChatNotifications,
       setQuietNotifications,
       setNotificationSnoozed: setAndSaveNotificationSnoozed,
-      setSuggestNightModeInEvenings: (value: boolean) => saveSoftHelloMvpState({ suggestNightModeInEvenings: value }),
+      setSuggestNightModeInEvenings: (value: boolean) =>
+        saveSoftHelloMvpState({ suggestNightModeInEvenings: value }),
       setUseApproximateLocation,
       setShowDistanceInMeetups,
       setAllowMessageRequests,
@@ -3969,7 +4790,10 @@ export default function SettingsScreen() {
   const confirmDeactivateAccount = (timeline: AccountPauseTimeline) => {
     saveSoftHelloMvpState({ accountPaused: true, accountPauseTimeline: timeline });
     setAccountConfirmation(null);
-    Alert.alert("Saved locally", "Your prototype account pause was saved locally. No real account system was changed.");
+    Alert.alert(
+      "Saved locally",
+      "Your prototype account pause was saved locally. No real account system was changed.",
+    );
   };
 
   const reactivateAccount = () => {
@@ -3979,11 +4803,18 @@ export default function SettingsScreen() {
 
   const confirmDeleteAccount = () => {
     setAccountConfirmation(null);
-    Alert.alert("Demo only", "No real account or profile data was deleted. This NSN alpha has not connected account deletion to a backend.");
+    Alert.alert(
+      "Demo only",
+      "No real account or profile data was deleted. This NSN alpha has not connected account deletion to a backend.",
+    );
   };
 
   return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+    <ScreenContainer
+      containerClassName="bg-background"
+      safeAreaClassName="bg-background"
+      style={isDay && styles.dayContainer}
+    >
       <ScrollView
         ref={scrollViewRef}
         style={[styles.screen, isDay && styles.dayContainer]}
@@ -3998,36 +4829,87 @@ export default function SettingsScreen() {
         onScroll={handleSettingsScroll}
         scrollEventThrottle={16}
       >
-        <TouchableOpacity activeOpacity={0.75} onPress={handleSettingsBack} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={copy.goBack ?? englishCopy.goBack}>
+        <TouchableOpacity
+          activeOpacity={0.75}
+          onPress={handleSettingsBack}
+          style={[styles.backButton, isDay && styles.dayIconButton]}
+          accessibilityRole="button"
+          accessibilityLabel={copy.goBack ?? englishCopy.goBack}
+        >
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 
-        <Text style={[styles.title, largerText && styles.largeTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.title}</Text>
-        <Text style={[styles.subtitle, largerText && styles.largeBodyText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+        <Text
+          style={[
+            styles.title,
+            largerText && styles.largeTitle,
+            isDay && styles.dayTitle,
+            contrastTextStyle,
+            isRtl && styles.rtlText,
+          ]}
+        >
+          {copy.title}
+        </Text>
+        <Text
+          style={[
+            styles.subtitle,
+            largerText && styles.largeBodyText,
+            isDay && styles.daySubtitle,
+            contrastMutedStyle,
+            isRtl && styles.rtlText,
+          ]}
+        >
           {copy.subtitle}
         </Text>
 
-        <View style={[styles.quickJumpBlock, isDay && styles.dayQuickJumpBlock, highContrast && styles.highContrastCard]}>
+        <View
+          style={[
+            styles.quickJumpBlock,
+            isDay && styles.dayQuickJumpBlock,
+            highContrast && styles.highContrastCard,
+          ]}
+        >
           <View style={styles.quickJumpHeader}>
-            <Text style={[styles.quickJumpTitle, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Jump to section</Text>
+            <Text
+              style={[
+                styles.quickJumpTitle,
+                isDay && styles.dayLabel,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Jump to section
+            </Text>
             <View style={[styles.accordionQuickActions, isRtl && styles.rtlRow]}>
               <TouchableOpacity
                 activeOpacity={0.78}
                 onPress={expandAllSettingsAccordions}
                 accessibilityRole="button"
                 accessibilityLabel="Expand all Settings sections"
-                style={[styles.accordionQuickAction, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+                style={[
+                  styles.accordionQuickAction,
+                  isDay && styles.dayQuickJumpButton,
+                  highContrast && styles.highContrastButton,
+                ]}
               >
-                <Text style={[styles.accordionQuickActionText, isDay && styles.dayActionText]}>Expand all</Text>
+                <Text style={[styles.accordionQuickActionText, isDay && styles.dayActionText]}>
+                  Expand all
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.78}
                 onPress={collapseAllSettingsAccordions}
                 accessibilityRole="button"
                 accessibilityLabel="Collapse all Settings sections"
-                style={[styles.accordionQuickAction, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+                style={[
+                  styles.accordionQuickAction,
+                  isDay && styles.dayQuickJumpButton,
+                  highContrast && styles.highContrastButton,
+                ]}
               >
-                <Text style={[styles.accordionQuickActionText, isDay && styles.dayActionText]}>Collapse all</Text>
+                <Text style={[styles.accordionQuickActionText, isDay && styles.dayActionText]}>
+                  Collapse all
+                </Text>
               </TouchableOpacity>
             </View>
             <TextInput
@@ -4035,7 +4917,12 @@ export default function SettingsScreen() {
               onChangeText={setQuickJumpSearch}
               placeholder="Search sections..."
               placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
-              style={[styles.quickJumpSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText, isRtl && styles.rtlSearchInput]}
+              style={[
+                styles.quickJumpSearchInput,
+                isDay && styles.dayLanguageSearchInput,
+                largerText && styles.largeDropdownText,
+                isRtl && styles.rtlSearchInput,
+              ]}
               accessibilityLabel="Search settings sections"
             />
           </View>
@@ -4047,19 +4934,44 @@ export default function SettingsScreen() {
                 onPress={() => jumpToSection(option.id)}
                 accessibilityRole="button"
                 accessibilityLabel={`Jump to ${option.label}`}
-                style={[styles.quickJumpButton, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+                style={[
+                  styles.quickJumpButton,
+                  isDay && styles.dayQuickJumpButton,
+                  highContrast && styles.highContrastButton,
+                ]}
               >
-                <IconSymbol name={jumpIconBySection[option.id]} size={14} color={isDay ? "#445E93" : "#A8B7DA"} />
-                <Text style={[styles.quickJumpText, isDay && styles.dayActionText, contrastTextStyle]}>{option.label}</Text>
+                <IconSymbol
+                  name={jumpIconBySection[option.id]}
+                  size={14}
+                  color={isDay ? "#445E93" : "#A8B7DA"}
+                />
+                <Text
+                  style={[styles.quickJumpText, isDay && styles.dayActionText, contrastTextStyle]}
+                >
+                  {option.label}
+                </Text>
               </TouchableOpacity>
             ))}
             {filteredQuickJumpOptions.length === 0 && (
-              <Text style={[styles.noResultsText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>No matching section</Text>
+              <Text
+                style={[styles.noResultsText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}
+              >
+                No matching section
+              </Text>
             )}
           </View>
         </View>
 
-        <Text onLayout={registerSectionLayout("settingsView")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <Text
+          onLayout={registerSectionLayout("settingsView")}
+          style={[
+            styles.sectionTitle,
+            largerText && styles.largeSectionTitle,
+            isDay && styles.dayTitle,
+            contrastTextStyle,
+            isRtl && styles.rtlText,
+          ]}
+        >
           Settings view
         </Text>
         <View style={[styles.settingsModeGrid, { gap: settingsLayout.optionGap }]}>
@@ -4072,1455 +4984,3670 @@ export default function SettingsScreen() {
                 onPress={() => saveSettingsPrivacyMode(option.value)}
                 style={[
                   styles.settingsModeButton,
-                  settingsLayout.isDesktop ? settingsLayout.sectionCard : settingsLayout.fullWidthCard,
-                  { borderRadius: Math.max(12, settingsLayout.cardRadius - 3), minHeight: Math.max(76, settingsLayout.minTapTarget) },
+                  settingsLayout.isDesktop
+                    ? settingsLayout.sectionCard
+                    : settingsLayout.fullWidthCard,
+                  {
+                    borderRadius: Math.max(12, settingsLayout.cardRadius - 3),
+                    minHeight: Math.max(76, settingsLayout.minTapTarget),
+                  },
                   isDay && styles.dayDropdownButton,
                   active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
                 ]}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
               >
-                <Text style={[styles.comfortModeTitle, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
-                <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                <Text
+                  style={[
+                    styles.comfortModeTitle,
+                    largerText && styles.largeDropdownText,
+                    isDay && styles.dayLabel,
+                    active && styles.blurLevelTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.comfortModeCopy,
+                    isDay && styles.daySubtitle,
+                    active && styles.blurLevelTextActive,
+                  ]}
+                >
+                  {option.copy}
+                </Text>
               </TouchableOpacity>
             );
           })}
         </View>
 
-        {renderSettingsAccordion("displayLayout", (
+        {renderSettingsAccordion(
+          "displayLayout",
           <>
-        <Text onLayout={registerSectionLayout("batteryPerformance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          {copy.batteryPerformance ?? englishCopy.batteryPerformance}
-        </Text>
-        <View style={[styles.card, styles.trustFoundationsSettingsCard, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {performanceRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.rowDivider, isDay && (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.dayRowDivider, highContrast && (index < performanceRows.length - 1 || (lowLightMode && row.key === "lowLightMode")) && styles.highContrastDivider]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
-                {renderSettingMeta(row.key)}
-              </View>
-              <Switch
-                value={getSettingDisabled(row.key) ? false : row.value}
-                onValueChange={onToggleChange(row.key, row.onValueChange)}
-                disabled={getSettingDisabled(row.key)}
-                accessibilityLabel={row.label}
-                accessibilityHint={screenReaderHints ? row.copy : undefined}
-                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-              />
-            </View>
-          ))}
-          {lowLightMode ? (
-            <View style={styles.performanceLevelRow}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-                  {copy.lowLightLevel ?? englishCopy.lowLightLevel}
-                </Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                  {copy.lowLightLevelCopy ?? englishCopy.lowLightLevelCopy}
-                </Text>
-                <View style={[styles.lowLightLevelGrid, isRtl && styles.rtlRow]}>
-                  {lowLightLevelOptions.map((option) => {
-                    const active = lowLightLevel === option.value;
+            <Text
+              onLayout={registerSectionLayout("batteryPerformance")}
+              style={[
+                styles.sectionTitle,
+                largerText && styles.largeSectionTitle,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {copy.batteryPerformance ?? englishCopy.batteryPerformance}
+            </Text>
+            <View
+              style={[
+                styles.card,
+                styles.trustFoundationsSettingsCard,
+                { borderRadius: brandTheme.radius.card },
+                isDay && styles.dayCard,
+                highContrast && styles.highContrastCard,
+              ]}
+            >
+              {performanceRows.map((row, index) => (
+                <View
+                  key={row.label}
+                  style={[
+                    styles.settingRow,
+                    largerText && styles.largeSettingRow,
+                    isRtl && styles.rtlRow,
+                    (index < performanceRows.length - 1 ||
+                      (lowLightMode && row.key === "lowLightMode")) &&
+                      styles.rowDivider,
+                    isDay &&
+                      (index < performanceRows.length - 1 ||
+                        (lowLightMode && row.key === "lowLightMode")) &&
+                      styles.dayRowDivider,
+                    highContrast &&
+                      (index < performanceRows.length - 1 ||
+                        (lowLightMode && row.key === "lowLightMode")) &&
+                      styles.highContrastDivider,
+                  ]}
+                >
+                  <View style={styles.settingCopy}>
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {row.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {row.copy}
+                    </Text>
+                    {renderSettingMeta(row.key)}
+                  </View>
+                  <Switch
+                    value={getSettingDisabled(row.key) ? false : row.value}
+                    onValueChange={onToggleChange(row.key, row.onValueChange)}
+                    disabled={getSettingDisabled(row.key)}
+                    accessibilityLabel={row.label}
+                    accessibilityHint={screenReaderHints ? row.copy : undefined}
+                    accessibilityState={{ disabled: getSettingDisabled(row.key) }}
+                    trackColor={{
+                      false: isDay ? "#C5D0DA" : nsnColors.border,
+                      true: paletteAccent,
+                    }}
+                    thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                  />
+                </View>
+              ))}
+              {lowLightMode ? (
+                <View style={styles.performanceLevelRow}>
+                  <View style={styles.settingCopy}>
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.lowLightLevel ?? englishCopy.lowLightLevel}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.lowLightLevelCopy ?? englishCopy.lowLightLevelCopy}
+                    </Text>
+                    <View style={[styles.lowLightLevelGrid, isRtl && styles.rtlRow]}>
+                      {lowLightLevelOptions.map((option) => {
+                        const active = lowLightLevel === option.value;
 
+                        return (
+                          <TouchableOpacity
+                            key={option.value}
+                            activeOpacity={0.82}
+                            onPress={() => saveLowLightLevel(option.value)}
+                            accessibilityRole="radio"
+                            accessibilityState={{ checked: active }}
+                            accessibilityLabel={`${option.label} low light level`}
+                            accessibilityHint={screenReaderHints ? option.copy : undefined}
+                            style={[
+                              styles.lowLightLevelButton,
+                              isDay && styles.dayDropdownButton,
+                              active && {
+                                backgroundColor: paletteAccent,
+                                borderColor: paletteAccent,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.lowLightLevelText,
+                                largerText && styles.largeDropdownText,
+                                isDay && styles.dayLabel,
+                                active && styles.blurLevelTextActive,
+                              ]}
+                            >
+                              {option.label}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.comfortModeCopy,
+                                isDay && styles.daySubtitle,
+                                active && styles.blurLevelTextActive,
+                              ]}
+                            >
+                              {option.copy}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </View>
+              ) : null}
+            </View>
+            <Text
+              style={[
+                styles.sectionTitle,
+                largerText && styles.largeSectionTitle,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Profile and preferences display
+            </Text>
+            <View
+              style={[
+                styles.settingsResponsiveGrid,
+                settingsLayout.isDesktop && styles.settingsResponsiveGridWide,
+                { gap: settingsLayout.sectionGap },
+              ]}
+            >
+              <View style={responsiveSettingsCardStyle()}>
+                <Text
+                  style={[
+                    styles.subsectionTitle,
+                    styles.settingsResponsiveCardTitle,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Profile display style
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Choose whether Profile opens in a simpler layout or the fuller detailed layout.
+                </Text>
+                <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                  {profileShortcutLayoutOptions.map((option) => {
+                    const active = profileShortcutLayout === option.value;
                     return (
                       <TouchableOpacity
                         key={option.value}
                         activeOpacity={0.82}
-                        onPress={() => saveLowLightLevel(option.value)}
+                        onPress={() => saveProfileShortcutLayout(option.value)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        accessibilityLabel={`${option.label} low light level`}
+                        accessibilityLabel={option.label}
                         accessibilityHint={screenReaderHints ? option.copy : undefined}
-                        style={[styles.lowLightLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
+                        style={responsiveOptionButtonStyle(active)}
                       >
-                        <Text style={[styles.lowLightLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>
-                          {option.label}
+                        <Text
+                          style={[
+                            styles.blurLevelText,
+                            largerText && styles.largeDropdownText,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {active ? `Selected: ${option.label}` : option.label}
                         </Text>
-                        <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
+                        <Text
+                          style={[
+                            styles.comfortModeCopy,
+                            isDay && styles.daySubtitle,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {option.copy}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
+                {renderSettingMeta("profileShortcutLayout")}
               </View>
-            </View>
-          ) : null}
-        </View>
-        <Text style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          Profile and preferences display
-        </Text>
-        <View style={[styles.settingsResponsiveGrid, settingsLayout.isDesktop && styles.settingsResponsiveGridWide, { gap: settingsLayout.sectionGap }]}>
-          <View style={responsiveSettingsCardStyle()}>
-            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Profile display style</Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Choose whether Profile opens in a simpler layout or the fuller detailed layout.
-            </Text>
-            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
-              {profileShortcutLayoutOptions.map((option) => {
-                const active = profileShortcutLayout === option.value;
-                return (
-                  <TouchableOpacity
-                    key={option.value}
-                    activeOpacity={0.82}
-                    onPress={() => saveProfileShortcutLayout(option.value)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: active }}
-                    accessibilityLabel={option.label}
-                    accessibilityHint={screenReaderHints ? option.copy : undefined}
-                    style={responsiveOptionButtonStyle(active)}
-                  >
-                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option.label}` : option.label}</Text>
-                    <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {renderSettingMeta("profileShortcutLayout")}
-          </View>
 
-          <View style={responsiveSettingsCardStyle()}>
-            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>User preference text</Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Switch the Profile drawer and User Preferences between short summaries and fuller guidance.
-            </Text>
-            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
-              {userPreferenceTextModeOptions.map((option) => {
-                const active = userPreferenceTextMode === option.value;
-                return (
-                  <TouchableOpacity
-                    key={option.value}
-                    activeOpacity={0.82}
-                    onPress={() => saveUserPreferenceTextMode(option.value)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: active }}
-                    accessibilityLabel={option.label}
-                    accessibilityHint={screenReaderHints ? option.copy : undefined}
-                    style={responsiveOptionButtonStyle(active)}
-                  >
-                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option.label}` : option.label}</Text>
-                    <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {renderSettingMeta("userPreferenceTextMode")}
-          </View>
-
-          <View style={responsiveSettingsCardStyle(true)}>
-            {[
-              {
-                key: "showProfileControlsShortcut",
-                label: "Show Profile controls shortcut",
-                copy: "Show the Profile controls button at the top of Profile.",
-                value: showProfileControlsShortcut,
-                onChange: saveProfileControlsShortcutVisibility,
-              },
-              {
-                key: "showAlertsSettingsShortcut",
-                label: "Show Alerts settings shortcut",
-                copy: "Show the Settings button in Alerts.",
-                value: showAlertsSettingsShortcut,
-                onChange: saveAlertsSettingsShortcutVisibility,
-              },
-            ].map((row, index, rows) => (
-              <View key={row.key} style={[styles.settingRow, isRtl && styles.rtlRow, index < rows.length - 1 && styles.rowDivider, isDay && index < rows.length - 1 && styles.dayRowDivider, highContrast && index < rows.length - 1 && styles.highContrastDivider]}>
-                <View style={styles.settingCopy}>
-                  <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                  <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
-                  {renderSettingMeta(row.key)}
+              <View style={responsiveSettingsCardStyle()}>
+                <Text
+                  style={[
+                    styles.subsectionTitle,
+                    styles.settingsResponsiveCardTitle,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  User preference text
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Switch the Profile drawer and User Preferences between short summaries and fuller
+                  guidance.
+                </Text>
+                <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                  {userPreferenceTextModeOptions.map((option) => {
+                    const active = userPreferenceTextMode === option.value;
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.82}
+                        onPress={() => saveUserPreferenceTextMode(option.value)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={option.label}
+                        accessibilityHint={screenReaderHints ? option.copy : undefined}
+                        style={responsiveOptionButtonStyle(active)}
+                      >
+                        <Text
+                          style={[
+                            styles.blurLevelText,
+                            largerText && styles.largeDropdownText,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {active ? `Selected: ${option.label}` : option.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.comfortModeCopy,
+                            isDay && styles.daySubtitle,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {option.copy}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
-                <Switch
-                  value={row.value}
-                  onValueChange={row.onChange}
-                  accessibilityLabel={row.label}
-                  accessibilityHint={screenReaderHints ? row.copy : undefined}
-                  trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                  thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-                />
+                {renderSettingMeta("userPreferenceTextMode")}
               </View>
-            ))}
-          </View>
-        </View>
-          </>
-        ))}
 
-        {renderSettingsAccordion("privacyVisibility", (
-          <>
-        <Text onLayout={registerSectionLayout("generalPrivacy")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          General privacy
-        </Text>
-        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {privacyRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < privacyRows.length - 1 && styles.rowDivider, isDay && index < privacyRows.length - 1 && styles.dayRowDivider, highContrast && index < privacyRows.length - 1 && styles.highContrastDivider]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
-                {renderSettingMeta(row.key)}
+              <View style={responsiveSettingsCardStyle(true)}>
+                {[
+                  {
+                    key: "showProfileControlsShortcut",
+                    label: "Show Profile controls shortcut",
+                    copy: "Show the Profile controls button at the top of Profile.",
+                    value: showProfileControlsShortcut,
+                    onChange: saveProfileControlsShortcutVisibility,
+                  },
+                  {
+                    key: "showAlertsSettingsShortcut",
+                    label: "Show Alerts settings shortcut",
+                    copy: "Show the Settings button in Alerts.",
+                    value: showAlertsSettingsShortcut,
+                    onChange: saveAlertsSettingsShortcutVisibility,
+                  },
+                ].map((row, index, rows) => (
+                  <View
+                    key={row.key}
+                    style={[
+                      styles.settingRow,
+                      isRtl && styles.rtlRow,
+                      index < rows.length - 1 && styles.rowDivider,
+                      isDay && index < rows.length - 1 && styles.dayRowDivider,
+                      highContrast && index < rows.length - 1 && styles.highContrastDivider,
+                    ]}
+                  >
+                    <View style={styles.settingCopy}>
+                      <Text
+                        style={[
+                          styles.label,
+                          largerText && styles.largeLabel,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {row.label}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.helperText,
+                          largerText && styles.largeHelperText,
+                          isDay && styles.daySubtitle,
+                          contrastMutedStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {row.copy}
+                      </Text>
+                      {renderSettingMeta(row.key)}
+                    </View>
+                    <Switch
+                      value={row.value}
+                      onValueChange={row.onChange}
+                      accessibilityLabel={row.label}
+                      accessibilityHint={screenReaderHints ? row.copy : undefined}
+                      trackColor={{
+                        false: isDay ? "#C5D0DA" : nsnColors.border,
+                        true: paletteAccent,
+                      }}
+                      thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                    />
+                  </View>
+                ))}
               </View>
-              <Switch
-                value={getSettingDisabled(row.key) ? false : row.value}
-                onValueChange={onToggleChange(row.key, row.onValueChange)}
-                disabled={getSettingDisabled(row.key)}
-                accessibilityLabel={row.label}
-                accessibilityHint={screenReaderHints ? row.copy : undefined}
-                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-              />
             </View>
-          ))}
-        </View>
+          </>,
+        )}
 
-        <Text onLayout={registerSectionLayout("profileVisibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          Profile visibility
-        </Text>
-        <View style={styles.comfortModeGrid}>
-          {comfortModeOptions.map((option) => {
-            const active = comfortMode === option.value;
-            return (
-              <TouchableOpacity
-                key={option.value}
-                activeOpacity={0.82}
-                onPress={() => saveComfortMode(option.value)}
-                style={[styles.comfortModeButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-              >
-                <Text style={[styles.comfortModeTitle, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.value}</Text>
-                <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-        {[
-          {
-            title: "Identity basics",
-            rows: [
-              { label: "Show middle name", copy: middleName ? "Use name display below: full name or initial only." : "Add a middle name in Profile before showing it.", disabled: !middleName, value: Boolean(middleName && middleNameDisplay !== "Hidden"), onChange: (value: boolean) => saveSoftHelloMvpState({ middleNameDisplay: Boolean(middleName && value) ? "Full" : "Hidden" }) },
-              { label: "Show last name", copy: lastName ? "Use name display below: full name or initial only." : "Add a last name in Profile before showing it.", disabled: !lastName, value: Boolean(lastName && lastNameDisplay !== "Hidden"), onChange: (value: boolean) => saveSoftHelloMvpState({ lastNameDisplay: Boolean(lastName && value) ? "Full" : "Hidden" }) },
-              { label: "Show age", copy: "Let others see your age in profile previews.", value: showAge, onChange: (value: boolean) => saveSoftHelloMvpState({ showAge: value }) },
-              { label: "Show preferred age range", copy: "Show the age range you prefer for matching.", value: showPreferredAgeRange, onChange: (value: boolean) => saveSoftHelloMvpState({ showPreferredAgeRange: value }) },
-              { label: "Show gender", copy: gender === "Not specified" ? "Choose a gender below before showing it." : "Include your optional gender in profile previews.", disabled: gender === "Not specified", value: Boolean(gender !== "Not specified" && showGender), onChange: (value: boolean) => saveSoftHelloMvpState({ showGender: Boolean(gender !== "Not specified" && value) }) },
-            ],
-          },
-          {
-            title: "Local & social details",
-            rows: [
-              { label: "Show suburb / area", copy: "Share your local area without precise location.", value: showSuburbArea, onChange: (value: boolean) => saveBooleanPrivacy("showSuburbArea", value) },
-              { label: "Show interests", copy: "Show coffee, movies, walks and other first-meetup interests.", value: showInterests, onChange: (value: boolean) => saveBooleanPrivacy("showInterests", value) },
-              { label: "Show comfort preferences", copy: "Share gentle context like small groups or text-first.", value: showComfortPreferences, onChange: (value: boolean) => saveBooleanPrivacy("showComfortPreferences", value) },
-            ],
-          },
-          {
-            title: "Profile view",
-            rows: [
-              { label: "Minimal profile view", copy: "Show only the essentials in event-visible previews.", value: minimalProfileView, onChange: (value: boolean) => saveBooleanPrivacy("minimalProfileView", value) },
-              ...(comfortMode === "Warm Up Mode"
-                ? [{ label: "Lower blur in Warm Up", copy: "Use a softer blur while warming up, or keep your chosen blur level.", value: warmUpLowerBlur, onChange: saveWarmUpLowerBlur }]
-                : []),
-            ],
-          },
-        ].map((group) => (
-          <View key={group.title} style={styles.settingsGroup}>
-            <Text style={[styles.subsectionTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{group.title}</Text>
-            <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-              {group.rows.map((row, index) => (
-                <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (row as { disabled?: boolean }).disabled && styles.disabledOption, index < group.rows.length - 1 && styles.rowDivider, isDay && index < group.rows.length - 1 && styles.dayRowDivider, highContrast && index < group.rows.length - 1 && styles.highContrastDivider]}>
+        {renderSettingsAccordion(
+          "privacyVisibility",
+          <>
+            <Text
+              onLayout={registerSectionLayout("generalPrivacy")}
+              style={[
+                styles.sectionTitle,
+                largerText && styles.largeSectionTitle,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              General privacy
+            </Text>
+            <View
+              style={[
+                styles.card,
+                { borderRadius: brandTheme.radius.card },
+                isDay && styles.dayCard,
+                highContrast && styles.highContrastCard,
+              ]}
+            >
+              {privacyRows.map((row, index) => (
+                <View
+                  key={row.label}
+                  style={[
+                    styles.settingRow,
+                    largerText && styles.largeSettingRow,
+                    isRtl && styles.rtlRow,
+                    index < privacyRows.length - 1 && styles.rowDivider,
+                    isDay && index < privacyRows.length - 1 && styles.dayRowDivider,
+                    highContrast && index < privacyRows.length - 1 && styles.highContrastDivider,
+                  ]}
+                >
                   <View style={styles.settingCopy}>
-                    <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                    <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
-                    {renderSettingMeta(row.label)}
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {row.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {row.copy}
+                    </Text>
+                    {renderSettingMeta(row.key)}
                   </View>
                   <Switch
-                    value={(row as { disabled?: boolean }).disabled ? false : row.value}
-                    onValueChange={onToggleChange(row.label, row.onChange)}
-                    disabled={(row as { disabled?: boolean }).disabled}
+                    value={getSettingDisabled(row.key) ? false : row.value}
+                    onValueChange={onToggleChange(row.key, row.onValueChange)}
+                    disabled={getSettingDisabled(row.key)}
                     accessibilityLabel={row.label}
                     accessibilityHint={screenReaderHints ? row.copy : undefined}
-                    accessibilityState={{ disabled: (row as { disabled?: boolean }).disabled }}
-                    trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                    thumbColor={!(row as { disabled?: boolean }).disabled && row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                    accessibilityState={{ disabled: getSettingDisabled(row.key) }}
+                    trackColor={{
+                      false: isDay ? "#C5D0DA" : nsnColors.border,
+                      true: paletteAccent,
+                    }}
+                    thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
                   />
                 </View>
               ))}
             </View>
-          </View>
-        ))}
-          </>
-        ))}
 
-        {renderSettingsAccordion("comfortSafety", (
-          <>
-        <Text onLayout={registerSectionLayout("trustFoundations")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          Trust foundations
-        </Text>
-        <View style={[styles.settingsResponsiveGrid, settingsLayout.isDesktop && styles.settingsResponsiveGridWide, { gap: settingsLayout.sectionGap }]}>
-          <View style={responsiveSettingsCardStyle()}>
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Progressive visibility</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Comfort Mode keeps you mostly private, Warm Up reveals limited details, and Open Mode shows more event-visible profile details.
+            <View style={styles.settingsGroup}>
+              <Text
+                style={[
+                  styles.subsectionTitle,
+                  largerText && styles.largeLabel,
+                  isDay && styles.dayLabel,
+                  contrastTextStyle,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Soft Reveal pace
               </Text>
+              <Text
+                style={[
+                  styles.helperText,
+                  largerText && styles.largeHelperText,
+                  isDay && styles.daySubtitle,
+                  contrastMutedStyle,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Soft Reveal only lowers blur when both people choose it. You can pause, wait, or
+                return to more privacy at any time.
+              </Text>
+              <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                {softRevealPaceOptions.map((option) => {
+                  const active = softRevealPace === option.value;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      activeOpacity={0.82}
+                      onPress={() => saveSoftRevealPace(option.value)}
+                      style={responsiveOptionButtonStyle(active)}
+                      accessibilityRole="radio"
+                      accessibilityLabel={`Soft Reveal pace ${option.label}`}
+                      accessibilityState={{ checked: active }}
+                    >
+                      <Text
+                        style={[
+                          styles.blurLevelText,
+                          largerText && styles.largeDropdownText,
+                          isDay && styles.dayLabel,
+                          active && styles.blurLevelTextActive,
+                        ]}
+                      >
+                        {active ? `Selected: ${option.label}` : option.label}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.comfortModeCopy,
+                          isDay && styles.daySubtitle,
+                          active && styles.blurLevelTextActive,
+                        ]}
+                      >
+                        {option.copy}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+
+            <Text
+              onLayout={registerSectionLayout("profileVisibility")}
+              style={[
+                styles.sectionTitle,
+                largerText && styles.largeSectionTitle,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Profile visibility
+            </Text>
+            <View style={styles.comfortModeGrid}>
               {comfortModeOptions.map((option) => {
                 const active = comfortMode === option.value;
                 return (
                   <TouchableOpacity
-                    key={`trust-${option.value}`}
+                    key={option.value}
                     activeOpacity={0.82}
                     onPress={() => saveComfortMode(option.value)}
-                    style={responsiveOptionButtonStyle(active)}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`Progressive visibility ${option.value}`}
-                    accessibilityState={{ checked: active }}
-                  >
-                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option.value}` : option.value}</Text>
-                    <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={responsiveSettingsCardStyle()}>
-            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Social energy</Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>Choose the kind of social energy that feels easiest today.</Text>
-            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
-              {socialEnergyOptions.map((option) => {
-                const active = socialEnergyPreference === option;
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    activeOpacity={0.82}
-                    onPress={() => saveSocialEnergyPreference(option)}
-                    style={responsiveOptionButtonStyle(active)}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`Social energy ${option}`}
-                    accessibilityState={{ checked: active }}
-                  >
-                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={responsiveSettingsCardStyle()}>
-            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Communication preferences</Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>These prototype chips help others understand how you like to communicate.</Text>
-            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
-              {communicationPreferenceOptions.map((option) => {
-                const active = communicationPreferences.includes(option);
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    activeOpacity={0.82}
-                    onPress={() => toggleCommunicationPreference(option)}
-                    style={responsiveOptionButtonStyle(active)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Communication preference ${option}`}
-                    accessibilityState={{ selected: active }}
-                  >
-                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={responsiveSettingsCardStyle()}>
-            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Group size preference</Text>
-            <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
-              {groupSizePreferenceOptions.map((option) => {
-                const active = groupSizePreference === option;
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    activeOpacity={0.82}
-                    onPress={() => saveGroupSizePreference(option)}
-                    style={responsiveOptionButtonStyle(active)}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`Group size preference ${option}`}
-                    accessibilityState={{ checked: active }}
-                  >
-                    <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={responsiveSettingsCardStyle(true)}>
-            <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Safety, privacy & consent details</Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Photo comfort, consent reminders, and prototype trust state stay grouped here so safety actions remain calm and clear.
-            </Text>
-            <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
-              <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Community Guidelines (alpha)</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Keep meetups consent-first and low-pressure: ask before photos or videos, respect no-photo preferences, and do not share private chats, profiles, screenshots, or meetup details without permission.
-              </Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                These are prototype guidelines for tester clarity. Reporting, moderation, and account enforcement are not production systems yet.
-              </Text>
-              <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
-                <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Alpha guidance</Text>
-                <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Prototype-only</Text>
-              </View>
-            </View>
-            <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
-              <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can&apos;t fully prevent someone from using another device.
-              </Text>
-              <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
-                {photoRecordingComfortOptions.map((option) => {
-                  const active = photoRecordingComfortPreferences.includes(option);
-                  return (
-                    <TouchableOpacity
-                      key={option}
-                      activeOpacity={0.82}
-                      onPress={() => togglePhotoRecordingComfortPreference(option)}
-                      style={responsiveOptionButtonStyle(active)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Photo and recording comfort ${option}`}
-                      accessibilityState={{ selected: active }}
-                    >
-                      <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${option}` : option}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Please don&apos;t screenshot or share someone&apos;s profile, chat, or meetup details without permission.
-              </Text>
-              {renderSettingMeta("photoRecordingComfortPreferences")}
-            </View>
-
-            <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
-              <Text style={[styles.subsectionTitle, styles.settingsResponsiveCardTitle, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Prototype verification status</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Choose a local-only trust level for alpha testing. This unlocks prototype chat and meetup gates on this device, but does not perform real identity verification.
-              </Text>
-              <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
-                {verificationLevels.map((level) => {
-                  const active = effectiveVerificationLevel === level;
-                  const helper =
-                    level === "Unverified"
-                      ? "Browse-only prototype state."
-                      : level === "Contact Verified"
-                        ? "Allows prototype chat access."
-                        : "Allows prototype meetup/chat access.";
-
-                  return (
-                    <TouchableOpacity
-                      key={level}
-                      activeOpacity={0.82}
-                      onPress={() => savePrototypeVerificationLevel(level)}
-                      style={responsiveOptionButtonStyle(active)}
-                      accessibilityRole="radio"
-                      accessibilityLabel={`Prototype verification status ${level}`}
-                      accessibilityHint={helper}
-                      accessibilityState={{ checked: active }}
-                    >
-                      <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${level}` : level}</Text>
-                      <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{helper}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-              {renderSettingMeta("verificationLevel")}
-            </View>
-
-            <View style={[styles.settingsInlineSwitchRow, isRtl && styles.rtlRow]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Verified, but private</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                  Your contact/trust status can be checked without making your profile fully open. Prototype trust state only - no real verification provider is connected yet.
-                </Text>
-                {renderSettingMeta("verifiedButPrivate")}
-              </View>
-              <Switch
-                value={verifiedButPrivate}
-                onValueChange={onToggleChange("verifiedButPrivate", saveVerifiedButPrivate)}
-                accessibilityLabel="Verified but private prototype trust state"
-                accessibilityHint="Keeps trust status visible without opening your full profile."
-                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                thumbColor={verifiedButPrivate ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-              />
-            </View>
-          </View>
-        </View>
-          </>
-        ))}
-
-        {renderSettingsAccordion("profileDetails", (
-          <>
-        {isAdvancedSettings ? (
-          <>
-        <Text onLayout={registerSectionLayout("nameDisplay")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          Name display
-        </Text>
-        <View style={[styles.card, { borderRadius: brandTheme.radius.card }, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {[
-            { label: "Middle name", value: middleName, mode: middleNameDisplay, field: "middleNameDisplay" as const },
-            { label: "Last name", value: lastName, mode: lastNameDisplay, field: "lastNameDisplay" as const },
-          ].map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index === 0 && styles.rowDivider, isDay && index === 0 && styles.dayRowDivider, highContrast && index === 0 && styles.highContrastDivider]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                  {row.value ? `Saved as ${row.value}. Choose how it appears in preview.` : `Add a ${row.label.toLowerCase()} in Profile before showing it.`}
-                </Text>
-                <View style={styles.blurLevelGrid}>
-                  {nameDisplayOptions.map((option) => {
-                    const active = row.mode === option.value;
-                    return (
-                      <TouchableOpacity
-                        key={`${row.label}-${option.value}`}
-                        activeOpacity={0.82}
-                        disabled={!row.value}
-                        onPress={() => saveSoftHelloMvpState({ [row.field]: row.value ? option.value : "Hidden" })}
-                        style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }, !row.value && styles.disabledOption]}
-                        accessibilityRole="radio"
-                        accessibilityState={{ checked: active, disabled: !row.value }}
-                        accessibilityHint={row.value ? option.copy : `Add a ${row.label.toLowerCase()} in Profile before changing this display option.`}
-                      >
-                        <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
-                        <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {comfortMode !== "Open Mode" ? (
-          <>
-          <Text onLayout={registerSectionLayout("photoBlur")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-            Photo blur level
-          </Text>
-          <View style={styles.blurLevelGrid}>
-            {blurLevelOptions.map((level) => {
-              const active = blurLevel === level;
-              return (
-                <TouchableOpacity
-                  key={level}
-                  activeOpacity={0.82}
-                  onPress={() => saveBlurLevel(level)}
-                  style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
-                >
-                  <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{level}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          </>
-        ) : null}
-
-        <Text onLayout={registerSectionLayout("gender")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          Gender
-        </Text>
-        <View style={styles.blurLevelGrid}>
-          {genderOptions.map((option) => {
-            const active = gender === option;
-            return (
-              <TouchableOpacity
-                key={option}
-                activeOpacity={0.82}
-                onPress={() => saveSoftHelloMvpState({ gender: option, showGender: option === "Not specified" ? false : showGender })}
-                style={[styles.blurLevelButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: active }}
-              >
-                <Text style={[styles.blurLevelText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-          </>
-        ) : null}
-
-        <View onLayout={registerSectionLayout("profilePreview")}>
-          <ProfileVisibilityPreview
-            displayName={displayName}
-            middleName={middleName}
-            lastName={lastName}
-            suburb={suburb}
-            age={age}
-            preferredAgeMin={preferredAgeMin}
-            preferredAgeMax={preferredAgeMax}
-            gender={gender}
-            middleNameDisplay={middleNameDisplay}
-            lastNameDisplay={lastNameDisplay}
-            interests={hobbiesInterests}
-            comfortPreferences={comfortPreferences}
-            contactPreferences={contactPreferences}
-            socialEnergyPreference={socialEnergyPreference}
-            communicationPreferences={communicationPreferences}
-            groupSizePreference={groupSizePreference}
-            photoRecordingComfortPreferences={photoRecordingComfortPreferences}
-            verifiedButPrivate={verifiedButPrivate}
-            comfortMode={comfortMode}
-            profilePhotoUri={profilePhotoUri}
-            privateProfile={privateProfile}
-            blurProfilePhoto={blurProfilePhoto}
-            blurLevel={blurLevel}
-            warmUpLowerBlur={warmUpLowerBlur}
-            showSuburbArea={showSuburbArea}
-            showMiddleName={showMiddleName}
-            showLastName={showLastName}
-            showAge={showAge}
-            showPreferredAgeRange={showPreferredAgeRange}
-            showGender={showGender}
-            showInterests={showInterests}
-            showComfortPreferences={showComfortPreferences}
-            minimalProfileView={minimalProfileView}
-            isDay={isDay}
-          />
-        </View>
-          </>
-        ))}
-
-        {isAdvancedSettings ? (
-          <>
-        {renderSettingsAccordion("notifications", (
-          <>
-        <Text onLayout={registerSectionLayout("notifications")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          {copy.notifications ?? englishCopy.notifications}
-        </Text>
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {notificationRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.rowDivider, isDay && (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.dayRowDivider, highContrast && (index < notificationRows.length - 1 || (notificationSnoozed && row.key === "notificationSnoozed")) && styles.highContrastDivider]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
-                {renderSettingMeta(row.key)}
-              </View>
-              <Switch
-                value={getSettingDisabled(row.key) ? false : row.value}
-                onValueChange={onToggleChange(row.key, row.onValueChange)}
-                disabled={getSettingDisabled(row.key)}
-                accessibilityLabel={row.label}
-                accessibilityHint={screenReaderHints ? row.copy : undefined}
-                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-              />
-            </View>
-          ))}
-          {notificationSnoozed ? (
-            <View style={styles.notificationSnoozeRow}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-                  {copy.notificationSnoozeDuration ?? englishCopy.notificationSnoozeDuration}
-                </Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                  {copy.notificationSnoozeDurationCopy ?? englishCopy.notificationSnoozeDurationCopy}
-                </Text>
-                {renderSettingMeta("notificationSnoozed")}
-                <View style={[styles.snoozeOptionGrid, isRtl && styles.rtlRow]}>
-                  {notificationSnoozeOptions.map((option) => {
-                    const active = notificationSnoozePreset === option.value;
-
-                    return (
-                      <TouchableOpacity
-                        key={option.value}
-                        activeOpacity={0.82}
-                        onPress={() => saveNotificationSnoozePreset(option.value)}
-                        accessibilityRole="radio"
-                        accessibilityState={{ checked: active }}
-                        accessibilityLabel={`${option.label} notification snooze`}
-                        accessibilityHint={screenReaderHints ? option.copy : undefined}
-                        style={[styles.snoozeOptionButton, isDay && styles.dayDropdownButton, active && { backgroundColor: paletteAccent, borderColor: paletteAccent }]}
-                      >
-                        <Text style={[styles.snoozeOptionTitle, largerText && styles.largeDropdownText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>
-                          {option.label}
-                        </Text>
-                        <Text style={[styles.comfortModeCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-                <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                  {copy.notificationSnoozeSafetyNote ?? englishCopy.notificationSnoozeSafetyNote}
-                </Text>
-              </View>
-            </View>
-          ) : null}
-        </View>
-          </>
-        ))}
-
-        {renderSettingsAccordion("timeUnits", (
-          <>
-        <Text onLayout={registerSectionLayout("locationDiscovery")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          {copy.locationDiscovery ?? englishCopy.locationDiscovery}
-        </Text>
-        <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-          {copy.locationDiscoveryCopy ?? englishCopy.locationDiscoveryCopy}
-        </Text>
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {locationRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < locationRows.length - 1 && styles.rowDivider, isDay && index < locationRows.length - 1 && styles.dayRowDivider, highContrast && index < locationRows.length - 1 && styles.highContrastDivider]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
-                {renderSettingMeta(row.key)}
-              </View>
-              <Switch
-                value={getSettingDisabled(row.key) ? false : row.value}
-                onValueChange={onToggleChange(row.key, row.onValueChange)}
-                disabled={getSettingDisabled(row.key)}
-                accessibilityLabel={row.label}
-                accessibilityHint={screenReaderHints ? row.copy : undefined}
-                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-              />
-            </View>
-          ))}
-          <View style={[styles.timeContextBlock, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-              {copy.dayNightMode ?? englishCopy.dayNightMode}
-            </Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              {copy.dayNightModeCopy ?? englishCopy.dayNightModeCopy}
-            </Text>
-            {renderSettingMeta("dayNightModePreference")}
-            <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
-              {dayNightModeOptions.map((option) => {
-                const active = dayNightModePreference === option.value;
-
-                return (
-                  <TouchableOpacity
-                    key={option.value}
-                    activeOpacity={0.82}
-                    onPress={() => saveRegionalPreference({ dayNightModePreference: option.value })}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: active }}
-                    accessibilityLabel={`${option.label} Day Night behaviour`}
-                    accessibilityHint={screenReaderHints ? option.copy : undefined}
-                    style={[styles.timeContextOption, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
-                  >
-                    <Text style={[styles.timeContextOptionTitle, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
-                    <Text style={[styles.timeContextOptionCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-          <View style={[styles.timeContextBlock, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-              {copy.timeLocalContext ?? englishCopy.timeLocalContext}
-            </Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              {copy.timeLocalContextCopy ?? englishCopy.timeLocalContextCopy}
-            </Text>
-            {renderSettingMeta("timeContextMode")}
-            <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
-              {timeContextModeOptions.map((option) => {
-                const active = timeContextMode === option.value;
-
-                return (
-                  <TouchableOpacity
-                    key={option.value}
-                    activeOpacity={0.82}
-                    onPress={() => saveTimeContextMode(option.value)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: active }}
-                    accessibilityLabel={`${option.label} time context`}
-                    accessibilityHint={screenReaderHints ? option.copy : undefined}
-                    style={[styles.timeContextOption, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
-                  >
-                    <Text style={[styles.timeContextOptionTitle, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
-                    <Text style={[styles.timeContextOptionCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              {copy.timeLocalContextPrototypeNote ?? englishCopy.timeLocalContextPrototypeNote}
-            </Text>
-          </View>
-        </View>
-
-        <Text onLayout={registerSectionLayout("regionalFormats")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          {copy.regionalFormats ?? englishCopy.regionalFormats}
-        </Text>
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {[
-            { label: "Date format", value: dateFormatPreference, options: dateFormatOptions, update: (value: DateFormatPreference) => saveRegionalPreference({ dateFormatPreference: value }) },
-            { label: "Time format", value: timeFormatPreference, options: timeFormatOptions, update: (value: TimeFormatPreference) => saveRegionalPreference({ timeFormatPreference: value }) },
-            { label: "Clock display", value: clockDisplayStyle, options: clockDisplayOptions, update: (value: ClockDisplayStyle) => saveRegionalPreference({ clockDisplayStyle: value }) },
-            { label: "Temperature", value: temperatureUnitPreference, options: temperatureUnitOptions, update: (value: TemperatureUnitPreference) => saveRegionalPreference({ temperatureUnitPreference: value }) },
-            { label: "Distance", value: distanceUnitPreference, options: distanceUnitOptions, update: (value: DistanceUnitPreference) => saveRegionalPreference({ distanceUnitPreference: value }) },
-            { label: "Currency", value: currencyDisplayPreference, options: currencyDisplayOptions, update: (value: CurrencyDisplayPreference) => saveRegionalPreference({ currencyDisplayPreference: value }) },
-          ].map((group, index) => (
-            <View key={group.label} style={[styles.regionalFormatBlock, index < 5 && styles.rowDivider, isDay && index < 5 && styles.dayRowDivider, highContrast && index < 5 && styles.highContrastDivider]}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{group.label}</Text>
-              <View style={[styles.regionalOptionRow, isRtl && styles.rtlRow]}>
-                {group.options.map((option) => {
-                  const active = group.value === option;
-
-                  return (
-                    <TouchableOpacity
-                      key={option}
-                      activeOpacity={0.82}
-                      onPress={() => group.update(option as never)}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: active }}
-                      accessibilityLabel={`${option} ${group.label}`}
-                      style={[styles.regionalOptionChip, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
-                    >
-                      <Text style={[styles.regionalOptionText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          ))}
-          <View style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Show weekday</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Include labels like Mon or Tuesday before dates when you want extra context.
-              </Text>
-              {renderSettingMeta("showWeekday")}
-            </View>
-            <Switch
-              value={showWeekday}
-              onValueChange={(value) => saveRegionalPreference({ showWeekday: value })}
-              accessibilityLabel="Show weekday"
-              accessibilityHint={screenReaderHints ? "Toggles weekday labels on dates throughout the prototype." : undefined}
-              trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-              thumbColor={showWeekday ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-            />
-          </View>
-          <View style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Show digital time with analog clock</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                {digitalWithAnalogAvailability.copy}
-              </Text>
-              {renderSettingMeta("showDigitalTimeWithAnalog")}
-            </View>
-            <Switch
-              value={digitalWithAnalogAvailability.disabled ? false : showDigitalTimeWithAnalog}
-              onValueChange={(value) => saveRegionalPreference({ showDigitalTimeWithAnalog: value })}
-              disabled={digitalWithAnalogAvailability.disabled}
-              accessibilityLabel="Show digital time with analog clock"
-              accessibilityState={{ disabled: digitalWithAnalogAvailability.disabled }}
-              accessibilityHint={screenReaderHints ? digitalWithAnalogAvailability.accessibilityHint : undefined}
-              trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-              thumbColor={!digitalWithAnalogAvailability.disabled && showDigitalTimeWithAnalog ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-            />
-          </View>
-          <Text style={[styles.snoozeSafetyNote, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-            {copy.regionalFormatsPrototypeNote ?? englishCopy.regionalFormatsPrototypeNote}
-          </Text>
-        </View>
-          </>
-        ))}
-
-        {renderSettingsAccordion("safetyContact", (
-          <>
-        <Text onLayout={registerSectionLayout("safetyContact")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          {copy.safetyContact ?? englishCopy.safetyContact}
-        </Text>
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {safetyRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, isRtl && styles.rtlRow, index < safetyRows.length - 1 && styles.rowDivider, isDay && index < safetyRows.length - 1 && styles.dayRowDivider, highContrast && index < safetyRows.length - 1 && styles.highContrastDivider]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                  {getSettingDisabled(row.key) ? `${row.copy} Coming soon in the prototype.` : row.copy}
-                </Text>
-                {renderSettingMeta(row.key)}
-              </View>
-              <Switch
-                value={getSettingDisabled(row.key) ? false : row.value}
-                onValueChange={onToggleChange(row.key, row.onValueChange)}
-                disabled={getSettingDisabled(row.key)}
-                accessibilityLabel={row.label}
-                accessibilityHint={screenReaderHints ? row.copy : undefined}
-                accessibilityState={{ disabled: getSettingDisabled(row.key) }}
-                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-              />
-            </View>
-          ))}
-          <TouchableOpacity
-            activeOpacity={0.78}
-            onPress={resetOnboarding}
-            accessibilityRole="button"
-            accessibilityLabel={copy.restartOnboarding ?? englishCopy.restartOnboarding}
-            accessibilityHint={copy.restartOnboardingCopy ?? englishCopy.restartOnboardingCopy}
-            style={[styles.actionRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}
-          >
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-                {copy.restartOnboarding ?? englishCopy.restartOnboarding}
-              </Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                {copy.restartOnboardingCopy ?? englishCopy.restartOnboardingCopy}
-              </Text>
-            </View>
-            <Text style={[styles.actionText, isDay && styles.dayActionText]}>{copy.restartOnboardingAction ?? englishCopy.restartOnboardingAction}</Text>
-          </TouchableOpacity>
-        </View>
-          </>
-        ))}
-          </>
-        ) : null}
-
-        {renderSettingsAccordion("advancedDisplay", (
-          <>
-        {isAdvancedSettings ? (
-          <>
-        <Text onLayout={registerSectionLayout("accessibility")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{accessibilityCopy.accessibility}</Text>
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          {allAccessibilityRows.map((row, index) => (
-            <View key={row.label} style={[styles.settingRow, largerText && styles.largeSettingRow, largerTouchTargets && styles.accessibleSettingRow, isRtl && styles.rtlRow, index < allAccessibilityRows.length - 1 && styles.rowDivider, isDay && index < allAccessibilityRows.length - 1 && styles.dayRowDivider, highContrast && index < allAccessibilityRows.length - 1 && styles.highContrastDivider]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, boldText && styles.boldInterfaceText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
-                {renderSettingMeta(row.label)}
-              </View>
-              <Switch
-                value={row.value}
-                onValueChange={onToggleChange(row.label, row.onValueChange)}
-                accessibilityLabel={row.label}
-                accessibilityHint={screenReaderHints ? row.copy : undefined}
-                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
-              />
-            </View>
-          ))}
-        </View>
-          </>
-        ) : null}
-
-        <Text onLayout={registerSectionLayout("appearance")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          {copy.appearance ?? englishCopy.appearance}
-        </Text>
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          <View style={[styles.brandThemeBlock, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-            <Text style={[styles.label, largerText && styles.largeLabel, boldText && styles.boldInterfaceText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-              Brand theme
-            </Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              NSN is the default pilot identity. SoftHello is available only when the future-theme feature flag is enabled.
-            </Text>
-            <View style={styles.brandThemeGrid}>
-              {brandThemeOptions.map((theme) => {
-                const active = brandThemeId === theme.id;
-                return (
-                  <TouchableOpacity
-                    key={theme.id}
-                    activeOpacity={0.82}
-                    onPress={() => setBrandThemeId(theme.id as BrandThemeId)}
                     style={[
-                      styles.brandThemeOption,
-                      { borderRadius: brandTheme.radius.control },
+                      styles.comfortModeButton,
                       isDay && styles.dayDropdownButton,
                       active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
                     ]}
                     accessibilityRole="button"
                     accessibilityState={{ selected: active }}
                   >
-                    <View style={[styles.brandThemeMark, active && styles.brandThemeMarkActive]}>
-                      <Text style={[styles.brandThemeMarkText, active && styles.blurLevelTextActive]}>{theme.logo.monogram}</Text>
-                    </View>
-                    <View style={styles.settingCopy}>
-                      <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{theme.logo.wordmark}</Text>
-                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{theme.tone}</Text>
-                    </View>
+                    <Text
+                      style={[
+                        styles.comfortModeTitle,
+                        largerText && styles.largeDropdownText,
+                        isDay && styles.dayLabel,
+                        active && styles.blurLevelTextActive,
+                      ]}
+                    >
+                      {option.value}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.comfortModeCopy,
+                        isDay && styles.daySubtitle,
+                        active && styles.blurLevelTextActive,
+                      ]}
+                    >
+                      {option.copy}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-          </View>
-          {[
-            { label: appearanceOptionCopy.softSurfaces, copy: appearanceOptionCopy.softSurfacesCopy, value: softSurfaces, onValueChange: setSoftSurfaces },
-            { label: appearanceOptionCopy.clearBorders, copy: appearanceOptionCopy.clearBordersCopy, value: clearBorders, onValueChange: setClearBorders },
-          ].map((row) => (
-            <View key={row.label} style={[styles.settingRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-              <View style={styles.settingCopy}>
-                <Text style={[styles.label, largerText && styles.largeLabel, boldText && styles.boldInterfaceText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{row.label}</Text>
-                <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{row.copy}</Text>
-                {renderSettingMeta(row.label)}
+            {[
+              {
+                title: "Identity basics",
+                rows: [
+                  {
+                    label: "Show middle name",
+                    copy: middleName
+                      ? "Use name display below: full name or initial only."
+                      : "Add a middle name in Profile before showing it.",
+                    disabled: !middleName,
+                    value: Boolean(middleName && middleNameDisplay !== "Hidden"),
+                    onChange: (value: boolean) =>
+                      saveSoftHelloMvpState({
+                        middleNameDisplay: Boolean(middleName && value) ? "Full" : "Hidden",
+                      }),
+                  },
+                  {
+                    label: "Show last name",
+                    copy: lastName
+                      ? "Use name display below: full name or initial only."
+                      : "Add a last name in Profile before showing it.",
+                    disabled: !lastName,
+                    value: Boolean(lastName && lastNameDisplay !== "Hidden"),
+                    onChange: (value: boolean) =>
+                      saveSoftHelloMvpState({
+                        lastNameDisplay: Boolean(lastName && value) ? "Full" : "Hidden",
+                      }),
+                  },
+                  {
+                    label: "Show age",
+                    copy: "Let others see your age in profile previews.",
+                    value: showAge,
+                    onChange: (value: boolean) => saveSoftHelloMvpState({ showAge: value }),
+                  },
+                  {
+                    label: "Show preferred age range",
+                    copy: "Show the age range you prefer for matching.",
+                    value: showPreferredAgeRange,
+                    onChange: (value: boolean) =>
+                      saveSoftHelloMvpState({ showPreferredAgeRange: value }),
+                  },
+                  {
+                    label: "Show gender",
+                    copy:
+                      gender === "Not specified"
+                        ? "Choose a gender below before showing it."
+                        : "Include your optional gender in profile previews.",
+                    disabled: gender === "Not specified",
+                    value: Boolean(gender !== "Not specified" && showGender),
+                    onChange: (value: boolean) =>
+                      saveSoftHelloMvpState({
+                        showGender: Boolean(gender !== "Not specified" && value),
+                      }),
+                  },
+                ],
+              },
+              {
+                title: "Local & social details",
+                rows: [
+                  {
+                    label: "Show suburb / area",
+                    copy: "Share your local area without precise location.",
+                    value: showSuburbArea,
+                    onChange: (value: boolean) => saveBooleanPrivacy("showSuburbArea", value),
+                  },
+                  {
+                    label: "Show interests",
+                    copy: "Show coffee, movies, walks and other first-meetup interests.",
+                    value: showInterests,
+                    onChange: (value: boolean) => saveBooleanPrivacy("showInterests", value),
+                  },
+                  {
+                    label: "Show comfort preferences",
+                    copy: "Share gentle context like small groups or text-first.",
+                    value: showComfortPreferences,
+                    onChange: (value: boolean) =>
+                      saveBooleanPrivacy("showComfortPreferences", value),
+                  },
+                ],
+              },
+              {
+                title: "Profile view",
+                rows: [
+                  {
+                    label: "Minimal profile view",
+                    copy: "Show only the essentials in event-visible previews.",
+                    value: minimalProfileView,
+                    onChange: (value: boolean) => saveBooleanPrivacy("minimalProfileView", value),
+                  },
+                  ...(comfortMode === "Warm Up Mode"
+                    ? [
+                        {
+                          label: "Lower blur in Warm Up",
+                          copy: "Use a softer blur while warming up, or keep your chosen blur level.",
+                          value: warmUpLowerBlur,
+                          onChange: saveWarmUpLowerBlur,
+                        },
+                      ]
+                    : []),
+                ],
+              },
+            ].map((group) => (
+              <View key={group.title} style={styles.settingsGroup}>
+                <Text
+                  style={[
+                    styles.subsectionTitle,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {group.title}
+                </Text>
+                <View
+                  style={[
+                    styles.card,
+                    { borderRadius: brandTheme.radius.card },
+                    isDay && styles.dayCard,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  {group.rows.map((row, index) => (
+                    <View
+                      key={row.label}
+                      style={[
+                        styles.settingRow,
+                        largerText && styles.largeSettingRow,
+                        isRtl && styles.rtlRow,
+                        (row as { disabled?: boolean }).disabled && styles.disabledOption,
+                        index < group.rows.length - 1 && styles.rowDivider,
+                        isDay && index < group.rows.length - 1 && styles.dayRowDivider,
+                        highContrast && index < group.rows.length - 1 && styles.highContrastDivider,
+                      ]}
+                    >
+                      <View style={styles.settingCopy}>
+                        <Text
+                          style={[
+                            styles.label,
+                            largerText && styles.largeLabel,
+                            isDay && styles.dayLabel,
+                            contrastTextStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.helperText,
+                            largerText && styles.largeHelperText,
+                            isDay && styles.daySubtitle,
+                            contrastMutedStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.copy}
+                        </Text>
+                        {renderSettingMeta(row.label)}
+                      </View>
+                      <Switch
+                        value={(row as { disabled?: boolean }).disabled ? false : row.value}
+                        onValueChange={onToggleChange(row.label, row.onChange)}
+                        disabled={(row as { disabled?: boolean }).disabled}
+                        accessibilityLabel={row.label}
+                        accessibilityHint={screenReaderHints ? row.copy : undefined}
+                        accessibilityState={{ disabled: (row as { disabled?: boolean }).disabled }}
+                        trackColor={{
+                          false: isDay ? "#C5D0DA" : nsnColors.border,
+                          true: paletteAccent,
+                        }}
+                        thumbColor={
+                          !(row as { disabled?: boolean }).disabled && row.value
+                            ? "#FFFFFF"
+                            : isDay
+                              ? "#F4F9FF"
+                              : nsnColors.muted
+                        }
+                      />
+                    </View>
+                  ))}
+                </View>
               </View>
-              <Switch
-                value={row.value}
-                onValueChange={onToggleChange(row.label, row.onValueChange)}
-                accessibilityLabel={row.label}
-                accessibilityHint={screenReaderHints ? row.copy : undefined}
-                trackColor={{ false: isDay ? "#C5D0DA" : nsnColors.border, true: paletteAccent }}
-                thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+            ))}
+          </>,
+        )}
+
+        {renderSettingsAccordion(
+          "comfortSafety",
+          <>
+            <Text
+              onLayout={registerSectionLayout("trustFoundations")}
+              style={[
+                styles.sectionTitle,
+                largerText && styles.largeSectionTitle,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Trust foundations
+            </Text>
+            <View
+              style={[
+                styles.settingsResponsiveGrid,
+                settingsLayout.isDesktop && styles.settingsResponsiveGridWide,
+                { gap: settingsLayout.sectionGap },
+              ]}
+            >
+              <View style={responsiveSettingsCardStyle()}>
+                <View style={styles.settingCopy}>
+                  <Text
+                    style={[
+                      styles.label,
+                      largerText && styles.largeLabel,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Progressive visibility
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Comfort Mode keeps you mostly private, Warm Up reveals limited details, and Open
+                    Mode shows more event-visible profile details.
+                  </Text>
+                </View>
+                <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                  {comfortModeOptions.map((option) => {
+                    const active = comfortMode === option.value;
+                    return (
+                      <TouchableOpacity
+                        key={`trust-${option.value}`}
+                        activeOpacity={0.82}
+                        onPress={() => saveComfortMode(option.value)}
+                        style={responsiveOptionButtonStyle(active)}
+                        accessibilityRole="radio"
+                        accessibilityLabel={`Progressive visibility ${option.value}`}
+                        accessibilityState={{ checked: active }}
+                      >
+                        <Text
+                          style={[
+                            styles.blurLevelText,
+                            largerText && styles.largeDropdownText,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {active ? `Selected: ${option.value}` : option.value}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.comfortModeCopy,
+                            isDay && styles.daySubtitle,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {option.copy}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={responsiveSettingsCardStyle()}>
+                <Text
+                  style={[
+                    styles.subsectionTitle,
+                    styles.settingsResponsiveCardTitle,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Social energy
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Choose the kind of social energy that feels easiest today.
+                </Text>
+                <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                  {socialEnergyOptions.map((option) => {
+                    const active = socialEnergyPreference === option;
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        activeOpacity={0.82}
+                        onPress={() => saveSocialEnergyPreference(option)}
+                        style={responsiveOptionButtonStyle(active)}
+                        accessibilityRole="radio"
+                        accessibilityLabel={`Social energy ${option}`}
+                        accessibilityState={{ checked: active }}
+                      >
+                        <Text
+                          style={[
+                            styles.blurLevelText,
+                            largerText && styles.largeDropdownText,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {active ? `Selected: ${option}` : option}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={responsiveSettingsCardStyle()}>
+                <Text
+                  style={[
+                    styles.subsectionTitle,
+                    styles.settingsResponsiveCardTitle,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Communication preferences
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  These prototype chips help others understand how you like to communicate.
+                </Text>
+                <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                  {communicationPreferenceOptions.map((option) => {
+                    const active = communicationPreferences.includes(option);
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        activeOpacity={0.82}
+                        onPress={() => toggleCommunicationPreference(option)}
+                        style={responsiveOptionButtonStyle(active)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Communication preference ${option}`}
+                        accessibilityState={{ selected: active }}
+                      >
+                        <Text
+                          style={[
+                            styles.blurLevelText,
+                            largerText && styles.largeDropdownText,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {active ? `Selected: ${option}` : option}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={responsiveSettingsCardStyle()}>
+                <Text
+                  style={[
+                    styles.subsectionTitle,
+                    styles.settingsResponsiveCardTitle,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Group size preference
+                </Text>
+                <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                  {groupSizePreferenceOptions.map((option) => {
+                    const active = groupSizePreference === option;
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        activeOpacity={0.82}
+                        onPress={() => saveGroupSizePreference(option)}
+                        style={responsiveOptionButtonStyle(active)}
+                        accessibilityRole="radio"
+                        accessibilityLabel={`Group size preference ${option}`}
+                        accessibilityState={{ checked: active }}
+                      >
+                        <Text
+                          style={[
+                            styles.blurLevelText,
+                            largerText && styles.largeDropdownText,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {active ? `Selected: ${option}` : option}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={responsiveSettingsCardStyle(true)}>
+                <Text
+                  style={[
+                    styles.subsectionTitle,
+                    styles.settingsResponsiveCardTitle,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Safety, privacy & consent details
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Photo comfort, consent reminders, and prototype trust state stay grouped here so
+                  safety actions remain calm and clear.
+                </Text>
+                <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
+                  <Text
+                    style={[
+                      styles.subsectionTitle,
+                      styles.settingsResponsiveCardTitle,
+                      largerText && styles.largeLabel,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Community Guidelines (alpha)
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Keep meetups consent-first and low-pressure: ask before photos or videos,
+                    respect no-photo preferences, and do not share private chats, profiles,
+                    screenshots, or meetup details without permission.
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    These are prototype guidelines for tester clarity. Reporting, moderation, and
+                    account enforcement are not production systems yet.
+                  </Text>
+                  <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                    <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+                      Alpha guidance
+                    </Text>
+                    <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+                      Prototype-only
+                    </Text>
+                  </View>
+                </View>
+                <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
+                  <Text
+                    style={[
+                      styles.subsectionTitle,
+                      styles.settingsResponsiveCardTitle,
+                      largerText && styles.largeLabel,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Photo & recording comfort
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Let others know what feels okay around photos, videos, and screenshots. NSN can
+                    guide consent, but it can&apos;t fully prevent someone from using another
+                    device.
+                  </Text>
+                  <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                    {photoRecordingComfortOptions.map((option) => {
+                      const active = photoRecordingComfortPreferences.includes(option);
+                      return (
+                        <TouchableOpacity
+                          key={option}
+                          activeOpacity={0.82}
+                          onPress={() => togglePhotoRecordingComfortPreference(option)}
+                          style={responsiveOptionButtonStyle(active)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Photo and recording comfort ${option}`}
+                          accessibilityState={{ selected: active }}
+                        >
+                          <Text
+                            style={[
+                              styles.blurLevelText,
+                              largerText && styles.largeDropdownText,
+                              isDay && styles.dayLabel,
+                              active && styles.blurLevelTextActive,
+                            ]}
+                          >
+                            {active ? `Selected: ${option}` : option}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Please don&apos;t screenshot or share someone&apos;s profile, chat, or meetup
+                    details without permission.
+                  </Text>
+                  {renderSettingMeta("photoRecordingComfortPreferences")}
+                </View>
+
+                <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
+                  <Text
+                    style={[
+                      styles.subsectionTitle,
+                      styles.settingsResponsiveCardTitle,
+                      largerText && styles.largeLabel,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Prototype verification status
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Choose a local-only trust level for alpha testing. This unlocks prototype chat
+                    and meetup gates on this device, but does not perform real identity
+                    verification.
+                  </Text>
+                  <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
+                    {verificationLevels.map((level) => {
+                      const active = effectiveVerificationLevel === level;
+                      const helper =
+                        level === "Unverified"
+                          ? "Browse-only prototype state."
+                          : level === "Contact Verified"
+                            ? "Allows prototype chat access."
+                            : "Allows prototype meetup/chat access.";
+
+                      return (
+                        <TouchableOpacity
+                          key={level}
+                          activeOpacity={0.82}
+                          onPress={() => savePrototypeVerificationLevel(level)}
+                          style={responsiveOptionButtonStyle(active)}
+                          accessibilityRole="radio"
+                          accessibilityLabel={`Prototype verification status ${level}`}
+                          accessibilityHint={helper}
+                          accessibilityState={{ checked: active }}
+                        >
+                          <Text
+                            style={[
+                              styles.blurLevelText,
+                              largerText && styles.largeDropdownText,
+                              isDay && styles.dayLabel,
+                              active && styles.blurLevelTextActive,
+                            ]}
+                          >
+                            {active ? `Selected: ${level}` : level}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.comfortModeCopy,
+                              isDay && styles.daySubtitle,
+                              active && styles.blurLevelTextActive,
+                            ]}
+                          >
+                            {helper}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  {renderSettingMeta("verificationLevel")}
+                </View>
+
+                <View style={[styles.settingsInlineSwitchRow, isRtl && styles.rtlRow]}>
+                  <View style={styles.settingCopy}>
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Verified, but private
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Your contact/trust status can be checked without making your profile fully
+                      open. Prototype trust state only - no real verification provider is connected
+                      yet.
+                    </Text>
+                    {renderSettingMeta("verifiedButPrivate")}
+                  </View>
+                  <Switch
+                    value={verifiedButPrivate}
+                    onValueChange={onToggleChange("verifiedButPrivate", saveVerifiedButPrivate)}
+                    accessibilityLabel="Verified but private prototype trust state"
+                    accessibilityHint="Keeps trust status visible without opening your full profile."
+                    trackColor={{
+                      false: isDay ? "#C5D0DA" : nsnColors.border,
+                      true: paletteAccent,
+                    }}
+                    thumbColor={
+                      verifiedButPrivate ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted
+                    }
+                  />
+                </View>
+              </View>
+            </View>
+          </>,
+        )}
+
+        {renderSettingsAccordion(
+          "profileDetails",
+          <>
+            {isAdvancedSettings ? (
+              <>
+                <Text
+                  onLayout={registerSectionLayout("nameDisplay")}
+                  style={[
+                    styles.sectionTitle,
+                    largerText && styles.largeSectionTitle,
+                    isDay && styles.dayTitle,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Name display
+                </Text>
+                <View
+                  style={[
+                    styles.card,
+                    { borderRadius: brandTheme.radius.card },
+                    isDay && styles.dayCard,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  {[
+                    {
+                      label: "Middle name",
+                      value: middleName,
+                      mode: middleNameDisplay,
+                      field: "middleNameDisplay" as const,
+                    },
+                    {
+                      label: "Last name",
+                      value: lastName,
+                      mode: lastNameDisplay,
+                      field: "lastNameDisplay" as const,
+                    },
+                  ].map((row, index) => (
+                    <View
+                      key={row.label}
+                      style={[
+                        styles.settingRow,
+                        largerText && styles.largeSettingRow,
+                        isRtl && styles.rtlRow,
+                        index === 0 && styles.rowDivider,
+                        isDay && index === 0 && styles.dayRowDivider,
+                        highContrast && index === 0 && styles.highContrastDivider,
+                      ]}
+                    >
+                      <View style={styles.settingCopy}>
+                        <Text
+                          style={[
+                            styles.label,
+                            largerText && styles.largeLabel,
+                            isDay && styles.dayLabel,
+                            contrastTextStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.helperText,
+                            largerText && styles.largeHelperText,
+                            isDay && styles.daySubtitle,
+                            contrastMutedStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.value
+                            ? `Saved as ${row.value}. Choose how it appears in preview.`
+                            : `Add a ${row.label.toLowerCase()} in Profile before showing it.`}
+                        </Text>
+                        <View style={styles.blurLevelGrid}>
+                          {nameDisplayOptions.map((option) => {
+                            const active = row.mode === option.value;
+                            return (
+                              <TouchableOpacity
+                                key={`${row.label}-${option.value}`}
+                                activeOpacity={0.82}
+                                disabled={!row.value}
+                                onPress={() =>
+                                  saveSoftHelloMvpState({
+                                    [row.field]: row.value ? option.value : "Hidden",
+                                  })
+                                }
+                                style={[
+                                  styles.blurLevelButton,
+                                  isDay && styles.dayDropdownButton,
+                                  active && {
+                                    backgroundColor: paletteAccent,
+                                    borderColor: paletteAccent,
+                                  },
+                                  !row.value && styles.disabledOption,
+                                ]}
+                                accessibilityRole="radio"
+                                accessibilityState={{ checked: active, disabled: !row.value }}
+                                accessibilityHint={
+                                  row.value
+                                    ? option.copy
+                                    : `Add a ${row.label.toLowerCase()} in Profile before changing this display option.`
+                                }
+                              >
+                                <Text
+                                  style={[
+                                    styles.blurLevelText,
+                                    largerText && styles.largeDropdownText,
+                                    isDay && styles.dayLabel,
+                                    active && styles.blurLevelTextActive,
+                                  ]}
+                                >
+                                  {option.label}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.comfortModeCopy,
+                                    isDay && styles.daySubtitle,
+                                    active && styles.blurLevelTextActive,
+                                  ]}
+                                >
+                                  {option.copy}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+
+                {comfortMode !== "Open Mode" ? (
+                  <>
+                    <Text
+                      onLayout={registerSectionLayout("photoBlur")}
+                      style={[
+                        styles.sectionTitle,
+                        largerText && styles.largeSectionTitle,
+                        isDay && styles.dayTitle,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Photo blur level
+                    </Text>
+                    <View style={styles.blurLevelGrid}>
+                      {blurLevelOptions.map((level) => {
+                        const active = blurLevel === level;
+                        return (
+                          <TouchableOpacity
+                            key={level}
+                            activeOpacity={0.82}
+                            onPress={() => saveBlurLevel(level)}
+                            style={[
+                              styles.blurLevelButton,
+                              isDay && styles.dayDropdownButton,
+                              active && {
+                                backgroundColor: paletteAccent,
+                                borderColor: paletteAccent,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.blurLevelText,
+                                largerText && styles.largeDropdownText,
+                                isDay && styles.dayLabel,
+                                active && styles.blurLevelTextActive,
+                              ]}
+                            >
+                              {level}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </>
+                ) : null}
+
+                <Text
+                  onLayout={registerSectionLayout("gender")}
+                  style={[
+                    styles.sectionTitle,
+                    largerText && styles.largeSectionTitle,
+                    isDay && styles.dayTitle,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Gender
+                </Text>
+                <View style={styles.blurLevelGrid}>
+                  {genderOptions.map((option) => {
+                    const active = gender === option;
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        activeOpacity={0.82}
+                        onPress={() =>
+                          saveSoftHelloMvpState({
+                            gender: option,
+                            showGender: option === "Not specified" ? false : showGender,
+                          })
+                        }
+                        style={[
+                          styles.blurLevelButton,
+                          isDay && styles.dayDropdownButton,
+                          active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
+                        ]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                      >
+                        <Text
+                          style={[
+                            styles.blurLevelText,
+                            largerText && styles.largeDropdownText,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {option}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            ) : null}
+
+            <View onLayout={registerSectionLayout("profilePreview")}>
+              <ProfileVisibilityPreview
+                displayName={displayName}
+                middleName={middleName}
+                lastName={lastName}
+                suburb={suburb}
+                age={age}
+                preferredAgeMin={preferredAgeMin}
+                preferredAgeMax={preferredAgeMax}
+                gender={gender}
+                middleNameDisplay={middleNameDisplay}
+                lastNameDisplay={lastNameDisplay}
+                interests={hobbiesInterests}
+                comfortPreferences={comfortPreferences}
+                contactPreferences={contactPreferences}
+                socialEnergyPreference={socialEnergyPreference}
+                communicationPreferences={communicationPreferences}
+                groupSizePreference={groupSizePreference}
+                photoRecordingComfortPreferences={photoRecordingComfortPreferences}
+                verifiedButPrivate={verifiedButPrivate}
+                comfortMode={comfortMode}
+                profilePhotoUri={profilePhotoUri}
+                privateProfile={privateProfile}
+                blurProfilePhoto={blurProfilePhoto}
+                blurLevel={blurLevel}
+                warmUpLowerBlur={warmUpLowerBlur}
+                showSuburbArea={showSuburbArea}
+                showMiddleName={showMiddleName}
+                showLastName={showLastName}
+                showAge={showAge}
+                showPreferredAgeRange={showPreferredAgeRange}
+                showGender={showGender}
+                showInterests={showInterests}
+                showComfortPreferences={showComfortPreferences}
+                minimalProfileView={minimalProfileView}
+                isDay={isDay}
               />
             </View>
-          ))}
-          <View style={[styles.timeContextBlock, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-              Emoji display
-            </Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Reduce decorative emojis for a cleaner, calmer, more text-focused interface while keeping important context readable.
-            </Text>
-            {renderSettingMeta("emojiDisplayMode")}
-            <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
-              {emojiDisplayModeOptions.map((option) => {
-                const active = emojiDisplayMode === option;
-                const detail = emojiDisplayModeDetails[option];
-
-                return (
-                  <TouchableOpacity
-                    key={option}
-                    activeOpacity={0.82}
-                    onPress={() => saveEmojiDisplayMode(option)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: active }}
-                    accessibilityLabel={detail.label}
-                    accessibilityHint={screenReaderHints ? detail.copy : undefined}
-                    style={[styles.timeContextOption, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
-                  >
-                    <Text style={[styles.timeContextOptionTitle, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{active ? `Selected: ${detail.label}` : detail.label}</Text>
-                    <Text style={[styles.timeContextOptionCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{detail.copy}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-          <View style={[styles.timeContextBlock, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-              {copy.cardOutlineStyle ?? englishCopy.cardOutlineStyle}
-            </Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              {copy.cardOutlineStyleCopy ?? englishCopy.cardOutlineStyleCopy}
-            </Text>
-            {renderSettingMeta("cardOutlineStyle")}
-            <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
-              {cardOutlineOptions.map((option) => {
-                const active = cardOutlineStyle === option.value;
-
-                return (
-                  <TouchableOpacity
-                    key={option.value}
-                    activeOpacity={0.82}
-                    onPress={() => saveCardOutlineStyle(option.value)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: active }}
-                    accessibilityLabel={`${option.label} card outline style`}
-                    accessibilityHint={screenReaderHints ? option.copy : undefined}
-                    style={[styles.timeContextOption, isDay && styles.dayDropdownButton, active && styles.timeContextOptionActive]}
-                  >
-                    <Text style={[styles.timeContextOptionTitle, isDay && styles.dayLabel, active && styles.blurLevelTextActive]}>{option.label}</Text>
-                    <Text style={[styles.timeContextOptionCopy, isDay && styles.daySubtitle, active && styles.blurLevelTextActive]}>{option.copy}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-          <View style={[styles.dropdownRow, isRtl && styles.rtlRow]}>
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-                {copy.colorPalette ?? englishCopy.colorPalette}
-              </Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                {copy.colorPaletteCopy ?? englishCopy.colorPaletteCopy}
-              </Text>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.78}
-              onPress={() => setOpenDropdown(toggleSettingsDropdown(openDropdown, "palette"))}
-              accessibilityRole="button"
-              accessibilityLabel={copy.colorPalette ?? englishCopy.colorPalette}
-              accessibilityHint={screenReaderHints ? copy.colorPaletteCopy ?? englishCopy.colorPaletteCopy : undefined}
-              style={[styles.dropdownButton, styles.paletteDropdownButton, isRtl && styles.rtlDropdownButton, isDay && styles.dayDropdownButton, highContrast && styles.highContrastButton]}
-            >
-              <View style={styles.paletteMiniSwatches}>
-                {appPalette.swatches.slice(0, 4).map((swatch) => (
-                  <View key={swatch} style={[styles.paletteMiniSwatch, { backgroundColor: swatch }]} />
-                ))}
-              </View>
-              <Text style={[styles.dropdownText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle]}>
-                {paletteCopy[appPalette.id]?.label ?? appPalette.label}
-              </Text>
-              <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
-            </TouchableOpacity>
-          </View>
-
-          {openDropdown === "palette" && (
-            <ScrollView
-              style={[styles.dropdownMenu, styles.paletteMenu, isDay && styles.dayDropdownMenu]}
-              contentContainerStyle={styles.paletteMenuContent}
-              nestedScrollEnabled
-              showsVerticalScrollIndicator
-            >
-              {appPalettes.map((palette) => {
-                const selected = appPalette.id === palette.id;
-
-                return (
-                  <TouchableOpacity
-                    key={palette.id}
-                    activeOpacity={0.75}
-                    onPress={() => setOpenDropdown(selectSettingsPalette(palette, setAppPalette))}
-                    style={[styles.dropdownOption, styles.paletteOption, isRtl && styles.rtlRow, isDay && styles.dayDropdownOption]}
-                  >
-                    <View style={styles.paletteOptionCopy}>
-                      <View style={styles.paletteSwatches}>
-                        {palette.swatches.map((swatch) => (
-                          <View key={swatch} style={[styles.paletteSwatch, { backgroundColor: swatch }]} />
-                        ))}
-                      </View>
-                      <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlText]}>{paletteCopy[palette.id]?.label ?? palette.label}</Text>
-                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{paletteCopy[palette.id]?.description ?? palette.description}</Text>
-                    </View>
-                    <View style={[styles.radioOuter, selected && styles.radioOuterSelected, selected && { borderColor: paletteAccent }]}>
-                      {selected && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
-        </View>
+          </>,
+        )}
 
         {isAdvancedSettings ? (
           <>
-        <Text onLayout={registerSectionLayout("language")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>{copy.translations}</Text>
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          <View style={[styles.dropdownRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider]}>
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{copy.appLanguage}</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{copy.appLanguageCopy}</Text>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.78}
-              onPress={() => setOpenDropdown(toggleSettingsDropdown(openDropdown, "app"))}
-              accessibilityRole="button"
-              accessibilityLabel={copy.appLanguage}
-              accessibilityHint={screenReaderHints ? copy.appLanguageCopy : undefined}
-              style={[styles.dropdownButton, isRtl && styles.rtlDropdownButton, isDay && styles.dayDropdownButton, highContrast && styles.highContrastButton]}
-            >
-              <Text style={[styles.dropdownText, styles.languageValueText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlAlignedText]}>
-                {languageOptions.find((language) => language.label === appLanguage)?.flag} {appLanguage}
-              </Text>
-              <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
-            </TouchableOpacity>
-          </View>
+            {renderSettingsAccordion(
+              "notifications",
+              <>
+                <Text
+                  onLayout={registerSectionLayout("notifications")}
+                  style={[
+                    styles.sectionTitle,
+                    largerText && styles.largeSectionTitle,
+                    isDay && styles.dayTitle,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.notifications ?? englishCopy.notifications}
+                </Text>
+                <View
+                  style={[
+                    styles.card,
+                    isDay && styles.dayCard,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  {notificationRows.map((row, index) => (
+                    <View
+                      key={row.label}
+                      style={[
+                        styles.settingRow,
+                        largerText && styles.largeSettingRow,
+                        isRtl && styles.rtlRow,
+                        (index < notificationRows.length - 1 ||
+                          (notificationSnoozed && row.key === "notificationSnoozed")) &&
+                          styles.rowDivider,
+                        isDay &&
+                          (index < notificationRows.length - 1 ||
+                            (notificationSnoozed && row.key === "notificationSnoozed")) &&
+                          styles.dayRowDivider,
+                        highContrast &&
+                          (index < notificationRows.length - 1 ||
+                            (notificationSnoozed && row.key === "notificationSnoozed")) &&
+                          styles.highContrastDivider,
+                      ]}
+                    >
+                      <View style={styles.settingCopy}>
+                        <Text
+                          style={[
+                            styles.label,
+                            largerText && styles.largeLabel,
+                            isDay && styles.dayLabel,
+                            contrastTextStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.helperText,
+                            largerText && styles.largeHelperText,
+                            isDay && styles.daySubtitle,
+                            contrastMutedStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.copy}
+                        </Text>
+                        {renderSettingMeta(row.key)}
+                      </View>
+                      <Switch
+                        value={getSettingDisabled(row.key) ? false : row.value}
+                        onValueChange={onToggleChange(row.key, row.onValueChange)}
+                        disabled={getSettingDisabled(row.key)}
+                        accessibilityLabel={row.label}
+                        accessibilityHint={screenReaderHints ? row.copy : undefined}
+                        accessibilityState={{ disabled: getSettingDisabled(row.key) }}
+                        trackColor={{
+                          false: isDay ? "#C5D0DA" : nsnColors.border,
+                          true: paletteAccent,
+                        }}
+                        thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                      />
+                    </View>
+                  ))}
+                  {notificationSnoozed ? (
+                    <View style={styles.notificationSnoozeRow}>
+                      <View style={styles.settingCopy}>
+                        <Text
+                          style={[
+                            styles.label,
+                            largerText && styles.largeLabel,
+                            isDay && styles.dayLabel,
+                            contrastTextStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {copy.notificationSnoozeDuration ??
+                            englishCopy.notificationSnoozeDuration}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.helperText,
+                            largerText && styles.largeHelperText,
+                            isDay && styles.daySubtitle,
+                            contrastMutedStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {copy.notificationSnoozeDurationCopy ??
+                            englishCopy.notificationSnoozeDurationCopy}
+                        </Text>
+                        {renderSettingMeta("notificationSnoozed")}
+                        <View style={[styles.snoozeOptionGrid, isRtl && styles.rtlRow]}>
+                          {notificationSnoozeOptions.map((option) => {
+                            const active = notificationSnoozePreset === option.value;
 
-          {openDropdown === "app" && (
-            <ScrollView
-              style={[styles.dropdownMenu, isDay && styles.dayDropdownMenu]}
-              contentContainerStyle={styles.dropdownMenuContent}
-              nestedScrollEnabled
-              showsVerticalScrollIndicator
-            >
-              <TextInput
-                value={appLanguageSearch}
-                onChangeText={(value) => {
-                  setAppLanguageSearch(value);
-                  selectExactLanguage(value, setAppLanguage, setAppLanguageRegionBase);
-                }}
-                placeholder={copy.searchLanguage ?? englishCopy.searchLanguage}
-                placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
-                style={[styles.languageSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText, isRtl && styles.rtlSearchInput]}
-                accessibilityLabel={copy.searchLanguage ?? englishCopy.searchLanguage}
-              />
-              {appLanguageRegionBase && (
-                <View style={[styles.languageRegionHeader, isDay && styles.dayDropdownOption, isRtl && styles.rtlRow]}>
-                  <TouchableOpacity
-                    activeOpacity={0.75}
-                    onPress={() => {
-                      setAppLanguageRegionBase(null);
-                      setAppLanguageSearch("");
-                    }}
-                    style={styles.languageRegionBack}
+                            return (
+                              <TouchableOpacity
+                                key={option.value}
+                                activeOpacity={0.82}
+                                onPress={() => saveNotificationSnoozePreset(option.value)}
+                                accessibilityRole="radio"
+                                accessibilityState={{ checked: active }}
+                                accessibilityLabel={`${option.label} notification snooze`}
+                                accessibilityHint={screenReaderHints ? option.copy : undefined}
+                                style={[
+                                  styles.snoozeOptionButton,
+                                  isDay && styles.dayDropdownButton,
+                                  active && {
+                                    backgroundColor: paletteAccent,
+                                    borderColor: paletteAccent,
+                                  },
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.snoozeOptionTitle,
+                                    largerText && styles.largeDropdownText,
+                                    isDay && styles.dayLabel,
+                                    active && styles.blurLevelTextActive,
+                                  ]}
+                                >
+                                  {option.label}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.comfortModeCopy,
+                                    isDay && styles.daySubtitle,
+                                    active && styles.blurLevelTextActive,
+                                  ]}
+                                >
+                                  {option.copy}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                        <Text
+                          style={[
+                            styles.snoozeSafetyNote,
+                            isDay && styles.daySubtitle,
+                            contrastMutedStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {copy.notificationSnoozeSafetyNote ??
+                            englishCopy.notificationSnoozeSafetyNote}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
+                </View>
+              </>,
+            )}
+
+            {renderSettingsAccordion(
+              "timeUnits",
+              <>
+                <Text
+                  onLayout={registerSectionLayout("locationDiscovery")}
+                  style={[
+                    styles.sectionTitle,
+                    largerText && styles.largeSectionTitle,
+                    isDay && styles.dayTitle,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.locationDiscovery ?? englishCopy.locationDiscovery}
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.locationDiscoveryCopy ?? englishCopy.locationDiscoveryCopy}
+                </Text>
+                <View
+                  style={[
+                    styles.card,
+                    isDay && styles.dayCard,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  {locationRows.map((row, index) => (
+                    <View
+                      key={row.label}
+                      style={[
+                        styles.settingRow,
+                        largerText && styles.largeSettingRow,
+                        isRtl && styles.rtlRow,
+                        index < locationRows.length - 1 && styles.rowDivider,
+                        isDay && index < locationRows.length - 1 && styles.dayRowDivider,
+                        highContrast &&
+                          index < locationRows.length - 1 &&
+                          styles.highContrastDivider,
+                      ]}
+                    >
+                      <View style={styles.settingCopy}>
+                        <Text
+                          style={[
+                            styles.label,
+                            largerText && styles.largeLabel,
+                            isDay && styles.dayLabel,
+                            contrastTextStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.helperText,
+                            largerText && styles.largeHelperText,
+                            isDay && styles.daySubtitle,
+                            contrastMutedStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.copy}
+                        </Text>
+                        {renderSettingMeta(row.key)}
+                      </View>
+                      <Switch
+                        value={getSettingDisabled(row.key) ? false : row.value}
+                        onValueChange={onToggleChange(row.key, row.onValueChange)}
+                        disabled={getSettingDisabled(row.key)}
+                        accessibilityLabel={row.label}
+                        accessibilityHint={screenReaderHints ? row.copy : undefined}
+                        accessibilityState={{ disabled: getSettingDisabled(row.key) }}
+                        trackColor={{
+                          false: isDay ? "#C5D0DA" : nsnColors.border,
+                          true: paletteAccent,
+                        }}
+                        thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                      />
+                    </View>
+                  ))}
+                  <View
+                    style={[
+                      styles.timeContextBlock,
+                      isDay && styles.dayRowDivider,
+                      highContrast && styles.highContrastDivider,
+                    ]}
                   >
-                    <Text style={[styles.languageRegionBackText, isDay && styles.dayLabel]}>{isRtl ? "›" : "‹"}</Text>
-                  </TouchableOpacity>
-                  <View style={styles.languageOptionCopy}>
-                    <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{appLanguageRegionBase}</Text>
-                    <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
-                      {getRegionalLanguages(appLanguageRegionBase).map((language) => language.nativeName).join(" / ")}
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.dayNightMode ?? englishCopy.dayNightMode}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.dayNightModeCopy ?? englishCopy.dayNightModeCopy}
+                    </Text>
+                    {renderSettingMeta("dayNightModePreference")}
+                    <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
+                      {dayNightModeOptions.map((option) => {
+                        const active = dayNightModePreference === option.value;
+
+                        return (
+                          <TouchableOpacity
+                            key={option.value}
+                            activeOpacity={0.82}
+                            onPress={() =>
+                              saveRegionalPreference({ dayNightModePreference: option.value })
+                            }
+                            accessibilityRole="radio"
+                            accessibilityState={{ checked: active }}
+                            accessibilityLabel={`${option.label} Day Night behaviour`}
+                            accessibilityHint={screenReaderHints ? option.copy : undefined}
+                            style={[
+                              styles.timeContextOption,
+                              isDay && styles.dayDropdownButton,
+                              active && styles.timeContextOptionActive,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.timeContextOptionTitle,
+                                isDay && styles.dayLabel,
+                                active && styles.blurLevelTextActive,
+                              ]}
+                            >
+                              {option.label}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.timeContextOptionCopy,
+                                isDay && styles.daySubtitle,
+                                active && styles.blurLevelTextActive,
+                              ]}
+                            >
+                              {option.copy}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  </View>
+                  <View
+                    style={[
+                      styles.timeContextBlock,
+                      isDay && styles.dayRowDivider,
+                      highContrast && styles.highContrastDivider,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.timeLocalContext ?? englishCopy.timeLocalContext}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.timeLocalContextCopy ?? englishCopy.timeLocalContextCopy}
+                    </Text>
+                    {renderSettingMeta("timeContextMode")}
+                    <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
+                      {timeContextModeOptions.map((option) => {
+                        const active = timeContextMode === option.value;
+
+                        return (
+                          <TouchableOpacity
+                            key={option.value}
+                            activeOpacity={0.82}
+                            onPress={() => saveTimeContextMode(option.value)}
+                            accessibilityRole="radio"
+                            accessibilityState={{ checked: active }}
+                            accessibilityLabel={`${option.label} time context`}
+                            accessibilityHint={screenReaderHints ? option.copy : undefined}
+                            style={[
+                              styles.timeContextOption,
+                              isDay && styles.dayDropdownButton,
+                              active && styles.timeContextOptionActive,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.timeContextOptionTitle,
+                                isDay && styles.dayLabel,
+                                active && styles.blurLevelTextActive,
+                              ]}
+                            >
+                              {option.label}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.timeContextOptionCopy,
+                                isDay && styles.daySubtitle,
+                                active && styles.blurLevelTextActive,
+                              ]}
+                            >
+                              {option.copy}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                    <Text
+                      style={[
+                        styles.snoozeSafetyNote,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.timeLocalContextPrototypeNote ??
+                        englishCopy.timeLocalContextPrototypeNote}
                     </Text>
                   </View>
                 </View>
-              )}
-              {appLanguageOptions.map((language) => {
-                const optionIsRtl = rtlLanguages.has(getLanguageBase(language.label));
-                const hasRegions = language.label === getLanguageBase(language.label) && hasRegionalLanguages();
 
-                return (
-                  <TouchableOpacity
-                    key={language.label}
-                    activeOpacity={0.75}
-                    onPress={() => selectLanguageOption(language, setAppLanguage, setAppLanguageSearch, setAppLanguageRegionBase)}
-                    style={[styles.dropdownOption, isRtl && styles.rtlRow, isDay && styles.dayDropdownOption]}
-                  >
-                    <View style={styles.languageOptionCopy}>
-                      <Text style={[styles.dropdownOptionText, styles.languageLabelText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{language.flag} {language.label}</Text>
-                      <Text style={[styles.dropdownNativeText, optionIsRtl ? styles.languageNativeRtlText : styles.languageNativeLtrText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
-                        {hasRegions ? getRegionalLanguages(language.label).map((option) => option.nativeName).join(" / ") : language.nativeName}
+                <Text
+                  onLayout={registerSectionLayout("regionalFormats")}
+                  style={[
+                    styles.sectionTitle,
+                    largerText && styles.largeSectionTitle,
+                    isDay && styles.dayTitle,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.regionalFormats ?? englishCopy.regionalFormats}
+                </Text>
+                <View
+                  style={[
+                    styles.card,
+                    isDay && styles.dayCard,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  {[
+                    {
+                      label: "Date format",
+                      value: dateFormatPreference,
+                      options: dateFormatOptions,
+                      update: (value: DateFormatPreference) =>
+                        saveRegionalPreference({ dateFormatPreference: value }),
+                    },
+                    {
+                      label: "Time format",
+                      value: timeFormatPreference,
+                      options: timeFormatOptions,
+                      update: (value: TimeFormatPreference) =>
+                        saveRegionalPreference({ timeFormatPreference: value }),
+                    },
+                    {
+                      label: "Clock display",
+                      value: clockDisplayStyle,
+                      options: clockDisplayOptions,
+                      update: (value: ClockDisplayStyle) =>
+                        saveRegionalPreference({ clockDisplayStyle: value }),
+                    },
+                    {
+                      label: "Temperature",
+                      value: temperatureUnitPreference,
+                      options: temperatureUnitOptions,
+                      update: (value: TemperatureUnitPreference) =>
+                        saveRegionalPreference({ temperatureUnitPreference: value }),
+                    },
+                    {
+                      label: "Distance",
+                      value: distanceUnitPreference,
+                      options: distanceUnitOptions,
+                      update: (value: DistanceUnitPreference) =>
+                        saveRegionalPreference({ distanceUnitPreference: value }),
+                    },
+                    {
+                      label: "Currency",
+                      value: currencyDisplayPreference,
+                      options: currencyDisplayOptions,
+                      update: (value: CurrencyDisplayPreference) =>
+                        saveRegionalPreference({ currencyDisplayPreference: value }),
+                    },
+                  ].map((group, index) => (
+                    <View
+                      key={group.label}
+                      style={[
+                        styles.regionalFormatBlock,
+                        index < 5 && styles.rowDivider,
+                        isDay && index < 5 && styles.dayRowDivider,
+                        highContrast && index < 5 && styles.highContrastDivider,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.label,
+                          largerText && styles.largeLabel,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {group.label}
                       </Text>
-                      <View style={styles.settingMetaRow}>
-                        <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>{language.status}</Text>
-                        <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{language.code}</Text>
+                      <View style={[styles.regionalOptionRow, isRtl && styles.rtlRow]}>
+                        {group.options.map((option) => {
+                          const active = group.value === option;
+
+                          return (
+                            <TouchableOpacity
+                              key={option}
+                              activeOpacity={0.82}
+                              onPress={() => group.update(option as never)}
+                              accessibilityRole="radio"
+                              accessibilityState={{ checked: active }}
+                              accessibilityLabel={`${option} ${group.label}`}
+                              style={[
+                                styles.regionalOptionChip,
+                                isDay && styles.dayDropdownButton,
+                                active && styles.timeContextOptionActive,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.regionalOptionText,
+                                  isDay && styles.dayLabel,
+                                  active && styles.blurLevelTextActive,
+                                ]}
+                              >
+                                {option}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
                       </View>
-                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{language.note}</Text>
                     </View>
-                    {hasRegions ? (
-                      <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>{isRtl ? "‹" : "›"}</Text>
-                    ) : (
-                      <View style={[styles.radioOuter, appLanguage === language.label && styles.radioOuterSelected, appLanguage === language.label && { borderColor: paletteAccent }]}>
-                        {appLanguage === language.label && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-              {appLanguageOptions.length === 0 && (
-                <Text style={[styles.noResultsText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.noLanguageFound ?? englishCopy.noLanguageFound}</Text>
-              )}
-            </ScrollView>
-          )}
-
-          <View style={[styles.dropdownRow, isRtl && styles.rtlRow]}>
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{copy.translateMeetupsChats}</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{copy.translateMeetupsChatsCopy}</Text>
-            </View>
-            <TouchableOpacity
-              activeOpacity={0.78}
-              onPress={() => setOpenDropdown(toggleSettingsDropdown(openDropdown, "translation"))}
-              accessibilityRole="button"
-              accessibilityLabel={copy.translateMeetupsChats}
-              accessibilityHint={screenReaderHints ? copy.translateMeetupsChatsCopy : undefined}
-              style={[styles.dropdownButton, isRtl && styles.rtlDropdownButton, isDay && styles.dayDropdownButton, highContrast && styles.highContrastButton]}
-            >
-              <Text style={[styles.dropdownText, styles.languageValueText, largerText && styles.largeDropdownText, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlAlignedText]}>
-                {languageOptions.find((language) => language.label === translationLanguage)?.flag} {translationLanguage}
-              </Text>
-              <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
-            </TouchableOpacity>
-          </View>
-
-          {openDropdown === "translation" && (
-            <ScrollView
-              style={[styles.dropdownMenu, isDay && styles.dayDropdownMenu]}
-              contentContainerStyle={styles.dropdownMenuContent}
-              nestedScrollEnabled
-              showsVerticalScrollIndicator
-            >
-              <TextInput
-                value={translationLanguageSearch}
-                onChangeText={(value) => {
-                  setTranslationLanguageSearch(value);
-                  selectExactLanguage(value, setTranslationLanguage, setTranslationLanguageRegionBase);
-                }}
-                placeholder={copy.searchLanguage ?? englishCopy.searchLanguage}
-                placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
-                style={[styles.languageSearchInput, isDay && styles.dayLanguageSearchInput, largerText && styles.largeDropdownText, isRtl && styles.rtlSearchInput]}
-                accessibilityLabel={copy.searchLanguage ?? englishCopy.searchLanguage}
-              />
-              {translationLanguageRegionBase && (
-                <View style={[styles.languageRegionHeader, isDay && styles.dayDropdownOption, isRtl && styles.rtlRow]}>
-                  <TouchableOpacity
-                    activeOpacity={0.75}
-                    onPress={() => {
-                      setTranslationLanguageRegionBase(null);
-                      setTranslationLanguageSearch("");
-                    }}
-                    style={styles.languageRegionBack}
+                  ))}
+                  <View
+                    style={[
+                      styles.settingRow,
+                      largerText && styles.largeSettingRow,
+                      isRtl && styles.rtlRow,
+                      styles.rowDivider,
+                      isDay && styles.dayRowDivider,
+                      highContrast && styles.highContrastDivider,
+                    ]}
                   >
-                    <Text style={[styles.languageRegionBackText, isDay && styles.dayLabel]}>{isRtl ? "›" : "‹"}</Text>
-                  </TouchableOpacity>
-                  <View style={styles.languageOptionCopy}>
-                    <Text style={[styles.dropdownOptionText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{translationLanguageRegionBase}</Text>
-                    <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
-                      {getRegionalLanguages(translationLanguageRegionBase).map((language) => language.nativeName).join(" / ")}
-                    </Text>
+                    <View style={styles.settingCopy}>
+                      <Text
+                        style={[
+                          styles.label,
+                          largerText && styles.largeLabel,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Show weekday
+                      </Text>
+                      <Text
+                        style={[
+                          styles.helperText,
+                          largerText && styles.largeHelperText,
+                          isDay && styles.daySubtitle,
+                          contrastMutedStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Include labels like Mon or Tuesday before dates when you want extra context.
+                      </Text>
+                      {renderSettingMeta("showWeekday")}
+                    </View>
+                    <Switch
+                      value={showWeekday}
+                      onValueChange={(value) => saveRegionalPreference({ showWeekday: value })}
+                      accessibilityLabel="Show weekday"
+                      accessibilityHint={
+                        screenReaderHints
+                          ? "Toggles weekday labels on dates throughout the prototype."
+                          : undefined
+                      }
+                      trackColor={{
+                        false: isDay ? "#C5D0DA" : nsnColors.border,
+                        true: paletteAccent,
+                      }}
+                      thumbColor={showWeekday ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                    />
                   </View>
-                </View>
-              )}
-              {translationLanguageOptions.map((language) => {
-                const optionIsRtl = rtlLanguages.has(getLanguageBase(language.label));
-                const hasRegions = language.label === getLanguageBase(language.label) && hasRegionalLanguages();
-
-                return (
-                  <TouchableOpacity
-                    key={language.label}
-                    activeOpacity={0.75}
-                    onPress={() => selectLanguageOption(language, setTranslationLanguage, setTranslationLanguageSearch, setTranslationLanguageRegionBase)}
-                    style={[styles.dropdownOption, isRtl && styles.rtlRow, isDay && styles.dayDropdownOption]}
+                  <View
+                    style={[
+                      styles.settingRow,
+                      largerText && styles.largeSettingRow,
+                      isRtl && styles.rtlRow,
+                      styles.rowDivider,
+                      isDay && styles.dayRowDivider,
+                      highContrast && styles.highContrastDivider,
+                    ]}
                   >
-                    <View style={styles.languageOptionCopy}>
-                      <Text style={[styles.dropdownOptionText, styles.languageLabelText, isDay && styles.dayLabel, isRtl && styles.rtlAlignedText]}>{language.flag} {language.label}</Text>
-                      <Text style={[styles.dropdownNativeText, optionIsRtl ? styles.languageNativeRtlText : styles.languageNativeLtrText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>
-                        {hasRegions ? getRegionalLanguages(language.label).map((option) => option.nativeName).join(" / ") : language.nativeName}
+                    <View style={styles.settingCopy}>
+                      <Text
+                        style={[
+                          styles.label,
+                          largerText && styles.largeLabel,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Show digital time with analog clock
                       </Text>
-                      <View style={styles.settingMetaRow}>
-                        <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>{language.status}</Text>
-                        <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{language.code}</Text>
-                      </View>
-                      <Text style={[styles.dropdownNativeText, isDay && styles.daySubtitle, isRtl && styles.rtlAlignedText]}>{language.note}</Text>
+                      <Text
+                        style={[
+                          styles.helperText,
+                          largerText && styles.largeHelperText,
+                          isDay && styles.daySubtitle,
+                          contrastMutedStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {digitalWithAnalogAvailability.copy}
+                      </Text>
+                      {renderSettingMeta("showDigitalTimeWithAnalog")}
                     </View>
-                    {hasRegions ? (
-                      <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>{isRtl ? "‹" : "›"}</Text>
-                    ) : (
-                      <View style={[styles.radioOuter, translationLanguage === language.label && styles.radioOuterSelected, translationLanguage === language.label && { borderColor: paletteAccent }]}>
-                        {translationLanguage === language.label && <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />}
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-              {translationLanguageOptions.length === 0 && (
-                <Text style={[styles.noResultsText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{copy.noLanguageFound ?? englishCopy.noLanguageFound}</Text>
-              )}
-            </ScrollView>
-          )}
+                    <Switch
+                      value={
+                        digitalWithAnalogAvailability.disabled ? false : showDigitalTimeWithAnalog
+                      }
+                      onValueChange={(value) =>
+                        saveRegionalPreference({ showDigitalTimeWithAnalog: value })
+                      }
+                      disabled={digitalWithAnalogAvailability.disabled}
+                      accessibilityLabel="Show digital time with analog clock"
+                      accessibilityState={{ disabled: digitalWithAnalogAvailability.disabled }}
+                      accessibilityHint={
+                        screenReaderHints
+                          ? digitalWithAnalogAvailability.accessibilityHint
+                          : undefined
+                      }
+                      trackColor={{
+                        false: isDay ? "#C5D0DA" : nsnColors.border,
+                        true: paletteAccent,
+                      }}
+                      thumbColor={
+                        !digitalWithAnalogAvailability.disabled && showDigitalTimeWithAnalog
+                          ? "#FFFFFF"
+                          : isDay
+                            ? "#F4F9FF"
+                            : nsnColors.muted
+                      }
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.snoozeSafetyNote,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {copy.regionalFormatsPrototypeNote ?? englishCopy.regionalFormatsPrototypeNote}
+                  </Text>
+                </View>
+              </>,
+            )}
 
-          <View style={[styles.languageRoadmapCard, isDay && styles.dayDropdownButton]}>
-            <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
-              <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Sydney/North Shore alpha</Text>
-              <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>English fallback</Text>
-            </View>
-            <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>
-              Planned language support
-            </Text>
-            <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              These languages are not selectable as fully supported yet. NSN will keep the alpha focused locally and use English fallback strings until translation coverage is complete and reviewed.
-            </Text>
-            {renderPlannedLanguageGroup(
-              "Local community languages",
-              "Planned for community review around Sydney/North Shore before being treated as supported.",
-              nsnPlannedLocalCommunityLanguageOptions
+            {renderSettingsAccordion(
+              "safetyContact",
+              <>
+                <Text
+                  onLayout={registerSectionLayout("safetyContact")}
+                  style={[
+                    styles.sectionTitle,
+                    largerText && styles.largeSectionTitle,
+                    isDay && styles.dayTitle,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.safetyContact ?? englishCopy.safetyContact}
+                </Text>
+                <View
+                  style={[
+                    styles.card,
+                    isDay && styles.dayCard,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  {safetyRows.map((row, index) => (
+                    <View
+                      key={row.label}
+                      style={[
+                        styles.settingRow,
+                        largerText && styles.largeSettingRow,
+                        isRtl && styles.rtlRow,
+                        index < safetyRows.length - 1 && styles.rowDivider,
+                        isDay && index < safetyRows.length - 1 && styles.dayRowDivider,
+                        highContrast && index < safetyRows.length - 1 && styles.highContrastDivider,
+                      ]}
+                    >
+                      <View style={styles.settingCopy}>
+                        <Text
+                          style={[
+                            styles.label,
+                            largerText && styles.largeLabel,
+                            isDay && styles.dayLabel,
+                            contrastTextStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.helperText,
+                            largerText && styles.largeHelperText,
+                            isDay && styles.daySubtitle,
+                            contrastMutedStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {getSettingDisabled(row.key)
+                            ? `${row.copy} Coming soon in the prototype.`
+                            : row.copy}
+                        </Text>
+                        {renderSettingMeta(row.key)}
+                      </View>
+                      <Switch
+                        value={getSettingDisabled(row.key) ? false : row.value}
+                        onValueChange={onToggleChange(row.key, row.onValueChange)}
+                        disabled={getSettingDisabled(row.key)}
+                        accessibilityLabel={row.label}
+                        accessibilityHint={screenReaderHints ? row.copy : undefined}
+                        accessibilityState={{ disabled: getSettingDisabled(row.key) }}
+                        trackColor={{
+                          false: isDay ? "#C5D0DA" : nsnColors.border,
+                          true: paletteAccent,
+                        }}
+                        thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                      />
+                    </View>
+                  ))}
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    onPress={resetOnboarding}
+                    accessibilityRole="button"
+                    accessibilityLabel={copy.restartOnboarding ?? englishCopy.restartOnboarding}
+                    accessibilityHint={
+                      copy.restartOnboardingCopy ?? englishCopy.restartOnboardingCopy
+                    }
+                    style={[
+                      styles.actionRow,
+                      isRtl && styles.rtlRow,
+                      styles.rowDivider,
+                      isDay && styles.dayRowDivider,
+                      highContrast && styles.highContrastDivider,
+                    ]}
+                  >
+                    <View style={styles.settingCopy}>
+                      <Text
+                        style={[
+                          styles.label,
+                          largerText && styles.largeLabel,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {copy.restartOnboarding ?? englishCopy.restartOnboarding}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.helperText,
+                          largerText && styles.largeHelperText,
+                          isDay && styles.daySubtitle,
+                          contrastMutedStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {copy.restartOnboardingCopy ?? englishCopy.restartOnboardingCopy}
+                      </Text>
+                    </View>
+                    <Text style={[styles.actionText, isDay && styles.dayActionText]}>
+                      {copy.restartOnboardingAction ?? englishCopy.restartOnboardingAction}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>,
             )}
-            {renderPlannedLanguageGroup(
-              "Future SoftHello/global languages",
-              "Future-facing only; not part of the current NSN alpha release.",
-              nsnPlannedGlobalLanguageOptions
-            )}
-          </View>
-        </View>
           </>
         ) : null}
-          </>
-        ))}
 
-        {renderSettingsAccordion("account", (
+        {renderSettingsAccordion(
+          "advancedDisplay",
           <>
-        <Text onLayout={registerSectionLayout("generalSettings")} style={[styles.sectionTitle, largerText && styles.largeSectionTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
-          General settings
-        </Text>
-        <View style={[styles.card, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          <TouchableOpacity
-            activeOpacity={0.78}
-            onPress={() => router.push("/(tabs)/alpha-walkthrough" as never)}
-            accessibilityRole="button"
-            accessibilityLabel="Open alpha tester walkthrough"
-            accessibilityHint="Opens a short prototype tour for first-time NSN alpha testers."
-            style={[styles.actionRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}
-          >
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Alpha tester walkthrough</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Open the short NSN prototype tour for first-time testers.
-              </Text>
-            </View>
-            <Text style={[styles.actionText, isDay && styles.dayActionText]}>Open</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.78}
-            onPress={resetProfileDefaults}
-            accessibilityRole="button"
-            accessibilityLabel="Reset to defaults"
-            style={[styles.actionRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}
-          >
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, largerText && styles.largeLabel, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>Reset to defaults</Text>
-              <Text style={[styles.helperText, largerText && styles.largeHelperText, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-                Restore NSN privacy and comfort defaults.
-              </Text>
-            </View>
-            <Text style={[styles.actionText, isDay && styles.dayActionText]}>Reset</Text>
-          </TouchableOpacity>
-          <View style={[styles.deactivateSettingsRow, isRtl && styles.rtlRow, styles.rowDivider, isDay && styles.dayRowDivider, highContrast && styles.highContrastDivider]}>
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, styles.deactivateSettingsText, largerText && styles.largeLabel, isRtl && styles.rtlText]}>
-                {accountPaused ? "Prototype account paused" : "Pause prototype account"}
-              </Text>
-              <Text style={[styles.helperText, styles.deactivateSettingsCopy, largerText && styles.largeHelperText, isRtl && styles.rtlText]}>
-                {accountPaused
-                  ? `Paused locally for ${accountPauseTimeline}. You can return whenever you feel ready.`
-                  : "Local-only pause for alpha testing. Your profile settings stay saved, and no real account system is changed."}
-              </Text>
-              <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
-                <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Saved locally</Text>
-                {recentlyChangedKey === "reactivateAccount" ? (
-                  <Text style={[styles.recentlyChangedText, isDay && styles.dayRecentlyChangedText]}>Saved locally</Text>
-                ) : null}
-              </View>
-              {accountPaused ? (
-                <TouchableOpacity
-                  activeOpacity={0.82}
-                  onPress={reactivateAccount}
-                  style={[styles.deactivatePrimaryButton, styles.reactivateButton]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Resume prototype account"
+            {isAdvancedSettings ? (
+              <>
+                <Text
+                  onLayout={registerSectionLayout("accessibility")}
+                  style={[
+                    styles.sectionTitle,
+                    largerText && styles.largeSectionTitle,
+                    isDay && styles.dayTitle,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
                 >
-                  <Text style={styles.reactivateButtonText}>Resume prototype account</Text>
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.pauseTimelineGrid}>
-                  {accountPauseTimelineOptions.map((option) => (
-                    <TouchableOpacity
-                      key={option.value}
-                      activeOpacity={0.82}
-                      onPress={() => setAccountConfirmation({ kind: "deactivate", timeline: option.value })}
-                      style={styles.pauseTimelineButton}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Pause prototype account for ${option.label}`}
-                      accessibilityHint={screenReaderHints ? `${option.copy} Opens a prototype confirmation dialog.` : undefined}
+                  {accessibilityCopy.accessibility}
+                </Text>
+                <View
+                  style={[
+                    styles.card,
+                    isDay && styles.dayCard,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  {allAccessibilityRows.map((row, index) => (
+                    <View
+                      key={row.label}
+                      style={[
+                        styles.settingRow,
+                        largerText && styles.largeSettingRow,
+                        largerTouchTargets && styles.accessibleSettingRow,
+                        isRtl && styles.rtlRow,
+                        index < allAccessibilityRows.length - 1 && styles.rowDivider,
+                        isDay && index < allAccessibilityRows.length - 1 && styles.dayRowDivider,
+                        highContrast &&
+                          index < allAccessibilityRows.length - 1 &&
+                          styles.highContrastDivider,
+                      ]}
                     >
-                      <Text style={styles.pauseTimelineLabel}>{option.label}</Text>
-                      <Text style={styles.pauseTimelineCopy}>{option.copy}</Text>
-                    </TouchableOpacity>
+                      <View style={styles.settingCopy}>
+                        <Text
+                          style={[
+                            styles.label,
+                            largerText && styles.largeLabel,
+                            boldText && styles.boldInterfaceText,
+                            isDay && styles.dayLabel,
+                            contrastTextStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.helperText,
+                            largerText && styles.largeHelperText,
+                            isDay && styles.daySubtitle,
+                            contrastMutedStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {row.copy}
+                        </Text>
+                        {renderSettingMeta(row.label)}
+                      </View>
+                      <Switch
+                        value={row.value}
+                        onValueChange={onToggleChange(row.label, row.onValueChange)}
+                        accessibilityLabel={row.label}
+                        accessibilityHint={screenReaderHints ? row.copy : undefined}
+                        trackColor={{
+                          false: isDay ? "#C5D0DA" : nsnColors.border,
+                          true: paletteAccent,
+                        }}
+                        thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                      />
+                    </View>
                   ))}
                 </View>
+              </>
+            ) : null}
+
+            <Text
+              onLayout={registerSectionLayout("appearance")}
+              style={[
+                styles.sectionTitle,
+                largerText && styles.largeSectionTitle,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {copy.appearance ?? englishCopy.appearance}
+            </Text>
+            <View
+              style={[
+                styles.card,
+                isDay && styles.dayCard,
+                highContrast && styles.highContrastCard,
+              ]}
+            >
+              <View
+                style={[
+                  styles.brandThemeBlock,
+                  styles.rowDivider,
+                  isDay && styles.dayRowDivider,
+                  highContrast && styles.highContrastDivider,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    largerText && styles.largeLabel,
+                    boldText && styles.boldInterfaceText,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Brand theme
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  NSN is the default pilot identity. SoftHello is available only when the
+                  future-theme feature flag is enabled.
+                </Text>
+                <View style={styles.brandThemeGrid}>
+                  {brandThemeOptions.map((theme) => {
+                    const active = brandThemeId === theme.id;
+                    return (
+                      <TouchableOpacity
+                        key={theme.id}
+                        activeOpacity={0.82}
+                        onPress={() => setBrandThemeId(theme.id as BrandThemeId)}
+                        style={[
+                          styles.brandThemeOption,
+                          { borderRadius: brandTheme.radius.control },
+                          isDay && styles.dayDropdownButton,
+                          active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                      >
+                        <View
+                          style={[styles.brandThemeMark, active && styles.brandThemeMarkActive]}
+                        >
+                          <Text
+                            style={[
+                              styles.brandThemeMarkText,
+                              active && styles.blurLevelTextActive,
+                            ]}
+                          >
+                            {theme.logo.monogram}
+                          </Text>
+                        </View>
+                        <View style={styles.settingCopy}>
+                          <Text
+                            style={[
+                              styles.dropdownOptionText,
+                              isDay && styles.dayLabel,
+                              active && styles.blurLevelTextActive,
+                            ]}
+                          >
+                            {theme.logo.wordmark}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.dropdownNativeText,
+                              isDay && styles.daySubtitle,
+                              active && styles.blurLevelTextActive,
+                            ]}
+                          >
+                            {theme.tone}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+              {[
+                {
+                  label: appearanceOptionCopy.softSurfaces,
+                  copy: appearanceOptionCopy.softSurfacesCopy,
+                  value: softSurfaces,
+                  onValueChange: setSoftSurfaces,
+                },
+                {
+                  label: appearanceOptionCopy.clearBorders,
+                  copy: appearanceOptionCopy.clearBordersCopy,
+                  value: clearBorders,
+                  onValueChange: setClearBorders,
+                },
+              ].map((row) => (
+                <View
+                  key={row.label}
+                  style={[
+                    styles.settingRow,
+                    isRtl && styles.rtlRow,
+                    styles.rowDivider,
+                    isDay && styles.dayRowDivider,
+                    highContrast && styles.highContrastDivider,
+                  ]}
+                >
+                  <View style={styles.settingCopy}>
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        boldText && styles.boldInterfaceText,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {row.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {row.copy}
+                    </Text>
+                    {renderSettingMeta(row.label)}
+                  </View>
+                  <Switch
+                    value={row.value}
+                    onValueChange={onToggleChange(row.label, row.onValueChange)}
+                    accessibilityLabel={row.label}
+                    accessibilityHint={screenReaderHints ? row.copy : undefined}
+                    trackColor={{
+                      false: isDay ? "#C5D0DA" : nsnColors.border,
+                      true: paletteAccent,
+                    }}
+                    thumbColor={row.value ? "#FFFFFF" : isDay ? "#F4F9FF" : nsnColors.muted}
+                  />
+                </View>
+              ))}
+              <View
+                style={[
+                  styles.timeContextBlock,
+                  styles.rowDivider,
+                  isDay && styles.dayRowDivider,
+                  highContrast && styles.highContrastDivider,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Emoji display
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Reduce decorative emojis for a cleaner, calmer, more text-focused interface while
+                  keeping important context readable.
+                </Text>
+                {renderSettingMeta("emojiDisplayMode")}
+                <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
+                  {emojiDisplayModeOptions.map((option) => {
+                    const active = emojiDisplayMode === option;
+                    const detail = emojiDisplayModeDetails[option];
+
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        activeOpacity={0.82}
+                        onPress={() => saveEmojiDisplayMode(option)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={detail.label}
+                        accessibilityHint={screenReaderHints ? detail.copy : undefined}
+                        style={[
+                          styles.timeContextOption,
+                          isDay && styles.dayDropdownButton,
+                          active && styles.timeContextOptionActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.timeContextOptionTitle,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {active ? `Selected: ${detail.label}` : detail.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.timeContextOptionCopy,
+                            isDay && styles.daySubtitle,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {detail.copy}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+              <View
+                style={[
+                  styles.timeContextBlock,
+                  styles.rowDivider,
+                  isDay && styles.dayRowDivider,
+                  highContrast && styles.highContrastDivider,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    largerText && styles.largeLabel,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.cardOutlineStyle ?? englishCopy.cardOutlineStyle}
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.cardOutlineStyleCopy ?? englishCopy.cardOutlineStyleCopy}
+                </Text>
+                {renderSettingMeta("cardOutlineStyle")}
+                <View style={[styles.timeContextGrid, isRtl && styles.rtlRow]}>
+                  {cardOutlineOptions.map((option) => {
+                    const active = cardOutlineStyle === option.value;
+
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        activeOpacity={0.82}
+                        onPress={() => saveCardOutlineStyle(option.value)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={`${option.label} card outline style`}
+                        accessibilityHint={screenReaderHints ? option.copy : undefined}
+                        style={[
+                          styles.timeContextOption,
+                          isDay && styles.dayDropdownButton,
+                          active && styles.timeContextOptionActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.timeContextOptionTitle,
+                            isDay && styles.dayLabel,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {option.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.timeContextOptionCopy,
+                            isDay && styles.daySubtitle,
+                            active && styles.blurLevelTextActive,
+                          ]}
+                        >
+                          {option.copy}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+              <View style={[styles.dropdownRow, isRtl && styles.rtlRow]}>
+                <View style={styles.settingCopy}>
+                  <Text
+                    style={[
+                      styles.label,
+                      largerText && styles.largeLabel,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {copy.colorPalette ?? englishCopy.colorPalette}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {copy.colorPaletteCopy ?? englishCopy.colorPaletteCopy}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={() => setOpenDropdown(toggleSettingsDropdown(openDropdown, "palette"))}
+                  accessibilityRole="button"
+                  accessibilityLabel={copy.colorPalette ?? englishCopy.colorPalette}
+                  accessibilityHint={
+                    screenReaderHints
+                      ? (copy.colorPaletteCopy ?? englishCopy.colorPaletteCopy)
+                      : undefined
+                  }
+                  style={[
+                    styles.dropdownButton,
+                    styles.paletteDropdownButton,
+                    isRtl && styles.rtlDropdownButton,
+                    isDay && styles.dayDropdownButton,
+                    highContrast && styles.highContrastButton,
+                  ]}
+                >
+                  <View style={styles.paletteMiniSwatches}>
+                    {appPalette.swatches.slice(0, 4).map((swatch) => (
+                      <View
+                        key={swatch}
+                        style={[styles.paletteMiniSwatch, { backgroundColor: swatch }]}
+                      />
+                    ))}
+                  </View>
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      largerText && styles.largeDropdownText,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                    ]}
+                  >
+                    {paletteCopy[appPalette.id]?.label ?? appPalette.label}
+                  </Text>
+                  <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
+                </TouchableOpacity>
+              </View>
+
+              {openDropdown === "palette" && (
+                <ScrollView
+                  style={[styles.dropdownMenu, styles.paletteMenu, isDay && styles.dayDropdownMenu]}
+                  contentContainerStyle={styles.paletteMenuContent}
+                  nestedScrollEnabled
+                  showsVerticalScrollIndicator
+                >
+                  {appPalettes.map((palette) => {
+                    const selected = appPalette.id === palette.id;
+
+                    return (
+                      <TouchableOpacity
+                        key={palette.id}
+                        activeOpacity={0.75}
+                        onPress={() =>
+                          setOpenDropdown(selectSettingsPalette(palette, setAppPalette))
+                        }
+                        style={[
+                          styles.dropdownOption,
+                          styles.paletteOption,
+                          isRtl && styles.rtlRow,
+                          isDay && styles.dayDropdownOption,
+                        ]}
+                      >
+                        <View style={styles.paletteOptionCopy}>
+                          <View style={styles.paletteSwatches}>
+                            {palette.swatches.map((swatch) => (
+                              <View
+                                key={swatch}
+                                style={[styles.paletteSwatch, { backgroundColor: swatch }]}
+                              />
+                            ))}
+                          </View>
+                          <Text
+                            style={[
+                              styles.dropdownOptionText,
+                              isDay && styles.dayLabel,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {paletteCopy[palette.id]?.label ?? palette.label}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.dropdownNativeText,
+                              isDay && styles.daySubtitle,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {paletteCopy[palette.id]?.description ?? palette.description}
+                          </Text>
+                        </View>
+                        <View
+                          style={[
+                            styles.radioOuter,
+                            selected && styles.radioOuterSelected,
+                            selected && { borderColor: paletteAccent },
+                          ]}
+                        >
+                          {selected && (
+                            <View style={[styles.radioInner, { backgroundColor: paletteAccent }]} />
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
               )}
             </View>
-          </View>
-          <TouchableOpacity
-            activeOpacity={0.78}
-            onPress={() => setAccountConfirmation({ kind: "delete" })}
-            accessibilityRole="button"
-            accessibilityLabel="Preview account deletion"
-            accessibilityHint="Opens a prototype confirmation dialog. No real account will be deleted."
-            style={[styles.actionRow, styles.destructiveSettingsRow, isRtl && styles.rtlRow]}
-          >
-            <View style={styles.settingCopy}>
-              <Text style={[styles.label, styles.destructiveSettingsText, largerText && styles.largeLabel, isRtl && styles.rtlText]}>Preview account deletion</Text>
-              <Text style={[styles.helperText, styles.destructiveSettingsCopy, largerText && styles.largeHelperText, isRtl && styles.rtlText]}>
-                Demo-only preview for alpha testers. No real account or profile data is deleted; production deletion needs account systems, audit logging, and recovery policy first.
-              </Text>
-              <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
-                <Text style={[styles.prototypeBadge, styles.destructivePrototypeBadge]}>Demo</Text>
+
+            {isAdvancedSettings ? (
+              <>
+                <Text
+                  onLayout={registerSectionLayout("language")}
+                  style={[
+                    styles.sectionTitle,
+                    largerText && styles.largeSectionTitle,
+                    isDay && styles.dayTitle,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.translations}
+                </Text>
+                <View
+                  style={[
+                    styles.card,
+                    isDay && styles.dayCard,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.dropdownRow,
+                      isRtl && styles.rtlRow,
+                      styles.rowDivider,
+                      isDay && styles.dayRowDivider,
+                    ]}
+                  >
+                    <View style={styles.settingCopy}>
+                      <Text
+                        style={[
+                          styles.label,
+                          largerText && styles.largeLabel,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {copy.appLanguage}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.helperText,
+                          largerText && styles.largeHelperText,
+                          isDay && styles.daySubtitle,
+                          contrastMutedStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {copy.appLanguageCopy}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      onPress={() => setOpenDropdown(toggleSettingsDropdown(openDropdown, "app"))}
+                      accessibilityRole="button"
+                      accessibilityLabel={copy.appLanguage}
+                      accessibilityHint={screenReaderHints ? copy.appLanguageCopy : undefined}
+                      style={[
+                        styles.dropdownButton,
+                        isRtl && styles.rtlDropdownButton,
+                        isDay && styles.dayDropdownButton,
+                        highContrast && styles.highContrastButton,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownText,
+                          styles.languageValueText,
+                          largerText && styles.largeDropdownText,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlAlignedText,
+                        ]}
+                      >
+                        {languageOptions.find((language) => language.label === appLanguage)?.flag}{" "}
+                        {appLanguage}
+                      </Text>
+                      <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {openDropdown === "app" && (
+                    <ScrollView
+                      style={[styles.dropdownMenu, isDay && styles.dayDropdownMenu]}
+                      contentContainerStyle={styles.dropdownMenuContent}
+                      nestedScrollEnabled
+                      showsVerticalScrollIndicator
+                    >
+                      <TextInput
+                        value={appLanguageSearch}
+                        onChangeText={(value) => {
+                          setAppLanguageSearch(value);
+                          selectExactLanguage(value, setAppLanguage, setAppLanguageRegionBase);
+                        }}
+                        placeholder={copy.searchLanguage ?? englishCopy.searchLanguage}
+                        placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
+                        style={[
+                          styles.languageSearchInput,
+                          isDay && styles.dayLanguageSearchInput,
+                          largerText && styles.largeDropdownText,
+                          isRtl && styles.rtlSearchInput,
+                        ]}
+                        accessibilityLabel={copy.searchLanguage ?? englishCopy.searchLanguage}
+                      />
+                      {appLanguageRegionBase && (
+                        <View
+                          style={[
+                            styles.languageRegionHeader,
+                            isDay && styles.dayDropdownOption,
+                            isRtl && styles.rtlRow,
+                          ]}
+                        >
+                          <TouchableOpacity
+                            activeOpacity={0.75}
+                            onPress={() => {
+                              setAppLanguageRegionBase(null);
+                              setAppLanguageSearch("");
+                            }}
+                            style={styles.languageRegionBack}
+                          >
+                            <Text style={[styles.languageRegionBackText, isDay && styles.dayLabel]}>
+                              {isRtl ? "›" : "‹"}
+                            </Text>
+                          </TouchableOpacity>
+                          <View style={styles.languageOptionCopy}>
+                            <Text
+                              style={[
+                                styles.dropdownOptionText,
+                                isDay && styles.dayLabel,
+                                isRtl && styles.rtlAlignedText,
+                              ]}
+                            >
+                              {appLanguageRegionBase}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.dropdownNativeText,
+                                isDay && styles.daySubtitle,
+                                isRtl && styles.rtlAlignedText,
+                              ]}
+                            >
+                              {getRegionalLanguages(appLanguageRegionBase)
+                                .map((language) => language.nativeName)
+                                .join(" / ")}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+                      {appLanguageOptions.map((language) => {
+                        const optionIsRtl = rtlLanguages.has(getLanguageBase(language.label));
+                        const hasRegions =
+                          language.label === getLanguageBase(language.label) &&
+                          hasRegionalLanguages();
+
+                        return (
+                          <TouchableOpacity
+                            key={language.label}
+                            activeOpacity={0.75}
+                            onPress={() =>
+                              selectLanguageOption(
+                                language,
+                                setAppLanguage,
+                                setAppLanguageSearch,
+                                setAppLanguageRegionBase,
+                              )
+                            }
+                            style={[
+                              styles.dropdownOption,
+                              isRtl && styles.rtlRow,
+                              isDay && styles.dayDropdownOption,
+                            ]}
+                          >
+                            <View style={styles.languageOptionCopy}>
+                              <Text
+                                style={[
+                                  styles.dropdownOptionText,
+                                  styles.languageLabelText,
+                                  isDay && styles.dayLabel,
+                                  isRtl && styles.rtlAlignedText,
+                                ]}
+                              >
+                                {language.flag} {language.label}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.dropdownNativeText,
+                                  optionIsRtl
+                                    ? styles.languageNativeRtlText
+                                    : styles.languageNativeLtrText,
+                                  isDay && styles.daySubtitle,
+                                  isRtl && styles.rtlAlignedText,
+                                ]}
+                              >
+                                {hasRegions
+                                  ? getRegionalLanguages(language.label)
+                                      .map((option) => option.nativeName)
+                                      .join(" / ")
+                                  : language.nativeName}
+                              </Text>
+                              <View style={styles.settingMetaRow}>
+                                <Text
+                                  style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}
+                                >
+                                  {language.status}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.dropdownNativeText,
+                                    isDay && styles.daySubtitle,
+                                    isRtl && styles.rtlAlignedText,
+                                  ]}
+                                >
+                                  {language.code}
+                                </Text>
+                              </View>
+                              <Text
+                                style={[
+                                  styles.dropdownNativeText,
+                                  isDay && styles.daySubtitle,
+                                  isRtl && styles.rtlAlignedText,
+                                ]}
+                              >
+                                {language.note}
+                              </Text>
+                            </View>
+                            {hasRegions ? (
+                              <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>
+                                {isRtl ? "‹" : "›"}
+                              </Text>
+                            ) : (
+                              <View
+                                style={[
+                                  styles.radioOuter,
+                                  appLanguage === language.label && styles.radioOuterSelected,
+                                  appLanguage === language.label && { borderColor: paletteAccent },
+                                ]}
+                              >
+                                {appLanguage === language.label && (
+                                  <View
+                                    style={[styles.radioInner, { backgroundColor: paletteAccent }]}
+                                  />
+                                )}
+                              </View>
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                      {appLanguageOptions.length === 0 && (
+                        <Text
+                          style={[
+                            styles.noResultsText,
+                            isDay && styles.daySubtitle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {copy.noLanguageFound ?? englishCopy.noLanguageFound}
+                        </Text>
+                      )}
+                    </ScrollView>
+                  )}
+
+                  <View style={[styles.dropdownRow, isRtl && styles.rtlRow]}>
+                    <View style={styles.settingCopy}>
+                      <Text
+                        style={[
+                          styles.label,
+                          largerText && styles.largeLabel,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {copy.translateMeetupsChats}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.helperText,
+                          largerText && styles.largeHelperText,
+                          isDay && styles.daySubtitle,
+                          contrastMutedStyle,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {copy.translateMeetupsChatsCopy}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      activeOpacity={0.78}
+                      onPress={() =>
+                        setOpenDropdown(toggleSettingsDropdown(openDropdown, "translation"))
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={copy.translateMeetupsChats}
+                      accessibilityHint={
+                        screenReaderHints ? copy.translateMeetupsChatsCopy : undefined
+                      }
+                      style={[
+                        styles.dropdownButton,
+                        isRtl && styles.rtlDropdownButton,
+                        isDay && styles.dayDropdownButton,
+                        highContrast && styles.highContrastButton,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownText,
+                          styles.languageValueText,
+                          largerText && styles.largeDropdownText,
+                          isDay && styles.dayLabel,
+                          contrastTextStyle,
+                          isRtl && styles.rtlAlignedText,
+                        ]}
+                      >
+                        {
+                          languageOptions.find((language) => language.label === translationLanguage)
+                            ?.flag
+                        }{" "}
+                        {translationLanguage}
+                      </Text>
+                      <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>⌄</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {openDropdown === "translation" && (
+                    <ScrollView
+                      style={[styles.dropdownMenu, isDay && styles.dayDropdownMenu]}
+                      contentContainerStyle={styles.dropdownMenuContent}
+                      nestedScrollEnabled
+                      showsVerticalScrollIndicator
+                    >
+                      <TextInput
+                        value={translationLanguageSearch}
+                        onChangeText={(value) => {
+                          setTranslationLanguageSearch(value);
+                          selectExactLanguage(
+                            value,
+                            setTranslationLanguage,
+                            setTranslationLanguageRegionBase,
+                          );
+                        }}
+                        placeholder={copy.searchLanguage ?? englishCopy.searchLanguage}
+                        placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
+                        style={[
+                          styles.languageSearchInput,
+                          isDay && styles.dayLanguageSearchInput,
+                          largerText && styles.largeDropdownText,
+                          isRtl && styles.rtlSearchInput,
+                        ]}
+                        accessibilityLabel={copy.searchLanguage ?? englishCopy.searchLanguage}
+                      />
+                      {translationLanguageRegionBase && (
+                        <View
+                          style={[
+                            styles.languageRegionHeader,
+                            isDay && styles.dayDropdownOption,
+                            isRtl && styles.rtlRow,
+                          ]}
+                        >
+                          <TouchableOpacity
+                            activeOpacity={0.75}
+                            onPress={() => {
+                              setTranslationLanguageRegionBase(null);
+                              setTranslationLanguageSearch("");
+                            }}
+                            style={styles.languageRegionBack}
+                          >
+                            <Text style={[styles.languageRegionBackText, isDay && styles.dayLabel]}>
+                              {isRtl ? "›" : "‹"}
+                            </Text>
+                          </TouchableOpacity>
+                          <View style={styles.languageOptionCopy}>
+                            <Text
+                              style={[
+                                styles.dropdownOptionText,
+                                isDay && styles.dayLabel,
+                                isRtl && styles.rtlAlignedText,
+                              ]}
+                            >
+                              {translationLanguageRegionBase}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.dropdownNativeText,
+                                isDay && styles.daySubtitle,
+                                isRtl && styles.rtlAlignedText,
+                              ]}
+                            >
+                              {getRegionalLanguages(translationLanguageRegionBase)
+                                .map((language) => language.nativeName)
+                                .join(" / ")}
+                            </Text>
+                          </View>
+                        </View>
+                      )}
+                      {translationLanguageOptions.map((language) => {
+                        const optionIsRtl = rtlLanguages.has(getLanguageBase(language.label));
+                        const hasRegions =
+                          language.label === getLanguageBase(language.label) &&
+                          hasRegionalLanguages();
+
+                        return (
+                          <TouchableOpacity
+                            key={language.label}
+                            activeOpacity={0.75}
+                            onPress={() =>
+                              selectLanguageOption(
+                                language,
+                                setTranslationLanguage,
+                                setTranslationLanguageSearch,
+                                setTranslationLanguageRegionBase,
+                              )
+                            }
+                            style={[
+                              styles.dropdownOption,
+                              isRtl && styles.rtlRow,
+                              isDay && styles.dayDropdownOption,
+                            ]}
+                          >
+                            <View style={styles.languageOptionCopy}>
+                              <Text
+                                style={[
+                                  styles.dropdownOptionText,
+                                  styles.languageLabelText,
+                                  isDay && styles.dayLabel,
+                                  isRtl && styles.rtlAlignedText,
+                                ]}
+                              >
+                                {language.flag} {language.label}
+                              </Text>
+                              <Text
+                                style={[
+                                  styles.dropdownNativeText,
+                                  optionIsRtl
+                                    ? styles.languageNativeRtlText
+                                    : styles.languageNativeLtrText,
+                                  isDay && styles.daySubtitle,
+                                  isRtl && styles.rtlAlignedText,
+                                ]}
+                              >
+                                {hasRegions
+                                  ? getRegionalLanguages(language.label)
+                                      .map((option) => option.nativeName)
+                                      .join(" / ")
+                                  : language.nativeName}
+                              </Text>
+                              <View style={styles.settingMetaRow}>
+                                <Text
+                                  style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}
+                                >
+                                  {language.status}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.dropdownNativeText,
+                                    isDay && styles.daySubtitle,
+                                    isRtl && styles.rtlAlignedText,
+                                  ]}
+                                >
+                                  {language.code}
+                                </Text>
+                              </View>
+                              <Text
+                                style={[
+                                  styles.dropdownNativeText,
+                                  isDay && styles.daySubtitle,
+                                  isRtl && styles.rtlAlignedText,
+                                ]}
+                              >
+                                {language.note}
+                              </Text>
+                            </View>
+                            {hasRegions ? (
+                              <Text style={[styles.dropdownChevron, isDay && styles.daySubtitle]}>
+                                {isRtl ? "‹" : "›"}
+                              </Text>
+                            ) : (
+                              <View
+                                style={[
+                                  styles.radioOuter,
+                                  translationLanguage === language.label &&
+                                    styles.radioOuterSelected,
+                                  translationLanguage === language.label && {
+                                    borderColor: paletteAccent,
+                                  },
+                                ]}
+                              >
+                                {translationLanguage === language.label && (
+                                  <View
+                                    style={[styles.radioInner, { backgroundColor: paletteAccent }]}
+                                  />
+                                )}
+                              </View>
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
+                      {translationLanguageOptions.length === 0 && (
+                        <Text
+                          style={[
+                            styles.noResultsText,
+                            isDay && styles.daySubtitle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {copy.noLanguageFound ?? englishCopy.noLanguageFound}
+                        </Text>
+                      )}
+                    </ScrollView>
+                  )}
+
+                  <View style={[styles.languageRoadmapCard, isDay && styles.dayDropdownButton]}>
+                    <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                      <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+                        Sydney/North Shore alpha
+                      </Text>
+                      <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+                        English fallback
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Planned language support
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      These languages are not selectable as fully supported yet. NSN will keep the
+                      alpha focused locally and use English fallback strings until translation
+                      coverage is complete and reviewed.
+                    </Text>
+                    {renderPlannedLanguageGroup(
+                      "Local community languages",
+                      "Planned for community review around Sydney/North Shore before being treated as supported.",
+                      nsnPlannedLocalCommunityLanguageOptions,
+                    )}
+                    {renderPlannedLanguageGroup(
+                      "Future SoftHello/global languages",
+                      "Future-facing only; not part of the current NSN alpha release.",
+                      nsnPlannedGlobalLanguageOptions,
+                    )}
+                  </View>
+                </View>
+              </>
+            ) : null}
+          </>,
+        )}
+
+        {renderSettingsAccordion(
+          "account",
+          <>
+            <Text
+              onLayout={registerSectionLayout("generalSettings")}
+              style={[
+                styles.sectionTitle,
+                largerText && styles.largeSectionTitle,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              General settings
+            </Text>
+            <View
+              style={[
+                styles.card,
+                isDay && styles.dayCard,
+                highContrast && styles.highContrastCard,
+              ]}
+            >
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={() => router.push("/(tabs)/alpha-walkthrough" as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Open alpha tester walkthrough"
+                accessibilityHint="Opens a short prototype tour for first-time NSN alpha testers."
+                style={[
+                  styles.actionRow,
+                  isRtl && styles.rtlRow,
+                  styles.rowDivider,
+                  isDay && styles.dayRowDivider,
+                  highContrast && styles.highContrastDivider,
+                ]}
+              >
+                <View style={styles.settingCopy}>
+                  <Text
+                    style={[
+                      styles.label,
+                      largerText && styles.largeLabel,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Alpha tester walkthrough
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Open the short NSN prototype tour for first-time testers.
+                  </Text>
+                </View>
+                <Text style={[styles.actionText, isDay && styles.dayActionText]}>Open</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={resetProfileDefaults}
+                accessibilityRole="button"
+                accessibilityLabel="Reset to defaults"
+                style={[
+                  styles.actionRow,
+                  isRtl && styles.rtlRow,
+                  styles.rowDivider,
+                  isDay && styles.dayRowDivider,
+                  highContrast && styles.highContrastDivider,
+                ]}
+              >
+                <View style={styles.settingCopy}>
+                  <Text
+                    style={[
+                      styles.label,
+                      largerText && styles.largeLabel,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Reset to defaults
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Restore NSN privacy and comfort defaults.
+                  </Text>
+                </View>
+                <Text style={[styles.actionText, isDay && styles.dayActionText]}>Reset</Text>
+              </TouchableOpacity>
+              <View
+                style={[
+                  styles.deactivateSettingsRow,
+                  isRtl && styles.rtlRow,
+                  styles.rowDivider,
+                  isDay && styles.dayRowDivider,
+                  highContrast && styles.highContrastDivider,
+                ]}
+              >
+                <View style={styles.settingCopy}>
+                  <Text
+                    style={[
+                      styles.label,
+                      styles.deactivateSettingsText,
+                      largerText && styles.largeLabel,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {accountPaused ? "Prototype account paused" : "Pause prototype account"}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      styles.deactivateSettingsCopy,
+                      largerText && styles.largeHelperText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {accountPaused
+                      ? `Paused locally for ${accountPauseTimeline}. You can return whenever you feel ready.`
+                      : "Local-only pause for alpha testing. Your profile settings stay saved, and no real account system is changed."}
+                  </Text>
+                  <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                    <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+                      Saved locally
+                    </Text>
+                    {recentlyChangedKey === "reactivateAccount" ? (
+                      <Text
+                        style={[styles.recentlyChangedText, isDay && styles.dayRecentlyChangedText]}
+                      >
+                        Saved locally
+                      </Text>
+                    ) : null}
+                  </View>
+                  {accountPaused ? (
+                    <TouchableOpacity
+                      activeOpacity={0.82}
+                      onPress={reactivateAccount}
+                      style={[styles.deactivatePrimaryButton, styles.reactivateButton]}
+                      accessibilityRole="button"
+                      accessibilityLabel="Resume prototype account"
+                    >
+                      <Text style={styles.reactivateButtonText}>Resume prototype account</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <View style={styles.pauseTimelineGrid}>
+                      {accountPauseTimelineOptions.map((option) => (
+                        <TouchableOpacity
+                          key={option.value}
+                          activeOpacity={0.82}
+                          onPress={() =>
+                            setAccountConfirmation({ kind: "deactivate", timeline: option.value })
+                          }
+                          style={styles.pauseTimelineButton}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Pause prototype account for ${option.label}`}
+                          accessibilityHint={
+                            screenReaderHints
+                              ? `${option.copy} Opens a prototype confirmation dialog.`
+                              : undefined
+                          }
+                        >
+                          <Text style={styles.pauseTimelineLabel}>{option.label}</Text>
+                          <Text style={styles.pauseTimelineCopy}>{option.copy}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+                </View>
               </View>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={() => setAccountConfirmation({ kind: "delete" })}
+                accessibilityRole="button"
+                accessibilityLabel="Preview account deletion"
+                accessibilityHint="Opens a prototype confirmation dialog. No real account will be deleted."
+                style={[styles.actionRow, styles.destructiveSettingsRow, isRtl && styles.rtlRow]}
+              >
+                <View style={styles.settingCopy}>
+                  <Text
+                    style={[
+                      styles.label,
+                      styles.destructiveSettingsText,
+                      largerText && styles.largeLabel,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Preview account deletion
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      styles.destructiveSettingsCopy,
+                      largerText && styles.largeHelperText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Demo-only preview for alpha testers. No real account or profile data is deleted;
+                    production deletion needs account systems, audit logging, and recovery policy
+                    first.
+                  </Text>
+                  <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                    <Text style={[styles.prototypeBadge, styles.destructivePrototypeBadge]}>
+                      Demo
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.destructiveSettingsAction}>Preview</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.destructiveSettingsAction}>Preview</Text>
-          </TouchableOpacity>
-        </View>
-          </>
-        ))}
+          </>,
+        )}
       </ScrollView>
       {showBackToTop ? (
         <TouchableOpacity
@@ -5528,7 +8655,12 @@ export default function SettingsScreen() {
           onPress={scrollSettingsToTop}
           accessibilityRole="button"
           accessibilityLabel="Back to top of Settings & Privacy"
-          style={[styles.backToTopButton, isDay && styles.dayBackToTopButton, highContrast && styles.highContrastButton, isRtl && styles.rtlRow]}
+          style={[
+            styles.backToTopButton,
+            isDay && styles.dayBackToTopButton,
+            highContrast && styles.highContrastButton,
+            isRtl && styles.rtlRow,
+          ]}
         >
           <IconSymbol name="chevron.up" color={isDay ? "#244061" : "#FFFFFF"} size={18} />
           <Text style={[styles.backToTopText, isDay && styles.dayBackToTopText]}>Back to top</Text>
@@ -5542,12 +8674,22 @@ export default function SettingsScreen() {
       >
         <View style={styles.modalBackdrop}>
           <View
-            style={[styles.confirmDialog, isDay && styles.dayConfirmDialog, highContrast && styles.highContrastCard]}
+            style={[
+              styles.confirmDialog,
+              isDay && styles.dayConfirmDialog,
+              highContrast && styles.highContrastCard,
+            ]}
             accessibilityRole="alert"
-            accessibilityLabel={accountConfirmation?.kind === "delete" ? "Confirm delete account" : "Confirm deactivate account"}
+            accessibilityLabel={
+              accountConfirmation?.kind === "delete"
+                ? "Confirm delete account"
+                : "Confirm deactivate account"
+            }
           >
             <Text style={[styles.confirmTitle, isDay && styles.dayTitle]}>
-              {accountConfirmation?.kind === "delete" ? "Preview account deletion?" : "Pause prototype account?"}
+              {accountConfirmation?.kind === "delete"
+                ? "Preview account deletion?"
+                : "Pause prototype account?"}
             </Text>
             <Text style={[styles.confirmCopy, isDay && styles.daySubtitle]}>
               {accountConfirmation?.kind === "delete"
@@ -5560,7 +8702,11 @@ export default function SettingsScreen() {
                 onPress={() => setAccountConfirmation(null)}
                 accessibilityRole="button"
                 accessibilityLabel="Cancel account action"
-                style={[styles.confirmButton, styles.cancelButton, isDay && styles.dayDropdownButton]}
+                style={[
+                  styles.confirmButton,
+                  styles.cancelButton,
+                  isDay && styles.dayDropdownButton,
+                ]}
               >
                 <Text style={[styles.confirmButtonText, isDay && styles.dayLabel]}>Cancel</Text>
               </TouchableOpacity>
@@ -5574,10 +8720,21 @@ export default function SettingsScreen() {
                   confirmDeleteAccount();
                 }}
                 accessibilityRole="button"
-                accessibilityLabel={accountConfirmation?.kind === "delete" ? "Confirm prototype delete action" : "Confirm prototype deactivate action"}
-                style={[styles.confirmButton, accountConfirmation?.kind === "delete" ? styles.confirmDestructiveButton : styles.confirmPrimaryButton]}
+                accessibilityLabel={
+                  accountConfirmation?.kind === "delete"
+                    ? "Confirm prototype delete action"
+                    : "Confirm prototype deactivate action"
+                }
+                style={[
+                  styles.confirmButton,
+                  accountConfirmation?.kind === "delete"
+                    ? styles.confirmDestructiveButton
+                    : styles.confirmPrimaryButton,
+                ]}
               >
-                <Text style={styles.confirmPrimaryText}>{accountConfirmation?.kind === "delete" ? "Show demo result" : "Save locally"}</Text>
+                <Text style={styles.confirmPrimaryText}>
+                  {accountConfirmation?.kind === "delete" ? "Show demo result" : "Save locally"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

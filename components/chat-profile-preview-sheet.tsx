@@ -1,4 +1,12 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -19,7 +27,10 @@ export function ChatProfilePreviewSheet({
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={[styles.sheet, isDay && styles.daySheet]} onPress={(event) => event.stopPropagation()}>
+        <Pressable
+          style={[styles.sheet, isDay && styles.daySheet]}
+          onPress={(event) => event.stopPropagation()}
+        >
           {profile ? (
             <>
               <View style={styles.header}>
@@ -34,24 +45,54 @@ export function ChatProfilePreviewSheet({
                 />
                 <View style={styles.identity}>
                   <Text style={[styles.name, isDay && styles.dayTitle]}>{profile.displayName}</Text>
-                  <Text style={[styles.meta, isDay && styles.dayMuted]}>{profile.role} / {profile.privacyMode}</Text>
+                  <Text style={[styles.meta, isDay && styles.dayMuted]}>
+                    {profile.role} / {profile.privacyMode}
+                  </Text>
                 </View>
-                <TouchableOpacity activeOpacity={0.82} onPress={onClose} style={[styles.closeButton, isDay && styles.dayCloseButton]} accessibilityRole="button" accessibilityLabel="Close profile preview">
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={onClose}
+                  style={[styles.closeButton, isDay && styles.dayCloseButton]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close profile preview"
+                >
                   <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                 </TouchableOpacity>
               </View>
 
-              <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+              <ScrollView
+                style={styles.scroll}
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
+              >
                 <View style={[styles.trustPill, isDay && styles.dayPill]}>
                   <IconSymbol name="shield" color={isDay ? "#445E93" : "#C7B07A"} size={14} />
-                  <Text style={[styles.trustText, isDay && styles.dayTitle]}>{profile.trustState}</Text>
+                  <Text style={[styles.trustText, isDay && styles.dayTitle]}>
+                    {profile.trustState}
+                  </Text>
+                </View>
+                <View style={[styles.trustPill, isDay && styles.dayPill]}>
+                  <IconSymbol name="visibility" color={isDay ? "#445E93" : "#C7B07A"} size={14} />
+                  <Text style={[styles.trustText, isDay && styles.dayTitle]}>
+                    {profile.softRevealIndicator}
+                  </Text>
                 </View>
 
-                {profile.about ? <Text style={[styles.about, isDay && styles.dayMuted]}>{profile.about}</Text> : null}
-                {profile.hiddenDetailNote ? <Text style={[styles.privateNote, isDay && styles.dayPrivateNote]}>{profile.hiddenDetailNote}</Text> : null}
+                {profile.about ? (
+                  <Text style={[styles.about, isDay && styles.dayMuted]}>{profile.about}</Text>
+                ) : null}
+                {profile.hiddenDetailNote ? (
+                  <Text style={[styles.privateNote, isDay && styles.dayPrivateNote]}>
+                    {profile.hiddenDetailNote}
+                  </Text>
+                ) : null}
 
                 <PreviewSection title="Vibes" items={profile.vibes} isDay={isDay} />
-                <PreviewSection title="Shared interests" items={profile.sharedInterests} isDay={isDay} />
+                <PreviewSection
+                  title="Shared interests"
+                  items={profile.sharedInterests}
+                  isDay={isDay}
+                />
                 <PreviewSection title="Comfort notes" items={profile.comfortNotes} isDay={isDay} />
 
                 <View style={styles.boundaryStack}>
@@ -67,7 +108,15 @@ export function ChatProfilePreviewSheet({
   );
 }
 
-function PreviewSection({ title, items, isDay }: { title: string; items: string[]; isDay: boolean }) {
+function PreviewSection({
+  title,
+  items,
+  isDay,
+}: {
+  title: string;
+  items: string[];
+  isDay: boolean;
+}) {
   if (!items.length) return null;
 
   return (
@@ -75,7 +124,9 @@ function PreviewSection({ title, items, isDay }: { title: string; items: string[
       <Text style={[styles.sectionTitle, isDay && styles.dayMuted]}>{title}</Text>
       <View style={styles.chipRow}>
         {items.map((item) => (
-          <Text key={item} style={[styles.chip, isDay && styles.dayChip]}>{item}</Text>
+          <Text key={item} style={[styles.chip, isDay && styles.dayChip]}>
+            {item}
+          </Text>
         ))}
       </View>
     </View>

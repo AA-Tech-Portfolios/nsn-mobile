@@ -23,8 +23,16 @@ import {
   type CalendarMomentVisibility,
   type CustomCalendarMoment,
 } from "./preferences/calendar-moments";
-import { defaultFoodBeveragePreferenceIds, normalizeFoodBeveragePreferenceIds } from "./preferences/food-preferences";
-import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds, normalizeInterestComfortTagsByInterest, normalizeInterestPreferenceIds } from "./preferences/interests";
+import {
+  defaultFoodBeveragePreferenceIds,
+  normalizeFoodBeveragePreferenceIds,
+} from "./preferences/food-preferences";
+import {
+  defaultInterestComfortTagsByInterest,
+  defaultInterestPreferenceIds,
+  normalizeInterestComfortTagsByInterest,
+  normalizeInterestPreferenceIds,
+} from "./preferences/interests";
 import { normalizeEmojiDisplayMode, type EmojiDisplayMode } from "./preferences-layout";
 import {
   normalizePersonalityPresenceChoice,
@@ -58,6 +66,7 @@ import {
   type PersonalityPresenceStyle,
   type PersonalityPresenceVoicePresence,
 } from "./preferences/personality-presence";
+import type { SoftRevealPace } from "./soft-reveal";
 
 export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
 
@@ -105,7 +114,11 @@ export const getLanguageBase = (language: string) => language.replace(/\s+\([^)]
 
 export const DEFAULT_NSN_LANGUAGE = "English (Australia)";
 
-export type NsnLanguageSupportStatus = "Alpha active" | "Partially translated" | "Needs community review" | "Coming later";
+export type NsnLanguageSupportStatus =
+  | "Alpha active"
+  | "Partially translated"
+  | "Needs community review"
+  | "Coming later";
 
 export type NsnLanguageOption = {
   label: string;
@@ -119,45 +132,277 @@ export type NsnLanguageOption = {
 };
 
 export const nsnLocalLanguageOptions = [
-  { label: "English (Australia)", nativeName: "English · Australia", flag: "🇦🇺", code: "en-AU", status: "Alpha active", selectable: true, translationBase: "English", note: "Primary Sydney/North Shore alpha language." },
-  { label: "Hebrew", nativeName: "עברית", flag: "🇮🇱", code: "he", status: "Partially translated", selectable: true, translationBase: "Hebrew", note: "Visible for alpha testing; needs continued community review." },
-  { label: "Chinese (Simplified)", nativeName: "简体中文", flag: "🇨🇳", code: "zh-Hans", status: "Partially translated", selectable: true, translationBase: "Chinese", note: "Uses the current Simplified Chinese strings where available." },
-  { label: "Chinese (Traditional)", nativeName: "繁體中文", flag: "🌐", code: "zh-Hant", status: "Partially translated", selectable: true, translationBase: "English", note: "Visible for staging; falls back to English until Traditional Chinese copy is reviewed." },
-  { label: "Korean", nativeName: "한국어", flag: "🇰🇷", code: "ko", status: "Partially translated", selectable: true, translationBase: "Korean", note: "Visible for alpha testing; needs continued community review." },
-  { label: "Japanese", nativeName: "日本語", flag: "🇯🇵", code: "ja", status: "Partially translated", selectable: true, translationBase: "Japanese", note: "Visible for alpha testing; needs continued community review." },
+  {
+    label: "English (Australia)",
+    nativeName: "English · Australia",
+    flag: "🇦🇺",
+    code: "en-AU",
+    status: "Alpha active",
+    selectable: true,
+    translationBase: "English",
+    note: "Primary Sydney/North Shore alpha language.",
+  },
+  {
+    label: "Hebrew",
+    nativeName: "עברית",
+    flag: "🇮🇱",
+    code: "he",
+    status: "Partially translated",
+    selectable: true,
+    translationBase: "Hebrew",
+    note: "Visible for alpha testing; needs continued community review.",
+  },
+  {
+    label: "Chinese (Simplified)",
+    nativeName: "简体中文",
+    flag: "🇨🇳",
+    code: "zh-Hans",
+    status: "Partially translated",
+    selectable: true,
+    translationBase: "Chinese",
+    note: "Uses the current Simplified Chinese strings where available.",
+  },
+  {
+    label: "Chinese (Traditional)",
+    nativeName: "繁體中文",
+    flag: "🌐",
+    code: "zh-Hant",
+    status: "Partially translated",
+    selectable: true,
+    translationBase: "English",
+    note: "Visible for staging; falls back to English until Traditional Chinese copy is reviewed.",
+  },
+  {
+    label: "Korean",
+    nativeName: "한국어",
+    flag: "🇰🇷",
+    code: "ko",
+    status: "Partially translated",
+    selectable: true,
+    translationBase: "Korean",
+    note: "Visible for alpha testing; needs continued community review.",
+  },
+  {
+    label: "Japanese",
+    nativeName: "日本語",
+    flag: "🇯🇵",
+    code: "ja",
+    status: "Partially translated",
+    selectable: true,
+    translationBase: "Japanese",
+    note: "Visible for alpha testing; needs continued community review.",
+  },
 ] as const;
 
 export type NsnLocalLanguage = (typeof nsnLocalLanguageOptions)[number]["label"];
 
 export const nsnPlannedLocalCommunityLanguageOptions = [
-  { label: "Hindi", nativeName: "हिन्दी", flag: "🇮🇳", code: "hi", status: "Needs community review", selectable: false, note: "Planned for Sydney community review after alpha." },
-  { label: "Arabic", nativeName: "العربية", flag: "🌐", code: "ar", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
-  { label: "Vietnamese", nativeName: "Tiếng Việt", flag: "🇻🇳", code: "vi", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
-  { label: "Punjabi", nativeName: "ਪੰਜਾਬੀ", flag: "🌐", code: "pa", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
-  { label: "Persian / Farsi", nativeName: "فارسی", flag: "🌐", code: "fa", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
-  { label: "Filipino / Tagalog", nativeName: "Filipino / Tagalog", flag: "🇵🇭", code: "fil", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
-  { label: "Indonesian", nativeName: "Bahasa Indonesia", flag: "🇮🇩", code: "id", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
-  { label: "Malay / Bahasa Melayu", nativeName: "Bahasa Melayu", flag: "🌐", code: "ms", status: "Needs community review", selectable: false, note: "Planned for local community review; not fully translated." },
+  {
+    label: "Hindi",
+    nativeName: "हिन्दी",
+    flag: "🇮🇳",
+    code: "hi",
+    status: "Needs community review",
+    selectable: false,
+    note: "Planned for Sydney community review after alpha.",
+  },
+  {
+    label: "Arabic",
+    nativeName: "العربية",
+    flag: "🌐",
+    code: "ar",
+    status: "Needs community review",
+    selectable: false,
+    note: "Planned for local community review; not fully translated.",
+  },
+  {
+    label: "Vietnamese",
+    nativeName: "Tiếng Việt",
+    flag: "🇻🇳",
+    code: "vi",
+    status: "Needs community review",
+    selectable: false,
+    note: "Planned for local community review; not fully translated.",
+  },
+  {
+    label: "Punjabi",
+    nativeName: "ਪੰਜਾਬੀ",
+    flag: "🌐",
+    code: "pa",
+    status: "Needs community review",
+    selectable: false,
+    note: "Planned for local community review; not fully translated.",
+  },
+  {
+    label: "Persian / Farsi",
+    nativeName: "فارسی",
+    flag: "🌐",
+    code: "fa",
+    status: "Needs community review",
+    selectable: false,
+    note: "Planned for local community review; not fully translated.",
+  },
+  {
+    label: "Filipino / Tagalog",
+    nativeName: "Filipino / Tagalog",
+    flag: "🇵🇭",
+    code: "fil",
+    status: "Needs community review",
+    selectable: false,
+    note: "Planned for local community review; not fully translated.",
+  },
+  {
+    label: "Indonesian",
+    nativeName: "Bahasa Indonesia",
+    flag: "🇮🇩",
+    code: "id",
+    status: "Needs community review",
+    selectable: false,
+    note: "Planned for local community review; not fully translated.",
+  },
+  {
+    label: "Malay / Bahasa Melayu",
+    nativeName: "Bahasa Melayu",
+    flag: "🌐",
+    code: "ms",
+    status: "Needs community review",
+    selectable: false,
+    note: "Planned for local community review; not fully translated.",
+  },
 ] as const;
 
 export const nsnPlannedGlobalLanguageOptions = [
-  { label: "Spanish", nativeName: "Español", flag: "🌐", code: "es", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "French", nativeName: "Français", flag: "🌐", code: "fr", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "German", nativeName: "Deutsch", flag: "🌐", code: "de", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Portuguese", nativeName: "Português", flag: "🌐", code: "pt", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Italian", nativeName: "Italiano", flag: "🌐", code: "it", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Dutch", nativeName: "Nederlands", flag: "🌐", code: "nl", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Greek", nativeName: "Ελληνικά", flag: "🌐", code: "el", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Turkish", nativeName: "Türkçe", flag: "🌐", code: "tr", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Russian", nativeName: "Русский", flag: "🌐", code: "ru", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Ukrainian", nativeName: "Українська", flag: "🌐", code: "uk", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Swedish", nativeName: "Svenska", flag: "🌐", code: "sv", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Danish", nativeName: "Dansk", flag: "🌐", code: "da", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Norwegian", nativeName: "Norsk", flag: "🌐", code: "no", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
-  { label: "Finnish", nativeName: "Suomi", flag: "🌐", code: "fi", status: "Coming later", selectable: false, note: "Future SoftHello/global expansion candidate." },
+  {
+    label: "Spanish",
+    nativeName: "Español",
+    flag: "🌐",
+    code: "es",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "French",
+    nativeName: "Français",
+    flag: "🌐",
+    code: "fr",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "German",
+    nativeName: "Deutsch",
+    flag: "🌐",
+    code: "de",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Portuguese",
+    nativeName: "Português",
+    flag: "🌐",
+    code: "pt",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Italian",
+    nativeName: "Italiano",
+    flag: "🌐",
+    code: "it",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Dutch",
+    nativeName: "Nederlands",
+    flag: "🌐",
+    code: "nl",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Greek",
+    nativeName: "Ελληνικά",
+    flag: "🌐",
+    code: "el",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Turkish",
+    nativeName: "Türkçe",
+    flag: "🌐",
+    code: "tr",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Russian",
+    nativeName: "Русский",
+    flag: "🌐",
+    code: "ru",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Ukrainian",
+    nativeName: "Українська",
+    flag: "🌐",
+    code: "uk",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Swedish",
+    nativeName: "Svenska",
+    flag: "🌐",
+    code: "sv",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Danish",
+    nativeName: "Dansk",
+    flag: "🌐",
+    code: "da",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Norwegian",
+    nativeName: "Norsk",
+    flag: "🌐",
+    code: "no",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
+  {
+    label: "Finnish",
+    nativeName: "Suomi",
+    flag: "🌐",
+    code: "fi",
+    status: "Coming later",
+    selectable: false,
+    note: "Future SoftHello/global expansion candidate.",
+  },
 ] as const;
 
-const supportedLanguageLabels = new Set<string>(nsnLocalLanguageOptions.map((language) => language.label));
+const supportedLanguageLabels = new Set<string>(
+  nsnLocalLanguageOptions.map((language) => language.label),
+);
 
 export function normalizeNsnLanguage(language?: string | null): NsnLocalLanguage {
   if (!language) return DEFAULT_NSN_LANGUAGE;
@@ -169,7 +414,13 @@ export function normalizeNsnLanguage(language?: string | null): NsnLocalLanguage
   const baseLanguage = getLanguageBase(language);
 
   if (language === "English (AU)" || baseLanguage === "English") return DEFAULT_NSN_LANGUAGE;
-  if (language === "Chinese (Traditional)" || language === "Chinese (Taiwan)" || language === "Chinese (Hong Kong)" || language === "Traditional Chinese") return "Chinese (Traditional)";
+  if (
+    language === "Chinese (Traditional)" ||
+    language === "Chinese (Taiwan)" ||
+    language === "Chinese (Hong Kong)" ||
+    language === "Traditional Chinese"
+  )
+    return "Chinese (Traditional)";
   if (baseLanguage === "Chinese") return "Chinese (Simplified)";
   if (baseLanguage === "Hebrew") return "Hebrew";
   if (baseLanguage === "Korean") return "Korean";
@@ -180,7 +431,9 @@ export function normalizeNsnLanguage(language?: string | null): NsnLocalLanguage
 
 export function getTranslationLanguageBase(language: string) {
   const normalizedLanguage = normalizeNsnLanguage(language);
-  const languageOption = nsnLocalLanguageOptions.find((option) => option.label === normalizedLanguage);
+  const languageOption = nsnLocalLanguageOptions.find(
+    (option) => option.label === normalizedLanguage,
+  );
 
   return languageOption?.translationBase ?? getLanguageBase(normalizedLanguage);
 }
@@ -207,7 +460,10 @@ const normalizePreferredAgeRange = (minValue?: number, maxValue?: number) => {
   return { min, max: Math.min(MAX_PROFILE_AGE, min + MAX_PREFERRED_AGE_SPAN, max) };
 };
 
-const normalizeNameDisplayMode = (value: unknown, fallback: ProfileNameDisplayMode = "Hidden"): ProfileNameDisplayMode =>
+const normalizeNameDisplayMode = (
+  value: unknown,
+  fallback: ProfileNameDisplayMode = "Hidden",
+): ProfileNameDisplayMode =>
   value === "Initial" || value === "Full" || value === "Hidden" ? value : fallback;
 
 export type SoftHelloIntent = "Friends" | "Dating" | "Both" | "Exploring";
@@ -217,7 +473,14 @@ export type NsnBlurLevel = "Soft blur" | "Medium blur" | "Strong blur";
 export type ProfileShortcutLayout = "Clean" | "Expanded";
 export type ProfileWidthPreference = "Contained" | "Wide";
 export type NoiseLevelPreference = "Any" | NoiseLevel;
-export type TransportationMethod = "Driving" | "Public transport" | "Walking" | "Cycling" | "Rideshare" | "Getting dropped off" | "Not sure yet";
+export type TransportationMethod =
+  | "Driving"
+  | "Public transport"
+  | "Walking"
+  | "Cycling"
+  | "Rideshare"
+  | "Getting dropped off"
+  | "Not sure yet";
 export type ContactPreference = "In person" | "Text" | "Email" | "Phone" | "Video";
 export type FriendshipStylePreference =
   | "Casual friendships"
@@ -381,8 +644,19 @@ export type LocationComfortPreference =
   | "Share region only"
   | "Ask before sharing location";
 export type SocialEnergyPreference = "Calm" | "Balanced" | "Social" | "Lively";
-export type CommunicationPreference = "Chat before meetup" | "Details only" | "Voice okay" | "In-person first" | "Low-message mode" | "Reminders only";
-export type GroupSizePreference = "1:1" | "2-3 people" | "4-6 people" | "Small groups only" | "Flexible";
+export type CommunicationPreference =
+  | "Chat before meetup"
+  | "Details only"
+  | "Voice okay"
+  | "In-person first"
+  | "Low-message mode"
+  | "Reminders only";
+export type GroupSizePreference =
+  | "1:1"
+  | "2-3 people"
+  | "4-6 people"
+  | "Small groups only"
+  | "Flexible";
 export type PhotoRecordingComfortPreference =
   | "Ask me first"
   | "No photos of me"
@@ -522,20 +796,40 @@ export type SettingsPrivacyMode = "Basic" | "Advanced";
 export type UserPreferenceTextMode = "Simple" | "Detailed";
 export type AccountPauseTimeline = "A few days" | "One week" | "One month" | "Until I return";
 export type LowLightLevel = "Gentle" | "Medium" | "Deep";
-export type NotificationSnoozePreset = "1 hour" | "Tonight" | "24 hours" | "Until I turn it back on";
+export type NotificationSnoozePreset =
+  | "1 hour"
+  | "Tonight"
+  | "24 hours"
+  | "Until I turn it back on";
 export type HomeViewMode = "Essential" | "Comfortable";
 export type HomeEventLayout = "List" | "Map";
 export type HomeLayoutDensity = "Compact" | "Comfortable" | "Spacious";
 export type HomeHeaderControlsDensity = "Compact" | "Comfortable" | "Spacious";
-export type HomeCardLayout = "Vertical list" | "Horizontal cards" | "Boxed grid" | "Layered cards" | "Magazine";
+export type HomeCardLayout =
+  | "Vertical list"
+  | "Horizontal cards"
+  | "Boxed grid"
+  | "Layered cards"
+  | "Magazine";
 export type HomeEventVisualMode = "Emoji/Icon" | "Preview image";
-export type DateFormatPreference = "Device / locale" | "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY/MM/DD" | "YY/MM/DD" | "DD.MM.YYYY" | "DD-MM-YYYY" | "YYYY-MM-DD";
+export type DateFormatPreference =
+  | "Device / locale"
+  | "DD/MM/YYYY"
+  | "MM/DD/YYYY"
+  | "YYYY/MM/DD"
+  | "YY/MM/DD"
+  | "DD.MM.YYYY"
+  | "DD-MM-YYYY"
+  | "YYYY-MM-DD";
 export type TimeFormatPreference = "Device / locale" | "12-hour clock" | "24-hour clock";
 export type ClockDisplayStyle = "Digital" | "Analog";
 export type TemperatureUnitPreference = "Device / locale" | "Celsius" | "Fahrenheit";
 export type DistanceUnitPreference = "Device / locale" | "Kilometres" | "Miles";
 export type CurrencyDisplayPreference = "Device / locale" | "AUD" | "USD" | "EUR" | "GBP";
-export type DayNightModePreference = "Manual toggle" | "Follow system/device time" | "Follow selected suburb/local time";
+export type DayNightModePreference =
+  | "Manual toggle"
+  | "Follow system/device time"
+  | "Follow selected suburb/local time";
 export type CardOutlineStyle = "Minimal" | "Standard" | "Strong";
 export type HomeVisibleSections = {
   weather: boolean;
@@ -548,7 +842,12 @@ export type HomeVisibleSections = {
 };
 export type HomeSectionOrderKey = keyof HomeVisibleSections;
 
-export const socialEnergyOptions: SocialEnergyPreference[] = ["Calm", "Balanced", "Social", "Lively"];
+export const socialEnergyOptions: SocialEnergyPreference[] = [
+  "Calm",
+  "Balanced",
+  "Social",
+  "Lively",
+];
 export const communicationPreferenceOptions: CommunicationPreference[] = [
   "Chat before meetup",
   "Details only",
@@ -557,7 +856,13 @@ export const communicationPreferenceOptions: CommunicationPreference[] = [
   "Low-message mode",
   "Reminders only",
 ];
-export const groupSizePreferenceOptions: GroupSizePreference[] = ["1:1", "2-3 people", "4-6 people", "Small groups only", "Flexible"];
+export const groupSizePreferenceOptions: GroupSizePreference[] = [
+  "1:1",
+  "2-3 people",
+  "4-6 people",
+  "Small groups only",
+  "Flexible",
+];
 export const photoRecordingComfortOptions: PhotoRecordingComfortPreference[] = [
   "Ask me first",
   "No photos of me",
@@ -579,7 +884,10 @@ export const physicalContactComfortOptions: PhysicalContactComfortPreference[] =
   "Hugs only if I offer",
   "Prefer personal space",
 ];
-export const defaultPhysicalContactComfortPreferences: PhysicalContactComfortPreference[] = ["Ask first", "Prefer personal space"];
+export const defaultPhysicalContactComfortPreferences: PhysicalContactComfortPreference[] = [
+  "Ask first",
+  "Prefer personal space",
+];
 export const backgroundVisibilityOptions: BackgroundVisibilityPreference[] = [
   "Private",
   "Matched/shared visibility only",
@@ -732,7 +1040,15 @@ export const defaultHomeVisibleSections: HomeVisibleSections = {
   nightEvents: true,
 };
 
-export const defaultHomeSectionOrder: HomeSectionOrderKey[] = ["weather", "map", "recommendedEvents", "dayEvents", "nightEvents", "search", "noiseGuide"];
+export const defaultHomeSectionOrder: HomeSectionOrderKey[] = [
+  "weather",
+  "map",
+  "recommendedEvents",
+  "dayEvents",
+  "nightEvents",
+  "search",
+  "noiseGuide",
+];
 
 export const transportationPreferenceOptions: TransportationPreference[] = [
   "Walking",
@@ -756,7 +1072,11 @@ export const transportationPreferenceOptions: TransportationPreference[] = [
   "Prefer well-lit routes",
   "Prefer close to public transport",
 ];
-export const defaultTransportationPreferences: TransportationPreference[] = ["Public transport", "Walking", "Prefer nearby only"];
+export const defaultTransportationPreferences: TransportationPreference[] = [
+  "Public transport",
+  "Walking",
+  "Prefer nearby only",
+];
 export const friendshipStyleOptions: FriendshipStylePreference[] = [
   "Casual friendships",
   "Deeper friendships",
@@ -830,7 +1150,11 @@ export const meetupContactPreferenceOptions: MeetupContactPreference[] = [
   "Last-minute plans okay",
   "No pressure to reply quickly",
 ];
-export const defaultMeetupContactPreferences: MeetupContactPreference[] = ["Details only", "Low-message mode", "Reminders only"];
+export const defaultMeetupContactPreferences: MeetupContactPreference[] = [
+  "Details only",
+  "Low-message mode",
+  "Reminders only",
+];
 export const locationComfortPreferenceOptions: LocationComfortPreference[] = [
   "Near my selected suburb",
   "North Shore preferred",
@@ -906,9 +1230,15 @@ export const locationComfortPreferenceOptions: LocationComfortPreference[] = [
   "Share region only",
   "Ask before sharing location",
 ];
-export const defaultLocationComfortPreferences: LocationComfortPreference[] = ["North Shore preferred", "Quiet venues", "Share suburb only"];
+export const defaultLocationComfortPreferences: LocationComfortPreference[] = [
+  "North Shore preferred",
+  "Quiet venues",
+  "Share suburb only",
+];
 
-const normalizeHomeVisibleSections = (value?: Partial<HomeVisibleSections> | null): HomeVisibleSections => ({
+const normalizeHomeVisibleSections = (
+  value?: Partial<HomeVisibleSections> | null,
+): HomeVisibleSections => ({
   ...defaultHomeVisibleSections,
   ...(value ?? {}),
 });
@@ -924,7 +1254,11 @@ const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSe
     .forEach((key) => {
       if (key === "map") {
         const weatherIndex = normalizedOrder.indexOf("weather");
-        normalizedOrder.splice(weatherIndex >= 0 ? weatherIndex + 1 : normalizedOrder.length, 0, key);
+        normalizedOrder.splice(
+          weatherIndex >= 0 ? weatherIndex + 1 : normalizedOrder.length,
+          0,
+          key,
+        );
         return;
       }
 
@@ -937,10 +1271,14 @@ const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSe
 const normalizeHomeEventVisualMode = (value?: HomeEventVisualMode | null): HomeEventVisualMode =>
   value === "Emoji/Icon" ? "Emoji/Icon" : "Preview image";
 
-const normalizeHomeHeaderControlsDensity = (value?: HomeHeaderControlsDensity | null): HomeHeaderControlsDensity =>
+const normalizeHomeHeaderControlsDensity = (
+  value?: HomeHeaderControlsDensity | null,
+): HomeHeaderControlsDensity =>
   value === "Compact" || value === "Spacious" ? value : "Comfortable";
 
-const normalizeDateFormatPreference = (value?: DateFormatPreference | null): DateFormatPreference =>
+const normalizeDateFormatPreference = (
+  value?: DateFormatPreference | null,
+): DateFormatPreference =>
   value === "DD/MM/YYYY" ||
   value === "MM/DD/YYYY" ||
   value === "YYYY/MM/DD" ||
@@ -951,72 +1289,129 @@ const normalizeDateFormatPreference = (value?: DateFormatPreference | null): Dat
     ? value
     : "Device / locale";
 
-const normalizeTimeFormatPreference = (value?: TimeFormatPreference | null): TimeFormatPreference =>
+const normalizeTimeFormatPreference = (
+  value?: TimeFormatPreference | null,
+): TimeFormatPreference =>
   value === "12-hour clock" || value === "24-hour clock" ? value : "Device / locale";
 
 const normalizeClockDisplayStyle = (value?: ClockDisplayStyle | null): ClockDisplayStyle =>
   value === "Analog" ? "Analog" : "Digital";
 
-const normalizeTemperatureUnitPreference = (value?: TemperatureUnitPreference | null): TemperatureUnitPreference =>
+const normalizeTemperatureUnitPreference = (
+  value?: TemperatureUnitPreference | null,
+): TemperatureUnitPreference =>
   value === "Celsius" || value === "Fahrenheit" ? value : "Device / locale";
 
-const normalizeDistanceUnitPreference = (value?: DistanceUnitPreference | null): DistanceUnitPreference =>
+const normalizeDistanceUnitPreference = (
+  value?: DistanceUnitPreference | null,
+): DistanceUnitPreference =>
   value === "Kilometres" || value === "Miles" ? value : "Device / locale";
 
-const normalizeCurrencyDisplayPreference = (value?: CurrencyDisplayPreference | null): CurrencyDisplayPreference =>
-  value === "AUD" || value === "USD" || value === "EUR" || value === "GBP" ? value : "Device / locale";
+const normalizeCurrencyDisplayPreference = (
+  value?: CurrencyDisplayPreference | null,
+): CurrencyDisplayPreference =>
+  value === "AUD" || value === "USD" || value === "EUR" || value === "GBP"
+    ? value
+    : "Device / locale";
 
-const normalizeDayNightModePreference = (value?: DayNightModePreference | null): DayNightModePreference =>
-  value === "Follow system/device time" || value === "Follow selected suburb/local time" ? value : "Manual toggle";
+const normalizeDayNightModePreference = (
+  value?: DayNightModePreference | null,
+): DayNightModePreference =>
+  value === "Follow system/device time" || value === "Follow selected suburb/local time"
+    ? value
+    : "Manual toggle";
 
 const normalizeCardOutlineStyle = (value?: CardOutlineStyle | null): CardOutlineStyle =>
   value === "Minimal" || value === "Standard" ? value : "Strong";
 
-const normalizeSocialEnergyPreference = (value?: SocialEnergyPreference | null): SocialEnergyPreference =>
-  value && socialEnergyOptions.includes(value) ? value : "Calm";
+const normalizeSocialEnergyPreference = (
+  value?: SocialEnergyPreference | null,
+): SocialEnergyPreference => (value && socialEnergyOptions.includes(value) ? value : "Calm");
 
-const normalizeCommunicationPreferences = (value?: CommunicationPreference[] | null): CommunicationPreference[] => {
-  const filtered = (value ?? []).filter((preference): preference is CommunicationPreference => communicationPreferenceOptions.includes(preference));
+const normalizeCommunicationPreferences = (
+  value?: CommunicationPreference[] | null,
+): CommunicationPreference[] => {
+  const filtered = (value ?? []).filter((preference): preference is CommunicationPreference =>
+    communicationPreferenceOptions.includes(preference),
+  );
   return filtered.length ? filtered : ["Low-message mode", "Details only"];
 };
 
 const normalizeGroupSizePreference = (value?: GroupSizePreference | null): GroupSizePreference =>
   value && groupSizePreferenceOptions.includes(value) ? value : "Small groups only";
 
-const normalizePhotoRecordingComfortPreferences = (value?: PhotoRecordingComfortPreference[] | null): PhotoRecordingComfortPreference[] => {
-  const filtered = (value ?? []).filter((preference): preference is PhotoRecordingComfortPreference => photoRecordingComfortOptions.includes(preference));
+const normalizePhotoRecordingComfortPreferences = (
+  value?: PhotoRecordingComfortPreference[] | null,
+): PhotoRecordingComfortPreference[] => {
+  const filtered = (value ?? []).filter(
+    (preference): preference is PhotoRecordingComfortPreference =>
+      photoRecordingComfortOptions.includes(preference),
+  );
   return filtered.length ? filtered : defaultPhotoRecordingComfortPreferences;
 };
 
-const normalizePhysicalContactComfortPreferences = (value?: PhysicalContactComfortPreference[] | null): PhysicalContactComfortPreference[] => {
-  const filtered = (value ?? []).filter((preference): preference is PhysicalContactComfortPreference => physicalContactComfortOptions.includes(preference));
+const normalizePhysicalContactComfortPreferences = (
+  value?: PhysicalContactComfortPreference[] | null,
+): PhysicalContactComfortPreference[] => {
+  const filtered = (value ?? []).filter(
+    (preference): preference is PhysicalContactComfortPreference =>
+      physicalContactComfortOptions.includes(preference),
+  );
   return filtered.length ? filtered : defaultPhysicalContactComfortPreferences;
 };
 
-const normalizeBackgroundVisibilityPreference = (value?: BackgroundVisibilityPreference | null): BackgroundVisibilityPreference =>
+const normalizeBackgroundVisibilityPreference = (
+  value?: BackgroundVisibilityPreference | null,
+): BackgroundVisibilityPreference =>
   value && backgroundVisibilityOptions.includes(value) ? value : "Private";
 
-const normalizeBackgroundPreferenceList = <T extends string>(value: T[] | null | undefined, options: T[]): T[] => {
-  const filtered = Array.from(new Set((value ?? []).filter((preference): preference is T => options.includes(preference))));
+const normalizeBackgroundPreferenceList = <T extends string>(
+  value: T[] | null | undefined,
+  options: T[],
+): T[] => {
+  const filtered = Array.from(
+    new Set((value ?? []).filter((preference): preference is T => options.includes(preference))),
+  );
   return filtered.includes("Prefer not to say" as T) ? (["Prefer not to say"] as T[]) : filtered;
 };
 
-export const normalizeLanguageComfortPreferences = (value?: LanguageComfortPreference[] | null): LanguageComfortPreference[] =>
-  normalizeBackgroundPreferenceList(value, languageComfortOptions);
+export const normalizeLanguageComfortPreferences = (
+  value?: LanguageComfortPreference[] | null,
+): LanguageComfortPreference[] => normalizeBackgroundPreferenceList(value, languageComfortOptions);
 
-const normalizeSelectablePreferenceList = <T extends string>(value: T[] | null | undefined, options: T[], fallback: T[]): T[] => {
-  const filtered = Array.from(new Set((value ?? []).filter((preference): preference is T => options.includes(preference))));
+const normalizeSelectablePreferenceList = <T extends string>(
+  value: T[] | null | undefined,
+  options: T[],
+  fallback: T[],
+): T[] => {
+  const filtered = Array.from(
+    new Set((value ?? []).filter((preference): preference is T => options.includes(preference))),
+  );
   return filtered.length ? filtered : fallback;
 };
 
 const meetupContactConflicts: Array<readonly MeetupContactPreference[]> = [
   ["Voice call okay", "No voice calls"],
-  ["Details only", "Chat before meetup", "Group chat okay", "Direct messages okay", "Voice call okay"],
-  ["Reminders only", "Chat before meetup", "Group chat okay", "Direct messages okay", "Voice call okay"],
+  [
+    "Details only",
+    "Chat before meetup",
+    "Group chat okay",
+    "Direct messages okay",
+    "Voice call okay",
+  ],
+  [
+    "Reminders only",
+    "Chat before meetup",
+    "Group chat okay",
+    "Direct messages okay",
+    "Voice call okay",
+  ],
   ["Prefer planning ahead", "Last-minute plans okay"],
 ];
 
-export const normalizeMeetupContactPreferences = (value?: MeetupContactPreference[] | null): MeetupContactPreference[] => {
+export const normalizeMeetupContactPreferences = (
+  value?: MeetupContactPreference[] | null,
+): MeetupContactPreference[] => {
   const normalized: MeetupContactPreference[] = [];
 
   for (const preference of value ?? []) {
@@ -1026,7 +1421,7 @@ export const normalizeMeetupContactPreferences = (value?: MeetupContactPreferenc
       meetupContactConflicts
         .filter((group) => group.includes(preference))
         .flatMap((group) => group)
-        .filter((item) => item !== preference)
+        .filter((item) => item !== preference),
     );
     const nextPreferences = conflicts.size
       ? normalized.filter((item) => !conflicts.has(item))
@@ -1044,7 +1439,7 @@ export const normalizeMeetupContactPreferences = (value?: MeetupContactPreferenc
 
 export const toggleMeetupContactPreferenceSelection = (
   current: MeetupContactPreference[],
-  preference: MeetupContactPreference
+  preference: MeetupContactPreference,
 ): MeetupContactPreference[] => {
   const nextPreferences = current.includes(preference)
     ? current.filter((item) => item !== preference)
@@ -1119,6 +1514,9 @@ export type OnboardingSnapshot = {
   privateProfile?: boolean;
   blurProfilePhoto?: boolean;
   blurLevel?: NsnBlurLevel;
+  softRevealSuggestions?: boolean;
+  softRevealPace?: SoftRevealPace;
+  preferSoftRevealPeople?: boolean;
   warmUpLowerBlur?: boolean;
   showSuburbArea?: boolean;
   showInterests?: boolean;
@@ -1244,7 +1642,10 @@ export type TimezoneSetting = {
   longitude: number;
 };
 
-export type TimeContextMode = "Automatic device time" | "Use selected suburb/local area" | "Manual city/suburb override";
+export type TimeContextMode =
+  | "Automatic device time"
+  | "Use selected suburb/local area"
+  | "Manual city/suburb override";
 
 export type WeatherSnapshot = {
   temperature: number | null;
@@ -1273,17 +1674,105 @@ export const defaultNsnTimezone: TimezoneSetting = {
 
 export const australianLocalAreas: TimezoneSetting[] = [
   defaultNsnTimezone,
-  { id: "newcastle", label: "Newcastle", city: "Newcastle", country: "NSW, Australia", timeZone: "Australia/Sydney", latitude: -32.9283, longitude: 151.7817 },
-  { id: "wollongong", label: "Wollongong", city: "Wollongong", country: "NSW, Australia", timeZone: "Australia/Sydney", latitude: -34.4278, longitude: 150.8931 },
-  { id: "canberra", label: "Canberra", city: "Canberra", country: "ACT, Australia", timeZone: "Australia/Sydney", latitude: -35.2809, longitude: 149.13 },
-  { id: "melbourne", label: "Melbourne", city: "Melbourne", country: "VIC, Australia", timeZone: "Australia/Melbourne", latitude: -37.8136, longitude: 144.9631 },
-  { id: "adelaide", label: "Adelaide", city: "Adelaide", country: "SA, Australia", timeZone: "Australia/Adelaide", latitude: -34.9285, longitude: 138.6007 },
-  { id: "brisbane", label: "Brisbane", city: "Brisbane", country: "QLD, Australia", timeZone: "Australia/Brisbane", latitude: -27.4698, longitude: 153.0251 },
-  { id: "gold-coast", label: "Gold Coast", city: "Gold Coast", country: "QLD, Australia", timeZone: "Australia/Brisbane", latitude: -28.0167, longitude: 153.4 },
-  { id: "cairns", label: "Cairns", city: "Cairns", country: "QLD, Australia", timeZone: "Australia/Brisbane", latitude: -16.9186, longitude: 145.7781 },
-  { id: "darwin", label: "Darwin", city: "Darwin", country: "NT, Australia", timeZone: "Australia/Darwin", latitude: -12.4634, longitude: 130.8456 },
-  { id: "hobart", label: "Hobart", city: "Hobart", country: "TAS, Australia", timeZone: "Australia/Hobart", latitude: -42.8821, longitude: 147.3272 },
-  { id: "perth", label: "Perth", city: "Perth", country: "WA, Australia", timeZone: "Australia/Perth", latitude: -31.9523, longitude: 115.8613 },
+  {
+    id: "newcastle",
+    label: "Newcastle",
+    city: "Newcastle",
+    country: "NSW, Australia",
+    timeZone: "Australia/Sydney",
+    latitude: -32.9283,
+    longitude: 151.7817,
+  },
+  {
+    id: "wollongong",
+    label: "Wollongong",
+    city: "Wollongong",
+    country: "NSW, Australia",
+    timeZone: "Australia/Sydney",
+    latitude: -34.4278,
+    longitude: 150.8931,
+  },
+  {
+    id: "canberra",
+    label: "Canberra",
+    city: "Canberra",
+    country: "ACT, Australia",
+    timeZone: "Australia/Sydney",
+    latitude: -35.2809,
+    longitude: 149.13,
+  },
+  {
+    id: "melbourne",
+    label: "Melbourne",
+    city: "Melbourne",
+    country: "VIC, Australia",
+    timeZone: "Australia/Melbourne",
+    latitude: -37.8136,
+    longitude: 144.9631,
+  },
+  {
+    id: "adelaide",
+    label: "Adelaide",
+    city: "Adelaide",
+    country: "SA, Australia",
+    timeZone: "Australia/Adelaide",
+    latitude: -34.9285,
+    longitude: 138.6007,
+  },
+  {
+    id: "brisbane",
+    label: "Brisbane",
+    city: "Brisbane",
+    country: "QLD, Australia",
+    timeZone: "Australia/Brisbane",
+    latitude: -27.4698,
+    longitude: 153.0251,
+  },
+  {
+    id: "gold-coast",
+    label: "Gold Coast",
+    city: "Gold Coast",
+    country: "QLD, Australia",
+    timeZone: "Australia/Brisbane",
+    latitude: -28.0167,
+    longitude: 153.4,
+  },
+  {
+    id: "cairns",
+    label: "Cairns",
+    city: "Cairns",
+    country: "QLD, Australia",
+    timeZone: "Australia/Brisbane",
+    latitude: -16.9186,
+    longitude: 145.7781,
+  },
+  {
+    id: "darwin",
+    label: "Darwin",
+    city: "Darwin",
+    country: "NT, Australia",
+    timeZone: "Australia/Darwin",
+    latitude: -12.4634,
+    longitude: 130.8456,
+  },
+  {
+    id: "hobart",
+    label: "Hobart",
+    city: "Hobart",
+    country: "TAS, Australia",
+    timeZone: "Australia/Hobart",
+    latitude: -42.8821,
+    longitude: 147.3272,
+  },
+  {
+    id: "perth",
+    label: "Perth",
+    city: "Perth",
+    country: "WA, Australia",
+    timeZone: "Australia/Perth",
+    latitude: -31.9523,
+    longitude: 115.8613,
+  },
 ];
 
 const normalizeTimezoneSetting = (value?: TimezoneSetting | null) => {
@@ -1292,7 +1781,9 @@ const normalizeTimezoneSetting = (value?: TimezoneSetting | null) => {
 };
 
 const normalizeTimeContextMode = (value?: TimeContextMode | null): TimeContextMode =>
-  value === "Automatic device time" || value === "Manual city/suburb override" ? value : "Use selected suburb/local area";
+  value === "Automatic device time" || value === "Manual city/suburb override"
+    ? value
+    : "Use selected suburb/local area";
 
 const getDefaultSydneyNightMode = () => {
   const now = new Date();
@@ -1302,20 +1793,28 @@ const getDefaultSydneyNightMode = () => {
       hour: "numeric",
       hour12: false,
       timeZone,
-    }).format(now)
+    }).format(now),
   );
-  const timeZoneName = new Intl.DateTimeFormat("en-AU", {
-    timeZone,
-    timeZoneName: "short",
-  }).formatToParts(now).find((part) => part.type === "timeZoneName")?.value ?? "";
-  const month = Number(new Intl.DateTimeFormat("en-AU", { month: "numeric", timeZone }).format(now));
+  const timeZoneName =
+    new Intl.DateTimeFormat("en-AU", {
+      timeZone,
+      timeZoneName: "short",
+    })
+      .formatToParts(now)
+      .find((part) => part.type === "timeZoneName")?.value ?? "";
+  const month = Number(
+    new Intl.DateTimeFormat("en-AU", { month: "numeric", timeZone }).format(now),
+  );
   const isDaylightSaving = /DT|Daylight/i.test(timeZoneName) || month >= 10 || month <= 3;
   const nightStartHour = isDaylightSaving ? 19 : 18;
 
   return hour >= nightStartHour || hour < 6;
 };
 
-const getWeatherCategory = (temperature: number | null, rainChance: number | null): WeatherSnapshot["category"] => {
+const getWeatherCategory = (
+  temperature: number | null,
+  rainChance: number | null,
+): WeatherSnapshot["category"] => {
   if (temperature === null || rainChance === null) return "unknown";
   if (rainChance >= 70) return "rain";
   if (rainChance >= 35) return "showers";
@@ -1326,18 +1825,32 @@ const getWeatherCategory = (temperature: number | null, rainChance: number | nul
 const didWeatherChange = (previous: WeatherSnapshot | null, next: WeatherSnapshot) => {
   if (!previous) return false;
   if (previous.category !== next.category) return true;
-  if (previous.rainChance !== null && next.rainChance !== null && Math.abs(previous.rainChance - next.rainChance) >= 15) return true;
-  return previous.temperature !== null && next.temperature !== null && Math.abs(previous.temperature - next.temperature) >= 3;
+  if (
+    previous.rainChance !== null &&
+    next.rainChance !== null &&
+    Math.abs(previous.rainChance - next.rainChance) >= 15
+  )
+    return true;
+  return (
+    previous.temperature !== null &&
+    next.temperature !== null &&
+    Math.abs(previous.temperature - next.temperature) >= 3
+  );
 };
 
-const getDistanceKm = (from: Pick<TimezoneSetting, "latitude" | "longitude">, to: Pick<TimezoneSetting, "latitude" | "longitude">) => {
+const getDistanceKm = (
+  from: Pick<TimezoneSetting, "latitude" | "longitude">,
+  to: Pick<TimezoneSetting, "latitude" | "longitude">,
+) => {
   const radiusKm = 6371;
   const toRadians = (value: number) => (value * Math.PI) / 180;
   const deltaLatitude = toRadians(to.latitude - from.latitude);
   const deltaLongitude = toRadians(to.longitude - from.longitude);
   const startLatitude = toRadians(from.latitude);
   const endLatitude = toRadians(to.latitude);
-  const a = Math.sin(deltaLatitude / 2) ** 2 + Math.cos(startLatitude) * Math.cos(endLatitude) * Math.sin(deltaLongitude / 2) ** 2;
+  const a =
+    Math.sin(deltaLatitude / 2) ** 2 +
+    Math.cos(startLatitude) * Math.cos(endLatitude) * Math.sin(deltaLongitude / 2) ** 2;
 
   return 2 * radiusKm * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
@@ -1410,6 +1923,12 @@ type AppSettings = {
   setPrivateProfile: (value: boolean) => void;
   blurLevel: NsnBlurLevel;
   setBlurLevel: (value: NsnBlurLevel) => void;
+  softRevealSuggestions: boolean;
+  setSoftRevealSuggestions: (value: boolean) => void;
+  softRevealPace: SoftRevealPace;
+  setSoftRevealPace: (value: SoftRevealPace) => void;
+  preferSoftRevealPeople: boolean;
+  setPreferSoftRevealPeople: (value: boolean) => void;
   warmUpLowerBlur: boolean;
   setWarmUpLowerBlur: (value: boolean) => void;
   showSuburbArea: boolean;
@@ -1531,7 +2050,9 @@ type AppSettings = {
   personalityPresenceSocialStyles: PersonalityPresenceSocialStyle[];
   setPersonalityPresenceSocialStyles: (value: PersonalityPresenceSocialStyle[]) => void;
   personalityPresenceConnectionPreferences: PersonalityPresenceConnectionPreference[];
-  setPersonalityPresenceConnectionPreferences: (value: PersonalityPresenceConnectionPreference[]) => void;
+  setPersonalityPresenceConnectionPreferences: (
+    value: PersonalityPresenceConnectionPreference[],
+  ) => void;
   personalityPresenceComfortAround: PersonalityPresenceComfortAround[];
   setPersonalityPresenceComfortAround: (value: PersonalityPresenceComfortAround[]) => void;
   personalityPresencePromptResponses: PersonalityPresencePromptResponse[];
@@ -1600,8 +2121,12 @@ type AppSettings = {
   setHomeVisibleSections: (value: HomeVisibleSections) => void;
   homeSectionOrder: HomeSectionOrderKey[];
   setHomeSectionOrder: (value: HomeSectionOrderKey[]) => void;
-  completeOnboarding: (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => Promise<void>;
-  saveSoftHelloMvpState: (snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>) => Promise<void>;
+  completeOnboarding: (
+    snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">,
+  ) => Promise<void>;
+  saveSoftHelloMvpState: (
+    snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>,
+  ) => Promise<void>;
   resetOnboarding: () => Promise<void>;
   isNightMode: boolean;
   setIsNightMode: (value: boolean) => void;
@@ -1694,7 +2219,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [isOnboardingLoaded, setIsOnboardingLoaded] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [accountPaused, setAccountPaused] = useState(false);
-  const [accountPauseTimeline, setAccountPauseTimeline] = useState<AccountPauseTimeline>("Until I return");
+  const [accountPauseTimeline, setAccountPauseTimeline] =
+    useState<AccountPauseTimeline>("Until I return");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [age, setAge] = useState<number | null>(null);
   const [preferredAgeMin, setPreferredAgeMin] = useState(25);
@@ -1721,13 +2247,18 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [comfortMode, setComfortMode] = useState<NsnComfortMode>("Comfort Mode");
   const [privateProfile, setPrivateProfile] = useState(false);
   const [blurLevel, setBlurLevel] = useState<NsnBlurLevel>("Medium blur");
+  const [softRevealSuggestions, setSoftRevealSuggestions] = useState(true);
+  const [softRevealPace, setSoftRevealPace] = useState<SoftRevealPace>("Gradual reveal");
+  const [preferSoftRevealPeople, setPreferSoftRevealPeople] = useState(false);
   const [warmUpLowerBlur, setWarmUpLowerBlur] = useState(true);
   const [showSuburbArea, setShowSuburbArea] = useState(false);
   const [showInterests, setShowInterests] = useState(false);
   const [showComfortPreferences, setShowComfortPreferences] = useState(false);
   const [minimalProfileView, setMinimalProfileView] = useState(false);
-  const [comfortPreferences, setComfortPreferences] = useState<SoftHelloComfortPreference[]>(defaultComfortPreferences);
-  const [verificationLevel, setVerificationLevel] = useState<SoftHelloVerificationLevel>("Unverified");
+  const [comfortPreferences, setComfortPreferences] =
+    useState<SoftHelloComfortPreference[]>(defaultComfortPreferences);
+  const [verificationLevel, setVerificationLevel] =
+    useState<SoftHelloVerificationLevel>("Unverified");
   const [eventMemberships, setEventMemberships] = useState<EventMembership[]>([]);
   const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
   const [safetyReports, setSafetyReports] = useState<SafetyReport[]>([]);
@@ -1737,67 +2268,152 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [hiddenEventIds, setHiddenEventIds] = useState<string[]>([]);
   const [noiseLevelPreference, setNoiseLevelPreference] = useState<NoiseLevelPreference>("Any");
   const [contactPreferences, setContactPreferences] = useState<ContactPreference[]>(["Text"]);
-  const [friendshipStylePreferences, setFriendshipStylePreferences] = useState<FriendshipStylePreference[]>([]);
+  const [friendshipStylePreferences, setFriendshipStylePreferences] = useState<
+    FriendshipStylePreference[]
+  >([]);
   const [datingStylePreferences, setDatingStylePreferences] = useState<DatingStylePreference[]>([]);
-  const [meetupRhythmPreferences, setMeetupRhythmPreferences] = useState<MeetupRhythmPreference[]>([]);
-  const [availabilityTimingPreferences, setAvailabilityTimingPreferences] = useState<AvailabilityTimingPreference[]>([]);
-  const [socialDurationPreferences, setSocialDurationPreferences] = useState<SocialDurationPreference[]>([]);
-  const [languageComfortPreferences, setLanguageComfortPreferences] = useState<LanguageComfortPreference[]>([]);
-  const [socialEnergyPreference, setSocialEnergyPreference] = useState<SocialEnergyPreference>("Calm");
-  const [communicationPreferences, setCommunicationPreferences] = useState<CommunicationPreference[]>(["Low-message mode", "Details only"]);
-  const [groupSizePreference, setGroupSizePreference] = useState<GroupSizePreference>("Small groups only");
-  const [photoRecordingComfortPreferences, setPhotoRecordingComfortPreferences] = useState<PhotoRecordingComfortPreference[]>(defaultPhotoRecordingComfortPreferences);
-  const [physicalContactComfortPreferences, setPhysicalContactComfortPreferences] = useState<PhysicalContactComfortPreference[]>(defaultPhysicalContactComfortPreferences);
-  const [backgroundStudyStatuses, setBackgroundStudyStatuses] = useState<BackgroundStudyStatusPreference[]>([]);
-  const [backgroundStudyAreas, setBackgroundStudyAreas] = useState<BackgroundStudyAreaPreference[]>([]);
-  const [backgroundStudyVisibility, setBackgroundStudyVisibility] = useState<BackgroundVisibilityPreference>("Private");
-  const [backgroundWorkPreferences, setBackgroundWorkPreferences] = useState<BackgroundWorkPreference[]>([]);
-  const [backgroundWorkRhythms, setBackgroundWorkRhythms] = useState<BackgroundWorkRhythmPreference[]>([]);
-  const [backgroundWorkVisibility, setBackgroundWorkVisibility] = useState<BackgroundVisibilityPreference>("Private");
-  const [backgroundCommunityPreferences, setBackgroundCommunityPreferences] = useState<BackgroundCommunityPreference[]>([]);
-  const [backgroundCommunityVisibility, setBackgroundCommunityVisibility] = useState<BackgroundVisibilityPreference>("Private");
-  const [lifeContextCurrentStates, setLifeContextCurrentStates] = useState<LifeContextCurrentStatePreference[]>([]);
-  const [lifeContextCurrentVisibility, setLifeContextCurrentVisibility] = useState<BackgroundVisibilityPreference>("Private");
+  const [meetupRhythmPreferences, setMeetupRhythmPreferences] = useState<MeetupRhythmPreference[]>(
+    [],
+  );
+  const [availabilityTimingPreferences, setAvailabilityTimingPreferences] = useState<
+    AvailabilityTimingPreference[]
+  >([]);
+  const [socialDurationPreferences, setSocialDurationPreferences] = useState<
+    SocialDurationPreference[]
+  >([]);
+  const [languageComfortPreferences, setLanguageComfortPreferences] = useState<
+    LanguageComfortPreference[]
+  >([]);
+  const [socialEnergyPreference, setSocialEnergyPreference] =
+    useState<SocialEnergyPreference>("Calm");
+  const [communicationPreferences, setCommunicationPreferences] = useState<
+    CommunicationPreference[]
+  >(["Low-message mode", "Details only"]);
+  const [groupSizePreference, setGroupSizePreference] =
+    useState<GroupSizePreference>("Small groups only");
+  const [photoRecordingComfortPreferences, setPhotoRecordingComfortPreferences] = useState<
+    PhotoRecordingComfortPreference[]
+  >(defaultPhotoRecordingComfortPreferences);
+  const [physicalContactComfortPreferences, setPhysicalContactComfortPreferences] = useState<
+    PhysicalContactComfortPreference[]
+  >(defaultPhysicalContactComfortPreferences);
+  const [backgroundStudyStatuses, setBackgroundStudyStatuses] = useState<
+    BackgroundStudyStatusPreference[]
+  >([]);
+  const [backgroundStudyAreas, setBackgroundStudyAreas] = useState<BackgroundStudyAreaPreference[]>(
+    [],
+  );
+  const [backgroundStudyVisibility, setBackgroundStudyVisibility] =
+    useState<BackgroundVisibilityPreference>("Private");
+  const [backgroundWorkPreferences, setBackgroundWorkPreferences] = useState<
+    BackgroundWorkPreference[]
+  >([]);
+  const [backgroundWorkRhythms, setBackgroundWorkRhythms] = useState<
+    BackgroundWorkRhythmPreference[]
+  >([]);
+  const [backgroundWorkVisibility, setBackgroundWorkVisibility] =
+    useState<BackgroundVisibilityPreference>("Private");
+  const [backgroundCommunityPreferences, setBackgroundCommunityPreferences] = useState<
+    BackgroundCommunityPreference[]
+  >([]);
+  const [backgroundCommunityVisibility, setBackgroundCommunityVisibility] =
+    useState<BackgroundVisibilityPreference>("Private");
+  const [lifeContextCurrentStates, setLifeContextCurrentStates] = useState<
+    LifeContextCurrentStatePreference[]
+  >([]);
+  const [lifeContextCurrentVisibility, setLifeContextCurrentVisibility] =
+    useState<BackgroundVisibilityPreference>("Private");
   const [lifeContextFields, setLifeContextFields] = useState<LifeContextFieldPreference[]>([]);
-  const [lifeContextFieldVisibility, setLifeContextFieldVisibility] = useState<BackgroundVisibilityPreference>("Private");
-  const [lifeContextLearningInterests, setLifeContextLearningInterests] = useState<LifeContextLearningPreference[]>([]);
-  const [lifeContextLearningVisibility, setLifeContextLearningVisibility] = useState<BackgroundVisibilityPreference>("Matched/shared visibility only");
+  const [lifeContextFieldVisibility, setLifeContextFieldVisibility] =
+    useState<BackgroundVisibilityPreference>("Private");
+  const [lifeContextLearningInterests, setLifeContextLearningInterests] = useState<
+    LifeContextLearningPreference[]
+  >([]);
+  const [lifeContextLearningVisibility, setLifeContextLearningVisibility] =
+    useState<BackgroundVisibilityPreference>("Matched/shared visibility only");
   const [lifeComfortPreferences, setLifeComfortPreferences] = useState<LifeComfortPreference[]>([]);
-  const [lifeComfortVisibility, setLifeComfortVisibility] = useState<BackgroundVisibilityPreference>("Private");
+  const [lifeComfortVisibility, setLifeComfortVisibility] =
+    useState<BackgroundVisibilityPreference>("Private");
   const [lifeContextLastUpdatedAt, setLifeContextLastUpdatedAt] = useState<string | null>(null);
   const [verifiedButPrivate, setVerifiedButPrivate] = useState(true);
-  const [personalityPresenceHair, setPersonalityPresenceHair] = useState<PersonalityPresenceHair | null>(null);
-  const [personalityPresenceHairCues, setPersonalityPresenceHairCues] = useState<PersonalityPresenceHairCue[]>([]);
-  const [personalityPresenceEyes, setPersonalityPresenceEyes] = useState<PersonalityPresenceEyes | null>(null);
-  const [personalityPresenceFacialHair, setPersonalityPresenceFacialHair] = useState<PersonalityPresenceFacialHair | null>(null);
-  const [personalityPresenceStyle, setPersonalityPresenceStyle] = useState<PersonalityPresenceStyle | null>(null);
-  const [personalityPresencePresentation, setPersonalityPresencePresentation] = useState<PersonalityPresencePresentation | null>(null);
-  const [personalityPresencePersonalStyles, setPersonalityPresencePersonalStyles] = useState<PersonalityPresencePersonalStyle[]>([]);
-  const [personalityPresenceAccessories, setPersonalityPresenceAccessories] = useState<PersonalityPresenceAccessories[]>([]);
-  const [personalityPresenceGrooming, setPersonalityPresenceGrooming] = useState<PersonalityPresenceGrooming[]>([]);
-  const [personalityPresenceVoicePresence, setPersonalityPresenceVoicePresence] = useState<PersonalityPresenceVoicePresence[]>([]);
-  const [personalityPresenceSocialStyles, setPersonalityPresenceSocialStyles] = useState<PersonalityPresenceSocialStyle[]>([]);
-  const [personalityPresenceConnectionPreferences, setPersonalityPresenceConnectionPreferences] = useState<PersonalityPresenceConnectionPreference[]>([]);
-  const [personalityPresenceComfortAround, setPersonalityPresenceComfortAround] = useState<PersonalityPresenceComfortAround[]>([]);
-  const [personalityPresencePromptResponses, setPersonalityPresencePromptResponses] = useState<PersonalityPresencePromptResponse[]>([]);
+  const [personalityPresenceHair, setPersonalityPresenceHair] =
+    useState<PersonalityPresenceHair | null>(null);
+  const [personalityPresenceHairCues, setPersonalityPresenceHairCues] = useState<
+    PersonalityPresenceHairCue[]
+  >([]);
+  const [personalityPresenceEyes, setPersonalityPresenceEyes] =
+    useState<PersonalityPresenceEyes | null>(null);
+  const [personalityPresenceFacialHair, setPersonalityPresenceFacialHair] =
+    useState<PersonalityPresenceFacialHair | null>(null);
+  const [personalityPresenceStyle, setPersonalityPresenceStyle] =
+    useState<PersonalityPresenceStyle | null>(null);
+  const [personalityPresencePresentation, setPersonalityPresencePresentation] =
+    useState<PersonalityPresencePresentation | null>(null);
+  const [personalityPresencePersonalStyles, setPersonalityPresencePersonalStyles] = useState<
+    PersonalityPresencePersonalStyle[]
+  >([]);
+  const [personalityPresenceAccessories, setPersonalityPresenceAccessories] = useState<
+    PersonalityPresenceAccessories[]
+  >([]);
+  const [personalityPresenceGrooming, setPersonalityPresenceGrooming] = useState<
+    PersonalityPresenceGrooming[]
+  >([]);
+  const [personalityPresenceVoicePresence, setPersonalityPresenceVoicePresence] = useState<
+    PersonalityPresenceVoicePresence[]
+  >([]);
+  const [personalityPresenceSocialStyles, setPersonalityPresenceSocialStyles] = useState<
+    PersonalityPresenceSocialStyle[]
+  >([]);
+  const [personalityPresenceConnectionPreferences, setPersonalityPresenceConnectionPreferences] =
+    useState<PersonalityPresenceConnectionPreference[]>([]);
+  const [personalityPresenceComfortAround, setPersonalityPresenceComfortAround] = useState<
+    PersonalityPresenceComfortAround[]
+  >([]);
+  const [personalityPresencePromptResponses, setPersonalityPresencePromptResponses] = useState<
+    PersonalityPresencePromptResponse[]
+  >([]);
   const [showPersonalityPresenceOnProfile, setShowPersonalityPresenceOnProfile] = useState(false);
-  const [showPersonalityPresencePromptsOnProfile, setShowPersonalityPresencePromptsOnProfile] = useState(false);
-  const [calendarMomentStates, setCalendarMomentStates] = useState<CalendarMomentStates>(defaultCalendarMomentStates);
-  const [calendarMomentVisibility, setCalendarMomentVisibility] = useState<CalendarMomentVisibility>(defaultCalendarMomentVisibility);
-  const [customCalendarMoments, setCustomCalendarMoments] = useState<CustomCalendarMoment[]>(defaultCustomCalendarMoments);
-  const [transportationMethod, setTransportationMethod] = useState<TransportationMethod>("Public transport");
-  const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>(["No preference"]);
-  const [transportationPreferences, setTransportationPreferences] = useState<TransportationPreference[]>(defaultTransportationPreferences);
-  const [meetupContactPreferences, setMeetupContactPreferences] = useState<MeetupContactPreference[]>(defaultMeetupContactPreferences);
-  const [locationComfortPreferences, setLocationComfortPreferences] = useState<LocationComfortPreference[]>(defaultLocationComfortPreferences);
-  const [foodBeveragePreferenceIds, setFoodBeveragePreferenceIds] = useState<string[]>(defaultFoodBeveragePreferenceIds);
+  const [showPersonalityPresencePromptsOnProfile, setShowPersonalityPresencePromptsOnProfile] =
+    useState(false);
+  const [calendarMomentStates, setCalendarMomentStates] = useState<CalendarMomentStates>(
+    defaultCalendarMomentStates,
+  );
+  const [calendarMomentVisibility, setCalendarMomentVisibility] =
+    useState<CalendarMomentVisibility>(defaultCalendarMomentVisibility);
+  const [customCalendarMoments, setCustomCalendarMoments] = useState<CustomCalendarMoment[]>(
+    defaultCustomCalendarMoments,
+  );
+  const [transportationMethod, setTransportationMethod] =
+    useState<TransportationMethod>("Public transport");
+  const [dietaryPreferences, setDietaryPreferences] = useState<DietaryPreference[]>([
+    "No preference",
+  ]);
+  const [transportationPreferences, setTransportationPreferences] = useState<
+    TransportationPreference[]
+  >(defaultTransportationPreferences);
+  const [meetupContactPreferences, setMeetupContactPreferences] = useState<
+    MeetupContactPreference[]
+  >(defaultMeetupContactPreferences);
+  const [locationComfortPreferences, setLocationComfortPreferences] = useState<
+    LocationComfortPreference[]
+  >(defaultLocationComfortPreferences);
+  const [foodBeveragePreferenceIds, setFoodBeveragePreferenceIds] = useState<string[]>(
+    defaultFoodBeveragePreferenceIds,
+  );
   const [hobbiesInterests, setHobbiesInterests] = useState<string[]>(["Coffee", "Movies", "Walks"]);
-  const [interestPreferenceIds, setInterestPreferenceIds] = useState<string[]>(defaultInterestPreferenceIds);
-  const [interestComfortTagsByInterest, setInterestComfortTagsByInterest] = useState<Record<string, string[]>>(defaultInterestComfortTagsByInterest);
-  const [profileShortcutLayout, setProfileShortcutLayout] = useState<ProfileShortcutLayout>("Clean");
-  const [profileWidthPreference, setProfileWidthPreference] = useState<ProfileWidthPreference>("Contained");
+  const [interestPreferenceIds, setInterestPreferenceIds] = useState<string[]>(
+    defaultInterestPreferenceIds,
+  );
+  const [interestComfortTagsByInterest, setInterestComfortTagsByInterest] = useState<
+    Record<string, string[]>
+  >(defaultInterestComfortTagsByInterest);
+  const [profileShortcutLayout, setProfileShortcutLayout] =
+    useState<ProfileShortcutLayout>("Clean");
+  const [profileWidthPreference, setProfileWidthPreference] =
+    useState<ProfileWidthPreference>("Contained");
   const [settingsPrivacyMode, setSettingsPrivacyMode] = useState<SettingsPrivacyMode>("Basic");
-  const [userPreferenceTextMode, setUserPreferenceTextMode] = useState<UserPreferenceTextMode>("Simple");
+  const [userPreferenceTextMode, setUserPreferenceTextMode] =
+    useState<UserPreferenceTextMode>("Simple");
   const [emojiDisplayMode, setEmojiDisplayMode] = useState<EmojiDisplayMode>("Full emoji display");
   const [showProfileControlsShortcut, setShowProfileControlsShortcut] = useState(true);
   const [showAlertsSettingsShortcut, setShowAlertsSettingsShortcut] = useState(true);
@@ -1811,11 +2427,16 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [homeEventLayout, setHomeEventLayout] = useState<HomeEventLayout>("List");
   const [homeLayoutDensity, setHomeLayoutDensity] = useState<HomeLayoutDensity>("Compact");
   const [homeFitToScreen, setHomeFitToScreen] = useState(false);
-  const [homeHeaderControlsDensity, setHomeHeaderControlsDensity] = useState<HomeHeaderControlsDensity>("Comfortable");
+  const [homeHeaderControlsDensity, setHomeHeaderControlsDensity] =
+    useState<HomeHeaderControlsDensity>("Comfortable");
   const [homeCardLayout, setHomeCardLayout] = useState<HomeCardLayout>("Vertical list");
-  const [homeEventVisualMode, setHomeEventVisualMode] = useState<HomeEventVisualMode>("Preview image");
-  const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(defaultHomeVisibleSections);
-  const [homeSectionOrder, setHomeSectionOrder] = useState<HomeSectionOrderKey[]>(defaultHomeSectionOrder);
+  const [homeEventVisualMode, setHomeEventVisualMode] =
+    useState<HomeEventVisualMode>("Preview image");
+  const [homeVisibleSections, setHomeVisibleSections] = useState<HomeVisibleSections>(
+    defaultHomeVisibleSections,
+  );
+  const [homeSectionOrder, setHomeSectionOrder] =
+    useState<HomeSectionOrderKey[]>(defaultHomeSectionOrder);
   const [isNightMode, setIsNightMode] = useState(() => getDefaultSydneyNightMode());
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(true);
   const [largerText, setLargerText] = useState(false);
@@ -1833,30 +2454,45 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [chatNotifications, setChatNotifications] = useState(true);
   const [quietNotifications, setQuietNotifications] = useState(false);
   const [notificationSnoozed, setNotificationSnoozed] = useState(false);
-  const [notificationSnoozePreset, setNotificationSnoozePreset] = useState<NotificationSnoozePreset>("Tonight");
+  const [notificationSnoozePreset, setNotificationSnoozePreset] =
+    useState<NotificationSnoozePreset>("Tonight");
   const [useApproximateLocation, setUseApproximateLocation] = useState(true);
   const [showDistanceInMeetups, setShowDistanceInMeetups] = useState(true);
   const [allowMessageRequests, setAllowMessageRequests] = useState(false);
   const [safetyCheckIns, setSafetyCheckIns] = useState(true);
   const [appLanguage, setAppLanguageState] = useState<NsnLocalLanguage>(DEFAULT_NSN_LANGUAGE);
-  const [translationLanguage, setTranslationLanguageState] = useState<NsnLocalLanguage>(DEFAULT_NSN_LANGUAGE);
+  const [translationLanguage, setTranslationLanguageState] =
+    useState<NsnLocalLanguage>(DEFAULT_NSN_LANGUAGE);
   const [appPalette, setAppPalette] = useState<AppPalette>(appPalettes[0]);
   const [brandThemeId, setBrandThemeIdState] = useState<BrandThemeId>("nsn");
   const [softSurfaces, setSoftSurfaces] = useState(false);
   const [clearBorders, setClearBorders] = useState(false);
   const [timezone, setTimezone] = useState<TimezoneSetting>(defaultNsnTimezone);
-  const [timeContextMode, setTimeContextMode] = useState<TimeContextMode>("Use selected suburb/local area");
-  const [dateFormatPreference, setDateFormatPreference] = useState<DateFormatPreference>("Device / locale");
+  const [timeContextMode, setTimeContextMode] = useState<TimeContextMode>(
+    "Use selected suburb/local area",
+  );
+  const [dateFormatPreference, setDateFormatPreference] =
+    useState<DateFormatPreference>("Device / locale");
   const [showWeekday, setShowWeekday] = useState(true);
-  const [timeFormatPreference, setTimeFormatPreference] = useState<TimeFormatPreference>("Device / locale");
+  const [timeFormatPreference, setTimeFormatPreference] =
+    useState<TimeFormatPreference>("Device / locale");
   const [clockDisplayStyle, setClockDisplayStyle] = useState<ClockDisplayStyle>("Digital");
   const [showDigitalTimeWithAnalog, setShowDigitalTimeWithAnalog] = useState(false);
-  const [temperatureUnitPreference, setTemperatureUnitPreference] = useState<TemperatureUnitPreference>("Device / locale");
-  const [distanceUnitPreference, setDistanceUnitPreference] = useState<DistanceUnitPreference>("Device / locale");
-  const [currencyDisplayPreference, setCurrencyDisplayPreference] = useState<CurrencyDisplayPreference>("Device / locale");
-  const [dayNightModePreference, setDayNightModePreference] = useState<DayNightModePreference>("Follow selected suburb/local time");
+  const [temperatureUnitPreference, setTemperatureUnitPreference] =
+    useState<TemperatureUnitPreference>("Device / locale");
+  const [distanceUnitPreference, setDistanceUnitPreference] =
+    useState<DistanceUnitPreference>("Device / locale");
+  const [currencyDisplayPreference, setCurrencyDisplayPreference] =
+    useState<CurrencyDisplayPreference>("Device / locale");
+  const [dayNightModePreference, setDayNightModePreference] = useState<DayNightModePreference>(
+    "Follow selected suburb/local time",
+  );
   const [cardOutlineStyle, setCardOutlineStyle] = useState<CardOutlineStyle>("Strong");
-  const [weather, setWeather] = useState<WeatherSnapshot>({ temperature: null, rainChance: null, category: "unknown" });
+  const [weather, setWeather] = useState<WeatherSnapshot>({
+    temperature: null,
+    rainChance: null,
+    category: "unknown",
+  });
   const [liveWeatherAlert, setLiveWeatherAlert] = useState<LiveWeatherAlert | null>(null);
   const previousWeather = useRef<WeatherSnapshot | null>(null);
 
@@ -1876,7 +2512,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setAccountPaused(Boolean(snapshot.accountPaused));
         setAccountPauseTimeline(snapshot.accountPauseTimeline ?? "Until I return");
         setAgeConfirmed(Boolean(snapshot.ageConfirmed));
-        const storedAgeRange = normalizePreferredAgeRange(snapshot.preferredAgeMin, snapshot.preferredAgeMax);
+        const storedAgeRange = normalizePreferredAgeRange(
+          snapshot.preferredAgeMin,
+          snapshot.preferredAgeMax,
+        );
         setAge(normalizeAdultAge(snapshot.age));
         setPreferredAgeMin(storedAgeRange.min);
         setPreferredAgeMax(storedAgeRange.max);
@@ -1886,8 +2525,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setMiddleName(snapshot.middleName ?? "");
         setLastName(snapshot.lastName ?? "");
         setGender(snapshot.gender ?? "Not specified");
-        const storedMiddleNameDisplay = normalizeNameDisplayMode(snapshot.middleNameDisplay, snapshot.showMiddleName ? "Full" : "Hidden");
-        const storedLastNameDisplay = normalizeNameDisplayMode(snapshot.lastNameDisplay, snapshot.showLastName ? "Full" : "Hidden");
+        const storedMiddleNameDisplay = normalizeNameDisplayMode(
+          snapshot.middleNameDisplay,
+          snapshot.showMiddleName ? "Full" : "Hidden",
+        );
+        const storedLastNameDisplay = normalizeNameDisplayMode(
+          snapshot.lastNameDisplay,
+          snapshot.showLastName ? "Full" : "Hidden",
+        );
         setMiddleNameDisplay(storedMiddleNameDisplay);
         setLastNameDisplay(storedLastNameDisplay);
         setShowMiddleName(storedMiddleNameDisplay !== "Hidden");
@@ -1904,12 +2549,19 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setComfortMode(snapshot.comfortMode ?? "Comfort Mode");
         setPrivateProfile(Boolean(snapshot.privateProfile));
         setBlurLevel(snapshot.blurLevel ?? "Medium blur");
+        setSoftRevealSuggestions(snapshot.softRevealSuggestions ?? true);
+        setSoftRevealPace(snapshot.softRevealPace ?? "Gradual reveal");
+        setPreferSoftRevealPeople(Boolean(snapshot.preferSoftRevealPeople));
         setWarmUpLowerBlur(snapshot.warmUpLowerBlur ?? true);
         setShowSuburbArea(snapshot.showSuburbArea ?? true);
         setShowInterests(snapshot.showInterests ?? true);
         setShowComfortPreferences(snapshot.showComfortPreferences ?? true);
         setMinimalProfileView(Boolean(snapshot.minimalProfileView));
-        setComfortPreferences(snapshot.comfortPreferences?.length ? snapshot.comfortPreferences : defaultComfortPreferences);
+        setComfortPreferences(
+          snapshot.comfortPreferences?.length
+            ? snapshot.comfortPreferences
+            : defaultComfortPreferences,
+        );
         setVerificationLevel(snapshot.verificationLevel ?? "Unverified");
         setEventMemberships(snapshot.eventMemberships ?? []);
         setBlockedUserIds(snapshot.blockedUserIds ?? []);
@@ -1919,65 +2571,251 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setPinnedEventIds(snapshot.pinnedEventIds ?? []);
         setHiddenEventIds(snapshot.hiddenEventIds ?? []);
         setNoiseLevelPreference(snapshot.noiseLevelPreference ?? "Any");
-        setContactPreferences(snapshot.contactPreferences?.length ? snapshot.contactPreferences : ["Text"]);
-        setFriendshipStylePreferences(normalizeBackgroundPreferenceList(snapshot.friendshipStylePreferences, friendshipStyleOptions));
-        setDatingStylePreferences(normalizeBackgroundPreferenceList(snapshot.datingStylePreferences, datingStyleOptions));
-        setMeetupRhythmPreferences(normalizeBackgroundPreferenceList(snapshot.meetupRhythmPreferences, meetupRhythmOptions));
-        setAvailabilityTimingPreferences(normalizeBackgroundPreferenceList(snapshot.availabilityTimingPreferences, availabilityTimingOptions));
-        setSocialDurationPreferences(normalizeBackgroundPreferenceList(snapshot.socialDurationPreferences, socialDurationOptions));
-        setLanguageComfortPreferences(normalizeLanguageComfortPreferences(snapshot.languageComfortPreferences));
+        setContactPreferences(
+          snapshot.contactPreferences?.length ? snapshot.contactPreferences : ["Text"],
+        );
+        setFriendshipStylePreferences(
+          normalizeBackgroundPreferenceList(
+            snapshot.friendshipStylePreferences,
+            friendshipStyleOptions,
+          ),
+        );
+        setDatingStylePreferences(
+          normalizeBackgroundPreferenceList(snapshot.datingStylePreferences, datingStyleOptions),
+        );
+        setMeetupRhythmPreferences(
+          normalizeBackgroundPreferenceList(snapshot.meetupRhythmPreferences, meetupRhythmOptions),
+        );
+        setAvailabilityTimingPreferences(
+          normalizeBackgroundPreferenceList(
+            snapshot.availabilityTimingPreferences,
+            availabilityTimingOptions,
+          ),
+        );
+        setSocialDurationPreferences(
+          normalizeBackgroundPreferenceList(
+            snapshot.socialDurationPreferences,
+            socialDurationOptions,
+          ),
+        );
+        setLanguageComfortPreferences(
+          normalizeLanguageComfortPreferences(snapshot.languageComfortPreferences),
+        );
         setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
-        setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
+        setCommunicationPreferences(
+          normalizeCommunicationPreferences(snapshot.communicationPreferences),
+        );
         setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
-        setPhotoRecordingComfortPreferences(normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences));
-        setPhysicalContactComfortPreferences(normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences));
-        setBackgroundStudyStatuses(normalizeBackgroundPreferenceList(snapshot.backgroundStudyStatuses, backgroundStudyStatusOptions));
-        setBackgroundStudyAreas(normalizeBackgroundPreferenceList(snapshot.backgroundStudyAreas, backgroundStudyAreaOptions));
-        setBackgroundStudyVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundStudyVisibility));
-        setBackgroundWorkPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundWorkPreferences, backgroundWorkOptions));
-        setBackgroundWorkRhythms(normalizeBackgroundPreferenceList(snapshot.backgroundWorkRhythms, backgroundWorkRhythmOptions));
-        setBackgroundWorkVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility));
-        setBackgroundCommunityPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions));
-        setBackgroundCommunityVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility));
-        setLifeContextCurrentStates(normalizeBackgroundPreferenceList(snapshot.lifeContextCurrentStates, lifeContextCurrentStateOptions));
-        setLifeContextCurrentVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextCurrentVisibility));
-        setLifeContextFields(normalizeBackgroundPreferenceList(snapshot.lifeContextFields, lifeContextFieldOptions));
-        setLifeContextFieldVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextFieldVisibility));
-        setLifeContextLearningInterests(normalizeBackgroundPreferenceList(snapshot.lifeContextLearningInterests, lifeContextLearningOptions));
-        setLifeContextLearningVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only"));
-        setLifeComfortPreferences(normalizeBackgroundPreferenceList(snapshot.lifeComfortPreferences, lifeComfortOptions));
-        setLifeComfortVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeComfortVisibility));
-        setLifeContextLastUpdatedAt(normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt));
+        setPhotoRecordingComfortPreferences(
+          normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences),
+        );
+        setPhysicalContactComfortPreferences(
+          normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences),
+        );
+        setBackgroundStudyStatuses(
+          normalizeBackgroundPreferenceList(
+            snapshot.backgroundStudyStatuses,
+            backgroundStudyStatusOptions,
+          ),
+        );
+        setBackgroundStudyAreas(
+          normalizeBackgroundPreferenceList(
+            snapshot.backgroundStudyAreas,
+            backgroundStudyAreaOptions,
+          ),
+        );
+        setBackgroundStudyVisibility(
+          normalizeBackgroundVisibilityPreference(snapshot.backgroundStudyVisibility),
+        );
+        setBackgroundWorkPreferences(
+          normalizeBackgroundPreferenceList(
+            snapshot.backgroundWorkPreferences,
+            backgroundWorkOptions,
+          ),
+        );
+        setBackgroundWorkRhythms(
+          normalizeBackgroundPreferenceList(
+            snapshot.backgroundWorkRhythms,
+            backgroundWorkRhythmOptions,
+          ),
+        );
+        setBackgroundWorkVisibility(
+          normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility),
+        );
+        setBackgroundCommunityPreferences(
+          normalizeBackgroundPreferenceList(
+            snapshot.backgroundCommunityPreferences,
+            backgroundCommunityOptions,
+          ),
+        );
+        setBackgroundCommunityVisibility(
+          normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility),
+        );
+        setLifeContextCurrentStates(
+          normalizeBackgroundPreferenceList(
+            snapshot.lifeContextCurrentStates,
+            lifeContextCurrentStateOptions,
+          ),
+        );
+        setLifeContextCurrentVisibility(
+          normalizeBackgroundVisibilityPreference(snapshot.lifeContextCurrentVisibility),
+        );
+        setLifeContextFields(
+          normalizeBackgroundPreferenceList(snapshot.lifeContextFields, lifeContextFieldOptions),
+        );
+        setLifeContextFieldVisibility(
+          normalizeBackgroundVisibilityPreference(snapshot.lifeContextFieldVisibility),
+        );
+        setLifeContextLearningInterests(
+          normalizeBackgroundPreferenceList(
+            snapshot.lifeContextLearningInterests,
+            lifeContextLearningOptions,
+          ),
+        );
+        setLifeContextLearningVisibility(
+          normalizeBackgroundVisibilityPreference(
+            snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only",
+          ),
+        );
+        setLifeComfortPreferences(
+          normalizeBackgroundPreferenceList(snapshot.lifeComfortPreferences, lifeComfortOptions),
+        );
+        setLifeComfortVisibility(
+          normalizeBackgroundVisibilityPreference(snapshot.lifeComfortVisibility),
+        );
+        setLifeContextLastUpdatedAt(
+          normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt),
+        );
         setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
-        setPersonalityPresenceHair(normalizePersonalityPresenceChoice(snapshot.personalityPresenceHair, personalityPresenceHairOptions));
-        setPersonalityPresenceHairCues(normalizePersonalityPresenceList(snapshot.personalityPresenceHairCues, personalityPresenceHairCueOptions));
-        setPersonalityPresenceEyes(normalizePersonalityPresenceChoice(snapshot.personalityPresenceEyes, personalityPresenceEyeOptions));
-        setPersonalityPresenceFacialHair(normalizePersonalityPresenceChoice(snapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions));
-        setPersonalityPresenceStyle(normalizePersonalityPresenceChoice(snapshot.personalityPresenceStyle, personalityPresenceStyleOptions));
-        setPersonalityPresencePresentation(normalizePersonalityPresenceChoice(snapshot.personalityPresencePresentation, personalityPresencePresentationOptions));
-        setPersonalityPresencePersonalStyles(normalizePersonalityPresenceList(snapshot.personalityPresencePersonalStyles, personalityPresencePersonalStyleOptions));
-        setPersonalityPresenceAccessories(normalizePersonalityPresenceList(snapshot.personalityPresenceAccessories, personalityPresenceAccessoriesOptions));
-        setPersonalityPresenceGrooming(normalizePersonalityPresenceList(snapshot.personalityPresenceGrooming, personalityPresenceGroomingOptions));
-        setPersonalityPresenceVoicePresence(normalizePersonalityPresenceList(snapshot.personalityPresenceVoicePresence, personalityPresenceVoicePresenceOptions));
-        setPersonalityPresenceSocialStyles(normalizePersonalityPresenceList(snapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions));
-        setPersonalityPresenceConnectionPreferences(normalizePersonalityPresenceList(snapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions));
-        setPersonalityPresenceComfortAround(normalizePersonalityPresenceList(snapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions));
-        setPersonalityPresencePromptResponses(normalizePersonalityPresencePromptResponses(snapshot.personalityPresencePromptResponses));
+        setPersonalityPresenceHair(
+          normalizePersonalityPresenceChoice(
+            snapshot.personalityPresenceHair,
+            personalityPresenceHairOptions,
+          ),
+        );
+        setPersonalityPresenceHairCues(
+          normalizePersonalityPresenceList(
+            snapshot.personalityPresenceHairCues,
+            personalityPresenceHairCueOptions,
+          ),
+        );
+        setPersonalityPresenceEyes(
+          normalizePersonalityPresenceChoice(
+            snapshot.personalityPresenceEyes,
+            personalityPresenceEyeOptions,
+          ),
+        );
+        setPersonalityPresenceFacialHair(
+          normalizePersonalityPresenceChoice(
+            snapshot.personalityPresenceFacialHair,
+            personalityPresenceFacialHairOptions,
+          ),
+        );
+        setPersonalityPresenceStyle(
+          normalizePersonalityPresenceChoice(
+            snapshot.personalityPresenceStyle,
+            personalityPresenceStyleOptions,
+          ),
+        );
+        setPersonalityPresencePresentation(
+          normalizePersonalityPresenceChoice(
+            snapshot.personalityPresencePresentation,
+            personalityPresencePresentationOptions,
+          ),
+        );
+        setPersonalityPresencePersonalStyles(
+          normalizePersonalityPresenceList(
+            snapshot.personalityPresencePersonalStyles,
+            personalityPresencePersonalStyleOptions,
+          ),
+        );
+        setPersonalityPresenceAccessories(
+          normalizePersonalityPresenceList(
+            snapshot.personalityPresenceAccessories,
+            personalityPresenceAccessoriesOptions,
+          ),
+        );
+        setPersonalityPresenceGrooming(
+          normalizePersonalityPresenceList(
+            snapshot.personalityPresenceGrooming,
+            personalityPresenceGroomingOptions,
+          ),
+        );
+        setPersonalityPresenceVoicePresence(
+          normalizePersonalityPresenceList(
+            snapshot.personalityPresenceVoicePresence,
+            personalityPresenceVoicePresenceOptions,
+          ),
+        );
+        setPersonalityPresenceSocialStyles(
+          normalizePersonalityPresenceList(
+            snapshot.personalityPresenceSocialStyles,
+            personalityPresenceSocialStyleOptions,
+          ),
+        );
+        setPersonalityPresenceConnectionPreferences(
+          normalizePersonalityPresenceList(
+            snapshot.personalityPresenceConnectionPreferences,
+            personalityPresenceConnectionOptions,
+          ),
+        );
+        setPersonalityPresenceComfortAround(
+          normalizePersonalityPresenceList(
+            snapshot.personalityPresenceComfortAround,
+            personalityPresenceComfortAroundOptions,
+          ),
+        );
+        setPersonalityPresencePromptResponses(
+          normalizePersonalityPresencePromptResponses(snapshot.personalityPresencePromptResponses),
+        );
         setShowPersonalityPresenceOnProfile(Boolean(snapshot.showPersonalityPresenceOnProfile));
-        setShowPersonalityPresencePromptsOnProfile(Boolean(snapshot.showPersonalityPresencePromptsOnProfile));
+        setShowPersonalityPresencePromptsOnProfile(
+          Boolean(snapshot.showPersonalityPresencePromptsOnProfile),
+        );
         setCalendarMomentStates(normalizeCalendarMomentStates(snapshot.calendarMomentStates));
-        setCalendarMomentVisibility(normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility));
+        setCalendarMomentVisibility(
+          normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility),
+        );
         setCustomCalendarMoments(normalizeCustomCalendarMoments(snapshot.customCalendarMoments));
         setTransportationMethod(snapshot.transportationMethod ?? "Public transport");
-        setTransportationPreferences(normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences));
-        setMeetupContactPreferences(normalizeMeetupContactPreferences(snapshot.meetupContactPreferences));
-        setLocationComfortPreferences(normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences));
-        setDietaryPreferences(snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"]);
-        setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
-        setHobbiesInterests(snapshot.hobbiesInterests?.length ? snapshot.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
-        const storedInterestPreferenceIds = normalizeInterestPreferenceIds(snapshot.interestPreferenceIds);
+        setTransportationPreferences(
+          normalizeSelectablePreferenceList(
+            snapshot.transportationPreferences,
+            transportationPreferenceOptions,
+            defaultTransportationPreferences,
+          ),
+        );
+        setMeetupContactPreferences(
+          normalizeMeetupContactPreferences(snapshot.meetupContactPreferences),
+        );
+        setLocationComfortPreferences(
+          normalizeSelectablePreferenceList(
+            snapshot.locationComfortPreferences,
+            locationComfortPreferenceOptions,
+            defaultLocationComfortPreferences,
+          ),
+        );
+        setDietaryPreferences(
+          snapshot.dietaryPreferences?.length ? snapshot.dietaryPreferences : ["No preference"],
+        );
+        setFoodBeveragePreferenceIds(
+          normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds),
+        );
+        setHobbiesInterests(
+          snapshot.hobbiesInterests?.length
+            ? snapshot.hobbiesInterests
+            : ["Coffee", "Movies", "Walks"],
+        );
+        const storedInterestPreferenceIds = normalizeInterestPreferenceIds(
+          snapshot.interestPreferenceIds,
+        );
         setInterestPreferenceIds(storedInterestPreferenceIds);
-        setInterestComfortTagsByInterest(normalizeInterestComfortTagsByInterest(snapshot.interestComfortTagsByInterest, storedInterestPreferenceIds));
+        setInterestComfortTagsByInterest(
+          normalizeInterestComfortTagsByInterest(
+            snapshot.interestComfortTagsByInterest,
+            storedInterestPreferenceIds,
+          ),
+        );
         setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
         setProfileWidthPreference(snapshot.profileWidthPreference ?? "Contained");
         setSettingsPrivacyMode(snapshot.settingsPrivacyMode ?? "Basic");
@@ -1995,7 +2833,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeEventLayout(snapshot.homeEventLayout ?? "List");
         setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Compact");
         setHomeFitToScreen(Boolean(snapshot.homeFitToScreen));
-        setHomeHeaderControlsDensity(normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity));
+        setHomeHeaderControlsDensity(
+          normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity),
+        );
         setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
         setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
         setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
@@ -2013,12 +2853,22 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
         setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
         setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
-        setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
+        setTemperatureUnitPreference(
+          normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference),
+        );
         setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
-        setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
-        setDayNightModePreference(snapshot.dayNightModePreference ? normalizeDayNightModePreference(snapshot.dayNightModePreference) : "Follow selected suburb/local time");
+        setCurrencyDisplayPreference(
+          normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference),
+        );
+        setDayNightModePreference(
+          snapshot.dayNightModePreference
+            ? normalizeDayNightModePreference(snapshot.dayNightModePreference)
+            : "Follow selected suburb/local time",
+        );
         setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
-        setBlurProfilePhoto(snapshot.blurProfilePhoto ?? (snapshot.visibilityPreference ?? "Blurred") === "Blurred");
+        setBlurProfilePhoto(
+          snapshot.blurProfilePhoto ?? (snapshot.visibilityPreference ?? "Blurred") === "Blurred",
+        );
       } catch (error) {
         console.warn("NSN onboarding could not load:", error);
       } finally {
@@ -2035,9 +2885,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     };
   }, []);
 
-  const completeOnboarding = async (snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">) => {
+  const completeOnboarding = async (
+    snapshot: Omit<OnboardingSnapshot, "hasCompletedOnboarding">,
+  ) => {
     setAgeConfirmed(snapshot.ageConfirmed);
-    const nextAgeRange = normalizePreferredAgeRange(snapshot.preferredAgeMin, snapshot.preferredAgeMax);
+    const nextAgeRange = normalizePreferredAgeRange(
+      snapshot.preferredAgeMin,
+      snapshot.preferredAgeMax,
+    );
     const nextAge = normalizeAdultAge(snapshot.age);
     setAge(nextAge);
     setPreferredAgeMin(nextAgeRange.min);
@@ -2048,8 +2903,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setMiddleName(snapshot.middleName ?? "");
     setLastName(snapshot.lastName ?? "");
     setGender(snapshot.gender ?? "Not specified");
-    const nextMiddleNameDisplay = normalizeNameDisplayMode(snapshot.middleNameDisplay, snapshot.showMiddleName ? "Full" : "Hidden");
-    const nextLastNameDisplay = normalizeNameDisplayMode(snapshot.lastNameDisplay, snapshot.showLastName ? "Full" : "Hidden");
+    const nextMiddleNameDisplay = normalizeNameDisplayMode(
+      snapshot.middleNameDisplay,
+      snapshot.showMiddleName ? "Full" : "Hidden",
+    );
+    const nextLastNameDisplay = normalizeNameDisplayMode(
+      snapshot.lastNameDisplay,
+      snapshot.showLastName ? "Full" : "Hidden",
+    );
     setMiddleNameDisplay(nextMiddleNameDisplay);
     setLastNameDisplay(nextLastNameDisplay);
     setShowMiddleName(nextMiddleNameDisplay !== "Hidden");
@@ -2066,6 +2927,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setComfortMode(snapshot.comfortMode ?? "Comfort Mode");
     setPrivateProfile(Boolean(snapshot.privateProfile));
     setBlurLevel(snapshot.blurLevel ?? "Medium blur");
+    setSoftRevealSuggestions(snapshot.softRevealSuggestions ?? true);
+    setSoftRevealPace(snapshot.softRevealPace ?? "Gradual reveal");
+    setPreferSoftRevealPeople(Boolean(snapshot.preferSoftRevealPeople));
     setWarmUpLowerBlur(snapshot.warmUpLowerBlur ?? true);
     setShowSuburbArea(snapshot.showSuburbArea ?? true);
     setShowInterests(snapshot.showInterests ?? true);
@@ -2081,54 +2945,171 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setPinnedEventIds(snapshot.pinnedEventIds);
     setHiddenEventIds(snapshot.hiddenEventIds);
     setNoiseLevelPreference(snapshot.noiseLevelPreference ?? "Any");
-    setContactPreferences(snapshot.contactPreferences?.length ? snapshot.contactPreferences : ["Text"]);
-    const nextSocialEnergyPreference = normalizeSocialEnergyPreference(snapshot.socialEnergyPreference);
-    const nextCommunicationPreferences = normalizeCommunicationPreferences(snapshot.communicationPreferences);
+    setContactPreferences(
+      snapshot.contactPreferences?.length ? snapshot.contactPreferences : ["Text"],
+    );
+    const nextSocialEnergyPreference = normalizeSocialEnergyPreference(
+      snapshot.socialEnergyPreference,
+    );
+    const nextCommunicationPreferences = normalizeCommunicationPreferences(
+      snapshot.communicationPreferences,
+    );
     const nextGroupSizePreference = normalizeGroupSizePreference(snapshot.groupSizePreference);
-    const nextPhotoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences);
-    const nextPhysicalContactComfortPreferences = normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences);
-    const nextBackgroundStudyStatuses = normalizeBackgroundPreferenceList(snapshot.backgroundStudyStatuses, backgroundStudyStatusOptions);
-    const nextBackgroundStudyAreas = normalizeBackgroundPreferenceList(snapshot.backgroundStudyAreas, backgroundStudyAreaOptions);
-    const nextBackgroundStudyVisibility = normalizeBackgroundVisibilityPreference(snapshot.backgroundStudyVisibility);
-    const nextBackgroundWorkPreferences = normalizeBackgroundPreferenceList(snapshot.backgroundWorkPreferences, backgroundWorkOptions);
-    const nextBackgroundWorkRhythms = normalizeBackgroundPreferenceList(snapshot.backgroundWorkRhythms, backgroundWorkRhythmOptions);
-    const nextBackgroundWorkVisibility = normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility);
-    const nextBackgroundCommunityPreferences = normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions);
-    const nextBackgroundCommunityVisibility = normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility);
-    const nextLifeContextCurrentStates = normalizeBackgroundPreferenceList(snapshot.lifeContextCurrentStates, lifeContextCurrentStateOptions);
-    const nextLifeContextCurrentVisibility = normalizeBackgroundVisibilityPreference(snapshot.lifeContextCurrentVisibility);
-    const nextLifeContextFields = normalizeBackgroundPreferenceList(snapshot.lifeContextFields, lifeContextFieldOptions);
-    const nextLifeContextFieldVisibility = normalizeBackgroundVisibilityPreference(snapshot.lifeContextFieldVisibility);
-    const nextLifeContextLearningInterests = normalizeBackgroundPreferenceList(snapshot.lifeContextLearningInterests, lifeContextLearningOptions);
-    const nextLifeContextLearningVisibility = normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only");
-    const nextLifeComfortPreferences = normalizeBackgroundPreferenceList(snapshot.lifeComfortPreferences, lifeComfortOptions);
-    const nextLifeComfortVisibility = normalizeBackgroundVisibilityPreference(snapshot.lifeComfortVisibility);
-    const nextFriendshipStylePreferences = normalizeBackgroundPreferenceList(snapshot.friendshipStylePreferences, friendshipStyleOptions);
-    const nextDatingStylePreferences = normalizeBackgroundPreferenceList(snapshot.datingStylePreferences, datingStyleOptions);
-    const nextMeetupRhythmPreferences = normalizeBackgroundPreferenceList(snapshot.meetupRhythmPreferences, meetupRhythmOptions);
-    const nextAvailabilityTimingPreferences = normalizeBackgroundPreferenceList(snapshot.availabilityTimingPreferences, availabilityTimingOptions);
-    const nextSocialDurationPreferences = normalizeBackgroundPreferenceList(snapshot.socialDurationPreferences, socialDurationOptions);
-    const nextLanguageComfortPreferences = normalizeLanguageComfortPreferences(snapshot.languageComfortPreferences);
+    const nextPhotoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(
+      snapshot.photoRecordingComfortPreferences,
+    );
+    const nextPhysicalContactComfortPreferences = normalizePhysicalContactComfortPreferences(
+      snapshot.physicalContactComfortPreferences,
+    );
+    const nextBackgroundStudyStatuses = normalizeBackgroundPreferenceList(
+      snapshot.backgroundStudyStatuses,
+      backgroundStudyStatusOptions,
+    );
+    const nextBackgroundStudyAreas = normalizeBackgroundPreferenceList(
+      snapshot.backgroundStudyAreas,
+      backgroundStudyAreaOptions,
+    );
+    const nextBackgroundStudyVisibility = normalizeBackgroundVisibilityPreference(
+      snapshot.backgroundStudyVisibility,
+    );
+    const nextBackgroundWorkPreferences = normalizeBackgroundPreferenceList(
+      snapshot.backgroundWorkPreferences,
+      backgroundWorkOptions,
+    );
+    const nextBackgroundWorkRhythms = normalizeBackgroundPreferenceList(
+      snapshot.backgroundWorkRhythms,
+      backgroundWorkRhythmOptions,
+    );
+    const nextBackgroundWorkVisibility = normalizeBackgroundVisibilityPreference(
+      snapshot.backgroundWorkVisibility,
+    );
+    const nextBackgroundCommunityPreferences = normalizeBackgroundPreferenceList(
+      snapshot.backgroundCommunityPreferences,
+      backgroundCommunityOptions,
+    );
+    const nextBackgroundCommunityVisibility = normalizeBackgroundVisibilityPreference(
+      snapshot.backgroundCommunityVisibility,
+    );
+    const nextLifeContextCurrentStates = normalizeBackgroundPreferenceList(
+      snapshot.lifeContextCurrentStates,
+      lifeContextCurrentStateOptions,
+    );
+    const nextLifeContextCurrentVisibility = normalizeBackgroundVisibilityPreference(
+      snapshot.lifeContextCurrentVisibility,
+    );
+    const nextLifeContextFields = normalizeBackgroundPreferenceList(
+      snapshot.lifeContextFields,
+      lifeContextFieldOptions,
+    );
+    const nextLifeContextFieldVisibility = normalizeBackgroundVisibilityPreference(
+      snapshot.lifeContextFieldVisibility,
+    );
+    const nextLifeContextLearningInterests = normalizeBackgroundPreferenceList(
+      snapshot.lifeContextLearningInterests,
+      lifeContextLearningOptions,
+    );
+    const nextLifeContextLearningVisibility = normalizeBackgroundVisibilityPreference(
+      snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only",
+    );
+    const nextLifeComfortPreferences = normalizeBackgroundPreferenceList(
+      snapshot.lifeComfortPreferences,
+      lifeComfortOptions,
+    );
+    const nextLifeComfortVisibility = normalizeBackgroundVisibilityPreference(
+      snapshot.lifeComfortVisibility,
+    );
+    const nextFriendshipStylePreferences = normalizeBackgroundPreferenceList(
+      snapshot.friendshipStylePreferences,
+      friendshipStyleOptions,
+    );
+    const nextDatingStylePreferences = normalizeBackgroundPreferenceList(
+      snapshot.datingStylePreferences,
+      datingStyleOptions,
+    );
+    const nextMeetupRhythmPreferences = normalizeBackgroundPreferenceList(
+      snapshot.meetupRhythmPreferences,
+      meetupRhythmOptions,
+    );
+    const nextAvailabilityTimingPreferences = normalizeBackgroundPreferenceList(
+      snapshot.availabilityTimingPreferences,
+      availabilityTimingOptions,
+    );
+    const nextSocialDurationPreferences = normalizeBackgroundPreferenceList(
+      snapshot.socialDurationPreferences,
+      socialDurationOptions,
+    );
+    const nextLanguageComfortPreferences = normalizeLanguageComfortPreferences(
+      snapshot.languageComfortPreferences,
+    );
     const nextLifeContextLastUpdatedAt =
       normalizeLifeContextUpdatedAt(snapshot.lifeContextLastUpdatedAt) ??
-      (nextLifeContextCurrentStates.length || nextLifeContextFields.length || nextLifeContextLearningInterests.length ? new Date().toISOString() : null);
+      (nextLifeContextCurrentStates.length ||
+      nextLifeContextFields.length ||
+      nextLifeContextLearningInterests.length
+        ? new Date().toISOString()
+        : null);
     const nextCalendarMomentStates = normalizeCalendarMomentStates(snapshot.calendarMomentStates);
-    const nextCalendarMomentVisibility = normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility);
-    const nextCustomCalendarMoments = normalizeCustomCalendarMoments(snapshot.customCalendarMoments);
-    const nextPersonalityPresenceHair = normalizePersonalityPresenceChoice(snapshot.personalityPresenceHair, personalityPresenceHairOptions);
-    const nextPersonalityPresenceHairCues = normalizePersonalityPresenceList(snapshot.personalityPresenceHairCues, personalityPresenceHairCueOptions);
-    const nextPersonalityPresenceEyes = normalizePersonalityPresenceChoice(snapshot.personalityPresenceEyes, personalityPresenceEyeOptions);
-    const nextPersonalityPresenceFacialHair = normalizePersonalityPresenceChoice(snapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions);
-    const nextPersonalityPresenceStyle = normalizePersonalityPresenceChoice(snapshot.personalityPresenceStyle, personalityPresenceStyleOptions);
-    const nextPersonalityPresencePresentation = normalizePersonalityPresenceChoice(snapshot.personalityPresencePresentation, personalityPresencePresentationOptions);
-    const nextPersonalityPresencePersonalStyles = normalizePersonalityPresenceList(snapshot.personalityPresencePersonalStyles, personalityPresencePersonalStyleOptions);
-    const nextPersonalityPresenceAccessories = normalizePersonalityPresenceList(snapshot.personalityPresenceAccessories, personalityPresenceAccessoriesOptions);
-    const nextPersonalityPresenceGrooming = normalizePersonalityPresenceList(snapshot.personalityPresenceGrooming, personalityPresenceGroomingOptions);
-    const nextPersonalityPresenceVoicePresence = normalizePersonalityPresenceList(snapshot.personalityPresenceVoicePresence, personalityPresenceVoicePresenceOptions);
-    const nextPersonalityPresenceSocialStyles = normalizePersonalityPresenceList(snapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions);
-    const nextPersonalityPresenceConnectionPreferences = normalizePersonalityPresenceList(snapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions);
-    const nextPersonalityPresenceComfortAround = normalizePersonalityPresenceList(snapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions);
-    const nextPersonalityPresencePromptResponses = normalizePersonalityPresencePromptResponses(snapshot.personalityPresencePromptResponses);
+    const nextCalendarMomentVisibility = normalizeCalendarMomentVisibility(
+      snapshot.calendarMomentVisibility,
+    );
+    const nextCustomCalendarMoments = normalizeCustomCalendarMoments(
+      snapshot.customCalendarMoments,
+    );
+    const nextPersonalityPresenceHair = normalizePersonalityPresenceChoice(
+      snapshot.personalityPresenceHair,
+      personalityPresenceHairOptions,
+    );
+    const nextPersonalityPresenceHairCues = normalizePersonalityPresenceList(
+      snapshot.personalityPresenceHairCues,
+      personalityPresenceHairCueOptions,
+    );
+    const nextPersonalityPresenceEyes = normalizePersonalityPresenceChoice(
+      snapshot.personalityPresenceEyes,
+      personalityPresenceEyeOptions,
+    );
+    const nextPersonalityPresenceFacialHair = normalizePersonalityPresenceChoice(
+      snapshot.personalityPresenceFacialHair,
+      personalityPresenceFacialHairOptions,
+    );
+    const nextPersonalityPresenceStyle = normalizePersonalityPresenceChoice(
+      snapshot.personalityPresenceStyle,
+      personalityPresenceStyleOptions,
+    );
+    const nextPersonalityPresencePresentation = normalizePersonalityPresenceChoice(
+      snapshot.personalityPresencePresentation,
+      personalityPresencePresentationOptions,
+    );
+    const nextPersonalityPresencePersonalStyles = normalizePersonalityPresenceList(
+      snapshot.personalityPresencePersonalStyles,
+      personalityPresencePersonalStyleOptions,
+    );
+    const nextPersonalityPresenceAccessories = normalizePersonalityPresenceList(
+      snapshot.personalityPresenceAccessories,
+      personalityPresenceAccessoriesOptions,
+    );
+    const nextPersonalityPresenceGrooming = normalizePersonalityPresenceList(
+      snapshot.personalityPresenceGrooming,
+      personalityPresenceGroomingOptions,
+    );
+    const nextPersonalityPresenceVoicePresence = normalizePersonalityPresenceList(
+      snapshot.personalityPresenceVoicePresence,
+      personalityPresenceVoicePresenceOptions,
+    );
+    const nextPersonalityPresenceSocialStyles = normalizePersonalityPresenceList(
+      snapshot.personalityPresenceSocialStyles,
+      personalityPresenceSocialStyleOptions,
+    );
+    const nextPersonalityPresenceConnectionPreferences = normalizePersonalityPresenceList(
+      snapshot.personalityPresenceConnectionPreferences,
+      personalityPresenceConnectionOptions,
+    );
+    const nextPersonalityPresenceComfortAround = normalizePersonalityPresenceList(
+      snapshot.personalityPresenceComfortAround,
+      personalityPresenceComfortAroundOptions,
+    );
+    const nextPersonalityPresencePromptResponses = normalizePersonalityPresencePromptResponses(
+      snapshot.personalityPresencePromptResponses,
+    );
     setSocialEnergyPreference(nextSocialEnergyPreference);
     setCommunicationPreferences(nextCommunicationPreferences);
     setGroupSizePreference(nextGroupSizePreference);
@@ -2172,24 +3153,43 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setPersonalityPresenceComfortAround(nextPersonalityPresenceComfortAround);
     setPersonalityPresencePromptResponses(nextPersonalityPresencePromptResponses);
     setShowPersonalityPresenceOnProfile(Boolean(snapshot.showPersonalityPresenceOnProfile));
-    setShowPersonalityPresencePromptsOnProfile(Boolean(snapshot.showPersonalityPresencePromptsOnProfile));
+    setShowPersonalityPresencePromptsOnProfile(
+      Boolean(snapshot.showPersonalityPresencePromptsOnProfile),
+    );
     setCalendarMomentStates(nextCalendarMomentStates);
     setCalendarMomentVisibility(nextCalendarMomentVisibility);
     setCustomCalendarMoments(nextCustomCalendarMoments);
     setVerifiedButPrivate(snapshot.verifiedButPrivate ?? true);
     setTransportationMethod(snapshot.transportationMethod);
-    const nextTransportationPreferences = normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences);
-    const nextMeetupContactPreferences = normalizeMeetupContactPreferences(snapshot.meetupContactPreferences);
-    const nextLocationComfortPreferences = normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences);
+    const nextTransportationPreferences = normalizeSelectablePreferenceList(
+      snapshot.transportationPreferences,
+      transportationPreferenceOptions,
+      defaultTransportationPreferences,
+    );
+    const nextMeetupContactPreferences = normalizeMeetupContactPreferences(
+      snapshot.meetupContactPreferences,
+    );
+    const nextLocationComfortPreferences = normalizeSelectablePreferenceList(
+      snapshot.locationComfortPreferences,
+      locationComfortPreferenceOptions,
+      defaultLocationComfortPreferences,
+    );
     setTransportationPreferences(nextTransportationPreferences);
     setMeetupContactPreferences(nextMeetupContactPreferences);
     setLocationComfortPreferences(nextLocationComfortPreferences);
     setDietaryPreferences(snapshot.dietaryPreferences);
-    const nextFoodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds);
+    const nextFoodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(
+      snapshot.foodBeveragePreferenceIds,
+    );
     setFoodBeveragePreferenceIds(nextFoodBeveragePreferenceIds);
     setHobbiesInterests(snapshot.hobbiesInterests);
-    const nextInterestPreferenceIds = normalizeInterestPreferenceIds(snapshot.interestPreferenceIds);
-    const nextInterestComfortTagsByInterest = normalizeInterestComfortTagsByInterest(snapshot.interestComfortTagsByInterest, nextInterestPreferenceIds);
+    const nextInterestPreferenceIds = normalizeInterestPreferenceIds(
+      snapshot.interestPreferenceIds,
+    );
+    const nextInterestComfortTagsByInterest = normalizeInterestComfortTagsByInterest(
+      snapshot.interestComfortTagsByInterest,
+      nextInterestPreferenceIds,
+    );
     setInterestPreferenceIds(nextInterestPreferenceIds);
     setInterestComfortTagsByInterest(nextInterestComfortTagsByInterest);
     setProfileShortcutLayout(snapshot.profileShortcutLayout ?? "Clean");
@@ -2209,7 +3209,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHomeEventLayout(snapshot.homeEventLayout ?? "List");
     setHomeLayoutDensity(snapshot.homeLayoutDensity ?? "Compact");
     setHomeFitToScreen(Boolean(snapshot.homeFitToScreen));
-    setHomeHeaderControlsDensity(normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity));
+    setHomeHeaderControlsDensity(
+      normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity),
+    );
     setHomeCardLayout(snapshot.homeCardLayout ?? "Vertical list");
     setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
     setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
@@ -2227,10 +3229,18 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
     setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
     setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
-    setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
+    setTemperatureUnitPreference(
+      normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference),
+    );
     setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
-    setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
-    setDayNightModePreference(snapshot.dayNightModePreference ? normalizeDayNightModePreference(snapshot.dayNightModePreference) : "Follow selected suburb/local time");
+    setCurrencyDisplayPreference(
+      normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference),
+    );
+    setDayNightModePreference(
+      snapshot.dayNightModePreference
+        ? normalizeDayNightModePreference(snapshot.dayNightModePreference)
+        : "Follow selected suburb/local time",
+    );
     setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
     setBlurProfilePhoto(snapshot.blurProfilePhoto ?? snapshot.visibilityPreference === "Blurred");
     setHasCompletedOnboarding(true);
@@ -2245,7 +3255,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           preferredAgeMax: nextAgeRange.max,
           appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
           translationLanguage: normalizeNsnLanguage(snapshot.translationLanguage),
-          homeHeaderControlsDensity: normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity),
+          homeHeaderControlsDensity: normalizeHomeHeaderControlsDensity(
+            snapshot.homeHeaderControlsDensity,
+          ),
           homeEventVisualMode: normalizeHomeEventVisualMode(snapshot.homeEventVisualMode),
           homeVisibleSections: normalizeHomeVisibleSections(snapshot.homeVisibleSections),
           homeSectionOrder: normalizeHomeSectionOrder(snapshot.homeSectionOrder),
@@ -2295,7 +3307,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           personalityPresenceComfortAround: nextPersonalityPresenceComfortAround,
           personalityPresencePromptResponses: nextPersonalityPresencePromptResponses,
           showPersonalityPresenceOnProfile: Boolean(snapshot.showPersonalityPresenceOnProfile),
-          showPersonalityPresencePromptsOnProfile: Boolean(snapshot.showPersonalityPresencePromptsOnProfile),
+          showPersonalityPresencePromptsOnProfile: Boolean(
+            snapshot.showPersonalityPresencePromptsOnProfile,
+          ),
           calendarMomentStates: nextCalendarMomentStates,
           calendarMomentVisibility: nextCalendarMomentVisibility,
           customCalendarMoments: nextCustomCalendarMoments,
@@ -2311,20 +3325,28 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
           clockDisplayStyle: normalizeClockDisplayStyle(snapshot.clockDisplayStyle),
           showDigitalTimeWithAnalog: Boolean(snapshot.showDigitalTimeWithAnalog),
-          temperatureUnitPreference: normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference),
+          temperatureUnitPreference: normalizeTemperatureUnitPreference(
+            snapshot.temperatureUnitPreference,
+          ),
           distanceUnitPreference: normalizeDistanceUnitPreference(snapshot.distanceUnitPreference),
-          currencyDisplayPreference: normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference),
-          dayNightModePreference: snapshot.dayNightModePreference ? normalizeDayNightModePreference(snapshot.dayNightModePreference) : "Follow selected suburb/local time",
+          currencyDisplayPreference: normalizeCurrencyDisplayPreference(
+            snapshot.currencyDisplayPreference,
+          ),
+          dayNightModePreference: snapshot.dayNightModePreference
+            ? normalizeDayNightModePreference(snapshot.dayNightModePreference)
+            : "Follow selected suburb/local time",
           cardOutlineStyle: normalizeCardOutlineStyle(snapshot.cardOutlineStyle),
           hasCompletedOnboarding: true,
-        } satisfies OnboardingSnapshot)
+        } satisfies OnboardingSnapshot),
       );
     } catch (error) {
       console.warn("NSN onboarding could not save:", error);
     }
   };
 
-  const saveSoftHelloMvpState = async (snapshot: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">> = {}) => {
+  const saveSoftHelloMvpState = async (
+    snapshot: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">> = {},
+  ) => {
     const nextSnapshot: OnboardingSnapshot = {
       hasCompletedOnboarding,
       accountPaused,
@@ -2356,6 +3378,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       privateProfile,
       blurProfilePhoto,
       blurLevel,
+      softRevealSuggestions,
+      softRevealPace,
+      preferSoftRevealPeople,
       warmUpLowerBlur,
       showSuburbArea,
       showInterests,
@@ -2486,86 +3511,242 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.brandThemeId = normalizeBrandThemeId(nextSnapshot.brandThemeId);
     nextSnapshot.timezone = normalizeTimezoneSetting(nextSnapshot.timezone);
     nextSnapshot.timeContextMode = normalizeTimeContextMode(nextSnapshot.timeContextMode);
-    nextSnapshot.dateFormatPreference = normalizeDateFormatPreference(nextSnapshot.dateFormatPreference);
+    nextSnapshot.dateFormatPreference = normalizeDateFormatPreference(
+      nextSnapshot.dateFormatPreference,
+    );
     nextSnapshot.showWeekday = Boolean(nextSnapshot.showWeekday);
-    nextSnapshot.timeFormatPreference = normalizeTimeFormatPreference(nextSnapshot.timeFormatPreference);
+    nextSnapshot.timeFormatPreference = normalizeTimeFormatPreference(
+      nextSnapshot.timeFormatPreference,
+    );
     nextSnapshot.clockDisplayStyle = normalizeClockDisplayStyle(nextSnapshot.clockDisplayStyle);
     nextSnapshot.showDigitalTimeWithAnalog = Boolean(nextSnapshot.showDigitalTimeWithAnalog);
-    nextSnapshot.temperatureUnitPreference = normalizeTemperatureUnitPreference(nextSnapshot.temperatureUnitPreference);
-    nextSnapshot.distanceUnitPreference = normalizeDistanceUnitPreference(nextSnapshot.distanceUnitPreference);
-    nextSnapshot.currencyDisplayPreference = normalizeCurrencyDisplayPreference(nextSnapshot.currencyDisplayPreference);
-    nextSnapshot.dayNightModePreference = normalizeDayNightModePreference(nextSnapshot.dayNightModePreference);
+    nextSnapshot.temperatureUnitPreference = normalizeTemperatureUnitPreference(
+      nextSnapshot.temperatureUnitPreference,
+    );
+    nextSnapshot.distanceUnitPreference = normalizeDistanceUnitPreference(
+      nextSnapshot.distanceUnitPreference,
+    );
+    nextSnapshot.currencyDisplayPreference = normalizeCurrencyDisplayPreference(
+      nextSnapshot.currencyDisplayPreference,
+    );
+    nextSnapshot.dayNightModePreference = normalizeDayNightModePreference(
+      nextSnapshot.dayNightModePreference,
+    );
     nextSnapshot.cardOutlineStyle = normalizeCardOutlineStyle(nextSnapshot.cardOutlineStyle);
     nextSnapshot.emojiDisplayMode = normalizeEmojiDisplayMode(nextSnapshot.emojiDisplayMode);
     nextSnapshot.homeFitToScreen = Boolean(nextSnapshot.homeFitToScreen);
-    nextSnapshot.homeHeaderControlsDensity = normalizeHomeHeaderControlsDensity(nextSnapshot.homeHeaderControlsDensity);
-    nextSnapshot.socialEnergyPreference = normalizeSocialEnergyPreference(nextSnapshot.socialEnergyPreference);
-    nextSnapshot.communicationPreferences = normalizeCommunicationPreferences(nextSnapshot.communicationPreferences);
-    nextSnapshot.groupSizePreference = normalizeGroupSizePreference(nextSnapshot.groupSizePreference);
-    nextSnapshot.photoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(nextSnapshot.photoRecordingComfortPreferences);
-    nextSnapshot.physicalContactComfortPreferences = normalizePhysicalContactComfortPreferences(nextSnapshot.physicalContactComfortPreferences);
-    nextSnapshot.backgroundStudyStatuses = normalizeBackgroundPreferenceList(nextSnapshot.backgroundStudyStatuses, backgroundStudyStatusOptions);
-    nextSnapshot.backgroundStudyAreas = normalizeBackgroundPreferenceList(nextSnapshot.backgroundStudyAreas, backgroundStudyAreaOptions);
-    nextSnapshot.backgroundStudyVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.backgroundStudyVisibility);
-    nextSnapshot.backgroundWorkPreferences = normalizeBackgroundPreferenceList(nextSnapshot.backgroundWorkPreferences, backgroundWorkOptions);
-    nextSnapshot.backgroundWorkRhythms = normalizeBackgroundPreferenceList(nextSnapshot.backgroundWorkRhythms, backgroundWorkRhythmOptions);
-    nextSnapshot.backgroundWorkVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.backgroundWorkVisibility);
-    nextSnapshot.backgroundCommunityPreferences = normalizeBackgroundPreferenceList(nextSnapshot.backgroundCommunityPreferences, backgroundCommunityOptions);
-    nextSnapshot.backgroundCommunityVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.backgroundCommunityVisibility);
-    nextSnapshot.lifeContextCurrentStates = normalizeBackgroundPreferenceList(nextSnapshot.lifeContextCurrentStates, lifeContextCurrentStateOptions);
-    nextSnapshot.lifeContextCurrentVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.lifeContextCurrentVisibility);
-    nextSnapshot.lifeContextFields = normalizeBackgroundPreferenceList(nextSnapshot.lifeContextFields, lifeContextFieldOptions);
-    nextSnapshot.lifeContextFieldVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.lifeContextFieldVisibility);
-    nextSnapshot.lifeContextLearningInterests = normalizeBackgroundPreferenceList(nextSnapshot.lifeContextLearningInterests, lifeContextLearningOptions);
-    nextSnapshot.lifeContextLearningVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only");
-    nextSnapshot.lifeComfortPreferences = normalizeBackgroundPreferenceList(nextSnapshot.lifeComfortPreferences, lifeComfortOptions);
-    nextSnapshot.lifeComfortVisibility = normalizeBackgroundVisibilityPreference(nextSnapshot.lifeComfortVisibility);
-    nextSnapshot.friendshipStylePreferences = normalizeBackgroundPreferenceList(nextSnapshot.friendshipStylePreferences, friendshipStyleOptions);
-    nextSnapshot.datingStylePreferences = normalizeBackgroundPreferenceList(nextSnapshot.datingStylePreferences, datingStyleOptions);
-    nextSnapshot.meetupRhythmPreferences = normalizeBackgroundPreferenceList(nextSnapshot.meetupRhythmPreferences, meetupRhythmOptions);
-    nextSnapshot.availabilityTimingPreferences = normalizeBackgroundPreferenceList(nextSnapshot.availabilityTimingPreferences, availabilityTimingOptions);
-    nextSnapshot.socialDurationPreferences = normalizeBackgroundPreferenceList(nextSnapshot.socialDurationPreferences, socialDurationOptions);
-    nextSnapshot.languageComfortPreferences = normalizeLanguageComfortPreferences(nextSnapshot.languageComfortPreferences);
+    nextSnapshot.homeHeaderControlsDensity = normalizeHomeHeaderControlsDensity(
+      nextSnapshot.homeHeaderControlsDensity,
+    );
+    nextSnapshot.socialEnergyPreference = normalizeSocialEnergyPreference(
+      nextSnapshot.socialEnergyPreference,
+    );
+    nextSnapshot.communicationPreferences = normalizeCommunicationPreferences(
+      nextSnapshot.communicationPreferences,
+    );
+    nextSnapshot.groupSizePreference = normalizeGroupSizePreference(
+      nextSnapshot.groupSizePreference,
+    );
+    nextSnapshot.photoRecordingComfortPreferences = normalizePhotoRecordingComfortPreferences(
+      nextSnapshot.photoRecordingComfortPreferences,
+    );
+    nextSnapshot.physicalContactComfortPreferences = normalizePhysicalContactComfortPreferences(
+      nextSnapshot.physicalContactComfortPreferences,
+    );
+    nextSnapshot.backgroundStudyStatuses = normalizeBackgroundPreferenceList(
+      nextSnapshot.backgroundStudyStatuses,
+      backgroundStudyStatusOptions,
+    );
+    nextSnapshot.backgroundStudyAreas = normalizeBackgroundPreferenceList(
+      nextSnapshot.backgroundStudyAreas,
+      backgroundStudyAreaOptions,
+    );
+    nextSnapshot.backgroundStudyVisibility = normalizeBackgroundVisibilityPreference(
+      nextSnapshot.backgroundStudyVisibility,
+    );
+    nextSnapshot.backgroundWorkPreferences = normalizeBackgroundPreferenceList(
+      nextSnapshot.backgroundWorkPreferences,
+      backgroundWorkOptions,
+    );
+    nextSnapshot.backgroundWorkRhythms = normalizeBackgroundPreferenceList(
+      nextSnapshot.backgroundWorkRhythms,
+      backgroundWorkRhythmOptions,
+    );
+    nextSnapshot.backgroundWorkVisibility = normalizeBackgroundVisibilityPreference(
+      nextSnapshot.backgroundWorkVisibility,
+    );
+    nextSnapshot.backgroundCommunityPreferences = normalizeBackgroundPreferenceList(
+      nextSnapshot.backgroundCommunityPreferences,
+      backgroundCommunityOptions,
+    );
+    nextSnapshot.backgroundCommunityVisibility = normalizeBackgroundVisibilityPreference(
+      nextSnapshot.backgroundCommunityVisibility,
+    );
+    nextSnapshot.lifeContextCurrentStates = normalizeBackgroundPreferenceList(
+      nextSnapshot.lifeContextCurrentStates,
+      lifeContextCurrentStateOptions,
+    );
+    nextSnapshot.lifeContextCurrentVisibility = normalizeBackgroundVisibilityPreference(
+      nextSnapshot.lifeContextCurrentVisibility,
+    );
+    nextSnapshot.lifeContextFields = normalizeBackgroundPreferenceList(
+      nextSnapshot.lifeContextFields,
+      lifeContextFieldOptions,
+    );
+    nextSnapshot.lifeContextFieldVisibility = normalizeBackgroundVisibilityPreference(
+      nextSnapshot.lifeContextFieldVisibility,
+    );
+    nextSnapshot.lifeContextLearningInterests = normalizeBackgroundPreferenceList(
+      nextSnapshot.lifeContextLearningInterests,
+      lifeContextLearningOptions,
+    );
+    nextSnapshot.lifeContextLearningVisibility = normalizeBackgroundVisibilityPreference(
+      nextSnapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only",
+    );
+    nextSnapshot.lifeComfortPreferences = normalizeBackgroundPreferenceList(
+      nextSnapshot.lifeComfortPreferences,
+      lifeComfortOptions,
+    );
+    nextSnapshot.lifeComfortVisibility = normalizeBackgroundVisibilityPreference(
+      nextSnapshot.lifeComfortVisibility,
+    );
+    nextSnapshot.friendshipStylePreferences = normalizeBackgroundPreferenceList(
+      nextSnapshot.friendshipStylePreferences,
+      friendshipStyleOptions,
+    );
+    nextSnapshot.datingStylePreferences = normalizeBackgroundPreferenceList(
+      nextSnapshot.datingStylePreferences,
+      datingStyleOptions,
+    );
+    nextSnapshot.meetupRhythmPreferences = normalizeBackgroundPreferenceList(
+      nextSnapshot.meetupRhythmPreferences,
+      meetupRhythmOptions,
+    );
+    nextSnapshot.availabilityTimingPreferences = normalizeBackgroundPreferenceList(
+      nextSnapshot.availabilityTimingPreferences,
+      availabilityTimingOptions,
+    );
+    nextSnapshot.socialDurationPreferences = normalizeBackgroundPreferenceList(
+      nextSnapshot.socialDurationPreferences,
+      socialDurationOptions,
+    );
+    nextSnapshot.languageComfortPreferences = normalizeLanguageComfortPreferences(
+      nextSnapshot.languageComfortPreferences,
+    );
     nextSnapshot.lifeContextLastUpdatedAt = normalizeLifeContextUpdatedAt(
-      lifeContextTouched && snapshot.lifeContextLastUpdatedAt === undefined ? new Date().toISOString() : nextSnapshot.lifeContextLastUpdatedAt
+      lifeContextTouched && snapshot.lifeContextLastUpdatedAt === undefined
+        ? new Date().toISOString()
+        : nextSnapshot.lifeContextLastUpdatedAt,
     );
     nextSnapshot.verifiedButPrivate = nextSnapshot.verifiedButPrivate ?? true;
-    nextSnapshot.personalityPresenceHair = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceHair, personalityPresenceHairOptions);
-    nextSnapshot.personalityPresenceHairCues = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceHairCues, personalityPresenceHairCueOptions);
-    nextSnapshot.personalityPresenceEyes = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceEyes, personalityPresenceEyeOptions);
-    nextSnapshot.personalityPresenceFacialHair = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceFacialHair, personalityPresenceFacialHairOptions);
-    nextSnapshot.personalityPresenceStyle = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresenceStyle, personalityPresenceStyleOptions);
-    nextSnapshot.personalityPresencePresentation = normalizePersonalityPresenceChoice(nextSnapshot.personalityPresencePresentation, personalityPresencePresentationOptions);
-    nextSnapshot.personalityPresencePersonalStyles = normalizePersonalityPresenceList(nextSnapshot.personalityPresencePersonalStyles, personalityPresencePersonalStyleOptions);
-    nextSnapshot.personalityPresenceAccessories = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceAccessories, personalityPresenceAccessoriesOptions);
-    nextSnapshot.personalityPresenceGrooming = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceGrooming, personalityPresenceGroomingOptions);
-    nextSnapshot.personalityPresenceVoicePresence = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceVoicePresence, personalityPresenceVoicePresenceOptions);
-    nextSnapshot.personalityPresenceSocialStyles = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceSocialStyles, personalityPresenceSocialStyleOptions);
-    nextSnapshot.personalityPresenceConnectionPreferences = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceConnectionPreferences, personalityPresenceConnectionOptions);
-    nextSnapshot.personalityPresenceComfortAround = normalizePersonalityPresenceList(nextSnapshot.personalityPresenceComfortAround, personalityPresenceComfortAroundOptions);
-    nextSnapshot.personalityPresencePromptResponses = normalizePersonalityPresencePromptResponses(nextSnapshot.personalityPresencePromptResponses);
-    nextSnapshot.showPersonalityPresenceOnProfile = Boolean(nextSnapshot.showPersonalityPresenceOnProfile);
-    nextSnapshot.showPersonalityPresencePromptsOnProfile = Boolean(nextSnapshot.showPersonalityPresencePromptsOnProfile);
-    nextSnapshot.calendarMomentStates = normalizeCalendarMomentStates(nextSnapshot.calendarMomentStates);
-    nextSnapshot.calendarMomentVisibility = normalizeCalendarMomentVisibility(nextSnapshot.calendarMomentVisibility);
-    nextSnapshot.customCalendarMoments = normalizeCustomCalendarMoments(nextSnapshot.customCalendarMoments);
-    nextSnapshot.transportationPreferences = normalizeSelectablePreferenceList(nextSnapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences);
-    nextSnapshot.meetupContactPreferences = normalizeMeetupContactPreferences(nextSnapshot.meetupContactPreferences);
-    nextSnapshot.locationComfortPreferences = normalizeSelectablePreferenceList(nextSnapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences);
-    nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(nextSnapshot.foodBeveragePreferenceIds);
-    nextSnapshot.interestPreferenceIds = normalizeInterestPreferenceIds(nextSnapshot.interestPreferenceIds);
-    nextSnapshot.interestComfortTagsByInterest = normalizeInterestComfortTagsByInterest(nextSnapshot.interestComfortTagsByInterest, nextSnapshot.interestPreferenceIds);
+    nextSnapshot.personalityPresenceHair = normalizePersonalityPresenceChoice(
+      nextSnapshot.personalityPresenceHair,
+      personalityPresenceHairOptions,
+    );
+    nextSnapshot.personalityPresenceHairCues = normalizePersonalityPresenceList(
+      nextSnapshot.personalityPresenceHairCues,
+      personalityPresenceHairCueOptions,
+    );
+    nextSnapshot.personalityPresenceEyes = normalizePersonalityPresenceChoice(
+      nextSnapshot.personalityPresenceEyes,
+      personalityPresenceEyeOptions,
+    );
+    nextSnapshot.personalityPresenceFacialHair = normalizePersonalityPresenceChoice(
+      nextSnapshot.personalityPresenceFacialHair,
+      personalityPresenceFacialHairOptions,
+    );
+    nextSnapshot.personalityPresenceStyle = normalizePersonalityPresenceChoice(
+      nextSnapshot.personalityPresenceStyle,
+      personalityPresenceStyleOptions,
+    );
+    nextSnapshot.personalityPresencePresentation = normalizePersonalityPresenceChoice(
+      nextSnapshot.personalityPresencePresentation,
+      personalityPresencePresentationOptions,
+    );
+    nextSnapshot.personalityPresencePersonalStyles = normalizePersonalityPresenceList(
+      nextSnapshot.personalityPresencePersonalStyles,
+      personalityPresencePersonalStyleOptions,
+    );
+    nextSnapshot.personalityPresenceAccessories = normalizePersonalityPresenceList(
+      nextSnapshot.personalityPresenceAccessories,
+      personalityPresenceAccessoriesOptions,
+    );
+    nextSnapshot.personalityPresenceGrooming = normalizePersonalityPresenceList(
+      nextSnapshot.personalityPresenceGrooming,
+      personalityPresenceGroomingOptions,
+    );
+    nextSnapshot.personalityPresenceVoicePresence = normalizePersonalityPresenceList(
+      nextSnapshot.personalityPresenceVoicePresence,
+      personalityPresenceVoicePresenceOptions,
+    );
+    nextSnapshot.personalityPresenceSocialStyles = normalizePersonalityPresenceList(
+      nextSnapshot.personalityPresenceSocialStyles,
+      personalityPresenceSocialStyleOptions,
+    );
+    nextSnapshot.personalityPresenceConnectionPreferences = normalizePersonalityPresenceList(
+      nextSnapshot.personalityPresenceConnectionPreferences,
+      personalityPresenceConnectionOptions,
+    );
+    nextSnapshot.personalityPresenceComfortAround = normalizePersonalityPresenceList(
+      nextSnapshot.personalityPresenceComfortAround,
+      personalityPresenceComfortAroundOptions,
+    );
+    nextSnapshot.personalityPresencePromptResponses = normalizePersonalityPresencePromptResponses(
+      nextSnapshot.personalityPresencePromptResponses,
+    );
+    nextSnapshot.showPersonalityPresenceOnProfile = Boolean(
+      nextSnapshot.showPersonalityPresenceOnProfile,
+    );
+    nextSnapshot.showPersonalityPresencePromptsOnProfile = Boolean(
+      nextSnapshot.showPersonalityPresencePromptsOnProfile,
+    );
+    nextSnapshot.calendarMomentStates = normalizeCalendarMomentStates(
+      nextSnapshot.calendarMomentStates,
+    );
+    nextSnapshot.calendarMomentVisibility = normalizeCalendarMomentVisibility(
+      nextSnapshot.calendarMomentVisibility,
+    );
+    nextSnapshot.customCalendarMoments = normalizeCustomCalendarMoments(
+      nextSnapshot.customCalendarMoments,
+    );
+    nextSnapshot.transportationPreferences = normalizeSelectablePreferenceList(
+      nextSnapshot.transportationPreferences,
+      transportationPreferenceOptions,
+      defaultTransportationPreferences,
+    );
+    nextSnapshot.meetupContactPreferences = normalizeMeetupContactPreferences(
+      nextSnapshot.meetupContactPreferences,
+    );
+    nextSnapshot.locationComfortPreferences = normalizeSelectablePreferenceList(
+      nextSnapshot.locationComfortPreferences,
+      locationComfortPreferenceOptions,
+      defaultLocationComfortPreferences,
+    );
+    nextSnapshot.foodBeveragePreferenceIds = normalizeFoodBeveragePreferenceIds(
+      nextSnapshot.foodBeveragePreferenceIds,
+    );
+    nextSnapshot.interestPreferenceIds = normalizeInterestPreferenceIds(
+      nextSnapshot.interestPreferenceIds,
+    );
+    nextSnapshot.interestComfortTagsByInterest = normalizeInterestComfortTagsByInterest(
+      nextSnapshot.interestComfortTagsByInterest,
+      nextSnapshot.interestPreferenceIds,
+    );
 
     if (snapshot.ageConfirmed !== undefined) setAgeConfirmed(snapshot.ageConfirmed);
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
-    if (snapshot.accountPauseTimeline !== undefined) setAccountPauseTimeline(snapshot.accountPauseTimeline);
+    if (snapshot.accountPauseTimeline !== undefined)
+      setAccountPauseTimeline(snapshot.accountPauseTimeline);
     if (snapshot.age !== undefined) {
       const nextAge = normalizeAdultAge(snapshot.age);
       setAge(nextAge);
       nextSnapshot.age = nextAge;
     }
     if (snapshot.preferredAgeMin !== undefined || snapshot.preferredAgeMax !== undefined) {
-      const nextAgeRange = normalizePreferredAgeRange(snapshot.preferredAgeMin ?? preferredAgeMin, snapshot.preferredAgeMax ?? preferredAgeMax);
+      const nextAgeRange = normalizePreferredAgeRange(
+        snapshot.preferredAgeMin ?? preferredAgeMin,
+        snapshot.preferredAgeMax ?? preferredAgeMax,
+      );
       setPreferredAgeMin(nextAgeRange.min);
       setPreferredAgeMax(nextAgeRange.max);
       nextSnapshot.preferredAgeMin = nextAgeRange.min;
@@ -2600,13 +3781,15 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       nextSnapshot.lastNameDisplay = nextMode;
     }
     if (snapshot.showAge !== undefined) setShowAge(snapshot.showAge);
-    if (snapshot.showPreferredAgeRange !== undefined) setShowPreferredAgeRange(snapshot.showPreferredAgeRange);
+    if (snapshot.showPreferredAgeRange !== undefined)
+      setShowPreferredAgeRange(snapshot.showPreferredAgeRange);
     if (snapshot.showGender !== undefined) setShowGender(snapshot.showGender);
     if (snapshot.profilePhotoUri !== undefined) setProfilePhotoUri(snapshot.profilePhotoUri);
     if (snapshot.contactEmail !== undefined) setContactEmail(snapshot.contactEmail);
     if (snapshot.contactPhone !== undefined) setContactPhone(snapshot.contactPhone);
     if (snapshot.identitySelfieUri !== undefined) setIdentitySelfieUri(snapshot.identitySelfieUri);
-    if (snapshot.hasIdentityDocument !== undefined) setHasIdentityDocument(snapshot.hasIdentityDocument);
+    if (snapshot.hasIdentityDocument !== undefined)
+      setHasIdentityDocument(snapshot.hasIdentityDocument);
     if (snapshot.visibilityPreference !== undefined) {
       setVisibilityPreference(snapshot.visibilityPreference);
       if (snapshot.blurProfilePhoto === undefined) {
@@ -2617,12 +3800,20 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.privateProfile !== undefined) setPrivateProfile(snapshot.privateProfile);
     if (snapshot.blurProfilePhoto !== undefined) setBlurProfilePhoto(snapshot.blurProfilePhoto);
     if (snapshot.blurLevel !== undefined) setBlurLevel(snapshot.blurLevel);
+    if (snapshot.softRevealSuggestions !== undefined)
+      setSoftRevealSuggestions(snapshot.softRevealSuggestions);
+    if (snapshot.softRevealPace !== undefined) setSoftRevealPace(snapshot.softRevealPace);
+    if (snapshot.preferSoftRevealPeople !== undefined)
+      setPreferSoftRevealPeople(snapshot.preferSoftRevealPeople);
     if (snapshot.warmUpLowerBlur !== undefined) setWarmUpLowerBlur(snapshot.warmUpLowerBlur);
     if (snapshot.showSuburbArea !== undefined) setShowSuburbArea(snapshot.showSuburbArea);
     if (snapshot.showInterests !== undefined) setShowInterests(snapshot.showInterests);
-    if (snapshot.showComfortPreferences !== undefined) setShowComfortPreferences(snapshot.showComfortPreferences);
-    if (snapshot.minimalProfileView !== undefined) setMinimalProfileView(snapshot.minimalProfileView);
-    if (snapshot.comfortPreferences !== undefined) setComfortPreferences(snapshot.comfortPreferences);
+    if (snapshot.showComfortPreferences !== undefined)
+      setShowComfortPreferences(snapshot.showComfortPreferences);
+    if (snapshot.minimalProfileView !== undefined)
+      setMinimalProfileView(snapshot.minimalProfileView);
+    if (snapshot.comfortPreferences !== undefined)
+      setComfortPreferences(snapshot.comfortPreferences);
     if (snapshot.verificationLevel !== undefined) setVerificationLevel(snapshot.verificationLevel);
     if (snapshot.eventMemberships !== undefined) setEventMemberships(snapshot.eventMemberships);
     if (snapshot.blockedUserIds !== undefined) setBlockedUserIds(snapshot.blockedUserIds);
@@ -2631,87 +3822,246 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.savedPlaces !== undefined) setSavedPlaces(snapshot.savedPlaces);
     if (snapshot.pinnedEventIds !== undefined) setPinnedEventIds(snapshot.pinnedEventIds);
     if (snapshot.hiddenEventIds !== undefined) setHiddenEventIds(snapshot.hiddenEventIds);
-    if (snapshot.noiseLevelPreference !== undefined) setNoiseLevelPreference(snapshot.noiseLevelPreference);
-    if (snapshot.contactPreferences !== undefined) setContactPreferences(snapshot.contactPreferences.length ? snapshot.contactPreferences : ["Text"]);
-    if (snapshot.friendshipStylePreferences !== undefined) setFriendshipStylePreferences(nextSnapshot.friendshipStylePreferences ?? []);
-    if (snapshot.datingStylePreferences !== undefined) setDatingStylePreferences(nextSnapshot.datingStylePreferences ?? []);
-    if (snapshot.meetupRhythmPreferences !== undefined) setMeetupRhythmPreferences(nextSnapshot.meetupRhythmPreferences ?? []);
-    if (snapshot.availabilityTimingPreferences !== undefined) setAvailabilityTimingPreferences(nextSnapshot.availabilityTimingPreferences ?? []);
-    if (snapshot.socialDurationPreferences !== undefined) setSocialDurationPreferences(nextSnapshot.socialDurationPreferences ?? []);
-    if (snapshot.languageComfortPreferences !== undefined) setLanguageComfortPreferences(nextSnapshot.languageComfortPreferences ?? []);
-    if (snapshot.socialEnergyPreference !== undefined) setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
-    if (snapshot.communicationPreferences !== undefined) setCommunicationPreferences(normalizeCommunicationPreferences(snapshot.communicationPreferences));
-    if (snapshot.groupSizePreference !== undefined) setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
-    if (snapshot.photoRecordingComfortPreferences !== undefined) setPhotoRecordingComfortPreferences(normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences));
-    if (snapshot.physicalContactComfortPreferences !== undefined) setPhysicalContactComfortPreferences(normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences));
-    if (snapshot.backgroundStudyStatuses !== undefined) setBackgroundStudyStatuses(normalizeBackgroundPreferenceList(snapshot.backgroundStudyStatuses, backgroundStudyStatusOptions));
-    if (snapshot.backgroundStudyAreas !== undefined) setBackgroundStudyAreas(normalizeBackgroundPreferenceList(snapshot.backgroundStudyAreas, backgroundStudyAreaOptions));
-    if (snapshot.backgroundStudyVisibility !== undefined) setBackgroundStudyVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundStudyVisibility));
-    if (snapshot.backgroundWorkPreferences !== undefined) setBackgroundWorkPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundWorkPreferences, backgroundWorkOptions));
-    if (snapshot.backgroundWorkRhythms !== undefined) setBackgroundWorkRhythms(normalizeBackgroundPreferenceList(snapshot.backgroundWorkRhythms, backgroundWorkRhythmOptions));
-    if (snapshot.backgroundWorkVisibility !== undefined) setBackgroundWorkVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility));
-    if (snapshot.backgroundCommunityPreferences !== undefined) setBackgroundCommunityPreferences(normalizeBackgroundPreferenceList(snapshot.backgroundCommunityPreferences, backgroundCommunityOptions));
-    if (snapshot.backgroundCommunityVisibility !== undefined) setBackgroundCommunityVisibility(normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility));
-    if (snapshot.lifeContextCurrentStates !== undefined) setLifeContextCurrentStates(normalizeBackgroundPreferenceList(snapshot.lifeContextCurrentStates, lifeContextCurrentStateOptions));
-    if (snapshot.lifeContextCurrentVisibility !== undefined) setLifeContextCurrentVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextCurrentVisibility));
-    if (snapshot.lifeContextFields !== undefined) setLifeContextFields(normalizeBackgroundPreferenceList(snapshot.lifeContextFields, lifeContextFieldOptions));
-    if (snapshot.lifeContextFieldVisibility !== undefined) setLifeContextFieldVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextFieldVisibility));
-    if (snapshot.lifeContextLearningInterests !== undefined) setLifeContextLearningInterests(normalizeBackgroundPreferenceList(snapshot.lifeContextLearningInterests, lifeContextLearningOptions));
-    if (snapshot.lifeContextLearningVisibility !== undefined) setLifeContextLearningVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility));
-    if (snapshot.lifeComfortPreferences !== undefined) setLifeComfortPreferences(normalizeBackgroundPreferenceList(snapshot.lifeComfortPreferences, lifeComfortOptions));
-    if (snapshot.lifeComfortVisibility !== undefined) setLifeComfortVisibility(normalizeBackgroundVisibilityPreference(snapshot.lifeComfortVisibility));
-    if (snapshot.lifeContextLastUpdatedAt !== undefined || lifeContextTouched) setLifeContextLastUpdatedAt(nextSnapshot.lifeContextLastUpdatedAt ?? null);
-    if (snapshot.verifiedButPrivate !== undefined) setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
-    if (snapshot.personalityPresenceHair !== undefined) setPersonalityPresenceHair(nextSnapshot.personalityPresenceHair ?? null);
-    if (snapshot.personalityPresenceHairCues !== undefined) setPersonalityPresenceHairCues(nextSnapshot.personalityPresenceHairCues ?? []);
-    if (snapshot.personalityPresenceEyes !== undefined) setPersonalityPresenceEyes(nextSnapshot.personalityPresenceEyes ?? null);
-    if (snapshot.personalityPresenceFacialHair !== undefined) setPersonalityPresenceFacialHair(nextSnapshot.personalityPresenceFacialHair ?? null);
-    if (snapshot.personalityPresenceStyle !== undefined) setPersonalityPresenceStyle(nextSnapshot.personalityPresenceStyle ?? null);
-    if (snapshot.personalityPresencePresentation !== undefined) setPersonalityPresencePresentation(nextSnapshot.personalityPresencePresentation ?? null);
-    if (snapshot.personalityPresencePersonalStyles !== undefined) setPersonalityPresencePersonalStyles(nextSnapshot.personalityPresencePersonalStyles ?? []);
-    if (snapshot.personalityPresenceAccessories !== undefined) setPersonalityPresenceAccessories(nextSnapshot.personalityPresenceAccessories ?? []);
-    if (snapshot.personalityPresenceGrooming !== undefined) setPersonalityPresenceGrooming(nextSnapshot.personalityPresenceGrooming ?? []);
-    if (snapshot.personalityPresenceVoicePresence !== undefined) setPersonalityPresenceVoicePresence(nextSnapshot.personalityPresenceVoicePresence ?? []);
-    if (snapshot.personalityPresenceSocialStyles !== undefined) setPersonalityPresenceSocialStyles(nextSnapshot.personalityPresenceSocialStyles ?? []);
-    if (snapshot.personalityPresenceConnectionPreferences !== undefined) setPersonalityPresenceConnectionPreferences(nextSnapshot.personalityPresenceConnectionPreferences ?? []);
-    if (snapshot.personalityPresenceComfortAround !== undefined) setPersonalityPresenceComfortAround(nextSnapshot.personalityPresenceComfortAround ?? []);
-    if (snapshot.personalityPresencePromptResponses !== undefined) setPersonalityPresencePromptResponses(nextSnapshot.personalityPresencePromptResponses ?? []);
-    if (snapshot.showPersonalityPresenceOnProfile !== undefined) setShowPersonalityPresenceOnProfile(Boolean(snapshot.showPersonalityPresenceOnProfile));
-    if (snapshot.showPersonalityPresencePromptsOnProfile !== undefined) setShowPersonalityPresencePromptsOnProfile(Boolean(snapshot.showPersonalityPresencePromptsOnProfile));
-    if (snapshot.calendarMomentStates !== undefined) setCalendarMomentStates(normalizeCalendarMomentStates(snapshot.calendarMomentStates));
-    if (snapshot.calendarMomentVisibility !== undefined) setCalendarMomentVisibility(normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility));
-    if (snapshot.customCalendarMoments !== undefined) setCustomCalendarMoments(normalizeCustomCalendarMoments(snapshot.customCalendarMoments));
-    if (snapshot.transportationMethod !== undefined) setTransportationMethod(snapshot.transportationMethod);
-    if (snapshot.transportationPreferences !== undefined) setTransportationPreferences(normalizeSelectablePreferenceList(snapshot.transportationPreferences, transportationPreferenceOptions, defaultTransportationPreferences));
-    if (snapshot.meetupContactPreferences !== undefined) setMeetupContactPreferences(normalizeMeetupContactPreferences(snapshot.meetupContactPreferences));
-    if (snapshot.locationComfortPreferences !== undefined) setLocationComfortPreferences(normalizeSelectablePreferenceList(snapshot.locationComfortPreferences, locationComfortPreferenceOptions, defaultLocationComfortPreferences));
-    if (snapshot.dietaryPreferences !== undefined) setDietaryPreferences(snapshot.dietaryPreferences);
-    if (snapshot.foodBeveragePreferenceIds !== undefined) setFoodBeveragePreferenceIds(normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds));
+    if (snapshot.noiseLevelPreference !== undefined)
+      setNoiseLevelPreference(snapshot.noiseLevelPreference);
+    if (snapshot.contactPreferences !== undefined)
+      setContactPreferences(
+        snapshot.contactPreferences.length ? snapshot.contactPreferences : ["Text"],
+      );
+    if (snapshot.friendshipStylePreferences !== undefined)
+      setFriendshipStylePreferences(nextSnapshot.friendshipStylePreferences ?? []);
+    if (snapshot.datingStylePreferences !== undefined)
+      setDatingStylePreferences(nextSnapshot.datingStylePreferences ?? []);
+    if (snapshot.meetupRhythmPreferences !== undefined)
+      setMeetupRhythmPreferences(nextSnapshot.meetupRhythmPreferences ?? []);
+    if (snapshot.availabilityTimingPreferences !== undefined)
+      setAvailabilityTimingPreferences(nextSnapshot.availabilityTimingPreferences ?? []);
+    if (snapshot.socialDurationPreferences !== undefined)
+      setSocialDurationPreferences(nextSnapshot.socialDurationPreferences ?? []);
+    if (snapshot.languageComfortPreferences !== undefined)
+      setLanguageComfortPreferences(nextSnapshot.languageComfortPreferences ?? []);
+    if (snapshot.socialEnergyPreference !== undefined)
+      setSocialEnergyPreference(normalizeSocialEnergyPreference(snapshot.socialEnergyPreference));
+    if (snapshot.communicationPreferences !== undefined)
+      setCommunicationPreferences(
+        normalizeCommunicationPreferences(snapshot.communicationPreferences),
+      );
+    if (snapshot.groupSizePreference !== undefined)
+      setGroupSizePreference(normalizeGroupSizePreference(snapshot.groupSizePreference));
+    if (snapshot.photoRecordingComfortPreferences !== undefined)
+      setPhotoRecordingComfortPreferences(
+        normalizePhotoRecordingComfortPreferences(snapshot.photoRecordingComfortPreferences),
+      );
+    if (snapshot.physicalContactComfortPreferences !== undefined)
+      setPhysicalContactComfortPreferences(
+        normalizePhysicalContactComfortPreferences(snapshot.physicalContactComfortPreferences),
+      );
+    if (snapshot.backgroundStudyStatuses !== undefined)
+      setBackgroundStudyStatuses(
+        normalizeBackgroundPreferenceList(
+          snapshot.backgroundStudyStatuses,
+          backgroundStudyStatusOptions,
+        ),
+      );
+    if (snapshot.backgroundStudyAreas !== undefined)
+      setBackgroundStudyAreas(
+        normalizeBackgroundPreferenceList(
+          snapshot.backgroundStudyAreas,
+          backgroundStudyAreaOptions,
+        ),
+      );
+    if (snapshot.backgroundStudyVisibility !== undefined)
+      setBackgroundStudyVisibility(
+        normalizeBackgroundVisibilityPreference(snapshot.backgroundStudyVisibility),
+      );
+    if (snapshot.backgroundWorkPreferences !== undefined)
+      setBackgroundWorkPreferences(
+        normalizeBackgroundPreferenceList(
+          snapshot.backgroundWorkPreferences,
+          backgroundWorkOptions,
+        ),
+      );
+    if (snapshot.backgroundWorkRhythms !== undefined)
+      setBackgroundWorkRhythms(
+        normalizeBackgroundPreferenceList(
+          snapshot.backgroundWorkRhythms,
+          backgroundWorkRhythmOptions,
+        ),
+      );
+    if (snapshot.backgroundWorkVisibility !== undefined)
+      setBackgroundWorkVisibility(
+        normalizeBackgroundVisibilityPreference(snapshot.backgroundWorkVisibility),
+      );
+    if (snapshot.backgroundCommunityPreferences !== undefined)
+      setBackgroundCommunityPreferences(
+        normalizeBackgroundPreferenceList(
+          snapshot.backgroundCommunityPreferences,
+          backgroundCommunityOptions,
+        ),
+      );
+    if (snapshot.backgroundCommunityVisibility !== undefined)
+      setBackgroundCommunityVisibility(
+        normalizeBackgroundVisibilityPreference(snapshot.backgroundCommunityVisibility),
+      );
+    if (snapshot.lifeContextCurrentStates !== undefined)
+      setLifeContextCurrentStates(
+        normalizeBackgroundPreferenceList(
+          snapshot.lifeContextCurrentStates,
+          lifeContextCurrentStateOptions,
+        ),
+      );
+    if (snapshot.lifeContextCurrentVisibility !== undefined)
+      setLifeContextCurrentVisibility(
+        normalizeBackgroundVisibilityPreference(snapshot.lifeContextCurrentVisibility),
+      );
+    if (snapshot.lifeContextFields !== undefined)
+      setLifeContextFields(
+        normalizeBackgroundPreferenceList(snapshot.lifeContextFields, lifeContextFieldOptions),
+      );
+    if (snapshot.lifeContextFieldVisibility !== undefined)
+      setLifeContextFieldVisibility(
+        normalizeBackgroundVisibilityPreference(snapshot.lifeContextFieldVisibility),
+      );
+    if (snapshot.lifeContextLearningInterests !== undefined)
+      setLifeContextLearningInterests(
+        normalizeBackgroundPreferenceList(
+          snapshot.lifeContextLearningInterests,
+          lifeContextLearningOptions,
+        ),
+      );
+    if (snapshot.lifeContextLearningVisibility !== undefined)
+      setLifeContextLearningVisibility(
+        normalizeBackgroundVisibilityPreference(snapshot.lifeContextLearningVisibility),
+      );
+    if (snapshot.lifeComfortPreferences !== undefined)
+      setLifeComfortPreferences(
+        normalizeBackgroundPreferenceList(snapshot.lifeComfortPreferences, lifeComfortOptions),
+      );
+    if (snapshot.lifeComfortVisibility !== undefined)
+      setLifeComfortVisibility(
+        normalizeBackgroundVisibilityPreference(snapshot.lifeComfortVisibility),
+      );
+    if (snapshot.lifeContextLastUpdatedAt !== undefined || lifeContextTouched)
+      setLifeContextLastUpdatedAt(nextSnapshot.lifeContextLastUpdatedAt ?? null);
+    if (snapshot.verifiedButPrivate !== undefined)
+      setVerifiedButPrivate(Boolean(snapshot.verifiedButPrivate));
+    if (snapshot.personalityPresenceHair !== undefined)
+      setPersonalityPresenceHair(nextSnapshot.personalityPresenceHair ?? null);
+    if (snapshot.personalityPresenceHairCues !== undefined)
+      setPersonalityPresenceHairCues(nextSnapshot.personalityPresenceHairCues ?? []);
+    if (snapshot.personalityPresenceEyes !== undefined)
+      setPersonalityPresenceEyes(nextSnapshot.personalityPresenceEyes ?? null);
+    if (snapshot.personalityPresenceFacialHair !== undefined)
+      setPersonalityPresenceFacialHair(nextSnapshot.personalityPresenceFacialHair ?? null);
+    if (snapshot.personalityPresenceStyle !== undefined)
+      setPersonalityPresenceStyle(nextSnapshot.personalityPresenceStyle ?? null);
+    if (snapshot.personalityPresencePresentation !== undefined)
+      setPersonalityPresencePresentation(nextSnapshot.personalityPresencePresentation ?? null);
+    if (snapshot.personalityPresencePersonalStyles !== undefined)
+      setPersonalityPresencePersonalStyles(nextSnapshot.personalityPresencePersonalStyles ?? []);
+    if (snapshot.personalityPresenceAccessories !== undefined)
+      setPersonalityPresenceAccessories(nextSnapshot.personalityPresenceAccessories ?? []);
+    if (snapshot.personalityPresenceGrooming !== undefined)
+      setPersonalityPresenceGrooming(nextSnapshot.personalityPresenceGrooming ?? []);
+    if (snapshot.personalityPresenceVoicePresence !== undefined)
+      setPersonalityPresenceVoicePresence(nextSnapshot.personalityPresenceVoicePresence ?? []);
+    if (snapshot.personalityPresenceSocialStyles !== undefined)
+      setPersonalityPresenceSocialStyles(nextSnapshot.personalityPresenceSocialStyles ?? []);
+    if (snapshot.personalityPresenceConnectionPreferences !== undefined)
+      setPersonalityPresenceConnectionPreferences(
+        nextSnapshot.personalityPresenceConnectionPreferences ?? [],
+      );
+    if (snapshot.personalityPresenceComfortAround !== undefined)
+      setPersonalityPresenceComfortAround(nextSnapshot.personalityPresenceComfortAround ?? []);
+    if (snapshot.personalityPresencePromptResponses !== undefined)
+      setPersonalityPresencePromptResponses(nextSnapshot.personalityPresencePromptResponses ?? []);
+    if (snapshot.showPersonalityPresenceOnProfile !== undefined)
+      setShowPersonalityPresenceOnProfile(Boolean(snapshot.showPersonalityPresenceOnProfile));
+    if (snapshot.showPersonalityPresencePromptsOnProfile !== undefined)
+      setShowPersonalityPresencePromptsOnProfile(
+        Boolean(snapshot.showPersonalityPresencePromptsOnProfile),
+      );
+    if (snapshot.calendarMomentStates !== undefined)
+      setCalendarMomentStates(normalizeCalendarMomentStates(snapshot.calendarMomentStates));
+    if (snapshot.calendarMomentVisibility !== undefined)
+      setCalendarMomentVisibility(
+        normalizeCalendarMomentVisibility(snapshot.calendarMomentVisibility),
+      );
+    if (snapshot.customCalendarMoments !== undefined)
+      setCustomCalendarMoments(normalizeCustomCalendarMoments(snapshot.customCalendarMoments));
+    if (snapshot.transportationMethod !== undefined)
+      setTransportationMethod(snapshot.transportationMethod);
+    if (snapshot.transportationPreferences !== undefined)
+      setTransportationPreferences(
+        normalizeSelectablePreferenceList(
+          snapshot.transportationPreferences,
+          transportationPreferenceOptions,
+          defaultTransportationPreferences,
+        ),
+      );
+    if (snapshot.meetupContactPreferences !== undefined)
+      setMeetupContactPreferences(
+        normalizeMeetupContactPreferences(snapshot.meetupContactPreferences),
+      );
+    if (snapshot.locationComfortPreferences !== undefined)
+      setLocationComfortPreferences(
+        normalizeSelectablePreferenceList(
+          snapshot.locationComfortPreferences,
+          locationComfortPreferenceOptions,
+          defaultLocationComfortPreferences,
+        ),
+      );
+    if (snapshot.dietaryPreferences !== undefined)
+      setDietaryPreferences(snapshot.dietaryPreferences);
+    if (snapshot.foodBeveragePreferenceIds !== undefined)
+      setFoodBeveragePreferenceIds(
+        normalizeFoodBeveragePreferenceIds(snapshot.foodBeveragePreferenceIds),
+      );
     if (snapshot.hobbiesInterests !== undefined) setHobbiesInterests(snapshot.hobbiesInterests);
     if (snapshot.interestPreferenceIds !== undefined) {
       const nextInterestIds = normalizeInterestPreferenceIds(snapshot.interestPreferenceIds);
       setInterestPreferenceIds(nextInterestIds);
-      setInterestComfortTagsByInterest(normalizeInterestComfortTagsByInterest(nextSnapshot.interestComfortTagsByInterest, nextInterestIds));
+      setInterestComfortTagsByInterest(
+        normalizeInterestComfortTagsByInterest(
+          nextSnapshot.interestComfortTagsByInterest,
+          nextInterestIds,
+        ),
+      );
     } else if (snapshot.interestComfortTagsByInterest !== undefined) {
-      setInterestComfortTagsByInterest(normalizeInterestComfortTagsByInterest(snapshot.interestComfortTagsByInterest, nextSnapshot.interestPreferenceIds));
+      setInterestComfortTagsByInterest(
+        normalizeInterestComfortTagsByInterest(
+          snapshot.interestComfortTagsByInterest,
+          nextSnapshot.interestPreferenceIds,
+        ),
+      );
     }
-    if (snapshot.profileShortcutLayout !== undefined) setProfileShortcutLayout(snapshot.profileShortcutLayout);
-    if (snapshot.profileWidthPreference !== undefined) setProfileWidthPreference(snapshot.profileWidthPreference);
-    if (snapshot.settingsPrivacyMode !== undefined) setSettingsPrivacyMode(snapshot.settingsPrivacyMode);
-    if (snapshot.userPreferenceTextMode !== undefined) setUserPreferenceTextMode(snapshot.userPreferenceTextMode);
-    if (snapshot.emojiDisplayMode !== undefined) setEmojiDisplayMode(normalizeEmojiDisplayMode(snapshot.emojiDisplayMode));
-    if (snapshot.showProfileControlsShortcut !== undefined) setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut);
-    if (snapshot.showAlertsSettingsShortcut !== undefined) setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut);
+    if (snapshot.profileShortcutLayout !== undefined)
+      setProfileShortcutLayout(snapshot.profileShortcutLayout);
+    if (snapshot.profileWidthPreference !== undefined)
+      setProfileWidthPreference(snapshot.profileWidthPreference);
+    if (snapshot.settingsPrivacyMode !== undefined)
+      setSettingsPrivacyMode(snapshot.settingsPrivacyMode);
+    if (snapshot.userPreferenceTextMode !== undefined)
+      setUserPreferenceTextMode(snapshot.userPreferenceTextMode);
+    if (snapshot.emojiDisplayMode !== undefined)
+      setEmojiDisplayMode(normalizeEmojiDisplayMode(snapshot.emojiDisplayMode));
+    if (snapshot.showProfileControlsShortcut !== undefined)
+      setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut);
+    if (snapshot.showAlertsSettingsShortcut !== undefined)
+      setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut);
     if (snapshot.batterySaver !== undefined) setBatterySaver(snapshot.batterySaver);
     if (snapshot.lowLightMode !== undefined) setLowLightMode(snapshot.lowLightMode);
     if (snapshot.lowLightLevel !== undefined) setLowLightLevel(snapshot.lowLightLevel);
     if (snapshot.homeViewMode !== undefined) setHomeViewMode(snapshot.homeViewMode);
     if (snapshot.homeNearbyOnly !== undefined) setHomeNearbyOnly(snapshot.homeNearbyOnly);
-    if (snapshot.homeSmallGroupsOnly !== undefined) setHomeSmallGroupsOnly(snapshot.homeSmallGroupsOnly);
-    if (snapshot.homeWeatherSafeOnly !== undefined) setHomeWeatherSafeOnly(snapshot.homeWeatherSafeOnly);
+    if (snapshot.homeSmallGroupsOnly !== undefined)
+      setHomeSmallGroupsOnly(snapshot.homeSmallGroupsOnly);
+    if (snapshot.homeWeatherSafeOnly !== undefined)
+      setHomeWeatherSafeOnly(snapshot.homeWeatherSafeOnly);
     if (snapshot.homeEventLayout !== undefined) setHomeEventLayout(snapshot.homeEventLayout);
     if (snapshot.homeLayoutDensity !== undefined) setHomeLayoutDensity(snapshot.homeLayoutDensity);
-    if (snapshot.homeFitToScreen !== undefined) setHomeFitToScreen(Boolean(snapshot.homeFitToScreen));
+    if (snapshot.homeFitToScreen !== undefined)
+      setHomeFitToScreen(Boolean(snapshot.homeFitToScreen));
     if (snapshot.homeHeaderControlsDensity !== undefined) {
       const nextDensity = normalizeHomeHeaderControlsDensity(snapshot.homeHeaderControlsDensity);
       setHomeHeaderControlsDensity(nextDensity);
@@ -2733,24 +4083,44 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       setHomeSectionOrder(nextOrder);
       nextSnapshot.homeSectionOrder = nextOrder;
     }
-    if (snapshot.suggestNightModeInEvenings !== undefined) setSuggestNightModeInEvenings(snapshot.suggestNightModeInEvenings);
-    if (snapshot.notificationSnoozed !== undefined) setNotificationSnoozed(snapshot.notificationSnoozed);
-    if (snapshot.notificationSnoozePreset !== undefined) setNotificationSnoozePreset(snapshot.notificationSnoozePreset);
-    if (snapshot.appLanguage !== undefined) setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
-    if (snapshot.translationLanguage !== undefined) setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
-    if (snapshot.brandThemeId !== undefined) setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
+    if (snapshot.suggestNightModeInEvenings !== undefined)
+      setSuggestNightModeInEvenings(snapshot.suggestNightModeInEvenings);
+    if (snapshot.notificationSnoozed !== undefined)
+      setNotificationSnoozed(snapshot.notificationSnoozed);
+    if (snapshot.notificationSnoozePreset !== undefined)
+      setNotificationSnoozePreset(snapshot.notificationSnoozePreset);
+    if (snapshot.appLanguage !== undefined)
+      setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
+    if (snapshot.translationLanguage !== undefined)
+      setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
+    if (snapshot.brandThemeId !== undefined)
+      setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
     if (snapshot.timezone !== undefined) setTimezone(normalizeTimezoneSetting(snapshot.timezone));
-    if (snapshot.timeContextMode !== undefined) setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
-    if (snapshot.dateFormatPreference !== undefined) setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
+    if (snapshot.timeContextMode !== undefined)
+      setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
+    if (snapshot.dateFormatPreference !== undefined)
+      setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
     if (snapshot.showWeekday !== undefined) setShowWeekday(Boolean(snapshot.showWeekday));
-    if (snapshot.timeFormatPreference !== undefined) setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
-    if (snapshot.clockDisplayStyle !== undefined) setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
-    if (snapshot.showDigitalTimeWithAnalog !== undefined) setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
-    if (snapshot.temperatureUnitPreference !== undefined) setTemperatureUnitPreference(normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference));
-    if (snapshot.distanceUnitPreference !== undefined) setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
-    if (snapshot.currencyDisplayPreference !== undefined) setCurrencyDisplayPreference(normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference));
-    if (snapshot.dayNightModePreference !== undefined) setDayNightModePreference(normalizeDayNightModePreference(snapshot.dayNightModePreference));
-    if (snapshot.cardOutlineStyle !== undefined) setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
+    if (snapshot.timeFormatPreference !== undefined)
+      setTimeFormatPreference(normalizeTimeFormatPreference(snapshot.timeFormatPreference));
+    if (snapshot.clockDisplayStyle !== undefined)
+      setClockDisplayStyle(normalizeClockDisplayStyle(snapshot.clockDisplayStyle));
+    if (snapshot.showDigitalTimeWithAnalog !== undefined)
+      setShowDigitalTimeWithAnalog(Boolean(snapshot.showDigitalTimeWithAnalog));
+    if (snapshot.temperatureUnitPreference !== undefined)
+      setTemperatureUnitPreference(
+        normalizeTemperatureUnitPreference(snapshot.temperatureUnitPreference),
+      );
+    if (snapshot.distanceUnitPreference !== undefined)
+      setDistanceUnitPreference(normalizeDistanceUnitPreference(snapshot.distanceUnitPreference));
+    if (snapshot.currencyDisplayPreference !== undefined)
+      setCurrencyDisplayPreference(
+        normalizeCurrencyDisplayPreference(snapshot.currencyDisplayPreference),
+      );
+    if (snapshot.dayNightModePreference !== undefined)
+      setDayNightModePreference(normalizeDayNightModePreference(snapshot.dayNightModePreference));
+    if (snapshot.cardOutlineStyle !== undefined)
+      setCardOutlineStyle(normalizeCardOutlineStyle(snapshot.cardOutlineStyle));
 
     try {
       await AsyncStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(nextSnapshot));
@@ -2809,7 +4179,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     async function fetchLiveWeather() {
       try {
         const response = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.timeZone)}&forecast_days=1`
+          `https://api.open-meteo.com/v1/forecast?latitude=${timezone.latitude}&longitude=${timezone.longitude}&current=temperature_2m&hourly=precipitation_probability&timezone=${encodeURIComponent(timezone.timeZone)}&forecast_days=1`,
         );
 
         if (!response.ok) {
@@ -2817,9 +4187,15 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         }
 
         const data = await response.json();
-        const currentHourIndex = data.hourly.time?.findIndex((time: string) => time === data.current.time) ?? 0;
-        const rainChance = data.hourly.precipitation_probability?.[currentHourIndex >= 0 ? currentHourIndex : 0] ?? null;
-        const temperature = typeof data.current.temperature_2m === "number" ? Math.round(data.current.temperature_2m) : null;
+        const currentHourIndex =
+          data.hourly.time?.findIndex((time: string) => time === data.current.time) ?? 0;
+        const rainChance =
+          data.hourly.precipitation_probability?.[currentHourIndex >= 0 ? currentHourIndex : 0] ??
+          null;
+        const temperature =
+          typeof data.current.temperature_2m === "number"
+            ? Math.round(data.current.temperature_2m)
+            : null;
         const nextWeather: WeatherSnapshot = {
           temperature,
           rainChance,
@@ -2832,15 +4208,22 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
 
         setWeather(nextWeather);
 
-        const temperatureCopy = nextWeather.temperature === null ? "temperature unavailable" : `${nextWeather.temperature}C`;
-        const rainCopy = nextWeather.rainChance === null ? "rain chance unavailable" : `${nextWeather.rainChance}% rain chance`;
-        const detail = nextWeather.category === "rain"
-          ? "Rain is likely, so outdoor plans may need an indoor fallback."
-          : nextWeather.category === "showers"
-            ? "Showers are possible; keep an indoor backup nearby."
-            : nextWeather.category === "warm"
-              ? "It is warming up; shade and water-friendly meetups are best."
-              : "No major weather shift for nearby plans right now.";
+        const temperatureCopy =
+          nextWeather.temperature === null
+            ? "temperature unavailable"
+            : `${nextWeather.temperature}C`;
+        const rainCopy =
+          nextWeather.rainChance === null
+            ? "rain chance unavailable"
+            : `${nextWeather.rainChance}% rain chance`;
+        const detail =
+          nextWeather.category === "rain"
+            ? "Rain is likely, so outdoor plans may need an indoor fallback."
+            : nextWeather.category === "showers"
+              ? "Showers are possible; keep an indoor backup nearby."
+              : nextWeather.category === "warm"
+                ? "It is warming up; shade and water-friendly meetups are best."
+                : "No major weather shift for nearby plans right now.";
 
         setLiveWeatherAlert({
           icon: changed ? "!" : "~",
@@ -2947,6 +4330,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setPrivateProfile,
         blurLevel,
         setBlurLevel,
+        softRevealSuggestions,
+        setSoftRevealSuggestions,
+        softRevealPace,
+        setSoftRevealPace,
+        preferSoftRevealPeople,
+        setPreferSoftRevealPeople,
         warmUpLowerBlur,
         setWarmUpLowerBlur,
         showSuburbArea,

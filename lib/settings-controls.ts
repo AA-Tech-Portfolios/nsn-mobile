@@ -13,6 +13,10 @@ export type SettingsCopySource = {
   revealAfterRsvpCopy: string;
   friendsOfFriendsOnly: string;
   friendsOfFriendsOnlyCopy: string;
+  softRevealSuggestions?: string;
+  softRevealSuggestionsCopy?: string;
+  preferSoftRevealPeople?: string;
+  preferSoftRevealPeopleCopy?: string;
   meetupReminders?: string;
   meetupRemindersCopy?: string;
   weatherAlerts?: string;
@@ -57,6 +61,8 @@ export type SettingsControlState = {
   sameAgeGroupsOnly: boolean;
   revealAfterRsvp: boolean;
   friendsOfFriendsOnly: boolean;
+  softRevealSuggestions: boolean;
+  preferSoftRevealPeople: boolean;
   meetupReminders: boolean;
   weatherAlerts: boolean;
   chatNotifications: boolean;
@@ -82,6 +88,8 @@ export type SettingsControlActions = {
   setSameAgeGroupsOnly: (value: boolean) => void;
   setRevealAfterRsvp: (value: boolean) => void;
   setFriendsOfFriendsOnly: (value: boolean) => void;
+  setSoftRevealSuggestions: (value: boolean) => void;
+  setPreferSoftRevealPeople: (value: boolean) => void;
   setMeetupReminders: (value: boolean) => void;
   setWeatherAlerts: (value: boolean) => void;
   setChatNotifications: (value: boolean) => void;
@@ -174,6 +182,20 @@ export function createSettingsToggleSections({
         value: state.friendsOfFriendsOnly,
         onValueChange: actions.setFriendsOfFriendsOnly,
       },
+      {
+        key: "softRevealSuggestions",
+        label: copy.softRevealSuggestions ?? englishCopy.softRevealSuggestions ?? "",
+        copy: copy.softRevealSuggestionsCopy ?? englishCopy.softRevealSuggestionsCopy ?? "",
+        value: state.softRevealSuggestions,
+        onValueChange: actions.setSoftRevealSuggestions,
+      },
+      {
+        key: "preferSoftRevealPeople",
+        label: copy.preferSoftRevealPeople ?? englishCopy.preferSoftRevealPeople ?? "",
+        copy: copy.preferSoftRevealPeopleCopy ?? englishCopy.preferSoftRevealPeopleCopy ?? "",
+        value: state.preferSoftRevealPeople,
+        onValueChange: actions.setPreferSoftRevealPeople,
+      },
     ],
     notificationRows: [
       {
@@ -214,7 +236,8 @@ export function createSettingsToggleSections({
       {
         key: "suggestNightModeInEvenings",
         label: copy.suggestNightModeInEvenings ?? englishCopy.suggestNightModeInEvenings ?? "",
-        copy: copy.suggestNightModeInEveningsCopy ?? englishCopy.suggestNightModeInEveningsCopy ?? "",
+        copy:
+          copy.suggestNightModeInEveningsCopy ?? englishCopy.suggestNightModeInEveningsCopy ?? "",
         value: state.suggestNightModeInEvenings,
         onValueChange: actions.setSuggestNightModeInEvenings,
       },
@@ -302,11 +325,17 @@ export function createSettingsToggleSections({
 
 export type SettingsDropdownName = "app" | "translation" | "palette";
 
-export function toggleSettingsDropdown(current: SettingsDropdownName | null, target: SettingsDropdownName) {
+export function toggleSettingsDropdown(
+  current: SettingsDropdownName | null,
+  target: SettingsDropdownName,
+) {
   return current === target ? null : target;
 }
 
-export function selectSettingsPalette(palette: AppPalette, setAppPalette: (value: AppPalette) => void) {
+export function selectSettingsPalette(
+  palette: AppPalette,
+  setAppPalette: (value: AppPalette) => void,
+) {
   setAppPalette(palette);
   return null;
 }

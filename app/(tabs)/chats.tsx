@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ChatProfilePreviewSheet } from "@/components/chat-profile-preview-sheet";
@@ -8,7 +16,13 @@ import { ProfileAvatar } from "@/components/profile-avatar";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { allEvents, eventChatSeeds, nsnColors, type ChatMessage, type EventItem } from "@/lib/nsn-data";
+import {
+  allEvents,
+  eventChatSeeds,
+  nsnColors,
+  type ChatMessage,
+  type EventItem,
+} from "@/lib/nsn-data";
 import { getChatProfilePreview } from "@/lib/chat-profile-preview";
 import { getGuideTipForSurface } from "@/lib/guides-and-tips";
 import {
@@ -38,6 +52,15 @@ import {
   type SafetyReportReason,
   type SafetyReportRoute,
 } from "@/lib/softhello-mvp";
+import {
+  createSoftRevealRequest,
+  getNextSoftRevealLevel,
+  getSoftRevealMilestonePrompt,
+  getSoftRevealIndicator,
+  respondToSoftRevealRequest,
+  type SoftRevealBlurLevel,
+  type SoftRevealRequest,
+} from "@/lib/soft-reveal";
 import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations";
 
 type SoftExitChoice = "stepBack" | "skipToday";
@@ -124,28 +147,59 @@ type ChatTarget =
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
 const escalationReportReasons: SafetyReportReasonOption[] = [
-  { reason: "Safety threat", copy: "Immediate risk, coercion, stalking, threats, or unsafe meetup behaviour." },
-  { reason: "Unsafe behaviour", copy: "Unsafe in-person conduct, ignoring safety plans, or making the meetup feel physically unsafe." },
-  { reason: "Harassment", copy: "Repeated unwanted contact, intimidation, sexual pressure, or abusive messages." },
+  {
+    reason: "Safety threat",
+    copy: "Immediate risk, coercion, stalking, threats, or unsafe meetup behaviour.",
+  },
+  {
+    reason: "Unsafe behaviour",
+    copy: "Unsafe in-person conduct, ignoring safety plans, or making the meetup feel physically unsafe.",
+  },
+  {
+    reason: "Harassment",
+    copy: "Repeated unwanted contact, intimidation, sexual pressure, or abusive messages.",
+  },
   { reason: "Underage risk", copy: "Someone may be under 18 or trying to involve a minor." },
-  { reason: "Impersonation", copy: "Pretending to be another person, using stolen details, or misleading identity." },
+  {
+    reason: "Impersonation",
+    copy: "Pretending to be another person, using stolen details, or misleading identity.",
+  },
   { reason: "Fraud", copy: "Money requests, scams, phishing, blackmail, or suspicious links." },
 ];
 
 const otherReportReasons: SafetyReportReasonOption[] = [
-  { reason: "Fake identity", copy: "Identity details, voice, images, or profile behaviour may be misleading or synthetic." },
+  {
+    reason: "Fake identity",
+    copy: "Identity details, voice, images, or profile behaviour may be misleading or synthetic.",
+  },
   { reason: "Fake profile", copy: "Profile details, photos, or behaviour do not seem genuine." },
   {
     reason: "Possible account compromise",
     copy: "Use this if an account suddenly seems unusual, sends suspicious links, changes tone, or may no longer be controlled by the original person.",
-    reviewCopy: "We'll review this calmly and may apply temporary protections while checking whether the account is secure.",
+    reviewCopy:
+      "We'll review this calmly and may apply temporary protections while checking whether the account is secure.",
   },
   { reason: "Spam", copy: "Promotional messages, repetitive outreach, or unrelated links." },
-  { reason: "Spam/bot behaviour", copy: "Bot-like replies, throwaway account patterns, suspicious links, or mass outreach." },
-  { reason: "Boundary violation", copy: "Ignoring stated boundaries, photo consent, privacy preferences, or contact limits." },
-  { reason: "No-show pattern", copy: "Repeatedly joining plans and not attending in a way that affects small groups." },
-  { reason: "Hate or discrimination", copy: "Abuse targeting identity, culture, religion, disability, gender, or sexuality." },
-  { reason: "Privacy concern", copy: "Sharing private information, screenshots, or personal details without consent." },
+  {
+    reason: "Spam/bot behaviour",
+    copy: "Bot-like replies, throwaway account patterns, suspicious links, or mass outreach.",
+  },
+  {
+    reason: "Boundary violation",
+    copy: "Ignoring stated boundaries, photo consent, privacy preferences, or contact limits.",
+  },
+  {
+    reason: "No-show pattern",
+    copy: "Repeatedly joining plans and not attending in a way that affects small groups.",
+  },
+  {
+    reason: "Hate or discrimination",
+    copy: "Abuse targeting identity, culture, religion, disability, gender, or sexuality.",
+  },
+  {
+    reason: "Privacy concern",
+    copy: "Sharing private information, screenshots, or personal details without consent.",
+  },
   { reason: "Other", copy: "Something else feels wrong and should be reviewed." },
 ];
 
@@ -158,21 +212,72 @@ const reportTargets: ReportTarget[] = [
 
 const memberBlockTargets = reportTargets.filter((target) => target.role === "member");
 const directChatTargets = [
-  { id: "person-maya-host", personId: "maya-host", name: "Maya", role: "host", emoji: "M", tone: "#174667" },
-  { id: "person-nsn-tester", personId: "nsn-tester", name: "NSN Tester", role: "member", emoji: "N", tone: "#1590C9" },
-  { id: "person-jordan-member", personId: "jordan-member", name: "Jordan", role: "member", emoji: "J", tone: "#0F5B7C" },
+  {
+    id: "person-maya-host",
+    personId: "maya-host",
+    name: "Maya",
+    role: "host",
+    emoji: "M",
+    tone: "#174667",
+  },
+  {
+    id: "person-nsn-tester",
+    personId: "nsn-tester",
+    name: "NSN Tester",
+    role: "member",
+    emoji: "N",
+    tone: "#1590C9",
+  },
+  {
+    id: "person-jordan-member",
+    personId: "jordan-member",
+    name: "Jordan",
+    role: "member",
+    emoji: "J",
+    tone: "#0F5B7C",
+  },
 ] as const;
 
 const directChatSeedByPerson: Record<string, ChatMessage[]> = {
   "maya-host": [
-    { id: "maya-direct-1", personId: "maya-host", name: "Maya", avatar: "M", text: "Hi, happy to help if you have any questions before the meetup.", time: "4:28pm", mine: false },
+    {
+      id: "maya-direct-1",
+      personId: "maya-host",
+      name: "Maya",
+      avatar: "M",
+      text: "Hi, happy to help if you have any questions before the meetup.",
+      time: "4:28pm",
+      mine: false,
+    },
   ],
   "nsn-tester": [
-    { id: "nsn-tester-direct-1", personId: "nsn-tester", name: "NSN Tester", avatar: "N", text: "Hey, nice to meet you here.", time: "4:30pm", mine: false },
+    {
+      id: "nsn-tester-direct-1",
+      personId: "nsn-tester",
+      name: "NSN Tester",
+      avatar: "N",
+      text: "Hey, nice to meet you here.",
+      time: "4:30pm",
+      mine: false,
+    },
   ],
   "jordan-member": [
-    { id: "jordan-direct-1", personId: "jordan-member", name: "Jordan", avatar: "J", text: "Hi, are you going to the movie night too?", time: "4:31pm", mine: false },
+    {
+      id: "jordan-direct-1",
+      personId: "jordan-member",
+      name: "Jordan",
+      avatar: "J",
+      text: "Hi, are you going to the movie night too?",
+      time: "4:31pm",
+      mine: false,
+    },
   ],
+};
+
+const directChatStartedAtByPerson: Record<string, string> = {
+  "maya-host": "2026-05-24T10:00:00.000Z",
+  "nsn-tester": "2026-05-20T10:00:00.000Z",
+  "jordan-member": "2026-05-17T10:00:00.000Z",
 };
 
 const directChatMessageTranslations: Record<string, Record<string, string>> = {
@@ -198,7 +303,10 @@ const directChatMessageTranslations: Record<string, Record<string, string>> = {
   },
 };
 
-const localizeDirectMessages = (messagesByPerson: Record<string, ChatMessage[]>, languageBase: string) => {
+const localizeDirectMessages = (
+  messagesByPerson: Record<string, ChatMessage[]>,
+  languageBase: string,
+) => {
   const translatedDirectMessages = directChatMessageTranslations[languageBase];
   if (!translatedDirectMessages) return messagesByPerson;
 
@@ -209,7 +317,7 @@ const localizeDirectMessages = (messagesByPerson: Record<string, ChatMessage[]>,
         ...message,
         text: translatedDirectMessages[message.id] ?? message.text,
       })),
-    ])
+    ]),
   ) as Record<string, ChatMessage[]>;
 };
 
@@ -220,15 +328,18 @@ const reportFlowCopy: ReportFlowCopy = {
   memberRole: "Member",
   chatRole: "Group",
   reportToHost: "Report to host first",
-  reportToHostCopy: "Use this when the concern is about another member and the host may be able to step in.",
+  reportToHostCopy:
+    "Use this when the concern is about another member and the host may be able to step in.",
   appReview: "Submit for app review",
-  appReviewCopy: "Use this for host issues, urgent escalation, or when reporting to the host does not help.",
+  appReviewCopy:
+    "Use this for host issues, urgent escalation, or when reporting to the host does not help.",
   cancelWindow: "You can cancel this report for 10 minutes.",
   cancelReport: "Cancel report",
   reportCancelled: "Report cancelled",
   reportSaved: "Report saved",
   reportReceivedStatus: "Report received · under review",
-  accountCompromiseReviewCopy: "We'll review this calmly and may apply temporary protections while checking whether the account is secure.",
+  accountCompromiseReviewCopy:
+    "We'll review this calmly and may apply temporary protections while checking whether the account is secure.",
 };
 
 const arrivalUpdateCopy: ArrivalUpdateCopy = {
@@ -236,17 +347,41 @@ const arrivalUpdateCopy: ArrivalUpdateCopy = {
   runningLate: "Running late",
   cannotMakeIt: "Can’t make it",
   cannotMakeItReasonTitle: "Why can’t you make it?",
-  runningLateMessage: (method: string) => `Quick update: I am running late. I am coming by ${method.toLowerCase()}, so I will keep you posted.`,
+  runningLateMessage: (method: string) =>
+    `Quick update: I am running late. I am coming by ${method.toLowerCase()}, so I will keep you posted.`,
   cannotMakeItReasons: {
-    unwell: { label: "Feeling unwell", message: "I am sorry, I am feeling unwell and will not be able to make it today. I hope the meetup goes well." },
-    work: { label: "Work came up", message: "I am sorry, work has come up and I will not be able to make it today. I hope the meetup goes well." },
-    appointment: { label: "Appointment", message: "I am sorry, I have an appointment and will not be able to make it today. I hope the meetup goes well." },
-    somethingCameUp: { label: "Something came up", message: "I am sorry, something came up and I will not be able to make it today. I hope the meetup goes well." },
-    changedMind: { label: "Changed my mind", message: "I am sorry, I have changed my mind and will not be able to make it today. I hope the meetup goes well." },
+    unwell: {
+      label: "Feeling unwell",
+      message:
+        "I am sorry, I am feeling unwell and will not be able to make it today. I hope the meetup goes well.",
+    },
+    work: {
+      label: "Work came up",
+      message:
+        "I am sorry, work has come up and I will not be able to make it today. I hope the meetup goes well.",
+    },
+    appointment: {
+      label: "Appointment",
+      message:
+        "I am sorry, I have an appointment and will not be able to make it today. I hope the meetup goes well.",
+    },
+    somethingCameUp: {
+      label: "Something came up",
+      message:
+        "I am sorry, something came up and I will not be able to make it today. I hope the meetup goes well.",
+    },
+    changedMind: {
+      label: "Changed my mind",
+      message:
+        "I am sorry, I have changed my mind and will not be able to make it today. I hope the meetup goes well.",
+    },
   } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
 };
 
-const safetyReasonTranslations: Record<string, Partial<Record<SafetyReportReason, { label: string; copy: string }>>> = {
+const safetyReasonTranslations: Record<
+  string,
+  Partial<Record<SafetyReportReason, { label: string; copy: string }>>
+> = {
   Chinese: {
     "Safety threat": { label: "安全威胁", copy: "即时风险、胁迫、跟踪、威胁或不安全的线下行为。" },
     Harassment: { label: "骚扰", copy: "反复的不受欢迎联系、恐吓、性压力或辱骂消息。" },
@@ -255,44 +390,104 @@ const safetyReasonTranslations: Record<string, Partial<Record<SafetyReportReason
     Fraud: { label: "欺诈", copy: "索要钱款、诈骗、钓鱼、勒索或可疑链接。" },
     "Fake profile": { label: "虚假资料", copy: "资料、照片或行为看起来不真实。" },
     Spam: { label: "垃圾信息", copy: "推广消息、重复联系或无关链接。" },
-    "Hate or discrimination": { label: "仇恨或歧视", copy: "针对身份、文化、宗教、残障、性别或性取向的攻击。" },
+    "Hate or discrimination": {
+      label: "仇恨或歧视",
+      copy: "针对身份、文化、宗教、残障、性别或性取向的攻击。",
+    },
     "Privacy concern": { label: "隐私问题", copy: "未经同意分享私人信息、截图或个人细节。" },
     Other: { label: "其他", copy: "还有其他感觉不对、需要审核的情况。" },
   },
   Japanese: {
-    "Safety threat": { label: "安全上の脅威", copy: "差し迫った危険、強要、つきまとい、脅し、不安全なミートアップ行動。" },
-    Harassment: { label: "ハラスメント", copy: "望まない連絡の繰り返し、威圧、性的な圧力、攻撃的なメッセージ。" },
-    "Underage risk": { label: "未成年のリスク", copy: "18歳未満の可能性、または未成年を巻き込もうとしている可能性。" },
-    Impersonation: { label: "なりすまし", copy: "他人のふり、盗まれた情報の使用、誤解を招く本人情報。" },
+    "Safety threat": {
+      label: "安全上の脅威",
+      copy: "差し迫った危険、強要、つきまとい、脅し、不安全なミートアップ行動。",
+    },
+    Harassment: {
+      label: "ハラスメント",
+      copy: "望まない連絡の繰り返し、威圧、性的な圧力、攻撃的なメッセージ。",
+    },
+    "Underage risk": {
+      label: "未成年のリスク",
+      copy: "18歳未満の可能性、または未成年を巻き込もうとしている可能性。",
+    },
+    Impersonation: {
+      label: "なりすまし",
+      copy: "他人のふり、盗まれた情報の使用、誤解を招く本人情報。",
+    },
     Fraud: { label: "詐欺", copy: "金銭要求、詐欺、フィッシング、脅迫、不審なリンク。" },
-    "Fake profile": { label: "偽プロフィール", copy: "プロフィール情報、写真、行動が本物らしく見えない。" },
+    "Fake profile": {
+      label: "偽プロフィール",
+      copy: "プロフィール情報、写真、行動が本物らしく見えない。",
+    },
     Spam: { label: "スパム", copy: "宣伝、繰り返しの連絡、関係のないリンク。" },
-    "Hate or discrimination": { label: "憎悪または差別", copy: "属性、文化、宗教、障がい、性別、性的指向を対象にした攻撃。" },
-    "Privacy concern": { label: "プライバシーの懸念", copy: "同意なく個人情報、スクリーンショット、私的な詳細を共有している。" },
+    "Hate or discrimination": {
+      label: "憎悪または差別",
+      copy: "属性、文化、宗教、障がい、性別、性的指向を対象にした攻撃。",
+    },
+    "Privacy concern": {
+      label: "プライバシーの懸念",
+      copy: "同意なく個人情報、スクリーンショット、私的な詳細を共有している。",
+    },
     Other: { label: "その他", copy: "他に違和感があり、確認が必要なこと。" },
   },
   Korean: {
-    "Safety threat": { label: "안전 위협", copy: "즉각적인 위험, 강요, 스토킹, 협박 또는 안전하지 않은 모임 행동." },
-    Harassment: { label: "괴롭힘", copy: "반복적인 원치 않는 연락, 위협, 성적 압박 또는 모욕적인 메시지." },
-    "Underage risk": { label: "미성년자 위험", copy: "누군가 만 18세 미만이거나 미성년자를 참여시키려는 경우." },
-    Impersonation: { label: "사칭", copy: "다른 사람인 척하거나 도용된 정보, 오해를 부르는 신원 사용." },
+    "Safety threat": {
+      label: "안전 위협",
+      copy: "즉각적인 위험, 강요, 스토킹, 협박 또는 안전하지 않은 모임 행동.",
+    },
+    Harassment: {
+      label: "괴롭힘",
+      copy: "반복적인 원치 않는 연락, 위협, 성적 압박 또는 모욕적인 메시지.",
+    },
+    "Underage risk": {
+      label: "미성년자 위험",
+      copy: "누군가 만 18세 미만이거나 미성년자를 참여시키려는 경우.",
+    },
+    Impersonation: {
+      label: "사칭",
+      copy: "다른 사람인 척하거나 도용된 정보, 오해를 부르는 신원 사용.",
+    },
     Fraud: { label: "사기", copy: "금전 요구, 사기, 피싱, 협박 또는 의심스러운 링크." },
-    "Fake profile": { label: "가짜 프로필", copy: "프로필 정보, 사진 또는 행동이 진짜처럼 보이지 않음." },
+    "Fake profile": {
+      label: "가짜 프로필",
+      copy: "프로필 정보, 사진 또는 행동이 진짜처럼 보이지 않음.",
+    },
     Spam: { label: "스팸", copy: "홍보 메시지, 반복 연락 또는 관련 없는 링크." },
-    "Hate or discrimination": { label: "혐오 또는 차별", copy: "정체성, 문화, 종교, 장애, 성별 또는 성적 지향을 향한 공격." },
-    "Privacy concern": { label: "개인정보 우려", copy: "동의 없이 개인 정보, 스크린샷 또는 사적인 내용을 공유." },
+    "Hate or discrimination": {
+      label: "혐오 또는 차별",
+      copy: "정체성, 문화, 종교, 장애, 성별 또는 성적 지향을 향한 공격.",
+    },
+    "Privacy concern": {
+      label: "개인정보 우려",
+      copy: "동의 없이 개인 정보, 스크린샷 또는 사적인 내용을 공유.",
+    },
     Other: { label: "기타", copy: "그 밖에 이상하게 느껴져 검토가 필요한 내용." },
   },
   Hebrew: {
-    "Safety threat": { label: "איום בטיחותי", copy: "סיכון מיידי, כפייה, מעקב, איומים או התנהגות לא בטוחה במפגש." },
-    Harassment: { label: "הטרדה", copy: "פנייה חוזרת לא רצויה, הפחדה, לחץ מיני או הודעות פוגעניות." },
+    "Safety threat": {
+      label: "איום בטיחותי",
+      copy: "סיכון מיידי, כפייה, מעקב, איומים או התנהגות לא בטוחה במפגש.",
+    },
+    Harassment: {
+      label: "הטרדה",
+      copy: "פנייה חוזרת לא רצויה, הפחדה, לחץ מיני או הודעות פוגעניות.",
+    },
     "Underage risk": { label: "חשש לקטין", copy: "ייתכן שמישהו מתחת לגיל 18 או מנסה לערב קטין." },
     Impersonation: { label: "התחזות", copy: "העמדת פנים כאדם אחר או שימוש בפרטים מטעים." },
     Fraud: { label: "הונאה", copy: "בקשות כסף, תרמיות, פישינג, סחיטה או קישורים חשודים." },
-    "Fake profile": { label: "פרופיל מזויף", copy: "פרטי פרופיל, תמונות או התנהגות לא נראים אמינים." },
+    "Fake profile": {
+      label: "פרופיל מזויף",
+      copy: "פרטי פרופיל, תמונות או התנהגות לא נראים אמינים.",
+    },
     Spam: { label: "ספאם", copy: "הודעות פרסומיות, פנייה חוזרת או קישורים לא קשורים." },
-    "Hate or discrimination": { label: "שנאה או אפליה", copy: "פגיעה שמכוונת לזהות, תרבות, דת, מוגבלות, מגדר או מיניות." },
-    "Privacy concern": { label: "חשש לפרטיות", copy: "שיתוף מידע פרטי, צילומי מסך או פרטים אישיים ללא הסכמה." },
+    "Hate or discrimination": {
+      label: "שנאה או אפליה",
+      copy: "פגיעה שמכוונת לזהות, תרבות, דת, מוגבלות, מגדר או מיניות.",
+    },
+    "Privacy concern": {
+      label: "חשש לפרטיות",
+      copy: "שיתוף מידע פרטי, צילומי מסך או פרטים אישיים ללא הסכמה.",
+    },
     Other: { label: "אחר", copy: "משהו אחר מרגיש לא תקין וצריך בדיקה." },
   },
 };
@@ -322,7 +517,8 @@ const reportFlowTranslations = {
     reportToHost: "まず主催者に報告",
     reportToHostCopy: "別のメンバーに関する懸念で、主催者が対応できそうな場合に使います。",
     appReview: "アプリ審査に送信",
-    appReviewCopy: "主催者の問題、緊急のエスカレーション、または主催者への報告で解決しない場合に使います。",
+    appReviewCopy:
+      "主催者の問題、緊急のエスカレーション、または主催者への報告で解決しない場合に使います。",
     cancelWindow: "この報告は10分間キャンセルできます。",
     cancelReport: "報告をキャンセル",
     reportCancelled: "報告をキャンセルしました",
@@ -337,7 +533,8 @@ const reportFlowTranslations = {
     reportToHost: "먼저 주최자에게 신고",
     reportToHostCopy: "다른 멤버에 대한 우려이고 주최자가 도와줄 수 있을 때 사용하세요.",
     appReview: "앱 검토로 제출",
-    appReviewCopy: "주최자 문제, 긴급 신고, 또는 주최자에게 신고해도 도움이 되지 않을 때 사용하세요.",
+    appReviewCopy:
+      "주최자 문제, 긴급 신고, 또는 주최자에게 신고해도 도움이 되지 않을 때 사용하세요.",
     cancelWindow: "이 신고는 10분 동안 취소할 수 있어요.",
     cancelReport: "신고 취소",
     reportCancelled: "신고가 취소됨",
@@ -366,13 +563,29 @@ const arrivalUpdateTranslations = {
     runningLate: "מאחר/ת",
     cannotMakeIt: "לא אוכל להגיע",
     cannotMakeItReasonTitle: "למה לא תוכל/י להגיע?",
-    runningLateMessage: (method: string) => `עדכון קצר: אני מאחר/ת. אני מגיע/ה באמצעות ${method}, ואעדכן בהמשך.`,
+    runningLateMessage: (method: string) =>
+      `עדכון קצר: אני מאחר/ת. אני מגיע/ה באמצעות ${method}, ואעדכן בהמשך.`,
     cannotMakeItReasons: {
-      unwell: { label: "לא מרגיש/ה טוב", message: "סליחה, אני לא מרגיש/ה טוב ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
-      work: { label: "עבודה צצה", message: "סליחה, צצה לי עבודה ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
-      appointment: { label: "תור או פגישה", message: "סליחה, יש לי תור או פגישה ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
-      somethingCameUp: { label: "משהו צץ", message: "סליחה, משהו צץ ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
-      changedMind: { label: "שיניתי את דעתי", message: "סליחה, שיניתי את דעתי ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח." },
+      unwell: {
+        label: "לא מרגיש/ה טוב",
+        message: "סליחה, אני לא מרגיש/ה טוב ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח.",
+      },
+      work: {
+        label: "עבודה צצה",
+        message: "סליחה, צצה לי עבודה ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח.",
+      },
+      appointment: {
+        label: "תור או פגישה",
+        message: "סליחה, יש לי תור או פגישה ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח.",
+      },
+      somethingCameUp: {
+        label: "משהו צץ",
+        message: "סליחה, משהו צץ ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח.",
+      },
+      changedMind: {
+        label: "שיניתי את דעתי",
+        message: "סליחה, שיניתי את דעתי ולא אוכל להגיע היום. מקווה שהמפגש יהיה מוצלח.",
+      },
     } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
   },
   Chinese: {
@@ -380,13 +593,26 @@ const arrivalUpdateTranslations = {
     runningLate: "会迟到",
     cannotMakeIt: "无法参加",
     cannotMakeItReasonTitle: "为什么无法参加？",
-    runningLateMessage: (method: string) => `快速更新：我会迟到。我会通过${method}到达，会继续更新。`,
+    runningLateMessage: (method: string) =>
+      `快速更新：我会迟到。我会通过${method}到达，会继续更新。`,
     cannotMakeItReasons: {
       unwell: { label: "身体不适", message: "抱歉，我今天身体不舒服，不能参加了。希望聚会顺利。" },
-      work: { label: "工作临时有事", message: "抱歉，工作上临时有事，我今天不能参加了。希望聚会顺利。" },
-      appointment: { label: "有预约", message: "抱歉，我有一个预约，今天不能参加了。希望聚会顺利。" },
-      somethingCameUp: { label: "临时有事", message: "抱歉，临时有事，我今天不能参加了。希望聚会顺利。" },
-      changedMind: { label: "改变主意", message: "抱歉，我改变主意了，今天不能参加。希望聚会顺利。" },
+      work: {
+        label: "工作临时有事",
+        message: "抱歉，工作上临时有事，我今天不能参加了。希望聚会顺利。",
+      },
+      appointment: {
+        label: "有预约",
+        message: "抱歉，我有一个预约，今天不能参加了。希望聚会顺利。",
+      },
+      somethingCameUp: {
+        label: "临时有事",
+        message: "抱歉，临时有事，我今天不能参加了。希望聚会顺利。",
+      },
+      changedMind: {
+        label: "改变主意",
+        message: "抱歉，我改变主意了，今天不能参加。希望聚会顺利。",
+      },
     } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
   },
   Japanese: {
@@ -394,13 +620,32 @@ const arrivalUpdateTranslations = {
     runningLate: "遅れています",
     cannotMakeIt: "参加できません",
     cannotMakeItReasonTitle: "参加できない理由は？",
-    runningLateMessage: (method: string) => `短い更新：少し遅れています。${method}で向かっているので、また知らせます。`,
+    runningLateMessage: (method: string) =>
+      `短い更新：少し遅れています。${method}で向かっているので、また知らせます。`,
     cannotMakeItReasons: {
-      unwell: { label: "体調不良", message: "すみません、今日は体調が悪く参加できません。ミートアップがうまくいきますように。" },
-      work: { label: "仕事が入った", message: "すみません、仕事が入って今日は参加できません。ミートアップがうまくいきますように。" },
-      appointment: { label: "予定がある", message: "すみません、予定があり今日は参加できません。ミートアップがうまくいきますように。" },
-      somethingCameUp: { label: "急用ができた", message: "すみません、急用ができて今日は参加できません。ミートアップがうまくいきますように。" },
-      changedMind: { label: "気が変わった", message: "すみません、気が変わったので今日は参加しません。ミートアップがうまくいきますように。" },
+      unwell: {
+        label: "体調不良",
+        message: "すみません、今日は体調が悪く参加できません。ミートアップがうまくいきますように。",
+      },
+      work: {
+        label: "仕事が入った",
+        message:
+          "すみません、仕事が入って今日は参加できません。ミートアップがうまくいきますように。",
+      },
+      appointment: {
+        label: "予定がある",
+        message: "すみません、予定があり今日は参加できません。ミートアップがうまくいきますように。",
+      },
+      somethingCameUp: {
+        label: "急用ができた",
+        message:
+          "すみません、急用ができて今日は参加できません。ミートアップがうまくいきますように。",
+      },
+      changedMind: {
+        label: "気が変わった",
+        message:
+          "すみません、気が変わったので今日は参加しません。ミートアップがうまくいきますように。",
+      },
     } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
   },
   Korean: {
@@ -408,13 +653,32 @@ const arrivalUpdateTranslations = {
     runningLate: "늦는 중",
     cannotMakeIt: "참석 불가",
     cannotMakeItReasonTitle: "왜 참석할 수 없나요?",
-    runningLateMessage: (method: string) => `간단 업데이트: 제가 늦고 있어요. ${method}(으)로 가는 중이라 계속 알려드릴게요.`,
+    runningLateMessage: (method: string) =>
+      `간단 업데이트: 제가 늦고 있어요. ${method}(으)로 가는 중이라 계속 알려드릴게요.`,
     cannotMakeItReasons: {
-      unwell: { label: "몸이 좋지 않음", message: "죄송해요, 오늘 몸이 좋지 않아 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요." },
-      work: { label: "일이 생김", message: "죄송해요, 일이 생겨 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요." },
-      appointment: { label: "예약/약속", message: "죄송해요, 다른 약속이 있어 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요." },
-      somethingCameUp: { label: "급한 일이 생김", message: "죄송해요, 급한 일이 생겨 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요." },
-      changedMind: { label: "마음이 바뀜", message: "죄송해요, 마음이 바뀌어 오늘 참석하지 않으려 해요. 모임이 잘 진행되길 바라요." },
+      unwell: {
+        label: "몸이 좋지 않음",
+        message:
+          "죄송해요, 오늘 몸이 좋지 않아 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요.",
+      },
+      work: {
+        label: "일이 생김",
+        message: "죄송해요, 일이 생겨 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요.",
+      },
+      appointment: {
+        label: "예약/약속",
+        message:
+          "죄송해요, 다른 약속이 있어 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요.",
+      },
+      somethingCameUp: {
+        label: "급한 일이 생김",
+        message:
+          "죄송해요, 급한 일이 생겨 오늘 참석하지 못할 것 같아요. 모임이 잘 진행되길 바라요.",
+      },
+      changedMind: {
+        label: "마음이 바뀜",
+        message: "죄송해요, 마음이 바뀌어 오늘 참석하지 않으려 해요. 모임이 잘 진행되길 바라요.",
+      },
     } satisfies Record<CannotMakeItReason, { label: string; message: string }>,
   },
 } satisfies Record<string, ArrivalUpdateCopy>;
@@ -601,7 +865,7 @@ const getChatMemberLabel = (event: EventItem, languageBase: string) =>
         ? event.people.replace("people", "人")
         : languageBase === "Korean"
           ? event.people.replace("people", "명")
-      : event.people;
+          : event.people;
 
 const chatTranslations = {
   English: {
@@ -615,7 +879,8 @@ const chatTranslations = {
     placeholder: "Type a message...",
     disclaimer: "Local preview only. No live chat or backend messaging is connected.",
     softExitTitle: "Soft Exit",
-    softExitCopy: "You can leave early, take a quiet break, or step back without making it a big thing. No pressure to talk constantly.",
+    softExitCopy:
+      "You can leave early, take a quiet break, or step back without making it a big thing. No pressure to talk constantly.",
     softExitQuiet: "Your chat is quiet for now. You can look for another group when you are ready.",
     safetyTitle: "Safety options",
     safetyCopy: "Use these when something feels off. They stay private in this prototype.",
@@ -645,7 +910,8 @@ const chatTranslations = {
     findAnotherGroupCopy: "Look for a better fit.",
     reopenOptions: "Reopen chat options",
     trustRequiredTitle: "Prototype contact preview",
-    trustRequiredCopy: "Private chats are gated by a local demo trust state. No real verification provider or live private messaging is connected.",
+    trustRequiredCopy:
+      "Private chats are gated by a local demo trust state. No real verification provider or live private messaging is connected.",
     reviewSettings: "Review prototype trust",
     reviewTrustStatusHint: "Opens Profile so you can review local prototype trust details.",
     backToChatChooserHint: "Returns to the chat chooser.",
@@ -668,7 +934,8 @@ const chatTranslations = {
     placeholder: "اكتب رسالة...",
     disclaimer: "تختفي الدردشة بعد اللقاء.",
     softExitTitle: "خروج هادئ",
-    softExitCopy: "يمكنك التراجع دون أن يكون الأمر كبيراً. كون هذه المجموعة ليست مجموعتك لا يعني أنك متأخر.",
+    softExitCopy:
+      "يمكنك التراجع دون أن يكون الأمر كبيراً. كون هذه المجموعة ليست مجموعتك لا يعني أنك متأخر.",
     softExitQuiet: "الدردشة هادئة الآن. يمكنك البحث عن مجموعة أخرى عندما تكون مستعداً.",
     safetyTitle: "خيارات السلامة",
     safetyCopy: "استخدمها عندما تشعر أن هناك شيئاً غير مريح. تبقى خاصة في هذا النموذج.",
@@ -758,10 +1025,13 @@ const chatTranslations = {
     placeholder: "Écrire un message...",
     disclaimer: "Le chat disparaît après la rencontre.",
     softExitTitle: "Sortie douce",
-    softExitCopy: "Vous pouvez prendre du recul sans en faire quelque chose de lourd. Si ce groupe n'est pas le vôtre, cela ne veut pas dire que vous êtes en retard.",
-    softExitQuiet: "Votre chat est en pause pour l'instant. Vous pourrez chercher un autre groupe quand vous serez prêt.",
+    softExitCopy:
+      "Vous pouvez prendre du recul sans en faire quelque chose de lourd. Si ce groupe n'est pas le vôtre, cela ne veut pas dire que vous êtes en retard.",
+    softExitQuiet:
+      "Votre chat est en pause pour l'instant. Vous pourrez chercher un autre groupe quand vous serez prêt.",
     safetyTitle: "Options de sécurité",
-    safetyCopy: "À utiliser si quelque chose vous semble anormal. Elles restent privées dans ce prototype.",
+    safetyCopy:
+      "À utiliser si quelque chose vous semble anormal. Elles restent privées dans ce prototype.",
     reportConcern: "Signaler un souci",
     reportConcernCopy: "Choisir un motif privé pour examen.",
     escalationReasons: "Motifs d'escalade",
@@ -771,7 +1041,8 @@ const chatTranslations = {
     unblockHost: "Débloquer l'hôte",
     unblockHostCopy: "Autoriser à nouveau l'interaction directe.",
     blockChoiceTitle: "Bloquer cette personne ?",
-    blockChoiceCopy: "Vous pouvez seulement bloquer, ou bloquer et choisir aussi un motif de signalement.",
+    blockChoiceCopy:
+      "Vous pouvez seulement bloquer, ou bloquer et choisir aussi un motif de signalement.",
     blockOnly: "Bloquer seulement",
     blockAndReport: "Bloquer et signaler",
     blockedSaved: "Bloqué en privé",
@@ -803,10 +1074,13 @@ const chatTranslations = {
     placeholder: "Nachricht schreiben...",
     disclaimer: "Der Chat verschwindet nach dem Treffen.",
     softExitTitle: "Sanfter Ausstieg",
-    softExitCopy: "Du kannst dich zurückziehen, ohne daraus etwas Großes zu machen. Wenn diese Gruppe nicht deine Gruppe ist, heißt das nicht, dass du zurückbleibst.",
-    softExitQuiet: "Dein Chat ist jetzt ruhiggestellt. Du kannst nach einer anderen Gruppe suchen, wenn du bereit bist.",
+    softExitCopy:
+      "Du kannst dich zurückziehen, ohne daraus etwas Großes zu machen. Wenn diese Gruppe nicht deine Gruppe ist, heißt das nicht, dass du zurückbleibst.",
+    softExitQuiet:
+      "Dein Chat ist jetzt ruhiggestellt. Du kannst nach einer anderen Gruppe suchen, wenn du bereit bist.",
     safetyTitle: "Sicherheitsoptionen",
-    safetyCopy: "Nutze sie, wenn sich etwas nicht richtig anfühlt. Sie bleiben in diesem Prototyp privat.",
+    safetyCopy:
+      "Nutze sie, wenn sich etwas nicht richtig anfühlt. Sie bleiben in diesem Prototyp privat.",
     reportConcern: "Anliegen melden",
     reportConcernCopy: "Wähle einen privaten Meldegrund zur Prüfung.",
     escalationReasons: "Eskalationsgründe",
@@ -816,14 +1090,16 @@ const chatTranslations = {
     unblockHost: "Host entsperren",
     unblockHostCopy: "Direkte Interaktion wieder erlauben.",
     blockChoiceTitle: "Diese Person blockieren?",
-    blockChoiceCopy: "Du kannst nur blockieren oder blockieren und zusätzlich einen Meldegrund wählen.",
+    blockChoiceCopy:
+      "Du kannst nur blockieren oder blockieren und zusätzlich einen Meldegrund wählen.",
     blockOnly: "Nur blockieren",
     blockAndReport: "Blockieren und melden",
     blockedSaved: "Privat blockiert",
     blockedSavedCopy: "Du erhältst keine direkte Interaktion mehr von diesem Prototyp-Host.",
     unblockedSaved: "Entsperrt",
     unblockedSavedCopy: "Direkte Interaktion ist in diesem Prototyp wieder erlaubt.",
-    chooseReportAfterBlock: "Blockiert. Wähle einen Meldegrund, wenn du auch eine Prüfung möchtest.",
+    chooseReportAfterBlock:
+      "Blockiert. Wähle einen Meldegrund, wenn du auch eine Prüfung möchtest.",
     cancel: "Abbrechen",
     stepBack: "Zurücktreten",
     stepBackCopy: "Eine sanfte Vorlage senden.",
@@ -848,7 +1124,8 @@ const chatTranslations = {
     placeholder: "הקלד הודעה...",
     disclaimer: "הצ'אט נעלם אחרי המפגש.",
     softExitTitle: "יציאה רכה",
-    softExitCopy: "אפשר לקחת צעד אחורה בלי להפוך את זה למשהו גדול. אם זו לא הקבוצה שלך, זה לא אומר שנשארת מאחור.",
+    softExitCopy:
+      "אפשר לקחת צעד אחורה בלי להפוך את זה למשהו גדול. אם זו לא הקבוצה שלך, זה לא אומר שנשארת מאחור.",
     softExitQuiet: "הצ'אט שלך שקט כרגע. אפשר לחפש קבוצה אחרת כשתהיה מוכן.",
     safetyTitle: "אפשרויות בטיחות",
     safetyCopy: "השתמש בזה כשמשהו מרגיש לא תקין. זה נשאר פרטי באב הטיפוס.",
@@ -896,7 +1173,8 @@ const chatTranslations = {
     placeholder: "メッセージを入力...",
     disclaimer: "チャットはミートアップ後に消えます。",
     softExitTitle: "やさしい退出",
-    softExitCopy: "大ごとにせず、少し距離を置いて大丈夫です。このグループが合わなくても、あなたが遅れているわけではありません。",
+    softExitCopy:
+      "大ごとにせず、少し距離を置いて大丈夫です。このグループが合わなくても、あなたが遅れているわけではありません。",
     softExitQuiet: "チャットはいったん静かになりました。準備ができたら、別のグループを探せます。",
     safetyTitle: "安全オプション",
     safetyCopy: "違和感があるときに使えます。このプロトタイプでは非公開です。",
@@ -941,7 +1219,8 @@ const chatTranslations = {
     placeholder: "메시지 입력...",
     disclaimer: "채팅은 모임 후 사라집니다.",
     softExitTitle: "부드러운 나가기",
-    softExitCopy: "큰일처럼 만들지 않고 물러나도 괜찮아요. 이 그룹이 내 그룹이 아니라고 해서 뒤처진 것은 아니에요.",
+    softExitCopy:
+      "큰일처럼 만들지 않고 물러나도 괜찮아요. 이 그룹이 내 그룹이 아니라고 해서 뒤처진 것은 아니에요.",
     softExitQuiet: "지금은 채팅이 조용해졌어요. 준비되면 다른 그룹을 찾아볼 수 있어요.",
     safetyTitle: "안전 옵션",
     safetyCopy: "뭔가 불편하게 느껴질 때 사용하세요. 이 프로토타입에서는 비공개로 유지돼요.",
@@ -986,10 +1265,12 @@ const chatTranslations = {
     placeholder: "Введите сообщение...",
     disclaimer: "Чат исчезнет после встречи.",
     softExitTitle: "Мягкий выход",
-    softExitCopy: "Вы можете отойти без лишней драмы. Если эта группа не ваша, это не значит, что вы отстаете.",
+    softExitCopy:
+      "Вы можете отойти без лишней драмы. Если эта группа не ваша, это не значит, что вы отстаете.",
     softExitQuiet: "Ваш чат пока тихий. Вы можете поискать другую группу, когда будете готовы.",
     safetyTitle: "Параметры безопасности",
-    safetyCopy: "Используйте, если что-то кажется неправильным. В этом прототипе они остаются приватными.",
+    safetyCopy:
+      "Используйте, если что-то кажется неправильным. В этом прототипе они остаются приватными.",
     reportConcern: "Сообщить о проблеме",
     reportConcernCopy: "Выберите приватную причину для проверки.",
     escalationReasons: "Причины эскалации",
@@ -1003,7 +1284,8 @@ const chatTranslations = {
     blockOnly: "Только заблокировать",
     blockAndReport: "Заблокировать и пожаловаться",
     blockedSaved: "Заблокировано приватно",
-    blockedSavedCopy: "Вы не будете получать прямое взаимодействие от этого прототипного организатора.",
+    blockedSavedCopy:
+      "Вы не будете получать прямое взаимодействие от этого прототипного организатора.",
     unblockedSaved: "Разблокировано",
     unblockedSavedCopy: "Прямое взаимодействие снова разрешено в этом прототипе.",
     chooseReportAfterBlock: "Заблокировано. Выберите причину, если также нужна проверка.",
@@ -1031,8 +1313,10 @@ const chatTranslations = {
     placeholder: "Escribe un mensaje...",
     disclaimer: "El chat desaparece después de la quedada.",
     softExitTitle: "Salida suave",
-    softExitCopy: "Puedes apartarte sin convertirlo en algo grande. Que este grupo no sea tu grupo no significa que te estés quedando atrás.",
-    softExitQuiet: "Tu chat queda tranquilo por ahora. Puedes buscar otro grupo cuando estés listo.",
+    softExitCopy:
+      "Puedes apartarte sin convertirlo en algo grande. Que este grupo no sea tu grupo no significa que te estés quedando atrás.",
+    softExitQuiet:
+      "Tu chat queda tranquilo por ahora. Puedes buscar otro grupo cuando estés listo.",
     safetyTitle: "Opciones de seguridad",
     safetyCopy: "Úsalas cuando algo se sienta raro. En este prototipo se mantienen privadas.",
     reportConcern: "Reportar inquietud",
@@ -1070,7 +1354,8 @@ const chatTranslations = {
 const chatTrustGateTranslations = {
   English: {
     trustRequiredTitle: "Prototype contact preview",
-    trustRequiredCopy: "Private chats are gated by a local demo trust state. No real verification provider or live private messaging is connected.",
+    trustRequiredCopy:
+      "Private chats are gated by a local demo trust state. No real verification provider or live private messaging is connected.",
     reviewSettings: "Review prototype trust",
   },
   Japanese: {
@@ -1154,8 +1439,12 @@ const chatMessageTranslations = {
 
 export default function ChatsScreen() {
   const router = useRouter();
-  const { eventId: requestedEventIdParam } = useLocalSearchParams<{ eventId?: string | string[] }>();
-  const requestedEventId = Array.isArray(requestedEventIdParam) ? requestedEventIdParam[0] : requestedEventIdParam;
+  const { eventId: requestedEventIdParam } = useLocalSearchParams<{
+    eventId?: string | string[];
+  }>();
+  const requestedEventId = Array.isArray(requestedEventIdParam)
+    ? requestedEventIdParam[0]
+    : requestedEventIdParam;
   const {
     isNightMode,
     appLanguage,
@@ -1170,28 +1459,59 @@ export default function ChatsScreen() {
     safetyReports,
     transportationMethod,
     screenReaderHints,
+    softRevealSuggestions,
+    softRevealPace,
+    preferSoftRevealPeople,
     saveSoftHelloMvpState,
   } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const translationLanguageBase = getTranslationLanguageBase(translationLanguage);
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(appLanguageBase);
-  const copy = chatTranslations[appLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
+  const copy =
+    chatTranslations[appLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
   const chatCopy = { ...chatTranslations.English, ...copy };
-  const trustGateCopy = chatTrustGateTranslations[appLanguageBase as keyof typeof chatTrustGateTranslations] ?? chatTrustGateTranslations.English;
-  const localizedReportFlowCopy: ReportFlowCopy = reportFlowTranslations[appLanguageBase as keyof typeof reportFlowTranslations] ?? reportFlowCopy;
+  const trustGateCopy =
+    chatTrustGateTranslations[appLanguageBase as keyof typeof chatTrustGateTranslations] ??
+    chatTrustGateTranslations.English;
+  const localizedReportFlowCopy: ReportFlowCopy =
+    reportFlowTranslations[appLanguageBase as keyof typeof reportFlowTranslations] ??
+    reportFlowCopy;
   const localizedArrivalUpdateCopy =
-    arrivalUpdateTranslations[appLanguageBase as keyof typeof arrivalUpdateTranslations] ?? arrivalUpdateCopy;
+    arrivalUpdateTranslations[appLanguageBase as keyof typeof arrivalUpdateTranslations] ??
+    arrivalUpdateCopy;
   const localizedSafetyReasons = safetyReasonTranslations[appLanguageBase] ?? {};
-  const memberBlockCopy = memberBlockTranslations[appLanguageBase as keyof typeof memberBlockTranslations] ?? memberBlockTranslations.English;
-  const chatMenuCopy = chatMenuTranslations[appLanguageBase as keyof typeof chatMenuTranslations] ?? chatMenuTranslations.English;
+  const memberBlockCopy =
+    memberBlockTranslations[appLanguageBase as keyof typeof memberBlockTranslations] ??
+    memberBlockTranslations.English;
+  const chatMenuCopy =
+    chatMenuTranslations[appLanguageBase as keyof typeof chatMenuTranslations] ??
+    chatMenuTranslations.English;
   const chatEventTitleCopy = chatEventTitleTranslations[appLanguageBase] ?? {};
-  const translatedMessages = chatMessageTranslations[translationLanguageBase as keyof typeof chatMessageTranslations];
-  const transportationOptionsCopy = getProfilePreferenceCopy(appLanguageBase).transportation.options ?? {};
-  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
+  const translatedMessages =
+    chatMessageTranslations[translationLanguageBase as keyof typeof chatMessageTranslations];
+  const transportationOptionsCopy =
+    getProfilePreferenceCopy(appLanguageBase).transportation.options ?? {};
+  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel(
+    { contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument },
+    verificationLevel,
+  );
   const canUsePrivateChats = canChatPrivately(effectiveVerificationLevel);
-  const [eventMessagesById, setEventMessagesById] = useState<Record<string, ChatMessage[]>>(() => ({ ...eventChatSeeds }));
-  const [directMessagesByPerson, setDirectMessagesByPerson] = useState<Record<string, ChatMessage[]>>(directChatSeedByPerson);
+  const [eventMessagesById, setEventMessagesById] = useState<Record<string, ChatMessage[]>>(() => ({
+    ...eventChatSeeds,
+  }));
+  const [directMessagesByPerson, setDirectMessagesByPerson] =
+    useState<Record<string, ChatMessage[]>>(directChatSeedByPerson);
+  const [softRevealLevelsByPerson, setSoftRevealLevelsByPerson] = useState<
+    Record<string, SoftRevealBlurLevel>
+  >({
+    "maya-host": "High blur",
+    "nsn-tester": "High blur",
+    "jordan-member": "High blur",
+  });
+  const [softRevealRequestsByPerson, setSoftRevealRequestsByPerson] = useState<
+    Record<string, SoftRevealRequest | undefined>
+  >({});
   const [draft, setDraft] = useState("");
   const [selectedChatId, setSelectedChatId] = useState("movie-night-watch-chat");
   const [selectedChatTargetId, setSelectedChatTargetId] = useState<string | null>(null);
@@ -1204,7 +1524,9 @@ export default function ChatsScreen() {
   const [memberBlockOpen, setMemberBlockOpen] = useState(false);
   const [blockNotice, setBlockNotice] = useState("");
   const [selectedReportTargetId, setSelectedReportTargetId] = useState("maya-host");
-  const [selectedBlockMemberId, setSelectedBlockMemberId] = useState(memberBlockTargets[0]?.id ?? "");
+  const [selectedBlockMemberId, setSelectedBlockMemberId] = useState(
+    memberBlockTargets[0]?.id ?? "",
+  );
   const [selectedReportRoute, setSelectedReportRoute] = useState<SafetyReportRoute>("app_review");
   const [lastReportId, setLastReportId] = useState<string | null>(null);
   const [reportNotice, setReportNotice] = useState("");
@@ -1214,8 +1536,12 @@ export default function ChatsScreen() {
   const [chatPlusOpen, setChatPlusOpen] = useState(false);
   const [bypassAlphaChatGate, setBypassAlphaChatGate] = useState(false);
   const [showGuideTip, setShowGuideTip] = useState(true);
-  const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
-  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
+  const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<
+    FirstMeetupSupportOption[]
+  >(["No extra support"]);
+  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<
+    AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null
+  >(null);
   const [selectedComfortRoles, setSelectedComfortRoles] = useState<MeetupComfortRoleOption[]>([]);
   const guideTip = getGuideTipForSurface("chats");
   const softExitMessage = softExitChoice ? copy.softExitPresets[softExitChoice] : null;
@@ -1225,9 +1551,15 @@ export default function ChatsScreen() {
     setSelectedChatId(requestedEventId);
     setSelectedChatTargetId(`group-${requestedEventId}`);
   }, [requestedEventId]);
-  const selectedChat = allEvents.find((event) => event.id === selectedChatId) ?? allEvents.find((event) => event.id === "movie-night-watch-chat") ?? allEvents[0]!;
+  const selectedChat =
+    allEvents.find((event) => event.id === selectedChatId) ??
+    allEvents.find((event) => event.id === "movie-night-watch-chat") ??
+    allEvents[0]!;
   const selectedChatTitle = chatEventTitleCopy[selectedChat.id] ?? selectedChat.title;
-  const selectedChatMembers = selectedChat.id === "movie-night-watch-chat" ? copy.members : getChatMemberLabel(selectedChat, appLanguageBase);
+  const selectedChatMembers =
+    selectedChat.id === "movie-night-watch-chat"
+      ? copy.members
+      : getChatMemberLabel(selectedChat, appLanguageBase);
   const groupChatTargets: ChatTarget[] = allEvents.map((event) => ({
     id: `group-${event.id}`,
     type: "group",
@@ -1247,19 +1579,51 @@ export default function ChatsScreen() {
     personId: person.personId,
   }));
   const chatTargets = [...groupChatTargets, ...personChatTargets];
-  const selectedChatTarget = selectedChatTargetId ? chatTargets.find((target) => target.id === selectedChatTargetId) : undefined;
+  const selectedChatTarget = selectedChatTargetId
+    ? chatTargets.find((target) => target.id === selectedChatTargetId)
+    : undefined;
   const isPersonChat = selectedChatTarget?.type === "person";
   const activeChatTitle = selectedChatTarget?.title ?? selectedChatTitle;
   const activeChatSubtitle = selectedChatTarget?.subtitle ?? selectedChatMembers;
   const activeChatEmoji = selectedChatTarget?.emoji ?? selectedChat.emoji;
   const activeChatTone = selectedChatTarget?.tone ?? selectedChat.imageTone;
-  const activeChatProfile = selectedChatTarget?.type === "person" ? getChatProfilePreview(selectedChatTarget.personId) : undefined;
-  const conversationId = selectedChatTarget?.type === "person" ? selectedChatTarget.personId : selectedChat.id;
+  const activeChatProfile =
+    selectedChatTarget?.type === "person"
+      ? getChatProfilePreview(selectedChatTarget.personId)
+      : undefined;
+  const activeSoftRevealLevel =
+    selectedChatTarget?.type === "person"
+      ? (softRevealLevelsByPerson[selectedChatTarget.personId] ?? "High blur")
+      : "High blur";
+  const activeSoftRevealRequest =
+    selectedChatTarget?.type === "person"
+      ? softRevealRequestsByPerson[selectedChatTarget.personId]
+      : undefined;
+  const mySoftRevealPreferences = {
+    suggestionsEnabled: softRevealSuggestions,
+    revealPace: softRevealPace,
+    preferSoftRevealPeople,
+  };
+  const activeSoftRevealPrompt =
+    selectedChatTarget?.type === "person" && activeChatProfile
+      ? getSoftRevealMilestonePrompt({
+          myPreferences: mySoftRevealPreferences,
+          theirPreferences: activeChatProfile.softRevealPreferences,
+          chatStartedAt:
+            directChatStartedAtByPerson[selectedChatTarget.personId] ?? "2026-05-31T10:00:00.000Z",
+          now: "2026-05-31T10:00:00.000Z",
+          currentLevel: activeSoftRevealLevel,
+        })
+      : { kind: "none" as const };
+  const conversationId =
+    selectedChatTarget?.type === "person" ? selectedChatTarget.personId : selectedChat.id;
   const eventId = selectedChat.id;
   const activeMessages =
     selectedChatTarget?.type === "person"
-      ? localizeDirectMessages(directMessagesByPerson, appLanguageBase)[selectedChatTarget.personId] ?? []
-      : eventMessagesById[selectedChat.id] ?? eventChatSeeds[selectedChat.id] ?? [];
+      ? (localizeDirectMessages(directMessagesByPerson, appLanguageBase)[
+          selectedChatTarget.personId
+        ] ?? [])
+      : (eventMessagesById[selectedChat.id] ?? eventChatSeeds[selectedChat.id] ?? []);
   const previewProfile = getChatProfilePreview(previewPersonId);
   const getMessagePersonId = (message: ChatMessage) =>
     message.personId ??
@@ -1267,50 +1631,108 @@ export default function ChatsScreen() {
     null;
   const hostUserId = "maya-host";
   const isHostBlocked = blockedUserIds.includes(hostUserId);
-  const selectedBlockMember = memberBlockTargets.find((target) => target.id === selectedBlockMemberId) ?? memberBlockTargets[0];
-  const isSelectedMemberBlocked = selectedBlockMember ? blockedUserIds.includes(selectedBlockMember.id) : false;
-  const selectedReportTarget = reportTargets.find((target) => target.id === selectedReportTargetId) ?? reportTargets[0];
+  const selectedBlockMember =
+    memberBlockTargets.find((target) => target.id === selectedBlockMemberId) ??
+    memberBlockTargets[0];
+  const isSelectedMemberBlocked = selectedBlockMember
+    ? blockedUserIds.includes(selectedBlockMember.id)
+    : false;
+  const selectedReportTarget =
+    reportTargets.find((target) => target.id === selectedReportTargetId) ?? reportTargets[0];
   const effectiveReportRoute =
-    selectedReportTarget.role === "host" || selectedReportTarget.role === "chat" ? "app_review" : selectedReportRoute;
-  const lastReport = lastReportId ? safetyReports.find((report) => report.id === lastReportId) : undefined;
-  const canCancelLastReport = Boolean(lastReport && !lastReport.cancelledAt && lastReport.cancelUntil && Date.now() <= Date.parse(lastReport.cancelUntil));
+    selectedReportTarget.role === "host" || selectedReportTarget.role === "chat"
+      ? "app_review"
+      : selectedReportRoute;
+  const lastReport = lastReportId
+    ? safetyReports.find((report) => report.id === lastReportId)
+    : undefined;
+  const canCancelLastReport = Boolean(
+    lastReport &&
+    !lastReport.cancelledAt &&
+    lastReport.cancelUntil &&
+    Date.now() <= Date.parse(lastReport.cancelUntil),
+  );
 
   if (!canUsePrivateChats && !bypassAlphaChatGate) {
     return (
-      <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+      <ScreenContainer
+        containerClassName="bg-background"
+        safeAreaClassName="bg-background"
+        style={isDay && styles.dayContainer}
+      >
         <View style={[styles.screen, isDay && styles.dayContainer]}>
           <View style={[styles.header, isDay && styles.dayHeader]}>
-            <View style={styles.eventAvatar}><Text style={styles.eventEmoji}>💬</Text></View>
+            <View style={styles.eventAvatar}>
+              <Text style={styles.eventEmoji}>💬</Text>
+            </View>
             <View style={styles.headerText}>
-              <Text style={[styles.title, isDay && styles.dayTitle]}>{trustGateCopy.trustRequiredTitle}</Text>
-              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}</Text>
+              <Text style={[styles.title, isDay && styles.dayTitle]}>
+                {trustGateCopy.trustRequiredTitle}
+              </Text>
+              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>
+                {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
+              </Text>
             </View>
           </View>
           <View style={[styles.trustGateCard, isDay && styles.dayCard]}>
-            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
-            <Text style={[styles.trustGateTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredTitle}</Text>
-            <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{trustGateCopy.trustRequiredCopy}</Text>
-            <Text style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              This gate is a prototype state. No real verification provider or private messaging system is connected yet.
+            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>
+              Alpha testing
             </Text>
-            <Text style={[styles.trustGateStatus, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+            <Text
+              style={[styles.trustGateTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}
+            >
+              {trustGateCopy.trustRequiredTitle}
+            </Text>
+            <Text
+              style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+            >
+              {trustGateCopy.trustRequiredCopy}
+            </Text>
+            <Text
+              style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+            >
+              This gate is a prototype state. No real verification provider or private messaging
+              system is connected yet.
+            </Text>
+            <Text
+              style={[
+                styles.trustGateStatus,
+                isDay && styles.dayAccentText,
+                isRtl && styles.rtlText,
+              ]}
+            >
               {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() => setBypassAlphaChatGate(true)}
-              style={[styles.trustGateButton, styles.trustGateBypassButton, isDay && styles.dayTrustGateBypassButton]}
+              style={[
+                styles.trustGateButton,
+                styles.trustGateBypassButton,
+                isDay && styles.dayTrustGateBypassButton,
+              ]}
               accessibilityRole="button"
               accessibilityLabel="Browse prototype chats for alpha testing"
               accessibilityHint="Bypasses this local prototype gate for the current session without changing verification status."
             >
-              <Text style={[styles.trustGateButtonText, styles.trustGateBypassButtonText, isDay && styles.dayTrustGateBypassButtonText]}>
+              <Text
+                style={[
+                  styles.trustGateButtonText,
+                  styles.trustGateBypassButtonText,
+                  isDay && styles.dayTrustGateBypassButtonText,
+                ]}
+              >
                 Browse prototype chats for now
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.85}
-              onPress={() => router.push({ pathname: "/(tabs)/profile", params: { menu: "verificationTrust", from: "chats" } } as never)}
+              onPress={() =>
+                router.push({
+                  pathname: "/(tabs)/profile",
+                  params: { menu: "verificationTrust", from: "chats" },
+                } as never)
+              }
               style={styles.trustGateButton}
               accessibilityRole="button"
               accessibilityHint={screenReaderHints ? chatCopy.reviewTrustStatusHint : undefined}
@@ -1326,12 +1748,22 @@ export default function ChatsScreen() {
   const sendMessage = () => {
     const trimmed = draft.trim();
     if (!trimmed) return;
-    const nextMessage: ChatMessage = { id: String(Date.now()), name: copy.you, avatar: "Y", text: trimmed, time: copy.now, mine: true };
+    const nextMessage: ChatMessage = {
+      id: String(Date.now()),
+      name: copy.you,
+      avatar: "Y",
+      text: trimmed,
+      time: copy.now,
+      mine: true,
+    };
 
     if (selectedChatTarget?.type === "person") {
       setDirectMessagesByPerson((current) => ({
         ...current,
-        [selectedChatTarget.personId]: [...(current[selectedChatTarget.personId] ?? []), nextMessage],
+        [selectedChatTarget.personId]: [
+          ...(current[selectedChatTarget.personId] ?? []),
+          nextMessage,
+        ],
       }));
     } else {
       setEventMessagesById((current) => ({
@@ -1341,6 +1773,39 @@ export default function ChatsScreen() {
     }
 
     setDraft("");
+  };
+
+  const requestSoftReveal = (
+    targetLevel: SoftRevealBlurLevel = getNextSoftRevealLevel(activeSoftRevealLevel),
+  ) => {
+    if (selectedChatTarget?.type !== "person") return;
+    const request = createSoftRevealRequest({
+      requestedBy: "me",
+      targetLevel,
+      currentLevel: activeSoftRevealLevel,
+      chatStartedAt:
+        directChatStartedAtByPerson[selectedChatTarget.personId] ?? "2026-05-31T10:00:00.000Z",
+      requestedAt: new Date().toISOString(),
+    });
+    setSoftRevealRequestsByPerson((current) => ({
+      ...current,
+      [selectedChatTarget.personId]: request,
+    }));
+  };
+
+  const respondToActiveSoftReveal = (response: "Accept" | "Not yet" | "Decide later") => {
+    if (selectedChatTarget?.type !== "person" || !activeSoftRevealRequest) return;
+    const result = respondToSoftRevealRequest(activeSoftRevealRequest, "them", response);
+    setSoftRevealRequestsByPerson((current) => ({
+      ...current,
+      [selectedChatTarget.personId]: result.request,
+    }));
+    if (result.changed) {
+      setSoftRevealLevelsByPerson((current) => ({
+        ...current,
+        [selectedChatTarget.personId]: result.revealLevel,
+      }));
+    }
   };
 
   const sendArrivalUpdate = (text: string) => {
@@ -1354,7 +1819,11 @@ export default function ChatsScreen() {
   };
 
   const sendRunningLateUpdate = () => {
-    sendArrivalUpdate(localizedArrivalUpdateCopy.runningLateMessage(transportationOptionsCopy[transportationMethod]?.label ?? transportationMethod));
+    sendArrivalUpdate(
+      localizedArrivalUpdateCopy.runningLateMessage(
+        transportationOptionsCopy[transportationMethod]?.label ?? transportationMethod,
+      ),
+    );
   };
 
   const sendCannotMakeItUpdate = async (reason: CannotMakeItReason) => {
@@ -1376,17 +1845,30 @@ export default function ChatsScreen() {
     });
   };
   const toggleComfortRole = (role: MeetupComfortRoleOption) => {
-    setSelectedComfortRoles((current) => (current.includes(role) ? current.filter((item) => item !== role) : [...current, role]));
+    setSelectedComfortRoles((current) =>
+      current.includes(role) ? current.filter((item) => item !== role) : [...current, role],
+    );
   };
 
   const reportConcern = async (reason: SafetyReportReason) => {
     const accountCompromiseCopy =
-      localizedReportFlowCopy.accountCompromiseReviewCopy ?? reportFlowCopy.accountCompromiseReviewCopy ?? "";
-    const reportReceivedStatus = localizedReportFlowCopy.reportReceivedStatus ?? reportFlowCopy.reportReceivedStatus ?? localizedReportFlowCopy.cancelWindow;
-    const report = createSafetyReport(conversationId, selectedReportTarget.id, reason, new Date().toISOString(), {
-      reportedUserName: selectedReportTarget.name,
-      route: effectiveReportRoute,
-    });
+      localizedReportFlowCopy.accountCompromiseReviewCopy ??
+      reportFlowCopy.accountCompromiseReviewCopy ??
+      "";
+    const reportReceivedStatus =
+      localizedReportFlowCopy.reportReceivedStatus ??
+      reportFlowCopy.reportReceivedStatus ??
+      localizedReportFlowCopy.cancelWindow;
+    const report = createSafetyReport(
+      conversationId,
+      selectedReportTarget.id,
+      reason,
+      new Date().toISOString(),
+      {
+        reportedUserName: selectedReportTarget.name,
+        route: effectiveReportRoute,
+      },
+    );
     await saveSoftHelloMvpState({ safetyReports: [...safetyReports, report] });
     setReportReasonsOpen(false);
     setBlockChoiceOpen(false);
@@ -1394,9 +1876,13 @@ export default function ChatsScreen() {
     setReportNotice(
       effectiveReportRoute === "host_review"
         ? `${reason} about ${selectedReportTarget.name} was sent to the host.`
-        : `${reason} about ${selectedReportTarget.name} was submitted for app review.`
+        : `${reason} about ${selectedReportTarget.name} was submitted for app review.`,
     );
-    setReportStatusNotice(reason === "Possible account compromise" ? `${reportReceivedStatus}. ${accountCompromiseCopy}` : reportReceivedStatus);
+    setReportStatusNotice(
+      reason === "Possible account compromise"
+        ? `${reportReceivedStatus}. ${accountCompromiseCopy}`
+        : reportReceivedStatus,
+    );
     Alert.alert(localizedReportFlowCopy.reportSaved, `${localizedReportFlowCopy.cancelWindow}`);
   };
 
@@ -1442,7 +1928,9 @@ export default function ChatsScreen() {
   const blockMemberOnly = async () => {
     if (!selectedBlockMember) return;
 
-    await saveSoftHelloMvpState({ blockedUserIds: blockUser(selectedBlockMember.id, blockedUserIds) });
+    await saveSoftHelloMvpState({
+      blockedUserIds: blockUser(selectedBlockMember.id, blockedUserIds),
+    });
     setBlockChoiceOpen(false);
     setReportReasonsOpen(false);
     setBlockNotice(memberBlockCopy.blockedMemberCopy(selectedBlockMember.name));
@@ -1451,7 +1939,9 @@ export default function ChatsScreen() {
   const blockMemberAndReport = async () => {
     if (!selectedBlockMember) return;
 
-    await saveSoftHelloMvpState({ blockedUserIds: blockUser(selectedBlockMember.id, blockedUserIds) });
+    await saveSoftHelloMvpState({
+      blockedUserIds: blockUser(selectedBlockMember.id, blockedUserIds),
+    });
     setSelectedReportTargetId(selectedBlockMember.id);
     setSelectedReportRoute("host_review");
     setMemberBlockOpen(false);
@@ -1463,7 +1953,9 @@ export default function ChatsScreen() {
   const unblockMember = async () => {
     if (!selectedBlockMember) return;
 
-    await saveSoftHelloMvpState({ blockedUserIds: unblockUser(selectedBlockMember.id, blockedUserIds) });
+    await saveSoftHelloMvpState({
+      blockedUserIds: unblockUser(selectedBlockMember.id, blockedUserIds),
+    });
     setReportReasonsOpen(false);
     setBlockNotice(memberBlockCopy.unblockedMemberCopy(selectedBlockMember.name));
   };
@@ -1506,17 +1998,26 @@ export default function ChatsScreen() {
 
   const renderChatTargetButton = (target: ChatTarget) => {
     const active = selectedChatTarget?.id === target.id;
-    const targetProfile = target.type === "person" ? getChatProfilePreview(target.personId) : undefined;
+    const targetProfile =
+      target.type === "person" ? getChatProfilePreview(target.personId) : undefined;
 
     return (
       <TouchableOpacity
         key={target.id}
         activeOpacity={0.82}
         onPress={() => chooseChat(target)}
-        style={[styles.chatMenuItem, isDay && styles.daySoftExitAction, active && styles.chatMenuItemActive]}
+        style={[
+          styles.chatMenuItem,
+          isDay && styles.daySoftExitAction,
+          active && styles.chatMenuItemActive,
+        ]}
         accessibilityRole="button"
         accessibilityState={{ selected: active }}
-        accessibilityHint={screenReaderHints ? `Opens ${target.type === "person" ? "a private chat with" : "the group chat for"} ${target.title}.` : undefined}
+        accessibilityHint={
+          screenReaderHints
+            ? `Opens ${target.type === "person" ? "a private chat with" : "the group chat for"} ${target.title}.`
+            : undefined
+        }
       >
         {target.type === "person" ? (
           <ProfileAvatar
@@ -1534,21 +2035,47 @@ export default function ChatsScreen() {
           </View>
         )}
         <View style={styles.chatMenuItemBody}>
-          <Text style={[styles.chatMenuItemTitle, isDay && styles.dayTitle, active && styles.chatMenuItemTextActive, isRtl && styles.rtlText]}>{target.title}</Text>
-          <Text style={[styles.chatMenuItemMeta, isDay && styles.dayMutedText, active && styles.chatMenuItemTextActive, isRtl && styles.rtlText]}>
+          <Text
+            style={[
+              styles.chatMenuItemTitle,
+              isDay && styles.dayTitle,
+              active && styles.chatMenuItemTextActive,
+              isRtl && styles.rtlText,
+            ]}
+          >
+            {target.title}
+          </Text>
+          <Text
+            style={[
+              styles.chatMenuItemMeta,
+              isDay && styles.dayMutedText,
+              active && styles.chatMenuItemTextActive,
+              isRtl && styles.rtlText,
+            ]}
+          >
             {target.subtitle}
           </Text>
         </View>
-        <Text style={[styles.chatMenuStatus, active && styles.chatMenuItemTextActive]}>{active ? "✓" : "›"}</Text>
+        <Text style={[styles.chatMenuStatus, active && styles.chatMenuItemTextActive]}>
+          {active ? "✓" : "›"}
+        </Text>
       </TouchableOpacity>
     );
   };
 
   if (!selectedChatTarget) {
     return (
-      <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+      <ScreenContainer
+        containerClassName="bg-background"
+        safeAreaClassName="bg-background"
+        style={isDay && styles.dayContainer}
+      >
         <View style={[styles.screen, isDay && styles.dayContainer]}>
-          <ScrollView style={styles.chat} contentContainerStyle={styles.chatSelectionContent} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.chat}
+            contentContainerStyle={styles.chatSelectionContent}
+            showsVerticalScrollIndicator={false}
+          >
             <TouchableOpacity
               activeOpacity={0.78}
               onPress={returnFromChatChooser}
@@ -1556,27 +2083,76 @@ export default function ChatsScreen() {
               accessibilityRole="button"
               accessibilityLabel={chatMenuCopy.returnLabel}
             >
-              <IconSymbol name={isRtl ? "chevron.right" : "chevron.left"} color={isDay ? "#0B1220" : nsnColors.text} size={18} />
-              <Text style={[styles.chatSelectionReturnText, isDay && styles.dayTitle]}>{chatMenuCopy.returnLabel}</Text>
+              <IconSymbol
+                name={isRtl ? "chevron.right" : "chevron.left"}
+                color={isDay ? "#0B1220" : nsnColors.text}
+                size={18}
+              />
+              <Text style={[styles.chatSelectionReturnText, isDay && styles.dayTitle]}>
+                {chatMenuCopy.returnLabel}
+              </Text>
             </TouchableOpacity>
-            <Text style={[styles.chatSelectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{chatMenuCopy.landingTitle}</Text>
-            <Text style={[styles.chatSelectionCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.landingCopy}</Text>
+            <Text
+              style={[styles.chatSelectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}
+            >
+              {chatMenuCopy.landingTitle}
+            </Text>
+            <Text
+              style={[
+                styles.chatSelectionCopy,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {chatMenuCopy.landingCopy}
+            </Text>
 
-            {showGuideTip ? <GuidesAndTipsCard tip={guideTip} isDay={isDay} onDismiss={() => setShowGuideTip(false)} /> : null}
+            {showGuideTip ? (
+              <GuidesAndTipsCard
+                tip={guideTip}
+                isDay={isDay}
+                onDismiss={() => setShowGuideTip(false)}
+              />
+            ) : null}
 
             <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
-              <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
-              <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>Demo conversations</Text>
+              <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>
+                Alpha testing
+              </Text>
+              <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>
+                Demo conversations
+              </Text>
               <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
-                Try switching between group and private chats, sending a local message, and using soft-exit options. Reports, blocks, and private chats are prototype-only.
+                Try switching between group and private chats, sending a local message, and using
+                soft-exit options. Reports, blocks, and private chats are prototype-only.
               </Text>
             </View>
 
-            <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.meetupGroups}</Text>
-            <View style={styles.chatSelectionList}>{groupChatTargets.map(renderChatTargetButton)}</View>
+            <Text
+              style={[
+                styles.chatMenuSectionTitle,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {chatMenuCopy.meetupGroups}
+            </Text>
+            <View style={styles.chatSelectionList}>
+              {groupChatTargets.map(renderChatTargetButton)}
+            </View>
 
-            <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.people}</Text>
-            <View style={styles.chatSelectionList}>{personChatTargets.map(renderChatTargetButton)}</View>
+            <Text
+              style={[
+                styles.chatMenuSectionTitle,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {chatMenuCopy.people}
+            </Text>
+            <View style={styles.chatSelectionList}>
+              {personChatTargets.map(renderChatTargetButton)}
+            </View>
           </ScrollView>
         </View>
       </ScreenContainer>
@@ -1584,9 +2160,13 @@ export default function ChatsScreen() {
   }
 
   return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
+    <ScreenContainer
+      containerClassName="bg-background"
+      safeAreaClassName="bg-background"
+      style={isDay && styles.dayContainer}
+    >
       <View style={[styles.screen, isDay && styles.dayContainer]}>
-          <View style={[styles.header, isDay && styles.dayHeader]}>
+        <View style={[styles.header, isDay && styles.dayHeader]}>
           <TouchableOpacity
             activeOpacity={0.75}
             onPress={() => {
@@ -1628,13 +2208,19 @@ export default function ChatsScreen() {
                 isDay={isDay}
               />
             ) : (
-              <View style={[styles.eventAvatar, { backgroundColor: activeChatTone }]}><Text style={styles.eventEmoji}>{activeChatEmoji}</Text></View>
+              <View style={[styles.eventAvatar, { backgroundColor: activeChatTone }]}>
+                <Text style={styles.eventEmoji}>{activeChatEmoji}</Text>
+              </View>
             )}
             <View style={styles.headerText}>
               <Text style={[styles.title, isDay && styles.dayTitle]}>{activeChatTitle}</Text>
-              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>{activeChatSubtitle}</Text>
+              <Text style={[styles.subtitle, isDay && styles.dayMutedText]}>
+                {activeChatSubtitle}
+              </Text>
             </View>
-            <Text style={[styles.chatPickerChevron, isDay && styles.dayMutedText]}>{chatMenuOpen ? "⌃" : "⌄"}</Text>
+            <Text style={[styles.chatPickerChevron, isDay && styles.dayMutedText]}>
+              {chatMenuOpen ? "⌃" : "⌄"}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.75}
@@ -1674,26 +2260,150 @@ export default function ChatsScreen() {
 
         {chatMenuOpen ? (
           <View style={[styles.chatMenu, isDay && styles.dayCard]}>
-            <Text style={[styles.chatMenuTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.title}</Text>
-            <ScrollView style={styles.chatMenuList} contentContainerStyle={styles.chatMenuListContent} showsVerticalScrollIndicator={false}>
-              <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.meetupGroups}</Text>
+            <Text
+              style={[styles.chatMenuTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+            >
+              {chatMenuCopy.title}
+            </Text>
+            <ScrollView
+              style={styles.chatMenuList}
+              contentContainerStyle={styles.chatMenuListContent}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text
+                style={[
+                  styles.chatMenuSectionTitle,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {chatMenuCopy.meetupGroups}
+              </Text>
               {groupChatTargets.map(renderChatTargetButton)}
-              <Text style={[styles.chatMenuSectionTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{chatMenuCopy.people}</Text>
+              <Text
+                style={[
+                  styles.chatMenuSectionTitle,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {chatMenuCopy.people}
+              </Text>
               {personChatTargets.map(renderChatTargetButton)}
             </ScrollView>
           </View>
         ) : null}
 
-        <ScrollView style={styles.chat} contentContainerStyle={styles.chatContent} showsVerticalScrollIndicator={false} scrollEnabled={!chatMenuOpen}>
-          {showGuideTip ? <GuidesAndTipsCard tip={guideTip} isDay={isDay} onDismiss={() => setShowGuideTip(false)} /> : null}
+        <ScrollView
+          style={styles.chat}
+          contentContainerStyle={styles.chatContent}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={!chatMenuOpen}
+        >
+          {showGuideTip ? (
+            <GuidesAndTipsCard
+              tip={guideTip}
+              isDay={isDay}
+              onDismiss={() => setShowGuideTip(false)}
+            />
+          ) : null}
 
           <View style={[styles.alphaGuideCard, isDay && styles.dayCard]}>
-            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
+            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>
+              Alpha testing
+            </Text>
             <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
-              Messages stay in this prototype session. Try the tone, arrival updates, and soft exit controls without treating this as a live chat.
+              Messages stay in this prototype session. Try the tone, arrival updates, and soft exit
+              controls without treating this as a live chat.
             </Text>
           </View>
-          <View style={[styles.dayPill, isDay && styles.dayPillLight]}><Text style={[styles.dayPillText, isDay && styles.dayMutedText]}>{copy.today}</Text></View>
+          {isPersonChat && activeChatProfile ? (
+            <View style={[styles.softRevealCard, isDay && styles.dayCard]}>
+              <View style={styles.softRevealHeader}>
+                <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>
+                  Soft Reveal
+                </Text>
+                <Text style={[styles.softRevealLevel, isDay && styles.dayTitle]}>
+                  {activeSoftRevealLevel}
+                </Text>
+              </View>
+              <View style={styles.softRevealIndicatorRow}>
+                <Text style={[styles.softRevealChip, isDay && styles.daySoftRevealChip]}>
+                  {getSoftRevealIndicator(mySoftRevealPreferences)}
+                </Text>
+                <Text style={[styles.softRevealChip, isDay && styles.daySoftRevealChip]}>
+                  {activeChatProfile.softRevealIndicator}
+                </Text>
+              </View>
+              <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
+                Lowering blur is mutual and reversible. Nothing changes unless both people agree.
+              </Text>
+              {activeSoftRevealPrompt.kind === "suggestion" ? (
+                <Text style={[styles.softRevealPrompt, isDay && styles.dayMutedText]}>
+                  {activeSoftRevealPrompt.copy}
+                </Text>
+              ) : null}
+              {activeSoftRevealPrompt.kind === "helper" ? (
+                <Text style={[styles.softRevealHelper, isDay && styles.daySoftRevealHelper]}>
+                  {activeSoftRevealPrompt.copy}
+                </Text>
+              ) : null}
+              {activeSoftRevealRequest && activeSoftRevealRequest.status !== "accepted" ? (
+                <View style={styles.softRevealRequestBox}>
+                  <Text style={[styles.softExitTitle, isDay && styles.dayTitle]}>
+                    Lower blur together?
+                  </Text>
+                  <Text style={[styles.softExitCopy, isDay && styles.dayMutedText]}>
+                    One person asked to move to {activeSoftRevealRequest.targetLevel}. You can
+                    answer now or come back to it later.
+                  </Text>
+                  <View style={styles.softRevealActions}>
+                    {(["Accept", "Not yet", "Decide later"] as const).map((response) => (
+                      <TouchableOpacity
+                        key={response}
+                        activeOpacity={0.82}
+                        onPress={() => respondToActiveSoftReveal(response)}
+                        style={[
+                          styles.softRevealButton,
+                          isDay && styles.daySoftRevealButton,
+                          response === "Accept" && styles.softRevealButtonPrimary,
+                        ]}
+                        accessibilityRole="button"
+                      >
+                        <Text
+                          style={[
+                            styles.softRevealButtonText,
+                            response === "Accept" && styles.softRevealButtonTextPrimary,
+                          ]}
+                        >
+                          {response}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() =>
+                    requestSoftReveal(
+                      activeSoftRevealPrompt.kind === "suggestion"
+                        ? activeSoftRevealPrompt.targetLevel
+                        : undefined,
+                    )
+                  }
+                  style={[styles.softRevealButton, styles.softRevealButtonPrimary]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Lower blur together"
+                >
+                  <Text style={styles.softRevealButtonTextPrimary}>Lower blur together</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : null}
+          <View style={[styles.dayPill, isDay && styles.dayPillLight]}>
+            <Text style={[styles.dayPillText, isDay && styles.dayMutedText]}>{copy.today}</Text>
+          </View>
           <View style={[styles.systemNotice, isDay && styles.dayCard]}>
             <Text style={[styles.systemText, isDay && styles.dayTitle]}>{copy.joined}</Text>
             <Text style={[styles.systemSubtext, isDay && styles.dayMutedText]}>{copy.private}</Text>
@@ -1701,20 +2411,30 @@ export default function ChatsScreen() {
 
           {safetyOpen && (
             <View style={[styles.softExitPanel, isDay && styles.daySoftExitPanel]}>
-              <Text style={[styles.softExitTitle, isDay && styles.dayTitle]}>{copy.safetyTitle}</Text>
-              <Text style={[styles.softExitCopy, isDay && styles.dayMutedText]}>{copy.safetyCopy}</Text>
+              <Text style={[styles.softExitTitle, isDay && styles.dayTitle]}>
+                {copy.safetyTitle}
+              </Text>
+              <Text style={[styles.softExitCopy, isDay && styles.dayMutedText]}>
+                {copy.safetyCopy}
+              </Text>
               <View style={styles.softExitActions}>
                 <TouchableOpacity
                   activeOpacity={0.82}
                   onPress={() => setReportReasonsOpen((current) => !current)}
                   style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                 >
-                  <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.reportConcern}</Text>
-                  <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.reportConcernCopy}</Text>
+                  <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>
+                    {copy.reportConcern}
+                  </Text>
+                  <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>
+                    {copy.reportConcernCopy}
+                  </Text>
                 </TouchableOpacity>
                 {reportReasonsOpen ? (
                   <View style={styles.reportReasonStack}>
-                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{localizedReportFlowCopy.targetTitle}</Text>
+                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>
+                      {localizedReportFlowCopy.targetTitle}
+                    </Text>
                     <View style={styles.reportTargetGrid}>
                       {reportTargets.map((target) => {
                         const active = selectedReportTarget.id === target.id;
@@ -1741,20 +2461,46 @@ export default function ChatsScreen() {
                             accessibilityRole="button"
                             accessibilityState={{ selected: active }}
                           >
-                            <Text style={[styles.reportTargetName, isDay && styles.dayTitle, active && styles.reportTargetTextActive]}>{target.name}</Text>
-                            <Text style={[styles.reportTargetRole, isDay && styles.dayMutedText, active && styles.reportTargetTextActive]}>{roleLabel}</Text>
+                            <Text
+                              style={[
+                                styles.reportTargetName,
+                                isDay && styles.dayTitle,
+                                active && styles.reportTargetTextActive,
+                              ]}
+                            >
+                              {target.name}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.reportTargetRole,
+                                isDay && styles.dayMutedText,
+                                active && styles.reportTargetTextActive,
+                              ]}
+                            >
+                              {roleLabel}
+                            </Text>
                           </TouchableOpacity>
                         );
                       })}
                     </View>
                     {selectedReportTarget.role === "member" ? (
                       <>
-                        <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{localizedReportFlowCopy.routeTitle}</Text>
+                        <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>
+                          {localizedReportFlowCopy.routeTitle}
+                        </Text>
                         <View style={styles.reportRouteStack}>
-                          {([
-                            { value: "host_review" as SafetyReportRoute, label: localizedReportFlowCopy.reportToHost, copy: localizedReportFlowCopy.reportToHostCopy },
-                            { value: "app_review" as SafetyReportRoute, label: localizedReportFlowCopy.appReview, copy: localizedReportFlowCopy.appReviewCopy },
-                          ]).map((route) => {
+                          {[
+                            {
+                              value: "host_review" as SafetyReportRoute,
+                              label: localizedReportFlowCopy.reportToHost,
+                              copy: localizedReportFlowCopy.reportToHostCopy,
+                            },
+                            {
+                              value: "app_review" as SafetyReportRoute,
+                              label: localizedReportFlowCopy.appReview,
+                              copy: localizedReportFlowCopy.appReviewCopy,
+                            },
+                          ].map((route) => {
                             const active = selectedReportRoute === route.value;
 
                             return (
@@ -1762,26 +2508,57 @@ export default function ChatsScreen() {
                                 key={route.value}
                                 activeOpacity={0.82}
                                 onPress={() => setSelectedReportRoute(route.value)}
-                                style={[styles.reportRouteButton, isDay && styles.dayReportReasonButton, active && styles.reportTargetButtonActive]}
+                                style={[
+                                  styles.reportRouteButton,
+                                  isDay && styles.dayReportReasonButton,
+                                  active && styles.reportTargetButtonActive,
+                                ]}
                                 accessibilityRole="button"
                                 accessibilityState={{ selected: active }}
                               >
-                                <Text style={[styles.reportReasonText, isDay && styles.dayTitle, active && styles.reportTargetTextActive]}>{route.label}</Text>
-                                <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText, active && styles.reportTargetTextActive]}>{route.copy}</Text>
+                                <Text
+                                  style={[
+                                    styles.reportReasonText,
+                                    isDay && styles.dayTitle,
+                                    active && styles.reportTargetTextActive,
+                                  ]}
+                                >
+                                  {route.label}
+                                </Text>
+                                <Text
+                                  style={[
+                                    styles.reportReasonCopy,
+                                    isDay && styles.dayMutedText,
+                                    active && styles.reportTargetTextActive,
+                                  ]}
+                                >
+                                  {route.copy}
+                                </Text>
                               </TouchableOpacity>
                             );
                           })}
                         </View>
                       </>
                     ) : (
-                      <View style={[styles.reportRouteButton, isDay && styles.dayReportReasonButton]}>
-                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{localizedReportFlowCopy.appReview}</Text>
-                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{localizedReportFlowCopy.appReviewCopy}</Text>
+                      <View
+                        style={[styles.reportRouteButton, isDay && styles.dayReportReasonButton]}
+                      >
+                        <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>
+                          {localizedReportFlowCopy.appReview}
+                        </Text>
+                        <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>
+                          {localizedReportFlowCopy.appReviewCopy}
+                        </Text>
                       </View>
                     )}
-                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{copy.escalationReasons}</Text>
+                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>
+                      {copy.escalationReasons}
+                    </Text>
                     {escalationReportReasons.map((option) => {
-                      const localizedOption = localizedSafetyReasons[option.reason] ?? { label: option.reason, copy: option.copy };
+                      const localizedOption = localizedSafetyReasons[option.reason] ?? {
+                        label: option.reason,
+                        copy: option.copy,
+                      };
 
                       return (
                         <TouchableOpacity
@@ -1792,17 +2569,28 @@ export default function ChatsScreen() {
                           accessibilityRole="button"
                           accessibilityLabel={`Report ${option.reason}`}
                         >
-                          <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{localizedOption.label}</Text>
-                          <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{localizedOption.copy}</Text>
+                          <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>
+                            {localizedOption.label}
+                          </Text>
+                          <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>
+                            {localizedOption.copy}
+                          </Text>
                           {option.reviewCopy ? (
-                            <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{option.reviewCopy}</Text>
+                            <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>
+                              {option.reviewCopy}
+                            </Text>
                           ) : null}
                         </TouchableOpacity>
                       );
                     })}
-                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>{copy.otherReportReasons}</Text>
+                    <Text style={[styles.reportReasonHeading, isDay && styles.dayMutedText]}>
+                      {copy.otherReportReasons}
+                    </Text>
                     {otherReportReasons.map((option) => {
-                      const localizedOption = localizedSafetyReasons[option.reason] ?? { label: option.reason, copy: option.copy };
+                      const localizedOption = localizedSafetyReasons[option.reason] ?? {
+                        label: option.reason,
+                        copy: option.copy,
+                      };
 
                       return (
                         <TouchableOpacity
@@ -1813,8 +2601,12 @@ export default function ChatsScreen() {
                           accessibilityRole="button"
                           accessibilityLabel={`Report ${option.reason}`}
                         >
-                          <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>{localizedOption.label}</Text>
-                          <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>{localizedOption.copy}</Text>
+                          <Text style={[styles.reportReasonText, isDay && styles.dayTitle]}>
+                            {localizedOption.label}
+                          </Text>
+                          <Text style={[styles.reportReasonCopy, isDay && styles.dayMutedText]}>
+                            {localizedOption.copy}
+                          </Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -1822,16 +2614,28 @@ export default function ChatsScreen() {
                 ) : null}
                 {reportNotice ? (
                   <View style={[styles.softExitResult, isDay && styles.daySoftExitResult]}>
-                    <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>{reportNotice}</Text>
+                    <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>
+                      {reportNotice}
+                    </Text>
                     {reportStatusNotice ? (
-                      <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{reportStatusNotice}</Text>
+                      <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>
+                        {reportStatusNotice}
+                      </Text>
                     ) : null}
                     {canCancelLastReport ? (
-                      <TouchableOpacity activeOpacity={0.82} onPress={cancelLastReport} style={styles.cancelReportButton}>
-                        <Text style={styles.cancelReportText}>{localizedReportFlowCopy.cancelReport}</Text>
+                      <TouchableOpacity
+                        activeOpacity={0.82}
+                        onPress={cancelLastReport}
+                        style={styles.cancelReportButton}
+                      >
+                        <Text style={styles.cancelReportText}>
+                          {localizedReportFlowCopy.cancelReport}
+                        </Text>
                       </TouchableOpacity>
                     ) : (
-                      <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{localizedReportFlowCopy.cancelWindow}</Text>
+                      <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>
+                        {localizedReportFlowCopy.cancelWindow}
+                      </Text>
                     )}
                   </View>
                 ) : null}
@@ -1846,15 +2650,21 @@ export default function ChatsScreen() {
                   style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                 >
                   <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>
-                    {isSelectedMemberBlocked ? memberBlockCopy.unblockMember : memberBlockCopy.blockMember}
+                    {isSelectedMemberBlocked
+                      ? memberBlockCopy.unblockMember
+                      : memberBlockCopy.blockMember}
                   </Text>
                   <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>
-                    {isSelectedMemberBlocked ? memberBlockCopy.unblockMemberCopy : memberBlockCopy.blockMemberCopy}
+                    {isSelectedMemberBlocked
+                      ? memberBlockCopy.unblockMemberCopy
+                      : memberBlockCopy.blockMemberCopy}
                   </Text>
                 </TouchableOpacity>
                 {memberBlockOpen ? (
                   <View style={[styles.blockChoiceCard, isDay && styles.dayReportReasonButton]}>
-                    <Text style={[styles.blockChoiceTitle, isDay && styles.dayTitle]}>{memberBlockCopy.chooseMember}</Text>
+                    <Text style={[styles.blockChoiceTitle, isDay && styles.dayTitle]}>
+                      {memberBlockCopy.chooseMember}
+                    </Text>
                     <View style={styles.reportTargetGrid}>
                       {memberBlockTargets.map((target) => {
                         const active = selectedBlockMember?.id === target.id;
@@ -1876,9 +2686,25 @@ export default function ChatsScreen() {
                             accessibilityRole="button"
                             accessibilityState={{ selected: active }}
                           >
-                            <Text style={[styles.reportTargetName, isDay && styles.dayTitle, active && styles.reportTargetTextActive]}>{target.name}</Text>
-                            <Text style={[styles.reportTargetRole, isDay && styles.dayMutedText, active && styles.reportTargetTextActive]}>
-                              {blocked ? memberBlockCopy.unblockMember : localizedReportFlowCopy.memberRole}
+                            <Text
+                              style={[
+                                styles.reportTargetName,
+                                isDay && styles.dayTitle,
+                                active && styles.reportTargetTextActive,
+                              ]}
+                            >
+                              {target.name}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.reportTargetRole,
+                                isDay && styles.dayMutedText,
+                                active && styles.reportTargetTextActive,
+                              ]}
+                            >
+                              {blocked
+                                ? memberBlockCopy.unblockMember
+                                : localizedReportFlowCopy.memberRole}
                             </Text>
                           </TouchableOpacity>
                         );
@@ -1886,16 +2712,34 @@ export default function ChatsScreen() {
                     </View>
                     <View style={styles.blockChoiceActions}>
                       {isSelectedMemberBlocked ? (
-                        <TouchableOpacity activeOpacity={0.82} onPress={unblockMember} style={[styles.blockChoiceButton, isDay && styles.daySoftExitAction]}>
-                          <Text style={[styles.blockChoiceButtonText, isDay && styles.dayTitle]}>{memberBlockCopy.unblockMember}</Text>
+                        <TouchableOpacity
+                          activeOpacity={0.82}
+                          onPress={unblockMember}
+                          style={[styles.blockChoiceButton, isDay && styles.daySoftExitAction]}
+                        >
+                          <Text style={[styles.blockChoiceButtonText, isDay && styles.dayTitle]}>
+                            {memberBlockCopy.unblockMember}
+                          </Text>
                         </TouchableOpacity>
                       ) : (
                         <>
-                          <TouchableOpacity activeOpacity={0.82} onPress={blockMemberOnly} style={[styles.blockChoiceButton, isDay && styles.daySoftExitAction]}>
-                            <Text style={[styles.blockChoiceButtonText, isDay && styles.dayTitle]}>{copy.blockOnly}</Text>
+                          <TouchableOpacity
+                            activeOpacity={0.82}
+                            onPress={blockMemberOnly}
+                            style={[styles.blockChoiceButton, isDay && styles.daySoftExitAction]}
+                          >
+                            <Text style={[styles.blockChoiceButtonText, isDay && styles.dayTitle]}>
+                              {copy.blockOnly}
+                            </Text>
                           </TouchableOpacity>
-                          <TouchableOpacity activeOpacity={0.82} onPress={blockMemberAndReport} style={[styles.blockChoiceButton, styles.blockChoiceButtonDanger]}>
-                            <Text style={styles.blockChoiceButtonTextDanger}>{copy.blockAndReport}</Text>
+                          <TouchableOpacity
+                            activeOpacity={0.82}
+                            onPress={blockMemberAndReport}
+                            style={[styles.blockChoiceButton, styles.blockChoiceButtonDanger]}
+                          >
+                            <Text style={styles.blockChoiceButtonTextDanger}>
+                              {copy.blockAndReport}
+                            </Text>
                           </TouchableOpacity>
                         </>
                       )}
@@ -1916,30 +2760,60 @@ export default function ChatsScreen() {
                   }
                   style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                 >
-                  <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{isHostBlocked ? copy.unblockHost : copy.blockHost}</Text>
-                  <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{isHostBlocked ? copy.unblockHostCopy : copy.blockHostCopy}</Text>
+                  <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>
+                    {isHostBlocked ? copy.unblockHost : copy.blockHost}
+                  </Text>
+                  <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>
+                    {isHostBlocked ? copy.unblockHostCopy : copy.blockHostCopy}
+                  </Text>
                 </TouchableOpacity>
                 {blockChoiceOpen && !isHostBlocked ? (
                   <View style={[styles.blockChoiceCard, isDay && styles.dayReportReasonButton]}>
-                    <Text style={[styles.blockChoiceTitle, isDay && styles.dayTitle]}>{copy.blockChoiceTitle}</Text>
-                    <Text style={[styles.blockChoiceCopy, isDay && styles.dayMutedText]}>{copy.blockChoiceCopy}</Text>
+                    <Text style={[styles.blockChoiceTitle, isDay && styles.dayTitle]}>
+                      {copy.blockChoiceTitle}
+                    </Text>
+                    <Text style={[styles.blockChoiceCopy, isDay && styles.dayMutedText]}>
+                      {copy.blockChoiceCopy}
+                    </Text>
                     <View style={styles.blockChoiceActions}>
-                      <TouchableOpacity activeOpacity={0.82} onPress={blockHostOnly} style={[styles.blockChoiceButton, isDay && styles.daySoftExitAction]}>
-                        <Text style={[styles.blockChoiceButtonText, isDay && styles.dayTitle]}>{copy.blockOnly}</Text>
+                      <TouchableOpacity
+                        activeOpacity={0.82}
+                        onPress={blockHostOnly}
+                        style={[styles.blockChoiceButton, isDay && styles.daySoftExitAction]}
+                      >
+                        <Text style={[styles.blockChoiceButtonText, isDay && styles.dayTitle]}>
+                          {copy.blockOnly}
+                        </Text>
                       </TouchableOpacity>
-                      <TouchableOpacity activeOpacity={0.82} onPress={blockHostAndReport} style={[styles.blockChoiceButton, styles.blockChoiceButtonDanger]}>
-                        <Text style={styles.blockChoiceButtonTextDanger}>{copy.blockAndReport}</Text>
+                      <TouchableOpacity
+                        activeOpacity={0.82}
+                        onPress={blockHostAndReport}
+                        style={[styles.blockChoiceButton, styles.blockChoiceButtonDanger]}
+                      >
+                        <Text style={styles.blockChoiceButtonTextDanger}>
+                          {copy.blockAndReport}
+                        </Text>
                       </TouchableOpacity>
                     </View>
-                    <TouchableOpacity activeOpacity={0.7} onPress={() => setBlockChoiceOpen(false)} style={styles.blockCancelButton}>
-                      <Text style={[styles.blockCancelText, isDay && styles.dayMutedText]}>{copy.cancel}</Text>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setBlockChoiceOpen(false)}
+                      style={styles.blockCancelButton}
+                    >
+                      <Text style={[styles.blockCancelText, isDay && styles.dayMutedText]}>
+                        {copy.cancel}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 ) : null}
                 {blockNotice ? (
                   <View style={[styles.softExitResult, isDay && styles.daySoftExitResult]}>
-                    <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>{isHostBlocked ? copy.blockedSaved : copy.unblockedSaved}</Text>
-                    <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{blockNotice}</Text>
+                    <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>
+                      {isHostBlocked ? copy.blockedSaved : copy.unblockedSaved}
+                    </Text>
+                    <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>
+                      {blockNotice}
+                    </Text>
                   </View>
                 ) : null}
               </View>
@@ -1948,12 +2822,20 @@ export default function ChatsScreen() {
 
           {(softExitOpen || softExitChoice) && (
             <View style={[styles.softExitPanel, isDay && styles.daySoftExitPanel]}>
-              <Text style={[styles.softExitTitle, isDay && styles.dayTitle]}>{copy.softExitTitle}</Text>
-              <Text style={[styles.softExitCopy, isDay && styles.dayMutedText]}>{copy.softExitCopy}</Text>
+              <Text style={[styles.softExitTitle, isDay && styles.dayTitle]}>
+                {copy.softExitTitle}
+              </Text>
+              <Text style={[styles.softExitCopy, isDay && styles.dayMutedText]}>
+                {copy.softExitCopy}
+              </Text>
               {softExitMessage ? (
                 <View style={[styles.softExitResult, isDay && styles.daySoftExitResult]}>
-                  <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>{softExitMessage}</Text>
-                  <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>{copy.softExitQuiet}</Text>
+                  <Text style={[styles.softExitResultText, isDay && styles.dayTitle]}>
+                    {softExitMessage}
+                  </Text>
+                  <Text style={[styles.softExitResultSubtext, isDay && styles.dayMutedText]}>
+                    {copy.softExitQuiet}
+                  </Text>
                 </View>
               ) : (
                 <View style={styles.softExitActions}>
@@ -1962,24 +2844,36 @@ export default function ChatsScreen() {
                     onPress={() => chooseSoftExit("stepBack")}
                     style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                   >
-                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.stepBack}</Text>
-                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.stepBackCopy}</Text>
+                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>
+                      {copy.stepBack}
+                    </Text>
+                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>
+                      {copy.stepBackCopy}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     activeOpacity={0.82}
                     onPress={() => chooseSoftExit("skipToday")}
                     style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                   >
-                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.skipToday}</Text>
-                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.skipTodayCopy}</Text>
+                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>
+                      {copy.skipToday}
+                    </Text>
+                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>
+                      {copy.skipTodayCopy}
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     activeOpacity={0.82}
                     onPress={() => router.push("/(tabs)/meetups")}
                     style={[styles.softExitAction, isDay && styles.daySoftExitAction]}
                   >
-                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>{copy.findAnotherGroup}</Text>
-                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>{copy.findAnotherGroupCopy}</Text>
+                    <Text style={[styles.softExitActionText, isDay && styles.dayTitle]}>
+                      {copy.findAnotherGroup}
+                    </Text>
+                    <Text style={[styles.softExitActionCopy, isDay && styles.dayMutedText]}>
+                      {copy.findAnotherGroupCopy}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -1991,7 +2885,10 @@ export default function ChatsScreen() {
             const profile = getChatProfilePreview(personId);
 
             return (
-              <View key={message.id} style={[styles.messageRow, message.mine && styles.messageRowMine]}>
+              <View
+                key={message.id}
+                style={[styles.messageRow, message.mine && styles.messageRowMine]}
+              >
                 {!message.mine ? (
                   <TouchableOpacity
                     activeOpacity={0.78}
@@ -2013,10 +2910,27 @@ export default function ChatsScreen() {
                   </TouchableOpacity>
                 ) : null}
                 <View style={[styles.messageBlock, message.mine && styles.messageBlockMine]}>
-                  {!message.mine && <Text style={[styles.senderName, isDay && styles.dayMutedText]}>{message.name}</Text>}
-                  <View style={[styles.bubble, message.mine ? styles.myBubble : styles.theirBubble, isDay && !message.mine && styles.dayCard]}>
-                    <Text style={[styles.bubbleText, isDay && !message.mine && styles.dayTitle]}>{translatedMessages?.[message.id as keyof typeof translatedMessages] ?? message.text}</Text>
-                    <Text style={[styles.messageTime, isDay && !message.mine && styles.dayMessageTime]}>{message.time}</Text>
+                  {!message.mine && (
+                    <Text style={[styles.senderName, isDay && styles.dayMutedText]}>
+                      {message.name}
+                    </Text>
+                  )}
+                  <View
+                    style={[
+                      styles.bubble,
+                      message.mine ? styles.myBubble : styles.theirBubble,
+                      isDay && !message.mine && styles.dayCard,
+                    ]}
+                  >
+                    <Text style={[styles.bubbleText, isDay && !message.mine && styles.dayTitle]}>
+                      {translatedMessages?.[message.id as keyof typeof translatedMessages] ??
+                        message.text}
+                    </Text>
+                    <Text
+                      style={[styles.messageTime, isDay && !message.mine && styles.dayMessageTime]}
+                    >
+                      {message.time}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -2025,42 +2939,67 @@ export default function ChatsScreen() {
         </ScrollView>
 
         <View style={styles.composerWrap}>
-          {!isPersonChat ? <View style={[styles.arrivalPanel, isDay && styles.dayCard]}>
-            <Text style={[styles.arrivalTitle, isDay && styles.dayTitle]}>{localizedArrivalUpdateCopy.title}</Text>
-            <View style={styles.arrivalActions}>
-              <TouchableOpacity activeOpacity={0.82} onPress={sendRunningLateUpdate} style={styles.arrivalButton}>
-                <Text style={styles.arrivalButtonText}>{localizedArrivalUpdateCopy.runningLate}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                activeOpacity={0.82}
-                onPress={() => setCannotMakeItOpen((current) => !current)}
-                style={[styles.arrivalButton, styles.arrivalButtonMuted]}
-              >
-                <Text style={[styles.arrivalButtonText, styles.arrivalButtonMutedText, isDay && styles.dayArrivalButtonMutedText]}>
-                  {localizedArrivalUpdateCopy.cannotMakeIt}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {cannotMakeItOpen ? (
-              <View style={styles.cannotMakeItPanel}>
-                <Text style={[styles.cannotMakeItTitle, isDay && styles.dayTitle]}>{localizedArrivalUpdateCopy.cannotMakeItReasonTitle}</Text>
-                <View style={styles.cannotMakeItGrid}>
-                  {(Object.keys(localizedArrivalUpdateCopy.cannotMakeItReasons) as CannotMakeItReason[]).map((reason) => (
-                    <TouchableOpacity
-                      key={reason}
-                      activeOpacity={0.82}
-                      onPress={() => sendCannotMakeItUpdate(reason)}
-                      style={[styles.cannotMakeItReasonButton, isDay && styles.dayCannotMakeItReasonButton]}
-                    >
-                      <Text style={[styles.cannotMakeItReasonText, isDay && styles.dayTitle]}>
-                        {localizedArrivalUpdateCopy.cannotMakeItReasons[reason].label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+          {!isPersonChat ? (
+            <View style={[styles.arrivalPanel, isDay && styles.dayCard]}>
+              <Text style={[styles.arrivalTitle, isDay && styles.dayTitle]}>
+                {localizedArrivalUpdateCopy.title}
+              </Text>
+              <View style={styles.arrivalActions}>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={sendRunningLateUpdate}
+                  style={styles.arrivalButton}
+                >
+                  <Text style={styles.arrivalButtonText}>
+                    {localizedArrivalUpdateCopy.runningLate}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() => setCannotMakeItOpen((current) => !current)}
+                  style={[styles.arrivalButton, styles.arrivalButtonMuted]}
+                >
+                  <Text
+                    style={[
+                      styles.arrivalButtonText,
+                      styles.arrivalButtonMutedText,
+                      isDay && styles.dayArrivalButtonMutedText,
+                    ]}
+                  >
+                    {localizedArrivalUpdateCopy.cannotMakeIt}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            ) : null}
-          </View> : null}
+              {cannotMakeItOpen ? (
+                <View style={styles.cannotMakeItPanel}>
+                  <Text style={[styles.cannotMakeItTitle, isDay && styles.dayTitle]}>
+                    {localizedArrivalUpdateCopy.cannotMakeItReasonTitle}
+                  </Text>
+                  <View style={styles.cannotMakeItGrid}>
+                    {(
+                      Object.keys(
+                        localizedArrivalUpdateCopy.cannotMakeItReasons,
+                      ) as CannotMakeItReason[]
+                    ).map((reason) => (
+                      <TouchableOpacity
+                        key={reason}
+                        activeOpacity={0.82}
+                        onPress={() => sendCannotMakeItUpdate(reason)}
+                        style={[
+                          styles.cannotMakeItReasonButton,
+                          isDay && styles.dayCannotMakeItReasonButton,
+                        ]}
+                      >
+                        <Text style={[styles.cannotMakeItReasonText, isDay && styles.dayTitle]}>
+                          {localizedArrivalUpdateCopy.cannotMakeItReasons[reason].label}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              ) : null}
+            </View>
+          ) : null}
           {softExitChoice && (
             <TouchableOpacity
               activeOpacity={0.82}
@@ -2070,16 +3009,22 @@ export default function ChatsScreen() {
               }}
               style={[styles.resumeButton, isDay && styles.dayCard]}
             >
-              <Text style={[styles.resumeButtonText, isDay && styles.dayTitle]}>{copy.reopenOptions}</Text>
+              <Text style={[styles.resumeButtonText, isDay && styles.dayTitle]}>
+                {copy.reopenOptions}
+              </Text>
             </TouchableOpacity>
           )}
           {chatPlusOpen ? (
             <View style={[styles.chatPlusPanel, isDay && styles.dayCard]}>
-              <Text style={[styles.chatPlusTitle, isDay && styles.dayTitle]}>Conversation starters</Text>
+              <Text style={[styles.chatPlusTitle, isDay && styles.dayTitle]}>
+                Conversation starters
+              </Text>
               <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>
                 Optional local helper chips only. They do not score, match, or force engagement.
               </Text>
-              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Gentle prompts</Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>
+                Gentle prompts
+              </Text>
               <View style={styles.chatPlusChipRow}>
                 {conversationStarterPrompts.map((question) => {
                   const active = selectedMeetupQuestion === question;
@@ -2096,14 +3041,28 @@ export default function ChatsScreen() {
                       accessibilityState={{ selected: active }}
                       accessibilityLabel={question}
                       accessibilityHint="Adds this optional starter to the composer."
-                      style={[styles.chatPlusQuestionChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                      style={[
+                        styles.chatPlusQuestionChip,
+                        isDay && styles.daySoftExitAction,
+                        active && styles.chatPlusChipActive,
+                      ]}
                     >
-                      <Text style={[styles.chatPlusQuestionText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{question}</Text>
+                      <Text
+                        style={[
+                          styles.chatPlusQuestionText,
+                          isDay && styles.dayTitle,
+                          active && styles.chatPlusChipTextActive,
+                        ]}
+                      >
+                        {question}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Quick replies</Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>
+                Quick replies
+              </Text>
               <View style={styles.chatPlusChipRow}>
                 {quickReplyOptions.map((reply) => {
                   const active = selectedMeetupQuestion === reply;
@@ -2120,14 +3079,28 @@ export default function ChatsScreen() {
                       accessibilityState={{ selected: active }}
                       accessibilityLabel={reply}
                       accessibilityHint="Adds this optional quick reply to the composer."
-                      style={[styles.chatPlusChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                      style={[
+                        styles.chatPlusChip,
+                        isDay && styles.daySoftExitAction,
+                        active && styles.chatPlusChipActive,
+                      ]}
                     >
-                      <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{reply}</Text>
+                      <Text
+                        style={[
+                          styles.chatPlusChipText,
+                          isDay && styles.dayTitle,
+                          active && styles.chatPlusChipTextActive,
+                        ]}
+                      >
+                        {reply}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
-              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Optional comfort roles</Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>
+                Optional comfort roles
+              </Text>
               <View style={styles.chatPlusChipRow}>
                 {meetupComfortRoleOptions.map((option) => {
                   const active = selectedComfortRoles.includes(option.label);
@@ -2141,35 +3114,68 @@ export default function ChatsScreen() {
                       accessibilityState={{ selected: active }}
                       accessibilityLabel={option.label}
                       accessibilityHint={option.description}
-                      style={[styles.chatPlusChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                      style={[
+                        styles.chatPlusChip,
+                        isDay && styles.daySoftExitAction,
+                        active && styles.chatPlusChipActive,
+                      ]}
                     >
-                      <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{option.label}</Text>
+                      <Text
+                        style={[
+                          styles.chatPlusChipText,
+                          isDay && styles.dayTitle,
+                          active && styles.chatPlusChipTextActive,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
               </View>
               <Text style={[styles.chatPlusMeta, isDay && styles.dayMutedText]}>
-                Roles: {selectedComfortRoles.length ? selectedComfortRoles.join(", ") : "None selected"}
+                Roles:{" "}
+                {selectedComfortRoles.length ? selectedComfortRoles.join(", ") : "None selected"}
               </Text>
-              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Arriving alone</Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>
+                Arriving alone
+              </Text>
               <View style={styles.chatPlusGuidanceList}>
                 {arrivingAloneReassuranceItems.map((item) => (
-                  <View key={item.label} style={[styles.chatPlusGuidanceRow, isDay && styles.daySoftExitAction]}>
-                    <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle]}>{item.label}</Text>
-                    <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>{item.copy}</Text>
+                  <View
+                    key={item.label}
+                    style={[styles.chatPlusGuidanceRow, isDay && styles.daySoftExitAction]}
+                  >
+                    <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>
+                      {item.copy}
+                    </Text>
                   </View>
                 ))}
               </View>
-              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>Practical notes</Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>
+                Practical notes
+              </Text>
               <View style={styles.chatPlusGuidanceList}>
                 {practicalMeetupGuidanceItems.map((item) => (
-                  <View key={item.label} style={[styles.chatPlusGuidanceRow, isDay && styles.daySoftExitAction]}>
-                    <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle]}>{item.label}</Text>
-                    <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>{item.copy}</Text>
+                  <View
+                    key={item.label}
+                    style={[styles.chatPlusGuidanceRow, isDay && styles.daySoftExitAction]}
+                  >
+                    <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle]}>
+                      {item.label}
+                    </Text>
+                    <Text style={[styles.chatPlusCopy, isDay && styles.dayMutedText]}>
+                      {item.copy}
+                    </Text>
                   </View>
                 ))}
               </View>
-              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>First meetup support</Text>
+              <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>
+                First meetup support
+              </Text>
               <View style={styles.chatPlusChipRow}>
                 {firstMeetupSupportOptions.map((option) => {
                   const active = selectedFirstMeetupSupport.includes(option.label);
@@ -2183,9 +3189,21 @@ export default function ChatsScreen() {
                       accessibilityState={{ selected: active }}
                       accessibilityLabel={option.label}
                       accessibilityHint={option.description}
-                      style={[styles.chatPlusChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                      style={[
+                        styles.chatPlusChip,
+                        isDay && styles.daySoftExitAction,
+                        active && styles.chatPlusChipActive,
+                      ]}
                     >
-                      <Text style={[styles.chatPlusChipText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{option.label}</Text>
+                      <Text
+                        style={[
+                          styles.chatPlusChipText,
+                          isDay && styles.dayTitle,
+                          active && styles.chatPlusChipTextActive,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -2195,7 +3213,9 @@ export default function ChatsScreen() {
               </Text>
               {askAboutMeetupQuestionGroups.map((group) => (
                 <View key={group.phase} style={styles.chatPlusQuestionGroup}>
-                  <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>{group.title}</Text>
+                  <Text style={[styles.chatPlusSectionLabel, isDay && styles.dayMutedText]}>
+                    {group.title}
+                  </Text>
                   <View style={styles.chatPlusChipRow}>
                     {group.questions.map((question) => {
                       const active = selectedMeetupQuestion === question;
@@ -2212,9 +3232,21 @@ export default function ChatsScreen() {
                           accessibilityState={{ selected: active }}
                           accessibilityLabel={question}
                           accessibilityHint="Adds this pre-written demo question to the composer."
-                          style={[styles.chatPlusQuestionChip, isDay && styles.daySoftExitAction, active && styles.chatPlusChipActive]}
+                          style={[
+                            styles.chatPlusQuestionChip,
+                            isDay && styles.daySoftExitAction,
+                            active && styles.chatPlusChipActive,
+                          ]}
                         >
-                          <Text style={[styles.chatPlusQuestionText, isDay && styles.dayTitle, active && styles.chatPlusChipTextActive]}>{question}</Text>
+                          <Text
+                            style={[
+                              styles.chatPlusQuestionText,
+                              isDay && styles.dayTitle,
+                              active && styles.chatPlusChipTextActive,
+                            ]}
+                          >
+                            {question}
+                          </Text>
                         </TouchableOpacity>
                       );
                     })}
@@ -2222,7 +3254,9 @@ export default function ChatsScreen() {
                 </View>
               ))}
               {selectedMeetupQuestion ? (
-                <Text style={[styles.chatPlusMeta, isDay && styles.dayMutedText]}>Added to composer: {selectedMeetupQuestion}</Text>
+                <Text style={[styles.chatPlusMeta, isDay && styles.dayMutedText]}>
+                  Added to composer: {selectedMeetupQuestion}
+                </Text>
               ) : null}
             </View>
           ) : null}
@@ -2236,7 +3270,11 @@ export default function ChatsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Open prototype meetup tools"
             accessibilityHint="Opens local first meetup support and ask-about-this-meetup chips."
-            style={[styles.addButton, isDay && styles.dayCard, chatPlusOpen && styles.addButtonActive]}
+            style={[
+              styles.addButton,
+              isDay && styles.dayCard,
+              chatPlusOpen && styles.addButtonActive,
+            ]}
           >
             <IconSymbol name="add" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
           </TouchableOpacity>
@@ -2271,32 +3309,115 @@ export default function ChatsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background, paddingHorizontal: 18 },
   dayContainer: { backgroundColor: "#E8EDF2" },
-  header: { flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 8, paddingBottom: 12, borderBottomWidth: 1, borderColor: nsnColors.border },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingTop: 8,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderColor: nsnColors.border,
+  },
   dayHeader: { borderColor: "#C5D0DA" },
-  eventAvatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#26133F", alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.primary },
+  eventAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#26133F",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: nsnColors.primary,
+  },
   eventEmoji: { fontSize: 22 },
-  chatPickerButton: { flex: 1, minHeight: 46, flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 16, paddingRight: 8 },
+  chatPickerButton: {
+    flex: 1,
+    minHeight: 46,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderRadius: 16,
+    paddingRight: 8,
+  },
   headerText: { flex: 1 },
   title: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 21 },
   dayTitle: { color: "#0B1220" },
   subtitle: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
   dayMutedText: { color: "#53677A" },
   dayAccentText: { color: "#445E93" },
-  chatPickerChevron: { width: 20, color: nsnColors.muted, fontSize: 18, fontWeight: "900", lineHeight: 22, textAlign: "center" },
-  iconButton: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
-  chatMenu: { maxHeight: 360, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginTop: 10, marginBottom: 8 },
-  chatMenuTitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
-  chatMenuSectionTitle: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, marginTop: 4, marginBottom: 6, textTransform: "uppercase" },
+  chatPickerChevron: {
+    width: 20,
+    color: nsnColors.muted,
+    fontSize: 18,
+    fontWeight: "900",
+    lineHeight: 22,
+    textAlign: "center",
+  },
+  iconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chatMenu: {
+    maxHeight: 360,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    padding: 10,
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  chatMenuTitle: {
+    color: nsnColors.muted,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    marginBottom: 8,
+  },
+  chatMenuSectionTitle: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+    marginTop: 4,
+    marginBottom: 6,
+    textTransform: "uppercase",
+  },
   chatMenuList: { maxHeight: 300 },
   chatMenuListContent: { gap: 8 },
-  chatMenuItem: { minHeight: 64, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10 },
+  chatMenuItem: {
+    minHeight: 64,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    padding: 10,
+  },
   chatMenuItemActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
-  chatMenuEmoji: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
+  chatMenuEmoji: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   chatMenuEmojiText: { fontSize: 20 },
   chatMenuItemBody: { flex: 1 },
   chatMenuItemTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   chatMenuItemMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  chatMenuStatus: { width: 20, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
+  chatMenuStatus: {
+    width: 20,
+    color: nsnColors.muted,
+    fontSize: 16,
+    fontWeight: "900",
+    textAlign: "center",
+  },
   chatMenuItemTextActive: { color: "#FFFFFF" },
   chat: { flex: 1 },
   chatContent: { paddingTop: 16, paddingBottom: 32 },
@@ -2315,67 +3436,325 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 12,
   },
-  chatSelectionReturnText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  chatSelectionReturnText: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
   chatSelectionTitle: { color: nsnColors.text, fontSize: 28, fontWeight: "900", lineHeight: 35 },
-  chatSelectionCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 4, marginBottom: 18 },
+  chatSelectionCopy: {
+    color: nsnColors.muted,
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 4,
+    marginBottom: 18,
+  },
   chatSelectionList: { gap: 8, marginBottom: 18 },
-  alphaGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
-  alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
-  alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
+  alphaGuideCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    padding: 14,
+    marginBottom: 14,
+  },
+  alphaGuideLabel: {
+    color: nsnColors.day,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+    textTransform: "uppercase",
+  },
+  alphaGuideTitle: {
+    color: nsnColors.text,
+    fontSize: 14,
+    fontWeight: "900",
+    lineHeight: 20,
+    marginTop: 2,
+  },
   alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
-  dayPill: { alignSelf: "center", backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 13, paddingVertical: 7, borderRadius: 15, marginBottom: 14 },
+  softRevealCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(247,200,91,0.42)",
+    backgroundColor: "rgba(247,200,91,0.08)",
+    padding: 14,
+    marginBottom: 14,
+    gap: 10,
+  },
+  softRevealHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  softRevealLevel: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  softRevealIndicatorRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
+  softRevealChip: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(247,200,91,0.38)",
+    color: nsnColors.text,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    overflow: "hidden",
+  },
+  daySoftRevealChip: { backgroundColor: "#FFFFFF", borderColor: "#D9C782", color: "#0B1220" },
+  softRevealPrompt: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
+  softRevealHelper: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(247,200,91,0.45)",
+    backgroundColor: "rgba(247,200,91,0.12)",
+    color: nsnColors.text,
+    fontSize: 12,
+    lineHeight: 18,
+    padding: 10,
+  },
+  daySoftRevealHelper: { backgroundColor: "#FFF7D6", borderColor: "#E3C75A", color: "#334155" },
+  softRevealRequestBox: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    padding: 12,
+  },
+  softRevealActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  softRevealButton: {
+    minHeight: 40,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.045)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  daySoftRevealButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
+  softRevealButtonPrimary: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  softRevealButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  softRevealButtonTextPrimary: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+  },
+  dayPill: {
+    alignSelf: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 15,
+    marginBottom: 14,
+  },
   dayPillLight: { backgroundColor: "#EEF3F4" },
   dayPillText: { color: nsnColors.muted, fontSize: 12, fontWeight: "700" },
-  systemNotice: { alignSelf: "center", width: "68%", borderRadius: 16, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, paddingVertical: 12, paddingHorizontal: 13, marginBottom: 18 },
+  systemNotice: {
+    alignSelf: "center",
+    width: "68%",
+    borderRadius: 16,
+    backgroundColor: nsnColors.surface,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    paddingVertical: 12,
+    paddingHorizontal: 13,
+    marginBottom: 18,
+  },
   dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   systemText: { color: nsnColors.text, textAlign: "center", fontSize: 12, lineHeight: 17 },
   systemSubtext: { color: nsnColors.muted, textAlign: "center", fontSize: 12, lineHeight: 17 },
-  trustGateCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, marginTop: 16 },
+  trustGateCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    padding: 16,
+    marginTop: 16,
+  },
   trustGateTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
-  trustGateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 10 },
-  trustGateStatus: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 12 },
-  trustGateButton: { width: "100%", minHeight: 46, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10 },
-  trustGateButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "center" },
-  trustGateBypassButton: { backgroundColor: "rgba(255,255,255,0.045)", borderWidth: 1, borderColor: nsnColors.border, marginBottom: 10 },
+  trustGateCopy: {
+    color: nsnColors.muted,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  trustGateStatus: {
+    color: nsnColors.day,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+  trustGateButton: {
+    width: "100%",
+    minHeight: 46,
+    borderRadius: 15,
+    backgroundColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  trustGateButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  trustGateBypassButton: {
+    backgroundColor: "rgba(255,255,255,0.045)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    marginBottom: 10,
+  },
   trustGateBypassButtonText: { color: nsnColors.text },
   dayTrustGateBypassButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   dayTrustGateBypassButtonText: { color: "#0B1220" },
-  softExitPanel: { borderRadius: 18, backgroundColor: "#0D1B2F", borderWidth: 1, borderColor: "#2B4578", padding: 14, marginBottom: 18 },
+  softExitPanel: {
+    borderRadius: 18,
+    backgroundColor: "#0D1B2F",
+    borderWidth: 1,
+    borderColor: "#2B4578",
+    padding: 14,
+    marginBottom: 18,
+  },
   daySoftExitPanel: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
-  softExitTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "800", lineHeight: 21, marginBottom: 4 },
+  softExitTitle: {
+    color: nsnColors.text,
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 21,
+    marginBottom: 4,
+  },
   softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginBottom: 12 },
   softExitActions: { gap: 9 },
-  softExitAction: { borderRadius: 14, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, paddingVertical: 10 },
+  softExitAction: {
+    borderRadius: 14,
+    backgroundColor: nsnColors.surface,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
   daySoftExitAction: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   softExitActionText: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 18 },
   softExitActionCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 1 },
   reportReasonStack: { gap: 8, paddingTop: 2, paddingBottom: 3 },
-  reportReasonHeading: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, letterSpacing: 0, textTransform: "uppercase" },
-  reportReasonButton: { borderRadius: 12, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingHorizontal: 11, paddingVertical: 9 },
+  reportReasonHeading: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+    letterSpacing: 0,
+    textTransform: "uppercase",
+  },
+  reportReasonButton: {
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+  },
   dayReportReasonButton: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   reportReasonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   reportReasonCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   reportTargetGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  reportTargetButton: { flexGrow: 1, minWidth: 118, minHeight: 50, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingHorizontal: 10, paddingVertical: 8 },
+  reportTargetButton: {
+    flexGrow: 1,
+    minWidth: 118,
+    minHeight: 50,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
   reportTargetButtonActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   reportTargetName: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  reportTargetRole: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 1 },
+  reportTargetRole: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    lineHeight: 15,
+    marginTop: 1,
+  },
   reportTargetTextActive: { color: "#FFFFFF" },
   reportRouteStack: { gap: 8 },
-  reportRouteButton: { borderRadius: 12, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", paddingHorizontal: 11, paddingVertical: 9 },
-  cancelReportButton: { alignSelf: "flex-start", minHeight: 34, borderRadius: 999, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 12, marginTop: 9 },
+  reportRouteButton: {
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+  },
+  cancelReportButton: {
+    alignSelf: "flex-start",
+    minHeight: 34,
+    borderRadius: 999,
+    backgroundColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    marginTop: 9,
+  },
   cancelReportText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17 },
-  blockChoiceCard: { borderRadius: 14, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", padding: 12, gap: 8 },
+  blockChoiceCard: {
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    padding: 12,
+    gap: 8,
+  },
   blockChoiceTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   blockChoiceCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
   blockChoiceActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  blockChoiceButton: { flex: 1, minWidth: 130, minHeight: 40, borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
+  blockChoiceButton: {
+    flex: 1,
+    minWidth: 130,
+    minHeight: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
   blockChoiceButtonDanger: { backgroundColor: "#B42318", borderColor: "#B42318" },
-  blockChoiceButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
-  blockChoiceButtonTextDanger: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
+  blockChoiceButtonText: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    textAlign: "center",
+  },
+  blockChoiceButtonTextDanger: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    textAlign: "center",
+  },
   blockCancelButton: { minHeight: 30, alignItems: "center", justifyContent: "center" },
   blockCancelText: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 17 },
-  softExitResult: { borderRadius: 14, backgroundColor: "rgba(114,214,126,0.11)", borderWidth: 1, borderColor: "rgba(114,214,126,0.28)", padding: 12 },
+  softExitResult: {
+    borderRadius: 14,
+    backgroundColor: "rgba(114,214,126,0.11)",
+    borderWidth: 1,
+    borderColor: "rgba(114,214,126,0.28)",
+    padding: 12,
+  },
   daySoftExitResult: { backgroundColor: "#E9F7ED", borderColor: "#A8D9B5" },
   softExitResultText: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 19 },
   softExitResultSubtext: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 4 },
@@ -2389,47 +3768,201 @@ const styles = StyleSheet.create({
   theirBubble: { backgroundColor: nsnColors.surface, borderTopLeftRadius: 8 },
   myBubble: { backgroundColor: nsnColors.primary, borderBottomRightRadius: 8 },
   bubbleText: { color: nsnColors.text, fontSize: 14, lineHeight: 20 },
-  messageTime: { alignSelf: "flex-end", color: "rgba(245,247,255,0.62)", fontSize: 11, marginTop: 4, lineHeight: 14 },
+  messageTime: {
+    alignSelf: "flex-end",
+    color: "rgba(245,247,255,0.62)",
+    fontSize: 11,
+    marginTop: 4,
+    lineHeight: 14,
+  },
   dayMessageTime: { color: "#7890AE" },
   composerWrap: { paddingBottom: 18 },
-  arrivalPanel: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginBottom: 9 },
-  arrivalTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
+  arrivalPanel: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    padding: 10,
+    marginBottom: 9,
+  },
+  arrivalTitle: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    marginBottom: 8,
+  },
   arrivalActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  arrivalButton: { flex: 1, minWidth: 130, minHeight: 38, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary, paddingHorizontal: 10 },
-  arrivalButtonMuted: { backgroundColor: "rgba(255,255,255,0.06)", borderWidth: 1, borderColor: nsnColors.border },
-  arrivalButtonText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
+  arrivalButton: {
+    flex: 1,
+    minWidth: 130,
+    minHeight: 38,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: nsnColors.primary,
+    paddingHorizontal: 10,
+  },
+  arrivalButtonMuted: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
+  arrivalButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    textAlign: "center",
+  },
   arrivalButtonMutedText: { color: nsnColors.text },
   dayArrivalButtonMutedText: { color: "#0B1220" },
   cannotMakeItPanel: { gap: 8, marginTop: 10 },
   cannotMakeItTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   cannotMakeItGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  cannotMakeItReasonButton: { flexGrow: 1, minWidth: 150, minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.06)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
+  cannotMakeItReasonButton: {
+    flexGrow: 1,
+    minWidth: 150,
+    minHeight: 36,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
   dayCannotMakeItReasonButton: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
-  cannotMakeItReasonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
-  resumeButton: { minHeight: 40, borderRadius: 16, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, alignItems: "center", justifyContent: "center", marginBottom: 9 },
+  cannotMakeItReasonText: {
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    textAlign: "center",
+  },
+  resumeButton: {
+    minHeight: 40,
+    borderRadius: 16,
+    backgroundColor: nsnColors.surface,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 9,
+  },
   resumeButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "800" },
-  chatPlusPanel: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 10, marginBottom: 9, gap: 8 },
+  chatPlusPanel: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    padding: 10,
+    marginBottom: 9,
+    gap: 8,
+  },
   chatPlusTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   chatPlusCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 16 },
-  chatPlusSectionLabel: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
+  chatPlusSectionLabel: {
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
   chatPlusChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
-  chatPlusChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  chatPlusChip: {
+    minHeight: 34,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
   chatPlusQuestionGroup: { gap: 6 },
-  chatPlusQuestionChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  chatPlusQuestionChip: {
+    minHeight: 34,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
   chatPlusGuidanceList: { gap: 7 },
-  chatPlusGuidanceRow: { borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 10, paddingVertical: 8, gap: 3 },
+  chatPlusGuidanceRow: {
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 3,
+  },
   chatPlusChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
-  chatPlusChipText: { flexShrink: 1, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
-  chatPlusQuestionText: { flexShrink: 1, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  chatPlusChipText: {
+    flexShrink: 1,
+    color: nsnColors.text,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+  },
+  chatPlusQuestionText: {
+    flexShrink: 1,
+    color: nsnColors.text,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+  },
   chatPlusChipTextActive: { color: "#FFFFFF" },
   chatPlusMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15 },
   addButtonActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(80,104,255,0.18)" },
-  addButton: { position: "absolute", left: 0, bottom: 42, width: 40, height: 40, borderRadius: 20, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border },
-  inputWrap: { marginLeft: 48, minHeight: 44, borderRadius: 22, backgroundColor: "#061121", borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "center", paddingLeft: 15, paddingRight: 5 },
+  addButton: {
+    position: "absolute",
+    left: 0,
+    bottom: 42,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: nsnColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
+  inputWrap: {
+    marginLeft: 48,
+    minHeight: 44,
+    borderRadius: 22,
+    backgroundColor: "#061121",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: 15,
+    paddingRight: 5,
+  },
   dayInputWrap: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   input: { flex: 1, color: nsnColors.text, fontSize: 14, minHeight: 42 },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
   rtlInput: { paddingRight: 2, writingDirection: "rtl" },
-  sendButton: { width: 34, height: 34, borderRadius: 17, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center" },
-  disclaimer: { color: nsnColors.muted, fontSize: 11, textAlign: "center", marginTop: 8, lineHeight: 15 },
+  sendButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  disclaimer: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 15,
+  },
 });

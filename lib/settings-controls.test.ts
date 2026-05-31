@@ -23,6 +23,10 @@ const copy: SettingsCopySource = {
   revealAfterRsvpCopy: "Show details after RSVP.",
   friendsOfFriendsOnly: "Friends of friends only",
   friendsOfFriendsOnlyCopy: "Limit discovery.",
+  softRevealSuggestions: "Enable Soft Reveal suggestions",
+  softRevealSuggestionsCopy: "Suggest calmer moments to lower blur together.",
+  preferSoftRevealPeople: "Prefer people who also use Soft Reveal",
+  preferSoftRevealPeopleCopy: "Prefer similar privacy pacing when possible.",
   meetupReminders: "Meetup reminders",
   meetupRemindersCopy: "Notify before meetups.",
   weatherAlerts: "Weather alerts",
@@ -67,6 +71,8 @@ const state: SettingsControlState = {
   sameAgeGroupsOnly: false,
   revealAfterRsvp: true,
   friendsOfFriendsOnly: false,
+  softRevealSuggestions: true,
+  preferSoftRevealPeople: false,
   meetupReminders: true,
   weatherAlerts: true,
   chatNotifications: true,
@@ -93,6 +99,8 @@ function createActions() {
     setSameAgeGroupsOnly: vi.fn(),
     setRevealAfterRsvp: vi.fn(),
     setFriendsOfFriendsOnly: vi.fn(),
+    setSoftRevealSuggestions: vi.fn(),
+    setPreferSoftRevealPeople: vi.fn(),
     setMeetupReminders: vi.fn(),
     setWeatherAlerts: vi.fn(),
     setChatNotifications: vi.fn(),
@@ -138,6 +146,8 @@ describe("settings controls", () => {
       "sameAgeGroupsOnly",
       "revealAfterRsvp",
       "friendsOfFriendsOnly",
+      "softRevealSuggestions",
+      "preferSoftRevealPeople",
       "meetupReminders",
       "weatherAlerts",
       "chatNotifications",
@@ -166,6 +176,8 @@ describe("settings controls", () => {
     expect(actions.setSameAgeGroupsOnly).toHaveBeenCalledWith(true);
     expect(actions.setRevealAfterRsvp).toHaveBeenCalledWith(false);
     expect(actions.setFriendsOfFriendsOnly).toHaveBeenCalledWith(true);
+    expect(actions.setSoftRevealSuggestions).toHaveBeenCalledWith(false);
+    expect(actions.setPreferSoftRevealPeople).toHaveBeenCalledWith(true);
     expect(actions.setMeetupReminders).toHaveBeenCalledWith(false);
     expect(actions.setWeatherAlerts).toHaveBeenCalledWith(false);
     expect(actions.setChatNotifications).toHaveBeenCalledWith(false);

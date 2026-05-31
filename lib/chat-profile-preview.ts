@@ -1,4 +1,5 @@
 import type { NsnComfortMode } from "@/lib/app-settings";
+import { getSoftRevealIndicator, type SoftRevealPreferences } from "./soft-reveal";
 import { demoPersonas } from "./demo-personas";
 
 export type ChatProfilePreview = {
@@ -16,6 +17,8 @@ export type ChatProfilePreview = {
   comfortNotes: string[];
   photoBoundary: string;
   contactBoundary: string;
+  softRevealPreferences: SoftRevealPreferences;
+  softRevealIndicator: string;
   hiddenDetailNote?: string;
 };
 
@@ -37,6 +40,8 @@ const toChatProfilePreview = (personId: keyof typeof demoPersonas): ChatProfileP
     comfortNotes: persona.comfortNotes,
     photoBoundary: persona.photoBoundary,
     contactBoundary: persona.contactBoundary,
+    softRevealPreferences: persona.softRevealPreferences,
+    softRevealIndicator: getSoftRevealIndicator(persona.softRevealPreferences),
     hiddenDetailNote: persona.hiddenDetailNote,
   };
 };
