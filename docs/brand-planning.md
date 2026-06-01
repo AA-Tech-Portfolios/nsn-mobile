@@ -1,6 +1,24 @@
-# NSN Brand Planning
+# NSN Naming Research and Brand Direction
 
-This is an internal planning note. It preserves current naming context, backup naming ideas, and tone guardrails without renaming the app or changing public product branding.
+This is an internal product and brand planning note. It captures preliminary naming research for the app as it evolves from the current NSN concept toward a future-facing, global social/community brand.
+
+## Summary
+
+North Shore Nights / NSN remains the active local prototype name for the Sydney/North Shore alpha. It should continue to be treated as the working local identity, not as the final long-term global brand.
+
+The strongest long-term naming direction is built around the **Soft** prefix. "Soft" carries the right emotional territory: gentle connection, low-pressure socialising, privacy, trust, belonging, and a calmer way to reach out or reconnect.
+
+The current recommendation is:
+
+- **Primary candidate:** SoftCove
+- **Backup candidate:** SoftGround
+- **Dream candidate if clearance works:** SoftHello
+
+Recommended brand line:
+
+> A softer way to find your people.
+
+This document is not legal advice, trademark clearance, or a final naming decision. It records first-pass product strategy and collision concerns so the team can decide what to investigate next.
 
 ## Current Active Name
 
@@ -18,120 +36,161 @@ NSN should avoid sounding like:
 - government, institutional, political, or public-service branding
 - therapy, care-service, or support-provider branding
 
-## Current Brand Structure
+## Brand Principles
+
+The future brand should feel warm, calm, human, and low-pressure. It should support meeting new people, reconnecting with old friends, and gradually building trust.
+
+The name should suggest some combination of:
+
+- gentle connection
+- belonging
+- safe spaces
+- small circles
+- first hellos
+- trust
+- finding your people
+
+The long-term name should be global, not Sydney-specific or Australia-specific. Local naming can still be useful for launch campaigns, city pages, or alpha cohorts, but the primary product name should travel well.
+
+The name should not sound like:
+
+- a dating app
+- a nightlife app
+- an events-only app
+- a dentist brand
+- a construction, materials, or property company
+- a meditation-only or wellness-only app
+- a regional or country-specific product
+
+## Naming Heuristics
+
+Prefer names that are simple, memorable, easy to spell, easy to pronounce, and emotionally aligned.
+
+One-word app names are preferred where possible. The visual identity can still style a name as two words in a logo if that helps readability, but spacing and capitalisation should not be treated as solving similarity issues. For example, "SoftSpace" and "Soft Space" should be considered very similar.
+
+Avoid names that require explanation to understand, create obvious wrong-category associations, or sit too close to existing apps, companies, software products, or social/community brands.
+
+Availability should be treated as a spectrum:
+
+- **Exact conflict:** the same name appears in a relevant or adjacent category.
+- **Confusingly similar:** spelling, spacing, sound, or meaning is close enough to create risk.
+- **Noisy or crowded category:** the word is heavily used, making search, handles, and brand distinction harder.
+- **Clean enough for further investigation:** no obvious blocker from first-pass research, but formal checks are still required.
+
+## Candidate Research
+
+These notes reflect first-pass naming research and product strategy, not live legal clearance.
+
+| Name | Meaning / association | Strengths | Risks | Current status |
+|---|---|---|---|---|
+| SoftHello | A softer way to say hello; a gentle first step into connection. | Very strong emotional fit; human, warm, instantly understandable, global, and not region-specific. | "Hello" is common across social, community, messaging, and product brands, so the category is likely crowded. Needs careful trademark, app-store, domain, and handle review. | Dream candidate if clearance works. |
+| SoftCircle | Finding your circle; belonging and smaller trusted groups. | Excellent community and belonging meaning. | High similarity risk because "Circle" is widely used by apps, companies, and community products. Close names such as SoftCircles increase concern. | Emotionally strong but risky. |
+| SoftSpace | A softer space to connect. | Broad, warm, extensible, and place-based in a way that feels welcoming. | "Soft Space" / "SoftSpace" appears to be used in app, software, and mobile contexts. Spacing does not solve similarity. | Great concept, but likely too collision-prone. |
+| SoftUnity / Softunity | Soft + unity; togetherness and community. | Captures a broader social vision beyond events. | Existing software, app, and company references make it risky. | Conceptually promising, but not clean enough yet. |
+| SoftCove | A calm, protected place to gather and connect. | Warm, global, place-based without being city/country-specific, distinctive, and suggestive of privacy and safety without saying those words too literally. | Needs proper availability checks. The .com may be for sale. Requires trademark, app-store, domain, and social-handle review. | Current strongest practical candidate. |
+| SoftGround | A grounded place to land socially. | Mature, calm, trust-oriented, and suggests emotional safety and foundation. | Less directly social. "Soft ground" is a common phrase and may create landscaping, geotechnical, or materials associations. | Strong backup candidate. |
+| SoftMellow | Calm, relaxed, low-pressure socialising. | Pleasant, friendly, and low-pressure. | May sound like wellness, meditation, music, sleep, or mood tracking rather than social connection. | Usable but weaker than SoftCove and SoftGround. |
+| SoftGather | People gathering softly. | Directly social and easy to understand. | "Gather" is crowded in community, social, events, and workplace software. | Good meaning, but likely noisy. |
+| SoftKin | Kin as "your people" or close relationships. | Short, human, and belonging-oriented. | May be heard or read as "soft skin", creating skincare confusion. | Interesting but risky due to sound confusion. |
+| SoftNest | Safe place, home, and belonging. | Warm, protective, and comforting. | Could drift toward parenting, home, wellness, or nesting products. | Keep as inspiration, not a current top candidate. |
+| SoftSide | Finding your side, or the softer side of social connection. | Warm and approachable. | Can evoke siding or building materials, especially near variants like SoftSiding. | Conceptually useful, but not ideal as the primary name. |
+| SoftGreet | A soft greeting. | Close to SoftHello and easy to understand. | More formal and less emotionally natural than "hello". | Acceptable but weaker than SoftHello. |
+| SoftSay | A softer way to say something or reach out. | Short, potentially unique, and communication-oriented. | Does not clearly suggest community or belonging; may sound like messaging or AI communication. | Interesting, but not a top candidate. |
+| Softnect | Soft + connect. | Short, brandable, and connection is implied. | More tech/product-like and less human; may sound like networking software. | Usable but less emotionally aligned. |
+| Softello | Soft + hello-like coined word. | Cute, brandable, and close to SoftHello. | Existing uses and domain references may make it less clean than expected. | Possible, but needs careful checking. |
+| Softora | Soft + aura/aurora-style feeling. | Smooth and brandable. | Existing tech/web references, including Australian-adjacent use, make it less attractive. | Not preferred. |
+| SoftHarbor / SoftHarbour | A safe harbour for connection. | Strong safety, calm, and trust associations. | Spelling split between US/AU English, existing unrelated uses, and slightly long. | Not top-tier. |
+| SoftSyd / SoftAus / SoftAuz | Local Sydney/Australia identity. | Could support a local pilot or campaign. | Region-based and limiting. The long-term product should not sound city-specific or country-specific. | Retire for primary brand; possible local campaign language only. |
+| SofTea | Tea/cafe warmth. | Cute and memorable. | Too strongly suggests tea, cafes, bubble tea, or wellness. | Retire. |
+| SoftBliss / SoftJoy / SoftSidejoy | Positive emotional state. | Friendly and upbeat. | Suggests wellness, meditation, happiness outcomes, dental, beauty, or wellbeing categories more than social connection. | Retire. |
+| SandLights | Beach/coastal light imagery. | Beautiful imagery. | Sounds like a beach festival, tourism brand, lighting product, or coastal event brand rather than a social/community app. | Retire. |
+| Softspoint | A possible meeting point. | Could imply a place to meet. | Hard to parse and sounds like software infrastructure or support tooling. | Retire. |
+| Softfus / Softus / SoftusCircle | Coined soft-community variants. | Potentially distinctive. | Meaning is hidden, pronunciation is ambiguous, and SoftusCircle feels stitched together and too long. | Not current direction. |
+
+## Final Recommendation
+
+**SoftCove** is the current strongest practical candidate.
+
+It preserves the emotional world of SoftHello, SoftCircle, and SoftSpace while appearing more ownable and less obviously collision-prone from first-pass research. It suggests a calm, protected place to connect without being city-specific, country-specific, dating-first, nightlife-first, or event-only.
+
+SoftCove also gives the product room to grow. A cove can hold first hellos, small circles, reconnection, trust, privacy, group plans, and quieter forms of belonging without forcing the brand into one narrow feature.
+
+**SoftGround** should remain the strongest backup. It feels mature and trust-oriented, though it is less immediately social and has more unrelated phrase associations.
+
+**SoftHello** remains the dream candidate if clearance works. It is the most emotionally direct name, but "Hello" is common enough in adjacent categories that it needs a deeper clearance review before it can be treated as viable.
+
+## Positioning Direction
+
+Recommended brand line:
+
+> A softer way to find your people.
+
+Alternative taglines:
+
+- A calmer space to connect.
+- Meet people at your own pace.
+- For gentle hellos and real circles.
+- A softer place to belong.
+- Find your people, gently.
+
+The core positioning should be:
+
+SoftCove is a gentle social/community app for meeting new people, reconnecting with old friends, and finding trusted circles at your own pace.
+
+This should stay practical and product-led. The brand can be warm without becoming fluffy, therapeutic, or overpromising emotional outcomes.
+
+## Clearance Note
+
+This document is preliminary naming research only.
+
+It is not legal advice, trademark clearance, app-store clearance, domain clearance, or a final decision. Before any name is used publicly, filed, reserved broadly, or treated as the final brand, the team should run proper clearance checks and consider professional legal or trademark advice.
+
+A name appearing online does not automatically make it unusable. However, existing usage can lower confidence around brand distinctiveness, searchability, social handles, domains, and confusing similarity.
+
+## Next Steps Before Final Decision
+
+Before choosing a final name, complete:
+
+1. App Store search.
+2. Google Play search.
+3. Domain search, especially .com and relevant local domains.
+4. Social handle search across Instagram, TikTok, X, YouTube, and LinkedIn.
+5. Trademark search in Australia via IP Australia.
+6. Trademark search in the US via USPTO if global expansion is likely.
+7. Search for confusingly similar marks, including spelling variants and similar-sounding names.
+8. Check whether similar names exist in social, community, events, messaging, friendship, networking, software, or mobile app categories.
+9. Decide whether the brand should appear as one word in product surfaces, such as "SoftCove", while allowing visual logo styling as "Soft Cove".
+
+## Working Brand Structure
 
 1. **North Shore Nights / NSN**
 
    Active local alpha prototype identity. It should feel warm, local, atmospheric, calm, and easy to say. It needs clear positioning copy to avoid "night events only" assumptions.
 
-2. **ShoreLights**
+2. **SoftCove**
 
-   Light/glow emotional inspiration. It is not active, not a rename plan, and not currently cleared as a backup product name. Existing public usage means it should be treated as visual and emotional direction only until proper domain, handle, business-name, and trade mark checks are completed.
+   Current strongest practical long-term candidate. It should be investigated as the likely future-facing global product name.
 
-3. **SoftHello**
+3. **SoftGround**
 
-   Broader long-term/global umbrella direction. It feels emotionally gentle, original, and scalable beyond one local region. It should not replace NSN during the Sydney/North Shore alpha.
+   Backup long-term candidate. It should remain available for comparison if SoftCove shows unexpected clearance, domain, handle, or category problems.
 
-4. **ShoreLife**
+4. **SoftHello**
 
-   Possible future program or community theme. It may be useful for beach, outdoor, coastal, or recurring local community ideas, but it is not the core product identity and is not currently cleared as a product name.
+   Dream emotional candidate and ongoing naming reference. It may remain valuable as inspiration for tone, onboarding, and first-contact language even if it is not chosen as the final product name.
 
-## Emotional Naming Direction
+5. **ShoreLights / ShoreLife**
 
-This list is an inspiration bank only, not an active rename shortlist. ShoreLights remains useful as a light/glow direction reference, but it should not be treated as a cleared backup product name.
-
-**Soft / Gentle**
-
-- SoftLights
-- LightHello
-- GlowHello
-- SoftGlow
-
-**Shore / Local**
-
-- ShoreLights
-- LocalLights
-- NorthGlow
-- ShoreLife
-
-**Glow / Evening Atmosphere**
-
-- CityLights
-- EveningGlow
-- NightGlow
-- QuietLights
-
-**Meetup / Gathering**
-
-- LightGather
-- GlowMeet
-
-**Lantern / Warmth**
-
-- SoftLantern
-- WarmLights
-
-## Naming Guardrails
-
-Future naming should avoid:
-
-- government or institutional tone
-- political-party-like wording
-- therapy, care-service, or support-provider implications
-- generic startup names
-- generic professional networking names
-- dating-app-like names
-- nightlife-only assumptions
-- aggressive growth or social-media energy
-
-Avoid overusing words like:
-
-- Care
-- Support
-- Network
-- NextGen
-- Young Professionals
-- Service
-
-Preferred emotional direction:
-
-- calm
-- warm
-- local
-- human
-- privacy-conscious
-- low-pressure
-- non-corporate
-- softly social
-- atmospheric
-- welcoming without being clinical
-
-## Name Clearance Checklist
-
-Before any backup name is used publicly, filed, or treated as a serious product identity, run a proper clearance pass:
-
-- web search
-- domain search
-- social handle search
-- ASIC business name availability search
-- IP Australia trade mark search / TM Checker
-- check similar names and similar service categories
-- consider professional legal or trade mark advice before public launch or filing
-
-A name appearing online does not automatically make it unusable. But existing public usage lowers confidence for clean social handles, domains, and brand distinctiveness. Until checked properly, names such as ShoreLights and ShoreLife should be treated as inspiration only.
-
-## Social Media / Handle Note
-
-Social media handle reservation is paused for now. Future handle reservation should be for brand protection and discoverability only, not a marketing launch.
-
-If NSN becomes public-facing, the website should remain the primary public identity. Social accounts, if created later, should act like quiet signposts rather than engagement-driven channels.
+   Local or visual inspiration only. These are not active rename plans and should not be treated as cleared backup product names.
 
 ## Public Copy Guidance
 
-Future positioning lines can use calm, prototype-safe wording such as:
+Until a final brand decision is made, public copy should keep NSN plain-spoken, local, and human. It should make the prototype feel approachable without implying production safety systems, matching guarantees, therapy, nightlife, dating-first intent, or institutional support.
+
+Prototype-safe lines can include:
 
 - "Calmer small-group meetups for Sydney's North Shore, day or evening."
 - "Local meetups with privacy-first, low-pressure social pacing."
 - "Inspired by the quieter glow of North Shore evenings - not nightlife-only events."
 
-Keep public copy plain-spoken, local, and human. It should make NSN feel approachable without implying production safety systems, matching guarantees, therapy, nightlife, dating-first intent, or institutional support.
+Future SoftCove-style copy should stay warm but grounded. It should describe a calmer way to connect and find trusted people without sounding like a wellness app, dating app, or public safety service.
