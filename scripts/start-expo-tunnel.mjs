@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 const port = Number(process.env.EXPO_TUNNEL_PORT ?? 8081);
@@ -9,21 +10,13 @@ const clearCache = !["0", "false", "no"].includes(
 );
 
 function resolveNgrokBin() {
-  const suffix = process.platform === "win32" ? ".exe" : "";
+  const require = createRequire(import.meta.url);
+  const resolvedExpoNgrokBin = require("@expo/ngrok-bin");
   const candidates = [
-    path.resolve("node_modules", "ngrok", "bin", `ngrok${suffix}`),
-    path.resolve(
-      "node_modules",
-      ".pnpm",
-      "ngrok@5.0.0-beta.2",
-      "node_modules",
-      "ngrok",
-      "bin",
-      `ngrok${suffix}`,
-    ),
+    resolvedExpoNgrokBin,
   ];
 
-  const bin = candidates.find((candidate) => fs.existsSync(candidate));
+  const bin = candidates.find((candidate) => typeof candidate === "string" && fs.existsSync(candidate));
   if (!bin) {
     throw new Error("ngrok binary not found. Run `pnpm install` first.");
   }
