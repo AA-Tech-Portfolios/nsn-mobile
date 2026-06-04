@@ -962,130 +962,6 @@ const visibilityModeTranslations = {
   },
 } as const;
 
-const locationPreferenceRowTranslations = {
-  English: "Location Preference",
-  Arabic: "تفضيل الموقع",
-  Hebrew: "העדפת מיקום",
-  Russian: "Предпочтение локации",
-  Spanish: "Preferencia de ubicación",
-  Chinese: "位置偏好",
-  French: "Préférence de lieu",
-  German: "Standortpräferenz",
-  Japanese: "場所の希望",
-  Korean: "위치 선호",
-  Yiddish: "ארט-פרעפערענץ",
-} as const;
-
-const transportationRowTranslations = {
-  English: "Transportation Method",
-  Arabic: "طريقة الوصول",
-  Hebrew: "דרך הגעה",
-  Russian: "Способ прибытия",
-  Spanish: "Método de transporte",
-  Chinese: "交通方式",
-  French: "Mode de transport",
-  German: "Anreiseart",
-  Japanese: "移動手段",
-  Korean: "이동 방법",
-  Yiddish: "טראנספארט-אופֿן",
-} as const;
-
-const foodPreferencesRowTranslations = {
-  English: "Food Preferences",
-  Arabic: "تفضيلات الطعام",
-  Hebrew: "העדפות אוכל",
-  Russian: "Еда",
-  Spanish: "Comida",
-  Chinese: "饮食偏好",
-  French: "Repas",
-  German: "Essen",
-  Japanese: "食事",
-  Korean: "음식 선호",
-  Yiddish: "עסן",
-} as const;
-
-const hobbiesInterestsRowTranslations = {
-  English: "Hobbies & Interests",
-  Arabic: "الهوايات والاهتمامات",
-  Hebrew: "תחביבים ותחומי עניין",
-  Russian: "Хобби и интересы",
-  Spanish: "Hobbies e intereses",
-  Chinese: "爱好与兴趣",
-  French: "Loisirs et centres d'intérêt",
-  German: "Hobbys und Interessen",
-  Japanese: "趣味と興味",
-  Korean: "취미와 관심사",
-  Yiddish: "האביס און אינטערעסן",
-} as const;
-
-const profileMenuTranslations = {
-  English: {
-    menuTitle: "Profile shortcuts",
-    layoutTitle: "Profile Layout",
-    clean: "Clean profile",
-    cleanCopy: "Move shortcuts into this menu.",
-    expanded: "Full profile",
-    expandedCopy: "Show shortcuts as rows.",
-    widthTitle: "Screen width",
-    contained: "Contained",
-    containedCopy: "Keep profile sections comfortably centered.",
-    wide: "Wide screen",
-    wideCopy: "Stretch profile sections across the screen.",
-  },
-  Chinese: {
-    menuTitle: "资料快捷入口",
-    layoutTitle: "资料布局",
-    clean: "简洁资料",
-    cleanCopy: "把快捷入口移到这个菜单里。",
-    expanded: "完整资料",
-    expandedCopy: "把快捷入口显示为列表行。",
-    widthTitle: "屏幕宽度",
-    contained: "居中显示",
-    containedCopy: "让资料区域舒适地居中显示。",
-    wide: "宽屏显示",
-    wideCopy: "让资料区域横向铺开。",
-  },
-  Hebrew: {
-    menuTitle: "קיצורי פרופיל",
-    layoutTitle: "תצוגת פרופיל",
-    clean: "פרופיל נקי",
-    cleanCopy: "להעביר קיצורים לתפריט הזה.",
-    expanded: "פרופיל מלא",
-    expandedCopy: "להציג קיצורים כשורות.",
-    widthTitle: "רוחב מסך",
-    contained: "מרוכז",
-    containedCopy: "להשאיר את אזורי הפרופיל ממורכזים בנוחות.",
-    wide: "מסך רחב",
-    wideCopy: "למתוח את אזורי הפרופיל לרוחב המסך.",
-  },
-  Japanese: {
-    menuTitle: "プロフィールショートカット",
-    layoutTitle: "プロフィールレイアウト",
-    clean: "シンプルプロフィール",
-    cleanCopy: "ショートカットをこのメニューに移動します。",
-    expanded: "フルプロフィール",
-    expandedCopy: "ショートカットを行として表示します。",
-    widthTitle: "画面幅",
-    contained: "中央寄せ",
-    containedCopy: "プロフィールセクションを見やすく中央に配置します。",
-    wide: "ワイド画面",
-    wideCopy: "プロフィールセクションを画面幅いっぱいに広げます。",
-  },
-  Korean: {
-    menuTitle: "프로필 바로가기",
-    layoutTitle: "프로필 레이아웃",
-    clean: "깔끔한 프로필",
-    cleanCopy: "바로가기를 이 메뉴로 이동합니다.",
-    expanded: "전체 프로필",
-    expandedCopy: "바로가기를 행으로 표시합니다.",
-    widthTitle: "화면 너비",
-    contained: "가운데 정렬",
-    containedCopy: "프로필 섹션을 편안하게 가운데에 둡니다.",
-    wide: "넓은 화면",
-    wideCopy: "프로필 섹션을 화면 전체로 넓힙니다.",
-  },
-} as const;
-
 const profileVerificationTranslations = {
   English: {
     reviewSettings: "Review settings",
@@ -1273,7 +1149,6 @@ export default function ProfileScreen() {
     contactEmail,
     contactPhone,
     identitySelfieUri,
-    setIdentitySelfieUri,
     hasIdentityDocument,
     comfortPreferences,
     contactPreferences,
@@ -1357,7 +1232,6 @@ export default function ProfileScreen() {
   const vibeCopy = profileVibeTranslations[appLanguageBase] ?? {};
   const comfortCopy = comfortPreferenceTranslations[appLanguageBase] ?? {};
   const visibilityCopy = visibilityModeTranslations[appLanguageBase as keyof typeof visibilityModeTranslations] ?? visibilityModeTranslations.English;
-  const profileMenuCopy = profileMenuTranslations[appLanguageBase as keyof typeof profileMenuTranslations] ?? profileMenuTranslations.English;
   const profileVerificationCopy = profileVerificationTranslations[appLanguageBase as keyof typeof profileVerificationTranslations] ?? profileVerificationTranslations.English;
   const profileVerificationA11yCopy = { ...profileVerificationTranslations.English, ...profileVerificationCopy };
   const profilePreferenceCopy = getProfilePreferenceCopy(appLanguageBase);
@@ -1840,13 +1714,6 @@ export default function ProfileScreen() {
       return;
     }
 
-    setDraftSuburb(suburb);
-    setShowSuburbSaved(false);
-    setIsEditingSuburb(true);
-  };
-
-  const openLocalAreaEditor = () => {
-    closeProfileMenu();
     setDraftSuburb(suburb);
     setShowSuburbSaved(false);
     setIsEditingSuburb(true);
@@ -2454,7 +2321,7 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState(snapshot);
   };
 
-  const openVerificationReview = () => {
+  const openVerificationReview = useCallback(() => {
     closeProfileMenu();
     setDraftContactEmail(contactEmail);
     setDraftContactPhone(contactPhone);
@@ -2462,13 +2329,13 @@ export default function ProfileScreen() {
     setDraftHasIdentityDocument(hasIdentityDocument);
     setDraftVerificationLevel(effectiveVerificationLevel);
     setIsVerificationReviewOpen(true);
-  };
+  }, [closeProfileMenu, contactEmail, contactPhone, effectiveVerificationLevel, hasIdentityDocument, identitySelfieUri]);
 
   useEffect(() => {
     if (menu === "verificationTrust") {
       openVerificationReview();
     }
-  }, [menu]);
+  }, [menu, openVerificationReview]);
 
   const confirmVerificationDetails = async () => {
     const nextVerificationLevel = getEffectivePrototypeVerificationLevel({

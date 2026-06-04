@@ -337,7 +337,6 @@ export default function EventsScreen() {
     identitySelfieUri,
     isNightMode,
     profilePhotoUri,
-    saveSoftHelloMvpState,
     suburb,
     transportationMethod,
     verificationLevel,

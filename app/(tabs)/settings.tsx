@@ -3751,7 +3751,6 @@ export default function SettingsScreen() {
     middleName,
     lastName,
     gender,
-    setGender,
     middleNameDisplay,
     lastNameDisplay,
     showMiddleName,
