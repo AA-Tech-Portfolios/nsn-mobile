@@ -8,6 +8,8 @@ SoftShore is the public-facing local pilot direction: a Sydney/North Shore alpha
 
 SoftHello is the umbrella/global product direction. North Shore Nights / NSN remains historical and internal terminology in this repository while rename work is scoped separately.
 
+The current shared tagline is: **Small meetups for big moments.**
+
 ## Working Features
 
 - Five-stage local onboarding: welcome, about you, meeting comfort, privacy visibility, and review.
@@ -80,6 +82,7 @@ Current validation has focused on TypeScript checks, local Expo/web startup, scr
 - **Umbrella/global product:** SoftHello, the broader product and brand direction for low-pressure, privacy-aware social connection.
 - **Local pilot/community brand:** SoftShore, the Sydney North Shore alpha direction.
 - **Historical/internal terminology:** North Shore Nights / NSN, retained in this repo until scoped rename tasks are planned.
+- **Tagline:** Small meetups for big moments.
 - **Temporary repository name:** `nsn-mobile` can remain as-is for now; repository and package renames should be separate future tasks.
 
 See also: [`BRAND_NAMING.md`](BRAND_NAMING.md), [`softhello-softshore-brand-naming-story.md`](softhello-softshore-brand-naming-story.md), [`nsn-alpha-readiness.md`](nsn-alpha-readiness.md), [`alpha-tester-guide.md`](alpha-tester-guide.md), [`alpha-tester-feedback-checklist.md`](alpha-tester-feedback-checklist.md), [`brand-systems.md`](brand-systems.md), [`softhello-feature-map.md`](softhello-feature-map.md), and [`../todo.md`](../todo.md).

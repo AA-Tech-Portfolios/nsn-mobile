@@ -8,6 +8,8 @@ This repo currently contains three related naming layers:
 - **SoftShore** is the local Sydney North Shore pilot/community brand.
 - **North Shore Nights (NSN)** is historical/internal terminology retained for continuity.
 
+The shared tagline is: **Small meetups for big moments.**
+
 The products can share low-pressure meetup principles, trust flows, accessibility thinking,
 and safety patterns. They should not accidentally share all visual language or local copy.
 
@@ -135,6 +137,7 @@ grounded in place while moving away from language that can sound nightlife-first
 
 ### Prototype-Safe Lines
 
+- "Small meetups for big moments."
 - "SoftShore is the local Sydney North Shore pilot for SoftHello."
 - "Small, low-pressure gatherings around the North Shore."
 - "Reach out gently, reconnect at your own pace, and keep privacy choices visible."

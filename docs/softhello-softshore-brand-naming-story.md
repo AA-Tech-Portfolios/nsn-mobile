@@ -6,6 +6,8 @@ SoftShore is the local Sydney North Shore pilot brand. It carries the same softn
 
 North Shore Nights and NSN helped shape the early prototype. They can remain in the repository and internal references while the product learns locally. The next brand move is not a mechanical rename across every file; it is a careful shift in public-facing language toward SoftShore and shared product language toward SoftHello.
 
+The tagline is **Small meetups for big moments.** It keeps the product focused on modest, respectful gatherings while still acknowledging that small social steps can matter deeply.
+
 ## Brand Relationship
 
 SoftHello is the broader product world.
@@ -41,6 +43,8 @@ Avoid language around:
 - vague promises of safety before systems are real
 
 ## Public Positioning
+
+Small meetups for big moments.
 
 SoftShore is the local Sydney North Shore pilot for SoftHello: a calm way to explore small local gatherings, reach out gently, and reconnect with privacy and consent respected from the start.
 

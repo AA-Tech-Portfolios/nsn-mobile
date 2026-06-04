@@ -2,6 +2,8 @@
 
 SoftShore is the local Sydney North Shore pilot for **SoftHello**, the broader product direction for calm, low-pressure social connection. This repository is still named `nsn-mobile`, and North Shore Nights / NSN remains historical and internal terminology while the brand migration is scoped carefully.
 
+**Tagline:** Small meetups for big moments.
+
 The pilot is built for young adults who want easier, calmer ways to reach out, reconnect, and find small local gatherings: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
 
 **Alpha note:** this repository is still a prototype. Several safety, trust, RSVP, verification, moderation, and account behaviours are local-only, mocked, or scaffolded. Do not treat the app as production-ready or rely on it for real-world meetups without separate alpha organiser confirmation.
@@ -43,7 +45,7 @@ Use these docs before making brand-facing changes:
 - [`docs/codex-brand-context-prompt.md`](docs/codex-brand-context-prompt.md) - prompt context for future Codex sessions.
 - [`docs/brand-systems.md`](docs/brand-systems.md) - visual identity boundaries and implementation rules.
 
-In short: **SoftHello** is the broader product, **SoftShore** is the local Sydney North Shore pilot, and **NSN / North Shore Nights** can remain as historical/internal terminology for now. Do not rename the repository, package, folders, bundle identifiers, or every internal reference without a separate migration task.
+In short: **SoftHello** is the broader product, **SoftShore** is the local Sydney North Shore pilot, **NSN / North Shore Nights** can remain as historical/internal terminology for now, and the shared tagline is **Small meetups for big moments.** Do not rename the repository, package, folders, bundle identifiers, or every internal reference without a separate migration task.
 
 ## Local Pilot
 
@@ -165,6 +167,7 @@ See [`design.md`](design.md) for the broader interface plan and [`docs/brand-sys
 
 A lightweight future website can reuse these same prototype-safe messages:
 
+- Small meetups for big moments.
 - SoftShore is the Sydney/North Shore pilot for small, low-pressure local gatherings.
 - SoftHello is the broader product direction once the local learning is clearer.
 - Privacy and trust are design principles first; production safety, verification, matching, payments, and moderation claims should wait until those systems are real and reviewed.

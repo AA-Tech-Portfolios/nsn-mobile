@@ -4,6 +4,8 @@ SoftHello is the umbrella product name. It describes the broader app direction: 
 
 SoftShore is the local Sydney North Shore pilot/community brand. It keeps the pilot grounded in place while moving public-facing language away from North Shore Nights and NSN.
 
+The shared tagline is: **Small meetups for big moments.**
+
 North Shore Nights and NSN remain valid historical and internal terminology for now. They appear in the repository name, package name, folders, route names, docs, screenshots, and prototype data. Do not blindly rename every internal reference. Repository, package, folder, bundle identifier, and broad code-symbol renames should be planned as separate future tasks.
 
 ## Naming Model
@@ -27,6 +29,7 @@ North Shore Nights and NSN remain valid historical and internal terminology for 
 
 ## Prototype-Safe Copy
 
+- "Small meetups for big moments."
 - "SoftShore is the local Sydney North Shore pilot for SoftHello."
 - "Find small, low-pressure gatherings around the North Shore."
 - "Reach out gently, reconnect at your own pace, and keep privacy choices visible."
