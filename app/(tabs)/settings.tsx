@@ -13,7 +13,7 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
-import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
@@ -3754,15 +3754,10 @@ export default function SettingsScreen() {
     middleNameDisplay,
     lastNameDisplay,
     showMiddleName,
-    setShowMiddleName,
     showLastName,
-    setShowLastName,
     showAge,
-    setShowAge,
     showPreferredAgeRange,
-    setShowPreferredAgeRange,
     showGender,
-    setShowGender,
     warmUpLowerBlur,
     setWarmUpLowerBlur,
     setComfortMode,
@@ -3830,7 +3825,6 @@ export default function SettingsScreen() {
     notificationSnoozed,
     setNotificationSnoozed,
     suggestNightModeInEvenings,
-    setSuggestNightModeInEvenings,
     notificationSnoozePreset,
     setNotificationSnoozePreset,
     useApproximateLocation,
@@ -3955,31 +3949,34 @@ export default function SettingsScreen() {
     { contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument },
     verificationLevel,
   );
-  const quickJumpOptions: { id: SettingsSectionJumpId; label: string }[] = [
-    { id: "settingsView", label: "View" },
-    { id: "batteryPerformance", label: "Battery" },
-    { id: "generalPrivacy", label: "Privacy" },
-    { id: "profileVisibility", label: "Visibility" },
-    { id: "trustFoundations", label: "Trust" },
-    { id: "profilePreview", label: "Preview" },
-    { id: "appearance", label: "Appearance" },
-    ...(isAdvancedSettings
-      ? [
-          { id: "nameDisplay" as const, label: "Names" },
-          ...(comfortMode !== "Open Mode"
-            ? [{ id: "photoBlur" as const, label: "Photo blur" }]
-            : []),
-          { id: "gender" as const, label: "Gender" },
-          { id: "notifications" as const, label: "Notifications" },
-          { id: "locationDiscovery" as const, label: "Location" },
-          { id: "regionalFormats" as const, label: "Formats" },
-          { id: "safetyContact" as const, label: "Safety" },
-          { id: "accessibility" as const, label: "Accessibility" },
-          { id: "language" as const, label: "Language" },
-        ]
-      : []),
-    { id: "generalSettings", label: "Prototype account" },
-  ];
+  const quickJumpOptions = useMemo<{ id: SettingsSectionJumpId; label: string }[]>(
+    () => [
+      { id: "settingsView", label: "View" },
+      { id: "batteryPerformance", label: "Battery" },
+      { id: "generalPrivacy", label: "Privacy" },
+      { id: "profileVisibility", label: "Visibility" },
+      { id: "trustFoundations", label: "Trust" },
+      { id: "profilePreview", label: "Preview" },
+      { id: "appearance", label: "Appearance" },
+      ...(isAdvancedSettings
+        ? [
+            { id: "nameDisplay" as const, label: "Names" },
+            ...(comfortMode !== "Open Mode"
+              ? [{ id: "photoBlur" as const, label: "Photo blur" }]
+              : []),
+            { id: "gender" as const, label: "Gender" },
+            { id: "notifications" as const, label: "Notifications" },
+            { id: "locationDiscovery" as const, label: "Location" },
+            { id: "regionalFormats" as const, label: "Formats" },
+            { id: "safetyContact" as const, label: "Safety" },
+            { id: "accessibility" as const, label: "Accessibility" },
+            { id: "language" as const, label: "Language" },
+          ]
+        : []),
+      { id: "generalSettings", label: "Prototype account" },
+    ],
+    [comfortMode, isAdvancedSettings],
+  );
   const normalizedQuickJumpSearch = quickJumpSearch.trim().toLocaleLowerCase();
   const filteredQuickJumpOptions = useMemo(
     () =>
@@ -4267,7 +4264,7 @@ export default function SettingsScreen() {
   const registerAccordionLayout = (id: SettingsAccordionId) => (event: LayoutChangeEvent) => {
     accordionOffsets.current[id] = event.nativeEvent.layout.y;
   };
-  const scrollToSectionOrAccordion = (id: SettingsSectionJumpId) => {
+  const scrollToSectionOrAccordion = useCallback((id: SettingsSectionJumpId) => {
     const accordionId = accordionByJumpSection[id];
     const sectionY = sectionOffsets.current[id];
     const accordionY = accordionOffsets.current[accordionId];
@@ -4278,8 +4275,8 @@ export default function SettingsScreen() {
       y: Math.max(0, y - 8),
       animated: !batterySaver && !reduceMotion,
     });
-  };
-  const jumpToSection = (id: SettingsSectionJumpId) => {
+  }, [batterySaver, reduceMotion]);
+  const jumpToSection = useCallback((id: SettingsSectionJumpId) => {
     const accordionId = accordionByJumpSection[id];
 
     setOpenAccordionSections((current) =>
@@ -4291,7 +4288,7 @@ export default function SettingsScreen() {
       scrollToSectionOrAccordion(id);
       setTimeout(() => setHighlightedAccordionSection(null), 1600);
     }, 80);
-  };
+  }, [scrollToSectionOrAccordion]);
   const renderSettingsAccordion = (id: SettingsAccordionId, children: ReactNode) => {
     if (!visibleSettingsAccordionIds.includes(id)) return null;
 
@@ -4454,7 +4451,7 @@ export default function SettingsScreen() {
 
     const timer = setTimeout(() => jumpToSection(normalizedRequestedSection), 350);
     return () => clearTimeout(timer);
-  }, [isAdvancedSettings, normalizedRequestedSection, saveSoftHelloMvpState]);
+  }, [isAdvancedSettings, jumpToSection, normalizedRequestedSection, saveSoftHelloMvpState]);
   useEffect(() => {
     return () => {
       if (recentlyChangedTimer.current) {
