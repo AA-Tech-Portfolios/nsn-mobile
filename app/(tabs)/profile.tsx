@@ -7324,7 +7324,7 @@ const styles = StyleSheet.create({
   dayProfileControlsButton: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   profileDrawerBackdrop: { flex: 1, alignItems: "flex-end", justifyContent: "center", backgroundColor: "rgba(2,8,20,0.58)", padding: 18 },
   profileDrawerBackdropMobile: { justifyContent: "flex-end", padding: 10 },
-  profileOptionsDrawer: { width: 440, maxWidth: "96%", height: "100%", maxHeight: 820, borderRadius: 24, borderWidth: 1, borderColor: "#536C9E", backgroundColor: "#0B1626", padding: 14, gap: 12, shadowColor: "#000000", shadowOpacity: 0.32, shadowRadius: 24, shadowOffset: { width: -8, height: 10 }, elevation: 16 },
+  profileOptionsDrawer: { width: 440, maxWidth: "96%", height: "100%", maxHeight: 820, borderRadius: 24, borderWidth: 1, borderColor: "#536C9E", backgroundColor: "#0B1626", padding: 14, gap: 12, ...(Platform.OS === "web" ? ({ boxShadow: "-8px 10px 24px rgba(0,0,0,0.32)" } as any) : { shadowColor: "#000000", shadowOpacity: 0.32, shadowRadius: 24, shadowOffset: { width: -8, height: 10 }, elevation: 16 }) },
   profileOptionsDrawerHelpDesktop: { width: 980, maxWidth: "94%", maxHeight: 860, padding: 18 },
   profileOptionsDrawerMobile: { width: "100%", maxWidth: "100%", height: "92%", maxHeight: "92%", borderBottomLeftRadius: 0, borderBottomRightRadius: 0, paddingBottom: 18 },
   dayProfileOptionsDrawer: { backgroundColor: "#E8EDF2", borderColor: "#9FB2C8" },

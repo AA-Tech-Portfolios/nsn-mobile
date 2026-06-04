@@ -3959,7 +3959,7 @@ const styles = StyleSheet.create({
   prototypeMapCityLabel: { position: "absolute", right: "12%", bottom: 24, maxWidth: "34%", color: "rgba(245,247,255,0.62)", fontSize: 9, fontWeight: "900" },
   prototypeMapNorthLabel: { position: "absolute", left: 20, top: 53, color: "rgba(245,247,255,0.76)", fontSize: 10, fontWeight: "900" },
   prototypeMapPinHalo: { position: "absolute", marginLeft: -23, marginTop: -23, width: 46, height: 46, borderRadius: 23, backgroundColor: "rgba(199,176,122,0.2)", borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
-  prototypeMapPin: { position: "absolute", marginLeft: -15, marginTop: -15, width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: "#FFFFFF", backgroundColor: "#214B95", alignItems: "center", justifyContent: "center", shadowColor: "#000000", shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4 },
+  prototypeMapPin: { position: "absolute", marginLeft: -15, marginTop: -15, width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: "#FFFFFF", backgroundColor: "#214B95", alignItems: "center", justifyContent: "center", ...(Platform.OS === "web" ? ({ boxShadow: "0px 3px 8px rgba(0,0,0,0.22)" } as any) : { shadowColor: "#000000", shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4 }) },
   dayPrototypeMapPin: { backgroundColor: "#284E92" },
   prototypeMapArea: { position: "absolute", right: 12, top: 44, maxWidth: "36%", borderRadius: 12, backgroundColor: "rgba(8,17,31,0.72)", paddingHorizontal: 9, paddingVertical: 5 },
   dayPrototypeMapArea: { backgroundColor: "rgba(255,255,255,0.72)" },
