@@ -18,9 +18,9 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: pnpm
 
       - run: corepack enable
+      - run: corepack install
       - run: pnpm --version
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
