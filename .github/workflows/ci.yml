@@ -20,7 +20,7 @@ jobs:
           node-version: 22
 
       - run: corepack enable
-      - run: corepack install
+      - run: corepack prepare pnpm@11.5.1 --activate
       - run: pnpm --version
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
