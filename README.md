@@ -1,56 +1,69 @@
-# North Shore Nights (NSN)
+# SoftShore / NSN Mobile
 
-North Shore Nights (NSN) is a Sydney/North Shore alpha prototype for low-pressure social meetups. It is built for young adults who want easier, calmer ways to meet new people locally: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
+SoftShore is the local Sydney North Shore pilot for **SoftHello**, the broader product direction for calm, low-pressure social connection. This repository is still named `nsn-mobile`, and North Shore Nights / NSN remains historical and internal terminology while the brand migration is scoped carefully.
+
+The pilot is built for young adults who want easier, calmer ways to reach out, reconnect, and find small local gatherings: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
 
 **Alpha note:** this repository is still a prototype. Several safety, trust, RSVP, verification, moderation, and account behaviours are local-only, mocked, or scaffolded. Do not treat the app as production-ready or rely on it for real-world meetups without separate alpha organiser confirmation.
 
 ## Current Prototype Status
 
-The active app identity is **North Shore Nights**, focused on Sydney's North Shore and Australia/Sydney local context. The prototype currently supports local onboarding, Home discovery, event details, meetup/chat previews, profile/privacy settings, comfort preferences, a prototype Support & Resources surface, and saved-local prototype states.
+The active public-facing pilot direction is **SoftShore**, focused on Sydney's North Shore and Australia/Sydney local context. Existing NSN references remain in code, screenshots, package metadata, and historical docs until specific rename tasks are planned. The prototype currently supports local onboarding, Home discovery, event details, meetup/chat previews, profile/privacy settings, comfort preferences, a prototype Support & Resources surface, and saved-local prototype states.
 
 For the real current state, including what is working, what is mocked, and what is not implemented yet, see [`docs/current-state.md`](docs/current-state.md).
 
 ## Visual Preview
 
-NSN is currently a Sydney/North Shore alpha prototype for calmer first meetups: small groups, clear expectations, privacy-conscious profile controls, and local-only demo states that are easy to review with trusted testers.
+SoftShore is currently a Sydney/North Shore alpha prototype for calmer first meetups: small groups, clear expectations, privacy-conscious profile controls, and local-only demo states that are easy to review with trusted testers.
 
 The screenshots below are checkpoint assets from the current prototype. They are presentation aids only; they do not imply production verification, live matching, emergency tooling, payments, or connected moderation systems.
 
-| Home discovery | Event details | Profile & privacy |
-| --- | --- | --- |
+| Home discovery                                                     | Event details                                                             | Profile & privacy                                                     |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | ![NSN Home discovery screenshot](screenshots/home-web-desktop.png) | ![NSN Event Details screenshot](screenshots/checkpoint/event-details.png) | ![NSN Profile screenshot](screenshots/checkpoint/profile-privacy.png) |
 
-| Settings & Privacy | Onboarding |
-| --- | --- |
+| Settings & Privacy                                                                     | Onboarding                                                                                     |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | ![NSN Settings and Privacy screenshot](screenshots/checkpoint/06-settings-privacy.png) | ![NSN onboarding welcome screenshot](screenshots/checkpoint/07-onboarding-stage-1-welcome.png) |
 
-NSN's tone should stay low-pressure and plain-spoken: people can browse quietly, decide later, keep profile details private, and treat every alpha action as feedback rather than a commitment.
+SoftShore's tone should stay low-pressure and plain-spoken: people can browse quietly, decide later, keep profile details private, and treat every alpha action as feedback rather than a commitment.
 
 ## Product Intent
 
-Many social apps assume users are ready for big groups, loud events, or open-ended networking. NSN is designed for people who may be shy, reserved, new to an area, neurodivergent, privacy-conscious, or simply more comfortable with structured, smaller meetups.
+Many social apps assume users are ready for big groups, loud events, or open-ended networking. SoftHello and the local SoftShore pilot are designed for people who may be shy, reserved, new to an area, neurodivergent, privacy-conscious, or simply more comfortable with structured, smaller gatherings.
 
 Core principles live in [`docs/core-principles.md`](docs/core-principles.md). The emotional mission lives in [`docs/vision.md`](docs/vision.md).
 
-## NSN Local Pilot
+## Brand And Naming
 
-NSN-specific docs:
+Use these docs before making brand-facing changes:
+
+- [`docs/BRAND_NAMING.md`](docs/BRAND_NAMING.md) - current naming model for SoftHello, SoftShore, and NSN.
+- [`docs/softhello-softshore-brand-naming-story.md`](docs/softhello-softshore-brand-naming-story.md) - naming story and tone guidance.
+- [`docs/codex-brand-context-prompt.md`](docs/codex-brand-context-prompt.md) - prompt context for future Codex sessions.
+- [`docs/brand-systems.md`](docs/brand-systems.md) - visual identity boundaries and implementation rules.
+
+In short: **SoftHello** is the broader product, **SoftShore** is the local Sydney North Shore pilot, and **NSN / North Shore Nights** can remain as historical/internal terminology for now. Do not rename the repository, package, folders, bundle identifiers, or every internal reference without a separate migration task.
+
+## Local Pilot
+
+Pilot docs:
 
 - [`docs/current-state.md`](docs/current-state.md) - current implemented prototype status and limitations.
 - [`docs/nsn-alpha-readiness.md`](docs/nsn-alpha-readiness.md) - readiness requirements for controlled alpha testing.
 - [`docs/alpha-tester-guide.md`](docs/alpha-tester-guide.md) - human-facing guide for trusted controlled alpha testers.
 - [`docs/alpha-tester-feedback-checklist.md`](docs/alpha-tester-feedback-checklist.md) - short feedback questions for alpha walkthroughs and debriefs.
 - [`docs/community-support-vision.md`](docs/community-support-vision.md) - support, resources, gentle independence, accessibility, and boundary principles.
-- [`docs/brand-systems.md`](docs/brand-systems.md) - NSN local visual identity and future SoftHello brand context.
+- [`docs/brand-systems.md`](docs/brand-systems.md) - SoftHello, SoftShore, and NSN visual identity boundaries.
 - [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes, verification commands, and Expo web/native testing guidance.
 - [`docs/browser-testing.md`](docs/browser-testing.md) - practical alpha browser coverage, web checks, and future platform testing boundaries.
 - [`docs/database-auth-planning.md`](docs/database-auth-planning.md) - early staged planning for real auth, database entities, and trust/safety guardrails.
 - [`docs/security-abuse-prevention-checklist.md`](docs/security-abuse-prevention-checklist.md) - planning-only security, abuse-prevention, and launch-readiness checklist.
 - [`todo.md`](todo.md) - active implementation roadmap.
 
-## SoftHello Future / Global Context
+## SoftHello Global Context
 
-SoftHello remains the future/global direction. These docs are retained for product continuity, but they are not the active app identity in this repository:
+SoftHello is the umbrella/global product direction. These docs describe shared principles, future product boundaries, and the long-term product world beyond the local SoftShore pilot:
 
 - [`docs/vision.md`](docs/vision.md) - emotional mission and north star.
 - [`docs/core-principles.md`](docs/core-principles.md) - short non-negotiable rules.
@@ -82,7 +95,7 @@ SoftHello remains the future/global direction. These docs are retained for produ
 - Profile, vibes, optional photo, blur controls, visibility settings, contact preferences, food/interests, saved places, and user preference panels.
 - Support & Resources prototype with expandable demo placeholders for life skills, community connection, accessibility, animals and wildlife, and crisis/emergency pathways.
 - Settings for language, translation language, accessibility, appearance, regional formats, notification preferences, account pause/delete demo actions, and privacy controls.
-- NSN and SoftHello brand theme support for design exploration, with NSN as the active identity.
+- SoftShore, NSN, and SoftHello brand theme support for design exploration, with SoftShore as the public-facing pilot direction and NSN retained for internal continuity.
 
 ## Tech Stack
 
@@ -152,8 +165,8 @@ See [`design.md`](design.md) for the broader interface plan and [`docs/brand-sys
 
 A lightweight future website can reuse these same prototype-safe messages:
 
-- North Shore Nights is a Sydney/North Shore alpha for small, low-pressure local meetups.
-- SoftHello remains the future/global direction once the local learning is clearer.
+- SoftShore is the Sydney/North Shore pilot for small, low-pressure local gatherings.
+- SoftHello is the broader product direction once the local learning is clearer.
 - Privacy and trust are design principles first; production safety, verification, matching, payments, and moderation claims should wait until those systems are real and reviewed.
 - Good preview assets for a future landing page or social profile are Home discovery, Event Details, Settings & Privacy, and Onboarding. These show the app's calm feel without overpromising live operations.
 - Reserving names or preparing preview images is separate from public marketing. The near-term goal is brand protection, tester clarity, and future discoverability.

@@ -1,11 +1,12 @@
 # Brand Systems
 
-> North Shore Nights (NSN) is the active app identity for this repository. SoftHello references in this document are future/global context only.
+> SoftHello is the umbrella/global product direction. SoftShore is the public-facing Sydney North Shore pilot direction. North Shore Nights / NSN remains historical and internal terminology while repo, package, folder, and code-symbol renames are scoped separately.
 
-This repo currently contains two related but distinct product identities:
+This repo currently contains three related naming layers:
 
-- **SoftHello** is the global release direction.
-- **North Shore Nights (NSN)** is the local Sydney/North Shore prototype direction.
+- **SoftHello** is the umbrella/global product direction.
+- **SoftShore** is the local Sydney North Shore pilot/community brand.
+- **North Shore Nights (NSN)** is historical/internal terminology retained for continuity.
 
 The products can share low-pressure meetup principles, trust flows, accessibility thinking,
 and safety patterns. They should not accidentally share all visual language or local copy.
@@ -67,14 +68,14 @@ These are SoftHello product goals, not current NSN production capabilities. See 
 
 ### Visual System
 
-| Role | Color |
-|---|---:|
-| Purple primary | `#6C5CE7` |
-| Peach accent | `#FFB48A` |
-| Warm cream | `#FFE6D6` |
+| Role            |     Color |
+| --------------- | --------: |
+| Purple primary  | `#6C5CE7` |
+| Peach accent    | `#FFB48A` |
+| Warm cream      | `#FFE6D6` |
 | Soft background | `#F4F6FA` |
-| Deep ink | `#18182E` |
-| Muted slate | `#6B7280` |
+| Deep ink        | `#18182E` |
+| Muted slate     | `#6B7280` |
 
 ### Typography
 
@@ -109,8 +110,40 @@ These are SoftHello product goals, not current NSN production capabilities. See 
 
 ## North Shore Nights
 
-NSN is the local Australian prototype identity. It can be more place-based, night-friendly,
-and Sydney/North Shore specific.
+NSN is the historical local Australian prototype identity. Keep it where it preserves repository,
+package, screenshot, historical, or code context. New public-facing local pilot copy should generally
+prefer SoftShore unless the surface is explicitly documenting the older NSN prototype.
+
+## SoftShore
+
+SoftShore is the Sydney North Shore pilot/community brand for SoftHello. It keeps the local pilot
+grounded in place while moving away from language that can sound nightlife-first.
+
+### Product Position
+
+- Local Sydney North Shore pilot name and public-facing community identity.
+- Designed for small gatherings, gentle first steps, reconnecting, privacy, consent, and belonging.
+- Useful for tester-facing docs, public pilot copy, and community-facing explanations.
+- Should not require repo, package, folder, route, or code-symbol renames until a scoped migration is planned.
+
+### Tone
+
+- Calm, local, respectful, and practical.
+- Warm without overpromising emotional outcomes.
+- Clear about prototype limitations and local-only behaviours.
+- Avoid dating-first, nightlife-first, networking-first, or loud social media framing.
+
+### Prototype-Safe Lines
+
+- "SoftShore is the local Sydney North Shore pilot for SoftHello."
+- "Small, low-pressure gatherings around the North Shore."
+- "Reach out gently, reconnect at your own pace, and keep privacy choices visible."
+
+## NSN Historical Reference
+
+North Shore Nights / NSN can remain in internal and historical contexts for now. The notes below
+describe the older NSN visual system and should still inform existing screens until a visual rebrand
+is explicitly scoped.
 
 ### Version 1.0 Concept Anchor
 
@@ -160,20 +193,20 @@ The v1.1 concept also introduces feature cards that are central to the NSN produ
 
 ### Visual System
 
-| Role | Color |
-|---|---:|
+| Role                     |     Color |
+| ------------------------ | --------: |
 | Midnight blue background | `#020814` |
-| Secondary background | `#1E293B` |
-| Tertiary background | `#334155` |
-| Indigo accent | `#4F5BD5` |
-| Ocean blue | `#2F80ED` |
-| Teal blue | `#2CB1BC` |
-| Warm gold | `#F2C94C` |
-| Primary text | `#E5E7EB` |
-| Secondary text | `#94A3B8` |
-| Muted text | `#64748B` |
-| Highlight | `#3B82F6` |
-| Borders and lines | `#475569` |
+| Secondary background     | `#1E293B` |
+| Tertiary background      | `#334155` |
+| Indigo accent            | `#4F5BD5` |
+| Ocean blue               | `#2F80ED` |
+| Teal blue                | `#2CB1BC` |
+| Warm gold                | `#F2C94C` |
+| Primary text             | `#E5E7EB` |
+| Secondary text           | `#94A3B8` |
+| Muted text               | `#64748B` |
+| Highlight                | `#3B82F6` |
+| Borders and lines        | `#475569` |
 
 ### Typography
 
@@ -212,6 +245,11 @@ Current implementation status for these shared principles belongs in [`current-s
 
 ## Implementation Rules
 
+- Use [`BRAND_NAMING.md`](BRAND_NAMING.md) before changing brand-facing copy.
+- Use SoftHello for umbrella/global product language.
+- Use SoftShore for public-facing Sydney North Shore pilot language.
+- Keep NSN / North Shore Nights where it is historical, internal, or tied to existing repo/package/code context.
+- Do not rename `nsn-mobile`, package names, folders, bundle identifiers, route names, or code symbols without a separate migration task.
 - Do not mix SoftHello purple/peach branding into NSN screens unless the screen is explicitly part of the global rebrand direction.
 - Do not use Australian-only terms such as suburb as the only location language in SoftHello global flows.
 - Keep local Australian locality matching in NSN-specific or region-aware modules.

@@ -4,9 +4,9 @@ This document is the single source of truth for what the repository currently re
 
 ## Current Prototype Scope
 
-North Shore Nights (NSN) is the active app identity: a Sydney/North Shore alpha prototype for calm, low-pressure, small-group meetups. The prototype is intended for controlled testing, UX review, and product learning.
+SoftShore is the public-facing local pilot direction: a Sydney/North Shore alpha prototype for calm, low-pressure, small-group meetups. The prototype is intended for controlled testing, UX review, and product learning.
 
-SoftHello remains future/global context only. It should guide long-term product direction, but NSN is the current local pilot.
+SoftHello is the umbrella/global product direction. North Shore Nights / NSN remains historical and internal terminology in this repository while rename work is scoped separately.
 
 ## Working Features
 
@@ -18,7 +18,7 @@ SoftHello remains future/global context only. It should guide long-term product 
 - Profile visibility controls including blur photo, blur level, private profile, local area display, name display, age/preferred age/gender display, interests, comfort preferences, and preview modes.
 - Local preference areas for transportation, location, food and beverage, hobbies/interests, contact preference, saved places, notification style, accessibility, language, regional formats, appearance, and account pause/delete demo states.
 - Soft Exit, block/report-shaped controls, saved places, event sharing/pinning/hiding, arrival-update style states, and private reflection/post-event feedback logic in prototype form.
-- NSN visual identity with optional SoftHello theme exploration.
+- SoftShore / NSN visual identity with optional SoftHello theme exploration.
 
 ## Mocked / Local-Only Systems
 
@@ -42,7 +42,7 @@ SoftHello remains future/global context only. It should guide long-term product 
 - Live group chat backed by a server.
 - Public event creation by regular users with moderation and abuse controls.
 - Real map, transport, weather, and locality APIs with attribution and reliability guarantees.
-- SoftHello global launch branding, copy, and region-neutral settings.
+- SoftHello global launch branding, copy, and region-neutral settings beyond the local SoftShore pilot.
 - Public beta or production launch readiness.
 
 ## Current Tech Stack
@@ -62,7 +62,7 @@ SoftHello remains future/global context only. It should guide long-term product 
 - Data may be local to the device/browser and can be reset.
 - Some buttons intentionally show demo, coming-soon, or saved-locally behaviour.
 - Safety, trust, moderation, and verification surfaces are not a substitute for real-world safety operations.
-- NSN should not be used for unsupervised real meetups until the alpha organiser confirms the test conditions separately.
+- SoftShore / NSN should not be used for unsupervised real meetups until the alpha organiser confirms the test conditions separately.
 - Translation, accessibility, and regional behaviour need further review on real devices and with real users.
 - The prototype has been iterated primarily for product exploration and alpha readiness, not production hardening.
 
@@ -75,9 +75,11 @@ SoftHello remains future/global context only. It should guide long-term product 
 
 Current validation has focused on TypeScript checks, local Expo/web startup, screenshots, and manual prototype review. iOS, Android, and web should each receive explicit manual QA before broader alpha testing.
 
-## Current Active Identity vs Future Direction
+## Current Brand Context
 
-- **Current active identity:** North Shore Nights, a Sydney/North Shore local alpha prototype.
-- **Future/global direction:** SoftHello, the broader product and brand direction for low-pressure, privacy-aware social connection.
+- **Umbrella/global product:** SoftHello, the broader product and brand direction for low-pressure, privacy-aware social connection.
+- **Local pilot/community brand:** SoftShore, the Sydney North Shore alpha direction.
+- **Historical/internal terminology:** North Shore Nights / NSN, retained in this repo until scoped rename tasks are planned.
+- **Temporary repository name:** `nsn-mobile` can remain as-is for now; repository and package renames should be separate future tasks.
 
-See also: [`nsn-alpha-readiness.md`](nsn-alpha-readiness.md), [`alpha-tester-guide.md`](alpha-tester-guide.md), [`alpha-tester-feedback-checklist.md`](alpha-tester-feedback-checklist.md), [`brand-systems.md`](brand-systems.md), [`softhello-feature-map.md`](softhello-feature-map.md), and [`../todo.md`](../todo.md).
+See also: [`BRAND_NAMING.md`](BRAND_NAMING.md), [`softhello-softshore-brand-naming-story.md`](softhello-softshore-brand-naming-story.md), [`nsn-alpha-readiness.md`](nsn-alpha-readiness.md), [`alpha-tester-guide.md`](alpha-tester-guide.md), [`alpha-tester-feedback-checklist.md`](alpha-tester-feedback-checklist.md), [`brand-systems.md`](brand-systems.md), [`softhello-feature-map.md`](softhello-feature-map.md), and [`../todo.md`](../todo.md).
