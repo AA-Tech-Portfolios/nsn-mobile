@@ -207,7 +207,7 @@ Names to consider:
 
 ## Repository Maintenance
 
-- [ ] 🟢 Follow up on GitHub Actions warning: `pnpm/action-setup@v4` targets Node.js 20 and is being forced to run on Node.js 24; update or replace the action when a Node 24-compatible release is available.
+- [x] 🟢 Follow up on GitHub Actions warning: `pnpm/action-setup@v4` targets Node.js 20 and is being forced to run on Node.js 24; update or replace the action when a Node 24-compatible release is available.
 
 ## Immediate Alpha Priorities
 
