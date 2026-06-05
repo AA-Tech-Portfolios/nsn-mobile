@@ -14,6 +14,7 @@ import type {
 } from "@/lib/app-settings";
 import { useAppSettings } from "@/lib/app-settings";
 import { nsnColors } from "@/lib/nsn-data";
+import { profileVisibilityPreviewCopy } from "@/lib/profile-visibility-copy";
 import type { SoftHelloComfortPreference } from "@/lib/softhello-mvp";
 
 export { getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-avatar";
@@ -219,14 +220,16 @@ export function ProfileVisibilityPreview({
           isDay={isDay}
         />
         <View style={styles.identity}>
-          <Text style={[styles.name, brandTheme.typography.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{privateProfile ? "Private NSN member" : publicName}</Text>
+          <Text style={[styles.name, brandTheme.typography.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+            {privateProfile ? profileVisibilityPreviewCopy.privateProfileName : publicName}
+          </Text>
           <Text style={[styles.status, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>{status}</Text>
         </View>
       </View>
 
       {privateProfile ? (
         <Text style={[styles.copy, brandTheme.typography.caption, isDay && styles.dayMuted, isRtl && styles.rtlText]}>
-          Only your RSVP and safety basics are visible until you choose to share more.
+          {profileVisibilityPreviewCopy.privateProfileNote}
         </Text>
       ) : (
         <View style={styles.detailStack}>
@@ -246,8 +249,8 @@ export function ProfileVisibilityPreview({
           {visibleGroupSize ? renderDetailLine("groupSize", `Group size: ${visibleGroupSize}`) : null}
           {visiblePhotoRecording.length ? renderDetailLine("photoRecording", `Photo & recording: ${visiblePhotoRecording.join(", ")}`) : null}
           {visiblePersonalityPresence.length ? renderDetailLine("personalityPresence", `Personality & Presence: ${visiblePersonalityPresence.join(", ")}`) : null}
-          {verifiedButPrivate ? renderDetailLine("verificationTrust", "Verified, but private: trust status can be checked without opening the full profile.") : null}
-          {minimalProfileView ? renderDetailLine(null, "Minimal view is on, so only basics are shown.") : null}
+          {verifiedButPrivate ? renderDetailLine("verificationTrust", profileVisibilityPreviewCopy.prototypeDetailsNote) : null}
+          {minimalProfileView ? renderDetailLine(null, profileVisibilityPreviewCopy.minimalProfileViewNote) : null}
         </View>
       )}
     </View>

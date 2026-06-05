@@ -7,6 +7,7 @@ import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
+import { englishEventCreationCopy } from "@/lib/event-creation-copy";
 import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
@@ -15,54 +16,7 @@ const noiseLevels = ["Quiet", "Balanced", "Lively"] as const;
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
 const eventsTranslations = {
-  English: {
-    title: "My Events",
-    subtitle: "Create your own experiences and invite others on your terms.",
-    createEvent: "Create a Meetup",
-    emptyTitle: "No events created yet",
-    emptyCopy: "Host a coffee meetup, movie night, board games, walk, study session or anything that feels like you.",
-    sheetTitle: "Create a Meetup",
-    sheetSubtitle: "Set the plan, the place, and the vibe.",
-    eventName: "Event name",
-    eventNamePlaceholder: "Board games and coffee",
-    date: "Date",
-    datePlaceholder: "24 May",
-    time: "Time",
-    timePlaceholder: "6:30pm",
-    venue: "Venue",
-    venuePlaceholder: "Chatswood Social Cafe",
-    backupVenue: "Bad weather backup",
-    backupVenuePlaceholder: "Indoor table at nearby cafe",
-    noiseLevel: "Noise level",
-    address: "Address",
-    addressPlaceholder: "Enter an address or pick below",
-    mapReady: "OpenStreetMap / MapLibre ready",
-    chooseFromMap: "Choose from map",
-    mapCopy: "Pick a suggested North Shore place now. This panel can host a MapLibre map when native map tiles are added.",
-    description: "Description",
-    descriptionPlaceholder: "What should people expect?",
-    backupPrefix: "Backup",
-    save: "Create Meetup",
-    verificationRequiredTitle: "Real Person Verified required",
-    verificationRequiredCopy: "To keep meetups trustworthy, creators need Real Person Verified status before opening a real-world plan.",
-    reviewSettings: "Review settings",
-    verificationTitle: "Confirm your details",
-    verificationCopy: "Before creating real-world plans, please confirm the profile details members rely on for safety.",
-    displayName: "Name",
-    suburb: "Local area",
-    age: "Age confirmation",
-    photo: "Profile photo",
-    contact: "Contact status",
-    transport: "Arrival method",
-    ageConfirmed: "18 or older confirmed",
-    ageMissing: "Needs confirmation",
-    photoAdded: "Photo added",
-    photoMissing: "Can be added later",
-    confirmDetails: "Review in profile",
-    editProfile: "Edit Profile",
-    close: "Close",
-    noise: { Quiet: "Quiet", Balanced: "Balanced", Lively: "Lively" },
-  },
+  English: englishEventCreationCopy,
   Chinese: {
     title: "我的活动",
     subtitle: "创建自己的体验，并按你的方式邀请他人。",

@@ -10,6 +10,7 @@ import type { NsnBlurLevel, NsnComfortMode, ProfileGender, SoftHelloIntent } fro
 import { defaultPhotoRecordingComfortPreferences, defaultPhysicalContactComfortPreferences, useAppSettings } from "@/lib/app-settings";
 import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
+import { onboardingCopy } from "@/lib/onboarding-copy";
 import { createAlphaTesterOnboardingSnapshot } from "@/lib/onboarding-snapshot";
 import { defaultFoodBeveragePreferenceIds } from "@/lib/preferences/food-preferences";
 import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds } from "@/lib/preferences/interests";
@@ -340,14 +341,10 @@ export default function OnboardingScreen() {
           <View style={[styles.panel, isDay && styles.dayPanel]}>
             <Text style={[styles.title, isDay && styles.dayTitle]}>Meet nearby, without the pressure.</Text>
             <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-              {isMobileOnboarding
-                ? "NSN is a Sydney North Shore alpha for trying calm, low-pressure meetup ideas."
-                : "NSN is a Sydney North Shore pilot for safe, respectful and genuine first meetups: coffee, walks, movies, dinner, games and small local events."}
+              {isMobileOnboarding ? onboardingCopy.welcomeIntro.mobile : onboardingCopy.welcomeIntro.desktop}
             </Text>
             <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-              {isMobileOnboarding
-                ? "You can keep things private, move slowly, or skip setup for testing."
-                : "You control what others can see. Start private, warm up gradually, or keep things more open at an event."}
+              {isMobileOnboarding ? onboardingCopy.welcomePrivacy.mobile : onboardingCopy.welcomePrivacy.desktop}
             </Text>
           </View>
         ) : null}
@@ -420,9 +417,7 @@ export default function OnboardingScreen() {
             {ageValidationMessage ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{ageValidationMessage}</Text> : null}
             {preferredAgeValidationMessage ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{preferredAgeValidationMessage}</Text> : null}
             {aboutStepRequirement ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{aboutStepRequirement}</Text> : null}
-            <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
-              Preferred matching starts at {MIN_ADULT_AGE}. NSN keeps age ranges realistic and within the adult pilot.
-            </Text>
+            <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>{onboardingCopy.preferredAgeRangeHint}</Text>
 
             <View>
               <Text style={[styles.label, isDay && styles.dayTitle]}>Optional gender</Text>
@@ -519,7 +514,7 @@ export default function OnboardingScreen() {
             <ToggleRow label="Show middle name" copy="Only available if you entered an optional middle name." value={Boolean(middleName.trim() && showMiddleName)} onPress={() => setShowMiddleName((current) => !current)} isDay={isDay} />
             <ToggleRow label="Show last name" copy="Only available if you entered an optional last name." value={Boolean(lastName.trim() && showLastName)} onPress={() => setShowLastName((current) => !current)} isDay={isDay} />
             <ToggleRow label="Show age" copy="Let others see your age in the preview." value={showAge} onPress={() => setShowAge((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Show preferred age range" copy="Show the adult age range you prefer for matching." value={showPreferredAgeRange} onPress={() => setShowPreferredAgeRange((current) => !current)} isDay={isDay} />
+            <ToggleRow label="Show preferred age range" copy={onboardingCopy.showPreferredAgeRange} value={showPreferredAgeRange} onPress={() => setShowPreferredAgeRange((current) => !current)} isDay={isDay} />
             <ToggleRow label="Show gender" copy="Only available if you selected an optional gender." value={Boolean(gender !== "Not specified" && showGender)} onPress={() => setShowGender((current) => !current)} isDay={isDay} />
             <ToggleRow label="Show interests" copy="Let event members see first-meetup interests." value={showInterests} onPress={() => setShowInterests((current) => !current)} isDay={isDay} />
             <ToggleRow label="Show comfort preferences" copy="Share gentle context like text-first or small groups." value={showComfortPreferences} onPress={() => setShowComfortPreferences((current) => !current)} isDay={isDay} />
@@ -616,12 +611,12 @@ export default function OnboardingScreen() {
           onPress={skipOnboardingForTesting}
           accessibilityRole="button"
           accessibilityLabel="Skip onboarding for now and finish registration later"
-          accessibilityHint="Uses a private local tester profile so you can explore the alpha prototype."
+          accessibilityHint={onboardingCopy.skipButton.accessibilityHint}
           style={[styles.skipButton, isDay && styles.dayCard]}
         >
           <Text style={[styles.skipButtonText, isDay && styles.dayTitle]}>Skip onboarding for now</Text>
           <Text style={[styles.skipButtonCopy, isDay && styles.dayMutedText]}>
-            Alpha tester shortcut. You can finish registration/setup later from Profile.
+            {onboardingCopy.skipButton.copy}
           </Text>
         </TouchableOpacity>
       </ScrollView>

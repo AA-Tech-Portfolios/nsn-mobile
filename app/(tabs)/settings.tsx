@@ -64,6 +64,7 @@ import {
 import { nsnColors } from "@/lib/nsn-data";
 import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { brandThemes, isSoftHelloThemeEnabled, type BrandThemeId } from "@/lib/brand-theme";
+import { englishSettingsPrivacyCopy } from "@/lib/settings-privacy-copy";
 import {
   createSettingsToggleSections,
   selectSettingsPalette,
@@ -531,108 +532,7 @@ type SettingsCopy = {
   goBack?: string;
 };
 
-const englishCopy: SettingsCopy = {
-  title: "Settings & Privacy",
-  subtitle: "Choose how you want others to see you.",
-  accessibility: "Accessibility",
-  largerText: "Larger text",
-  largerTextCopy: "Increase text size on this screen and save the preference for the app.",
-  highContrast: "High contrast",
-  highContrastCopy: "Strengthen borders and text contrast for easier scanning.",
-  reduceMotion: "Disable animations",
-  reduceMotionCopy: "Turn off decorative movement and use instant Day/Night changes.",
-  screenReaderHints: "Screen reader hints",
-  screenReaderHintsCopy: "Add extra labels and hints for assistive technologies.",
-  translations: "Language",
-  blurProfilePhoto: "Blur profile photo",
-  blurProfilePhotoCopy: "Keep your photo softened until you choose otherwise.",
-  privateProfile: "Private profile",
-  privateProfileCopy: "Limit profile details across discovery surfaces.",
-  showFirstNameOnly: "Show first name only",
-  showFirstNameOnlyCopy: "Use your first name in meetups and chats.",
-  sameAgeGroupsOnly: "Only show me same age groups",
-  sameAgeGroupsOnlyCopy: "Prioritise meetups with people in a similar age range.",
-  revealAfterRsvp: "Only reveal profile after RSVP",
-  revealAfterRsvpCopy: "Show your profile once both sides have committed to the plan.",
-  friendsOfFriendsOnly: "Friends-of-friends only",
-  friendsOfFriendsOnlyCopy: "Prefer people connected through your trusted network.",
-  softRevealSuggestions: "Enable Soft Reveal suggestions",
-  softRevealSuggestionsCopy:
-    "Show gentle chat milestones for lowering blur together when both people use them.",
-  preferSoftRevealPeople: "Prefer people who also use Soft Reveal",
-  preferSoftRevealPeopleCopy:
-    "A quiet preference for similar privacy pacing where the prototype can use it.",
-  appLanguage: "Preferred language",
-  appLanguageCopy: "Choose the language NSN uses for the North Shore pilot.",
-  translateMeetupsChats: "Community language",
-  translateMeetupsChatsCopy: "Show meetup details and chat messages in this language.",
-  appearance: "Appearance",
-  colorPalette: "Colour palette",
-  colorPaletteCopy: "Choose the mood and accent colours you prefer.",
-  notifications: "Notifications",
-  meetupReminders: "Meetup reminders",
-  meetupRemindersCopy: "Get reminders before meetups you have joined.",
-  weatherAlerts: "Weather alerts",
-  weatherAlertsCopy: "Receive updates when weather may affect an outdoor plan.",
-  chatNotifications: "Chat notifications",
-  chatNotificationsCopy: "Notify me when meetup group chats have new messages.",
-  quietNotifications: "Quiet notifications",
-  quietNotificationsCopy: "Keep notification tone gentle and avoid attention-heavy alerts.",
-  notificationSnoozed: "Snooze notifications",
-  notificationSnoozedCopy: "Pause non-safety notifications for a set time.",
-  suggestNightModeInEvenings: "Suggest Night mode in evenings",
-  suggestNightModeInEveningsCopy:
-    "Show a quiet Home suggestion when local time and the current mode do not match.",
-  notificationSnoozeDuration: "Snooze duration",
-  notificationSnoozeDurationCopy:
-    "Safety check-ins can still appear while routine notifications are snoozed.",
-  notificationSnoozeSafetyNote: "Safety check-ins stay controlled by Safety & Contact.",
-  locationDiscovery: "Location & local area",
-  locationDiscoveryCopy:
-    "Approximate area is the default. You can choose a suburb manually, and this prototype does not run continuous background location.",
-  useApproximateLocation: "Use approximate location",
-  useApproximateLocationCopy:
-    "Show nearby options from a broad local area. Your exact live location is not shared with other users.",
-  showDistanceInMeetups: "Show distance in meetups",
-  showDistanceInMeetupsCopy:
-    "Display approximate distance on event and meetup cards, not precise live positioning.",
-  timeLocalContext: "Time & local context",
-  timeLocalContextCopy:
-    "Choose how NSN decides local time for the Home greeting, Day/Night mode, weather, and local prompts.",
-  timeLocalContextPrototypeNote:
-    "Prototype only: selected-area and manual override use saved local fallback data for now. No background location updates are connected.",
-  regionalFormats: "Time, date & units",
-  regionalFormatsCopy:
-    "Start from this device's locale, or override how NSN displays shared event times, weather, and future pricing.",
-  regionalFormatsPrototypeNote:
-    "Event data stays standardized internally; NSN formats labels for each viewer to reduce date and time ambiguity.",
-  dayNightMode: "Day/Night behaviour",
-  dayNightModeCopy:
-    "Choose whether the dashboard follows your manual toggle, this device's clock, or the selected NSN local area.",
-  cardOutlineStyle: "Card outline style",
-  cardOutlineStyleCopy:
-    "Adjust how strongly NSN outlines cards, panels, and local context modules.",
-  safetyContact: "Safety & Contact",
-  allowMessageRequests: "Allow message requests",
-  allowMessageRequestsCopy: "Let people message before you join the same meetup.",
-  safetyCheckIns: "Safety check-ins",
-  safetyCheckInsCopy: "Enable gentle check-in prompts around joined meetups.",
-  batteryPerformance: "Battery & Performance",
-  batterySaver: "Battery saver",
-  batterySaverCopy:
-    "Reduce animations, weather refresh, and haptics when you want NSN to use less power.",
-  lowLightMode: "Low light mode",
-  lowLightModeCopy: "Dim bright surfaces for softer viewing in darker rooms.",
-  lowLightLevel: "Brightness level",
-  lowLightLevelCopy: "Choose how much Low light mode dims the app.",
-  restartOnboarding: "Restart NSN onboarding",
-  restartOnboardingCopy:
-    "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
-  restartOnboardingAction: "Start",
-  searchLanguage: "Search local languages...",
-  noLanguageFound: "No language found",
-  goBack: "Go back",
-};
+const englishCopy: SettingsCopy = englishSettingsPrivacyCopy;
 
 const settingsTranslations: Record<string, SettingsCopy> = {
   English: englishCopy,

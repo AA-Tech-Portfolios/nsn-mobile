@@ -8,6 +8,7 @@ import {
   normalizeLocationLookupQuery,
   type LocalAreaSuggestion,
 } from "@/lib/location-lookup";
+import { getLocalAreaPickerCopy } from "@/lib/local-area-copy";
 import { nsnColors } from "@/lib/nsn-data";
 
 type LocalAreaPickerProps = {
@@ -35,23 +36,16 @@ export function LocalAreaPicker({
   autoFocus,
   limit = 7,
   placeholder = "Search suburb or region...",
-  promptCopy = "Search for a suburb, region, or locality to personalise NSN.",
-  fallbackNote = "Prototype location lookup uses local fallback suburb data while API-backed search is being prepared.",
+  promptCopy,
+  fallbackNote,
   searchScope = "local",
 }: LocalAreaPickerProps) {
   const normalizedQuery = normalizeLocationLookupQuery(query);
+  const copy = getLocalAreaPickerCopy(searchScope);
   const suggestions = useMemo(
     () => searchScope === "australia" ? lookupAustralianLocalitySuggestions(query, limit) : lookupLocalAreaSuggestions(query, limit),
     [limit, query, searchScope]
   );
-  const exampleCopy =
-    searchScope === "australia"
-      ? "Try 3000, Melbourne, Brisbane, Perth, Hobart, or Adelaide."
-      : "Try CBD, St. Ives, Parra, Northern Beaches, or West Pymble.";
-  const emptyCopy =
-    searchScope === "australia"
-      ? "Try another postcode, suburb, city, or state abbreviation."
-      : "Try another Sydney suburb, region, or common shorthand.";
 
   return (
     <View style={styles.container}>
@@ -71,16 +65,16 @@ export function LocalAreaPicker({
       </View>
       {!normalizedQuery ? (
         <View style={[styles.promptCard, isDay && styles.dayResultButton]}>
-          <Text style={[styles.resultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{promptCopy}</Text>
+          <Text style={[styles.resultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{promptCopy ?? copy.prompt}</Text>
           <Text style={[styles.resultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            {exampleCopy}
+            {copy.example}
           </Text>
-          <Text style={[styles.fallbackNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{fallbackNote}</Text>
+          <Text style={[styles.fallbackNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{fallbackNote ?? copy.fallbackNote}</Text>
         </View>
       ) : null}
       {suggestions.length > 0 ? (
         <View style={styles.resultGroup}>
-          <Text style={[styles.resultGroupTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Matching suburbs and regions</Text>
+          <Text style={[styles.resultGroupTitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.resultGroupTitle}</Text>
           <View style={styles.resultStack}>
             {suggestions.map((area) => {
               const active = area.id === selectedAreaId;
@@ -107,9 +101,9 @@ export function LocalAreaPicker({
       ) : null}
       {normalizedQuery && suggestions.length === 0 ? (
         <View style={[styles.emptyCard, isDay && styles.dayResultButton]}>
-          <Text style={[styles.resultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>No matching suburb or region yet.</Text>
+          <Text style={[styles.resultTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.emptyTitle}</Text>
           <Text style={[styles.resultMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            {emptyCopy}
+            {copy.emptyCopy}
           </Text>
         </View>
       ) : null}

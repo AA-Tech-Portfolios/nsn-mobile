@@ -21,7 +21,7 @@ describe("meetup empty-state copy", () => {
 
   it("suggests adjusting filters without harsh no-results wording", () => {
     expect(getMeetupEmptyStateCopy({ hour: 14, mode: "day", reason: "filtered" })).toEqual({
-      title: "Nothing matching those filters yet",
+      title: "No meetup results for those filters yet",
       copy: "There may still be gentle options nearby. Try widening the filters or switching the layout density.",
       suggestion: "NSN is still a small Sydney/North Shore alpha community.",
     });
@@ -29,9 +29,23 @@ describe("meetup empty-state copy", () => {
 
   it("keeps search misses prototype-safe and non-urgent", () => {
     expect(getMeetupEmptyStateCopy({ hour: 19, mode: "night", reason: "search" })).toEqual({
-      title: "No matching meetup in the alpha yet",
-      copy: "Try another suburb, activity, or a broader phrase. The local prototype is still growing.",
-      suggestion: "Nothing has been hidden from you; there just may not be a matching demo meetup yet.",
+      title: "No meetup result in the alpha yet",
+      copy: "Try another suburb, activity, or a broader phrase. This local prototype has a small demo set.",
+      suggestion: "Nothing has been hidden from you; there just may not be a demo meetup for that search yet.",
     });
+  });
+
+  it("avoids urgency, scarcity, growth, and matchmaking language", () => {
+    const allCopy = [
+      getMeetupEmptyStateCopy({ hour: 1, mode: "night", reason: "no-active-events" }),
+      getMeetupEmptyStateCopy({ hour: 6, mode: "day", reason: "no-active-events" }),
+      getMeetupEmptyStateCopy({ hour: 22, mode: "night", reason: "no-active-events" }),
+      getMeetupEmptyStateCopy({ hour: 14, mode: "day", reason: "filtered" }),
+      getMeetupEmptyStateCopy({ hour: 19, mode: "night", reason: "search" }),
+    ]
+      .flatMap((copy) => [copy.title, copy.copy, copy.suggestion])
+      .join(" ");
+
+    expect(allCopy).not.toMatch(/\bmatching|matchmaking|popular|limited|hurry|scarcity|growing\b/i);
   });
 });
