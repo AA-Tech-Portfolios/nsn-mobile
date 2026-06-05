@@ -40,7 +40,7 @@ pnpm test
 
 When validating from Ubuntu under WSL, clone the repository into the native Linux filesystem, such as `~/Projects/nsn-mobile`, instead of running it from a Windows-mounted path like `/mnt/c/...`.
 
-Native dependencies such as `esbuild` can fail during `pnpm install` on mounted Windows paths with `ERR_PNPM_EPERM`. The native Linux filesystem avoids that install issue and has validated with Node.js 22 via `nvm` and Corepack-managed `pnpm` 11.5.1.
+Native dependencies such as `esbuild` can fail during `pnpm install` on mounted Windows paths with `ERR_PNPM_EPERM`. The native Linux filesystem avoids that install issue and has validated with Node.js 22 via `nvm` and Corepack-managed `pnpm` 11.5.2.
 
 ### Expo Web
 
