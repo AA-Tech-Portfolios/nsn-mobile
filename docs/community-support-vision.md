@@ -78,7 +78,7 @@ NSN / SoftHello is not:
 - a replacement for qualified support services
 - live safety monitoring
 
-Current alpha support resources are demo placeholders only. They are not verified services, recommendations, referrals, or localized advice.
+Current alpha support resources are demo placeholders only. They are not reviewed services, recommendations, referrals, or localized advice.
 
 ## Future Exploration
 

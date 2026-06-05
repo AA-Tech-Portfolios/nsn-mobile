@@ -49,7 +49,7 @@ Use this during or after a short NSN alpha walkthrough. Keep notes plain and spe
 
 - Did the join or RSVP wording feel clear?
 - Did it seem honest that RSVP is prototype/local-only?
-- Would you expect a real host to be notified?
+- Would you expect anyone to be messaged by your RSVP?
 - Was it clear that attendance is not production-tracked?
 - Did leaving or changing your mind feel okay?
 
@@ -100,7 +100,7 @@ Use this during or after a short NSN alpha walkthrough. Keep notes plain and spe
 - Which words or labels were unclear?
 - Did anything sound too corporate?
 - Did anything sound too serious for a prototype?
-- Did anything sound too casual for a safety-related area?
+- Did any boundary or guideline wording feel too casual?
 - Was any Australian/local wording missing or awkward?
 
 ## Unclear Buttons Or Flows
@@ -111,6 +111,13 @@ Use this during or after a short NSN alpha walkthrough. Keep notes plain and spe
 - Did disabled controls explain enough?
 - Did any flow end without enough feedback?
 
+## Prototype Badges And Guidelines
+
+- Did Demo, Coming soon, Saved locally, and Prototype labels feel consistent?
+- Did Community Guidelines feel visible in event details?
+- Did photo, video, screenshot, and sharing reminders feel practical?
+- Did any badge make a local/demo action sound more real than it is?
+
 ## Mobile Layout And Readability
 
 - Was text readable on your device?
@@ -120,12 +127,12 @@ Use this during or after a short NSN alpha walkthrough. Keep notes plain and spe
 - Were important actions too close to the bottom edge?
 - Did long labels wrap cleanly?
 
-## Trust And Safety Perception
+## Prototype Limits And Boundaries
 
-- Did the app feel honest about safety limits?
+- Did the app feel honest about prototype limits?
 - Did report/block-shaped controls feel understandable?
-- Did any safety wording feel like a real service when it is not?
-- Did verification wording feel prototype-only?
+- Did any wording feel like a real service when it is not?
+- Did profile-detail review wording feel prototype-only?
 - Would you want more human organiser confirmation before a real meetup?
 - What would make you trust NSN more later?
 

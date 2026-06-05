@@ -112,7 +112,7 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, RSVP interaction smoke test
 
-8. **Running late / cannot make it wording review**  
+8. **Running late / cannot make it wording review** ✅ Completed  
    **Difficulty:** 🟢 Easy  
    **Why it matters for alpha:** Keeps attendance changes low-pressure and kind without implying live notifications or backend delivery.  
    **Suggested files:** `app/(tabs)/chats.tsx`, `app/event/[id].tsx`, `lib/nsn-data.ts`  
@@ -126,7 +126,7 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, mobile drawer smoke test
 
-10. **Alpha walkthrough checklist copy refresh**  
+10. **Alpha walkthrough checklist copy refresh** ✅ Completed  
     **Difficulty:** 🟢 Easy  
     **Why it matters for alpha:** Gives trusted testers a clearer path through privacy, comfort, meetup browsing, profile review, and demo-only safety language.  
     **Suggested files:** `docs/alpha-tester-guide.md`, `docs/alpha-tester-feedback-checklist.md`, `app/(tabs)/alpha-walkthrough.tsx`  
@@ -140,7 +140,7 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
     **Scope:** documentation/frontend-only/local-only  
     **Checks:** `pnpm check`, `pnpm test`, README render/read-through
 
-12. **Community Guidelines visibility check**  
+12. **Community Guidelines visibility check** ✅ Completed  
     **Difficulty:** 🟢 Easy  
     **Why it matters for alpha:** Ensures photo/video consent and privacy reminders are visible without feeling heavy or corporate.  
     **Suggested files:** `app/event/[id].tsx`, `app/(tabs)/settings.tsx`, `lib/community-support-resources.ts`, `docs/alpha-tester-guide.md`  
@@ -154,14 +154,14 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
     **Scope:** frontend-only/local-only  
     **Checks:** `pnpm check`, `pnpm test`, desktop/mobile density smoke test
 
-14. **Prototype badge consistency review**  
+14. **Prototype badge consistency review** ✅ Completed  
     **Difficulty:** 🟢 Easy  
     **Why it matters for alpha:** Keeps Demo, Coming soon, Saved locally, and Prototype labels consistent so testers do not mistake local controls for live systems.  
     **Suggested files:** `app/(tabs)/settings.tsx`, `app/(tabs)/profile.tsx`, `app/event/[id].tsx`, `components/prototype-local-note.tsx`  
     **Scope:** frontend-only/local-only  
     **Checks:** `pnpm check`, `pnpm test`, copy audit for production-sounding claims
 
-15. **Tester feedback prompt tidy-up**  
+15. **Tester feedback prompt tidy-up** ✅ Completed  
     **Difficulty:** 🟢 Easy  
     **Why it matters for alpha:** Makes feedback easier to give around comfort, clarity, privacy, text wrapping, and low-pressure meetup flow.  
     **Suggested files:** `docs/alpha-tester-feedback-checklist.md`, `app/(tabs)/alpha-walkthrough.tsx`  
@@ -250,7 +250,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Bottom-nav spacing is correct
 - [ ] Text wraps instead of truncating where readability matters
 - [ ] Verification works and stays prototype-safe
-- [ ] Community Guidelines alpha copy is visible and calm
+- [x] Community Guidelines alpha copy is visible and calm
 - [x] Checkpoint screenshots are regenerated after the walkthrough
 
 ## Post-Alpha Core Features

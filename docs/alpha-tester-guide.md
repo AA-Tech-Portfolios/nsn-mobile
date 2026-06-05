@@ -14,7 +14,7 @@ NSN is a product exploration for people who want easier ways to find small local
 - comfort and privacy controls
 - small-group social planning ideas
 - early chat and meetup screens
-- honest safety and prototype labels
+- honest prototype and boundary labels
 
 The goal of alpha testing is to understand how the experience feels, not to prove that every feature is finished.
 
@@ -31,7 +31,7 @@ You can currently try:
 - drafting local meetup ideas in the Create Meetup prototype
 - viewing Meetups and Chats prototype screens
 - changing profile, privacy, comfort, accessibility, language, and notification preferences
-- trying Soft Exit, block/report-shaped controls, and other safety-adjacent prototype surfaces
+- trying Soft Exit, block/report-shaped controls, and other boundary-focused prototype surfaces
 
 Most of this is designed to run locally as a realistic app-shaped prototype.
 
@@ -84,7 +84,7 @@ The current RSVP and join states are prototype-only. They may be saved locally, 
 For alpha testing:
 
 - treat RSVP actions as a way to test the flow
-- do not assume your RSVP has reached a real host
+- do not assume your RSVP has messaged anyone
 - do not assume attendance is tracked
 - wait for separate organiser confirmation before any real meetup plan
 
@@ -113,7 +113,7 @@ Please test whether the chat area feels:
 - low-pressure for shy or first-time users
 - honest about its alpha status
 
-Do not use chat for urgent, private, safety-critical, or real coordination needs during this alpha.
+Do not use chat for urgent, private, or real coordination needs during this alpha.
 
 ## Profile And Privacy Settings
 
@@ -127,6 +127,12 @@ Please remember:
 - verification and trust indicators are not real verified identity checks
 
 We want to know whether the controls are understandable and reassuring before they become more serious systems.
+
+## Community Guidelines
+
+Event details include Community Guidelines copy for photo/video consent, screenshot privacy, soft exits, local report-shaped controls, and low-pressure participation.
+
+Please check whether those reminders are visible, practical, and calm. They are prototype reminders only; they do not publish reports, prevent screenshots, or create live support.
 
 ## Comfort Controls
 
