@@ -3339,7 +3339,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingRight: 8,
   },
-  headerText: { flex: 1 },
+  headerText: { flex: 1, minWidth: 0 },
   title: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 21 },
   dayTitle: { color: "#0B1220" },
   subtitle: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
@@ -3408,7 +3408,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chatMenuEmojiText: { fontSize: 20 },
-  chatMenuItemBody: { flex: 1 },
+  chatMenuItemBody: { flex: 1, minWidth: 0 },
   chatMenuItemTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   chatMenuItemMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   chatMenuStatus: {
@@ -3420,8 +3420,8 @@ const styles = StyleSheet.create({
   },
   chatMenuItemTextActive: { color: "#FFFFFF" },
   chat: { flex: 1 },
-  chatContent: { paddingTop: 16, paddingBottom: 32 },
-  chatSelectionContent: { paddingTop: 22, paddingBottom: 112 },
+  chatContent: { paddingTop: 16, paddingBottom: 48 },
+  chatSelectionContent: { paddingTop: 22, paddingBottom: 128 },
   chatSelectionReturnButton: {
     alignSelf: "flex-start",
     minHeight: 40,
@@ -3776,7 +3776,7 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
   dayMessageTime: { color: "#7890AE" },
-  composerWrap: { paddingBottom: 18 },
+  composerWrap: { paddingBottom: 24 },
   arrivalPanel: {
     borderRadius: 16,
     borderWidth: 1,
@@ -3947,7 +3947,7 @@ const styles = StyleSheet.create({
     paddingRight: 5,
   },
   dayInputWrap: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
-  input: { flex: 1, color: nsnColors.text, fontSize: 14, minHeight: 42 },
+  input: { flex: 1, minWidth: 0, color: nsnColors.text, fontSize: 14, minHeight: 42 },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
   rtlInput: { paddingRight: 2, writingDirection: "rtl" },
   sendButton: {

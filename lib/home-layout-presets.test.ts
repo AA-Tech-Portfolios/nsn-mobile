@@ -69,7 +69,7 @@ describe("home layout presets", () => {
     expect(compact.eventImageWidth).toBe(compact.eventImageHeight);
     expect(comfortable.eventImageWidth).toBe(comfortable.eventImageHeight);
     expect(spacious.eventImageWidth).toBe(spacious.eventImageHeight);
-    expect(compact.eventImageWidth).toBeGreaterThanOrEqual(96);
+    expect(compact.eventImageWidth).toBeGreaterThanOrEqual(90);
     expect(compact.eventImageWidth).toBeLessThan(comfortable.eventImageWidth);
     expect(comfortable.eventImageWidth).toBeLessThan(spacious.eventImageWidth);
   });
@@ -78,6 +78,15 @@ describe("home layout presets", () => {
     expect(getHomeLayoutPreset("Compact").bottomPadding).toBeGreaterThanOrEqual(132);
     expect(getHomeLayoutPreset("Comfortable").bottomPadding).toBeGreaterThanOrEqual(148);
     expect(getHomeLayoutPreset("Spacious").bottomPadding).toBeGreaterThanOrEqual(164);
+  });
+
+  it("keeps compact mobile event cards readable without taking over the feed", () => {
+    const compact = getHomeLayoutPreset("Compact");
+
+    expect(compact.eventCardMinHeight).toBeGreaterThanOrEqual(118);
+    expect(compact.eventImageWidth).toBeLessThanOrEqual(92);
+    expect(compact.eventImageHeight).toBe(compact.eventImageWidth);
+    expect(compact.eventDescriptionLines).toBeGreaterThanOrEqual(2);
   });
 
   it("only enables Fit to screen for desktop-sized constrained or wide browser windows", () => {

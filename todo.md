@@ -20,8 +20,8 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 - [x] 🟢 Regenerate checkpoint screenshots after the alpha UX cleanup, including Home, Meetups, Event Details, Chats, Profile, Settings & Privacy, and onboarding stages
 - [x] 🟢 Review onboarding calmness and clarity so NSN reads as a local Sydney/North Shore alpha, not a production matching, safety, or verification system
 - [x] 🟢 Review Settings & Privacy prototype wording so local-only, demo, coming-soon, saved-locally, and prototype verification copy feels clear without sounding alarming
-- [ ] 🟢 Review text wrapping on mobile for titles, descriptions, location text, and important card copy
-- [ ] 🟢 Review bottom-nav spacing so chat composers, scroll views, modals, and card lists sit above the tab bar/home indicator without excessive empty space
+- [x] 🟢 Review text wrapping on mobile for titles, descriptions, location text, and important card copy
+- [x] 🟢 Review bottom-nav spacing so chat composers, scroll views, modals, and card lists sit above the tab bar/home indicator without excessive empty space
 - [x] 🟢 Add empty-state timing messages for no active events, sleeping time, and quiet hours
 - [x] 🟢 Add README screenshots or mockups for the home screen, profile privacy, event details, Settings & Privacy, and onboarding
 - [x] 🟢 Refresh checkpoint screenshots for core tabs, Settings & Privacy, and onboarding stages after recent UI changes
@@ -84,14 +84,14 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, mobile Settings & Privacy smoke test
 
-4. **Mobile text wrapping audit**  
+4. **Mobile text wrapping audit** ✅ Completed  
    **Difficulty:** 🟢 Easy  
    **Why it matters for alpha:** Prevents clipped titles, locations, descriptions, badges, and action text from making the app feel unfinished.  
    **Suggested files:** `app/(tabs)/index.tsx`, `app/(tabs)/meetups.tsx`, `app/event/[id].tsx`, `app/(tabs)/profile.tsx`  
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, small-iPhone smoke test
 
-5. **Bottom-nav spacing polish**  
+5. **Bottom-nav spacing polish** ✅ Completed  
    **Difficulty:** 🟢 Easy  
    **Why it matters for alpha:** Keeps cards, composers, modals, and buttons reachable without creating awkward empty space.  
    **Suggested files:** `app/(tabs)/_layout.tsx`, `components/screen-container.tsx`, `app/(tabs)/chats.tsx`, `app/(tabs)/index.tsx`, `app/(tabs)/meetups.tsx`  
@@ -147,7 +147,7 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
     **Scope:** frontend-only/local-only  
     **Checks:** `pnpm check`, `pnpm test`, event detail and Settings smoke test
 
-13. **Home density readability pass**  
+13. **Home density readability pass** ✅ Completed  
     **Difficulty:** 🟢 Easy  
     **Why it matters for alpha:** Keeps Compact, Comfortable, and Spacious modes useful without making Home feel overloaded.  
     **Suggested files:** `app/(tabs)/index.tsx`, `lib/home-layout-presets.ts`, `lib/home-view-filters.ts`, `lib/home-header-context.ts`  

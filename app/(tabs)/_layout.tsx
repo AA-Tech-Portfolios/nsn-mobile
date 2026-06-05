@@ -74,8 +74,10 @@ export default function TabLayout() {
           fontSize: 11,
           fontWeight: boldText ? "800" : "600",
           lineHeight: 16,
+          maxWidth: 76,
           marginTop: 2,
           marginBottom: 0,
+          textAlign: "center",
         },
         tabBarIconStyle: {
           marginTop: 0,
@@ -88,6 +90,7 @@ export default function TabLayout() {
           paddingBottom: largerTouchTargets ? 11 : 9,
           alignItems: "center",
           justifyContent: "center",
+          gap: 2,
           overflow: "visible",
         },
         tabBarStyle: {
