@@ -18,8 +18,8 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 ### 🟢 Easy Alpha Polish
 
 - [x] 🟢 Regenerate checkpoint screenshots after the alpha UX cleanup, including Home, Meetups, Event Details, Chats, Profile, Settings & Privacy, and onboarding stages
-- [ ] 🟢 Review onboarding calmness and clarity so NSN reads as a local Sydney/North Shore alpha, not a production matching, safety, or verification system
-- [ ] 🟢 Review Settings & Privacy prototype wording so local-only, demo, coming-soon, saved-locally, and prototype verification copy feels clear without sounding alarming
+- [x] 🟢 Review onboarding calmness and clarity so NSN reads as a local Sydney/North Shore alpha, not a production matching, safety, or verification system
+- [x] 🟢 Review Settings & Privacy prototype wording so local-only, demo, coming-soon, saved-locally, and prototype verification copy feels clear without sounding alarming
 - [ ] 🟢 Review text wrapping on mobile for titles, descriptions, location text, and important card copy
 - [ ] 🟢 Review bottom-nav spacing so chat composers, scroll views, modals, and card lists sit above the tab bar/home indicator without excessive empty space
 - [x] 🟢 Add empty-state timing messages for no active events, sleeping time, and quiet hours
@@ -70,14 +70,14 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, then visually review changed screenshots
 
-2. **Calm onboarding wording pass**  
+2. **Calm onboarding wording pass** ✅ Completed  
    **Difficulty:** 🟢 Easy  
    **Why it matters for alpha:** Helps testers understand NSN as a small Sydney/North Shore prototype without implying production matching, safety, or verification.  
    **Suggested files:** `app/onboarding.tsx`, `lib/onboarding-snapshot.ts`, `docs/alpha-tester-guide.md`  
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, mobile onboarding smoke test
 
-3. **Prototype-safe Settings & Privacy copy pass**  
+3. **Prototype-safe Settings & Privacy copy pass** ✅ Completed  
    **Difficulty:** 🟢 Easy  
    **Why it matters for alpha:** Makes local-only, demo, coming-soon, saved-locally, and prototype verification wording reassuring instead of alarming.  
    **Suggested files:** `app/(tabs)/settings.tsx`, `lib/settings-controls.ts`, `components/prototype-local-note.tsx`  

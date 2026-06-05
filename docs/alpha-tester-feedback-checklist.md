@@ -53,6 +53,14 @@ Use this during or after a short NSN alpha walkthrough. Keep notes plain and spe
 - Was it clear that attendance is not production-tracked?
 - Did leaving or changing your mind feel okay?
 
+## Create Meetup Prototype
+
+- Did Create Meetup feel like a local draft/prototype flow?
+- Were event name, time, place, backup, noise level, and description labels clear?
+- Did any wording sound like it would publish, verify, or guarantee a real event?
+- Did the profile-detail review prompt feel realistic and not alarming?
+- Did the empty state feel welcoming without pressuring you to create something?
+
 ## Chats
 
 - Did Chats feel clearly tied to meetups?

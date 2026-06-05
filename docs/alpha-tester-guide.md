@@ -28,6 +28,7 @@ You can currently try:
 - opening meetup details
 - reading expectations, meeting points, comfort notes, and weather-aware copy
 - using local join/leave-style RSVP states
+- drafting local meetup ideas in the Create Meetup prototype
 - viewing Meetups and Chats prototype screens
 - changing profile, privacy, comfort, accessibility, language, and notification preferences
 - trying Soft Exit, block/report-shaped controls, and other safety-adjacent prototype surfaces
@@ -88,6 +89,17 @@ For alpha testing:
 - wait for separate organiser confirmation before any real meetup plan
 
 Useful feedback includes whether the RSVP wording feels too strong, too vague, or just right for an early, low-pressure meetup app.
+
+## Create Meetup Prototype
+
+The Events area includes a local Create Meetup prototype for drafting small meetup ideas. It is useful for testing whether labels, helper text, place details, backup plans, and noise-level wording feel clear.
+
+Please remember:
+
+- created meetups are saved locally in the prototype
+- creating a meetup does not publish it to a real community
+- profile-detail review wording is a prototype readiness prompt, not real identity verification
+- maps and suggested places are placeholders until real map/provider decisions are made
 
 ## Chats
 
