@@ -42,6 +42,34 @@ When validating from Ubuntu under WSL, clone the repository into the native Linu
 
 Native dependencies such as `esbuild` can fail during `pnpm install` on mounted Windows paths with `ERR_PNPM_EPERM`. The native Linux filesystem avoids that install issue and has validated with Node.js 22 via `nvm` and Corepack-managed `pnpm` 11.5.2.
 
+### Ubuntu 26.04 VirtualBox VM
+
+Ubuntu 26.04 LTS has also been validated successfully in VirtualBox 7.2.8. The repository cloned cleanly in a fresh Ubuntu environment using Node.js 22.22.1 and Corepack-managed `pnpm` 11.5.2.
+
+These commands completed successfully:
+
+```bash
+pnpm install
+pnpm check
+pnpm lint
+pnpm test
+```
+
+The NSN web app launched successfully in Firefox on Ubuntu. A first `pnpm dev` run failed during Expo web bundling with:
+
+```text
+FATAL ERROR: Ineffective mark-compacts near heap limit
+Allocation failed - JavaScript heap out of memory
+```
+
+Increase the Node heap size before starting the dev server:
+
+```bash
+NODE_OPTIONS="--max-old-space-size=4096" pnpm dev
+```
+
+With the Node heap limit raised to 4096 MB, the onboarding flow and Home screen loaded successfully. This VM pass confirms NSN compatibility across Windows, macOS, Ubuntu under WSL, Ubuntu Linux in a VM, and GitHub Actions Linux runners.
+
 ### Expo Web
 
 Start Expo web for browser testing:
