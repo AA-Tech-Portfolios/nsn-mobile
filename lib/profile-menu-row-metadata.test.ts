@@ -27,6 +27,7 @@ describe("profile menu row metadata", () => {
     expect(profileSupportRowMetadata.icon).toBe("help");
     expect(profileResourceSupportRowMetadata.icon).toBe("heart");
     expect(profileResourceSupportRowMetadata.title).toBe("Support & Resources");
+    expect(profileResourceSupportRowMetadata.badge).toBe("Demo");
   });
 
   it("can switch preference row copy between simple and detailed text", () => {

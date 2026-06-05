@@ -2292,7 +2292,7 @@ export default function HomeScreen() {
 
     const renderSafetyBoundariesPanel = () => (
       <View style={[styles.optionsHubInlinePanel, { borderRadius: Math.max(15, homeLayoutPreset.cardRadius - 5), padding: homeLayoutPreset.cardPadding - 2, gap: homeLayoutPreset.mobileStackGap }, isDay && styles.dayLocationResultButton]}>
-        <Text style={[styles.optionsHubInlineTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Safety & Boundaries</Text>
+        <Text style={[styles.optionsHubInlineTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Community Guidelines</Text>
         <Text style={[styles.optionsHubInlineCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
           Calm prototype reminders for consent, comfort, privacy, and low-pressure participation. Reporting and blocking stay in Block & Report.
         </Text>

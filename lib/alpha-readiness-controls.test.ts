@@ -12,9 +12,14 @@ describe("alpha readiness controls", () => {
     expect(getAlphaActionLabel("demo")).toBe("Demo");
     expect(getAlphaActionLabel("comingSoon")).toBe("Coming soon");
     expect(getAlphaActionLabel("local")).toBe("Saved locally");
-    expect(getAlphaRecentStatusCopy("Demo")).toBe("Demo saved locally");
+    expect(getAlphaRecentStatusCopy("Demo")).toBe("Demo preview");
     expect(getAlphaRecentStatusCopy("Coming soon")).toBe("Coming soon");
     expect(getAlphaRecentStatusCopy("Saved locally")).toBe("Saved locally");
+    expect([
+      getAlphaRecentStatusCopy("Demo"),
+      getAlphaRecentStatusCopy("Coming soon"),
+      getAlphaRecentStatusCopy("Saved locally"),
+    ].join(" ")).not.toMatch(/\bverified|verification|guarantee|matching|urgent|popular\b/i);
   });
 
   it("keeps profile preferences reachable inside the mobile drawer", () => {

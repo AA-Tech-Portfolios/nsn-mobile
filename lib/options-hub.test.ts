@@ -151,11 +151,12 @@ describe("options hub metadata", () => {
     const blockReport = safetySection?.rows.find((row) => row.title === "Block & Report");
 
     expect(meetupSection?.rows.some((row) => row.title === "Conversation starters" && row.badge === "Demo")).toBe(true);
-    expect(safetySection?.title).toBe("Support & Safety");
+    expect(safetySection?.title).toBe("Support & Boundaries");
     expect(safetySection?.rows.some((row) => row.title === "Block & Report")).toBe(true);
     expect(safetySection?.rows.some((row) => row.title === "Preparedness & Guidance")).toBe(false);
     expect(safetySection?.rows.find((row) => row.title === "Help & Support")?.description).toMatch(/preparedness guidance/i);
-    expect(blockReport?.description).not.toMatch(/preparedness|arriving alone|first-aid|weather|transport|emergency/i);
+    expect(blockReport?.badge).toBe("Demo");
+    expect(blockReport?.description).not.toMatch(/safety|preparedness|arriving alone|first-aid|weather|transport|emergency/i);
   });
 
   it("keeps safety boundaries broader than moderation while Block & Report stays focused", () => {
@@ -171,13 +172,13 @@ describe("options hub metadata", () => {
 
     const safetySection = optionsHubSections.find((section) => section.id === "safetyPrivacy");
     expect(safetySection?.rows.map((row) => row.title)).toEqual(expect.arrayContaining([
-      "Safety & Boundaries",
+      "Community Guidelines",
       "Help & Support",
       "Support & Resources",
       "Block & Report",
     ]));
     expect(safetySection?.rows.map((row) => row.title)).toEqual([
-      "Safety & Boundaries",
+      "Community Guidelines",
       "Help & Support",
       "Support & Resources",
       "Block & Report",

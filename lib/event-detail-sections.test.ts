@@ -9,7 +9,7 @@ describe("event detail section plan", () => {
       "Optional conversation",
       "Arrival",
       "Comfort & pacing",
-      "Safety & boundaries",
+      "Community guidelines",
     ]);
   });
 
@@ -23,7 +23,7 @@ describe("event detail section plan", () => {
       { section: "optionalConversation", label: "Optional conversation", iconName: "message" },
       { section: "arrival", label: "Arrival", iconName: "location" },
       { section: "comfortPacing", label: "Comfort & pacing", iconName: "low-pressure" },
-      { section: "safetyBoundaries", label: "Safety & boundaries", iconName: "shield" },
+      { section: "safetyBoundaries", label: "Community guidelines", iconName: "shield" },
     ]);
   });
 });

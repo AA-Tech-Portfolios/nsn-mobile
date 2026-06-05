@@ -32,7 +32,7 @@ export function getAlphaActionLabel(kind: AlphaActionKind): AlphaActionLabel {
 }
 
 export function getAlphaRecentStatusCopy(label?: AlphaActionLabel) {
-  if (label === "Demo") return "Demo saved locally";
+  if (label === "Demo") return "Demo preview";
   if (label === "Coming soon") return "Coming soon";
   return "Saved locally";
 }

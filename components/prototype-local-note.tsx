@@ -7,7 +7,7 @@ type PrototypeLocalNoteProps = {
   label?: string;
 };
 
-export function PrototypeLocalNote({ isDay = false, label = "Prototype-only / stored locally" }: PrototypeLocalNoteProps) {
+export function PrototypeLocalNote({ isDay = false, label = "Saved locally" }: PrototypeLocalNoteProps) {
   return (
     <View style={[styles.note, isDay && styles.dayNote]}>
       <Text style={[styles.text, isDay && styles.dayText]}>{label}</Text>

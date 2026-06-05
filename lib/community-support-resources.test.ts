@@ -12,8 +12,8 @@ describe("community support resource prototype metadata", () => {
       "Crisis & Emergency Support",
     ]);
 
-    expect(communitySupportResourceCategories.every((category) => category.badge === "Alpha demo")).toBe(true);
-    expect(communitySupportResourceCategories.every((category) => category.resources.every((resource) => resource.badge === "Demo placeholder"))).toBe(true);
+    expect(communitySupportResourceCategories.every((category) => category.badge === "Demo")).toBe(true);
+    expect(communitySupportResourceCategories.every((category) => category.resources.every((resource) => resource.badge === "Demo"))).toBe(true);
   });
 
   it("states clear support boundaries without sounding clinical or verified", () => {
@@ -28,7 +28,7 @@ describe("community support resource prototype metadata", () => {
       .toLowerCase();
 
     expect(combined).toContain("prototype");
-    expect(combined).toContain("not verified");
+    expect(combined).toContain("not reviewed");
     expect(combined).not.toMatch(/therapy platform|diagnosis|professional advice|verified service|case management|social-work replacement|live monitoring|guaranteed/);
   });
 

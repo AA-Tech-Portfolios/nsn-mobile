@@ -41,8 +41,8 @@ export const eventDetailSectionPlan: EventDetailSectionPlan[] = [
   },
   {
     id: "safetyBoundaries",
-    title: "Safety & boundaries",
-    summary: "Soft exits, consent reminders, and prototype limits.",
+    title: "Community guidelines",
+    summary: "Consent reminders, soft exits, and prototype limits.",
     iconName: "shield",
     initiallyExpanded: false,
   },

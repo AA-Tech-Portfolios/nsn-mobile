@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { PrototypeLocalNote } from "@/components/prototype-local-note";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import {
   backgroundCommunityOptions,
   backgroundStudyAreaOptions,
@@ -1370,7 +1371,7 @@ export default function UserPreferencesScreen() {
                       {renderChip({ key: "verified-private-off", label: "Show normal trust status", active: !verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: false }), wide: true })}
                     </View>
                   ))}
-                  {renderInlinePreferenceGroup("Photo & recording comfort", "NSN can show preferences and reminders, but it cannot fully prevent screenshots, photos, videos, or public sharing.", (
+                  {renderInlinePreferenceGroup("Photo & recording comfort", eventCommunityGuidelinesCopy.mediaCopy, (
                     <View style={responsiveChipGridStyle}>
                       {photoRecordingComfortOptions.map((option) => renderChip({ key: option, label: option, icon: option === "Ask me first" ? "📷" : undefined, active: photoRecordingComfortPreferences.includes(option), onPress: () => togglePhotoRecordingPreference(option), wide: true }))}
                     </View>

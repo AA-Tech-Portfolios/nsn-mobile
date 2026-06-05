@@ -63,6 +63,7 @@ import {
   type ProfilePreferenceSection,
 } from "@/lib/alpha-readiness-controls";
 import { getUserPreferenceRowDescription, getUserPreferenceRows, profileResourceSupportRowMetadata, profileSupportRowMetadata, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
+import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
 import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
@@ -2777,7 +2778,7 @@ export default function ProfileScreen() {
       <View style={styles.trustFoundationGroup}>
         <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
         <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-          Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can&apos;t fully prevent someone from using another device.
+          {eventCommunityGuidelinesCopy.mediaCopy}
         </Text>
         <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
           {photoRecordingComfortOptions.map((option) => {
@@ -3002,7 +3003,7 @@ export default function ProfileScreen() {
 
     return [row.id, {
       ...row,
-      summary: canMeetInPerson(effectiveVerificationLevel) ? "Ready for in-person safety checks" : "Review prototype trust status",
+      summary: canMeetInPerson(effectiveVerificationLevel) ? "Profile details reviewed" : "Review prototype profile details",
       badge: getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase),
       action: openVerificationReview,
     }] as const;
@@ -3485,7 +3486,7 @@ export default function ProfileScreen() {
                                 : profileMenuPanel === "helpSupport"
                                   ? "Help & Support"
                                 : profileMenuPanel === "safetyBoundaries"
-                                  ? "Safety & Boundaries"
+                                  ? "Community Guidelines"
                                 : profileMenuPanel === "blockReport"
                                   ? "Block & Report"
                                   : "Profile Controls";
@@ -3722,7 +3723,7 @@ export default function ProfileScreen() {
                       </TouchableOpacity>
                     ))}
                     <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
-                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Support & Safety</Text>
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Support & Boundaries</Text>
                     <TouchableOpacity
                       activeOpacity={0.78}
                       onPress={() => setProfileMenuPanel("notifications")}
@@ -3787,11 +3788,11 @@ export default function ProfileScreen() {
                       onPress={() => setProfileMenuPanel("safetyBoundaries")}
                       style={[styles.profileMenuItem, compactUserOptionRows && styles.profilePreferenceMenuItemCompact]}
                       accessibilityRole="button"
-                      accessibilityLabel="Safety and Boundaries"
+                      accessibilityLabel="Community Guidelines"
                     >
                       <IconSymbol name="shield" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Safety & Boundaries</Text>
+                        <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Community Guidelines</Text>
                         {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Consent, privacy, quiet exits, and low-pressure reminders.</Text> : null}
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
@@ -5716,11 +5717,11 @@ export default function ProfileScreen() {
                       onPress={() => setProfileMenuPanel("blockReport")}
                       style={[styles.profileLayoutOption, isDay && styles.daySoftOption]}
                       accessibilityRole="button"
-                      accessibilityLabel="Open Block & Report for unsafe contact"
+                      accessibilityLabel="Open Block & Report for unwanted contact"
                     >
                       <View style={styles.profileLayoutBody}>
-                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Unsafe or Unwanted Contact?</Text>
-                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Open Block & Report for safety-focused prototype controls.</Text>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Unwanted Contact?</Text>
+                        <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Open Block & Report for report-shaped prototype controls.</Text>
                       </View>
                       <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                     </TouchableOpacity>
@@ -5731,7 +5732,7 @@ export default function ProfileScreen() {
                   <>
                     <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("main")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to Profile menu">
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
-                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Safety & Boundaries</Text>
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Community Guidelines</Text>
                     </TouchableOpacity>
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Low-pressure boundaries</Text>

@@ -14,6 +14,7 @@ import {
   type EventDetailSectionId,
 } from "@/lib/event-detail-sections";
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
+import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   askAboutMeetupQuestionGroups,
@@ -1650,10 +1651,10 @@ export default function EventDetailsScreen() {
               <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
                 <IconSymbol name="visibility" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
               </View>
-              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.mediaTitle}</Text>
             </View>
             <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {"Let others know what feels okay around photos, videos, and screenshots. NSN can guide consent, but it can't fully prevent someone from using another device."}
+              {eventCommunityGuidelinesCopy.mediaCopy}
             </Text>
             <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
               {mediaComfortLabels.map((label) => (
@@ -1661,7 +1662,7 @@ export default function EventDetailsScreen() {
               ))}
             </View>
             <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {"Please don't screenshot or share someone's profile, chat, or meetup details without permission. Prototype note: NSN can show preferences and reminders, but cannot guarantee screenshot/photo prevention."}
+              {eventCommunityGuidelinesCopy.mediaNote}
             </Text>
           </View>
 
@@ -1671,9 +1672,9 @@ export default function EventDetailsScreen() {
                 <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
               </View>
               <View style={styles.weatherCopyBlock}>
-                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>First meetup support</Text>
+                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.firstMeetupSupportTitle}</Text>
                 <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Local prototype choices only. No guide, matching, or private 1:1 flow is created.
+                  {eventCommunityGuidelinesCopy.firstMeetupSupportCopy}
                 </Text>
               </View>
             </View>
@@ -1710,9 +1711,9 @@ export default function EventDetailsScreen() {
                 <IconSymbol name="group" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
               </View>
               <View style={styles.weatherCopyBlock}>
-                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Optional comfort roles</Text>
+                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.comfortRolesTitle}</Text>
                 <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  Local preview only. These are broad joining cues, not identity labels, rankings, or strict filters.
+                  {eventCommunityGuidelinesCopy.comfortRolesCopy}
                 </Text>
               </View>
             </View>
@@ -1743,22 +1744,22 @@ export default function EventDetailsScreen() {
           </>
         ))}
 
-        {renderAccordionSection("safetyBoundaries", "Safety & boundaries", "Soft exits, consent reminders, and prototype limits.", "shield", (
+        {renderAccordionSection("safetyBoundaries", eventCommunityGuidelinesCopy.sectionTitle, eventCommunityGuidelinesCopy.sectionSummary, "shield", (
           <>
           <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
             <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.softExitTitle}</Text>
             <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.softExitCopy}</Text>
           </View>
           <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Mismatch is not failure</Text>
+            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.mismatchTitle}</Text>
             <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              This group may not be the right fit. You can leave, switch plans, mute or block in chat, hide this event, or look for another small meetup without making it a public rejection.
+              {eventCommunityGuidelinesCopy.mismatchCopy}
             </Text>
           </View>
           <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Reports are reviewed</Text>
+            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.reportsTitle}</Text>
             <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Prototype reports are saved locally for now. Production NSN should review harassment, unsafe behaviour, fake identity, spam/bot behaviour, boundary violations, no-show patterns, and other concerns with calm consequences.
+              {eventCommunityGuidelinesCopy.reportsCopy}
             </Text>
           </View>
           </>
@@ -1795,7 +1796,7 @@ export default function EventDetailsScreen() {
             </Text>
           </View>
           <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Prototype only: this RSVP is saved locally on this device. It does not reserve a real spot, notify a host, or change the meetup plan.
+            Prototype only: this RSVP is saved locally on this device. It does not reserve a real spot, message anyone, or change the meetup plan.
           </Text>
           <Text style={[styles.rsvpDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getRsvpDescription(membership.status)}</Text>
           <View style={styles.rsvpActions}>

@@ -150,6 +150,6 @@ export const profileResourceSupportRowMetadata = {
   icon: "heart" as const,
   title: "Support & Resources",
   description: "Explore gentle community, accessibility, wellbeing, and practical life resources.",
-  badge: "Alpha demo",
+  badge: "Demo",
   chevron: true,
 };

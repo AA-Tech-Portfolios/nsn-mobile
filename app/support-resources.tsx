@@ -60,7 +60,7 @@ export default function SupportResourcesScreen() {
             Support should feel approachable. Explore local, community, accessibility, wellbeing, and practical life resources at your own pace.
           </Text>
           <Text style={[styles.noticeText, isDay && styles.dayNoticeText]}>
-            Demo placeholders only. Resources are not verified yet, and NSN is not therapy, emergency services, crisis care, or a replacement for qualified support.
+            Demo placeholders only. Resources are not reviewed yet, and NSN is not therapy, emergency services, crisis care, or a replacement for qualified support.
           </Text>
         </View>
 

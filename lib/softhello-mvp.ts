@@ -310,8 +310,8 @@ export function getRsvpDescription(status: EventMembershipStatus) {
   if (status === "interested") return "This RSVP is saved on this device only. You can decide later without joining the meetup chat.";
   if (status === "going" || status === "joined") return "Marked as going on this device. Meetup chat opens as a prototype preview.";
   if (status === "deciding_later") return "Saved locally as deciding later, without pressure to join or explain yet.";
-  if (status === "running_late") return "Saved locally as running late. This does not notify a host or change the meetup plan.";
-  if (status === "unable") return "Saved locally as unable to make it. This does not send a cancellation or notify anyone.";
+  if (status === "running_late") return "Saved locally as running late. This does not message anyone or change the meetup plan.";
+  if (status === "unable") return "Saved locally as unable to make it. This does not send a cancellation or message anyone.";
   if (status === "not_this_time") return "This plan is marked as not for you this time. You can change it later.";
   if (status === "left") return "You left this local plan preview. You can still choose another RSVP state.";
 

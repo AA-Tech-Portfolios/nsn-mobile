@@ -164,13 +164,13 @@ export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "safetyPrivacy",
     icon: "shield",
-    title: "Support & Safety",
+    title: "Support & Boundaries",
     description: "Warm support, resources, reporting, privacy, and boundary controls.",
     rows: [
       row({
         id: "safety-boundaries",
         icon: "shield",
-        title: "Safety & Boundaries",
+        title: "Community Guidelines",
         description: "Consent, privacy, quiet exits, and low-pressure participation reminders.",
         badge: "Guidance",
       }),
@@ -186,14 +186,14 @@ export const optionsHubSections: OptionsHubSection[] = [
         icon: "heart",
         title: "Support & Resources",
         description: "Prototype community, accessibility, wellbeing, and practical life resources.",
-        badge: "Alpha demo",
+        badge: "Demo",
       }),
       row({
         id: "block-report",
         icon: "flag",
         title: "Block & Report",
-        description: "Boundary and moderation demos for unsafe or unwanted contact.",
-        badge: "Safety",
+        description: "Boundary and report-shaped demos for unwanted contact.",
+        badge: "Demo",
       }),
     ],
   },

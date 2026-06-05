@@ -5,44 +5,10 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
+import { alphaWalkthroughCopy, alphaWalkthroughSteps } from "@/lib/alpha-walkthrough-copy";
 import { nsnColors } from "@/lib/nsn-data";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
-
-const walkthroughSteps = [
-  {
-    title: "Start gently",
-    eyebrow: "Prototype",
-    copy: "NSN is a Sydney/North Shore alpha for trying low-pressure meetup ideas. Nothing here joins a real public meetup yet.",
-    actionLabel: "Open Home",
-    route: "/(tabs)",
-    icon: "low-pressure",
-  },
-  {
-    title: "Browse one meetup",
-    eyebrow: "Demo meetups",
-    copy: "Look for a calm activity like coffee, a walk, or a quiet indoor plan. Focus on whether the wording feels safe and clear.",
-    actionLabel: "Browse meetups",
-    route: "/(tabs)/meetups",
-    icon: "calendar",
-  },
-  {
-    title: "Check comfort controls",
-    eyebrow: "Saved locally",
-    copy: "Review Profile for privacy, comfort, local area, and prototype trust status. These settings stay local in the alpha.",
-    actionLabel: "Open Profile",
-    route: "/(tabs)/profile",
-    icon: "person.fill",
-  },
-  {
-    title: "Explore at your pace",
-    eyebrow: "No pressure",
-    copy: "You can skip chats, use tester shortcuts, or leave a flow anytime. Feedback should focus on what feels too heavy on mobile.",
-    actionLabel: "Finish walkthrough",
-    route: "/(tabs)",
-    icon: "checkmark",
-  },
-] as const;
 
 export default function AlphaWalkthroughScreen() {
   const router = useRouter();
@@ -50,14 +16,14 @@ export default function AlphaWalkthroughScreen() {
   const [stepIndex, setStepIndex] = useState(0);
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(getLanguageBase(appLanguage));
-  const step = walkthroughSteps[stepIndex];
-  const progressText = `Step ${stepIndex + 1} of ${walkthroughSteps.length}`;
+  const step = alphaWalkthroughSteps[stepIndex];
+  const progressText = `Step ${stepIndex + 1} of ${alphaWalkthroughSteps.length}`;
   const localAreaCopy = useMemo(
     () => (suburb ? `Current local area: ${suburb}. You can change it from Search NSN on Home or from Profile.` : "No local area is set yet. Search NSN on Home can find a suburb, region, or activity."),
     [suburb]
   );
   const canGoBack = stepIndex > 0;
-  const canGoNext = stepIndex < walkthroughSteps.length - 1;
+  const canGoNext = stepIndex < alphaWalkthroughSteps.length - 1;
 
   const openStepRoute = () => {
     router.push(step.route as never);
@@ -71,20 +37,20 @@ export default function AlphaWalkthroughScreen() {
           onPress={() => router.back()}
           style={[styles.backButton, isDay && styles.dayIconButton]}
           accessibilityRole="button"
-          accessibilityLabel="Close alpha tester walkthrough"
+          accessibilityLabel={alphaWalkthroughCopy.closeLabel}
         >
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 
-        <Text style={[styles.title, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Alpha tester walkthrough</Text>
+        <Text style={[styles.title, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{alphaWalkthroughCopy.title}</Text>
         <Text style={[styles.subtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-          A short, low-pressure tour for first-time testers. NSN is a Sydney/North Shore prototype, and some features are demo-only.
+          {alphaWalkthroughCopy.subtitle}
         </Text>
 
         <View style={[styles.progressCard, isDay && styles.dayCard]}>
           <Text style={[styles.progressText, isDay && styles.dayAccentText]}>{progressText}</Text>
           <View style={[styles.progressTrack, isDay && styles.dayProgressTrack]}>
-            <View style={[styles.progressFill, { width: `${((stepIndex + 1) / walkthroughSteps.length) * 100}%` }]} />
+            <View style={[styles.progressFill, { width: `${((stepIndex + 1) / alphaWalkthroughSteps.length) * 100}%` }]} />
           </View>
         </View>
 
@@ -115,7 +81,7 @@ export default function AlphaWalkthroughScreen() {
         </View>
 
         <View style={[styles.stepList, isRtl && styles.rtlRow]}>
-          {walkthroughSteps.map((item, index) => {
+          {alphaWalkthroughSteps.map((item, index) => {
             const active = index === stepIndex;
             return (
               <TouchableOpacity
@@ -123,7 +89,7 @@ export default function AlphaWalkthroughScreen() {
                 activeOpacity={0.78}
                 onPress={() => setStepIndex(index)}
                 accessibilityRole="button"
-                accessibilityLabel={`${item.title}. ${index + 1} of ${walkthroughSteps.length}`}
+                accessibilityLabel={`${item.title}. ${index + 1} of ${alphaWalkthroughSteps.length}`}
                 accessibilityState={{ selected: active }}
                 style={[styles.stepPill, isDay && styles.dayStepPill, active && styles.stepPillActive]}
               >
@@ -141,7 +107,7 @@ export default function AlphaWalkthroughScreen() {
             onPress={() => setStepIndex((current) => Math.max(0, current - 1))}
             disabled={!canGoBack}
             accessibilityRole="button"
-            accessibilityLabel="Previous walkthrough step"
+            accessibilityLabel={alphaWalkthroughCopy.previousLabel}
             accessibilityState={{ disabled: !canGoBack }}
             style={[styles.navButton, isDay && styles.dayNavButton, !canGoBack && styles.disabledButton]}
           >
@@ -151,7 +117,7 @@ export default function AlphaWalkthroughScreen() {
             activeOpacity={0.78}
             onPress={() => (canGoNext ? setStepIndex((current) => current + 1) : router.push("/(tabs)" as never))}
             accessibilityRole="button"
-            accessibilityLabel={canGoNext ? "Next walkthrough step" : "Finish walkthrough"}
+            accessibilityLabel={canGoNext ? alphaWalkthroughCopy.nextLabel : alphaWalkthroughCopy.finishLabel}
             style={[styles.navButton, styles.nextButton]}
           >
             <Text style={styles.nextButtonText}>{canGoNext ? "Next" : "Done"}</Text>
@@ -159,9 +125,9 @@ export default function AlphaWalkthroughScreen() {
         </View>
 
         <View style={[styles.noteCard, isDay && styles.dayCard]}>
-          <Text style={[styles.noteTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Prototype note</Text>
+          <Text style={[styles.noteTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{alphaWalkthroughCopy.prototypeNoteTitle}</Text>
           <Text style={[styles.noteCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Account deletion, verification, moderation, notification delivery, and safety systems are not production systems yet. No real account action is taken in this alpha walkthrough.
+            {alphaWalkthroughCopy.prototypeNoteCopy}
           </Text>
         </View>
       </ScrollView>

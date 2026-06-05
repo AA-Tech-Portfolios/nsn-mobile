@@ -64,6 +64,7 @@ import {
 import { nsnColors } from "@/lib/nsn-data";
 import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { brandThemes, isSoftHelloThemeEnabled, type BrandThemeId } from "@/lib/brand-theme";
+import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { englishSettingsPrivacyCopy } from "@/lib/settings-privacy-copy";
 import {
   createSettingsToggleSections,
@@ -5997,9 +5998,7 @@ export default function SettingsScreen() {
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Let others know what feels okay around photos, videos, and screenshots. NSN can
-                    guide consent, but it can&apos;t fully prevent someone from using another
-                    device.
+                    {eventCommunityGuidelinesCopy.mediaCopy}
                   </Text>
                   <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
                     {photoRecordingComfortOptions.map((option) => {

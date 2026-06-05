@@ -173,8 +173,16 @@ describe("SoftHello MVP domain rules", () => {
     expect(getRsvpLabel("left")).toBe("Left plan");
     expect(getRsvpDescription("interested")).toContain("saved on this device");
     expect(getRsvpDescription("deciding_later")).toContain("without pressure");
-    expect(getRsvpDescription("running_late")).toContain("does not notify a host");
-    expect(getRsvpDescription("unable")).toContain("does not send a cancellation");
+    expect(getRsvpDescription("running_late")).toBe(
+      "Saved locally as running late. This does not message anyone or change the meetup plan."
+    );
+    expect(getRsvpDescription("unable")).toBe(
+      "Saved locally as unable to make it. This does not send a cancellation or message anyone."
+    );
+    expect([
+      getRsvpDescription("running_late"),
+      getRsvpDescription("unable"),
+    ].join(" ")).not.toMatch(/\bnotify a host|urgent|guarantee|matching|verified|verification\b/i);
     expect(shouldOpenMeetupChat("going")).toBe(true);
     expect(shouldOpenMeetupChat("joined")).toBe(true);
     expect(shouldOpenMeetupChat("interested")).toBe(false);
