@@ -1,12 +1,12 @@
 # Brand Systems
 
-> SoftHello is the umbrella/global product direction. SoftShore is the public-facing Sydney North Shore pilot direction. North Shore Nights / NSN remains historical and internal terminology while repo, package, folder, and code-symbol renames are scoped separately.
+> North Shore Nights / NSN is the current Sydney/North Shore alpha pilot. SoftHello is the future broader/global product direction, not a live or production-ready product. SoftShore remains historical naming exploration unless a future scoped naming review reopens it.
 
 This repo currently contains three related naming layers:
 
-- **SoftHello** is the umbrella/global product direction.
-- **SoftShore** is the local Sydney North Shore pilot/community brand.
-- **North Shore Nights (NSN)** is historical/internal terminology retained for continuity.
+- **North Shore Nights (NSN)** is the current local Sydney/North Shore pilot.
+- **SoftHello** is the future broader/global product direction.
+- **SoftShore** is historical naming exploration.
 
 The shared tagline is: **Small meetups for big moments.**
 
@@ -45,7 +45,7 @@ The original concept also introduces:
 
 ### Product Position
 
-- Global release name and identity.
+- Future broader product name and identity.
 - Local events can still exist, but copy should avoid feeling tied only to Sydney or Australia.
 - Active NSN location fields should stay local to Sydney's North Shore, NSW, and Australia/Sydney time.
 - Suburb/local-area language can be adapted by region rather than hard-coded as Australian-only wording.
@@ -112,41 +112,37 @@ These are SoftHello product goals, not current NSN production capabilities. See 
 
 ## North Shore Nights
 
-NSN is the historical local Australian prototype identity. Keep it where it preserves repository,
-package, screenshot, historical, or code context. New public-facing local pilot copy should generally
-prefer SoftShore unless the surface is explicitly documenting the older NSN prototype.
+NSN is the current local Australian prototype identity. Use it for public-facing Sydney/North Shore
+alpha copy, tester-facing docs, screenshots, and repository/package continuity.
 
 ## SoftShore
 
-SoftShore is the Sydney North Shore pilot/community brand for SoftHello. It keeps the local pilot
-grounded in place while moving away from language that can sound nightlife-first.
+SoftShore is historical naming exploration from an earlier brand pass. It should not be positioned
+as the current pilot name unless a future scoped naming review reopens it.
 
 ### Product Position
 
-- Local Sydney North Shore pilot name and public-facing community identity.
-- Designed for small gatherings, gentle first steps, reconnecting, privacy, consent, and belonging.
-- Useful for tester-facing docs, public pilot copy, and community-facing explanations.
-- Should not require repo, package, folder, route, or code-symbol renames until a scoped migration is planned.
+- Historical research name for a possible local community identity.
+- Useful only when documenting older naming exploration.
+- Should not replace NSN in current pilot copy without a scoped migration.
 
 ### Tone
 
-- Calm, local, respectful, and practical.
-- Warm without overpromising emotional outcomes.
-- Clear about prototype limitations and local-only behaviours.
+- Calm, local, respectful, and practical when mentioned as historical context.
+- Clear that it is not the active pilot name.
 - Avoid dating-first, nightlife-first, networking-first, or loud social media framing.
 
 ### Prototype-Safe Lines
 
 - "Small meetups for big moments."
-- "SoftShore is the local Sydney North Shore pilot for SoftHello."
+- "SoftShore was historical naming exploration for the local pilot."
 - "Small, low-pressure gatherings around the North Shore."
 - "Reach out gently, reconnect at your own pace, and keep privacy choices visible."
 
-## NSN Historical Reference
+## NSN Prototype Reference
 
-North Shore Nights / NSN can remain in internal and historical contexts for now. The notes below
-describe the older NSN visual system and should still inform existing screens until a visual rebrand
-is explicitly scoped.
+North Shore Nights / NSN is the current local pilot context. The notes below describe the NSN visual
+system and should inform existing screens until a visual rebrand is explicitly scoped.
 
 ### Version 1.0 Concept Anchor
 
@@ -192,7 +188,7 @@ The v1.1 concept also introduces feature cards that are central to the NSN produ
 - Local prototype name and identity.
 - Designed around Sydney's North Shore and nearby Australian localities.
 - Suburb, local area, venue, and Australian timezone language is appropriate here.
-- Works as a local proof-of-concept before SoftHello becomes the broader product system.
+- Works as a local proof-of-concept before any broader SoftHello product direction is ready.
 
 ### Visual System
 
@@ -249,9 +245,9 @@ Current implementation status for these shared principles belongs in [`current-s
 ## Implementation Rules
 
 - Use [`BRAND_NAMING.md`](BRAND_NAMING.md) before changing brand-facing copy.
-- Use SoftHello for umbrella/global product language.
-- Use SoftShore for public-facing Sydney North Shore pilot language.
-- Keep NSN / North Shore Nights where it is historical, internal, or tied to existing repo/package/code context.
+- Use NSN / North Shore Nights for current public-facing Sydney/North Shore pilot language.
+- Use SoftHello for future broader/global product language, without implying it is live or production-ready.
+- Keep SoftShore limited to historical naming exploration unless a scoped naming review changes that decision.
 - Do not rename `nsn-mobile`, package names, folders, bundle identifiers, route names, or code symbols without a separate migration task.
 - Do not mix SoftHello purple/peach branding into NSN screens unless the screen is explicitly part of the global rebrand direction.
 - Do not use Australian-only terms such as suburb as the only location language in SoftHello global flows.

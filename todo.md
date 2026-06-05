@@ -25,7 +25,7 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 - [x] 🟢 Add empty-state timing messages for no active events, sleeping time, and quiet hours
 - [x] 🟢 Add README screenshots or mockups for the home screen, profile privacy, event details, Settings & Privacy, and onboarding
 - [x] 🟢 Refresh checkpoint screenshots for core tabs, Settings & Privacy, and onboarding stages after recent UI changes
-- [ ] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
+- [x] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
 
 ### 🟡 Medium Local UX Flows
 
@@ -417,7 +417,7 @@ These ideas are future planning notes only. Do not add API calls, backend implem
 - [ ] 🔴 Post-pilot: evaluate transition toward SoftHello branding based on demand, testing, and regional expansion
 - [ ] 🔴 Future platform roadmap, not current scope: explore an official website, Windows app, macOS app, and watchOS companion only after the mobile/web prototype, safety boundaries, and demand are clearer
 - [ ] 🟢 Remove AI Expo related settings as the app develops
-- [ ] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
+- [x] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
 - [x] 🟢 Add a lightweight Dependabot maintenance workflow for weekly dependency review without automerge
 
 ## Historical Milestones / Release Notes
@@ -477,7 +477,7 @@ These ideas are future planning notes only. Do not add API calls, backend implem
 - [x] Add reporting, block host/member, unblock, report cancellation window, and escalation options
 - [x] Add private post-event reflection prompts
 - [x] Add saved comfort places for trusted venues
-- [x] Clarify product split between SoftHello global release and North Shore Nights local release so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
+- [x] Clarify product split between future SoftHello direction and North Shore Nights local pilot so users are not confused by mixed branding, colours, suburb/local-area features, and regional language
 - [x] Define separate brand systems: SoftHello should use the soft purple global identity, while North Shore Nights can keep the local light-blue/dark-blue Australian design direction
 - [x] v0.1.1-alpha — UX & Onboarding Polish
 

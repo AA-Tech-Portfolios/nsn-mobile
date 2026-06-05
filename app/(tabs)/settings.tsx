@@ -7355,8 +7355,8 @@ export default function SettingsScreen() {
                     isRtl && styles.rtlText,
                   ]}
                 >
-                  NSN is the default pilot identity. SoftHello is available only when the
-                  future-theme feature flag is enabled.
+                  NSN is the default pilot identity. SoftHello appears only as future-theme
+                  exploration when the feature flag is enabled.
                 </Text>
                 <View style={styles.brandThemeGrid}>
                   {brandThemeOptions.map((theme) => {

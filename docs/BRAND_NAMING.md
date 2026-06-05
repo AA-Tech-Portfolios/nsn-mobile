@@ -1,27 +1,29 @@
 # Brand Naming
 
-SoftHello is the umbrella product name. It describes the broader app direction: a calmer way for adults to reach out, reconnect, and find small gatherings with privacy, consent, and social comfort built in from the start.
+North Shore Nights (NSN) is the current Sydney/North Shore alpha pilot. It describes the local prototype being tested now: a calmer way for adults to explore small local gatherings with privacy choices, consent-minded wording, and social comfort considered from the start.
 
-SoftShore is the local Sydney North Shore pilot/community brand. It keeps the pilot grounded in place while moving public-facing language away from North Shore Nights and NSN.
+SoftHello is the future broader product direction. Use it for long-term product thinking and reusable principles, but do not describe it as live, launched, available, or production-ready.
+
+SoftShore remains historical naming exploration. It should not be positioned as the current pilot name unless a future scoped naming decision reopens it.
 
 The shared tagline is: **Small meetups for big moments.**
 
-North Shore Nights and NSN remain valid historical and internal terminology for now. They appear in the repository name, package name, folders, route names, docs, screenshots, and prototype data. Do not blindly rename every internal reference. Repository, package, folder, bundle identifier, and broad code-symbol renames should be planned as separate future tasks.
+Repository, package, folder, bundle identifier, and broad code-symbol renames should be planned as separate future tasks.
 
 ## Naming Model
 
-| Name                     | Role                            | Use                                                                                                                                                           |
-| ------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SoftHello                | Umbrella/global product         | Long-term product strategy, shared principles, future global copy, neutral contributor context.                                                               |
-| SoftShore                | Local Sydney North Shore pilot  | Public-facing pilot copy, tester-facing docs, local community language, gradual replacement for NSN wording where appropriate.                                |
-| North Shore Nights / NSN | Historical/internal terminology | Existing repository, package, internal docs, prototype references, screenshots, legacy planning, and code identifiers until specific rename tasks are scoped. |
+| Name                     | Role                             | Use                                                                                                                                             |
+| ------------------------ | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| North Shore Nights / NSN | Current Sydney/North Shore pilot | Current app copy, tester-facing docs, local prototype context, screenshots, repository/package continuity, and Sydney/North Shore alpha language. |
+| SoftHello                | Future broader product direction | Long-term product strategy, shared principles, future broader/global copy, neutral contributor context, and post-pilot planning.                 |
+| SoftShore                | Historical naming exploration    | Older planning docs or naming research only. Do not use as the current pilot name without a scoped naming decision.                              |
 
 ## Contributor Guidance
 
-- Prefer **SoftHello** when discussing the broader product or reusable product principles.
-- Prefer **SoftShore** when writing public-facing copy for the Sydney North Shore pilot.
-- Keep **NSN** where changing it would imply a repo/package/code rename, break existing paths, or create unnecessary churn.
-- Treat `nsn-mobile` as an acceptable temporary repo name.
+- Prefer **NSN** or **North Shore Nights** when writing about the current Sydney/North Shore alpha pilot.
+- Prefer **SoftHello** when discussing the future broader product direction or reusable product principles.
+- Keep **SoftShore** limited to historical naming exploration unless a future scoped naming review changes that decision.
+- Treat `nsn-mobile` as the expected repo name for now.
 - Treat package and bundle identifier renames as separate migration tasks that need planning, testing, and release coordination.
 - Keep copy warm, calm, respectful, and practical.
 - Describe small gatherings, reaching out, reconnecting, comfort, privacy, consent, and belonging.
@@ -30,18 +32,20 @@ North Shore Nights and NSN remain valid historical and internal terminology for 
 ## Prototype-Safe Copy
 
 - "Small meetups for big moments."
-- "SoftShore is the local Sydney North Shore pilot for SoftHello."
+- "NSN is the current Sydney/North Shore alpha pilot."
 - "Find small, low-pressure gatherings around the North Shore."
 - "Reach out gently, reconnect at your own pace, and keep privacy choices visible."
 - "A calm pilot for small local plans, clear expectations, and respectful connection."
-- "SoftHello is the broader product direction; SoftShore is where we are learning locally first."
+- "SoftHello is the future broader product direction after local pilot learning is clearer."
+- "SoftHello is not live or production-ready."
 
 ## Migration Rule
 
 When adding or changing public-facing text, ask:
 
-1. Is this broader product language? Use SoftHello.
-2. Is this Sydney North Shore pilot language? Use SoftShore.
-3. Is this an internal code path, repo/package identifier, historical doc, or screenshot label? Keep NSN unless a scoped rename task says otherwise.
+1. Is this current Sydney/North Shore pilot language? Use NSN or North Shore Nights.
+2. Is this future broader product language? Use SoftHello, with future-facing wording.
+3. Is this older naming research? SoftShore can appear as historical context, not as the active pilot.
+4. Is this an internal code path, repo/package identifier, historical doc, or screenshot label? Keep existing names unless a scoped rename task says otherwise.
 
-This lets the brand evolve without creating accidental technical churn.
+This lets the product language stay clear without creating accidental technical churn.

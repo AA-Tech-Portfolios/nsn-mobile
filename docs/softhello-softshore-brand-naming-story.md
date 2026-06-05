@@ -1,24 +1,26 @@
 # SoftHello / SoftShore Brand Naming Story
 
-SoftHello is the umbrella name because the product starts with a gentle social act: saying hello without pressure. It should feel warm, respectful, and human. The name leaves room for people meeting someone new, reconnecting with someone they already know, joining a small gathering, or simply taking a quieter first step back toward community.
+This is a historical naming note. The current naming model is documented in [`BRAND_NAMING.md`](BRAND_NAMING.md): North Shore Nights (NSN) is the current Sydney/North Shore alpha pilot, SoftHello is the future broader product direction, and SoftShore is historical naming exploration unless a future scoped naming review reopens it.
 
-SoftShore is the local Sydney North Shore pilot brand. It carries the same softness as SoftHello while making the pilot feel grounded in the community it serves first. "Shore" gives the pilot a calm local signal without making the product sound like nightlife, dating, generic networking, or a loud social feed.
+SoftHello remains useful as the future product direction because the name starts with a gentle social act: saying hello without pressure. It can describe a broader product world where people meet someone new, reconnect with someone they already know, join a small gathering, or take a quieter first step back toward community. It should not be described as live, launched, available, or production-ready.
 
-North Shore Nights and NSN helped shape the early prototype. They can remain in the repository and internal references while the product learns locally. The next brand move is not a mechanical rename across every file; it is a careful shift in public-facing language toward SoftShore and shared product language toward SoftHello.
+SoftShore was explored as a local Sydney North Shore pilot brand. "Shore" gave the idea a calm local signal without making the product sound like nightlife, dating, generic networking, or a loud social feed. That exploration is no longer the active pilot position.
+
+North Shore Nights and NSN now carry the current local pilot language. They also explain why this repository is called `nsn-mobile`. The next brand move should not be a mechanical rename across every file; any future transition toward SoftHello needs a scoped plan for repository naming, package naming, Expo/app identifiers, CI, release metadata, screenshots, docs, and user-facing copy.
 
 The tagline is **Small meetups for big moments.** It keeps the product focused on modest, respectful gatherings while still acknowledging that small social steps can matter deeply.
 
 ## Brand Relationship
 
-SoftHello is the broader product world.
+NSN is the Sydney/North Shore alpha pilot being tested now.
 
-SoftShore is the Sydney North Shore pilot inside that world.
+SoftHello is the future broader product direction after local learning is clearer.
 
-NSN is the historical/internal name that still explains why this repository is called `nsn-mobile`.
+SoftShore is historical naming exploration, not the current pilot name.
 
 ## Tone
 
-SoftHello and SoftShore should sound calm, plain-spoken, and emotionally safe. The product should make room for people who are shy, socially out of practice, new to an area, neurodivergent, privacy-conscious, or simply looking for smaller, clearer plans.
+NSN and future SoftHello copy should sound calm, plain-spoken, and emotionally safe. The product should make room for people who are shy, socially out of practice, new to an area, neurodivergent, privacy-conscious, or simply looking for smaller, clearer plans.
 
 Use language around:
 
@@ -46,10 +48,6 @@ Avoid language around:
 
 Small meetups for big moments.
 
-SoftShore is the local Sydney North Shore pilot for SoftHello: a calm way to explore small local gatherings, reach out gently, and reconnect with privacy and consent respected from the start.
+NSN is the current Sydney/North Shore alpha pilot: a calm way to explore small local gatherings, reach out gently, and reconnect with privacy and consent respected from the start.
 
-SoftHello can grow beyond one place. SoftShore keeps the first community specific, testable, and honest about what exists now.
-
-## Internal Continuity
-
-Keep NSN and North Shore Nights in historical docs, existing filenames, package metadata, screenshots, and code identifiers until a specific rename plan exists. A future rename should separately cover repository naming, package naming, Expo/app identifiers, CI, release metadata, screenshots, docs, and any user-facing copy that still says NSN.
+SoftHello can grow beyond one place later. The current NSN pilot keeps the first community specific, testable, and honest about what exists now.

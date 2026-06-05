@@ -4,9 +4,9 @@ This document is the single source of truth for what the repository currently re
 
 ## Current Prototype Scope
 
-SoftShore is the public-facing local pilot direction: a Sydney/North Shore alpha prototype for calm, low-pressure, small-group meetups. The prototype is intended for controlled testing, UX review, and product learning.
+NSN is the public-facing local pilot direction: a Sydney/North Shore alpha prototype for calm, low-pressure, small-group meetups. The prototype is intended for controlled testing, UX review, and product learning.
 
-SoftHello is the umbrella/global product direction. North Shore Nights / NSN remains historical and internal terminology in this repository while rename work is scoped separately.
+SoftHello is the future broader/global product direction. It is not live, launched, available, or production-ready. SoftShore remains historical naming exploration while any future rename work is scoped separately.
 
 The current shared tagline is: **Small meetups for big moments.**
 
@@ -20,7 +20,7 @@ The current shared tagline is: **Small meetups for big moments.**
 - Profile visibility controls including blur photo, blur level, private profile, local area display, name display, age/preferred age/gender display, interests, comfort preferences, and preview modes.
 - Local preference areas for transportation, location, food and beverage, hobbies/interests, contact preference, saved places, notification style, accessibility, language, regional formats, appearance, and account pause/delete demo states.
 - Soft Exit, block/report-shaped controls, saved places, event sharing/pinning/hiding, arrival-update style states, and private reflection/post-event feedback logic in prototype form.
-- SoftShore / NSN visual identity with optional SoftHello theme exploration.
+- NSN visual identity with optional future SoftHello theme exploration.
 
 ## Mocked / Local-Only Systems
 
@@ -44,7 +44,7 @@ The current shared tagline is: **Small meetups for big moments.**
 - Live group chat backed by a server.
 - Public event creation by regular users with moderation and abuse controls.
 - Real map, transport, weather, and locality APIs with attribution and reliability guarantees.
-- SoftHello global launch branding, copy, and region-neutral settings beyond the local SoftShore pilot.
+- SoftHello launch branding, copy, and region-neutral settings beyond the local NSN pilot.
 - Public beta or production launch readiness.
 
 ## Current Tech Stack
@@ -64,7 +64,7 @@ The current shared tagline is: **Small meetups for big moments.**
 - Data may be local to the device/browser and can be reset.
 - Some buttons intentionally show demo, coming-soon, or saved-locally behaviour.
 - Safety, trust, moderation, and verification surfaces are not a substitute for real-world safety operations.
-- SoftShore / NSN should not be used for unsupervised real meetups until the alpha organiser confirms the test conditions separately.
+- NSN should not be used for unsupervised real meetups until the alpha organiser confirms the test conditions separately.
 - Translation, accessibility, and regional behaviour need further review on real devices and with real users.
 - The prototype has been iterated primarily for product exploration and alpha readiness, not production hardening.
 
@@ -79,9 +79,9 @@ Current validation has focused on TypeScript checks, local Expo/web startup, scr
 
 ## Current Brand Context
 
-- **Umbrella/global product:** SoftHello, the broader product and brand direction for low-pressure, privacy-aware social connection.
-- **Local pilot/community brand:** SoftShore, the Sydney North Shore alpha direction.
-- **Historical/internal terminology:** North Shore Nights / NSN, retained in this repo until scoped rename tasks are planned.
+- **Current local pilot:** North Shore Nights / NSN, the Sydney North Shore alpha direction.
+- **Future broader/global direction:** SoftHello, the broader product and brand direction for low-pressure, privacy-aware social connection once local learning is clearer.
+- **Historical naming exploration:** SoftShore, retained only where older planning context explains it.
 - **Tagline:** Small meetups for big moments.
 - **Temporary repository name:** `nsn-mobile` can remain as-is for now; repository and package renames should be separate future tasks.
 

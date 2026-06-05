@@ -1,15 +1,15 @@
 # NSN Naming Research and Brand Direction
 
 > Historical naming research. The current brand model is now documented in
-> [`BRAND_NAMING.md`](BRAND_NAMING.md): SoftHello is the umbrella/global product name,
-> SoftShore is the Sydney North Shore pilot/community brand, and North Shore Nights / NSN
-> remains historical/internal terminology until scoped rename tasks are planned.
+> [`BRAND_NAMING.md`](BRAND_NAMING.md): North Shore Nights / NSN is the current
+> Sydney/North Shore alpha pilot, SoftHello is the future broader/global product direction,
+> and SoftShore remains historical naming exploration unless a future scoped review reopens it.
 
-This is an internal product and brand planning note. It captures preliminary naming research and is now historical context, not the current naming decision. The current public direction is SoftShore for the Sydney North Shore pilot under the SoftHello umbrella. NSN / North Shore Nights remains historical/internal terminology, and repo/package/folder renames should be handled as separate future tasks.
+This is an internal product and brand planning note. It captures preliminary naming research and is now historical context, not the current naming decision. The current public direction is NSN / North Shore Nights for the Sydney/North Shore alpha pilot. SoftHello is the future broader product direction, not a live or production-ready product. Repo/package/folder renames should be handled as separate future tasks.
 
 ## Summary
 
-SoftHello is the umbrella/global product name. SoftShore is the local Sydney North Shore pilot/community brand. North Shore Nights / NSN remains historical/internal terminology for the repository, code, screenshots, and older planning notes.
+North Shore Nights / NSN is the current Sydney/North Shore alpha pilot. SoftHello is the future broader/global product direction. SoftShore remains historical naming exploration for older planning notes.
 
 The current tagline is:
 
@@ -31,11 +31,11 @@ Treat those older candidates and lines as research history unless a new scoped n
 
 ## Current Active Name
 
-SoftShore is the public-facing Sydney/North Shore pilot/community brand for the current alpha direction.
+North Shore Nights / NSN is the public-facing Sydney/North Shore pilot/community brand for the current alpha direction.
 
 The repository is not being renamed right now. North Shore Nights / NSN can remain in historical docs, internal references, package metadata, screenshots, and code identifiers until specific rename work is planned.
 
-If NSN appears in older copy, "Nights" should be understood as atmosphere, calmness, and winding-down energy, not nightlife-only events. New public-facing pilot copy should generally prefer SoftShore and the line "Small meetups for big moments."
+Where NSN appears, "Nights" should be understood as atmosphere, calmness, and winding-down energy, not nightlife-only events. New public-facing pilot copy should generally prefer NSN / North Shore Nights and the line "Small meetups for big moments."
 
 NSN should avoid sounding like:
 
@@ -126,7 +126,7 @@ SoftCove also gives the product room to grow. A cove can hold first hellos, smal
 
 **SoftGround** was the strongest backup in this earlier research pass. It feels mature and trust-oriented, though it is less immediately social and has more unrelated phrase associations.
 
-**SoftHello** was the dream candidate in the older research and is now the umbrella/global product direction. "Hello" is common enough in adjacent categories that any broad public rollout still needs deeper clearance review before it is treated as legally settled.
+**SoftHello** was the dream candidate in the older research and is now the future broader/global product direction. "Hello" is common enough in adjacent categories that any broad public rollout still needs deeper clearance review before it is treated as legally settled. Do not describe SoftHello as live or production-ready.
 
 ## Current Positioning Direction
 
@@ -148,7 +148,7 @@ Alternative taglines:
 
 The current core positioning should be:
 
-SoftShore is the local Sydney North Shore pilot for SoftHello: small, low-pressure gatherings for reaching out gently, reconnecting at your own pace, and making privacy and consent visible from the start.
+NSN is the current Sydney/North Shore alpha pilot: small, low-pressure gatherings for reaching out gently, reconnecting at your own pace, and making privacy and consent visible from the start. SoftHello remains the future broader product direction after local learning is clearer.
 
 This should stay practical and product-led. The brand can be warm without becoming fluffy, therapeutic, or overpromising emotional outcomes.
 
@@ -178,15 +178,15 @@ Before broad public use of any product name, complete:
 
 1. **SoftHello**
 
-   Umbrella/global product name and broader product direction.
+   Future broader/global product direction. Not live or production-ready.
 
 2. **SoftShore**
 
-   Local Sydney North Shore pilot/community brand and the preferred public-facing pilot name.
+   Historical naming exploration. Not the current public-facing pilot name.
 
 3. **North Shore Nights / NSN**
 
-   Historical/internal terminology retained for repository, package, screenshot, older doc, and code continuity.
+   Current Sydney/North Shore alpha pilot and repository/package continuity name.
 
 4. **SoftCove**
 
@@ -202,14 +202,14 @@ Before broad public use of any product name, complete:
 
 ## Public Copy Guidance
 
-Public copy should keep SoftShore plain-spoken, local, and human. It should make the prototype feel approachable without implying production safety systems, matching guarantees, therapy, nightlife, dating-first intent, or institutional support.
+Public copy should keep NSN plain-spoken, local, and human. It should make the prototype feel approachable without implying production safety systems, matching guarantees, therapy, nightlife, dating-first intent, or institutional support.
 
 Prototype-safe lines can include:
 
 - "Small meetups for big moments."
-- "SoftShore is the Sydney North Shore pilot for SoftHello."
+- "NSN is the current Sydney/North Shore alpha pilot."
 - "Calmer small-group meetups for Sydney's North Shore, day or evening."
 - "Local meetups with privacy-first, low-pressure social pacing."
-- "NSN / North Shore Nights is historical/internal terminology for the early prototype."
+- "SoftHello is the future broader product direction, not a live product."
 
-SoftHello and SoftShore copy should stay warm but grounded. It should describe a calmer way to connect and find trusted people without sounding like a wellness app, dating app, or public safety service.
+NSN and future SoftHello copy should stay warm but grounded. It should describe a calmer way to connect and find trusted people without sounding like a wellness app, dating app, or public safety service.
