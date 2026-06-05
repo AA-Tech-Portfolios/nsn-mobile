@@ -36,6 +36,12 @@ pnpm test
 
 `pnpm lint` may report existing warnings in unrelated screens. Preserve the current warning policy unless the task is specifically to clean those files up.
 
+### Ubuntu WSL
+
+When validating from Ubuntu under WSL, clone the repository into the native Linux filesystem, such as `~/Projects/nsn-mobile`, instead of running it from a Windows-mounted path like `/mnt/c/...`.
+
+Native dependencies such as `esbuild` can fail during `pnpm install` on mounted Windows paths with `ERR_PNPM_EPERM`. The native Linux filesystem avoids that install issue and has validated with Node.js 22 via `nvm` and Corepack-managed `pnpm` 11.5.1.
+
 ### Expo Web
 
 Start Expo web for browser testing:
