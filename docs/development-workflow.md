@@ -1,5 +1,16 @@
 # Development Workflow
 
+## Validated environments
+
+These environments have been tested successfully for NSN development:
+
+| Environment | Status | Notes |
+|---|---|---|
+| Windows 11 Home | Primary | Main development environment for NSN. |
+| WSL 2 Ubuntu | Validated | Recommended to clone into the native Linux filesystem, not `/mnt/c/...`. |
+| Ubuntu 26.04 VM | Validated | Used for Linux workflow validation. |
+| macOS Apple Silicon | Validated | Used for Xcode/iOS build checks. |
+
 ## PowerShell-safe commands
 
 This project is usually edited from Windows PowerShell. Expo Router file paths can include
