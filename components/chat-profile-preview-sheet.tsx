@@ -93,6 +93,11 @@ export function ChatProfilePreviewSheet({
                   items={profile.sharedInterests}
                   isDay={isDay}
                 />
+                <PreviewSection
+                  title="Connection prompts"
+                  items={profile.connectionPromptSummary.slice(0, 8)}
+                  isDay={isDay}
+                />
                 <PreviewSection title="Comfort notes" items={profile.comfortNotes} isDay={isDay} />
 
                 <View style={styles.boundaryStack}>

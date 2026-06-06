@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { useRouter } from "expo-router";
 
 import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
+import { getMeetupConnectionInsights } from "@/lib/connection-prompts";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { getGuideTipForSurface } from "@/lib/guides-and-tips";
@@ -11,6 +12,7 @@ import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
 import { canChatPrivately, getEffectivePrototypeVerificationLevel, getEventMembership, getEventTrustSummary, getRsvpLabel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const upcoming = [eveningEvents[0], dayEvents[0], eveningEvents[1]];
+const alphaMeetupAttendeeIds = ["nsn-tester", "maya-host", "jordan-member"];
 
 const meetupEventTranslations: Record<string, Record<string, { title: string; people: string }>> = {
   Arabic: {
@@ -223,6 +225,7 @@ export default function MeetupsScreen() {
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canUseMeetups = canChatPrivately(effectiveVerificationLevel);
   const guideTip = getGuideTipForSurface("meetups");
+  const connectionInsights = getMeetupConnectionInsights(alphaMeetupAttendeeIds);
   const timingCopy = getMeetupEmptyStateCopy({
     hour: new Date().getHours(),
     mode: isNightMode ? "night" : "day",
@@ -272,6 +275,20 @@ export default function MeetupsScreen() {
           </TouchableOpacity>
         </View> : null}
 
+        {canUseMeetups ? (
+          <View style={[styles.connectionInsightCard, isDay && styles.dayCard]}>
+            <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Attendee context</Text>
+            <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>Gentle conversation prompts</Text>
+            <View style={styles.connectionInsightList}>
+              {connectionInsights.map((insight) => (
+                <Text key={insight} style={[styles.connectionInsightText, isDay && styles.dayMutedText]}>
+                  {insight}
+                </Text>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         {canUseMeetups ? <Text style={[styles.sectionTitle, isDay && styles.dayTitle]}>{copy.upcoming}</Text> : null}
         {canUseMeetups ? <View style={styles.list}>
           {upcoming.map((event) => {
@@ -318,6 +335,9 @@ const styles = StyleSheet.create({
   summaryButtonText: { color: nsnColors.text, fontWeight: "800", fontSize: 13, lineHeight: 18, textAlign: "center" },
   alphaGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
   timingCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", padding: 14, marginBottom: 14 },
+  connectionInsightCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 18 },
+  connectionInsightList: { gap: 7, marginTop: 8 },
+  connectionInsightText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
   alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },

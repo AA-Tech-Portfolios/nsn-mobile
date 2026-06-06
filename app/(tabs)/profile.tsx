@@ -64,6 +64,7 @@ import {
 } from "@/lib/alpha-readiness-controls";
 import { getUserPreferenceRowDescription, getUserPreferenceRows, profileResourceSupportRowMetadata, profileSupportRowMetadata, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
+import { connectionPromptCategories, getConnectionPromptProfile } from "@/lib/connection-prompts";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
 import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
@@ -1279,6 +1280,16 @@ export default function ProfileScreen() {
   const isCompactProfileControls = width < 560;
   const profileControlsButtonLabel = isCompactProfileControls ? "Controls" : "Profile controls";
   const simpleVisibilitySectionMaxWidth = isWideLayout ? 520 : brandTheme.layout.cardMaxWidth;
+  const alphaConnectionPromptProfile = getConnectionPromptProfile("nsn-tester");
+  const alphaConnectionPromptSections = alphaConnectionPromptProfile
+    ? connectionPromptCategories.map((category) => ({
+        ...category,
+        items:
+          category.id === "conversationSeeds"
+            ? alphaConnectionPromptProfile.conversationSeeds.map((seed) => `${seed.label}: ${seed.value}`)
+            : alphaConnectionPromptProfile[category.id],
+      }))
+    : [];
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [draftName, setDraftName] = useState(displayName);
@@ -3319,6 +3330,31 @@ export default function ProfileScreen() {
           <Text style={styles.reviewSettingsText}>Open Settings & Privacy</Text>
         </TouchableOpacity>
       </View>
+
+      {alphaConnectionPromptSections.length ? (
+        <View style={[styles.detailedProfileSummaryCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+          <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
+            <View style={styles.profileLayoutBody}>
+              <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Connection prompts</Text>
+              <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Share what feels comfortable. These alpha prompts are optional context, not filters or profile progress.
+              </Text>
+            </View>
+          </View>
+          {alphaConnectionPromptSections.map((section) => (
+            <View key={section.id} style={styles.connectionPromptGroup}>
+              <Text style={[styles.privacySummaryLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{section.title}</Text>
+              <View style={[styles.foodPreferenceSummaryChipRow, isRtl && styles.rtlRow]}>
+                {section.items.slice(0, 4).map((item) => (
+                  <Text key={`${section.id}-${item}`} style={[styles.foodPreferenceSummaryChip, isDay && styles.dayTrustPill]}>
+                    {formatProfilePreferenceLabel(item)}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       {renderLocalAreaFeatureSection("detailed")}
 
@@ -7576,6 +7612,7 @@ const styles = StyleSheet.create({
   privacySummaryItem: { flexGrow: 1, flexShrink: 1, flexBasis: 160, minWidth: 0, maxWidth: "100%", overflow: "hidden", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 12, paddingVertical: 10 },
   privacySummaryLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   privacySummaryValue: { width: "100%", flexShrink: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginTop: 2 },
+  connectionPromptGroup: { gap: 7, marginTop: 2 },
   trustCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, marginBottom: 16 },
   simpleTrustCard: { paddingVertical: 14 },
   trustHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6 },

@@ -10,6 +10,13 @@ describe("chat profile previews", () => {
     expect(preview?.privacyMode).toBe("Warm Up Mode");
     expect(preview?.about).toBeTruthy();
     expect(preview?.sharedInterests.length).toBeGreaterThan(1);
+    expect(preview?.connectionPromptSummary).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/starts conversations|smaller groups/i),
+        expect.stringMatching(/Coffee|Japan/i),
+        expect.stringMatching(/Appreciates/i),
+      ]),
+    );
     expect(preview?.photoBoundary).toContain("Ask before photos");
   });
 
@@ -21,6 +28,7 @@ describe("chat profile previews", () => {
     expect(preview?.avatarPrivate).toBe(true);
     expect(preview?.about).toBeUndefined();
     expect(preview?.sharedInterests.length).toBeLessThanOrEqual(2);
+    expect(preview?.connectionPromptSummary.join(" ")).toContain("shy at first");
     expect(preview?.hiddenDetailNote).toMatch(/private/i);
   });
 
@@ -31,5 +39,6 @@ describe("chat profile previews", () => {
       .toLowerCase();
 
     expect(visibleText).not.toMatch(/address|exact|routine|schedule|workplace|apartment|street/);
+    expect(visibleText).not.toMatch(/completion|score|rank|match percentage|degree|phd/);
   });
 });
