@@ -4,12 +4,12 @@
 
 These environments have been tested successfully for NSN development:
 
-| Environment | Status | Notes |
-|---|---|---|
-| Windows 11 Home | Primary | Main development environment for NSN. |
-| WSL 2 Ubuntu | Validated | Recommended to clone into the native Linux filesystem, not `/mnt/c/...`. |
-| Ubuntu 26.04 VM | Validated | Used for Linux workflow validation. |
-| macOS Apple Silicon | Validated | Used for Xcode/iOS build checks. |
+| Environment         | Status    | Notes                                                                    |
+| ------------------- | --------- | ------------------------------------------------------------------------ |
+| Windows 11 Home     | Primary   | Main development environment for NSN.                                    |
+| WSL 2 Ubuntu        | Validated | Recommended to clone into the native Linux filesystem, not `/mnt/c/...`. |
+| Ubuntu 26.04 VM     | Validated | Used for Linux workflow validation.                                      |
+| macOS Apple Silicon | Validated | Used for Xcode/iOS build checks.                                         |
 
 ## PowerShell-safe commands
 
@@ -34,6 +34,35 @@ pnpm check
 
 Avoid relying on unquoted route paths in PowerShell. A command that looks fine in a Unix shell
 can fail or match the wrong files on Windows.
+
+## Node Runtime On Windows
+
+CI uses Node 22. For Windows local Expo/Metro development, use Node 22 LTS for now.
+
+Expo SDK 54 and React Native 0.81 document Node 20.19.x as the minimum runtime. Node 24 is a supported LTS release, but local Windows testing has shown that Node 24 can trigger Metro fallback watcher errors while crawling pnpm junctions under `node_modules/.pnpm`.
+
+If Metro crashes with an error like this:
+
+```text
+EACCES: permission denied, lstat ... node_modules\.pnpm\...
+```
+
+switch back to Node 22, reinstall dependencies, and start Expo with a cleared cache:
+
+```powershell
+node -v
+Remove-Item -Recurse -Force node_modules
+pnpm install
+pnpm expo start -c
+```
+
+The expected local runtime is:
+
+```text
+v22.x.x
+```
+
+Revisit Node 24 after Expo/Metro support is clearer or after Metro watcher behaviour changes.
 
 ## Testing The App
 
