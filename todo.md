@@ -30,9 +30,9 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 ### 🟡 Medium Local UX Flows
 
 - [x] 🟡 Add gentle local RSVP states: Going, Interested, Deciding later, Running late, Unable to make it, and Clear
-- [ ] 🟡 Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
-- [ ] 🟡 Add interactive tutorials for privacy, preview visibility, comfort modes, and key meetup flows
-- [ ] 🟡 Add opt-out and group-change flows that reassure users it is okay to skip, leave, find a better-suited group, or create their own
+- [x] 🟡 Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
+- [x] 🟡 Add interactive tutorials for privacy, preview visibility, comfort modes, and key meetup flows
+- [x] 🟡 Add opt-out and group-change flows that reassure users it is okay to skip, leave, find a better-suited group, or create their own
 - [ ] 🟡 Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
 - [ ] 🟡 Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
 

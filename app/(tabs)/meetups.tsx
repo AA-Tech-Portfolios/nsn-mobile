@@ -6,8 +6,10 @@ import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
 import { getMeetupConnectionInsights } from "@/lib/connection-prompts";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getGuideTipForSurface } from "@/lib/guides-and-tips";
 import { getMeetupEmptyStateCopy } from "@/lib/meetup-empty-state";
+import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
 import { canChatPrivately, getEffectivePrototypeVerificationLevel, getEventMembership, getEventTrustSummary, getRsvpLabel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
@@ -216,6 +218,7 @@ export default function MeetupsScreen() {
   const router = useRouter();
   const { appLanguage, contactEmail, contactPhone, eventMemberships, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage, verificationLevel } = useAppSettings();
   const [showGuideTip, setShowGuideTip] = useState(true);
+  const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const translationLanguageBase = getTranslationLanguageBase(translationLanguage);
   const isDay = !isNightMode;
@@ -247,6 +250,34 @@ export default function MeetupsScreen() {
             Browse the demo meetup cards, open event details, and notice whether the plan feels low-pressure. Joining, trust gates, and private meetup access are prototype states for now.
           </Text>
         </View>
+
+        {meetupTutorialCards
+          .filter((card) => card.id === "soft-exit" && !dismissedTutorialIds.includes(card.id))
+          .map((card) => (
+            <View key={card.id} style={[styles.tutorialCard, isDay && styles.dayCard]}>
+              <View style={styles.tutorialHeader}>
+                <View style={[styles.tutorialIcon, isDay && styles.dayIconBubble]}>
+                  <IconSymbol name={card.iconName} color={isDay ? "#445E93" : nsnColors.day} size={18} />
+                </View>
+                <View style={styles.tutorialCopyBlock}>
+                  <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Tiny tutorial</Text>
+                  <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>{card.title}</Text>
+                </View>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={() => setDismissedTutorialIds((current) => (current.includes(card.id) ? current : [...current, card.id]))}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Dismiss ${card.title}`}
+                  style={[styles.dismissTutorialButton, isDay && styles.dayCard]}
+                >
+                  <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
+                </TouchableOpacity>
+              </View>
+              <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
+                {card.copy}
+              </Text>
+            </View>
+          ))}
 
         <View style={[styles.timingCard, isDay && styles.dayCard]}>
           <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Local alpha timing</Text>
@@ -341,6 +372,12 @@ const styles = StyleSheet.create({
   alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
   alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
+  tutorialCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
+  tutorialHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  tutorialIcon: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  dayIconBubble: { backgroundColor: "#EDF2FF", borderColor: "#C5D0DA" },
+  tutorialCopyBlock: { flex: 1, minWidth: 0 },
+  dismissTutorialButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   trustGateCard: { borderRadius: 22, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#2B4578", padding: 18, marginBottom: 22 },
   gateTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
   gateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 10 },

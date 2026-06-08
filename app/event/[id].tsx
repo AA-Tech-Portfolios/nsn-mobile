@@ -44,6 +44,7 @@ import {
   getVerificationLevelLabel,
   hideEvent,
   joinEvent,
+  leaveEvent,
   removeSavedPlace,
   savePlace,
   savePostEventFeedback,
@@ -55,6 +56,13 @@ import {
   unhideEvent,
   unpinEvent,
 } from "@/lib/softhello-mvp";
+import {
+  meetupOptOutActions,
+  meetupReadinessItems,
+  meetupTutorialCards,
+  type MeetupOptOutAction,
+  type MeetupTutorialCard,
+} from "@/lib/meetup-alpha-ux";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
 
@@ -805,6 +813,8 @@ export default function EventDetailsScreen() {
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
   const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
   const [selectedComfortRoles, setSelectedComfortRoles] = useState<MeetupComfortRoleOption[]>([]);
+  const [selectedOptOutAction, setSelectedOptOutAction] = useState<MeetupOptOutAction | null>(null);
+  const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const {
     ageConfirmed,
     appLanguage,
@@ -935,6 +945,7 @@ export default function EventDetailsScreen() {
     { iconName: "shield", label: "Trust", copy: eventTrustSummary },
   ] satisfies { iconName: IconSymbolName; label: string; copy: string }[];
   const quickJumpItems = getEventDetailQuickJumpItems();
+  const eventTutorialCards = meetupTutorialCards.filter((card) => card.id === "meetup-readiness" || card.id === "soft-exit");
   const isSectionExpanded = (section: EventDetailSectionId) => expandedSections.includes(section);
   const toggleEventDetailSection = (section: EventDetailSectionId) => {
     setExpandedSections((current) => {
@@ -1044,6 +1055,36 @@ export default function EventDetailsScreen() {
 
     const nextMemberships = setEventRsvpStatus(event.id, eventMemberships, status);
     await saveSoftHelloMvpState({ eventMemberships: nextMemberships });
+  };
+
+  const dismissTutorial = (tutorialId: MeetupTutorialCard["id"]) => {
+    setDismissedTutorialIds((current) => (current.includes(tutorialId) ? current : [...current, tutorialId]));
+  };
+
+  const handleOptOutAction = async (action: MeetupOptOutAction) => {
+    setSelectedOptOutAction(action);
+
+    if (action.id === "leave") {
+      await saveSoftHelloMvpState({ eventMemberships: leaveEvent(event.id, eventMemberships) });
+      return;
+    }
+
+    if (action.id === "not-right-fit") {
+      await saveSoftHelloMvpState({ eventMemberships: setEventRsvpStatus(event.id, eventMemberships, "not_this_time") });
+      return;
+    }
+
+    if (action.id === "change-group" || action.id === "calmer-option" || action.id === "maybe-later") {
+      await saveSoftHelloMvpState({ eventMemberships: setEventRsvpStatus(event.id, eventMemberships, "deciding_later") });
+      return;
+    }
+
+    if (action.id === "hide") {
+      await saveSoftHelloMvpState({
+        hiddenEventIds: hideEvent(event.id, hiddenEventIds),
+        pinnedEventIds: unpinEvent(event.id, pinnedEventIds),
+      });
+    }
   };
 
   const handleJoin = async () => {
@@ -1819,6 +1860,114 @@ export default function EventDetailsScreen() {
           </View>
         </View>
 
+        <View style={[styles.readinessPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
+            <View style={styles.readinessHeaderCopy}>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Pre-meetup readiness</Text>
+              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Local-only checklist for feeling prepared. It does not reserve a spot, contact a host, or connect live support.
+              </Text>
+            </View>
+            <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>Prototype</Text>
+          </View>
+          <View style={styles.readinessList}>
+            {meetupReadinessItems.map((item) => {
+              const itemCopy =
+                item.id === "meeting-point"
+                  ? `${item.copy} Venue reminder: ${event.venue}.`
+                  : item.id === "host-note" && event.trustProfile
+                    ? `${item.copy} Host preview: ${event.trustProfile.host.displayName}.`
+                    : item.id === "backup" && eventWeatherFallbacks.length
+                      ? `${item.copy} Nearby ideas: ${eventWeatherFallbacks.slice(0, 2).join(", ")}.`
+                      : item.copy;
+
+              return (
+                <View key={item.id} style={[styles.readinessRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}>
+                  <View style={[styles.readinessIconWrap, isDay && styles.dayMetaIconWrap]}>
+                    <IconSymbol name={item.iconName} color={isDay ? "#53677A" : "#8FAFD1"} size={17} />
+                  </View>
+                  <View style={[styles.readinessCopyBlock, isRtl && styles.rtlBlock]}>
+                    <Text style={[styles.readinessTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{item.title}</Text>
+                    <Text style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{itemCopy}</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={[styles.optOutPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
+            <View style={styles.readinessHeaderCopy}>
+              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Change your mind</Text>
+              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Skip, leave, hide, or choose a calmer option without a public explanation. These actions stay local to this prototype.
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.optOutActions, isRtl && styles.rtlRow]}>
+            {meetupOptOutActions.map((action) => {
+              const active = selectedOptOutAction?.id === action.id;
+
+              return (
+                <TouchableOpacity
+                  key={action.id}
+                  activeOpacity={0.82}
+                  onPress={() => handleOptOutAction(action)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  accessibilityLabel={action.label}
+                  accessibilityHint={action.copy}
+                  style={[styles.optOutChoice, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                >
+                  <IconSymbol name={action.iconName} color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={15} />
+                  <Text style={[styles.optOutChoiceText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{action.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {selectedOptOutAction ? (
+            <View style={[styles.optOutResult, isDay && styles.dayActionRow]}>
+              <Text style={[styles.readinessTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{selectedOptOutAction.label}</Text>
+              <Text style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{selectedOptOutAction.result}</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <View style={[styles.tutorialPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <Text style={[styles.quickReferenceKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Tiny tutorial</Text>
+          <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meetup flow basics</Text>
+          <View style={styles.tutorialCardList}>
+            {eventTutorialCards
+              .filter((card) => !dismissedTutorialIds.includes(card.id))
+              .map((card) => (
+                <View key={card.id} style={[styles.tutorialCard, isDay && styles.dayActionRow]}>
+                  <View style={[styles.readinessIconWrap, isDay && styles.dayMetaIconWrap]}>
+                    <IconSymbol name={card.iconName} color={isDay ? "#53677A" : "#8FAFD1"} size={17} />
+                  </View>
+                  <View style={styles.readinessCopyBlock}>
+                    <Text style={[styles.readinessTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{card.title}</Text>
+                    <Text style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{card.copy}</Text>
+                  </View>
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    onPress={() => dismissTutorial(card.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Dismiss ${card.title}`}
+                    style={[styles.dismissTutorialButton, isDay && styles.dayActionRow]}
+                  >
+                    <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+          </View>
+          {eventTutorialCards.every((card) => dismissedTutorialIds.includes(card.id)) ? (
+            <Text style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Tutorial cards dismissed for this visit. Nothing was saved to a backend.
+            </Text>
+          ) : null}
+        </View>
+
         <Text style={[styles.ctaReassurance, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventCopy.ctaReassurance}</Text>
 
         <TouchableOpacity
@@ -2037,6 +2186,23 @@ const styles = StyleSheet.create({
   rsvpChoiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   rsvpChoiceText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
   rsvpChoiceTextActive: { color: "#FFFFFF" },
+  readinessPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14, gap: 12 },
+  readinessHeaderCopy: { flex: 1, minWidth: 0 },
+  readinessList: { gap: 8 },
+  readinessRow: { minHeight: 72, flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 11, paddingVertical: 10 },
+  readinessIconWrap: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border, flexShrink: 0 },
+  readinessCopyBlock: { flex: 1, minWidth: 0 },
+  readinessTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  readinessCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  optOutPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14, gap: 12 },
+  optOutActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  optOutChoice: { minHeight: 40, maxWidth: "100%", flexGrow: 1, flexShrink: 1, flexBasis: 142, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 10, paddingVertical: 8 },
+  optOutChoiceText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
+  optOutResult: { borderRadius: 14, borderWidth: 1, borderColor: "rgba(114,214,126,0.3)", backgroundColor: "rgba(114,214,126,0.1)", padding: 10 },
+  tutorialPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14, gap: 9 },
+  tutorialCardList: { gap: 8 },
+  tutorialCard: { minHeight: 74, flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 11, paddingVertical: 10 },
+  dismissTutorialButton: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   joinButton: { minHeight: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary, paddingHorizontal: 16, paddingVertical: 10 },
   joinButtonLocked: { backgroundColor: "#3A4358" },
   joinText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 21, textAlign: "center" },

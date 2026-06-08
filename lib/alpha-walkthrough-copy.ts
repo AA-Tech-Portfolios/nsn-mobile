@@ -37,6 +37,22 @@ export const alphaWalkthroughSteps = [
     icon: "person.fill",
   },
   {
+    title: "Preview privacy",
+    eyebrow: "Local visibility",
+    copy: "Try profile preview, blur, and comfort modes. The goal is to understand what would be shown before sharing more.",
+    actionLabel: "Open settings",
+    route: "/(tabs)/settings",
+    icon: "visibility",
+  },
+  {
+    title: "Prepare for a meetup",
+    eyebrow: "Readiness flow",
+    copy: "Open an event, set a local RSVP state, and scan the readiness and soft-exit cards. No real booking, host message, or live support is connected.",
+    actionLabel: "Open event",
+    route: "/event/movie-night-watch-chat",
+    icon: "calendar",
+  },
+  {
     title: "Share feedback simply",
     eyebrow: "No pressure",
     copy: "You can skip chats, use tester shortcuts, or leave a flow anytime. Feedback can be short and specific: what felt clear, heavy, or unfinished.",

@@ -16,6 +16,8 @@ describe("alpha walkthrough copy", () => {
       "Prototype",
       "Demo meetups",
       "Saved locally",
+      "Local visibility",
+      "Readiness flow",
       "No pressure",
     ]);
     expect(visibleCopy).toContain("prototype");

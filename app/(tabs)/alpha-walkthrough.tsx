@@ -6,6 +6,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { alphaWalkthroughCopy, alphaWalkthroughSteps } from "@/lib/alpha-walkthrough-copy";
+import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
 import { nsnColors } from "@/lib/nsn-data";
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -14,6 +15,7 @@ export default function AlphaWalkthroughScreen() {
   const router = useRouter();
   const { isNightMode, appLanguage, suburb, screenReaderHints } = useAppSettings();
   const [stepIndex, setStepIndex] = useState(0);
+  const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(getLanguageBase(appLanguage));
   const step = alphaWalkthroughSteps[stepIndex];
@@ -24,9 +26,14 @@ export default function AlphaWalkthroughScreen() {
   );
   const canGoBack = stepIndex > 0;
   const canGoNext = stepIndex < alphaWalkthroughSteps.length - 1;
+  const visibleTutorialCards = meetupTutorialCards.filter((card) => !dismissedTutorialIds.includes(card.id));
 
   const openStepRoute = () => {
     router.push(step.route as never);
+  };
+
+  const dismissTutorial = (tutorialId: MeetupTutorialCard["id"]) => {
+    setDismissedTutorialIds((current) => (current.includes(tutorialId) ? current : [...current, tutorialId]));
   };
 
   return (
@@ -101,6 +108,52 @@ export default function AlphaWalkthroughScreen() {
           })}
         </View>
 
+        <View style={[styles.tutorialPanel, isDay && styles.dayCard]}>
+          <Text style={[styles.progressText, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>Interactive tutorials</Text>
+          <Text style={[styles.noteCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Dismissible local cards for the flows testers should try. No analytics or backend persistence is connected.
+          </Text>
+          <View style={styles.tutorialList}>
+            {visibleTutorialCards.map((card) => (
+              <View
+                key={card.id}
+                style={[styles.tutorialCard, isDay && styles.dayNavButton, isRtl && styles.rtlRow]}
+              >
+                <View style={[styles.stepIconSmall, isDay && styles.dayIconBubble]}>
+                  <IconSymbol name={card.iconName} color={isDay ? "#445E93" : nsnColors.day} size={18} />
+                </View>
+                <View style={styles.tutorialCopy}>
+                  <Text style={[styles.tutorialTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{card.title}</Text>
+                  <Text style={[styles.tutorialText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{card.copy}</Text>
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    onPress={() => router.push(card.id === "comfort-modes" ? "/(tabs)/settings" as never : card.id === "meetup-readiness" || card.id === "soft-exit" ? "/event/movie-night-watch-chat" as never : "/(tabs)/profile" as never)}
+                    accessibilityRole="button"
+                    accessibilityLabel={card.actionLabel}
+                    style={[styles.tutorialActionButton, isDay && styles.dayStepPill]}
+                  >
+                    <Text style={[styles.tutorialAction, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>{card.actionLabel}</Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={() => dismissTutorial(card.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Dismiss ${card.title}`}
+                  style={[styles.dismissButton, isDay && styles.dayStepPill]}
+                >
+                  <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+          {visibleTutorialCards.length === 0 ? (
+            <Text style={[styles.tutorialText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Tutorial cards dismissed for this visit. The dismissal was not sent anywhere.
+            </Text>
+          ) : null}
+        </View>
+
         <View style={styles.navRow}>
           <TouchableOpacity
             activeOpacity={0.78}
@@ -155,6 +208,7 @@ const styles = StyleSheet.create({
   stepCard: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, padding: 18 },
   stepHeader: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 12 },
   stepIcon: { width: 48, height: 48, borderRadius: 24, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(119,134,255,0.12)", flexShrink: 0 },
+  stepIconSmall: { width: 38, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(119,134,255,0.12)", flexShrink: 0 },
   dayIconBubble: { backgroundColor: "#EDF2FF" },
   stepHeaderCopy: { flex: 1, minWidth: 0 },
   stepEyebrow: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
@@ -171,6 +225,15 @@ const styles = StyleSheet.create({
   stepPillText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900" },
   dayStepPillText: { color: "#53677A" },
   stepPillTextActive: { color: "#FFFFFF" },
+  tutorialPanel: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginTop: 16, gap: 10 },
+  tutorialList: { gap: 8 },
+  tutorialCard: { minHeight: 88, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12 },
+  tutorialCopy: { flex: 1, minWidth: 0 },
+  tutorialTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19 },
+  tutorialText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 2 },
+  tutorialActionButton: { alignSelf: "flex-start", minHeight: 32, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, marginTop: 7 },
+  tutorialAction: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  dismissButton: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   navRow: { flexDirection: "row", gap: 10, marginTop: 16 },
   navButton: { flex: 1, minHeight: 44, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
   dayNavButton: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },

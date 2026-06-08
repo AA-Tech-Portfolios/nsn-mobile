@@ -122,6 +122,7 @@ import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafe
 import { gentleConnectionGuidance, supportBelongingGuidance, type SupportGuidanceId } from "@/lib/support-guidance";
 import { getCalmFaviconUrl, preparednessGuidanceCategories, safetyBoundaryGuidanceCategories, type PreparednessGuidanceCategory } from "@/lib/options-hub";
 import { communityRoleOptions, meetupAccessShortcutRows } from "@/lib/profile-community-roles";
+import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
 
 const rows = [
   { icon: "calendar", key: "meetups", route: "/meetups" },
@@ -1297,6 +1298,7 @@ export default function ProfileScreen() {
   const [draftMiddleName, setDraftMiddleName] = useState(middleName);
   const [draftLastName, setDraftLastName] = useState(lastName);
   const [showLastNameSaved, setShowLastNameSaved] = useState(false);
+  const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const [isEditingAge, setIsEditingAge] = useState(false);
   const [draftAge, setDraftAge] = useState(age ? String(age) : "");
   const [draftPreferredAgeMin, setDraftPreferredAgeMin] = useState(String(preferredAgeMin));
@@ -6142,6 +6144,42 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
+        <View style={[styles.profileTutorialPanel, isDay && styles.dayCard, clearBorders && styles.clearBorderCard]}>
+          <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>Tiny tutorial</Text>
+          <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Privacy and visibility</Text>
+          <View style={styles.profileTutorialList}>
+            {meetupTutorialCards
+              .filter((card) => (card.id === "privacy" || card.id === "visibility-preview") && !dismissedTutorialIds.includes(card.id))
+              .map((card) => (
+                <View key={card.id} style={[styles.profileTutorialCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
+                  <View style={[styles.rowIconBubble, isDay && styles.dayPhotoButton]}>
+                    <IconSymbol name={card.iconName} color={isDay ? "#445E93" : nsnColors.day} size={18} />
+                  </View>
+                  <View style={styles.profileTutorialCopy}>
+                    <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{card.title}</Text>
+                    <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{card.copy}</Text>
+                  </View>
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    onPress={() => setDismissedTutorialIds((current) => (current.includes(card.id) ? current : [...current, card.id]))}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Dismiss ${card.title}`}
+                    style={[styles.profileTutorialDismiss, isDay && styles.dayChip]}
+                  >
+                    <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+          </View>
+          {meetupTutorialCards
+            .filter((card) => card.id === "privacy" || card.id === "visibility-preview")
+            .every((card) => dismissedTutorialIds.includes(card.id)) ? (
+            <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Tutorial cards dismissed for this visit. Nothing was saved beyond this local screen state.
+            </Text>
+          ) : null}
+        </View>
+
         {false ? (
         <View style={[styles.profileDisplayCard, isDay && styles.dayCard, clearBorders && styles.clearBorderCard]}>
           <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
@@ -7481,6 +7519,13 @@ const styles = StyleSheet.create({
   alphaGuideLabel: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   alphaGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 2 },
   alphaGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
+  profileTutorialPanel: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14, gap: 10 },
+  profileTutorialList: { gap: 8 },
+  profileTutorialCard: { minHeight: 78, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 11 },
+  rowIconBubble: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  profileTutorialCopy: { flex: 1, minWidth: 0 },
+  profileTutorialDismiss: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  dayChip: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
   profileDisplayCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#0F223D", padding: 14, marginBottom: 16, gap: 12 },
   profileDisplayTitleRow: { flex: 1, flexDirection: "row", alignItems: "flex-start", gap: 9 },
   profileDisplayGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },

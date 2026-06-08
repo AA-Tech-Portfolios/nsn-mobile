@@ -84,6 +84,7 @@ import {
   type SoftHelloVerificationLevel,
 } from "@/lib/softhello-mvp";
 import type { SoftRevealPace } from "@/lib/soft-reveal";
+import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
 
 const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
 const softRevealPaceOptions: { value: SoftRevealPace; label: string; copy: string }[] = [
@@ -3785,6 +3786,7 @@ export default function SettingsScreen() {
   const [recentlyChangedKey, setRecentlyChangedKey] = useState<string | null>(null);
   const [accountConfirmation, setAccountConfirmation] = useState<AccountConfirmation>(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const [openAccordionSections, setOpenAccordionSections] = useState<SettingsAccordionId[]>([]);
   const [highlightedAccordionSection, setHighlightedAccordionSection] =
     useState<SettingsAccordionId | null>(null);
@@ -4758,6 +4760,44 @@ export default function SettingsScreen() {
         >
           {copy.subtitle}
         </Text>
+
+        <View style={[styles.settingsTutorialPanel, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
+          <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Tiny tutorial</Text>
+          <Text style={[styles.settingsTutorialTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+            Comfort and visibility controls
+          </Text>
+          <View style={styles.settingsTutorialList}>
+            {meetupTutorialCards
+              .filter((card) => (card.id === "comfort-modes" || card.id === "visibility-preview") && !dismissedTutorialIds.includes(card.id))
+              .map((card) => (
+                <View key={card.id} style={[styles.settingsTutorialCard, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton, isRtl && styles.rtlRow]}>
+                  <View style={[styles.tutorialIconBubble, isDay && styles.dayIconButton]}>
+                    <IconSymbol name={card.iconName} color={isDay ? "#445E93" : nsnColors.day} size={18} />
+                  </View>
+                  <View style={styles.settingsTutorialCopy}>
+                    <Text style={[styles.settingsTutorialCardTitle, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{card.title}</Text>
+                    <Text style={[styles.settingsTutorialCardCopy, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{card.copy}</Text>
+                  </View>
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    onPress={() => setDismissedTutorialIds((current) => (current.includes(card.id) ? current : [...current, card.id]))}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Dismiss ${card.title}`}
+                    style={[styles.settingsTutorialDismiss, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+                  >
+                    <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+          </View>
+          {meetupTutorialCards
+            .filter((card) => card.id === "comfort-modes" || card.id === "visibility-preview")
+            .every((card) => dismissedTutorialIds.includes(card.id)) ? (
+            <Text style={[styles.settingsTutorialCardCopy, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
+              Tutorial cards dismissed for this visit. No analytics or backend persistence is connected.
+            </Text>
+          ) : null}
+        </View>
 
         <View
           style={[
@@ -8885,6 +8925,74 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: nsnColors.surface,
     overflow: "hidden",
+  },
+  settingsTutorialPanel: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    padding: 14,
+    marginBottom: 14,
+    gap: 10,
+  },
+  settingsTutorialTitle: {
+    color: nsnColors.text,
+    fontSize: 16,
+    fontWeight: "900",
+    lineHeight: 22,
+  },
+  settingsTutorialList: {
+    gap: 8,
+  },
+  settingsTutorialCard: {
+    minHeight: 78,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    padding: 11,
+  },
+  tutorialIconBubble: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  settingsTutorialCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
+  settingsTutorialCardTitle: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  settingsTutorialCardCopy: {
+    color: nsnColors.muted,
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 17,
+    marginTop: 2,
+  },
+  settingsTutorialDismiss: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
   },
   settingsResponsiveGrid: {
     alignItems: "stretch",
