@@ -61,28 +61,28 @@ const row = (item: Omit<OptionsHubRow, "chevron">): OptionsHubRow => ({
 export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "home",
-    icon: "house.fill",
-    title: "Home",
-    description: "Dashboard filters, layout, and calm local scanning.",
+    icon: "layout",
+    title: "Appearance & Layout",
+    description: "Home dashboard filters, event cards, and calm local scanning layout.",
     rows: [
       row({
         id: "home-preferences",
         icon: "settings",
-        title: "Home Preferences",
+        title: "Home Display Preferences",
         description: "Essential filters and event display controls.",
         badge: "Saved locally",
       }),
       row({
         id: "customize-home",
         icon: "layout",
-        title: "Customise Home",
+        title: "Customise Home Layout",
         description: "Paused during alpha so mobile testers see the recommended Home layout.",
         badge: "Paused",
       }),
       row({
         id: "view-preferences",
         icon: "sliders",
-        title: "View Preferences",
+        title: "View Density",
         description: "Paused during alpha while mobile readability is simplified.",
         badge: "Paused",
       }),
@@ -91,8 +91,8 @@ export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "userPreferences",
     icon: "settings",
-    title: "User Preferences",
-    description: "Profile comfort settings without crowding Home.",
+    title: "Preferences",
+    description: "Local profile, meetup, and comfort preferences without crowding Home.",
     rows: [
       row({
         id: "transportation-method",
@@ -142,7 +142,7 @@ export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "chatContact",
     icon: "message",
-    title: "Chat & contact",
+    title: "Chat & Contact",
     description: "Local chat helpers, arrival updates, and contact boundaries.",
     rows: [
       row({
@@ -164,8 +164,8 @@ export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "safetyPrivacy",
     icon: "shield",
-    title: "Support & Boundaries",
-    description: "Warm support, resources, reporting, privacy, and boundary controls.",
+    title: "Safety & Support",
+    description: "Guidelines, quiet exits, support resources, privacy, and boundary controls.",
     rows: [
       row({
         id: "safety-boundaries",
@@ -200,7 +200,7 @@ export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "alphaTesting",
     icon: "flag",
-    title: "Alpha testing",
+    title: "Alpha Testing",
     description: "Tester walkthrough and prototype clarity notes.",
     rows: [
       row({
@@ -215,8 +215,8 @@ export const optionsHubSections: OptionsHubSection[] = [
   {
     id: "prototypeTools",
     icon: "edit",
-    title: "Prototype tools",
-    description: "Local-only controls that do not create backend changes.",
+    title: "App Settings",
+    description: "Local-only prototype controls that do not create backend changes.",
     rows: [
       row({
         id: "restore-default-home",

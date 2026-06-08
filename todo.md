@@ -33,7 +33,7 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 - [x] 🟡 Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
 - [x] 🟡 Add interactive tutorials for privacy, preview visibility, comfort modes, and key meetup flows
 - [x] 🟡 Add opt-out and group-change flows that reassure users it is okay to skip, leave, find a better-suited group, or create their own
-- [ ] 🟡 Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
+- [x] 🟡 Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
 - [ ] 🟡 Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
 
 ### 🟠 Hard / Not Alpha Implementation Scope
@@ -119,7 +119,7 @@ These are the safest near-term alpha tasks. They should remain frontend-only/loc
    **Scope:** frontend-only/local-only  
    **Checks:** `pnpm check`, `pnpm test`, chat/event detail smoke test
 
-9. **Profile/User Options grouping clarity pass**  
+9. **Profile/User Options grouping clarity pass** ✅ Completed  
    **Difficulty:** 🟡 Medium  
    **Why it matters for alpha:** Reduces duplicate concepts across Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings.  
    **Suggested files:** `app/(tabs)/profile.tsx`, `app/(tabs)/user-preferences.tsx`, `lib/profile-menu-row-metadata.ts`, `lib/options-hub.ts`  
@@ -343,7 +343,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 ## Profile, Preferences & Settings
 
 - [ ] Future UX architecture cleanup: review naming and grouping across Profile Controls, User Options, User Preferences, Display & Layout, Profile Layout, Width Settings, and Settings & Privacy so the mental model stays clear as NSN grows
-- [ ] Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
+- [x] Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
 - [ ] Explore merging Display & Layout, Profile Layout, and Width Settings into a unified Appearance & Layout or Display & Appearance area, avoiding deep nesting and preserving the non-corporate NSN tone
 - [ ] Expand richer food preference matching with lightweight comfort signals instead of restaurant recommendations
 - [ ] Add interest-based recommendations that use hobbies, genres, and comfort modifiers

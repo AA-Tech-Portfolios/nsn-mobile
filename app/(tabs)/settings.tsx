@@ -415,8 +415,8 @@ const settingsAccordionMeta: Record<
     icon: "preview",
   },
   comfortSafety: {
-    title: "Comfort & safety",
-    copy: "Trust foundations, safety copy, and low-pressure controls.",
+    title: "Privacy & comfort",
+    copy: "Profile visibility, contact comfort, and low-pressure controls.",
     icon: "shield",
   },
   notifications: {
@@ -430,8 +430,8 @@ const settingsAccordionMeta: Record<
     icon: "language",
   },
   safetyContact: {
-    title: "Safety & contact",
-    copy: "Prototype-safe safety states, onboarding restart, and contact controls.",
+    title: "Safety & Support",
+    copy: "Prototype-safe guidance, support links, onboarding restart, and contact controls.",
     icon: "shield",
   },
   advancedDisplay: {
@@ -440,7 +440,7 @@ const settingsAccordionMeta: Record<
     icon: "accessibility",
   },
   account: {
-    title: "Prototype account controls",
+    title: "App Settings",
     copy: "Alpha walkthrough, reset controls, and local-only account action previews.",
     icon: "account",
   },

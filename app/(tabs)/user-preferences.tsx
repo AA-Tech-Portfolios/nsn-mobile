@@ -148,13 +148,13 @@ type PreferenceSection = "overview" | "comfort" | "personality" | "background" |
 const preferenceSections: Record<PreferenceSection, { icon: string; title: string; copy: string }> = {
   overview: {
     icon: "🧭",
-    title: "User Preferences",
-    copy: "Choose what makes local meetups feel easier. These settings stay prototype-safe and help shape recommendations without pretending to be a production matching engine.",
+    title: "Preferences",
+    copy: "Choose what makes local meetups feel easier. These prototype preferences stay local and separate from Profile edits, Appearance & Layout, and App Settings.",
   },
   comfort: {
     icon: "🛡️",
-    title: "Comfort & Trust",
-    copy: "Visibility, social energy, communication, group size, verification, photo comfort, and physical contact preferences in one calmer view.",
+    title: "Privacy & Comfort",
+    copy: "Profile visibility, social energy, communication, group size, photo comfort, and personal-space preferences in one calmer view.",
   },
   personality: {
     icon: "🌿",
@@ -1225,7 +1225,7 @@ export default function UserPreferencesScreen() {
   }, {} as Record<CalendarMomentGroupId, number>);
 
   const overviewCards = [
-    { section: "comfort" as const, title: "Comfort & Trust", icon: getPreferenceSectionIcon("comfort", "🛡️"), copy: `${formatChipLabel(comfortMode)} / ${formatChipLabel(socialEnergyPreference)} energy / ${formatChipLabel(groupSizePreference)}`, meta: "Visibility, contact, verification, and consent." },
+    { section: "comfort" as const, title: "Privacy & Comfort", icon: getPreferenceSectionIcon("comfort", "🛡️"), copy: `${formatChipLabel(comfortMode)} / ${formatChipLabel(socialEnergyPreference)} energy / ${formatChipLabel(groupSizePreference)}`, meta: "Visibility, contact comfort, and consent." },
     { section: "personality" as const, title: "Personality & Presence", icon: getPreferenceSectionIcon("personality", "🌿"), copy: personalityPresenceSelectedCount ? `${personalityPresenceSelectedCount} optional details` : "Hidden by default", meta: selectedPersonalityPresenceLabels.length ? selectedPersonalityPresenceLabels.slice(0, 6).map((label) => formatChipLabel(label)).join(", ") : "Gentle recognisability, social style, and connection context for blurred profiles." },
     { section: "calendar" as const, title: "Calendar & Cultural Moments", icon: getPreferenceSectionIcon("calendar", "🗓️"), copy: selectedCalendarMomentLabels.length ? `${selectedCalendarMomentLabels.length} selected` : "Private by default", meta: selectedCalendarMomentLabels.map((label) => formatChipLabel(label)).join(", ") || "Holidays, festivals, observances, and personal calendar seasons." },
     { section: "food" as const, title: "Food & Beverage", icon: getPreferenceSectionIcon("food", "🍽️"), copy: `${foodBeveragePreferenceIds.length} selected`, meta: selectedFoodLabels.map((label) => formatChipLabel(label)).join(", ") || "Cuisines, drinks, dietary needs, and avoidances." },
@@ -1356,8 +1356,8 @@ export default function UserPreferencesScreen() {
             ))}
             {renderExpandableSectionCard({
               id: "comfort-advanced",
-              title: "Safety, privacy & consent details",
-              copy: "Verification display, photo comfort, and personal-space preferences live here for testers who want finer control.",
+              title: "Privacy, contact & consent details",
+              copy: "Contact/trust display, photo comfort, and personal-space preferences live here for testers who want finer control.",
               icon: "✅",
               open: openPreferenceDetailGroups.includes("comfort-advanced"),
               onToggle: () => togglePreferenceDetailGroup("comfort-advanced"),
@@ -1365,10 +1365,10 @@ export default function UserPreferencesScreen() {
               totalCount: 3,
               children: (
                 <View style={styles.inlinePreferenceStack}>
-                  {renderInlinePreferenceGroup("Verified but private", "Your contact/trust status can be checked without making your full profile fully open. No real verification provider is connected yet.", (
+                  {renderInlinePreferenceGroup("Contact status stays private", "Your prototype contact/trust status can stay visible without making your full profile fully open. No real provider is connected yet.", (
                     <View style={responsiveChipGridStyle}>
-                      {renderChip({ key: "verified-private-on", label: "Verified, but private", active: verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: true }), wide: true })}
-                      {renderChip({ key: "verified-private-off", label: "Show normal trust status", active: !verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: false }), wide: true })}
+                      {renderChip({ key: "verified-private-on", label: "Keep status private", active: verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: true }), wide: true })}
+                      {renderChip({ key: "verified-private-off", label: "Use standard status", active: !verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: false }), wide: true })}
                     </View>
                   ))}
                   {renderInlinePreferenceGroup("Photo & recording comfort", eventCommunityGuidelinesCopy.mediaCopy, (

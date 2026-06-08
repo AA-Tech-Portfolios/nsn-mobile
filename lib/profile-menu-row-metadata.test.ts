@@ -3,12 +3,35 @@ import { describe, expect, it } from "vitest";
 import {
   getUserPreferenceRows,
   getUserPreferenceRowDescription,
+  profileOptionGroups,
   profileResourceSupportRowMetadata,
   profileSupportRowMetadata,
   userPreferenceRowMetadata,
 } from "./profile-menu-row-metadata";
 
 describe("profile menu row metadata", () => {
+  it("defines the Profile User Options drawer around clear top-level areas", () => {
+    expect(profileOptionGroups.map((group) => group.title)).toEqual([
+      "Profile",
+      "Preferences",
+      "Appearance & Layout",
+      "Safety & Support",
+      "App Settings",
+    ]);
+    expect(profileOptionGroups.map((group) => group.id)).toEqual([
+      "profile",
+      "preferences",
+      "appearanceLayout",
+      "safetySupport",
+      "appSettings",
+    ]);
+
+    const helperCopy = profileOptionGroups.flatMap((group) => [group.description, group.helperCopy]).join(" ");
+
+    expect(helperCopy).toContain("local-only");
+    expect(helperCopy.toLowerCase()).not.toMatch(/guarantee|verified|verification|moderation|matching engine|live safety support|host tracking enabled/);
+  });
+
   it("keeps every user preference category row visually complete", () => {
     for (const row of userPreferenceRowMetadata) {
       expect(row.icon, row.title).toBeTruthy();
@@ -31,9 +54,9 @@ describe("profile menu row metadata", () => {
   });
 
   it("can switch preference row copy between simple and detailed text", () => {
-    expect(getUserPreferenceRowDescription("comfort", "Simple")).toBe("Visibility, trust, and meeting comfort.");
+    expect(getUserPreferenceRowDescription("comfort", "Simple")).toBe("Privacy, visibility, and meeting comfort.");
     expect(getUserPreferenceRowDescription("comfort", "Detailed")).toBe(
-      "Visibility, social energy, communication, group size, verification, and photo comfort."
+      "Privacy, profile visibility, social energy, communication, group size, photo comfort, and local-only meeting preferences."
     );
     expect(getUserPreferenceRowDescription("personality", "Simple")).toBe("Optional human context.");
     expect(getUserPreferenceRowDescription("food", "Simple")).toBe("Food, drinks, and dietary comfort.");
@@ -41,14 +64,15 @@ describe("profile menu row metadata", () => {
 
   it("supports a future alphabetical preference category order without changing the grouped default", () => {
     expect(getUserPreferenceRows().map((row) => row.key)).toEqual(userPreferenceRowMetadata.map((row) => row.key));
+    expect(getUserPreferenceRows().every((row) => row.groupId === "preferences")).toBe(true);
     expect(getUserPreferenceRows("Alphabetical").map((row) => row.title)).toEqual([
       "Calendar & Cultural Moments",
-      "Comfort & Trust",
       "Contact Preference",
       "Food & Beverage",
       "Hobbies & Interests",
       "Location Preference",
       "Personality & Presence",
+      "Privacy & Comfort",
       "Transportation Method",
       "Work, Study & Life Context",
     ]);

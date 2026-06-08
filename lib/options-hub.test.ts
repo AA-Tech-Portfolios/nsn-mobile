@@ -47,9 +47,18 @@ describe("options hub metadata", () => {
     expect(cards.map((card) => card.id)).toEqual(optionsHubSections.map((section) => section.id));
     expect(cards[0]).toMatchObject({
       id: "home",
-      title: "Home",
+      title: "Appearance & Layout",
       badge: "3 options",
     });
+    expect(cards.map((card) => card.title)).toEqual([
+      "Appearance & Layout",
+      "Preferences",
+      "Meetups",
+      "Chat & Contact",
+      "Safety & Support",
+      "Alpha Testing",
+      "App Settings",
+    ]);
     expect(cards.every((card) => card.chevron)).toBe(true);
     expect(cards.every((card) => !("rows" in card))).toBe(true);
   });
@@ -151,7 +160,7 @@ describe("options hub metadata", () => {
     const blockReport = safetySection?.rows.find((row) => row.title === "Block & Report");
 
     expect(meetupSection?.rows.some((row) => row.title === "Conversation starters" && row.badge === "Demo")).toBe(true);
-    expect(safetySection?.title).toBe("Support & Boundaries");
+    expect(safetySection?.title).toBe("Safety & Support");
     expect(safetySection?.rows.some((row) => row.title === "Block & Report")).toBe(true);
     expect(safetySection?.rows.some((row) => row.title === "Preparedness & Guidance")).toBe(false);
     expect(safetySection?.rows.find((row) => row.title === "Help & Support")?.description).toMatch(/preparedness guidance/i);

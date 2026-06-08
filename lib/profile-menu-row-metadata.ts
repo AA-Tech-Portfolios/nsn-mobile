@@ -1,6 +1,9 @@
 export type ProfileMenuIcon =
   | "shield"
   | "person.fill"
+  | "settings"
+  | "sliders"
+  | "layout"
   | "life-context"
   | "calendar"
   | "food"
@@ -10,6 +13,59 @@ export type ProfileMenuIcon =
   | "location"
   | "help"
   | "heart";
+
+export type ProfileOptionGroupId =
+  | "profile"
+  | "preferences"
+  | "appearanceLayout"
+  | "safetySupport"
+  | "appSettings";
+
+export type ProfileOptionGroupMetadata = {
+  id: ProfileOptionGroupId;
+  icon: ProfileMenuIcon;
+  title: string;
+  description: string;
+  helperCopy: string;
+};
+
+export const profileOptionGroups: ProfileOptionGroupMetadata[] = [
+  {
+    id: "profile",
+    icon: "person.fill",
+    title: "Profile",
+    description: "Preview, photo, about, vibes, and quick profile edits.",
+    helperCopy: "Profile is the social surface. Edits and visibility previews stay local-only in this alpha.",
+  },
+  {
+    id: "preferences",
+    icon: "sliders",
+    title: "Preferences",
+    description: "Privacy, comfort, interests, food, transport, contact, and local area preferences.",
+    helperCopy: "Preferences are prototype hints only, saved locally without matching or ranking claims.",
+  },
+  {
+    id: "appearanceLayout",
+    icon: "layout",
+    title: "Appearance & Layout",
+    description: "Home, event, and profile display choices.",
+    helperCopy: "Layout choices affect how this prototype looks on this device.",
+  },
+  {
+    id: "safetySupport",
+    icon: "shield",
+    title: "Safety & Support",
+    description: "Community guidelines, quiet exits, support links, and report-shaped demos.",
+    helperCopy: "Support content is guidance only, with no live safety, host tracking, or backend review connected.",
+  },
+  {
+    id: "appSettings",
+    icon: "settings",
+    title: "App Settings",
+    description: "Language, privacy settings, alerts, walkthroughs, and prototype account controls.",
+    helperCopy: "App settings are local-only controls unless a screen clearly says it opens an external resource.",
+  },
+];
 
 export type UserPreferenceRowKey =
   | "comfort"
@@ -24,6 +80,7 @@ export type UserPreferenceRowKey =
 
 export type UserPreferenceRowMetadata = {
   key: UserPreferenceRowKey;
+  groupId: "preferences";
   icon: ProfileMenuIcon;
   title: string;
   description: string;
@@ -37,15 +94,17 @@ export type UserPreferenceTextMode = "Simple" | "Detailed";
 export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   {
     key: "comfort",
+    groupId: "preferences",
     icon: "shield",
-    title: "Comfort & Trust",
-    description: "Visibility, social energy, communication, group size, verification, and photo comfort.",
-    simpleDescription: "Visibility, trust, and meeting comfort.",
+    title: "Privacy & Comfort",
+    description: "Privacy, profile visibility, social energy, communication, group size, photo comfort, and local-only meeting preferences.",
+    simpleDescription: "Privacy, visibility, and meeting comfort.",
     badgeKind: "saved",
     chevron: true,
   },
   {
     key: "personality",
+    groupId: "preferences",
     icon: "person.fill",
     title: "Personality & Presence",
     description: "Optional appearance, social style, and connection context for blurred profiles.",
@@ -55,6 +114,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   },
   {
     key: "background",
+    groupId: "preferences",
     icon: "life-context",
     title: "Work, Study & Life Context",
     description: "Optional work, study, learning, and volunteering context with visibility controls.",
@@ -64,6 +124,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   },
   {
     key: "calendar",
+    groupId: "preferences",
     icon: "calendar",
     title: "Calendar & Cultural Moments",
     description: "Holidays, festivals, observances, and personal calendar seasons.",
@@ -73,6 +134,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   },
   {
     key: "food",
+    groupId: "preferences",
     icon: "food",
     title: "Food & Beverage",
     description: "Cuisines, drinks, dietary needs, avoidances, and alcohol comfort.",
@@ -82,6 +144,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   },
   {
     key: "interests",
+    groupId: "preferences",
     icon: "interests",
     title: "Hobbies & Interests",
     description: "Activities, genres, local exploring, and comfort-aware tags.",
@@ -91,6 +154,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   },
   {
     key: "transport",
+    groupId: "preferences",
     icon: "transport",
     title: "Transportation Method",
     description: "Arrival comfort, route access, and travel pressure.",
@@ -100,6 +164,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   },
   {
     key: "contact",
+    groupId: "preferences",
     icon: "contact",
     title: "Contact Preference",
     description: "How you prefer pre-meetup communication.",
@@ -109,6 +174,7 @@ export const userPreferenceRowMetadata: UserPreferenceRowMetadata[] = [
   },
   {
     key: "location",
+    groupId: "preferences",
     icon: "location",
     title: "Location Preference",
     description: "Local area, venue comfort, and location privacy.",
