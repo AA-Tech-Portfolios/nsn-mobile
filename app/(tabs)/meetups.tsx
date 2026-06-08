@@ -76,10 +76,10 @@ const meetupsTranslations = {
     joined: "Joined",
     suggested: "Suggested",
     trustRequiredTitle: "Prototype meetup preview",
-    trustRequiredCopy: "Meetups and private chats are gated by a local demo trust state. No real verification provider or live chat is connected.",
-    reviewSettings: "Review prototype trust",
-    reviewTrustStatusHint: "Opens Profile so you can review local prototype trust details.",
-    nextMeetupHint: "Opens the next meetup details and safety information.",
+    trustRequiredCopy: "Meetups and private chats are gated by a local demo readiness state. No real verification provider or live chat is connected.",
+    reviewSettings: "Review readiness preview",
+    reviewTrustStatusHint: "Opens Profile so you can review local prototype readiness details.",
+    nextMeetupHint: "Opens the next meetup details and practical prototype information.",
     eventDetailsHint: (title: string) => `Opens details for ${title}.`,
   },
   Arabic: {
@@ -189,28 +189,8 @@ const meetupsTranslations = {
 const meetupsTrustGateTranslations = {
   English: {
     trustRequiredTitle: "Prototype meetup preview",
-    trustRequiredCopy: "Meetups and private chats are gated by a local demo trust state. No real verification provider or live chat is connected.",
-    reviewSettings: "Review prototype trust",
-  },
-  Japanese: {
-    trustRequiredTitle: "連絡先認証が必要です",
-    trustRequiredCopy: "両方の人が連絡先を認証すると、ミートアップとプライベートチャットが利用できます。",
-    reviewSettings: "信頼ステータスを確認",
-  },
-  Korean: {
-    trustRequiredTitle: "연락처 인증이 필요해요",
-    trustRequiredCopy: "두 사람 모두 연락처를 인증하면 모임과 개인 채팅을 사용할 수 있어요.",
-    reviewSettings: "신뢰 상태 확인",
-  },
-  Chinese: {
-    trustRequiredTitle: "需要联系方式验证",
-    trustRequiredCopy: "只有双方都验证联系方式后，聚会和私人聊天才会开放。",
-    reviewSettings: "查看信任状态",
-  },
-  Hebrew: {
-    trustRequiredTitle: "נדרש אימות קשר",
-    trustRequiredCopy: "מפגשים וצ'אטים פרטיים נפתחים כששני האנשים אימתו פרטי קשר.",
-    reviewSettings: "סקירת סטטוס אמון",
+    trustRequiredCopy: "Meetups and private chats are gated by a local demo readiness state. No real verification provider or live chat is connected.",
+    reviewSettings: "Review readiness preview",
   },
 } as const;
 
@@ -224,7 +204,7 @@ export default function MeetupsScreen() {
   const isDay = !isNightMode;
   const copy = meetupsTranslations[appLanguageBase as keyof typeof meetupsTranslations] ?? meetupsTranslations.English;
   const meetupCopy = { ...meetupsTranslations.English, ...copy };
-  const trustGateCopy = meetupsTrustGateTranslations[appLanguageBase as keyof typeof meetupsTrustGateTranslations] ?? meetupsTrustGateTranslations.English;
+  const trustGateCopy = meetupsTrustGateTranslations.English;
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const canUseMeetups = canChatPrivately(effectiveVerificationLevel);
   const guideTip = getGuideTipForSurface("meetups");

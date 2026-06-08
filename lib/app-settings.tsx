@@ -673,7 +673,7 @@ export type PhysicalContactComfortPreference =
   | "Prefer personal space";
 export type BackgroundVisibilityPreference =
   | "Private"
-  | "Matched/shared visibility only"
+  | "Shared preview visibility only"
   | "Visible on profile preview"
   | "Ask me first"
   | "Prefer not to say";
@@ -890,7 +890,7 @@ export const defaultPhysicalContactComfortPreferences: PhysicalContactComfortPre
 ];
 export const backgroundVisibilityOptions: BackgroundVisibilityPreference[] = [
   "Private",
-  "Matched/shared visibility only",
+  "Shared preview visibility only",
   "Visible on profile preview",
   "Ask me first",
   "Prefer not to say",
@@ -2258,7 +2258,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [comfortPreferences, setComfortPreferences] =
     useState<SoftHelloComfortPreference[]>(defaultComfortPreferences);
   const [verificationLevel, setVerificationLevel] =
-    useState<SoftHelloVerificationLevel>("Unverified");
+    useState<SoftHelloVerificationLevel>("Readiness not reviewed");
   const [eventMemberships, setEventMemberships] = useState<EventMembership[]>([]);
   const [blockedUserIds, setBlockedUserIds] = useState<string[]>([]);
   const [safetyReports, setSafetyReports] = useState<SafetyReport[]>([]);
@@ -2330,7 +2330,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     LifeContextLearningPreference[]
   >([]);
   const [lifeContextLearningVisibility, setLifeContextLearningVisibility] =
-    useState<BackgroundVisibilityPreference>("Matched/shared visibility only");
+    useState<BackgroundVisibilityPreference>("Shared preview visibility only");
   const [lifeComfortPreferences, setLifeComfortPreferences] = useState<LifeComfortPreference[]>([]);
   const [lifeComfortVisibility, setLifeComfortVisibility] =
     useState<BackgroundVisibilityPreference>("Private");
@@ -2562,7 +2562,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
             ? snapshot.comfortPreferences
             : defaultComfortPreferences,
         );
-        setVerificationLevel(snapshot.verificationLevel ?? "Unverified");
+        setVerificationLevel(snapshot.verificationLevel ?? "Readiness not reviewed");
         setEventMemberships(snapshot.eventMemberships ?? []);
         setBlockedUserIds(snapshot.blockedUserIds ?? []);
         setSafetyReports(snapshot.safetyReports ?? []);
@@ -2674,7 +2674,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         );
         setLifeContextLearningVisibility(
           normalizeBackgroundVisibilityPreference(
-            snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only",
+            snapshot.lifeContextLearningVisibility ?? "Shared preview visibility only",
           ),
         );
         setLifeComfortPreferences(
@@ -3009,7 +3009,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       lifeContextLearningOptions,
     );
     const nextLifeContextLearningVisibility = normalizeBackgroundVisibilityPreference(
-      snapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only",
+      snapshot.lifeContextLearningVisibility ?? "Shared preview visibility only",
     );
     const nextLifeComfortPreferences = normalizeBackgroundPreferenceList(
       snapshot.lifeComfortPreferences,
@@ -3601,7 +3601,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       lifeContextLearningOptions,
     );
     nextSnapshot.lifeContextLearningVisibility = normalizeBackgroundVisibilityPreference(
-      nextSnapshot.lifeContextLearningVisibility ?? "Matched/shared visibility only",
+      nextSnapshot.lifeContextLearningVisibility ?? "Shared preview visibility only",
     );
     nextSnapshot.lifeComfortPreferences = normalizeBackgroundPreferenceList(
       nextSnapshot.lifeComfortPreferences,

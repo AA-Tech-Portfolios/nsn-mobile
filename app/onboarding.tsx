@@ -22,8 +22,8 @@ const MIN_ADULT_AGE = 18;
 const MAX_PROFILE_AGE = 95;
 const MAX_PREFERRED_AGE_SPAN = 35;
 const comfortModes: { value: NsnComfortMode; copy: string }[] = [
-  { value: "Comfort Mode", copy: "Profiles are blurred, with matched or shared visibility only." },
-  { value: "Warm Up Mode", copy: "Profiles are partly visible and reveal more when both people feel comfortable." },
+  { value: "Comfort Mode", copy: "Details stay blurred unless you choose to show more in prototype previews." },
+  { value: "Warm Up Mode", copy: "A shared visibility preview can show a little more while staying local-only." },
   { value: "Open Mode", copy: "People in the event can see basic profile details." },
 ];
 const comfortPreferenceOptions: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet", "Flexible pace"];
@@ -263,7 +263,7 @@ export default function OnboardingScreen() {
       showComfortPreferences,
       minimalProfileView,
       comfortPreferences,
-      verificationLevel: "Unverified",
+      verificationLevel: "Readiness not reviewed",
       eventMemberships: [],
       blockedUserIds: [],
       safetyReports: [],

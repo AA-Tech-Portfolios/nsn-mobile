@@ -13,7 +13,7 @@ export const profileHomeSectionOrder = [
 ] as const;
 
 export type ProfileHomeSectionId = (typeof profileHomeSectionOrder)[number];
-export type ProfileManagementSectionId = "comfortTrustDetails" | "workStudyLifeContext" | "trustStatusDetails";
+export type ProfileManagementSectionId = "comfortTrustDetails" | "workStudyLifeContext" | "readinessPreviewDetails";
 export type MainProfileSummaryRowId =
   | "localArea"
   | "interests"
@@ -44,20 +44,20 @@ export const mainProfileSummaryRows: readonly MainProfileSummaryRow[] = [
   {
     id: "comfortTrust",
     icon: "shield",
-    title: "Comfort & Trust",
+    title: "Privacy & Comfort",
     description: "Pace, privacy, and low-pressure meeting comfort.",
   },
   {
     id: "privacy",
     icon: "settings",
     title: "Privacy",
-    description: "Profile visibility and prototype trust settings.",
+    description: "Profile visibility and local readiness preview settings.",
   },
   {
     id: "verificationTrust",
     icon: "badge",
-    title: "Verification / trust status",
-    description: "Prototype trust level and in-person readiness.",
+    title: "Readiness preview",
+    description: "Local-only comfort and meetup readiness note.",
   },
 ] as const;
 

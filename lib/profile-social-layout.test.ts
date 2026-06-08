@@ -28,7 +28,7 @@ describe("profile social layout", () => {
   it("keeps heavy management sections off the main profile page", () => {
     expect(shouldShowManagementSectionOnProfileHome("comfortTrustDetails")).toBe(false);
     expect(shouldShowManagementSectionOnProfileHome("workStudyLifeContext")).toBe(false);
-    expect(shouldShowManagementSectionOnProfileHome("trustStatusDetails")).toBe(false);
+    expect(shouldShowManagementSectionOnProfileHome("readinessPreviewDetails")).toBe(false);
   });
 
   it("shows only clean summary rows after About me and My vibes", () => {

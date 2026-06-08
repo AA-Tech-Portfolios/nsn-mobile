@@ -146,9 +146,8 @@ const calmLabelsWithoutIcons = new Set([
   "report a problem",
   "safety, privacy & consent details",
   "settings & privacy",
-  "trust status",
-  "verification / trust status",
-  "verified, but private",
+  "readiness preview",
+  "readiness preview private",
 ]);
 
 export const emojiDisplayModeOptions: EmojiDisplayMode[] = [

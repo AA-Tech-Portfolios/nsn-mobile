@@ -2,7 +2,7 @@ import { allEvents, type EventItem, type MeetupTrustProfile, type PrototypeVerif
 
 export type SoftHelloComfortPreference = "Small groups" | "Text-first" | "Quiet" | "Flexible pace" | "Indoor backup";
 
-export type SoftHelloVerificationLevel = "Unverified" | "Contact Verified" | "Real Person Verified";
+export type SoftHelloVerificationLevel = "Readiness not reviewed" | "Prototype contact preview" | "Prototype readiness reviewed";
 
 export type TrustEvidence = {
   contactEmail?: string | null;
@@ -83,22 +83,22 @@ export type SavedPlace = {
 
 export const defaultComfortPreferences: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet"];
 
-export const verificationLevels: SoftHelloVerificationLevel[] = ["Unverified", "Contact Verified", "Real Person Verified"];
+export const verificationLevels: SoftHelloVerificationLevel[] = ["Readiness not reviewed", "Prototype contact preview", "Prototype readiness reviewed"];
 
 export const prototypeVerificationStates: PrototypeVerificationState[] = ["unverified", "pending", "verified", "host-verified"];
 
 export const verificationRank: Record<SoftHelloVerificationLevel, number> = {
-  Unverified: 0,
-  "Contact Verified": 1,
-  "Real Person Verified": 2,
+  "Readiness not reviewed": 0,
+  "Prototype contact preview": 1,
+  "Prototype readiness reviewed": 2,
 };
 
 export function canMeetInPerson(level: SoftHelloVerificationLevel) {
-  return verificationRank[level] >= verificationRank["Real Person Verified"];
+  return verificationRank[level] >= verificationRank["Prototype readiness reviewed"];
 }
 
 export function canChatPrivately(level: SoftHelloVerificationLevel) {
-  return verificationRank[level] >= verificationRank["Contact Verified"];
+  return verificationRank[level] >= verificationRank["Prototype contact preview"];
 }
 
 export function deriveVerificationLevel(evidence: TrustEvidence): SoftHelloVerificationLevel {
@@ -106,19 +106,19 @@ export function deriveVerificationLevel(evidence: TrustEvidence): SoftHelloVerif
   const hasIdentityProof = Boolean(evidence.identitySelfieUri && evidence.hasIdentityDocument);
 
   if (hasContactDetails && hasIdentityProof) {
-    return "Real Person Verified";
+    return "Prototype readiness reviewed";
   }
 
   if (hasContactDetails) {
-    return "Contact Verified";
+    return "Prototype contact preview";
   }
 
-  return "Unverified";
+  return "Readiness not reviewed";
 }
 
 export function getEffectivePrototypeVerificationLevel(
   evidence: TrustEvidence,
-  selectedPrototypeLevel: SoftHelloVerificationLevel = "Unverified"
+  selectedPrototypeLevel: SoftHelloVerificationLevel = "Readiness not reviewed"
 ): SoftHelloVerificationLevel {
   const evidenceLevel = deriveVerificationLevel(evidence);
 
@@ -127,117 +127,17 @@ export function getEffectivePrototypeVerificationLevel(
 
 const meetingSafetyCopyTranslations: Record<string, Record<SoftHelloVerificationLevel, string>> = {
   English: {
-    Unverified: "You can browse and prepare, but meeting in person requires Real Person Verified status.",
-    "Contact Verified": "Contact Verified users can chat, but in-person meetups require Real Person Verified status.",
-    "Real Person Verified": "You are marked Real Person Verified in this prototype, so this meetup can move toward an in-person plan.",
-  },
-  Arabic: {
-    Unverified: "يمكنك التصفح والاستعداد، لكن اللقاءات الشخصية تتطلب حالة شخص حقيقي موثق.",
-    "Contact Verified": "يمكن للمستخدمين الموثقين عبر التواصل الدردشة، لكن اللقاءات الشخصية تتطلب حالة شخص حقيقي موثق.",
-    "Real Person Verified": "أنت موثق كشخص حقيقي في هذا النموذج، لذلك يمكن لهذا اللقاء الانتقال نحو خطة شخصية.",
-  },
-  Chinese: {
-    Unverified: "你可以浏览和准备，但线下见面需要完成真人验证。",
-    "Contact Verified": "已验证联系方式的用户可以聊天，但线下聚会需要真人验证状态。",
-    "Real Person Verified": "你在此原型中已标记为真人验证，因此这个聚会可以进入线下计划。",
-  },
-  French: {
-    Unverified: "Vous pouvez parcourir et préparer, mais les rencontres en personne nécessitent le statut Personne réelle vérifiée.",
-    "Contact Verified": "Les personnes avec contact vérifié peuvent discuter, mais les rencontres en personne nécessitent le statut Personne réelle vérifiée.",
-    "Real Person Verified": "Vous êtes marqué comme Personne réelle vérifiée dans ce prototype, donc cette rencontre peut avancer vers un plan en personne.",
-  },
-  German: {
-    Unverified: "Du kannst stöbern und dich vorbereiten, aber persönliche Treffen erfordern den Status Echtperson verifiziert.",
-    "Contact Verified": "Personen mit Kontaktverifizierung können chatten, aber persönliche Treffen erfordern den Status Echtperson verifiziert.",
-    "Real Person Verified": "Du bist in diesem Prototyp als Echtperson verifiziert markiert, daher kann dieses Treffen zu einem persönlichen Plan werden.",
-  },
-  Hebrew: {
-    Unverified: "אפשר לעיין ולהתכונן, אבל מפגש פנים אל פנים דורש סטטוס אימות אדם אמיתי.",
-    "Contact Verified": "משתמשים עם אימות קשר יכולים לשוחח, אבל מפגשים פנים אל פנים דורשים סטטוס אימות אדם אמיתי.",
-    "Real Person Verified": "את/ה מסומן/ת באב הטיפוס כאדם אמיתי מאומת, ולכן המפגש יכול להתקדם לתוכנית פנים אל פנים.",
-  },
-  Japanese: {
-    Unverified: "閲覧や準備はできますが、対面のミートアップには真人確認済みステータスが必要です。",
-    "Contact Verified": "連絡先確認済みのユーザーはチャットできますが、対面のミートアップには真人確認済みステータスが必要です。",
-    "Real Person Verified": "このプロトタイプでは真人確認済みとして表示されているため、このミートアップは対面の計画に進めます。",
-  },
-  Korean: {
-    Unverified: "둘러보고 준비할 수는 있지만, 직접 만나는 모임에는 실제 사람 인증 상태가 필요해요.",
-    "Contact Verified": "연락처 인증 사용자는 채팅할 수 있지만, 직접 만나는 모임에는 실제 사람 인증 상태가 필요해요.",
-    "Real Person Verified": "이 프로토타입에서 실제 사람 인증으로 표시되어 있어 이 모임은 대면 계획으로 이어질 수 있어요.",
-  },
-  Russian: {
-    Unverified: "Вы можете просматривать и готовиться, но для личных встреч нужен статус подтверждённого реального человека.",
-    "Contact Verified": "Пользователи с подтверждённым контактом могут общаться, но для личных встреч нужен статус подтверждённого реального человека.",
-    "Real Person Verified": "В этом прототипе вы отмечены как подтверждённый реальный человек, поэтому встреча может перейти к очному плану.",
-  },
-  Spanish: {
-    Unverified: "Puedes explorar y prepararte, pero las quedadas en persona requieren estado de Persona real verificada.",
-    "Contact Verified": "Las personas con contacto verificado pueden chatear, pero las quedadas en persona requieren estado de Persona real verificada.",
-    "Real Person Verified": "Estás marcado como Persona real verificada en este prototipo, así que esta quedada puede avanzar hacia un plan presencial.",
-  },
-  Yiddish: {
-    Unverified: "דו קענסט דורכקוקן און זיך גרייטן, אבער טרעפן זיך פנים-אל-פנים פארלאנגט סטאטוס פון באשטעטיגטער אמתער מענטש.",
-    "Contact Verified": "באנוצער מיט באשטעטיגטן קאנטאקט קענען שמועסן, אבער פנים-אל-פנים מיטאפס פארלאנגען סטאטוס פון באשטעטיגטער אמתער מענטש.",
-    "Real Person Verified": "דו ביסט אנגעצייכנט אלס באשטעטיגטער אמתער מענטש אין דעם פראטאטייפ, דעריבער קען דער מיטאפ גיין צו א פנים-אל-פנים פלאן.",
+    "Readiness not reviewed": "You can browse and prepare in this local prototype. Meetup access is only a local readiness preview.",
+    "Prototype contact preview": "This local contact preview can open prototype chat surfaces. No real verification or live messaging system is connected.",
+    "Prototype readiness reviewed": "Prototype readiness reviewed on this device. This is a local meetup preview state, not real identity verification.",
   },
 };
 
 const verificationLevelLabelTranslations: Record<string, Record<SoftHelloVerificationLevel, string>> = {
   English: {
-    Unverified: "Unverified",
-    "Contact Verified": "Contact Verified",
-    "Real Person Verified": "Real Person Verified",
-  },
-  Arabic: {
-    Unverified: "غير موثق",
-    "Contact Verified": "تم توثيق التواصل",
-    "Real Person Verified": "شخص حقيقي موثق",
-  },
-  Chinese: {
-    Unverified: "未验证",
-    "Contact Verified": "联系方式已验证",
-    "Real Person Verified": "真人已验证",
-  },
-  French: {
-    Unverified: "Non vérifié",
-    "Contact Verified": "Contact vérifié",
-    "Real Person Verified": "Personne réelle vérifiée",
-  },
-  German: {
-    Unverified: "Nicht verifiziert",
-    "Contact Verified": "Kontakt verifiziert",
-    "Real Person Verified": "Echtperson verifiziert",
-  },
-  Hebrew: {
-    Unverified: "לא מאומת",
-    "Contact Verified": "אימות קשר",
-    "Real Person Verified": "אימות אדם אמיתי",
-  },
-  Japanese: {
-    Unverified: "未確認",
-    "Contact Verified": "連絡先確認済み",
-    "Real Person Verified": "真人確認済み",
-  },
-  Korean: {
-    Unverified: "미인증",
-    "Contact Verified": "연락처 인증",
-    "Real Person Verified": "실제 사람 인증",
-  },
-  Russian: {
-    Unverified: "Не подтверждено",
-    "Contact Verified": "Контакт подтверждён",
-    "Real Person Verified": "Реальный человек подтверждён",
-  },
-  Spanish: {
-    Unverified: "Sin verificar",
-    "Contact Verified": "Contacto verificado",
-    "Real Person Verified": "Persona real verificada",
-  },
-  Yiddish: {
-    Unverified: "נישט באשטעטיגט",
-    "Contact Verified": "קאנטאקט באשטעטיגט",
-    "Real Person Verified": "אמתער מענטש באשטעטיגט",
+    "Readiness not reviewed": "Readiness not reviewed",
+    "Prototype contact preview": "Prototype contact preview",
+    "Prototype readiness reviewed": "Prototype readiness reviewed",
   },
 };
 
@@ -254,11 +154,11 @@ export function getVerificationLevelLabel(level: SoftHelloVerificationLevel, lan
 }
 
 export function getPrototypeVerificationStateLabel(state: PrototypeVerificationState) {
-  if (state === "host-verified") return "Verified host";
-  if (state === "verified") return "Verified";
-  if (state === "pending") return "Verification pending";
+  if (state === "host-verified") return "Host details preview";
+  if (state === "verified") return "Readiness preview";
+  if (state === "pending") return "Readiness preview pending";
 
-  return "Unverified";
+  return "Readiness not reviewed";
 }
 
 export function isAccountablePrototypeVerificationState(state: PrototypeVerificationState) {
@@ -267,7 +167,7 @@ export function isAccountablePrototypeVerificationState(state: PrototypeVerifica
 
 export function getEventTrustSummary(trustProfile: MeetupTrustProfile | undefined) {
   if (!trustProfile) {
-    return "Prototype trust details are not set for this meetup yet.";
+    return "Prototype readiness details are not set for this meetup yet.";
   }
 
   const hostLabel = getPrototypeVerificationStateLabel(trustProfile.host.verificationState);

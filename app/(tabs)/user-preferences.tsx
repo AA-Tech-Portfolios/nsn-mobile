@@ -169,12 +169,12 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
   calendar: {
     icon: "📅",
     title: "Calendar & Cultural Moments",
-    copy: "Choose events, holidays, or local moments that matter to you, so NSN can suggest more comfortable plans.",
+    copy: "Choose events, holidays, or local moments that matter to you for local-only comfort previews.",
   },
   food: {
     icon: "🍽️",
     title: "Food & Beverage",
-    copy: "Food and drink preferences help NSN suggest comfortable meetups. This is not a food delivery or restaurant recommendation system.",
+    copy: "Food and drink preferences help preview comfortable meetup ideas. This is not a food delivery or restaurant recommendation system.",
   },
   interests: {
     icon: "🎨",
@@ -200,7 +200,7 @@ const preferenceSections: Record<PreferenceSection, { icon: string; title: strin
 
 const simplePreferenceSectionCopy: Record<PreferenceSection, string> = {
   overview: "Choose what makes local meetups feel easier.",
-  comfort: "Visibility, trust, and meeting comfort.",
+  comfort: "Visibility, readiness preview, and meeting comfort.",
   personality: "Optional human context for blurred profiles.",
   background: "Optional life context.",
   calendar: "Dates and moments that matter to you.",
@@ -221,7 +221,7 @@ const workStudySectionIcons: Record<string, ComponentProps<typeof IconSymbol>["n
   Study: "life-context",
   Work: "badge",
   "Volunteering & community": "group",
-  "Prototype matching notes": "explore",
+  "Prototype suggestion notes": "explore",
 };
 
 const getPreferenceSectionIcon = (section: PreferenceSection, fallback: string) =>
@@ -1238,7 +1238,7 @@ export default function UserPreferencesScreen() {
 
   const getOverviewCardMeta = (item: (typeof overviewCards)[number]) => {
     if (userPreferenceTextMode === "Detailed") return item.meta;
-    if (item.section === "comfort") return "Visibility, trust, and comfort.";
+    if (item.section === "comfort") return "Visibility, readiness preview, and comfort.";
     if (item.section === "personality") return selectedPersonalityPresenceLabels.length ? item.meta : simplePreferenceSectionCopy.personality;
     if (item.section === "calendar") return selectedCalendarMomentLabels.length ? item.meta : simplePreferenceSectionCopy.calendar;
     if (item.section === "food") return selectedFoodLabels.length ? item.meta : simplePreferenceSectionCopy.food;
@@ -1357,7 +1357,7 @@ export default function UserPreferencesScreen() {
             {renderExpandableSectionCard({
               id: "comfort-advanced",
               title: "Privacy, contact & consent details",
-              copy: "Contact/trust display, photo comfort, and personal-space preferences live here for testers who want finer control.",
+              copy: "Contact/readiness display, photo comfort, and personal-space preferences live here for testers who want finer control.",
               icon: "✅",
               open: openPreferenceDetailGroups.includes("comfort-advanced"),
               onToggle: () => togglePreferenceDetailGroup("comfort-advanced"),
@@ -1365,10 +1365,10 @@ export default function UserPreferencesScreen() {
               totalCount: 3,
               children: (
                 <View style={styles.inlinePreferenceStack}>
-                  {renderInlinePreferenceGroup("Contact status stays private", "Your prototype contact/trust status can stay visible without making your full profile fully open. No real provider is connected yet.", (
+                  {renderInlinePreferenceGroup("Contact preview stays private", "Your prototype contact/readiness preview can stay visible without making your full profile fully open. No real provider is connected yet.", (
                     <View style={responsiveChipGridStyle}>
-                      {renderChip({ key: "verified-private-on", label: "Keep status private", active: verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: true }), wide: true })}
-                      {renderChip({ key: "verified-private-off", label: "Use standard status", active: !verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: false }), wide: true })}
+                      {renderChip({ key: "verified-private-on", label: "Keep preview private", active: verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: true }), wide: true })}
+                      {renderChip({ key: "verified-private-off", label: "Use standard preview", active: !verifiedButPrivate, onPress: () => saveSoftHelloMvpState({ verifiedButPrivate: false }), wide: true })}
                     </View>
                   ))}
                   {renderInlinePreferenceGroup("Photo & recording comfort", eventCommunityGuidelinesCopy.mediaCopy, (
@@ -1392,7 +1392,7 @@ export default function UserPreferencesScreen() {
             <View style={[styles.searchCard, isDay && styles.dayCard]}>
               <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Personality & Presence</Text>
               <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                These optional details are for gentle human context when photos are blurred or private. They stay local in this prototype and are not used for matching, scoring, ranking, swiping, or compatibility percentages.
+                These optional details are for gentle human context when photos are blurred or private. They stay local in this prototype and are not used for scoring, ranking, swiping, or compatibility percentages.
               </Text>
               <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
                 {showPersonalityPresenceOnProfile
@@ -1867,7 +1867,7 @@ export default function UserPreferencesScreen() {
               {renderExpandableSectionCard({
                 id: "background-life-comfort",
                 title: "Social comfort & life pacing",
-                copy: "Optional, private-by-default context for things that can affect social energy. This is not medical, diagnostic, or used for matching scores.",
+                copy: "Optional, private-by-default context for things that can affect social energy. This is not medical, diagnostic, or used for scores.",
                 icon: "🌿",
                 open: openPreferenceDetailGroups.includes("background-life-comfort"),
                 onToggle: () => togglePreferenceDetailGroup("background-life-comfort"),
@@ -1906,7 +1906,7 @@ export default function UserPreferencesScreen() {
                       .map((option) => renderPreferenceDetailChip(option, lifeComfortPreferences, toggleLifeComfortPreference))}
                   </View>
                   <Text style={[styles.notice, isDay && styles.dayMutedText]}>
-                    Keep this broad and skippable. NSN does not ask for diagnoses and does not provide therapy or mental-health matching.
+                    Keep this broad and skippable. NSN does not ask for diagnoses and does not provide therapy or mental-health pairing.
                   </Text>
                 </>
                 ),
@@ -2046,8 +2046,8 @@ export default function UserPreferencesScreen() {
               })}
               {renderExpandableSectionCard({
                 id: "background-notes",
-                title: "Prototype matching notes",
-                copy: "How broad context could help later, without adding a production recommendation engine.",
+                title: "Prototype suggestion notes",
+                copy: "How broad context could help later, without adding production recommendations.",
                 icon: "ðŸ§­",
                 open: openPreferenceDetailGroups.includes("background-notes"),
                 onToggle: () => togglePreferenceDetailGroup("background-notes"),
@@ -2140,7 +2140,7 @@ export default function UserPreferencesScreen() {
             })}
             {calendarSearch.trim() ? (
               renderSectionCard("Search results", "Matching holidays, cultural events, local festivals, personal seasons, and keywords.", "🔎", (
-                calendarSearchResults.length ? <View style={styles.momentStack}>{calendarSearchResults.map(renderCalendarMoment)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching moment yet. Try another holiday, festival, observance, or keyword.</Text>
+                calendarSearchResults.length ? <View style={styles.momentStack}>{calendarSearchResults.map(renderCalendarMoment)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No local moment found yet. Try another holiday, festival, observance, or keyword.</Text>
               ))
             ) : (
               <View style={responsiveCardGridStyle}>
@@ -2181,7 +2181,7 @@ export default function UserPreferencesScreen() {
             {renderExpandableSectionCard({
               id: "calendar-notes",
               title: "Prototype recommendation notes",
-              copy: "How these signals could help later, without implying a production recommendation engine.",
+              copy: "How these signals could help later, without implying production recommendations.",
               icon: "🧭",
               open: openPreferenceDetailGroups.includes("calendar-notes"),
               onToggle: () => togglePreferenceDetailGroup("calendar-notes"),
@@ -2189,7 +2189,7 @@ export default function UserPreferencesScreen() {
               wide: false,
               children: (
                 <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                  Later, these preferences can help suggest cultural festival ideas, quiet plans during busy holidays, alcohol-free or cafe options during observances, and local Sydney/North Shore moments. No production calendar integration, public holiday feed, or event recommendation engine is connected yet.
+                  Later, these preferences can help preview cultural festival ideas, quiet plans during busy holidays, alcohol-free or cafe options during observances, and local Sydney/North Shore moments. No production calendar integration, public holiday feed, or recommendation system is connected yet.
                 </Text>
               ),
             })}
@@ -2217,7 +2217,7 @@ export default function UserPreferencesScreen() {
             </View>
             {foodSearch.trim() ? (
               renderSectionCard("Search results", "Matching cuisines, foods, drinks, dietary needs, and avoidances.", "🔎", (
-                foodSearchResults.length ? <View style={responsiveChipGridStyle}>{foodSearchResults.map(renderFoodChip)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching preference yet. Try another food, drink, cuisine, dietary need, or avoidance.</Text>
+                foodSearchResults.length ? <View style={responsiveChipGridStyle}>{foodSearchResults.map(renderFoodChip)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No local preference found yet. Try another food, drink, cuisine, dietary need, or avoidance.</Text>
               ))
             ) : (
               <View style={responsiveCardGridStyle}>
@@ -2286,7 +2286,7 @@ export default function UserPreferencesScreen() {
               <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>Selected interests</Text>
               {renderSummary(selectedInterestLabels, "No hobbies or interests selected yet.")}
             </View>
-            {renderSectionCard(interestComfortModifierTitle, "Mark how each selected interest feels. These labels are prototype comfort signals for future matching and event planning.", "🌿", (
+            {renderSectionCard(interestComfortModifierTitle, "Mark how each selected interest feels. These labels are local-only comfort signals for future planning.", "🌿", (
               activeInterestForComfort ? (
                 <>
                   <View style={styles.interestComfortTabRow}>
@@ -2321,7 +2321,7 @@ export default function UserPreferencesScreen() {
             ), styles.interestComfortFullCard)}
             {interestSearch.trim() ? (
               renderSectionCard("Search results", "Matching interests, genres, categories, and aliases.", "🔎", (
-                interestSearchResults.length ? <View style={responsiveChipGridStyle}>{interestSearchResults.map(renderInterestChip)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No matching interest yet. Try another activity, genre, category, or local place.</Text>
+                interestSearchResults.length ? <View style={responsiveChipGridStyle}>{interestSearchResults.map(renderInterestChip)}</View> : <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>No local interest found yet. Try another activity, genre, category, or local place.</Text>
               ))
             ) : (
               <View style={responsiveCardGridStyle}>
@@ -2528,7 +2528,7 @@ export default function UserPreferencesScreen() {
                     {intentOptions.map((option) => renderChip({ key: option, label: option, active: intent === option, onPress: () => saveSoftHelloMvpState({ intent: option }) }))}
                   </View>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
-                    These are expectation signals only. They do not create scores, rankings, or strict matching rules.
+                    These are expectation signals only. They do not create scores, rankings, or strict pairing rules.
                   </Text>
                 </View>
               ))}

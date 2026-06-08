@@ -40,7 +40,7 @@ export function createAlphaTesterOnboardingSnapshot(options: {
     showComfortPreferences: false,
     minimalProfileView: true,
     comfortPreferences: defaultComfortPreferences,
-    verificationLevel: "Unverified",
+    verificationLevel: "Readiness not reviewed",
     eventMemberships: [],
     blockedUserIds: [],
     safetyReports: [],

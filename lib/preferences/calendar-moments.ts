@@ -10,7 +10,7 @@ export type CalendarMomentState =
 
 export type CalendarMomentVisibility =
   | "Private"
-  | "Matched/shared visibility only"
+  | "Shared preview visibility only"
   | "Visible on profile preview"
   | "Prefer not to say";
 
@@ -52,7 +52,7 @@ export const calendarMomentStateOptions: Array<{ value: CalendarMomentState; ico
 
 export const calendarMomentVisibilityOptions: CalendarMomentVisibility[] = [
   "Private",
-  "Matched/shared visibility only",
+  "Shared preview visibility only",
   "Visible on profile preview",
   "Prefer not to say",
 ];

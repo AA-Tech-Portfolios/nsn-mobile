@@ -45,7 +45,7 @@ const copy: SettingsCopySource = {
   showDistanceInMeetupsCopy: "Show distance in meetups.",
   allowMessageRequests: "Message requests",
   allowMessageRequestsCopy: "Allow new requests.",
-  safetyCheckIns: "Safety check-ins",
+  safetyCheckIns: "Meetup check-in reminders",
   safetyCheckInsCopy: "Enable safety prompts.",
   batterySaver: "Battery saver",
   batterySaverCopy: "Reduce motion and background refresh.",

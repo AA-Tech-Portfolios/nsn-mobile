@@ -8,6 +8,6 @@ describe("profile visibility preview copy", () => {
 
     expect(profileVisibilityPreviewCopy.privateProfileNote).toContain("local RSVP");
     expect(profileVisibilityPreviewCopy.prototypeDetailsNote).toMatch(/prototype/i);
-    expect(visibleCopy).not.toMatch(/\bsafety|verified|verification|trust status|guarantee|guaranteed\b/i);
+    expect(visibleCopy).not.toMatch(/\bsafety|verified|verification|production trust|guarantee|guaranteed\b/i);
   });
 });

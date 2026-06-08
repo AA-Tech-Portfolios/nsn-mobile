@@ -11,6 +11,6 @@ describe("event creation copy", () => {
     expect(englishEventCreationCopy.subtitle).toContain("local meetup ideas");
     expect(englishEventCreationCopy.sheetSubtitle).toContain("clear");
     expect(englishEventCreationCopy.verificationRequiredCopy).toContain("local prototype");
-    expect(visibleCopy).not.toMatch(/\binvite others|trustworthy|Real Person Verified required|safety|guarantee|publish|scarcity|popular|matching\b/i);
+    expect(visibleCopy).not.toMatch(/\binvite others|trustworthy|identity review required|safety|guarantee|publish|scarcity|popular|matching\b/i);
   });
 });

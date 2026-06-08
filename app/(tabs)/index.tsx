@@ -266,47 +266,47 @@ const eventLivePreviews: Record<string, { photo: ImageSourcePropType; place: str
   "picnic-easy-hangout": {
     photo: photoStylePreview("picnic-easy-hangout")!,
     place: "Lane Cove",
-    pulse: "Live 2",
+    pulse: "Demo group",
   },
   "beach-day-chill-vibes": {
     photo: photoStylePreview("beach-day-chill-vibes")!,
     place: "Palm Beach",
-    pulse: "Live 5",
+    pulse: "Alpha sample",
   },
   "library-calm-study": {
     photo: remotePreview("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=280&q=80"),
     place: "Chatswood",
-    pulse: "Live 1",
+    pulse: "Preview",
   },
   "coffee-lane-cove": {
     photo: remotePreview("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=280&q=80"),
     place: "Lane Cove",
-    pulse: "Live 3",
+    pulse: "Demo group",
   },
   "harbour-walk-waverton": {
     photo: remotePreview("https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=280&q=80"),
     place: "Waverton",
-    pulse: "Live 4",
+    pulse: "Alpha sample",
   },
   "movie-night-watch-chat": {
     photo: photoStylePreview("movie-night-watch-chat")!,
     place: "Macquarie",
-    pulse: "Live 6",
+    pulse: "Preview",
   },
   "board-games-coffee": {
     photo: remotePreview("https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=280&q=80"),
     place: "Chatswood",
-    pulse: "Live 2",
+    pulse: "Demo group",
   },
   "ramen-small-table": {
     photo: remotePreview("https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=280&q=80"),
     place: "Crows Nest",
-    pulse: "Live 3",
+    pulse: "Alpha sample",
   },
   "quiet-music-listening": {
     photo: remotePreview("https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=280&q=80"),
     place: "North Sydney",
-    pulse: "Live 1",
+    pulse: "Preview",
   },
 };
 

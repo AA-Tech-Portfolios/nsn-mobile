@@ -54,7 +54,7 @@ export const foodPreferenceGroups: FoodPreferenceGroup[] = [
     id: "proteins",
     title: "Proteins",
     icon: "🥩",
-    copy: "Helpful for food comfort, dietary matching, and event planning notes.",
+    copy: "Helpful for food comfort and local event planning notes.",
     defaultVisible: 8,
   },
   {

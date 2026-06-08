@@ -748,7 +748,7 @@ const chatMenuTranslations = {
     openLabel: "Choose meetup chat",
     returnLabel: "Return",
     landingTitle: "Choose a chat",
-    landingCopy: "Select a meetup group or verified person to open the right conversation.",
+    landingCopy: "Select a meetup group or prototype contact preview to open the right conversation.",
     meetupGroups: "Meetup groups",
     people: "People",
     privateChat: "Private chat",
@@ -882,25 +882,25 @@ const chatTranslations = {
     softExitCopy:
       "You can leave early, take a quiet break, or step back without making it a big thing. No pressure to talk constantly.",
     softExitQuiet: "Your chat is quiet for now. You can look for another group when you are ready.",
-    safetyTitle: "Safety options",
-    safetyCopy: "Use these when something feels off. They stay private in this prototype.",
-    reportConcern: "Report concern",
-    reportConcernCopy: "Choose a private report reason for moderator review.",
-    escalationReasons: "Escalation reasons",
-    otherReportReasons: "Other report reasons",
+    safetyTitle: "Boundary options",
+    safetyCopy: "Use these local demo controls when something feels off. Nothing is sent to live moderation.",
+    reportConcern: "Concern note preview",
+    reportConcernCopy: "Choose a local report preview reason. No live moderation review is connected.",
+    escalationReasons: "Local concern reasons",
+    otherReportReasons: "Other local note reasons",
     blockHost: "Block host",
     blockHostCopy: "Stops direct interaction privately.",
     unblockHost: "Unblock host",
     unblockHostCopy: "Allow direct interaction again.",
     blockChoiceTitle: "Block this person?",
-    blockChoiceCopy: "You can only block, or block and also choose a report reason.",
+    blockChoiceCopy: "You can only block locally, or block and add a local concern note preview.",
     blockOnly: "Just block",
-    blockAndReport: "Block and report",
+    blockAndReport: "Block and note locally",
     blockedSaved: "Blocked privately",
     blockedSavedCopy: "You will not receive direct interaction from this prototype host.",
     unblockedSaved: "Unblocked",
     unblockedSavedCopy: "Direct interaction is allowed again in this prototype.",
-    chooseReportAfterBlock: "Blocked. Choose a report reason if you want moderator review too.",
+    chooseReportAfterBlock: "Blocked locally. Choose a concern note reason if you want to preview that flow too.",
     cancel: "Cancel",
     stepBack: "Step back",
     stepBackCopy: "Send a gentle preset message.",
@@ -911,12 +911,12 @@ const chatTranslations = {
     reopenOptions: "Reopen chat options",
     trustRequiredTitle: "Prototype contact preview",
     trustRequiredCopy:
-      "Private chats are gated by a local demo trust state. No real verification provider or live private messaging is connected.",
-    reviewSettings: "Review prototype trust",
-    reviewTrustStatusHint: "Opens Profile so you can review local prototype trust details.",
+      "Private chats are gated by a local demo readiness state. No real verification provider or live private messaging is connected.",
+    reviewSettings: "Review readiness preview",
+    reviewTrustStatusHint: "Opens Profile so you can review local prototype readiness details.",
     backToChatChooserHint: "Returns to the chat chooser.",
     openChatListHint: "Opens the list of meetup groups and people you can chat with.",
-    safetyOptionsHint: "Opens private safety, report, and block options for this chat.",
+    safetyOptionsHint: "Opens local boundary, concern-note, and block demo controls for this chat.",
     softExitHint: "Opens gentle options for stepping back from this meetup chat.",
     softExitPresets: {
       stepBack: "Thanks, I am going to step back for now.",
@@ -1355,28 +1355,8 @@ const chatTrustGateTranslations = {
   English: {
     trustRequiredTitle: "Prototype contact preview",
     trustRequiredCopy:
-      "Private chats are gated by a local demo trust state. No real verification provider or live private messaging is connected.",
-    reviewSettings: "Review prototype trust",
-  },
-  Japanese: {
-    trustRequiredTitle: "連絡先認証が必要です",
-    trustRequiredCopy: "両方の人が連絡先を認証すると、プライベートチャットが利用できます。",
-    reviewSettings: "信頼ステータスを確認",
-  },
-  Korean: {
-    trustRequiredTitle: "연락처 인증이 필요해요",
-    trustRequiredCopy: "두 사람 모두 연락처를 인증하면 개인 채팅을 사용할 수 있어요.",
-    reviewSettings: "신뢰 상태 확인",
-  },
-  Chinese: {
-    trustRequiredTitle: "需要联系方式验证",
-    trustRequiredCopy: "只有双方都验证联系方式后，私人聊天才会开放。",
-    reviewSettings: "查看信任状态",
-  },
-  Hebrew: {
-    trustRequiredTitle: "נדרש אימות קשר",
-    trustRequiredCopy: "צ'אטים פרטיים נפתחים רק כששני האנשים אימתו פרטי קשר.",
-    reviewSettings: "סקירת סטטוס אמון",
+      "Private chats are gated by a local demo readiness state. No real verification provider or live private messaging is connected.",
+    reviewSettings: "Review readiness preview",
   },
 } as const;
 
@@ -1471,9 +1451,7 @@ export default function ChatsScreen() {
   const copy =
     chatTranslations[appLanguageBase as keyof typeof chatTranslations] ?? chatTranslations.English;
   const chatCopy = { ...chatTranslations.English, ...copy };
-  const trustGateCopy =
-    chatTrustGateTranslations[appLanguageBase as keyof typeof chatTrustGateTranslations] ??
-    chatTrustGateTranslations.English;
+  const trustGateCopy = chatTrustGateTranslations.English;
   const localizedReportFlowCopy: ReportFlowCopy =
     reportFlowTranslations[appLanguageBase as keyof typeof reportFlowTranslations] ??
     reportFlowCopy;

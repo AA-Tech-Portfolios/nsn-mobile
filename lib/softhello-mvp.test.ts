@@ -32,25 +32,25 @@ import {
 } from "./softhello-mvp";
 
 describe("SoftHello MVP domain rules", () => {
-  it("requires real person verification before in-person meetups", () => {
-    expect(canMeetInPerson("Unverified")).toBe(false);
-    expect(canMeetInPerson("Contact Verified")).toBe(false);
-    expect(canMeetInPerson("Real Person Verified")).toBe(true);
+  it("uses local readiness preview states before in-person meetup previews", () => {
+    expect(canMeetInPerson("Readiness not reviewed")).toBe(false);
+    expect(canMeetInPerson("Prototype contact preview")).toBe(false);
+    expect(canMeetInPerson("Prototype readiness reviewed")).toBe(true);
   });
 
-  it("requires contact verification for private chat surfaces", () => {
-    expect(canChatPrivately("Unverified")).toBe(false);
-    expect(canChatPrivately("Contact Verified")).toBe(true);
-    expect(canChatPrivately("Real Person Verified")).toBe(true);
+  it("uses contact preview state for private chat prototype surfaces", () => {
+    expect(canChatPrivately("Readiness not reviewed")).toBe(false);
+    expect(canChatPrivately("Prototype contact preview")).toBe(true);
+    expect(canChatPrivately("Prototype readiness reviewed")).toBe(true);
   });
 
-  it("derives trust status from contact and identity evidence", () => {
-    expect(deriveVerificationLevel({})).toBe("Unverified");
-    expect(deriveVerificationLevel({ contactEmail: "nsn.tester@example.com" })).toBe("Contact Verified");
-    expect(deriveVerificationLevel({ contactPhone: "+61400000000" })).toBe("Contact Verified");
+  it("derives readiness preview from contact and identity evidence", () => {
+    expect(deriveVerificationLevel({})).toBe("Readiness not reviewed");
+    expect(deriveVerificationLevel({ contactEmail: "nsn.tester@example.com" })).toBe("Prototype contact preview");
+    expect(deriveVerificationLevel({ contactPhone: "+61400000000" })).toBe("Prototype contact preview");
     expect(
       deriveVerificationLevel({ contactEmail: "nsn.tester@example.com", contactPhone: "+61400000000" }),
-    ).toBe("Contact Verified");
+    ).toBe("Prototype contact preview");
     expect(
       deriveVerificationLevel({
         contactEmail: "nsn.tester@example.com",
@@ -58,34 +58,51 @@ describe("SoftHello MVP domain rules", () => {
         identitySelfieUri: "file://selfie.jpg",
         hasIdentityDocument: true,
       }),
-    ).toBe("Real Person Verified");
+    ).toBe("Prototype readiness reviewed");
   });
 
   it("lets alpha prototype trust selection unlock gated surfaces locally", () => {
-    expect(getEffectivePrototypeVerificationLevel({}, "Contact Verified")).toBe("Contact Verified");
-    expect(canChatPrivately(getEffectivePrototypeVerificationLevel({}, "Contact Verified"))).toBe(
+    expect(getEffectivePrototypeVerificationLevel({}, "Prototype contact preview")).toBe("Prototype contact preview");
+    expect(canChatPrivately(getEffectivePrototypeVerificationLevel({}, "Prototype contact preview"))).toBe(
       true,
     );
-    expect(canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Contact Verified"))).toBe(
+    expect(canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Prototype contact preview"))).toBe(
       false,
     );
     expect(
-      canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Real Person Verified")),
+      canMeetInPerson(getEffectivePrototypeVerificationLevel({}, "Prototype readiness reviewed")),
     ).toBe(true);
     expect(
-      getEffectivePrototypeVerificationLevel({ contactEmail: "nsn.tester@example.com" }, "Unverified"),
-    ).toBe("Contact Verified");
+      getEffectivePrototypeVerificationLevel({ contactEmail: "nsn.tester@example.com" }, "Readiness not reviewed"),
+    ).toBe("Prototype contact preview");
   });
 
   it("localizes trust copy while falling back to English", () => {
-    expect(getMeetingSafetyCopy("Contact Verified", "Yiddish")).toContain("באשטעטיגטן קאנטאקט");
-    expect(getMeetingSafetyCopy("Contact Verified", "Unknown")).toBe(
-      "Contact Verified users can chat, but in-person meetups require Real Person Verified status.",
+    expect(getMeetingSafetyCopy("Prototype contact preview", "Yiddish")).toContain("local contact preview");
+    expect(getMeetingSafetyCopy("Prototype contact preview", "Unknown")).toBe(
+      "This local contact preview can open prototype chat surfaces. No real verification or live messaging system is connected.",
     );
-    expect(getVerificationLevelLabel("Real Person Verified", "Yiddish")).toBe(
-      "אמתער מענטש באשטעטיגט",
+    expect(getVerificationLevelLabel("Prototype readiness reviewed", "Yiddish")).toBe(
+      "Prototype readiness reviewed",
     );
-    expect(getVerificationLevelLabel("Unverified", "Unknown")).toBe("Unverified");
+    expect(getVerificationLevelLabel("Readiness not reviewed", "Unknown")).toBe("Readiness not reviewed");
+  });
+
+  it("keeps readiness and host labels prototype-safe", () => {
+    const visibleCopy = [
+      getMeetingSafetyCopy("Readiness not reviewed"),
+      getMeetingSafetyCopy("Prototype contact preview"),
+      getMeetingSafetyCopy("Prototype readiness reviewed"),
+      getVerificationLevelLabel("Prototype readiness reviewed"),
+      getPrototypeVerificationStateLabel("host-verified"),
+      getPrototypeVerificationStateLabel("verified"),
+      getPrototypeVerificationStateLabel("pending"),
+    ].join(" ");
+
+    expect(visibleCopy).toContain("prototype");
+    expect(visibleCopy).toContain("local");
+    const unsafeTerms = ["real-person label", "host verified label", "in-person requirement", "production trust wording", "safety-check wording"];
+    expect(visibleCopy).not.toMatch(new RegExp(unsafeTerms.join("|"), "i"));
   });
 
   it("tracks join and soft-exit membership state", () => {
@@ -280,8 +297,8 @@ describe("SoftHello MVP domain rules", () => {
     const event = dayEvents.find((item) => item.id === "library-calm-study");
 
     expect(event?.trustProfile?.host.verificationState).toBe("host-verified");
-    expect(getPrototypeVerificationStateLabel("host-verified")).toBe("Verified host");
-    expect(getEventTrustSummary(event?.trustProfile)).toBe("Verified host · 2-5 people");
+    expect(getPrototypeVerificationStateLabel("host-verified")).toBe("Host details preview");
+    expect(getEventTrustSummary(event?.trustProfile)).toBe("Host details preview · 2-5 people");
     expect(event?.trustProfile?.comfortTags).toEqual(
       expect.arrayContaining(["library-friendly", "quiet-conversation", "public-transport-access"]),
     );

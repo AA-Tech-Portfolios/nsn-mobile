@@ -388,18 +388,18 @@ const profileTranslations = {
     saveAbout: "Save about me",
     editAbout: "Edit about me",
     selectOrDeselectHint: "Double tap to select or deselect",
-    trustStatus: "Trust status",
+    trustStatus: "Readiness preview",
     reviewSettings: "Review settings",
     profileMenuHint: "Opens profile shortcuts, preferences, layout, and settings links.",
-    trustStatusHint: "Opens contact, selfie, and ID fields used for trust status.",
+    trustStatusHint: "Opens contact, selfie, and ID fields used for local readiness preview.",
     opensSectionHint: "Opens section",
     verificationReviewTitle: "Confirm your details",
-    verificationReviewCopy: "Review the profile details used for trust and in-person meetup safety.",
+    verificationReviewCopy: "Review local prototype details used for the readiness preview.",
     verificationName: "Name",
     verificationSuburb: "Local Area",
     verificationAge: "Age confirmation",
     verificationPhoto: "Profile photo",
-    verificationContact: "Contact status",
+    verificationContact: "Contact preview",
     verificationTransport: "Arrival method",
     ageConfirmed: "18 or older confirmed",
     ageMissing: "Needs confirmation",
@@ -987,14 +987,14 @@ const profileVerificationTranslations = {
     idMissing: "Needs ID check",
     idProvided: "ID provided",
     idDocumentHint: "Toggles whether a government ID has been provided.",
-    contact: "Current trust status",
+    contact: "Current readiness preview",
     transport: "Arrival method",
     ageConfirmed: "18 or older confirmed",
     ageMissing: "Needs confirmation",
     photoAdded: "Photo added",
     photoMissing: "Can be added later",
-    confirmDetails: "Save trust settings",
-    confirmDetailsHint: "Saves trust settings and updates your current verification status.",
+    confirmDetails: "Save readiness preview",
+    confirmDetailsHint: "Saves local readiness preview settings for this device.",
   },
   Chinese: {
     reviewSettings: "检查设置",
@@ -1235,14 +1235,14 @@ export default function ProfileScreen() {
   const vibeCopy = profileVibeTranslations[appLanguageBase] ?? {};
   const comfortCopy = comfortPreferenceTranslations[appLanguageBase] ?? {};
   const visibilityCopy = visibilityModeTranslations[appLanguageBase as keyof typeof visibilityModeTranslations] ?? visibilityModeTranslations.English;
-  const profileVerificationCopy = profileVerificationTranslations[appLanguageBase as keyof typeof profileVerificationTranslations] ?? profileVerificationTranslations.English;
+  const profileVerificationCopy = profileVerificationTranslations.English;
   const profileVerificationA11yCopy = { ...profileVerificationTranslations.English, ...profileVerificationCopy };
   const profilePreferenceCopy = getProfilePreferenceCopy(appLanguageBase);
   const visibilityModeCopy =
     comfortMode === "Comfort Mode"
-      ? "Profiles are blurred, with matched or shared visibility only."
+      ? "Details stay blurred unless you choose to show more in prototype previews."
       : comfortMode === "Warm Up Mode"
-        ? "Profiles are partly visible and reveal more when both people feel comfortable."
+        ? "Shared visibility preview can show a little more while staying local-only."
         : "People in the event can see basic profile details.";
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
   const getComfortLabel = (preference: SoftHelloComfortPreference) => comfortCopy[preference] ?? preference;
@@ -2417,7 +2417,7 @@ export default function ProfileScreen() {
       lifeContextFields: [],
       lifeContextFieldVisibility: "Private",
       lifeContextLearningInterests: [],
-      lifeContextLearningVisibility: "Matched/shared visibility only",
+      lifeContextLearningVisibility: "Shared preview visibility only",
       lifeContextLastUpdatedAt: null,
       verifiedButPrivate: true,
       calendarMomentStates: {},
@@ -2460,25 +2460,25 @@ export default function ProfileScreen() {
   );
   const verificationLevelCards = [
     {
-      level: "Unverified" as const,
+      level: "Readiness not reviewed" as const,
       title: "Level 0",
-      meaning: "New or incomplete account.",
-      treatment: "Can browse limited content, but cannot meet in person.",
-      active: effectiveReviewVerificationLevel === "Unverified",
+      meaning: "Local meetup readiness has not been reviewed in this prototype.",
+      treatment: "Can browse and prepare without implying a real safety or identity check.",
+      active: effectiveReviewVerificationLevel === "Readiness not reviewed",
     },
     {
-      level: "Contact Verified" as const,
+      level: "Prototype contact preview" as const,
       title: "Level 1",
-      meaning: "Email or phone saved locally in this pilot.",
-      treatment: "Can create a basic profile and use low-risk interactions.",
-      active: effectiveReviewVerificationLevel === "Contact Verified",
+      meaning: "Email or phone is saved locally for this prototype preview.",
+      treatment: "Can open prototype chat surfaces without a real verification provider.",
+      active: effectiveReviewVerificationLevel === "Prototype contact preview",
     },
     {
-      level: "Real Person Verified" as const,
+      level: "Prototype readiness reviewed" as const,
       title: "Level 2",
-      meaning: "Live selfie plus ID check modelled in the prototype.",
-      treatment: "Required before in-person meeting eligibility.",
-      active: effectiveReviewVerificationLevel === "Real Person Verified",
+      meaning: "Selfie and ID fields are modelled locally for alpha testing.",
+      treatment: "Shows a local meetup preview state only; it is not identity verification.",
+      active: effectiveReviewVerificationLevel === "Prototype readiness reviewed",
     },
   ];
   const selectedFoodPreferenceLabels = useMemo(
@@ -2681,9 +2681,9 @@ export default function ProfileScreen() {
     <View style={[styles.profileSectionCard, !isCleanProfile && styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
       <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
         <View style={styles.profileLayoutBody}>
-          <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Comfort & Trust</Text>
+          <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Privacy & Comfort</Text>
           <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Phase 1 prototype controls for visibility, energy, communication, group size, and verified-but-private trust.
+            Phase 1 prototype controls for visibility, energy, communication, group size, and local readiness previews.
           </Text>
         </View>
         <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>Saved locally</Text>
@@ -2850,15 +2850,15 @@ export default function ProfileScreen() {
         onPress={toggleVerifiedButPrivate}
         style={[styles.verifiedPrivateOption, isDay && styles.daySoftOption, verifiedButPrivate && styles.verifiedPrivateOptionActive]}
         accessibilityRole="switch"
-        accessibilityLabel="Verified but private prototype trust state"
+        accessibilityLabel="Private readiness preview"
         accessibilityState={{ checked: verifiedButPrivate }}
       >
         <View style={styles.profileLayoutBody}>
           <Text style={[styles.trustFoundationTitle, verifiedButPrivate && styles.verifiedPrivateTextActive, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
-            Verified, but private
+            Readiness preview private
           </Text>
           <Text style={[styles.trustFoundationCopy, verifiedButPrivate && styles.verifiedPrivateTextActive, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Your contact/trust status can be checked without making your profile fully open. Prototype only - no real verification provider is connected yet.
+            Your contact/readiness preview can be shown without making your profile fully open. Prototype only - no real verification provider is connected yet.
           </Text>
         </View>
         <View style={styles.profileLayoutCheck}>{verifiedButPrivate ? <IconSymbol name="checkmark" color="#FFFFFF" size={18} /> : null}</View>
@@ -3029,7 +3029,7 @@ export default function ProfileScreen() {
     <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
       <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
         <View style={styles.profileLayoutBody}>
-          <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Comfort & Trust</Text>
+          <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Privacy & Comfort</Text>
           <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
             {comfortMode} / {socialEnergyPreference} energy / {groupSizePreference}
           </Text>
@@ -3042,7 +3042,7 @@ export default function ProfileScreen() {
           { label: "Communication", value: communicationPreferences.slice(0, 2).join(", ") || "Not set" },
           { label: "Photo comfort", value: photoRecordingComfortPreferences.slice(0, 2).join(", ") || "Ask first" },
           { label: "Contact comfort", value: physicalContactComfortPreferences.slice(0, 2).join(", ") || "Ask first" },
-          { label: "Trust status", value: verifiedButPrivate ? "Verified, private" : "Visible when shared" },
+          { label: "Readiness preview", value: verifiedButPrivate ? "Preview private" : "Visible when shared" },
         ].map((item) => (
           <View key={item.label} style={[styles.privacySummaryItem, isDay && styles.daySoftOption]}>
             <Text style={[styles.privacySummaryLabel, isDay && styles.dayMutedText]}>{item.label}</Text>
@@ -3055,7 +3055,7 @@ export default function ProfileScreen() {
         onPress={() => openPreferenceDestination("comfortTrust", "comfort")}
         style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
         accessibilityRole="button"
-        accessibilityLabel="Manage Comfort and trust in User Options"
+        accessibilityLabel="Manage Privacy and Comfort in User Options"
       >
         <Text style={styles.reviewSettingsText}>Manage in User Options</Text>
       </TouchableOpacity>
@@ -3081,7 +3081,7 @@ export default function ProfileScreen() {
         </View>
       ) : (
         <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-          Nothing is visible on the profile preview yet. Broad context can stay private, matched/shared only, or ask-first.
+          Nothing is visible on the profile preview yet. Broad context can stay private, shared-preview only, or ask-first.
         </Text>
       )}
       <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
@@ -3177,7 +3177,7 @@ export default function ProfileScreen() {
       comfort: {
         label: "Manage",
         onPress: () => openFullPreferenceView("comfort"),
-        accessibilityLabel: "Manage comfort and trust preferences",
+        accessibilityLabel: "Manage privacy and comfort preferences",
       },
       contact: {
         label: "Manage",
@@ -3187,17 +3187,17 @@ export default function ProfileScreen() {
       socialEnergy: {
         label: "Manage",
         onPress: () => openFullPreferenceView("comfort"),
-        accessibilityLabel: "Manage social energy in comfort and trust preferences",
+        accessibilityLabel: "Manage social energy in privacy and comfort preferences",
       },
       communication: {
         label: "Manage",
         onPress: () => openFullPreferenceView("comfort"),
-        accessibilityLabel: "Manage communication preferences in comfort and trust",
+        accessibilityLabel: "Manage communication preferences in privacy and comfort",
       },
       groupSize: {
         label: "Manage",
         onPress: () => openFullPreferenceView("comfort"),
-        accessibilityLabel: "Manage group size preference in comfort and trust",
+        accessibilityLabel: "Manage group size preference in privacy and comfort",
       },
       photoRecording: {
         label: "Manage",
@@ -3207,7 +3207,7 @@ export default function ProfileScreen() {
       verificationTrust: {
         label: "Manage",
         onPress: openVerificationReview,
-        accessibilityLabel: "Manage prototype verification and trust status",
+        accessibilityLabel: "Manage prototype readiness preview",
       },
       personalityPresence: {
         label: "Manage",
@@ -3220,7 +3220,7 @@ export default function ProfileScreen() {
   };
   const visibilityModeDetail =
     privateProfile || comfortMode === "Comfort Mode"
-      ? "Private / matched/shared visibility only: full profile details stay limited, while trust and verification checks can still be shown where appropriate."
+      ? "Private / shared-preview visibility only: full profile details stay limited, while local readiness previews can still be shown where appropriate."
       : comfortMode === "Warm Up Mode"
         ? "Warm Up: people see a partial, gentler preview first. Photo blur and private details still follow your settings."
         : "Open / visible: people in the same event can see the profile details you choose to show.";
@@ -3240,7 +3240,7 @@ export default function ProfileScreen() {
           <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
             {comfortMode === "Open Mode"
               ? "Used for local meetups and shown only when your visibility settings allow it."
-              : "Used for local matching. You control whether it appears in the preview."}
+              : "Used for local meetup previews. You control whether it appears in the preview."}
           </Text>
         </View>
         <Text
@@ -3959,7 +3959,7 @@ export default function ProfileScreen() {
                       </Text>
                     </View>
                     {[
-                      { title: "Comfort Mode", copy: "Hides details by default and keeps profiles blurred until matched or shared." },
+                      { title: "Comfort Mode", copy: "Hides details by default and keeps profiles blurred unless you choose a shared preview." },
                       { title: "Warm Up Mode", copy: "Shows a few friendly details while keeping sensitive details hidden." },
                       { title: "Open Mode", copy: "Shows basic profile details to people in the event." },
                       { title: "Preview controls", copy: "Use Shown/Hidden buttons on Profile, or manage everything in Settings & Privacy." },
@@ -4095,7 +4095,7 @@ export default function ProfileScreen() {
                     <View style={[styles.profileMenuInfoCard, isDesktopHelpSupport && styles.helpIntroCardDesktop, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Personality & Presence</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Optional human context for blurred or private profile photos. These details stay local in this prototype and are not used for ranking, swiping, scoring, or matching logic.
+                        Optional human context for blurred or private profile photos. These details stay local in this prototype and are not used for ranking, swiping, scoring, or compatibility logic.
                       </Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         {showPersonalityPresenceOnProfile ? "Allowed in profile preview when your privacy settings permit it." : "Hidden from your public profile preview."}
@@ -4352,7 +4352,7 @@ export default function ProfileScreen() {
                       </View>
                     ))}
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
-                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Future matching note</Text>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Future suggestion note</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                         Later, broad context can help with study groups, volunteering meetups, and shared interest prompts. No production recommendation engine is connected yet.
                       </Text>
@@ -4456,7 +4456,7 @@ export default function ProfileScreen() {
                           calendarMomentSearchResults.map(renderCalendarMomentCard)
                         ) : (
                           <View style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
-                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No matching moment yet</Text>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No local moment yet</Text>
                             <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>Try another holiday, festival, observance, or keyword.</Text>
                           </View>
                         )}
@@ -4568,7 +4568,7 @@ export default function ProfileScreen() {
                           </View>
                         ) : (
                           <View style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
-                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No matching preference yet</Text>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No local preference yet</Text>
                             <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                               Try another food, drink, cuisine, dietary need, or avoidance.
                             </Text>
@@ -4663,7 +4663,7 @@ export default function ProfileScreen() {
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Hobbies & Interests</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Interests help NSN suggest comfortable activities and conversation starters. This is a local prototype preference layer, not a dating quiz or production matching engine.
+                        Interests help NSN preview comfortable activities and conversation starters. This is a local prototype preference layer, not a dating quiz or production recommendation system.
                       </Text>
                     </View>
                     <View style={styles.foodPreferenceSearchWrap}>
@@ -4710,7 +4710,7 @@ export default function ProfileScreen() {
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{interestComfortModifierTitle}</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Mark how each selected interest feels. These labels are prototype comfort signals for future matching and event planning.
+                        Mark how each selected interest feels. These labels are local-only comfort signals for future planning.
                       </Text>
                       {activeInterestForComfort ? (
                         <>
@@ -4776,7 +4776,7 @@ export default function ProfileScreen() {
                           </View>
                         ) : (
                           <View style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
-                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No matching interest yet</Text>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>No local interest yet</Text>
                             <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
                               Try another activity, genre, category, or local place.
                             </Text>
@@ -5324,7 +5324,7 @@ export default function ProfileScreen() {
                             ))
                           ) : (
                             <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                              No matching support items yet. Try weather, transport, accessibility, feedback, or arriving alone.
+                              No support items found yet. Try weather, transport, accessibility, feedback, or arriving alone.
                             </Text>
                           )}
                         </View>
@@ -5651,7 +5651,7 @@ export default function ProfileScreen() {
                         </View>
                       ))}
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                        Guidance is optional and used as reassurance only. It does not create matching scores, rankings, swiping, or pressure to date.
+                        Guidance is optional and used as reassurance only. It does not create scores, rankings, swiping, or pressure to date.
                       </Text>
                         </View>
                       ) : null}
@@ -6079,7 +6079,7 @@ export default function ProfileScreen() {
                   }}
                   style={styles.profileMenuItem}
                   accessibilityRole="button"
-                  accessibilityLabel="Block and report"
+                  accessibilityLabel="Block/report demo controls"
                 >
                   <IconSymbol name="flag" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                   <View style={styles.profileMenuItemBody}>
@@ -6202,7 +6202,7 @@ export default function ProfileScreen() {
           <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>Alpha testing</Text>
           <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>What to try on Profile</Text>
           <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Adjust your comfort profile, preview visibility, and local area. Verification, trust, account actions, block, and report controls are prototype-only until real account systems exist.
+            Adjust your comfort profile, preview visibility, and local area. Readiness, account actions, block, and report controls are prototype-only until real account systems exist.
           </Text>
         </View>
 
@@ -7081,7 +7081,7 @@ export default function ProfileScreen() {
 
         {shouldShowManagementSectionOnProfileHome("workStudyLifeContext") ? backgroundCommunitySummarySection : null}
 
-        {isCleanProfile && shouldShowManagementSectionOnProfileHome("trustStatusDetails") ? (
+        {isCleanProfile && shouldShowManagementSectionOnProfileHome("readinessPreviewDetails") ? (
           <View style={[styles.trustCard, styles.simpleTrustCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
             <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
               <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{copy.trustStatus}</Text>
@@ -7090,7 +7090,7 @@ export default function ProfileScreen() {
               </Text>
             </View>
             <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {canMeetInPerson(effectiveVerificationLevel) ? "Ready for in-person meetup safety checks." : "You can browse and prepare. In-person meetups need Real Person Verified status."}
+              {canMeetInPerson(effectiveVerificationLevel) ? "Prototype readiness reviewed on this device." : "You can browse and prepare. Meetup access is only a local readiness preview."}
             </Text>
             <View style={styles.verificationSteps}>
               {verificationLevels.map((level) => (
@@ -7130,7 +7130,7 @@ export default function ProfileScreen() {
             <View style={[styles.simpleVisibilityModeCard, isDay && styles.dayVisibilityModeCard]}>
               <View style={[styles.simpleVisibilityModeGrid, isRtl && styles.rtlRow]}>
                 {([
-                  { value: "Comfort Mode" as const, label: "Private / matched" },
+                  { value: "Comfort Mode" as const, label: "Private preview" },
                   { value: "Warm Up Mode" as const, label: "Warm Up" },
                   { value: "Open Mode" as const, label: "Open / visible" },
                 ]).map((option) => {
@@ -7314,7 +7314,7 @@ export default function ProfileScreen() {
             >
               <Text style={[styles.verificationReviewTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{profileVerificationCopy.title}</Text>
               <Text style={[styles.verificationReviewCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Choose how much trust evidence you want to model in this local pilot. Real verification still needs a provider before production.
+                Choose how much readiness evidence you want to model in this local pilot. Real verification still needs a provider before production.
               </Text>
               {openedVerificationFromChats ? (
                 <View style={[styles.verificationReturnGrid, isRtl && styles.rtlRow]}>
@@ -7350,11 +7350,11 @@ export default function ProfileScreen() {
                   onPress={() => setIsVerificationGuideOpen((current) => !current)}
                   accessibilityRole="button"
                   accessibilityState={{ expanded: isVerificationGuideOpen }}
-                  accessibilityLabel={`${isVerificationGuideOpen ? "Collapse" : "Expand"} trust level guide`}
+                  accessibilityLabel={`${isVerificationGuideOpen ? "Collapse" : "Expand"} readiness preview guide`}
                   style={[styles.verificationGuideHeader, isRtl && styles.rtlRow]}
                 >
                   <View style={styles.profileLayoutBody}>
-                    <Text style={[styles.verificationGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Trust level guide</Text>
+                    <Text style={[styles.verificationGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Readiness preview guide</Text>
                     <Text style={[styles.verificationGuideCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                       {getVerificationLevelLabel(effectiveReviewVerificationLevel, appLanguageBase)} selected. Expand to compare prototype levels.
                     </Text>
@@ -7370,8 +7370,8 @@ export default function ProfileScreen() {
                         onPress={() => savePrototypeVerificationLevel(item.level)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: item.active }}
-                        accessibilityLabel={`Prototype trust level ${item.level}`}
-                        accessibilityHint="Selects a local-only prototype verification level. This does not verify your identity."
+                        accessibilityLabel={`Prototype readiness preview ${item.level}`}
+                        accessibilityHint="Selects a local-only prototype readiness preview. This does not verify your identity."
                         style={[styles.verificationLevelCard, isDay && styles.daySoftOption, item.active && styles.verificationLevelCardActive, item.active && isDay && styles.dayVerificationLevelCardActive]}
                       >
                         <View style={styles.verificationLevelHeader}>
@@ -7384,19 +7384,19 @@ export default function ProfileScreen() {
                     ))}
                     <View style={[styles.verificationLevelCard, isDay && styles.daySoftOption]}>
                       <View style={styles.verificationLevelHeader}>
-                        <Text style={[styles.verificationLevelKicker, isDay && styles.dayMutedText]}>Level 3</Text>
-                        <Text style={[styles.verificationLevelName, isDay && styles.dayTitle]}>Identity Verified</Text>
+                        <Text style={[styles.verificationLevelKicker, isDay && styles.dayMutedText]}>Future</Text>
+                        <Text style={[styles.verificationLevelName, isDay && styles.dayTitle]}>External provider review</Text>
                       </View>
-                      <Text style={[styles.verificationLevelCopy, isDay && styles.dayMutedText]}>Optional ID verification confirming name and age.</Text>
-                      <Text style={[styles.verificationLevelTreatment, isDay && styles.dayTitle]}>Post-MVP unless needed for a high-trust flow.</Text>
+                      <Text style={[styles.verificationLevelCopy, isDay && styles.dayMutedText]}>Planning note only for a later reviewed provider handoff.</Text>
+                      <Text style={[styles.verificationLevelTreatment, isDay && styles.dayTitle]}>Not connected in this alpha prototype.</Text>
                     </View>
                   </View>
                 ) : null}
                 </View>
               <View style={styles.verificationReviewList}>
               <View style={[styles.verificationInputGroup, isDay && styles.daySoftOption]}>
-                <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Level 1: Contact Verified</Text>
-                <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Add an email or phone number to model contact verification.</Text>
+                <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Level 1: Contact preview</Text>
+                <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Add an email or phone number to model a local contact preview.</Text>
                 <View style={styles.verificationContactGrid}>
                   <TextInput
                     value={draftContactEmail}
@@ -7419,7 +7419,7 @@ export default function ProfileScreen() {
               </View>
               <View style={[styles.verificationActionGrid, isRtl && styles.rtlRow]}>
                 <TouchableOpacity activeOpacity={0.82} onPress={pickIdentitySelfie} style={[styles.verificationActionCard, isDay && styles.daySoftOption]} accessibilityRole="button" accessibilityHint={screenReaderHints ? profileVerificationA11yCopy.selfieHint : undefined}>
-                  <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Level 2: Real Person</Text>
+                  <Text style={[styles.verificationReviewValue, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Level 2: Readiness preview</Text>
                   <Text style={[styles.verificationReviewLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                     {draftIdentitySelfieUri ? profileVerificationCopy.selfieAdded : profileVerificationCopy.addSelfie}
                   </Text>

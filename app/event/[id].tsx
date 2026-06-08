@@ -219,7 +219,7 @@ const verificationWindowTranslations = {
     suburb: "Local area",
     age: "Age confirmation",
     photo: "Profile photo",
-    contact: "Contact status",
+    contact: "Contact preview",
     transport: "Arrival method",
     ageConfirmed: "18 or older confirmed",
     ageMissing: "Needs confirmation",
@@ -230,7 +230,7 @@ const verificationWindowTranslations = {
     close: "Close",
     defaultMemberName: "NSN member",
     confirmHint: "Reviews these local prototype details for this meetup preview.",
-    editProfileHint: "Opens Profile to update trust, contact, and profile details.",
+    editProfileHint: "Opens Profile to update readiness, contact, and profile details.",
     verifiedTitle: "Prototype details reviewed",
     verifiedCopy: "This local preview is marked ready to continue.",
   },
@@ -841,7 +841,7 @@ export default function EventDetailsScreen() {
   const copy = eventTranslations[appLanguageBase as keyof typeof eventTranslations] ?? eventTranslations.English;
   const saveCopy = savePlaceTranslations[appLanguageBase as keyof typeof savePlaceTranslations] ?? savePlaceTranslations.English;
   const actionCopy = eventActionTranslations[appLanguageBase as keyof typeof eventActionTranslations] ?? eventActionTranslations.English;
-  const verificationCopy = verificationWindowTranslations[appLanguageBase as keyof typeof verificationWindowTranslations] ?? verificationWindowTranslations.English;
+  const verificationCopy = verificationWindowTranslations.English;
   const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
   const eventCopy = { ...eventTranslations.English, ...copy };
   const eventActionCopy = { ...eventActionTranslations.English, ...actionCopy };

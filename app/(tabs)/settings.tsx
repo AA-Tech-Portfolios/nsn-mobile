@@ -105,7 +105,7 @@ const softRevealPaceOptions: { value: SoftRevealPace; label: string; copy: strin
   },
 ];
 const comfortModeOptions: { value: NsnComfortMode; copy: string }[] = [
-  { value: "Comfort Mode", copy: "Profiles stay blurred with matched or shared visibility only." },
+  { value: "Comfort Mode", copy: "Details stay blurred unless you choose to show more in prototype previews." },
   {
     value: "Warm Up Mode",
     copy: "Profiles are partly visible and can use a softer blur while warming up.",
@@ -143,7 +143,7 @@ const profileShortcutLayoutOptions: {
   {
     value: "Expanded",
     label: "Detailed Profile",
-    copy: "Show the fuller Profile detail view with local area, interests, comfort, privacy, and prototype trust detail cards.",
+    copy: "Show the fuller Profile detail view with local area, interests, comfort, privacy, and readiness preview cards.",
   },
 ];
 const userPreferenceTextModeOptions: {
@@ -2113,7 +2113,7 @@ const settingsSectionTranslations: Record<string, Partial<SettingsCopy>> = {
     safetyContact: "Safety at contact",
     allowMessageRequests: "Payagan ang message requests",
     allowMessageRequestsCopy: "Hayaan ang iba na mag-message bago kayo sumali sa parehong meetup.",
-    safetyCheckIns: "Safety check-ins",
+    safetyCheckIns: "Meetup check-in reminders",
     safetyCheckInsCopy: "I-on ang banayad na check-in prompts sa paligid ng sinalihang meetups.",
   },
   Indonesian: {
@@ -3858,7 +3858,7 @@ export default function SettingsScreen() {
       { id: "batteryPerformance", label: "Battery" },
       { id: "generalPrivacy", label: "Privacy" },
       { id: "profileVisibility", label: "Visibility" },
-      { id: "trustFoundations", label: "Trust" },
+      { id: "trustFoundations", label: "Readiness" },
       { id: "profilePreview", label: "Preview" },
       { id: "appearance", label: "Appearance" },
       ...(isAdvancedSettings
@@ -5559,7 +5559,7 @@ export default function SettingsScreen() {
                   },
                   {
                     label: "Show preferred age range",
-                    copy: "Show the age range you prefer for matching.",
+                    copy: "Show the adult age range you prefer in local previews.",
                     value: showPreferredAgeRange,
                     onChange: (value: boolean) =>
                       saveSoftHelloMvpState({ showPreferredAgeRange: value }),
@@ -5966,8 +5966,8 @@ export default function SettingsScreen() {
                     isRtl && styles.rtlText,
                   ]}
                 >
-                  Photo comfort, consent reminders, and prototype trust state stay grouped here so
-                  safety actions remain calm and clear.
+                  Photo comfort, consent reminders, and local readiness previews stay grouped here so
+                  boundary actions remain calm and clear.
                 </Text>
                 <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
                   <Text
@@ -6104,19 +6104,19 @@ export default function SettingsScreen() {
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Choose a local-only trust level for alpha testing. This unlocks prototype chat
-                    and meetup gates on this device, but does not perform real identity
+                    Choose a local-only readiness preview for alpha testing. This opens prototype
+                    chat and meetup preview gates on this device, but does not perform real identity
                     verification.
                   </Text>
                   <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
                     {verificationLevels.map((level) => {
                       const active = effectiveVerificationLevel === level;
                       const helper =
-                        level === "Unverified"
+                        level === "Readiness not reviewed"
                           ? "Browse-only prototype state."
-                          : level === "Contact Verified"
-                            ? "Allows prototype chat access."
-                            : "Allows prototype meetup/chat access.";
+                          : level === "Prototype contact preview"
+                            ? "Opens prototype chat preview."
+                            : "Opens prototype meetup and chat previews.";
 
                       return (
                         <TouchableOpacity
@@ -6166,7 +6166,7 @@ export default function SettingsScreen() {
                         isRtl && styles.rtlText,
                       ]}
                     >
-                      Verified, but private
+                      Readiness preview private
                     </Text>
                     <Text
                       style={[
@@ -6177,8 +6177,8 @@ export default function SettingsScreen() {
                         isRtl && styles.rtlText,
                       ]}
                     >
-                      Your contact/trust status can be checked without making your profile fully
-                      open. Prototype trust state only - no real verification provider is connected
+                      Your contact/readiness preview can be shown without making your profile fully
+                      open. Prototype readiness preview only - no real verification provider is connected
                       yet.
                     </Text>
                     {renderSettingMeta("verifiedButPrivate")}
@@ -6186,8 +6186,8 @@ export default function SettingsScreen() {
                   <Switch
                     value={verifiedButPrivate}
                     onValueChange={onToggleChange("verifiedButPrivate", saveVerifiedButPrivate)}
-                    accessibilityLabel="Verified but private prototype trust state"
-                    accessibilityHint="Keeps trust status visible without opening your full profile."
+                    accessibilityLabel="Private prototype readiness preview"
+                    accessibilityHint="Keeps the readiness preview visible without opening your full profile."
                     trackColor={{
                       false: isDay ? "#C5D0DA" : nsnColors.border,
                       true: paletteAccent,

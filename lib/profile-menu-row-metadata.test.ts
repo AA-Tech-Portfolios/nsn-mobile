@@ -30,7 +30,7 @@ describe("profile menu row metadata", () => {
     const helperCopy = profileOptionGroups.flatMap((group) => [group.description, group.helperCopy]).join(" ");
 
     expect(helperCopy).toContain("local-only");
-    expect(helperCopy.toLowerCase()).not.toMatch(/guarantee|verified|verification|moderation|matching engine|live safety support|host tracking enabled/);
+    expect(helperCopy.toLowerCase()).not.toMatch(/guarantee|verified|verification|moderation|production pairing|live safety support|host tracking enabled/);
   });
 
   it("keeps Appearance & Layout controls distinct without deep nesting", () => {

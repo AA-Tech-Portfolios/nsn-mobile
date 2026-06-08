@@ -284,7 +284,7 @@ export const dayEvents: EventItem[] = [
       venueType: "cafe",
       comfortTags: ["quiet", "beginner-friendly", "public-place", "indoor-backup", "transport-friendly", "cafe-nearby"],
       weatherAlternatives: ["stay indoors at the cafe", "Chatswood shopping centre", "library meetup"],
-      accountabilityNote: "Small table plans show trust status without exposing private identity documents.",
+      accountabilityNote: "Small table plans show a local readiness preview without exposing private identity documents.",
     },
   },
   {

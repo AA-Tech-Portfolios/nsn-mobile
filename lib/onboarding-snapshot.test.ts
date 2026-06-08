@@ -15,7 +15,7 @@ describe("alpha tester onboarding snapshot", () => {
       age: null,
       displayName: "NSN Tester",
       intent: "Exploring",
-      verificationLevel: "Unverified",
+      verificationLevel: "Readiness not reviewed",
       privateProfile: true,
       blurProfilePhoto: true,
       showAge: false,

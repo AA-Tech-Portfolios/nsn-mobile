@@ -231,7 +231,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - Review bottom-nav spacing: chat composers, scroll views, modals, and card lists should sit above the tab bar/home indicator without excessive empty space.
 - Review Profile/User Options grouping clarity: Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings should feel distinct, with no confusing duplicate concepts.
 - Review Settings & Privacy prototype wording: local-only, demo, coming-soon, saved-locally, and prototype verification copy should be clear without sounding alarming.
-- Review verification flow: testers should be able to set local Contact Verified or Real Person Verified states, see the Profile trust badge update, and understand that no real identity verification occurs.
+- Review readiness preview flow: testers should be able to set local prototype contact/readiness states, see the Profile readiness badge update, and understand that no real identity verification occurs.
 - Review chats and keyboard/composer spacing: group and private chat composers should feel calm, reachable, and consistently placed on smaller iPhones.
 - Review meetup details comfort/safety wording: comfort, weather, photo/video consent, safety notes, and Community Guidelines alpha copy should feel practical and low-pressure.
 - Review text wrapping on mobile: titles, descriptions, location text, and important card copy should wrap where readability matters instead of truncating too early.
@@ -249,7 +249,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Home does not feel overwhelming
 - [ ] Bottom-nav spacing is correct
 - [ ] Text wraps instead of truncating where readability matters
-- [ ] Verification works and stays prototype-safe
+- [x] Readiness preview wording stays prototype-safe
 - [x] Community Guidelines alpha copy is visible and calm
 - [x] Checkpoint screenshots are regenerated after the walkthrough
 
@@ -293,7 +293,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Decide the real verification provider strategy and UX handoff before claiming production verification
 - [ ] Use `docs/database-auth-planning.md` to guide staged database/auth planning before replacing local prototype state or collecting live personal data
 - [ ] Add a real trust-state backend before treating verification or privacy gates as production systems
-- [ ] Expand privacy rules for progressive visibility, matched/shared visibility, event-visible fields, warm-up disclosure, and mutual profile-photo reveal
+- [ ] Future privacy planning only: expand rules for progressive visibility, shared preview visibility, event-visible fields, warm-up disclosure, and mutual profile-photo reveal
 - [ ] Add mutual pre-meetup consent for optional 1-1 chats between members
 - [ ] Decide whether verified student, work, or volunteer status is ever needed; if added, keep it optional, broad, privacy-controlled, and separate from exact employer or institution display
 - [ ] Add stronger privacy controls for exact schools, workplaces, volunteer organisations, schedules, and routines before supporting those fields
@@ -312,7 +312,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 
 - [x] Add gentle local RSVP states: Going, Interested, Deciding later, Running late, Unable to make it, and Clear
 - [x] Add optional meetup comfort roles such as quiet joiner, happy to chat, host helper, first-time attendee, or guide request (implemented in prototype form as local-only role chips)
-- [ ] Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
+- [x] Add a pre-meetup readiness flow covering expectations, location, host, plan, safety reminder, backup plan, and exit options
 - [ ] Explore Pre-meetup UX only as a future safety/social comfort feature: support gradual trust before group activities, keep first meetings public and casual, make 1:1 or small-group comfort optional, and avoid creating pressure to prove readiness for the main meetup
 - [ ] Explore lightweight emergency-awareness guide pages covering staying calm, contacting local emergency services when someone is in immediate danger, asking venue staff for help, locating exits, water, restrooms, and open-air spaces, and leaving/rejoining meetups without stigma
 - [ ] Explore basic first-aid awareness links to external resources such as Australian Red Cross First Aid app, Healthdirect Australia first aid guidance, and St John Ambulance resources, with clear "not emergency medical advice" wording
