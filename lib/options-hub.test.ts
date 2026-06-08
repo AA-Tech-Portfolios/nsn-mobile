@@ -71,6 +71,18 @@ describe("options hub metadata", () => {
     expect(missing).toBeUndefined();
   });
 
+  it("keeps Appearance & Layout rows scoped to Home and event-card display", () => {
+    const appearance = getOptionsHubSection("home", optionsHubSections);
+
+    expect(appearance?.rows.map((row) => row.title)).toEqual([
+      "Home & event cards",
+      "Home layout preview",
+      "View density",
+    ]);
+    expect(appearance?.rows.map((row) => row.description).join(" ")).toContain("event-card");
+    expect(appearance?.rows.map((row) => row.description).join(" ")).toContain("local prototype");
+  });
+
   it("keeps first meetup support local and prototype-only", () => {
     expect(firstMeetupSupportOptions.map((option) => option.label)).toEqual([
       "Guide requested",

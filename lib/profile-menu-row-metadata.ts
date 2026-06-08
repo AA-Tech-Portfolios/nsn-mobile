@@ -67,6 +67,44 @@ export const profileOptionGroups: ProfileOptionGroupMetadata[] = [
   },
 ];
 
+export type AppearanceLayoutControlKey = "homeEventCards" | "profileDetailLevel" | "profileWidth";
+
+export type AppearanceLayoutControlMetadata = {
+  key: AppearanceLayoutControlKey;
+  icon: ProfileMenuIcon | "resize";
+  title: string;
+  scope: string;
+  description: string;
+  previewCopy: string;
+};
+
+export const appearanceLayoutControlMetadata: AppearanceLayoutControlMetadata[] = [
+  {
+    key: "homeEventCards",
+    icon: "layout",
+    title: "Home & event cards",
+    scope: "Home and Event Details",
+    description: "Controls Home density, event-card layout, preview images, and header control density.",
+    previewCopy: "Changes are local-only and affect how meetup cards scan on this device.",
+  },
+  {
+    key: "profileDetailLevel",
+    icon: "person.fill",
+    title: "Profile detail level",
+    scope: "Profile",
+    description: "Switches Profile between a simpler social preview and the fuller detailed view.",
+    previewCopy: "Use Simple for a quieter profile, or Detailed when reviewing privacy and comfort cards.",
+  },
+  {
+    key: "profileWidth",
+    icon: "resize",
+    title: "Profile width",
+    scope: "Profile",
+    description: "Chooses whether Profile stays centered or uses a wider dashboard-style layout.",
+    previewCopy: "Width is a local-only display preference for this device.",
+  },
+];
+
 export type UserPreferenceRowKey =
   | "comfort"
   | "personality"

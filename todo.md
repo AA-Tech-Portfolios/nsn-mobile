@@ -34,7 +34,7 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 - [x] 🟡 Add interactive tutorials for privacy, preview visibility, comfort modes, and key meetup flows
 - [x] 🟡 Add opt-out and group-change flows that reassure users it is okay to skip, leave, find a better-suited group, or create their own
 - [x] 🟡 Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
-- [ ] 🟡 Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
+- [x] 🟡 Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
 
 ### 🟠 Hard / Not Alpha Implementation Scope
 
@@ -219,7 +219,7 @@ Names to consider:
 - [x] Continue button behaviour audit across Profile, Settings & Privacy, modal menus, disabled controls, and saved-locally actions
 - [x] Keep prototype-only account actions visible for alpha as local pause and deletion-preview controls, with calm wording that real deletion/auth/backends are not connected yet
 - [x] 🟢 Regenerate checkpoint screenshots after the alpha UX cleanup, including refreshed profile/demo identity assets
-- [ ] 🟢 If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
+- [x] 🟢 If exact original event-image upload pixels are needed later, save source files into `assets/images/events` and swap Home preview sources to local files
 
 ## Alpha Walkthrough Notes (May 2026)
 
@@ -242,9 +242,9 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] No clipped mobile content
 - [ ] No empty icon containers
 - [ ] All buttons reachable on smaller iPhones
-- [ ] Settings names feel distinct
-- [ ] No confusing duplicate concepts
-- [ ] Prototype/demo wording is clear
+- [x] Settings names feel distinct
+- [x] No confusing duplicate concepts
+- [x] Prototype/demo wording is clear
 - [ ] Chats feel calm and low-pressure
 - [ ] Home does not feel overwhelming
 - [ ] Bottom-nav spacing is correct
@@ -344,7 +344,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 
 - [ ] Future UX architecture cleanup: review naming and grouping across Profile Controls, User Options, User Preferences, Display & Layout, Profile Layout, Width Settings, and Settings & Privacy so the mental model stays clear as NSN grows
 - [x] Explore calmer top-level settings groups such as Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings while keeping navigation lightweight, scannable, mobile-friendly, and desktop-friendly
-- [ ] Explore merging Display & Layout, Profile Layout, and Width Settings into a unified Appearance & Layout or Display & Appearance area, avoiding deep nesting and preserving the non-corporate NSN tone
+- [x] Explore merging Display & Layout, Profile Layout, and Width Settings into a unified Appearance & Layout or Display & Appearance area, avoiding deep nesting and preserving the non-corporate NSN tone
 - [ ] Expand richer food preference matching with lightweight comfort signals instead of restaurant recommendations
 - [ ] Add interest-based recommendations that use hobbies, genres, and comfort modifiers
 - [ ] Expand the interest taxonomy after tester feedback on categories, wording, and missing local activities
@@ -358,7 +358,7 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 - [ ] Explore lightweight event recurrence support, meetup pacing recommendations, and tester feedback on whether timing/rhythm preferences reduce social pressure without overcomplicating onboarding
 - [ ] Avoid turning connection expectations, dating style, meetup rhythm, availability, or duration preferences into compatibility scores, strict filters, or optimisation-style matching
 - [ ] Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
-- [ ] Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
+- [x] Expand Profile display preferences so Home, Profile, and event-card layout controls share clearer naming and previews
 - [ ] Explore optional header control density preferences with live preview, per-device defaults, and larger accessibility targets
 - [ ] Expand the Profile User Options drawer as trust foundations and preference-based recommendations mature
 

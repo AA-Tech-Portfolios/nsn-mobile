@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  appearanceLayoutControlMetadata,
   getUserPreferenceRows,
   getUserPreferenceRowDescription,
   profileOptionGroups,
@@ -30,6 +31,25 @@ describe("profile menu row metadata", () => {
 
     expect(helperCopy).toContain("local-only");
     expect(helperCopy.toLowerCase()).not.toMatch(/guarantee|verified|verification|moderation|matching engine|live safety support|host tracking enabled/);
+  });
+
+  it("keeps Appearance & Layout controls distinct without deep nesting", () => {
+    expect(appearanceLayoutControlMetadata.map((item) => item.title)).toEqual([
+      "Home & event cards",
+      "Profile detail level",
+      "Profile width",
+    ]);
+    expect(appearanceLayoutControlMetadata.map((item) => item.scope)).toEqual([
+      "Home and Event Details",
+      "Profile",
+      "Profile",
+    ]);
+
+    const combined = appearanceLayoutControlMetadata.flatMap((item) => [item.title, item.description, item.previewCopy]).join(" ");
+
+    expect(combined).toContain("local-only");
+    expect(combined).not.toMatch(/Display & Layout|Width Settings|Profile Layout/);
+    expect(combined.toLowerCase()).not.toMatch(/matching quality|verification|moderation|emergency|ai agent/);
   });
 
   it("keeps every user preference category row visually complete", () => {

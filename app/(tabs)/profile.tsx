@@ -62,7 +62,7 @@ import {
   type ProfileDrawerPanel,
   type ProfilePreferenceSection,
 } from "@/lib/alpha-readiness-controls";
-import { getUserPreferenceRowDescription, getUserPreferenceRows, profileOptionGroups, profileResourceSupportRowMetadata, profileSupportRowMetadata, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
+import { appearanceLayoutControlMetadata, getUserPreferenceRowDescription, getUserPreferenceRows, profileOptionGroups, profileResourceSupportRowMetadata, profileSupportRowMetadata, type AppearanceLayoutControlKey, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { connectionPromptCategories, getConnectionPromptProfile } from "@/lib/connection-prompts";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
@@ -227,8 +227,8 @@ const helpFaqItems = [
   },
   {
     id: "unsafe",
-    title: "How do I report something unsafe?",
-    copy: "Use Block & Report for unsafe, pushy, or unwanted contact. NSN does not currently provide emergency support.",
+    title: "How do I note unwanted contact?",
+    copy: "Use Block & Report for pushy or unwanted contact demos. NSN is a local prototype, so urgent help belongs with external services.",
   },
   {
     id: "feature",
@@ -3516,7 +3516,7 @@ export default function ProfileScreen() {
                         : profileMenuPanel === "display"
                           ? "Appearance & Layout"
                         : profileMenuPanel === "layout"
-                            ? "Profile display style"
+                            ? "Profile detail level"
                             : profileMenuPanel === "width"
                               ? "Profile width"
                               : profileMenuPanel === "notifications"
@@ -3531,6 +3531,8 @@ export default function ProfileScreen() {
 
   const getProfileOptionGroupHelperCopy = (groupId: (typeof profileOptionGroups)[number]["id"]) =>
     profileOptionGroups.find((group) => group.id === groupId)?.helperCopy ?? "";
+  const getAppearanceLayoutControl = (key: AppearanceLayoutControlKey) =>
+    appearanceLayoutControlMetadata.find((item) => item.key === key)!;
 
   const ageAndGroupPreferenceCard = (
     <View style={[styles.profileBasicsCard, styles.ageEditorCard, isCleanProfile && styles.profileDetailsAgeCard, isDay && styles.dayVisibilityModeCard]}>
@@ -3761,9 +3763,9 @@ export default function ProfileScreen() {
                       </View>
                     ) : null}
                     {[
-                      { icon: "layout" as const, title: "Home & event display", copy: `${homeEventLayout} events, ${homeLayoutDensity.toLowerCase()} Home density.`, action: () => setProfileMenuPanel("display") },
-                      { icon: "group" as const, title: "Profile display style", copy: isCleanProfile ? "Simple profile selected." : "Detailed profile selected.", action: () => setProfileMenuPanel("layout") },
-                      { icon: "resize" as const, title: "Profile width", copy: isWideProfile ? "Wide width selected." : "Contained width selected.", action: () => setProfileMenuPanel("width") },
+                      { ...getAppearanceLayoutControl("homeEventCards"), copy: `${homeEventLayout} event cards, ${homeLayoutDensity.toLowerCase()} Home density.`, action: () => setProfileMenuPanel("display") },
+                      { ...getAppearanceLayoutControl("profileDetailLevel"), copy: isCleanProfile ? "Simple profile selected." : "Detailed profile selected.", action: () => setProfileMenuPanel("layout") },
+                      { ...getAppearanceLayoutControl("profileWidth"), copy: isWideProfile ? "Wide width selected." : "Contained width selected.", action: () => setProfileMenuPanel("width") },
                     ].map((item) => (
                       <TouchableOpacity
                         key={item.title}
@@ -3776,7 +3778,14 @@ export default function ProfileScreen() {
                         <IconSymbol name={item.icon} color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                         <View style={styles.profileMenuItemBody}>
                           <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{item.title}</Text>
-                          {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{item.copy}</Text> : null}
+                          {!compactUserOptionRows ? (
+                            <>
+                              <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>{item.copy}</Text>
+                              <Text style={[styles.profileMenuDescription, styles.profileMenuDescriptionCompact, isDay && styles.dayMutedText]}>
+                                {item.scope}: {item.previewCopy}
+                              </Text>
+                            </>
+                          ) : null}
                         </View>
                         <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       </TouchableOpacity>
@@ -5047,7 +5056,7 @@ export default function ProfileScreen() {
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
                       <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Privacy & Comfort</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        These controls tell others what feels easiest before a meetup. They are prototype preferences and reminders, not guaranteed enforcement.
+                        These controls tell others what feels easiest before a meetup. They are prototype preferences and reminders, not live enforcement.
                       </Text>
                     </View>
                     {trustFoundationsSection}
@@ -5074,7 +5083,13 @@ export default function ProfileScreen() {
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Appearance & Layout</Text>
                     </TouchableOpacity>
-                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Home, event, and profile display</Text>
+                    <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>{getAppearanceLayoutControl("homeEventCards").title}</Text>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{getAppearanceLayoutControl("homeEventCards").scope}</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        {getAppearanceLayoutControl("homeEventCards").description} {getAppearanceLayoutControl("homeEventCards").previewCopy}
+                      </Text>
+                    </View>
                     <View style={styles.profileDisplayGrid}>
                       <View style={styles.profileDisplayGroup}>
                         <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Event Layout</Text>
@@ -5832,13 +5847,13 @@ export default function ProfileScreen() {
                       <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Block & Report</Text>
                     </TouchableOpacity>
                     <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
-                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Moderation tools preview</Text>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Boundary tools preview</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Demo only: these show future block, report, and blocked-user review flows. Account-based moderation tools will connect when authentication exists.
+                        Demo only: these show future block, report, and blocked-person review shapes. Nothing is sent from this local prototype.
                       </Text>
                     </View>
                     {[
-                      { title: "Demo: Block a Member", copy: "Shows how future contact blocking will work once accounts are enabled.", alert: "Demo only: blocking will connect to account profiles after the NSN pilot." },
+                      { title: "Demo: Block a Member", copy: "Shows how future contact boundaries could look once accounts exist.", alert: "Demo only: this local prototype does not update an account or notify anyone." },
                       { title: "Demo: Report Unwanted Behaviour", copy: "Shows how pushy or unwanted contact could be noted in a future account flow.", alert: "Demo only: this local prototype does not send a report or connect to review tools." },
                       { title: "Coming Soon: View Blocked People", copy: "Review and unblock people later.", alert: "Coming soon: your blocked list will appear here once accounts exist." },
                     ].map((item) => (
@@ -5873,13 +5888,19 @@ export default function ProfileScreen() {
                   <>
                     <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("main")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to Profile menu">
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
-                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Profile Layout</Text>
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getAppearanceLayoutControl("profileDetailLevel").title}</Text>
                     </TouchableOpacity>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{getAppearanceLayoutControl("profileDetailLevel").scope}</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        {getAppearanceLayoutControl("profileDetailLevel").description} {getAppearanceLayoutControl("profileDetailLevel").previewCopy}
+                      </Text>
+                    </View>
                     <View style={styles.profileLayoutStack}>
                       {profileShortcutLayoutOptions.map((option) => {
                         const active = profileShortcutLayout === option;
-                        const label = option === "Clean" ? "Simple Layout" : "Detailed Layout";
-                        const optionCopy = option === "Clean" ? "Lighter profile with the preview and key edit controls." : "Full profile with privacy, comfort, trust, and shortcuts.";
+                        const label = option === "Clean" ? "Simple profile" : "Detailed profile";
+                        const optionCopy = option === "Clean" ? "Lighter profile with the preview and key edit controls." : "Fuller profile with privacy, comfort, local context, and shortcuts.";
 
                         return (
                           <TouchableOpacity
@@ -5905,8 +5926,14 @@ export default function ProfileScreen() {
                   <>
                     <TouchableOpacity activeOpacity={0.78} onPress={() => setProfileMenuPanel("main")} style={styles.profileMenuBack} accessibilityRole="button" accessibilityLabel="Back to Profile menu">
                       <IconSymbol name="chevron.left" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
-                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Width Settings</Text>
+                      <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getAppearanceLayoutControl("profileWidth").title}</Text>
                     </TouchableOpacity>
+                    <View style={[styles.profileMenuInfoCard, isDay && styles.daySoftOption]}>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>{getAppearanceLayoutControl("profileWidth").scope}</Text>
+                      <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
+                        {getAppearanceLayoutControl("profileWidth").description} {getAppearanceLayoutControl("profileWidth").previewCopy}
+                      </Text>
+                    </View>
                     <View style={styles.profileLayoutStack}>
                       {profileWidthPreferenceOptions.map((option) => {
                         const active = profileWidthPreference === option;
@@ -6048,7 +6075,7 @@ export default function ProfileScreen() {
                   activeOpacity={0.78}
                   onPress={() => {
                     setShowProfileMenu(false);
-                    Alert.alert("Block & Report", "Block and report tools will connect to accounts after the NSN pilot.");
+                    Alert.alert("Block & Report", "Demo only: this local prototype does not send reports, update accounts, or notify anyone.");
                   }}
                   style={styles.profileMenuItem}
                   accessibilityRole="button"
@@ -6057,19 +6084,19 @@ export default function ProfileScreen() {
                   <IconSymbol name="flag" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                   <View style={styles.profileMenuItemBody}>
                     <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Block & Report</Text>
-                    <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>For unsafe, pushy, or unwanted contact.</Text>
+                    <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Local prototype flow for pushy or unwanted contact.</Text>
                   </View>
                 </TouchableOpacity>
                 <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
-                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Profile Layout</Text>
+                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Profile detail level</Text>
                 <View style={styles.profileLayoutStack}>
                   {profileShortcutLayoutOptions.map((option) => {
                     const active = profileShortcutLayout === option;
-                    const label = option === "Clean" ? "Simple Layout" : "Detailed Layout";
+                    const label = option === "Clean" ? "Simple profile" : "Detailed profile";
                     const optionCopy =
                       option === "Clean"
                         ? "Lighter profile with the preview and key edit controls."
-                        : "Full profile with privacy, comfort, trust, and shortcuts.";
+                        : "Fuller profile with privacy, comfort, local context, and shortcuts.";
 
                     return (
                       <TouchableOpacity
@@ -6090,7 +6117,7 @@ export default function ProfileScreen() {
                   })}
                 </View>
                 <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
-                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Width Settings</Text>
+                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Profile width</Text>
                 <View style={[styles.profileLayoutStack, styles.profileWidthStack]}>
                   {profileWidthPreferenceOptions.map((option) => {
                     const active = profileWidthPreference === option;
@@ -6221,7 +6248,7 @@ export default function ProfileScreen() {
             <View style={[styles.profileDisplayTitleRow, isRtl && styles.rtlRow]}>
               <IconSymbol name="visibility" color={isDay ? "#445E93" : "#C7B07A"} size={20} />
               <View style={styles.profileLayoutBody}>
-                <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Display & Layout</Text>
+                <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Appearance & Layout</Text>
                 <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                   View Preferences for Home cards, event previews, and header controls.
                 </Text>

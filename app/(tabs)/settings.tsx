@@ -143,7 +143,7 @@ const profileShortcutLayoutOptions: {
   {
     value: "Expanded",
     label: "Detailed Profile",
-    copy: "Show the fuller Profile Layout with local area, interests, comfort, privacy, and trust detail cards.",
+    copy: "Show the fuller Profile detail view with local area, interests, comfort, privacy, and prototype trust detail cards.",
   },
 ];
 const userPreferenceTextModeOptions: {
@@ -401,7 +401,7 @@ const settingsAccordionMeta: Record<
 > = {
   displayLayout: {
     title: "Appearance & Layout",
-    copy: "View mode, battery, low-light, and layout comfort.",
+    copy: "Theme, display comfort, Profile detail level, and local layout controls.",
     icon: "palette",
   },
   privacyVisibility: {
@@ -5145,7 +5145,7 @@ export default function SettingsScreen() {
                     isRtl && styles.rtlText,
                   ]}
                 >
-                  Profile display style
+                  Profile detail level
                 </Text>
                 <Text
                   style={[
@@ -5156,7 +5156,7 @@ export default function SettingsScreen() {
                     isRtl && styles.rtlText,
                   ]}
                 >
-                  Choose whether Profile opens in a simpler layout or the fuller detailed layout.
+                  Choose whether Profile opens as a simpler social preview or the fuller detail view.
                 </Text>
                 <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
                   {profileShortcutLayoutOptions.map((option) => {

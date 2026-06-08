@@ -251,9 +251,9 @@ const remotePreview = (uri: string): ImageSourcePropType => ({ uri });
 const alphaHomeCustomizationEnabled = false;
 
 const photoStylePreviewSources: Record<HomeEventPreviewAssetKey, ImageSourcePropType> = {
-  picnic: remotePreview("https://unsplash.com/photos/Bsyj_GezIQQ/download?force=true"),
-  beach: remotePreview("https://unsplash.com/photos/kJ6SgBhp9Uc/download?force=true"),
-  movie: remotePreview("https://unsplash.com/photos/GvJBboqOebI/download?force=true"),
+  picnic: require("../../assets/images/events/event-picnic-easy-hangout.png"),
+  beach: require("../../assets/images/events/event-beach-day-chill-vibes.png"),
+  movie: require("../../assets/images/events/event-movie-night-watch-chat.png"),
 };
 
 const photoStylePreview = (eventId: string) => {
