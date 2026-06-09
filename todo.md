@@ -26,6 +26,7 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 - [x] 🟢 Add README screenshots or mockups for the home screen, profile privacy, event details, Settings & Privacy, and onboarding
 - [x] 🟢 Refresh checkpoint screenshots for core tabs, Settings & Privacy, and onboarding stages after recent UI changes
 - [x] 🟢 Keep product language clear: NSN is the local Sydney/North Shore pilot, while SoftHello is the future/global direction
+- [x] 🟢 Refresh CI after the tab layout display-name lint fix so GitHub annotations reflect the current main branch
 
 ### 🟡 Medium Local UX Flows
 
