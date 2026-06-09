@@ -675,8 +675,9 @@ function EventCard({ event, isDay, appLanguageBase, locale, timeFormatPreference
   const livePreview = eventLivePreviews[event.id];
   const isCompactLayout = cardLayout === "Horizontal cards" || cardLayout === "Boxed grid";
   const layoutPreset = getHomeLayoutPreset(density);
-  const shouldUsePreviewImage = visualMode === "Preview image" && Boolean(livePreview?.photo);
-  const shouldUsePrototypeFallback = visualMode === "Preview image" && !livePreview?.photo;
+  const hasPreviewPhoto = livePreview?.photo !== undefined && livePreview.photo !== null;
+  const shouldUsePreviewImage = visualMode === "Preview image" && hasPreviewPhoto;
+  const shouldUsePrototypeFallback = visualMode === "Preview image" && !hasPreviewPhoto;
   const eventTime = formatEventTimeLabel(event.time, { locale, timeFormatPreference });
   const trustFoundationChips = getTrustFoundationEventChips(event, socialEnergyPreference, groupSizePreference, verifiedButPrivate);
   const mediaComfortChip = getMediaComfortEventChip(event, photoRecordingComfortPreferences);
@@ -1219,8 +1220,8 @@ export default function HomeScreen() {
   const showLayoutPreferences = openHomePanel === "preferences";
   const showOptionsHub = openHomePanel === "options";
   const shouldLockDashboardScroll = shouldAutoFitDashboard;
-  const tabContentHeight = largerTouchTargets ? 86 : 76;
-  const tabBottomSafeArea = Platform.OS === "web" ? Math.max(insets.bottom, 28) : Math.max(insets.bottom, 16);
+  const tabContentHeight = largerTouchTargets ? 82 : 74;
+  const tabBottomSafeArea = Platform.OS === "web" ? Math.max(insets.bottom, 24) : Math.max(insets.bottom, 14);
   const bottomNavReserve = tabContentHeight + tabBottomSafeArea + 20;
   const fitDashboardAvailableHeight = Math.max(0, viewportHeight - bottomNavReserve);
   const lockedDashboardHeight = shouldAutoFitDashboard
@@ -1565,7 +1566,7 @@ export default function HomeScreen() {
           {selectedMapDetails?.suburb ?? timezone.city}
         </Text>
       </View>
-      <Text pointerEvents="none" style={[styles.prototypeMapAttribution, isDay && styles.dayPrototypeMapAttribution]} numberOfLines={1}>
+      <Text pointerEvents="none" style={[styles.prototypeMapAttribution, isDay && styles.dayPrototypeMapAttribution]}>
         Prototype map preview - Map data © OpenStreetMap contributors
       </Text>
       <View style={styles.prototypeMapZoomControls}>
@@ -1836,15 +1837,6 @@ export default function HomeScreen() {
       copy: `${weatherStatus}. ${weatherAdvice} Demo only: this does not create a live alert or calendar action.`,
     });
   };
-
-  const weatherIcon =
-  weather.rainChance === null
-    ? "☁️"
-    : weather.rainChance >= 70
-    ? "☔"
-    : weather.rainChance >= 35
-    ? "🌦️"
-    : "🌤️";
 
   // ===== ANIMATIONS =====
   const weatherFloat = useRef(new Animated.Value(0)).current;
@@ -2447,9 +2439,9 @@ export default function HomeScreen() {
                   {locationContextNote}
                 </Text>
               </View>
-              <Animated.Text style={[styles.weatherIcon, { transform: [{ translateY: weatherFloat }] }]}>
-                {weatherIcon}
-              </Animated.Text>
+              <Animated.View style={[styles.weatherIconBadge, isDay && styles.dayWeatherIconBadge, { transform: [{ translateY: weatherFloat }] }]}>
+                <IconSymbol name="weather" color={isDay ? "#284E92" : "#C7B07A"} size={24} />
+              </Animated.View>
             </TouchableOpacity>
             <View style={[styles.todayCard, styles.dashboardCard, styles.dashboardContextTile, homeLayoutCardStyle, isDay && styles.dayDashboardContextTile]}>
               <View style={[styles.sectionTitleRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
@@ -2465,79 +2457,13 @@ export default function HomeScreen() {
               </Text>
             </View>
             </View>
-            {homeVisibleSections.map ? (
-              <View style={[styles.locationMapCard, styles.locationMapCardIntegrated, styles.dashboardCard, homeLayoutMapCardStyle, isDay && styles.dayLocationMapCardIntegrated]}>
-                <View style={[styles.sectionTitleRow, styles.locationMapTitleRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
-                  <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={17} />
-                  <Text style={[styles.locationMapTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Nearby atmosphere & map</Text>
-                  <Text style={[styles.prototypeMapModeBadge, isDay && styles.dayPrototypeMapModeBadge]}>Prototype</Text>
-                </View>
-                {renderPrototypeMapCanvas()}
-                <View style={[styles.locationMapSummary, isDay && styles.dayLocationMapSummary]}>
-                  <Text style={[styles.locationMapEvent, isDay && styles.dayHeadingText, isRtl && styles.rtlText]} numberOfLines={2}>
-                    {selectedMapEventCopy?.title ?? "Local area"}
-                  </Text>
-                  <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
-                    {selectedMapEvent ? `${selectedMapEvent.venue}, ${selectedMapDetails?.suburb ?? timezone.label} • ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
-                  </Text>
-                  <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
-                    Prototype preview only - broad local discovery, not exact live location sharing.
-                  </Text>
-                  <View style={[styles.locationMapDetailRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
-                    {(shouldUseVeryTightDashboardFit ? [] : [selectedMapDetails?.routeHint, selectedMapDetails?.accessibilityHint].filter(Boolean)).map((detail) => (
-                      <Text key={detail} style={[styles.locationMapDetailChip, isDay && styles.dayLocationMapDetailChip]} numberOfLines={1}>
-                        {detail}
-                      </Text>
-                    ))}
-                  </View>
-                </View>
-                <View style={[styles.locationMapActions, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
-                  <TouchableOpacity
-                    activeOpacity={0.82}
-                    onPress={cycleMapEvent}
-                    disabled={!canCycleMapEvent}
-                    accessibilityRole="button"
-                    accessibilityLabel="Show next event location"
-                    accessibilityHint={canCycleMapEvent ? "Cycles through demo event locations." : "Only one demo event location is currently visible."}
-                    style={[styles.locationMapAction, homeLayoutSmallActionStyle, isDay && styles.dayLocationMapAction, outlinedButtonStyle, !canCycleMapEvent && styles.disabledMoveButton]}
-                  >
-                    <IconSymbol name="flexible" color={isDay ? "#284E92" : "#C7B07A"} size={14} />
-                    <Text style={[styles.locationMapActionText, isDay && styles.dayLinkText]}>Next event</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    activeOpacity={0.82}
-                    onPress={() => showPrototypeUpdate("Open in maps placeholder")}
-                    accessibilityRole="button"
-                    accessibilityLabel="Open in maps placeholder"
-                    accessibilityHint="Real map links are not connected in this prototype."
-                    style={[styles.locationMapAction, homeLayoutSmallActionStyle, isDay && styles.dayLocationMapAction, outlinedButtonStyle]}
-                  >
-                    <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={14} />
-                    <Text style={[styles.locationMapActionText, isDay && styles.dayLinkText]}>Open in maps</Text>
-                  </TouchableOpacity>
-                  {selectedMapEvent ? (
-                    <TouchableOpacity
-                      activeOpacity={0.82}
-                      onPress={() => router.push(`/event/${selectedMapEvent.id}`)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Open meetup ${selectedMapEventCopy?.title ?? selectedMapEvent.title}`}
-                      style={[styles.locationMapAction, homeLayoutSmallActionStyle, isDay && styles.dayLocationMapAction, outlinedButtonStyle, styles.locationMapPrimaryAction]}
-                    >
-                      <IconSymbol name="chevron.right" color="#FFFFFF" size={14} />
-                      <Text style={styles.locationMapPrimaryActionText}>Open event</Text>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
           </View>
         ) : null;
       }
 
       if (sectionKey === "map") {
-        if (homeVisibleSections.weather) return null;
         return homeVisibleSections.map ? (
-          <View key={sectionKey} style={[styles.locationMapCard, styles.dashboardCard, homeLayoutMapCardStyle, isDay && styles.dayCard, outlinedCardStyle]}>
+          <View key={sectionKey} style={[styles.locationMapCard, styles.dashboardCard, homeLayoutMapCardStyle, styles.locationMapStandalone, isDay && styles.dayCard, outlinedCardStyle]}>
             <View style={[styles.sectionTitleRow, styles.locationMapTitleRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
               <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={18} />
               <Text style={[styles.locationMapTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Sydney North Shore map</Text>
@@ -3895,7 +3821,7 @@ const styles = StyleSheet.create({
   locationText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   changeText: { color: "#A8B7DA", fontSize: 12, fontWeight: "700" },
   homeSectionFlow: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 10, marginBottom: 8, width: "100%" },
-  localContextGroup: { flexGrow: 1, flexShrink: 1, flexBasis: 520, alignSelf: "stretch", gap: 10, minWidth: 0 },
+  localContextGroup: { flexGrow: 0.8, flexShrink: 1, flexBasis: 360, alignSelf: "stretch", gap: 10, minWidth: 0 },
   localContextZone: { borderRadius: 24, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(10,24,43,0.72)", padding: 12 },
   dayLocalContextZone: { borderColor: "#C5D0DA", backgroundColor: "rgba(244,247,248,0.74)" },
   localContextGroupAutoFit: { flexBasis: 410, gap: 9 },
@@ -3903,7 +3829,7 @@ const styles = StyleSheet.create({
   dashboardContextTile: { borderWidth: 0, backgroundColor: "rgba(255,255,255,0.035)" },
   dayDashboardContextTile: { backgroundColor: "rgba(255,255,255,0.72)" },
   dashboardUtilityCard: { flexGrow: 1, flexShrink: 1, flexBasis: "100%" },
-  dashboardWideCard: { flexGrow: 1.65, flexShrink: 1, flexBasis: 560, minWidth: 0 },
+  dashboardWideCard: { flexGrow: 2.4, flexShrink: 1, flexBasis: 720, minWidth: 0 },
   homeMajorSection: { alignSelf: "stretch", gap: 10, borderRadius: 20, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.045)", padding: 13 },
   homeMajorSectionAutoFit: { padding: 12, gap: 8 },
   dashboardPair: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
@@ -3916,13 +3842,15 @@ const styles = StyleSheet.create({
   weatherMetric: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15, borderRadius: 999, borderWidth: 1, borderColor: "#4D6794", paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden" },
   weatherCopy: { color: "#C7D3EA", fontSize: 11, lineHeight: 16, maxWidth: 290, marginTop: 5 },
   locationPrivacyCopy: { opacity: 0.88 },
-  weatherIcon: { fontSize: 28, marginLeft: 8 },
+  weatherIconBadge: { width: 42, height: 42, borderRadius: 21, marginLeft: 8, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(199,176,122,0.12)", borderWidth: 1, borderColor: "rgba(199,176,122,0.35)" },
+  dayWeatherIconBadge: { backgroundColor: "rgba(40,78,146,0.08)", borderColor: "rgba(40,78,146,0.22)" },
   todayCard: { minHeight: 92, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 12, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
   todayTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   todayDate: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19, marginTop: 7 },
   todayCopy: { color: "#C7D3EA", fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 3 },
   todayNote: { color: "#9FB0CD", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 5 },
   locationMapCard: { minHeight: 266, flexGrow: 1, borderRadius: 20, padding: 13, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
+  locationMapStandalone: { flexBasis: "100%", minHeight: 360 },
   locationMapCardIntegrated: { minHeight: 318, borderWidth: 0, backgroundColor: "rgba(255,255,255,0.035)" },
   dayLocationMapCardIntegrated: { backgroundColor: "rgba(255,255,255,0.78)" },
   locationMapTitleRow: { flex: 0 },

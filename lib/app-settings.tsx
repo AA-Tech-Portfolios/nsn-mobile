@@ -1041,13 +1041,18 @@ export const defaultHomeVisibleSections: HomeVisibleSections = {
 };
 
 export const defaultHomeSectionOrder: HomeSectionOrderKey[] = [
-  "weather",
-  "map",
   "recommendedEvents",
   "dayEvents",
   "nightEvents",
+  "weather",
+  "map",
   "search",
   "noiseGuide",
+];
+
+const previousHomeSectionOrders: HomeSectionOrderKey[][] = [
+  ["weather", "recommendedEvents", "dayEvents", "nightEvents", "map", "search", "noiseGuide"],
+  ["weather", "map", "recommendedEvents", "dayEvents", "nightEvents", "search", "noiseGuide"],
 ];
 
 export const transportationPreferenceOptions: TransportationPreference[] = [
@@ -1244,9 +1249,25 @@ const normalizeHomeVisibleSections = (
 });
 
 const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSectionOrderKey[] => {
+  if (!value?.length) {
+    return [...defaultHomeSectionOrder];
+  }
+
   const sectionKeys = Object.keys(defaultHomeVisibleSections) as HomeSectionOrderKey[];
   const validKeys = new Set(sectionKeys);
-  const ordered = (value ?? []).filter((key): key is HomeSectionOrderKey => validKeys.has(key));
+  const ordered = value.filter((key): key is HomeSectionOrderKey => validKeys.has(key));
+
+  if (
+    ordered.length > 0 &&
+    previousHomeSectionOrders.some(
+      (previousOrder) =>
+        previousOrder.length === ordered.length &&
+        previousOrder.every((key, index) => ordered[index] === key),
+    )
+  ) {
+    return [...defaultHomeSectionOrder];
+  }
+
   const normalizedOrder = [...ordered];
 
   sectionKeys
@@ -1254,8 +1275,13 @@ const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSe
     .forEach((key) => {
       if (key === "map") {
         const weatherIndex = normalizedOrder.indexOf("weather");
+        const eventIndex = Math.max(
+          normalizedOrder.indexOf("recommendedEvents"),
+          normalizedOrder.indexOf("dayEvents"),
+          normalizedOrder.indexOf("nightEvents"),
+        );
         normalizedOrder.splice(
-          weatherIndex >= 0 ? weatherIndex + 1 : normalizedOrder.length,
+          Math.max(weatherIndex, eventIndex) >= 0 ? Math.max(weatherIndex, eventIndex) + 1 : normalizedOrder.length,
           0,
           key,
         );

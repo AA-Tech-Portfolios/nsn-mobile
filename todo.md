@@ -239,16 +239,16 @@ This pass is a planning and review checkpoint for the NSN 2026 alpha. Do not tre
 
 ## Alpha UX Review Checklist
 
-- [ ] No clipped mobile content
-- [ ] No empty icon containers
-- [ ] All buttons reachable on smaller iPhones
+- [x] No clipped mobile content
+- [x] No empty icon containers
+- [x] All buttons reachable on smaller phones, including smaller iPhones and Android-sized viewports
 - [x] Settings names feel distinct
 - [x] No confusing duplicate concepts
 - [x] Prototype/demo wording is clear
-- [ ] Chats feel calm and low-pressure
-- [ ] Home does not feel overwhelming
-- [ ] Bottom-nav spacing is correct
-- [ ] Text wraps instead of truncating where readability matters
+- [x] Chats feel calm and low-pressure
+- [x] Home does not feel overwhelming
+- [x] Bottom-nav spacing is correct
+- [x] Text wraps instead of truncating where readability matters
 - [x] Readiness preview wording stays prototype-safe
 - [x] Community Guidelines alpha copy is visible and calm
 - [x] Checkpoint screenshots are regenerated after the walkthrough

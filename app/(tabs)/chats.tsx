@@ -1419,12 +1419,17 @@ const chatMessageTranslations = {
 
 export default function ChatsScreen() {
   const router = useRouter();
-  const { eventId: requestedEventIdParam } = useLocalSearchParams<{
+  const { eventId: requestedEventIdParam, alphaBypass: alphaBypassParam } = useLocalSearchParams<{
     eventId?: string | string[];
+    alphaBypass?: string | string[];
   }>();
   const requestedEventId = Array.isArray(requestedEventIdParam)
     ? requestedEventIdParam[0]
     : requestedEventIdParam;
+  const alphaBypass = Array.isArray(alphaBypassParam) ? alphaBypassParam[0] : alphaBypassParam;
+  const requestedEventExists = Boolean(
+    requestedEventId && allEvents.some((event) => event.id === requestedEventId),
+  );
   const {
     isNightMode,
     appLanguage,
@@ -1491,8 +1496,12 @@ export default function ChatsScreen() {
     Record<string, SoftRevealRequest | undefined>
   >({});
   const [draft, setDraft] = useState("");
-  const [selectedChatId, setSelectedChatId] = useState("movie-night-watch-chat");
-  const [selectedChatTargetId, setSelectedChatTargetId] = useState<string | null>(null);
+  const [selectedChatId, setSelectedChatId] = useState(
+    requestedEventExists && requestedEventId ? requestedEventId : "movie-night-watch-chat",
+  );
+  const [selectedChatTargetId, setSelectedChatTargetId] = useState<string | null>(
+    requestedEventExists && requestedEventId ? `group-${requestedEventId}` : null,
+  );
   const [previewPersonId, setPreviewPersonId] = useState<string | null>(null);
   const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [softExitOpen, setSoftExitOpen] = useState(false);
@@ -1512,7 +1521,7 @@ export default function ChatsScreen() {
   const [cannotMakeItOpen, setCannotMakeItOpen] = useState(false);
   const [softExitChoice, setSoftExitChoice] = useState<SoftExitChoice | null>(null);
   const [chatPlusOpen, setChatPlusOpen] = useState(false);
-  const [bypassAlphaChatGate, setBypassAlphaChatGate] = useState(false);
+  const [bypassAlphaChatGate, setBypassAlphaChatGate] = useState(alphaBypass === "1");
   const [showGuideTip, setShowGuideTip] = useState(true);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<
     FirstMeetupSupportOption[]
@@ -1529,6 +1538,9 @@ export default function ChatsScreen() {
     setSelectedChatId(requestedEventId);
     setSelectedChatTargetId(`group-${requestedEventId}`);
   }, [requestedEventId]);
+  useEffect(() => {
+    if (alphaBypass === "1") setBypassAlphaChatGate(true);
+  }, [alphaBypass]);
   const selectedChat =
     allEvents.find((event) => event.id === selectedChatId) ??
     allEvents.find((event) => event.id === "movie-night-watch-chat") ??
@@ -3238,38 +3250,40 @@ export default function ChatsScreen() {
               ) : null}
             </View>
           ) : null}
-          <TouchableOpacity
-            activeOpacity={0.75}
-            onPress={() => {
-              setChatPlusOpen((current) => !current);
-              setSafetyOpen(false);
-              setSoftExitOpen(false);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Open prototype meetup tools"
-            accessibilityHint="Opens local first meetup support and ask-about-this-meetup chips."
-            style={[
-              styles.addButton,
-              isDay && styles.dayCard,
-              chatPlusOpen && styles.addButtonActive,
-            ]}
-          >
-            <IconSymbol name="add" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
-          </TouchableOpacity>
-          <View style={[styles.inputWrap, isDay && styles.dayInputWrap]}>
-            <TextInput
-              value={draft}
-              onChangeText={setDraft}
-              placeholder={copy.placeholder}
-              placeholderTextColor={isDay ? "#7890AE" : nsnColors.mutedSoft}
-              style={[styles.input, isDay && styles.dayTitle, isRtl && styles.rtlInput]}
-              textAlign={isRtl ? "right" : "left"}
-              returnKeyType="send"
-              onSubmitEditing={sendMessage}
-            />
-            <TouchableOpacity activeOpacity={0.8} onPress={sendMessage} style={styles.sendButton}>
-              <IconSymbol name="paperplane.fill" color={nsnColors.text} size={19} />
+          <View style={styles.composerRow}>
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={() => {
+                setChatPlusOpen((current) => !current);
+                setSafetyOpen(false);
+                setSoftExitOpen(false);
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Open prototype meetup tools"
+              accessibilityHint="Opens local first meetup support and ask-about-this-meetup chips."
+              style={[
+                styles.addButton,
+                isDay && styles.dayCard,
+                chatPlusOpen && styles.addButtonActive,
+              ]}
+            >
+              <IconSymbol name="add" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
             </TouchableOpacity>
+            <View style={[styles.inputWrap, isDay && styles.dayInputWrap]}>
+              <TextInput
+                value={draft}
+                onChangeText={setDraft}
+                placeholder={copy.placeholder}
+                placeholderTextColor={isDay ? "#7890AE" : nsnColors.mutedSoft}
+                style={[styles.input, isDay && styles.dayTitle, isRtl && styles.rtlInput]}
+                textAlign={isRtl ? "right" : "left"}
+                returnKeyType="send"
+                onSubmitEditing={sendMessage}
+              />
+              <TouchableOpacity activeOpacity={0.8} onPress={sendMessage} style={styles.sendButton}>
+                <IconSymbol name="paperplane.fill" color={nsnColors.text} size={19} />
+              </TouchableOpacity>
+            </View>
           </View>
           <Text style={[styles.disclaimer, isDay && styles.dayMutedText]}>{copy.disclaimer}</Text>
         </View>
@@ -3754,7 +3768,7 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
   dayMessageTime: { color: "#7890AE" },
-  composerWrap: { paddingBottom: 24 },
+  composerWrap: { paddingBottom: 18 },
   arrivalPanel: {
     borderRadius: 16,
     borderWidth: 1,
@@ -3899,10 +3913,13 @@ const styles = StyleSheet.create({
   chatPlusChipTextActive: { color: "#FFFFFF" },
   chatPlusMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15 },
   addButtonActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(80,104,255,0.18)" },
+  composerRow: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   addButton: {
-    position: "absolute",
-    left: 0,
-    bottom: 42,
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -3913,7 +3930,8 @@ const styles = StyleSheet.create({
     borderColor: nsnColors.border,
   },
   inputWrap: {
-    marginLeft: 48,
+    flex: 1,
+    minWidth: 0,
     minHeight: 44,
     borderRadius: 22,
     backgroundColor: "#061121",

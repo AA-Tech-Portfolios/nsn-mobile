@@ -74,10 +74,10 @@ describe("home layout presets", () => {
     expect(comfortable.eventImageWidth).toBeLessThan(spacious.eventImageWidth);
   });
 
-  it("keeps scroll content clear of the taller bottom tabs", () => {
+  it("keeps scroll content clear of the phone bottom tabs", () => {
     expect(getHomeLayoutPreset("Compact").bottomPadding).toBeGreaterThanOrEqual(132);
-    expect(getHomeLayoutPreset("Comfortable").bottomPadding).toBeGreaterThanOrEqual(148);
-    expect(getHomeLayoutPreset("Spacious").bottomPadding).toBeGreaterThanOrEqual(164);
+    expect(getHomeLayoutPreset("Comfortable").bottomPadding).toBeGreaterThanOrEqual(144);
+    expect(getHomeLayoutPreset("Spacious").bottomPadding).toBeGreaterThanOrEqual(156);
   });
 
   it("keeps compact mobile event cards readable without taking over the feed", () => {

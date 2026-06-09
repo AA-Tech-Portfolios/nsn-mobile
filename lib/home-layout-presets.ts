@@ -111,7 +111,7 @@ const homeLayoutPresets: Record<HomeLayoutPresetName, HomeLayoutPreset> = {
     desktopGridGap: 10,
     mobileStackGap: 10,
     panelMaxHeight: 560,
-    bottomPadding: 148,
+    bottomPadding: 144,
     screenPaddingTop: 12,
   },
   Spacious: {
@@ -139,7 +139,7 @@ const homeLayoutPresets: Record<HomeLayoutPresetName, HomeLayoutPreset> = {
     desktopGridGap: 14,
     mobileStackGap: 14,
     panelMaxHeight: 620,
-    bottomPadding: 164,
+    bottomPadding: 156,
     screenPaddingTop: 14,
   },
 };

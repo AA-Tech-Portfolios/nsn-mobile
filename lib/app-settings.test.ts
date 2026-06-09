@@ -4,6 +4,7 @@ import {
   DEFAULT_NSN_LANGUAGE,
   availabilityTimingOptions,
   datingStyleOptions,
+  defaultHomeSectionOrder,
   friendshipStyleOptions,
   getTranslationLanguageBase,
   languageComfortOptions,
@@ -199,5 +200,19 @@ describe("connection expectation and meetup pacing staging", () => {
       ...availabilityTimingPreferenceDetails,
       ...socialDurationPreferenceDetails,
     ].map((option) => option.copy).join(" ")).not.toMatch(/score|ranking|optimization|time wasters/i);
+  });
+});
+
+describe("Home alpha defaults", () => {
+  it("keeps meetup discovery primary and map detail lower in the default flow", () => {
+    expect(defaultHomeSectionOrder).toEqual([
+      "recommendedEvents",
+      "dayEvents",
+      "nightEvents",
+      "weather",
+      "map",
+      "search",
+      "noiseGuide",
+    ]);
   });
 });

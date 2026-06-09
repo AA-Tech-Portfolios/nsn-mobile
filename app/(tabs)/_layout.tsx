@@ -60,8 +60,8 @@ export default function TabLayout() {
   const labels = tabLabels[getTranslationLanguageBase(appLanguage)] ?? tabLabels.English;
   const activeTintColor = appPalette.swatches[2];
   const insets = useSafeAreaInsets();
-  const bottomSafeArea = Platform.OS === "web" ? Math.max(insets.bottom, 28) : Math.max(insets.bottom, 16);
-  const tabContentHeight = largerTouchTargets ? 86 : 76;
+  const bottomSafeArea = Platform.OS === "web" ? Math.max(insets.bottom, 24) : Math.max(insets.bottom, 14);
+  const tabContentHeight = largerTouchTargets ? 82 : 74;
 
   return (
       <Tabs
@@ -74,7 +74,7 @@ export default function TabLayout() {
           fontSize: 11,
           fontWeight: boldText ? "800" : "600",
           lineHeight: 16,
-          maxWidth: 76,
+          maxWidth: 70,
           marginTop: 2,
           marginBottom: 0,
           textAlign: "center",
@@ -86,8 +86,8 @@ export default function TabLayout() {
         tabBarItemStyle: {
           minHeight: tabContentHeight,
           height: tabContentHeight,
-          paddingTop: largerTouchTargets ? 12 : 10,
-          paddingBottom: largerTouchTargets ? 11 : 9,
+          paddingTop: largerTouchTargets ? 10 : 8,
+          paddingBottom: largerTouchTargets ? 12 : 10,
           alignItems: "center",
           justifyContent: "center",
           gap: 2,
@@ -96,8 +96,8 @@ export default function TabLayout() {
         tabBarStyle: {
           minHeight: tabContentHeight + bottomSafeArea + 12,
           height: tabContentHeight + bottomSafeArea + 12,
-          paddingTop: 6,
-          paddingBottom: bottomSafeArea + 6,
+          paddingTop: 5,
+          paddingBottom: bottomSafeArea + 7,
           overflow: "visible",
           backgroundColor: reduceTransparency ? (isDay ? "#F4F7F8" : "#0B1626") : isDay ? "#E8EDF2" : nsnColors.background,
           borderTopColor: clearBorders ? (isDay ? "#6F87A1" : "#5A6EA5") : softSurfaces ? (isDay ? "#DDE6EC" : "rgba(148,163,184,0.18)") : isDay ? "#C5D0DA" : nsnColors.border,
