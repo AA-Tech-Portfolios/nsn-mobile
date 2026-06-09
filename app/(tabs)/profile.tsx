@@ -55,6 +55,7 @@ import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { ScreenContainer } from "@/components/screen-container";
+import { SkyThemeAccent } from "@/components/sky-theme-accent";
 import { ProfileVisibilityPreview, type ProfileVisibilityPreviewProps } from "@/components/profile-visibility-preview";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
@@ -1212,6 +1213,7 @@ export default function ProfileScreen() {
     softSurfaces,
     clearBorders,
     brandTheme,
+    skyTheme,
     saveSoftHelloMvpState,
     preferredAgeMin,
     preferredAgeMax,
@@ -3593,6 +3595,8 @@ export default function ProfileScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        <SkyThemeAccent theme={skyTheme} isNightMode={isNightMode} variant="quiet" />
+
         <View style={styles.topRight}>
           {showProfileControlsShortcut || showProfileMenu ? (
             <TouchableOpacity

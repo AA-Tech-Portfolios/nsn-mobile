@@ -135,6 +135,8 @@ as the current pilot name unless a future scoped naming review reopens it.
 ### Prototype-Safe Lines
 
 - "Small meetups for big moments."
+- "Small moments. Big skies."
+- "Sometimes the best conversations start with simply showing up."
 - "SoftShore was historical naming exploration for the local pilot."
 - "Small, low-pressure gatherings around the North Shore."
 - "Reach out gently, reconnect at your own pace, and keep privacy choices visible."

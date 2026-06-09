@@ -1,12 +1,35 @@
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
 const appUrl = process.env.SCREENSHOT_URL ?? "http://localhost:8083";
 const debugPort = Number(process.env.EDGE_DEBUG_PORT ?? 9444);
 const outputDir = resolve(process.cwd(), "screenshots", "checkpoint");
+const screenshotMode = process.env.SCREENSHOT_MODE === "night" ? "night" : "day";
+const visualPreviewDir = resolve(process.cwd(), "screenshots", "visual-preview", screenshotMode);
+const visualPreviewOnly = process.env.VISUAL_PREVIEW_ONLY === "1";
 const edgeProfileDir = resolve(tmpdir(), `nsn-checkpoint-edge-profile-${Date.now()}`);
+const fixedNow =
+  screenshotMode === "night" ? "2026-06-09T10:00:00.000Z" : "2026-06-09T02:00:00.000Z";
+const screenshotClockScript = `
+(() => {
+  const fixedNow = Date.parse(${JSON.stringify(fixedNow)});
+  const RealDate = Date;
+  class ScreenshotDate extends RealDate {
+    constructor(...args) {
+      super(...(args.length ? args : [fixedNow]));
+    }
+    static now() {
+      return fixedNow;
+    }
+  }
+  ScreenshotDate.UTC = RealDate.UTC;
+  ScreenshotDate.parse = RealDate.parse;
+  Object.setPrototypeOf(ScreenshotDate, RealDate);
+  globalThis.Date = ScreenshotDate;
+})();
+`;
 const edgeCandidates = [
   process.env.EDGE_PATH,
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
@@ -59,19 +82,67 @@ const onboardingSnapshot = {
 };
 
 const viewport = { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false };
+const mobileViewport = { width: 390, height: 844, deviceScaleFactor: 2, mobile: true };
+const visualPreviewViewports = [
+  { label: "browser", width: 1440, height: 900, deviceScaleFactor: 1, mobile: false },
+  { label: "mobile", width: 390, height: 844, deviceScaleFactor: 2, mobile: true },
+];
 
 const screens = [
   { name: "01-home", path: "/" },
+  {
+    name: "event-details",
+    path: "/event/movie-night-watch-chat",
+    wait: "Movie Night",
+    viewport: mobileViewport,
+  },
   { name: "02-meetups", path: "/meetups" },
   { name: "03-chats", path: "/chats" },
   { name: "04-alerts", path: "/notifications" },
-  { name: "05-profile", path: "/profile" },
+  { name: "05-profile", path: "/profile", aliases: ["profile-privacy"] },
   { name: "06-settings-privacy", path: "/settings" },
 ];
 
+const visualPreviewScreens = [
+  {
+    name: "home-discovery",
+    path: "/",
+    snapshot: profileSnapshot,
+    wait: "Low-pressure meetups around the North Shore.",
+  },
+  {
+    name: "event-details",
+    path: "/event/movie-night-watch-chat",
+    snapshot: profileSnapshot,
+    wait: "Movie Night",
+  },
+  {
+    name: "profile-privacy",
+    path: "/profile",
+    snapshot: profileSnapshot,
+    wait: "Privacy and visibility",
+  },
+  {
+    name: "settings-privacy",
+    path: "/settings",
+    snapshot: profileSnapshot,
+    wait: "Settings & Privacy",
+  },
+  {
+    name: "onboarding",
+    path: "/onboarding?stage=0",
+    snapshot: onboardingSnapshot,
+    wait: "Meet nearby",
+  },
+];
+
 function findEdge() {
-  const candidate = edgeCandidates.find((path) => path && (path.includes("\\") || path.includes("/")) && existsSync(path));
-  return candidate ?? edgeCandidates.find((path) => path && !path.includes("\\") && !path.includes("/"));
+  const candidate = edgeCandidates.find(
+    (path) => path && (path.includes("\\") || path.includes("/")) && existsSync(path),
+  );
+  return (
+    candidate ?? edgeCandidates.find((path) => path && !path.includes("\\") && !path.includes("/"))
+  );
 }
 
 function delay(ms) {
@@ -113,7 +184,9 @@ async function waitForDebugServer() {
 }
 
 async function createPageTarget() {
-  const response = await fetch(`http://127.0.0.1:${debugPort}/json/new?about:blank`, { method: "PUT" });
+  const response = await fetch(`http://127.0.0.1:${debugPort}/json/new?about:blank`, {
+    method: "PUT",
+  });
   if (!response.ok) throw new Error(`Could not create a browser target: ${response.status}`);
   return response.json();
 }
@@ -134,8 +207,12 @@ function createCdpClient(webSocketDebuggerUrl) {
     socket.addEventListener("error", rejectOpen, { once: true });
   });
 
-  socket.addEventListener("error", () => rejectPending(new Error("Browser DevTools WebSocket failed.")));
-  socket.addEventListener("close", () => rejectPending(new Error("Browser DevTools WebSocket closed.")));
+  socket.addEventListener("error", () =>
+    rejectPending(new Error("Browser DevTools WebSocket failed.")),
+  );
+  socket.addEventListener("close", () =>
+    rejectPending(new Error("Browser DevTools WebSocket closed.")),
+  );
   socket.addEventListener("message", (event) => {
     const message = JSON.parse(String(event.data));
 
@@ -224,14 +301,19 @@ const edgePath = findEdge();
 if (!edgePath) throw new Error("Could not find Microsoft Edge, Chrome, or Chromium.");
 
 mkdirSync(outputDir, { recursive: true });
+mkdirSync(visualPreviewDir, { recursive: true });
 
-const edge = spawn(edgePath, [
-  "--headless=new",
-  "--disable-gpu",
-  `--remote-debugging-port=${debugPort}`,
-  `--user-data-dir=${edgeProfileDir}`,
-  "about:blank",
-], { stdio: "ignore", windowsHide: true });
+const edge = spawn(
+  edgePath,
+  [
+    "--headless=new",
+    "--disable-gpu",
+    `--remote-debugging-port=${debugPort}`,
+    `--user-data-dir=${edgeProfileDir}`,
+    "about:blank",
+  ],
+  { stdio: "ignore", windowsHide: true },
+);
 
 const capturedPaths = [];
 
@@ -242,25 +324,57 @@ try {
   await client.open();
   await client.send("Page.enable");
   await client.send("Runtime.enable");
+  await client.send("Page.addScriptToEvaluateOnNewDocument", { source: screenshotClockScript });
   await client.send("Emulation.setDeviceMetricsOverride", viewport);
 
-  await setSnapshot(client, profileSnapshot);
-  for (const screen of screens) {
-    await navigateAndWait(client, `${appUrl}${screen.path}`);
-    capturedPaths.push(await capture(client, screen.name));
+  if (!visualPreviewOnly) {
+    await setSnapshot(client, profileSnapshot);
+    for (const screen of screens) {
+      await client.send("Emulation.setDeviceMetricsOverride", screen.viewport ?? viewport);
+      await navigateAndWait(client, `${appUrl}${screen.path}`);
+      if (screen.wait) await waitForText(client, screen.wait);
+      const outputPath = await capture(client, screen.name);
+      capturedPaths.push(outputPath);
+
+      for (const alias of screen.aliases ?? []) {
+        const aliasPath = resolve(outputDir, `${alias}.png`);
+        copyFileSync(outputPath, aliasPath);
+        capturedPaths.push(aliasPath);
+      }
+    }
+
+    for (const stage of [
+      { index: 0, wait: "Stage 1 of 5", name: "07-onboarding-stage-1-welcome" },
+      { index: 1, wait: "Stage 2 of 5", name: "08-onboarding-stage-2-about-you" },
+      { index: 2, wait: "Stage 3 of 5", name: "09-onboarding-stage-3-meeting-comfort" },
+      { index: 3, wait: "Stage 4 of 5", name: "10-onboarding-stage-4-privacy" },
+      { index: 4, wait: "Stage 5 of 5", name: "11-onboarding-stage-5-review" },
+    ]) {
+      await setSnapshot(client, onboardingSnapshot);
+      await navigateAndWait(client, `${appUrl}/onboarding?stage=${stage.index}`);
+      await waitForText(client, stage.wait);
+      capturedPaths.push(await capture(client, stage.name));
+    }
   }
 
-  for (const stage of [
-    { index: 0, wait: "Stage 1 of 5", name: "07-onboarding-stage-1-welcome" },
-    { index: 1, wait: "Stage 2 of 5", name: "08-onboarding-stage-2-about-you" },
-    { index: 2, wait: "Stage 3 of 5", name: "09-onboarding-stage-3-meeting-comfort" },
-    { index: 3, wait: "Stage 4 of 5", name: "10-onboarding-stage-4-privacy" },
-    { index: 4, wait: "Stage 5 of 5", name: "11-onboarding-stage-5-review" },
-  ]) {
-    await setSnapshot(client, onboardingSnapshot);
-    await navigateAndWait(client, `${appUrl}/onboarding?stage=${stage.index}`);
-    await waitForText(client, stage.wait);
-    capturedPaths.push(await capture(client, stage.name));
+  for (const previewScreen of visualPreviewScreens) {
+    await setSnapshot(client, previewScreen.snapshot);
+
+    for (const previewViewport of visualPreviewViewports) {
+      await client.send("Emulation.setDeviceMetricsOverride", previewViewport);
+      await navigateAndWait(client, `${appUrl}${previewScreen.path}`);
+      await waitForText(client, previewScreen.wait);
+      const screenshot = await client.send("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: false,
+      });
+      const outputPath = resolve(
+        visualPreviewDir,
+        `${previewScreen.name}-${previewViewport.label}.png`,
+      );
+      writeFileSync(outputPath, Buffer.from(screenshot.data, "base64"));
+      capturedPaths.push(outputPath);
+    }
   }
 
   client.close();

@@ -1,19 +1,49 @@
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import {
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
-import { ProfileVisibilityPreview, getBlurRadius, getEffectiveBlurLevel } from "@/components/profile-visibility-preview";
+import {
+  ProfileVisibilityPreview,
+  getBlurRadius,
+  getEffectiveBlurLevel,
+} from "@/components/profile-visibility-preview";
 import { ScreenContainer } from "@/components/screen-container";
 import { getOnboardingAboutRequirement } from "@/lib/alpha-readiness-controls";
-import type { NsnBlurLevel, NsnComfortMode, ProfileGender, SoftHelloIntent } from "@/lib/app-settings";
-import { defaultPhotoRecordingComfortPreferences, defaultPhysicalContactComfortPreferences, useAppSettings } from "@/lib/app-settings";
-import { AustralianLocality, australianLocalities, getAustralianLocalityLabel } from "@/lib/australian-localities";
+import type {
+  NsnBlurLevel,
+  NsnComfortMode,
+  ProfileGender,
+  SoftHelloIntent,
+} from "@/lib/app-settings";
+import {
+  defaultPhotoRecordingComfortPreferences,
+  defaultPhysicalContactComfortPreferences,
+  useAppSettings,
+} from "@/lib/app-settings";
+import {
+  AustralianLocality,
+  australianLocalities,
+  getAustralianLocalityLabel,
+} from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
 import { onboardingCopy } from "@/lib/onboarding-copy";
 import { createAlphaTesterOnboardingSnapshot } from "@/lib/onboarding-snapshot";
 import { defaultFoodBeveragePreferenceIds } from "@/lib/preferences/food-preferences";
-import { defaultInterestComfortTagsByInterest, defaultInterestPreferenceIds } from "@/lib/preferences/interests";
+import {
+  defaultInterestComfortTagsByInterest,
+  defaultInterestPreferenceIds,
+} from "@/lib/preferences/interests";
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { defaultComfortPreferences, type SoftHelloComfortPreference } from "@/lib/softhello-mvp";
 
@@ -22,11 +52,22 @@ const MIN_ADULT_AGE = 18;
 const MAX_PROFILE_AGE = 95;
 const MAX_PREFERRED_AGE_SPAN = 35;
 const comfortModes: { value: NsnComfortMode; copy: string }[] = [
-  { value: "Comfort Mode", copy: "Details stay blurred unless you choose to show more in prototype previews." },
-  { value: "Warm Up Mode", copy: "A shared visibility preview can show a little more while staying local-only." },
+  {
+    value: "Comfort Mode",
+    copy: "Details stay blurred unless you choose to show more in prototype previews.",
+  },
+  {
+    value: "Warm Up Mode",
+    copy: "A shared visibility preview can show a little more while staying local-only.",
+  },
   { value: "Open Mode", copy: "People in the event can see basic profile details." },
 ];
-const comfortPreferenceOptions: SoftHelloComfortPreference[] = ["Small groups", "Text-first", "Quiet", "Flexible pace"];
+const comfortPreferenceOptions: SoftHelloComfortPreference[] = [
+  "Small groups",
+  "Text-first",
+  "Quiet",
+  "Flexible pace",
+];
 const comfortPreferenceLabels: Record<SoftHelloComfortPreference, string> = {
   "Small groups": "I like small groups",
   "Text-first": "I prefer text first",
@@ -54,25 +95,40 @@ export default function OnboardingScreen() {
   const isDay = !settings.isNightMode;
   const isMobileOnboarding = viewportWidth < 560;
   const brandTheme = settings.brandTheme;
-  const requestedStage = Number.parseInt(Array.isArray(stageParam) ? stageParam[0] : stageParam ?? "", 10);
+  const requestedStage = Number.parseInt(
+    Array.isArray(stageParam) ? stageParam[0] : (stageParam ?? ""),
+    10,
+  );
   const hasDirectStage = Number.isFinite(requestedStage);
   const initialStage = hasDirectStage ? Math.min(Math.max(requestedStage, 0), 4) : 0;
   const [stage, setStage] = useState(initialStage);
-  const [displayName, setDisplayName] = useState(settings.displayName === "NSN Tester" ? (hasDirectStage ? "Maya" : "") : settings.displayName);
+  const [displayName, setDisplayName] = useState(
+    settings.displayName === "NSN Tester" ? (hasDirectStage ? "Maya" : "") : settings.displayName,
+  );
   const [middleName, setMiddleName] = useState(settings.middleName);
   const [lastName, setLastName] = useState(settings.lastName);
   const [gender, setGender] = useState<ProfileGender>(settings.gender);
-  const [ageInput, setAgeInput] = useState(settings.age ? String(settings.age) : hasDirectStage ? "28" : "");
-  const [preferredAgeMinInput, setPreferredAgeMinInput] = useState(String(settings.preferredAgeMin));
-  const [preferredAgeMaxInput, setPreferredAgeMaxInput] = useState(String(settings.preferredAgeMax));
+  const [ageInput, setAgeInput] = useState(
+    settings.age ? String(settings.age) : hasDirectStage ? "28" : "",
+  );
+  const [preferredAgeMinInput, setPreferredAgeMinInput] = useState(
+    String(settings.preferredAgeMin),
+  );
+  const [preferredAgeMaxInput, setPreferredAgeMaxInput] = useState(
+    String(settings.preferredAgeMax),
+  );
   const [suburb, setSuburb] = useState(settings.suburb || "Chatswood");
-  const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(chatswoodLocality);
+  const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(
+    chatswoodLocality,
+  );
   const [intent, setIntent] = useState<SoftHelloIntent>(settings.intent);
-  const [interests, setInterests] = useState<string[]>(settings.hobbiesInterests.length ? settings.hobbiesInterests : ["Coffee", "Movies", "Walks"]);
+  const [interests, setInterests] = useState<string[]>(
+    settings.hobbiesInterests.length ? settings.hobbiesInterests : ["Coffee", "Movies", "Walks"],
+  );
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | null>(settings.profilePhotoUri);
   const [comfortMode, setComfortMode] = useState<NsnComfortMode>(settings.comfortMode);
   const [comfortPreferences, setComfortPreferences] = useState<SoftHelloComfortPreference[]>(
-    settings.comfortPreferences.length ? settings.comfortPreferences : defaultComfortPreferences
+    settings.comfortPreferences.length ? settings.comfortPreferences : defaultComfortPreferences,
   );
   const [privateProfile, setPrivateProfile] = useState(settings.privateProfile);
   const [blurProfilePhoto, setBlurProfilePhoto] = useState(settings.blurProfilePhoto);
@@ -82,19 +138,26 @@ export default function OnboardingScreen() {
   const [showMiddleName, setShowMiddleName] = useState(settings.showMiddleName);
   const [showLastName, setShowLastName] = useState(settings.showLastName);
   const [showAge, setShowAge] = useState(settings.showAge);
-  const [showPreferredAgeRange, setShowPreferredAgeRange] = useState(settings.showPreferredAgeRange);
+  const [showPreferredAgeRange, setShowPreferredAgeRange] = useState(
+    settings.showPreferredAgeRange,
+  );
   const [showGender, setShowGender] = useState(settings.showGender);
   const [showInterests, setShowInterests] = useState(settings.showInterests);
-  const [showComfortPreferences, setShowComfortPreferences] = useState(settings.showComfortPreferences);
+  const [showComfortPreferences, setShowComfortPreferences] = useState(
+    settings.showComfortPreferences,
+  );
   const [minimalProfileView, setMinimalProfileView] = useState(settings.minimalProfileView);
   const [nameError, setNameError] = useState("");
 
   const age = Number.parseInt(ageInput, 10);
   const preferredAgeMinRaw = Number.parseInt(preferredAgeMinInput, 10);
   const preferredAgeMaxRaw = Number.parseInt(preferredAgeMaxInput, 10);
-  const hasPreferredAgeRange = preferredAgeMinInput.trim().length > 0 && preferredAgeMaxInput.trim().length > 0;
+  const hasPreferredAgeRange =
+    preferredAgeMinInput.trim().length > 0 && preferredAgeMaxInput.trim().length > 0;
   const preferredAgeMin = Number.isFinite(preferredAgeMinRaw) ? preferredAgeMinRaw : MIN_ADULT_AGE;
-  const preferredAgeMax = Number.isFinite(preferredAgeMaxRaw) ? preferredAgeMaxRaw : preferredAgeMin;
+  const preferredAgeMax = Number.isFinite(preferredAgeMaxRaw)
+    ? preferredAgeMaxRaw
+    : preferredAgeMin;
   const isAdult = Number.isFinite(age) && age >= MIN_ADULT_AGE && age <= MAX_PROFILE_AGE;
   const preferredAgeRangeIsValid =
     hasPreferredAgeRange &&
@@ -145,14 +208,17 @@ export default function OnboardingScreen() {
         const suburbName = normalizeLocalitySearch(locality.suburb);
         const label = normalizeLocalitySearch(getAustralianLocalityLabel(locality));
         return suburbName === normalizedValue || label === normalizedValue;
-      })
+      }),
     );
   };
 
   const pickProfilePhoto = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Permission needed", "Please allow photo access to choose a profile picture, or continue without one.");
+      Alert.alert(
+        "Permission needed",
+        "Please allow photo access to choose a profile picture, or continue without one.",
+      );
       return;
     }
 
@@ -169,12 +235,18 @@ export default function OnboardingScreen() {
   };
 
   const toggleInterest = (interest: string) => {
-    setInterests((current) => (current.includes(interest) ? current.filter((item) => item !== interest) : [...current, interest]));
+    setInterests((current) =>
+      current.includes(interest)
+        ? current.filter((item) => item !== interest)
+        : [...current, interest],
+    );
   };
 
   const toggleComfortPreference = (preference: SoftHelloComfortPreference) => {
     setComfortPreferences((current) =>
-      current.includes(preference) ? current.filter((item) => item !== preference) : [...current, preference]
+      current.includes(preference)
+        ? current.filter((item) => item !== preference)
+        : [...current, preference],
     );
   };
 
@@ -227,14 +299,17 @@ export default function OnboardingScreen() {
 
   const nextStage = () => {
     if (stage === 1 && !canContinueAbout) {
-      if (displayName.trim().length > 0 && !isAllowedDisplayName(displayName)) setNameError(nameNotAllowedMessage);
+      if (displayName.trim().length > 0 && !isAllowedDisplayName(displayName))
+        setNameError(nameNotAllowedMessage);
       return;
     }
     setStage((current) => Math.min(current + 1, 4));
   };
 
   const finishOnboarding = async () => {
-    const finalSuburb = selectedLocality ? getAustralianLocalityLabel(selectedLocality) : suburb.trim();
+    const finalSuburb = selectedLocality
+      ? getAustralianLocalityLabel(selectedLocality)
+      : suburb.trim();
     await settings.completeOnboarding({
       ageConfirmed: true,
       age,
@@ -297,16 +372,22 @@ export default function OnboardingScreen() {
         appLanguage: settings.appLanguage,
         translationLanguage: settings.translationLanguage,
         brandThemeId: settings.brandThemeId,
-      })
+      }),
     );
     router.replace("/(tabs)");
   };
 
   const stageTitles = ["Welcome", "About you", "Meeting comfort", "Privacy", "Review"];
-  const selectedSuburb = selectedLocality ? getAustralianLocalityLabel(selectedLocality) : suburb.trim();
+  const selectedSuburb = selectedLocality
+    ? getAustralianLocalityLabel(selectedLocality)
+    : suburb.trim();
 
   return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
+    <ScreenContainer
+      containerClassName="bg-background"
+      safeAreaClassName="bg-background"
+      style={isDay && styles.dayScreen}
+    >
       <ScrollView
         style={[styles.screen, isDay && styles.dayScreen]}
         contentContainerStyle={[
@@ -320,31 +401,56 @@ export default function OnboardingScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.brandLockup}>
-          <View style={[styles.logoMark, { borderRadius: brandTheme.radius.panel }, isDay && styles.dayCard]}>
-            <Text style={[styles.logoText, isDay && styles.dayTitle]}>{brandTheme.logo.monogram}</Text>
+          <View
+            style={[
+              styles.logoMark,
+              { borderRadius: brandTheme.radius.panel },
+              isDay && styles.dayCard,
+            ]}
+          >
+            <Text style={[styles.logoText, isDay && styles.dayTitle]}>
+              {brandTheme.logo.monogram}
+            </Text>
             <View style={styles.logoSignal} />
           </View>
-          <Text style={[styles.brand, brandTheme.typography.title, isDay && styles.dayTitle]}>{brandTheme.logo.wordmark}</Text>
-          <Text style={[styles.tagline, isDay && styles.dayAccentText]}>{brandTheme.id === "softhello" ? "A softer way to say hello." : "Local plans, calmer starts."}</Text>
+          <Text style={[styles.brand, brandTheme.typography.title, isDay && styles.dayTitle]}>
+            {brandTheme.logo.wordmark}
+          </Text>
+          <Text style={[styles.tagline, isDay && styles.dayAccentText]}>
+            {brandTheme.id === "softhello"
+              ? "A softer way to say hello."
+              : "Local plans, calmer starts."}
+          </Text>
         </View>
 
         <View style={styles.progressRow}>
           {stageTitles.map((title, index) => (
-            <View key={title} style={[styles.progressDot, index <= stage && styles.progressDotActive]} />
+            <View
+              key={title}
+              style={[styles.progressDot, index <= stage && styles.progressDotActive]}
+            />
           ))}
         </View>
         <Text style={[styles.stepLabel, isDay && styles.dayAccentText]}>
-          {isMobileOnboarding ? `Step ${stage + 1}/5 - ${stageTitles[stage]}` : `Stage ${stage + 1} of 5 - ${stageTitles[stage]}`}
+          {isMobileOnboarding
+            ? `Step ${stage + 1}/5 - ${stageTitles[stage]}`
+            : `Stage ${stage + 1} of 5 - ${stageTitles[stage]}`}
         </Text>
 
         {stage === 0 ? (
           <View style={[styles.panel, isDay && styles.dayPanel]}>
-            <Text style={[styles.title, isDay && styles.dayTitle]}>Meet nearby, without the pressure.</Text>
-            <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-              {isMobileOnboarding ? onboardingCopy.welcomeIntro.mobile : onboardingCopy.welcomeIntro.desktop}
+            <Text style={[styles.title, isDay && styles.dayTitle]}>
+              Meet nearby, without the pressure.
             </Text>
             <Text style={[styles.copy, isDay && styles.dayMutedText]}>
-              {isMobileOnboarding ? onboardingCopy.welcomePrivacy.mobile : onboardingCopy.welcomePrivacy.desktop}
+              {isMobileOnboarding
+                ? onboardingCopy.welcomeIntro.mobile
+                : onboardingCopy.welcomeIntro.desktop}
+            </Text>
+            <Text style={[styles.copy, isDay && styles.dayMutedText]}>
+              {isMobileOnboarding
+                ? onboardingCopy.welcomePrivacy.mobile
+                : onboardingCopy.welcomePrivacy.desktop}
             </Text>
           </View>
         ) : null}
@@ -363,7 +469,9 @@ export default function OnboardingScreen() {
                 placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
                 style={[styles.input, isDay && styles.dayInput]}
               />
-              {nameError ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{nameError}</Text> : null}
+              {nameError ? (
+                <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{nameError}</Text>
+              ) : null}
             </View>
             <View>
               <View style={styles.twoColumn}>
@@ -408,40 +516,89 @@ export default function OnboardingScreen() {
               <View style={styles.column}>
                 <Text style={[styles.label, isDay && styles.dayTitle]}>Preferred age range</Text>
                 <View style={styles.rangeRow}>
-                  <TextInput value={preferredAgeMinInput} onChangeText={(value) => setPreferredAgeMinInput(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" style={[styles.rangeInput, isDay && styles.dayInput]} />
+                  <TextInput
+                    value={preferredAgeMinInput}
+                    onChangeText={(value) =>
+                      setPreferredAgeMinInput(value.replace(/[^0-9]/g, "").slice(0, 2))
+                    }
+                    keyboardType="number-pad"
+                    style={[styles.rangeInput, isDay && styles.dayInput]}
+                  />
                   <Text style={[styles.rangeDash, isDay && styles.dayMutedText]}>to</Text>
-                  <TextInput value={preferredAgeMaxInput} onChangeText={(value) => setPreferredAgeMaxInput(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" style={[styles.rangeInput, isDay && styles.dayInput]} />
+                  <TextInput
+                    value={preferredAgeMaxInput}
+                    onChangeText={(value) =>
+                      setPreferredAgeMaxInput(value.replace(/[^0-9]/g, "").slice(0, 2))
+                    }
+                    keyboardType="number-pad"
+                    style={[styles.rangeInput, isDay && styles.dayInput]}
+                  />
                 </View>
               </View>
             </View>
-            {ageValidationMessage ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{ageValidationMessage}</Text> : null}
-            {preferredAgeValidationMessage ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{preferredAgeValidationMessage}</Text> : null}
-            {aboutStepRequirement ? <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>{aboutStepRequirement}</Text> : null}
-            <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>{onboardingCopy.preferredAgeRangeHint}</Text>
+            {ageValidationMessage ? (
+              <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>
+                {ageValidationMessage}
+              </Text>
+            ) : null}
+            {preferredAgeValidationMessage ? (
+              <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>
+                {preferredAgeValidationMessage}
+              </Text>
+            ) : null}
+            {aboutStepRequirement ? (
+              <Text style={[styles.inlineMessage, isDay && styles.dayMessage]}>
+                {aboutStepRequirement}
+              </Text>
+            ) : null}
+            <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+              {onboardingCopy.preferredAgeRangeHint}
+            </Text>
 
             <View>
               <Text style={[styles.label, isDay && styles.dayTitle]}>Optional gender</Text>
               <View style={styles.optionGrid}>
                 {genderOptions.map((option) => (
-                  <Choice key={option} label={option} active={gender === option} isDay={isDay} onPress={() => setGender(option)} />
+                  <Choice
+                    key={option}
+                    label={option}
+                    active={gender === option}
+                    isDay={isDay}
+                    onPress={() => setGender(option)}
+                  />
                 ))}
               </View>
               <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
-                This is optional, local for now, and hidden from preview unless you choose to show it.
+                This is optional, local for now, and hidden from preview unless you choose to show
+                it.
               </Text>
             </View>
 
             <View>
               <Text style={[styles.label, isDay && styles.dayTitle]}>Usual suburb or area</Text>
-              <TextInput value={suburb} onChangeText={updateSuburb} placeholder="Chatswood" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.input, isDay && styles.dayInput]} />
+              <TextInput
+                value={suburb}
+                onChangeText={updateSuburb}
+                placeholder="Chatswood"
+                placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
+                style={[styles.input, isDay && styles.dayInput]}
+              />
               <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
-                Manual suburb selection is okay. NSN uses broad local context by default, not continuous background location.
+                Manual suburb selection is okay. NSN uses broad local context by default, not
+                continuous background location.
               </Text>
               {localitySuggestions.length ? (
                 <View style={[styles.localityList, isDay && styles.dayCard]}>
                   {localitySuggestions.map((locality) => (
-                    <TouchableOpacity key={`${locality.suburb}-${locality.postcode}`} activeOpacity={0.8} onPress={() => selectLocality(locality)} style={styles.localityOption}>
-                      <Text style={[styles.localityName, isDay && styles.dayTitle]}>{getAustralianLocalityLabel(locality)}</Text>
+                    <TouchableOpacity
+                      key={`${locality.suburb}-${locality.postcode}`}
+                      activeOpacity={0.8}
+                      onPress={() => selectLocality(locality)}
+                      style={styles.localityOption}
+                    >
+                      <Text style={[styles.localityName, isDay && styles.dayTitle]}>
+                        {getAustralianLocalityLabel(locality)}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -452,7 +609,13 @@ export default function OnboardingScreen() {
               <Text style={[styles.label, isDay && styles.dayTitle]}>First meetup interests</Text>
               <View style={styles.optionGrid}>
                 {firstMeetupInterests.map((interest) => (
-                  <Choice key={interest} label={interest} active={interests.includes(interest)} isDay={isDay} onPress={() => toggleInterest(interest)} />
+                  <Choice
+                    key={interest}
+                    label={interest}
+                    active={interests.includes(interest)}
+                    isDay={isDay}
+                    onPress={() => toggleInterest(interest)}
+                  />
                 ))}
               </View>
             </View>
@@ -461,7 +624,13 @@ export default function OnboardingScreen() {
               <Text style={[styles.label, isDay && styles.dayTitle]}>What brings you here?</Text>
               <View style={styles.optionGrid}>
                 {intentOptions.map((option) => (
-                  <Choice key={option} label={option} active={intent === option} isDay={isDay} onPress={() => setIntent(option)} />
+                  <Choice
+                    key={option}
+                    label={option}
+                    active={intent === option}
+                    isDay={isDay}
+                    onPress={() => setIntent(option)}
+                  />
                 ))}
               </View>
             </View>
@@ -471,7 +640,16 @@ export default function OnboardingScreen() {
         {stage === 2 ? (
           <View style={styles.formStack}>
             {comfortModes.map((mode) => (
-              <TouchableOpacity key={mode.value} activeOpacity={0.84} onPress={() => updateComfortMode(mode.value)} style={[styles.selectionCard, isDay && styles.dayCard, comfortMode === mode.value && styles.selectionActive]}>
+              <TouchableOpacity
+                key={mode.value}
+                activeOpacity={0.84}
+                onPress={() => updateComfortMode(mode.value)}
+                style={[
+                  styles.selectionCard,
+                  isDay && styles.dayCard,
+                  comfortMode === mode.value && styles.selectionActive,
+                ]}
+              >
                 <View style={styles.selectionCopy}>
                   <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{mode.value}</Text>
                   <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{mode.copy}</Text>
@@ -484,7 +662,13 @@ export default function OnboardingScreen() {
               <Text style={[styles.label, isDay && styles.dayTitle]}>Comfort preferences</Text>
               <View style={styles.optionGrid}>
                 {comfortPreferenceOptions.map((preference) => (
-                  <Choice key={preference} label={comfortPreferenceLabels[preference]} active={comfortPreferences.includes(preference)} isDay={isDay} onPress={() => toggleComfortPreference(preference)} />
+                  <Choice
+                    key={preference}
+                    label={comfortPreferenceLabels[preference]}
+                    active={comfortPreferences.includes(preference)}
+                    isDay={isDay}
+                    onPress={() => toggleComfortPreference(preference)}
+                  />
                 ))}
               </View>
             </View>
@@ -493,8 +677,20 @@ export default function OnboardingScreen() {
 
         {stage === 3 ? (
           <View style={styles.formStack}>
-            <ToggleRow label="Private profile" copy="Limit profile details unless you choose to share more." value={privateProfile} onPress={() => setPrivateProfile((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Blur profile photo" copy="Keep your photo softened in event views." value={blurProfilePhoto} onPress={() => setBlurProfilePhoto((current) => !current)} isDay={isDay} />
+            <ToggleRow
+              label="Private profile"
+              copy="Limit profile details unless you choose to share more."
+              value={privateProfile}
+              onPress={() => setPrivateProfile((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Blur profile photo"
+              copy="Keep your photo softened in event views."
+              value={blurProfilePhoto}
+              onPress={() => setBlurProfilePhoto((current) => !current)}
+              isDay={isDay}
+            />
             {comfortMode === "Warm Up Mode" ? (
               <ToggleRow
                 label="Lower blur in Warm Up"
@@ -507,18 +703,80 @@ export default function OnboardingScreen() {
             <View>
               <Text style={[styles.label, isDay && styles.dayTitle]}>Blur level</Text>
               <View style={styles.optionGrid}>
-                {blurLevels.map((level) => <Choice key={level} label={level} active={blurLevel === level} isDay={isDay} onPress={() => setBlurLevel(level)} />)}
+                {blurLevels.map((level) => (
+                  <Choice
+                    key={level}
+                    label={level}
+                    active={blurLevel === level}
+                    isDay={isDay}
+                    onPress={() => setBlurLevel(level)}
+                  />
+                ))}
               </View>
             </View>
-            <ToggleRow label="Show suburb / area" copy="Share a broad local area only. Exact live location is not shared with other users." value={showSuburbArea} onPress={() => setShowSuburbArea((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Show middle name" copy="Only available if you entered an optional middle name." value={Boolean(middleName.trim() && showMiddleName)} onPress={() => setShowMiddleName((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Show last name" copy="Only available if you entered an optional last name." value={Boolean(lastName.trim() && showLastName)} onPress={() => setShowLastName((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Show age" copy="Let others see your age in the preview." value={showAge} onPress={() => setShowAge((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Show preferred age range" copy={onboardingCopy.showPreferredAgeRange} value={showPreferredAgeRange} onPress={() => setShowPreferredAgeRange((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Show gender" copy="Only available if you selected an optional gender." value={Boolean(gender !== "Not specified" && showGender)} onPress={() => setShowGender((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Show interests" copy="Let event members see first-meetup interests." value={showInterests} onPress={() => setShowInterests((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Show comfort preferences" copy="Share gentle context like text-first or small groups." value={showComfortPreferences} onPress={() => setShowComfortPreferences((current) => !current)} isDay={isDay} />
-            <ToggleRow label="Minimal profile view" copy="Show only the basics in event-visible previews." value={minimalProfileView} onPress={() => setMinimalProfileView((current) => !current)} isDay={isDay} />
+            <ToggleRow
+              label="Show suburb / area"
+              copy="Share a broad local area only. Exact live location is not shared with other users."
+              value={showSuburbArea}
+              onPress={() => setShowSuburbArea((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Show middle name"
+              copy="Only available if you entered an optional middle name."
+              value={Boolean(middleName.trim() && showMiddleName)}
+              onPress={() => setShowMiddleName((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Show last name"
+              copy="Only available if you entered an optional last name."
+              value={Boolean(lastName.trim() && showLastName)}
+              onPress={() => setShowLastName((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Show age"
+              copy="Let others see your age in the preview."
+              value={showAge}
+              onPress={() => setShowAge((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Show preferred age range"
+              copy={onboardingCopy.showPreferredAgeRange}
+              value={showPreferredAgeRange}
+              onPress={() => setShowPreferredAgeRange((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Show gender"
+              copy="Only available if you selected an optional gender."
+              value={Boolean(gender !== "Not specified" && showGender)}
+              onPress={() => setShowGender((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Show interests"
+              copy="Let event members see first-meetup interests."
+              value={showInterests}
+              onPress={() => setShowInterests((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Show comfort preferences"
+              copy="Share gentle context like text-first or small groups."
+              value={showComfortPreferences}
+              onPress={() => setShowComfortPreferences((current) => !current)}
+              isDay={isDay}
+            />
+            <ToggleRow
+              label="Minimal profile view"
+              copy="Show only the basics in event-visible previews."
+              value={minimalProfileView}
+              onPress={() => setMinimalProfileView((current) => !current)}
+              isDay={isDay}
+            />
 
             <View>
               <Text style={[styles.label, isDay && styles.dayTitle]}>How others see me</Text>
@@ -553,21 +811,37 @@ export default function OnboardingScreen() {
               />
             </View>
 
-            <TouchableOpacity activeOpacity={0.8} onPress={pickProfilePhoto} style={[styles.photoRow, isDay && styles.dayCard]}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={pickProfilePhoto}
+              style={[styles.photoRow, isDay && styles.dayCard]}
+            >
               <View style={styles.photoPreview}>
                 {profilePhotoUri ? (
                   <Image
                     source={{ uri: profilePhotoUri }}
                     style={styles.photoImage}
-                    blurRadius={blurProfilePhoto ? getBlurRadius(getEffectiveBlurLevel(comfortMode, blurLevel, warmUpLowerBlur)) : 0}
+                    blurRadius={
+                      blurProfilePhoto
+                        ? getBlurRadius(
+                            getEffectiveBlurLevel(comfortMode, blurLevel, warmUpLowerBlur),
+                          )
+                        : 0
+                    }
                   />
                 ) : (
-                  <Text style={styles.photoInitial}>{displayName.trim().charAt(0).toUpperCase() || "N"}</Text>
+                  <Text style={styles.photoInitial}>
+                    {displayName.trim().charAt(0).toUpperCase() || "N"}
+                  </Text>
                 )}
               </View>
               <View style={styles.selectionCopy}>
-                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{profilePhotoUri ? "Change optional photo" : "Add optional photo"}</Text>
-                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>You can leave this blank for now.</Text>
+                <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>
+                  {profilePhotoUri ? "Change optional photo" : "Add optional photo"}
+                </Text>
+                <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>
+                  You can leave this blank for now.
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -577,20 +851,62 @@ export default function OnboardingScreen() {
           <View style={[styles.panel, isDay && styles.dayPanel]}>
             <Text style={[styles.title, isDay && styles.dayTitle]}>Review your NSN setup</Text>
             <Summary label="Age" value={`${age}`} isDay={isDay} />
-            <Summary label="Preferred age range" value={`${preferredAgeMin}-${preferredAgeMax}`} isDay={isDay} />
-            <Summary label="Middle name" value={middleName.trim() ? (showMiddleName ? "Saved, shown in preview" : "Saved, hidden from preview") : "Not added"} isDay={isDay} />
-            <Summary label="Last name" value={lastName.trim() ? (showLastName ? "Saved, shown in preview" : "Saved, hidden from preview") : "Not added"} isDay={isDay} />
-            <Summary label="Gender" value={gender !== "Not specified" ? (showGender ? `${gender}, shown in preview` : `${gender}, hidden from preview`) : "Not specified"} isDay={isDay} />
+            <Summary
+              label="Preferred age range"
+              value={`${preferredAgeMin}-${preferredAgeMax}`}
+              isDay={isDay}
+            />
+            <Summary
+              label="Middle name"
+              value={
+                middleName.trim()
+                  ? showMiddleName
+                    ? "Saved, shown in preview"
+                    : "Saved, hidden from preview"
+                  : "Not added"
+              }
+              isDay={isDay}
+            />
+            <Summary
+              label="Last name"
+              value={
+                lastName.trim()
+                  ? showLastName
+                    ? "Saved, shown in preview"
+                    : "Saved, hidden from preview"
+                  : "Not added"
+              }
+              isDay={isDay}
+            />
+            <Summary
+              label="Gender"
+              value={
+                gender !== "Not specified"
+                  ? showGender
+                    ? `${gender}, shown in preview`
+                    : `${gender}, hidden from preview`
+                  : "Not specified"
+              }
+              isDay={isDay}
+            />
             <Summary label="Suburb / area" value={selectedSuburb || "Not set"} isDay={isDay} />
             <Summary label="Interests" value={interests.join(", ")} isDay={isDay} />
             <Summary label="Comfort mode" value={comfortMode} isDay={isDay} />
-            <Summary label="Privacy" value={`${privateProfile ? "Private profile" : "Event-visible"} · ${blurProfilePhoto ? blurLevel : "Photo clear"} · ${minimalProfileView ? "Minimal view" : "Details controlled"}`} isDay={isDay} />
+            <Summary
+              label="Privacy"
+              value={`${privateProfile ? "Private profile" : "Event-visible"} · ${blurProfilePhoto ? blurLevel : "Photo clear"} · ${minimalProfileView ? "Minimal view" : "Details controlled"}`}
+              isDay={isDay}
+            />
           </View>
         ) : null}
 
         <View style={styles.buttonRow}>
           {stage > 0 ? (
-            <TouchableOpacity activeOpacity={0.85} onPress={() => setStage((current) => Math.max(current - 1, 0))} style={[styles.secondaryButton, isDay && styles.dayCard]}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => setStage((current) => Math.max(current - 1, 0))}
+              style={[styles.secondaryButton, isDay && styles.dayCard]}
+            >
               <Text style={[styles.secondaryButtonText, isDay && styles.dayTitle]}>Back</Text>
             </TouchableOpacity>
           ) : null}
@@ -600,10 +916,17 @@ export default function OnboardingScreen() {
             onPress={stage === 4 ? finishOnboarding : nextStage}
             accessibilityRole="button"
             accessibilityState={{ disabled: stage === 1 && !canContinueAbout }}
-            accessibilityHint={stage === 1 && aboutStepRequirement ? aboutStepRequirement : undefined}
-            style={[styles.primaryButton, stage === 1 && !canContinueAbout && styles.primaryButtonDisabled]}
+            accessibilityHint={
+              stage === 1 && aboutStepRequirement ? aboutStepRequirement : undefined
+            }
+            style={[
+              styles.primaryButton,
+              stage === 1 && !canContinueAbout && styles.primaryButtonDisabled,
+            ]}
           >
-            <Text style={styles.primaryButtonText}>{stage === 0 ? "Get Started" : stage === 4 ? "Finish setup" : "Continue"}</Text>
+            <Text style={styles.primaryButtonText}>
+              {stage === 0 ? "Get Started" : stage === 4 ? "Finish setup" : "Continue"}
+            </Text>
           </TouchableOpacity>
         </View>
         <TouchableOpacity
@@ -614,7 +937,9 @@ export default function OnboardingScreen() {
           accessibilityHint={onboardingCopy.skipButton.accessibilityHint}
           style={[styles.skipButton, isDay && styles.dayCard]}
         >
-          <Text style={[styles.skipButtonText, isDay && styles.dayTitle]}>Skip onboarding for now</Text>
+          <Text style={[styles.skipButtonText, isDay && styles.dayTitle]}>
+            Skip onboarding for now
+          </Text>
           <Text style={[styles.skipButtonCopy, isDay && styles.dayMutedText]}>
             {onboardingCopy.skipButton.copy}
           </Text>
@@ -624,17 +949,51 @@ export default function OnboardingScreen() {
   );
 }
 
-function Choice({ label, active, isDay, onPress }: { label: string; active: boolean; isDay: boolean; onPress: () => void }) {
+function Choice({
+  label,
+  active,
+  isDay,
+  onPress,
+}: {
+  label: string;
+  active: boolean;
+  isDay: boolean;
+  onPress: () => void;
+}) {
   return (
-    <TouchableOpacity activeOpacity={0.82} onPress={onPress} style={[styles.choice, isDay && styles.dayChoice, active && styles.choiceActive]}>
-      <Text style={[styles.choiceText, isDay && styles.dayMutedText, active && styles.choiceTextActive]}>{label}</Text>
+    <TouchableOpacity
+      activeOpacity={0.82}
+      onPress={onPress}
+      style={[styles.choice, isDay && styles.dayChoice, active && styles.choiceActive]}
+    >
+      <Text
+        style={[styles.choiceText, isDay && styles.dayMutedText, active && styles.choiceTextActive]}
+      >
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 }
 
-function ToggleRow({ label, copy, value, onPress, isDay }: { label: string; copy: string; value: boolean; onPress: () => void; isDay: boolean }) {
+function ToggleRow({
+  label,
+  copy,
+  value,
+  onPress,
+  isDay,
+}: {
+  label: string;
+  copy: string;
+  value: boolean;
+  onPress: () => void;
+  isDay: boolean;
+}) {
   return (
-    <TouchableOpacity activeOpacity={0.82} onPress={onPress} style={[styles.selectionCard, isDay && styles.dayCard, value && styles.selectionActive]}>
+    <TouchableOpacity
+      activeOpacity={0.82}
+      onPress={onPress}
+      style={[styles.selectionCard, isDay && styles.dayCard, value && styles.selectionActive]}
+    >
       <View style={styles.selectionCopy}>
         <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{label}</Text>
         <Text style={[styles.cardCopy, isDay && styles.dayMutedText]}>{copy}</Text>
@@ -655,50 +1014,177 @@ function Summary({ label, value, isDay }: { label: string; value: string; isDay:
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayScreen: { backgroundColor: "#E8EDF2" },
+  dayScreen: { backgroundColor: "#FFFFFF" },
   content: { paddingHorizontal: 22, paddingTop: 22, paddingBottom: 36, gap: 16 },
   brandLockup: { alignItems: "center" },
-  logoMark: { width: 92, height: 58, borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surfaceRaised, alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  logoMark: {
+    width: 92,
+    height: 58,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surfaceRaised,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
   logoText: { color: nsnColors.text, fontSize: 24, fontWeight: "900", letterSpacing: 0 },
-  logoSignal: { position: "absolute", right: 12, top: 11, width: 9, height: 9, borderRadius: 5, backgroundColor: nsnColors.cyan },
-  brand: { color: nsnColors.text, fontSize: 32, fontWeight: "900", lineHeight: 38, textAlign: "center" },
-  tagline: { color: nsnColors.cyan, fontSize: 15, fontWeight: "800", lineHeight: 21, textAlign: "center", marginTop: 3 },
+  logoSignal: {
+    position: "absolute",
+    right: 12,
+    top: 11,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: nsnColors.cyan,
+  },
+  brand: {
+    color: nsnColors.text,
+    fontSize: 32,
+    fontWeight: "900",
+    lineHeight: 38,
+    textAlign: "center",
+  },
+  tagline: {
+    color: nsnColors.cyan,
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 21,
+    textAlign: "center",
+    marginTop: 3,
+  },
   progressRow: { flexDirection: "row", gap: 7, justifyContent: "center" },
   progressDot: { width: 30, height: 5, borderRadius: 3, backgroundColor: "rgba(166,177,199,0.25)" },
   progressDotActive: { backgroundColor: nsnColors.primary },
-  stepLabel: { color: nsnColors.cyan, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
-  panel: { borderRadius: 20, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 18, gap: 10 },
-  dayPanel: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
+  stepLabel: {
+    color: nsnColors.cyan,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    textAlign: "center",
+  },
+  panel: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    padding: 18,
+    gap: 10,
+  },
+  dayPanel: { backgroundColor: "#FFFFFF", borderColor: "#D7E0EA" },
   title: { color: nsnColors.text, fontSize: 24, fontWeight: "900", lineHeight: 31 },
   copy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   formStack: { gap: 16 },
-  label: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginBottom: 8 },
-  input: { minHeight: 50, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, fontSize: 15, paddingHorizontal: 14 },
+  label: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  input: {
+    minHeight: 50,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    color: nsnColors.text,
+    fontSize: 15,
+    paddingHorizontal: 14,
+  },
   dayInput: { borderColor: "#C5D0DA", backgroundColor: "#FFFFFF", color: "#0B1220" },
   twoColumn: { flexDirection: "row", gap: 12 },
   column: { flex: 1 },
   rangeRow: { minHeight: 50, flexDirection: "row", alignItems: "center", gap: 8 },
-  rangeInput: { flex: 1, minHeight: 50, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, color: nsnColors.text, fontSize: 15, textAlign: "center" },
+  rangeInput: {
+    flex: 1,
+    minHeight: 50,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    color: nsnColors.text,
+    fontSize: 15,
+    textAlign: "center",
+  },
   rangeDash: { color: nsnColors.muted, fontSize: 12, fontWeight: "800" },
   inlineMessage: { color: nsnColors.warning, fontSize: 12, lineHeight: 17, fontWeight: "800" },
   localityStatus: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
-  localityList: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, marginTop: 9, overflow: "hidden" },
-  localityOption: { minHeight: 46, justifyContent: "center", paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: nsnColors.border },
+  localityList: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    marginTop: 9,
+    overflow: "hidden",
+  },
+  localityOption: {
+    minHeight: 46,
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: nsnColors.border,
+  },
   localityName: { color: nsnColors.text, fontSize: 13, fontWeight: "800" },
   optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  choice: { minHeight: 42, minWidth: "47%", flex: 1, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
+  choice: {
+    minHeight: 42,
+    minWidth: "47%",
+    flex: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
   dayChoice: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   choiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   choiceText: { color: nsnColors.muted, fontSize: 13, fontWeight: "900", textAlign: "center" },
   choiceTextActive: { color: "#FFFFFF" },
-  selectionCard: { minHeight: 72, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
+  selectionCard: {
+    minHeight: 72,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 14,
+  },
   selectionActive: { borderColor: nsnColors.cyan, backgroundColor: "rgba(56,72,255,0.16)" },
   selectionCopy: { flex: 1 },
-  selectionCheck: { width: 24, color: nsnColors.cyan, fontSize: 18, fontWeight: "900", textAlign: "center" },
+  selectionCheck: {
+    width: 24,
+    color: nsnColors.cyan,
+    fontSize: 18,
+    fontWeight: "900",
+    textAlign: "center",
+  },
   cardTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   cardCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  photoRow: { minHeight: 82, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, flexDirection: "row", alignItems: "center", gap: 12, padding: 12 },
-  photoPreview: { width: 56, height: 56, borderRadius: 28, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", overflow: "hidden" },
+  photoRow: {
+    minHeight: 82,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+  },
+  photoPreview: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
   photoImage: { width: 56, height: 56, borderRadius: 28 },
   photoInitial: { color: "#FFFFFF", fontSize: 23, fontWeight: "900" },
   summaryRow: { borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", padding: 12, gap: 3 },
@@ -706,15 +1192,55 @@ const styles = StyleSheet.create({
   summaryLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   summaryValue: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   buttonRow: { flexDirection: "row", gap: 10, marginTop: 6 },
-  primaryButton: { flex: 1, minHeight: 54, borderRadius: 17, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 16 },
+  primaryButton: {
+    flex: 1,
+    minHeight: 54,
+    borderRadius: 17,
+    backgroundColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
   primaryButtonDisabled: { opacity: 0.42 },
   primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
-  secondaryButton: { minHeight: 54, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignItems: "center", justifyContent: "center", paddingHorizontal: 18 },
+  secondaryButton: {
+    minHeight: 54,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+  },
   secondaryButtonText: { color: nsnColors.text, fontSize: 14, fontWeight: "900" },
-  skipButton: { minHeight: 60, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10, gap: 2 },
-  skipButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
-  skipButtonCopy: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 16, textAlign: "center" },
-  dayCard: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
+  skipButton: {
+    minHeight: 60,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 2,
+  },
+  skipButtonText: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  skipButtonCopy: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "800",
+    lineHeight: 16,
+    textAlign: "center",
+  },
+  dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D7E0EA" },
   dayTitle: { color: "#0B1220" },
   dayMutedText: { color: "#53677A" },
   dayAccentText: { color: nsnColors.primary },

@@ -1,12 +1,30 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Linking, Modal, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import {
+  Alert,
+  Image,
+  Linking,
+  Modal,
+  Platform,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+  type ImageSourcePropType,
+} from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import type { IconSymbolName } from "@/components/ui/icon-symbol-map";
-import { getTranslationLanguageBase, type PhotoRecordingComfortPreference, useAppSettings } from "@/lib/app-settings";
+import {
+  getTranslationLanguageBase,
+  type PhotoRecordingComfortPreference,
+  useAppSettings,
+} from "@/lib/app-settings";
 import {
   eventDetailSectionPlan,
   getEventDetailQuickJumpItems,
@@ -66,6 +84,12 @@ import {
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
 
+const eventDetailImageSources: Record<string, ImageSourcePropType> = {
+  "beach-day-chill-vibes": require("../../assets/images/events/event-beach-day-chill-vibes.png"),
+  "movie-night-watch-chat": require("../../assets/images/events/event-movie-night-watch-chat.png"),
+  "picnic-easy-hangout": require("../../assets/images/events/event-picnic-easy-hangout.png"),
+};
+
 type CreatedEvent = {
   id: string;
   title: string;
@@ -84,29 +108,76 @@ type CreatedEvent = {
 
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
 
-const getDetailMediaComfortLabels = (event: EventItem, photoRecordingComfortPreferences: PhotoRecordingComfortPreference[]) => {
+const getDetailMediaComfortLabels = (
+  event: EventItem,
+  photoRecordingComfortPreferences: PhotoRecordingComfortPreference[],
+) => {
   const labels = [...(event.mediaComfortLabels ?? ["Ask before photos"])];
 
   if (photoRecordingComfortPreferences.includes("Ask me first")) labels.push("Ask before photos");
   if (photoRecordingComfortPreferences.includes("No photos of me")) labels.push("No photos of me");
-  if (photoRecordingComfortPreferences.includes("Group photos are okay")) labels.push("Group photos only if everyone agrees");
-  if (photoRecordingComfortPreferences.includes("Venue/event photos are okay")) labels.push("Venue photos okay");
+  if (photoRecordingComfortPreferences.includes("Group photos are okay"))
+    labels.push("Group photos only if everyone agrees");
+  if (photoRecordingComfortPreferences.includes("Venue/event photos are okay"))
+    labels.push("Venue photos okay");
   if (photoRecordingComfortPreferences.includes("No videos please")) labels.push("No filming");
-  if (photoRecordingComfortPreferences.includes("No public posting without permission")) labels.push("No public posting");
-  if (photoRecordingComfortPreferences.includes("Prefer no screenshots of chats/profile")) labels.push("Prefer no screenshots");
+  if (photoRecordingComfortPreferences.includes("No public posting without permission"))
+    labels.push("No public posting");
+  if (photoRecordingComfortPreferences.includes("Prefer no screenshots of chats/profile"))
+    labels.push("Prefer no screenshots");
 
   return labels.filter((label, index, all) => all.indexOf(label) === index).slice(0, 5);
 };
 
 const savePlaceTranslations = {
-  English: { save: "Save place", saved: "Saved", savedMessage: "Place saved", removedMessage: "Place removed" },
-  Chinese: { save: "收藏地点", saved: "已收藏", savedMessage: "地点已收藏", removedMessage: "地点已移除" },
-  Japanese: { save: "場所を保存", saved: "保存済み", savedMessage: "場所を保存しました", removedMessage: "場所を削除しました" },
-  Korean: { save: "장소 저장", saved: "저장됨", savedMessage: "장소가 저장됨", removedMessage: "장소가 제거됨" },
-  Arabic: { save: "حفظ المكان", saved: "محفوظ", savedMessage: "تم حفظ المكان", removedMessage: "تمت إزالة المكان" },
-  Hebrew: { save: "שמירת מקום", saved: "נשמר", savedMessage: "המקום נשמר", removedMessage: "המקום הוסר" },
-  Russian: { save: "Сохранить место", saved: "Сохранено", savedMessage: "Место сохранено", removedMessage: "Место удалено" },
-  Spanish: { save: "Guardar lugar", saved: "Guardado", savedMessage: "Lugar guardado", removedMessage: "Lugar eliminado" },
+  English: {
+    save: "Save place",
+    saved: "Saved",
+    savedMessage: "Place saved",
+    removedMessage: "Place removed",
+  },
+  Chinese: {
+    save: "收藏地点",
+    saved: "已收藏",
+    savedMessage: "地点已收藏",
+    removedMessage: "地点已移除",
+  },
+  Japanese: {
+    save: "場所を保存",
+    saved: "保存済み",
+    savedMessage: "場所を保存しました",
+    removedMessage: "場所を削除しました",
+  },
+  Korean: {
+    save: "장소 저장",
+    saved: "저장됨",
+    savedMessage: "장소가 저장됨",
+    removedMessage: "장소가 제거됨",
+  },
+  Arabic: {
+    save: "حفظ المكان",
+    saved: "محفوظ",
+    savedMessage: "تم حفظ المكان",
+    removedMessage: "تمت إزالة المكان",
+  },
+  Hebrew: {
+    save: "שמירת מקום",
+    saved: "נשמר",
+    savedMessage: "המקום נשמר",
+    removedMessage: "המקום הוסר",
+  },
+  Russian: {
+    save: "Сохранить место",
+    saved: "Сохранено",
+    savedMessage: "Место сохранено",
+    removedMessage: "Место удалено",
+  },
+  Spanish: {
+    save: "Guardar lugar",
+    saved: "Guardado",
+    savedMessage: "Lugar guardado",
+    removedMessage: "Lugar eliminado",
+  },
 } as const;
 
 const eventActionTranslations = {
@@ -114,7 +185,8 @@ const eventActionTranslations = {
     goBack: "Go back",
     goBackHint: "Returns to the previous screen.",
     shareTitle: "Share event",
-    shareMessage: (title: string, venue: string, time: string) => `I found this NSN meetup: ${title} at ${venue}, ${time}.`,
+    shareMessage: (title: string, venue: string, time: string) =>
+      `I found this NSN meetup: ${title} at ${venue}, ${time}.`,
     shareError: "This event could not be shared right now.",
     copiedMessage: "Event details copied to clipboard.",
     savePlaceHint: "Saves this venue to your saved places.",
@@ -139,7 +211,8 @@ const eventActionTranslations = {
   },
   Hebrew: {
     shareTitle: "שיתוף אירוע",
-    shareMessage: (title: string, venue: string, time: string) => `מצאתי מפגש ב-NSN: ${title} ב-${venue}, ${time}.`,
+    shareMessage: (title: string, venue: string, time: string) =>
+      `מצאתי מפגש ב-NSN: ${title} ב-${venue}, ${time}.`,
     shareError: "לא הצלחנו לשתף את האירוע כרגע.",
     copiedMessage: "פרטי האירוע הועתקו ללוח.",
     moreTitle: "אפשרויות אירוע",
@@ -157,7 +230,8 @@ const eventActionTranslations = {
   },
   Chinese: {
     shareTitle: "分享活动",
-    shareMessage: (title: string, venue: string, time: string) => `我发现了这个 NSN 聚会：${title}，地点 ${venue}，时间 ${time}。`,
+    shareMessage: (title: string, venue: string, time: string) =>
+      `我发现了这个 NSN 聚会：${title}，地点 ${venue}，时间 ${time}。`,
     shareError: "现在无法分享此活动。",
     copiedMessage: "活动详情已复制到剪贴板。",
     moreTitle: "活动选项",
@@ -175,7 +249,8 @@ const eventActionTranslations = {
   },
   Japanese: {
     shareTitle: "イベントを共有",
-    shareMessage: (title: string, venue: string, time: string) => `NSNのミートアップを見つけました：${title}、${venue}、${time}。`,
+    shareMessage: (title: string, venue: string, time: string) =>
+      `NSNのミートアップを見つけました：${title}、${venue}、${time}。`,
     shareError: "現在このイベントを共有できません。",
     copiedMessage: "イベント詳細をクリップボードにコピーしました。",
     moreTitle: "イベントオプション",
@@ -193,7 +268,8 @@ const eventActionTranslations = {
   },
   Korean: {
     shareTitle: "이벤트 공유",
-    shareMessage: (title: string, venue: string, time: string) => `NSN 모임을 찾았어요: ${title}, ${venue}, ${time}.`,
+    shareMessage: (title: string, venue: string, time: string) =>
+      `NSN 모임을 찾았어요: ${title}, ${venue}, ${time}.`,
     shareError: "지금은 이 이벤트를 공유할 수 없어요.",
     copiedMessage: "이벤트 정보가 클립보드에 복사됐어요.",
     moreTitle: "이벤트 옵션",
@@ -367,36 +443,210 @@ const getDetailSocialPaceLabel = (tone: string) => {
   return tone;
 };
 
-const detailEventTranslations: Record<string, Record<string, Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>>> = {
+const detailEventTranslations: Record<
+  string,
+  Record<
+    string,
+    Partial<Pick<EventItem, "title" | "category" | "people" | "description" | "tone" | "weather">>
+  >
+> = {
   Chinese: {
-    "picnic-easy-hangout": { title: "野餐 — 轻松相处", category: "户外", people: "2–4 位成员", description: "带些零食，坐下来放松。不需要一直聊天。", tone: "适中", weather: "受天气影响" },
-    "beach-day-chill-vibes": { title: "海边日 — 放松氛围", category: "户外", people: "3–6 位成员", description: "阳光、海边和好相处的人。自带毛巾。", tone: "适中", weather: "受天气影响" },
-    "library-calm-study": { title: "图书馆安静学习", category: "室内", people: "2–5 位成员", description: "安静的桌边时间，轻松聊天休息和温和重置。", tone: "安静", weather: "适合雨天" },
-    "coffee-lane-cove": { title: "咖啡 — 轻松打招呼", category: "美食", people: "2–4 位成员", description: "喝杯咖啡，找个舒服的位置，需要时随时离开。", tone: "适中", weather: "有室内备用" },
-    "harbour-walk-waverton": { title: "海港散步 — 轻松节奏", category: "活动", people: "3–6 位成员", description: "慢慢散步，有安静时刻和小范围聊天的空间。", tone: "适中", weather: "受天气影响" },
-    "board-games-coffee": { title: "桌游 + 咖啡", category: "室内", people: "3–5 位成员", description: "简单游戏、热饮和轻松的聊天开场。", tone: "适中", weather: "适合雨天" },
-    "ramen-small-table": { title: "拉面 — 小桌", category: "美食", people: "3–5 位成员", description: "热乎的食物、简单介绍，不必有压力待到很晚。", tone: "适中", weather: "适合雨天" },
-    "quiet-music-listening": { title: "安静音乐聆听", category: "室内", people: "2–5 位成员", description: "分享几首平静的歌，只按舒服的程度聊天。", tone: "安静", weather: "有室内备用" },
+    "picnic-easy-hangout": {
+      title: "野餐 — 轻松相处",
+      category: "户外",
+      people: "2–4 位成员",
+      description: "带些零食，坐下来放松。不需要一直聊天。",
+      tone: "适中",
+      weather: "受天气影响",
+    },
+    "beach-day-chill-vibes": {
+      title: "海边日 — 放松氛围",
+      category: "户外",
+      people: "3–6 位成员",
+      description: "阳光、海边和好相处的人。自带毛巾。",
+      tone: "适中",
+      weather: "受天气影响",
+    },
+    "library-calm-study": {
+      title: "图书馆安静学习",
+      category: "室内",
+      people: "2–5 位成员",
+      description: "安静的桌边时间，轻松聊天休息和温和重置。",
+      tone: "安静",
+      weather: "适合雨天",
+    },
+    "coffee-lane-cove": {
+      title: "咖啡 — 轻松打招呼",
+      category: "美食",
+      people: "2–4 位成员",
+      description: "喝杯咖啡，找个舒服的位置，需要时随时离开。",
+      tone: "适中",
+      weather: "有室内备用",
+    },
+    "harbour-walk-waverton": {
+      title: "海港散步 — 轻松节奏",
+      category: "活动",
+      people: "3–6 位成员",
+      description: "慢慢散步，有安静时刻和小范围聊天的空间。",
+      tone: "适中",
+      weather: "受天气影响",
+    },
+    "board-games-coffee": {
+      title: "桌游 + 咖啡",
+      category: "室内",
+      people: "3–5 位成员",
+      description: "简单游戏、热饮和轻松的聊天开场。",
+      tone: "适中",
+      weather: "适合雨天",
+    },
+    "ramen-small-table": {
+      title: "拉面 — 小桌",
+      category: "美食",
+      people: "3–5 位成员",
+      description: "热乎的食物、简单介绍，不必有压力待到很晚。",
+      tone: "适中",
+      weather: "适合雨天",
+    },
+    "quiet-music-listening": {
+      title: "安静音乐聆听",
+      category: "室内",
+      people: "2–5 位成员",
+      description: "分享几首平静的歌，只按舒服的程度聊天。",
+      tone: "安静",
+      weather: "有室内备用",
+    },
   },
   Japanese: {
-    "picnic-easy-hangout": { title: "ピクニック — 気楽な集まり", category: "屋外", people: "2–4人", description: "軽食を持って、座って、リラックス。ずっと話す必要はありません。", tone: "ほどよい", weather: "天気次第" },
-    "beach-day-chill-vibes": { title: "ビーチデー — ゆったりした雰囲気", category: "屋外", people: "3–6人", description: "太陽、海、気楽な時間。タオルを持参してください。", tone: "ほどよい", weather: "天気次第" },
-    "library-calm-study": { title: "図書館で静かな勉強", category: "屋内", people: "2–5人", description: "静かなテーブル時間、軽い会話休憩、やさしいリセット。", tone: "静か", weather: "雨でも安心" },
-    "coffee-lane-cove": { title: "コーヒー — 気軽にこんにちは", category: "食事", people: "2–4人", description: "コーヒーを飲み、居心地よく座り、必要ならいつでも帰れます。", tone: "ほどよい", weather: "屋内の予備案あり" },
-    "harbour-walk-waverton": { title: "ハーバー散歩 — ゆっくりペース", category: "アクティブ", people: "3–6人", description: "静かな時間と横並びの会話ができる、ゆっくりした散歩。", tone: "ほどよい", weather: "天気次第" },
-    "board-games-coffee": { title: "ボードゲーム + コーヒー", category: "屋内", people: "3–5人", description: "シンプルなゲーム、温かい飲み物、気軽な会話のきっかけ。", tone: "ほどよい", weather: "雨でも安心" },
-    "ramen-small-table": { title: "ラーメン — 小さなテーブル", category: "食事", people: "3–5人", description: "温かい食事、簡単な自己紹介、遅くまで残るプレッシャーなし。", tone: "ほどよい", weather: "雨でも安心" },
-    "quiet-music-listening": { title: "静かな音楽を聴く", category: "屋内", people: "2–5人", description: "落ち着いた曲をいくつか共有し、心地よい分だけ話します。", tone: "静か", weather: "屋内の予備案あり" },
+    "picnic-easy-hangout": {
+      title: "ピクニック — 気楽な集まり",
+      category: "屋外",
+      people: "2–4人",
+      description: "軽食を持って、座って、リラックス。ずっと話す必要はありません。",
+      tone: "ほどよい",
+      weather: "天気次第",
+    },
+    "beach-day-chill-vibes": {
+      title: "ビーチデー — ゆったりした雰囲気",
+      category: "屋外",
+      people: "3–6人",
+      description: "太陽、海、気楽な時間。タオルを持参してください。",
+      tone: "ほどよい",
+      weather: "天気次第",
+    },
+    "library-calm-study": {
+      title: "図書館で静かな勉強",
+      category: "屋内",
+      people: "2–5人",
+      description: "静かなテーブル時間、軽い会話休憩、やさしいリセット。",
+      tone: "静か",
+      weather: "雨でも安心",
+    },
+    "coffee-lane-cove": {
+      title: "コーヒー — 気軽にこんにちは",
+      category: "食事",
+      people: "2–4人",
+      description: "コーヒーを飲み、居心地よく座り、必要ならいつでも帰れます。",
+      tone: "ほどよい",
+      weather: "屋内の予備案あり",
+    },
+    "harbour-walk-waverton": {
+      title: "ハーバー散歩 — ゆっくりペース",
+      category: "アクティブ",
+      people: "3–6人",
+      description: "静かな時間と横並びの会話ができる、ゆっくりした散歩。",
+      tone: "ほどよい",
+      weather: "天気次第",
+    },
+    "board-games-coffee": {
+      title: "ボードゲーム + コーヒー",
+      category: "屋内",
+      people: "3–5人",
+      description: "シンプルなゲーム、温かい飲み物、気軽な会話のきっかけ。",
+      tone: "ほどよい",
+      weather: "雨でも安心",
+    },
+    "ramen-small-table": {
+      title: "ラーメン — 小さなテーブル",
+      category: "食事",
+      people: "3–5人",
+      description: "温かい食事、簡単な自己紹介、遅くまで残るプレッシャーなし。",
+      tone: "ほどよい",
+      weather: "雨でも安心",
+    },
+    "quiet-music-listening": {
+      title: "静かな音楽を聴く",
+      category: "屋内",
+      people: "2–5人",
+      description: "落ち着いた曲をいくつか共有し、心地よい分だけ話します。",
+      tone: "静か",
+      weather: "屋内の予備案あり",
+    },
   },
   Korean: {
-    "picnic-easy-hangout": { title: "피크닉 — 편안한 시간", category: "야외", people: "2–4명", description: "간식을 가져와 앉아서 쉬어요. 계속 말해야 할 부담은 없어요.", tone: "적당함", weather: "날씨 영향 있음" },
-    "beach-day-chill-vibes": { title: "해변의 날 — 여유로운 분위기", category: "야외", people: "3–6명", description: "햇살, 바다, 좋은 사람들. 수건을 가져오세요.", tone: "적당함", weather: "날씨 영향 있음" },
-    "library-calm-study": { title: "도서관 차분한 스터디", category: "실내", people: "2–5명", description: "조용한 테이블 시간, 가벼운 대화 휴식, 부드러운 리셋.", tone: "조용함", weather: "비 오는 날 적합" },
-    "coffee-lane-cove": { title: "커피 — 부담 없는 인사", category: "음식", people: "2–4명", description: "커피를 마시고 편한 곳에 앉아 필요하면 언제든 떠날 수 있어요.", tone: "적당함", weather: "실내 대안 있음" },
-    "harbour-walk-waverton": { title: "하버 산책 — 쉬운 속도", category: "활동", people: "3–6명", description: "조용한 순간과 옆자리 대화가 가능한 느린 산책.", tone: "적당함", weather: "날씨 영향 있음" },
-    "board-games-coffee": { title: "보드게임 + 커피", category: "실내", people: "3–5명", description: "간단한 게임, 따뜻한 음료, 쉬운 대화 시작점.", tone: "적당함", weather: "비 오는 날 적합" },
-    "ramen-small-table": { title: "라멘 — 작은 테이블", category: "음식", people: "3–5명", description: "따뜻한 음식, 간단한 소개, 늦게까지 있어야 한다는 부담 없음.", tone: "적당함", weather: "비 오는 날 적합" },
-    "quiet-music-listening": { title: "조용한 음악 감상", category: "실내", people: "2–5명", description: "차분한 노래 몇 곡을 공유하고 편한 만큼만 이야기해요.", tone: "조용함", weather: "실내 대안 있음" },
+    "picnic-easy-hangout": {
+      title: "피크닉 — 편안한 시간",
+      category: "야외",
+      people: "2–4명",
+      description: "간식을 가져와 앉아서 쉬어요. 계속 말해야 할 부담은 없어요.",
+      tone: "적당함",
+      weather: "날씨 영향 있음",
+    },
+    "beach-day-chill-vibes": {
+      title: "해변의 날 — 여유로운 분위기",
+      category: "야외",
+      people: "3–6명",
+      description: "햇살, 바다, 좋은 사람들. 수건을 가져오세요.",
+      tone: "적당함",
+      weather: "날씨 영향 있음",
+    },
+    "library-calm-study": {
+      title: "도서관 차분한 스터디",
+      category: "실내",
+      people: "2–5명",
+      description: "조용한 테이블 시간, 가벼운 대화 휴식, 부드러운 리셋.",
+      tone: "조용함",
+      weather: "비 오는 날 적합",
+    },
+    "coffee-lane-cove": {
+      title: "커피 — 부담 없는 인사",
+      category: "음식",
+      people: "2–4명",
+      description: "커피를 마시고 편한 곳에 앉아 필요하면 언제든 떠날 수 있어요.",
+      tone: "적당함",
+      weather: "실내 대안 있음",
+    },
+    "harbour-walk-waverton": {
+      title: "하버 산책 — 쉬운 속도",
+      category: "활동",
+      people: "3–6명",
+      description: "조용한 순간과 옆자리 대화가 가능한 느린 산책.",
+      tone: "적당함",
+      weather: "날씨 영향 있음",
+    },
+    "board-games-coffee": {
+      title: "보드게임 + 커피",
+      category: "실내",
+      people: "3–5명",
+      description: "간단한 게임, 따뜻한 음료, 쉬운 대화 시작점.",
+      tone: "적당함",
+      weather: "비 오는 날 적합",
+    },
+    "ramen-small-table": {
+      title: "라멘 — 작은 테이블",
+      category: "음식",
+      people: "3–5명",
+      description: "따뜻한 음식, 간단한 소개, 늦게까지 있어야 한다는 부담 없음.",
+      tone: "적당함",
+      weather: "비 오는 날 적합",
+    },
+    "quiet-music-listening": {
+      title: "조용한 음악 감상",
+      category: "실내",
+      people: "2–5명",
+      description: "차분한 노래 몇 곡을 공유하고 편한 만큼만 이야기해요.",
+      tone: "조용함",
+      weather: "실내 대안 있음",
+    },
   },
   Hebrew: {
     "picnic-easy-hangout": {
@@ -473,7 +723,8 @@ const eventTranslations = {
     tone: "Pace: Low chat",
     date: "Saturday, 24 May · 7:00pm",
     people: "2–4 people",
-    description: "Watch first, optional chat after if it feels right. Perfect for low-pressure meetups.",
+    description:
+      "Watch first, optional chat after if it feels right. Perfect for low-pressure meetups.",
     weatherTitle: "Weather update",
     weatherCopy: "Rain expected in the evening. This is an indoor meetup.",
     whatToExpect: "What to expect",
@@ -490,12 +741,15 @@ const eventTranslations = {
     today: "Today",
     tonight: "Tonight",
     genericDescriptionSuffix: "A low-pressure meetup with clear expectations before you join.",
-    weatherAffectedCopy: "Weather may affect this plan, so check the backup option before heading out.",
+    weatherAffectedCopy:
+      "Weather may affect this plan, so check the backup option before heading out.",
     weatherFriendlyCopy: "This event has a weather-friendly plan.",
-    genericMeetingCopy: (venue: string) => `Meet near ${venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`,
+    genericMeetingCopy: (venue: string) =>
+      `Meet near ${venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`,
     meetingSafety: "Prototype meetup readiness",
     softExitTitle: "You can change your mind",
-    softExitCopy: "You can leave early, take a quiet break, step back from the chat, or come back later. No pressure to talk constantly.",
+    softExitCopy:
+      "You can leave early, take a quiet break, step back from the chat, or come back later. No pressure to talk constantly.",
     ctaReassurance: "Arrive solo, leave anytime, or just listen first.",
     verifyBeforeMeeting: "Verify before meeting",
     openMeetupChat: "Open Meetup Chat",
@@ -509,7 +763,8 @@ const eventTranslations = {
     feedbackMixed: "Mixed",
     feedbackUnsafe: "Unsafe",
     preEventQuestionsTitle: "Conversation starters",
-    preEventQuestionsCopy: "Optional prompts and quick replies for low-pressure chat. Use one, ignore them, or join quietly.",
+    preEventQuestionsCopy:
+      "Optional prompts and quick replies for low-pressure chat. Use one, ignore them, or join quietly.",
   },
   Chinese: {
     title: "电影夜 —\n观看 + 聊天",
@@ -536,10 +791,12 @@ const eventTranslations = {
     genericDescriptionSuffix: "加入前会有清晰预期的低压力聚会。",
     weatherAffectedCopy: "天气可能影响这个计划，出发前请查看备用方案。",
     weatherFriendlyCopy: "此活动已有适合天气的计划。",
-    genericMeetingCopy: (venue: string) => `开始前约10分钟在 ${venue} 附近见。主持人可以在聊天中分享更安静的准确地点。`,
+    genericMeetingCopy: (venue: string) =>
+      `开始前约10分钟在 ${venue} 附近见。主持人可以在聊天中分享更安静的准确地点。`,
     meetingSafety: "聚会安全",
     softExitTitle: "你可以改变主意",
-    softExitCopy: "如果今天感觉不适合自己的节奏，可以跳过这次聚会。你可以找另一个小组、从聊天中退一步，或稍后再回来。",
+    softExitCopy:
+      "如果今天感觉不适合自己的节奏，可以跳过这次聚会。你可以找另一个小组、从聊天中退一步，或稍后再回来。",
     verifyBeforeMeeting: "见面前验证",
     openMeetupChat: "打开聚会聊天",
     openMeetupChatHint: "打开聚会群聊。",
@@ -560,7 +817,8 @@ const eventTranslations = {
     tone: "☽ 静か",
     date: "5月24日（土）· 19:00",
     people: "2–4人",
-    description: "まず映画を観て、よければ後で少し話します。低プレッシャーなミートアップにぴったりです。",
+    description:
+      "まず映画を観て、よければ後で少し話します。低プレッシャーなミートアップにぴったりです。",
     weatherTitle: "☀ 天気の更新",
     weatherCopy: "夜に雨が予想されています。これは屋内ミートアップです。",
     whatToExpect: "期待できること",
@@ -577,12 +835,15 @@ const eventTranslations = {
     today: "今日",
     tonight: "今夜",
     genericDescriptionSuffix: "参加前に期待値が分かる、低プレッシャーなミートアップです。",
-    weatherAffectedCopy: "天気がこの予定に影響する場合があります。出発前に予備案を確認してください。",
+    weatherAffectedCopy:
+      "天気がこの予定に影響する場合があります。出発前に予備案を確認してください。",
     weatherFriendlyCopy: "このイベントには天気に対応した予定があります。",
-    genericMeetingCopy: (venue: string) => `開始約10分前に ${venue} の近くで会いましょう。主催者がチャットでより静かな正確な場所を共有できます。`,
+    genericMeetingCopy: (venue: string) =>
+      `開始約10分前に ${venue} の近くで会いましょう。主催者がチャットでより静かな正確な場所を共有できます。`,
     meetingSafety: "ミートアップの安全",
     softExitTitle: "気が変わっても大丈夫",
-    softExitCopy: "今日の自分のペースに合わないなら、このミートアップを休んでも大丈夫です。別のグループを探したり、チャットから少し離れたり、後で戻ることもできます。",
+    softExitCopy:
+      "今日の自分のペースに合わないなら、このミートアップを休んでも大丈夫です。別のグループを探したり、チャットから少し離れたり、後で戻ることもできます。",
     verifyBeforeMeeting: "会う前に確認",
     openMeetupChat: "ミートアップチャットを開く",
     openMeetupChatHint: "ミートアップのグループチャットを開きます。",
@@ -622,10 +883,12 @@ const eventTranslations = {
     genericDescriptionSuffix: "참여 전 기대가 명확한 부담 없는 모임입니다.",
     weatherAffectedCopy: "날씨가 이 계획에 영향을 줄 수 있으니 출발 전 대안을 확인하세요.",
     weatherFriendlyCopy: "이 이벤트에는 날씨에 맞춘 계획이 있어요.",
-    genericMeetingCopy: (venue: string) => `시작 약 10분 전에 ${venue} 근처에서 만나요. 주최자가 채팅에서 더 조용한 정확한 장소를 공유할 수 있어요.`,
+    genericMeetingCopy: (venue: string) =>
+      `시작 약 10분 전에 ${venue} 근처에서 만나요. 주최자가 채팅에서 더 조용한 정확한 장소를 공유할 수 있어요.`,
     meetingSafety: "모임 안전",
     softExitTitle: "마음이 바뀌어도 괜찮아요",
-    softExitCopy: "오늘 내 속도와 맞지 않으면 이 모임을 건너뛰어도 괜찮아요. 다른 그룹을 찾거나, 채팅에서 잠시 물러나거나, 나중에 돌아올 수 있어요.",
+    softExitCopy:
+      "오늘 내 속도와 맞지 않으면 이 모임을 건너뛰어도 괜찮아요. 다른 그룹을 찾거나, 채팅에서 잠시 물러나거나, 나중에 돌아올 수 있어요.",
     verifyBeforeMeeting: "만나기 전 인증",
     openMeetupChat: "모임 채팅 열기",
     openMeetupChatHint: "모임 그룹 채팅을 엽니다.",
@@ -663,11 +926,14 @@ const eventTranslations = {
     today: "اليوم",
     tonight: "الليلة",
     genericDescriptionSuffix: "لقاء بلا ضغط مع توقعات واضحة قبل الانضمام.",
-    weatherAffectedCopy: "قد يؤثر الطقس على هذه الخطة، لذا تحقق من خيار النسخ الاحتياطي قبل الخروج.",
+    weatherAffectedCopy:
+      "قد يؤثر الطقس على هذه الخطة، لذا تحقق من خيار النسخ الاحتياطي قبل الخروج.",
     weatherFriendlyCopy: "لهذا الحدث خطة مناسبة للطقس.",
-    genericMeetingCopy: (venue: string) => `نلتقي بالقرب من ${venue} قبل وقت البداية بحوالي 10 دقائق. يمكن للمضيف مشاركة مكان أكثر هدوءاً في الدردشة.`,
+    genericMeetingCopy: (venue: string) =>
+      `نلتقي بالقرب من ${venue} قبل وقت البداية بحوالي 10 دقائق. يمكن للمضيف مشاركة مكان أكثر هدوءاً في الدردشة.`,
     softExitTitle: "يمكنك تغيير رأيك",
-    softExitCopy: "لا بأس في تخطي هذا اللقاء إذا لم يناسب وتيرتك اليوم. يمكنك العثور على مجموعة أخرى، أو التراجع عن الدردشة، أو العودة لاحقاً.",
+    softExitCopy:
+      "لا بأس في تخطي هذا اللقاء إذا لم يناسب وتيرتك اليوم. يمكنك العثور على مجموعة أخرى، أو التراجع عن الدردشة، أو العودة لاحقاً.",
     preEventQuestionsTitle: "أسئلة كسر الحواجز",
     preEventQuestionsCopy: "هذه الأسئلة يمكن أن تساعد في بدء المحادثات في اللقاء.",
   },
@@ -694,11 +960,14 @@ const eventTranslations = {
     today: "היום",
     tonight: "הערב",
     genericDescriptionSuffix: "מפגש בלי לחץ עם ציפיות ברורות לפני ההצטרפות.",
-    weatherAffectedCopy: "מזג האוויר עשוי להשפיע על התוכנית, אז כדאי לבדוק את אפשרות הגיבוי לפני שיוצאים.",
+    weatherAffectedCopy:
+      "מזג האוויר עשוי להשפיע על התוכנית, אז כדאי לבדוק את אפשרות הגיבוי לפני שיוצאים.",
     weatherFriendlyCopy: "לאירוע הזה יש תוכנית שמתאימה למזג האוויר.",
-    genericMeetingCopy: (venue: string) => `ניפגש ליד ${venue} כ-10 דקות לפני שעת ההתחלה. המארח יכול לשתף נקודה רגועה ומדויקת יותר בצ'אט.`,
+    genericMeetingCopy: (venue: string) =>
+      `ניפגש ליד ${venue} כ-10 דקות לפני שעת ההתחלה. המארח יכול לשתף נקודה רגועה ומדויקת יותר בצ'אט.`,
     softExitTitle: "אפשר לשנות את דעתך",
-    softExitCopy: "זה בסדר לדלג על המפגש אם הוא לא מרגיש בקצב שלך היום. אפשר למצוא קבוצה אחרת, לקחת צעד אחורה מהצ'אט, או לחזור מאוחר יותר.",
+    softExitCopy:
+      "זה בסדר לדלג על המפגש אם הוא לא מרגיש בקצב שלך היום. אפשר למצוא קבוצה אחרת, לקחת צעד אחורה מהצ'אט, או לחזור מאוחר יותר.",
     verifyBeforeMeeting: "אימות לפני מפגש",
     preEventQuestionsTitle: "שאלות קרח-שבירה",
     preEventQuestionsCopy: "שאלות אלו יכולות לעזור להתחיל שיחות במפגש.",
@@ -709,7 +978,8 @@ const eventTranslations = {
     tone: "☽ Спокойно",
     date: "Суббота, 24 мая · 19:00",
     people: "2–4 человека",
-    description: "Сначала смотрим фильм, потом можно пообщаться, если захочется. Отлично для встреч без давления.",
+    description:
+      "Сначала смотрим фильм, потом можно пообщаться, если захочется. Отлично для встреч без давления.",
     weatherTitle: "☀ Погода",
     weatherCopy: "Вечером ожидается дождь. Встреча проходит в помещении.",
     whatToExpect: "Чего ожидать",
@@ -726,11 +996,14 @@ const eventTranslations = {
     today: "Сегодня",
     tonight: "Сегодня вечером",
     genericDescriptionSuffix: "Встреча без давления с понятными ожиданиями перед присоединением.",
-    weatherAffectedCopy: "Погода может повлиять на план, поэтому проверьте запасной вариант перед выходом.",
+    weatherAffectedCopy:
+      "Погода может повлиять на план, поэтому проверьте запасной вариант перед выходом.",
     weatherFriendlyCopy: "У этой встречи есть план, подходящий для погоды.",
-    genericMeetingCopy: (venue: string) => `Встречаемся рядом с ${venue} примерно за 10 минут до начала. Организатор может поделиться более спокойной точной точкой в чате.`,
+    genericMeetingCopy: (venue: string) =>
+      `Встречаемся рядом с ${venue} примерно за 10 минут до начала. Организатор может поделиться более спокойной точной точкой в чате.`,
     softExitTitle: "Вы можете передумать",
-    softExitCopy: "Можно пропустить эту встречу, если сегодня она не подходит вашему темпу. Вы можете найти другую группу, отойти от чата или вернуться позже.",
+    softExitCopy:
+      "Можно пропустить эту встречу, если сегодня она не подходит вашему темпу. Вы можете найти другую группу, отойти от чата или вернуться позже.",
     preEventQuestionsTitle: "Ледоколы",
     preEventQuestionsCopy: "Эти вопросы могут помочь начать разговоры на встрече.",
   },
@@ -740,7 +1013,8 @@ const eventTranslations = {
     tone: "☽ Tranquilo",
     date: "Sábado, 24 de mayo · 7:00 p. m.",
     people: "2–4 personas",
-    description: "Primero vemos la película y luego charla opcional si apetece. Perfecto para quedadas sin presión.",
+    description:
+      "Primero vemos la película y luego charla opcional si apetece. Perfecto para quedadas sin presión.",
     weatherTitle: "☀ Actualización del clima",
     weatherCopy: "Se espera lluvia por la tarde. Esta quedada es en interior.",
     whatToExpect: "Qué esperar",
@@ -751,17 +1025,21 @@ const eventTranslations = {
     flexible: "Flexible",
     flexibleCopy: "Charlar después si apetece",
     meetingPoint: "Punto de encuentro",
-    meetingCopy: "Nos vemos en la taquilla de Event Cinemas a las 6:50 p. m. Buscaremos asientos juntos.",
+    meetingCopy:
+      "Nos vemos en la taquilla de Event Cinemas a las 6:50 p. m. Buscaremos asientos juntos.",
     join: "Unirse",
     spotsLeft: "Quedan 3 lugares",
     today: "Hoy",
     tonight: "Esta noche",
     genericDescriptionSuffix: "Una quedada sin presión con expectativas claras antes de unirte.",
-    weatherAffectedCopy: "El clima puede afectar este plan, así que revisa la opción de respaldo antes de salir.",
+    weatherAffectedCopy:
+      "El clima puede afectar este plan, así que revisa la opción de respaldo antes de salir.",
     weatherFriendlyCopy: "Este evento tiene un plan adecuado para el clima.",
-    genericMeetingCopy: (venue: string) => `Quedamos cerca de ${venue} unos 10 minutos antes de la hora de inicio. La persona anfitriona puede compartir un punto exacto más tranquilo en el chat.`,
+    genericMeetingCopy: (venue: string) =>
+      `Quedamos cerca de ${venue} unos 10 minutos antes de la hora de inicio. La persona anfitriona puede compartir un punto exacto más tranquilo en el chat.`,
     softExitTitle: "Puedes cambiar de opinión",
-    softExitCopy: "Está bien saltarte esta quedada si hoy no va a tu ritmo. Puedes encontrar otro grupo, apartarte del chat o volver más tarde.",
+    softExitCopy:
+      "Está bien saltarte esta quedada si hoy no va a tu ritmo. Puedes encontrar otro grupo, apartarte del chat o volver más tarde.",
     preEventQuestionsTitle: "Preguntas de hielo",
     preEventQuestionsCopy: "Estas preguntas pueden ayudar a iniciar conversaciones en la quedada.",
   },
@@ -793,8 +1071,12 @@ function DetailMetaRow({
       <View style={[styles.metaIconWrap, isDay && styles.dayMetaIconWrap]}>
         <IconSymbol name={iconName} color={isDay ? "#2F80ED" : "#E5E7EB"} size={19} />
       </View>
-      <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>{label}</Text>
-      {onPress ? <IconSymbol name="explore" color={isDay ? "#53677A" : nsnColors.muted} size={17} /> : null}
+      <Text style={[styles.metaLine, isDay && styles.dayText, isRtl && styles.rtlText]}>
+        {label}
+      </Text>
+      {onPress ? (
+        <IconSymbol name="explore" color={isDay ? "#53677A" : nsnColors.muted} size={17} />
+      ) : null}
     </RowContainer>
   );
 }
@@ -806,12 +1088,18 @@ export default function EventDetailsScreen() {
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
   const [isMobileReadingExpanded, setIsMobileReadingExpanded] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<EventDetailSectionId[]>(initialExpandedEventDetailSections);
+  const [expandedSections, setExpandedSections] = useState<EventDetailSectionId[]>(
+    initialExpandedEventDetailSections,
+  );
   const [focusedSection, setFocusedSection] = useState<EventDetailSectionId | null>("whatToExpect");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
-  const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<FirstMeetupSupportOption[]>(["No extra support"]);
-  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null>(null);
+  const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<
+    FirstMeetupSupportOption[]
+  >(["No extra support"]);
+  const [selectedMeetupQuestion, setSelectedMeetupQuestion] = useState<
+    AskAboutMeetupQuestion | ConversationStarterPrompt | QuickReplyOption | null
+  >(null);
   const [selectedComfortRoles, setSelectedComfortRoles] = useState<MeetupComfortRoleOption[]>([]);
   const [selectedOptOutAction, setSelectedOptOutAction] = useState<MeetupOptOutAction | null>(null);
   const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
@@ -838,11 +1126,19 @@ export default function EventDetailsScreen() {
     saveSoftHelloMvpState,
   } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
-  const copy = eventTranslations[appLanguageBase as keyof typeof eventTranslations] ?? eventTranslations.English;
-  const saveCopy = savePlaceTranslations[appLanguageBase as keyof typeof savePlaceTranslations] ?? savePlaceTranslations.English;
-  const actionCopy = eventActionTranslations[appLanguageBase as keyof typeof eventActionTranslations] ?? eventActionTranslations.English;
+  const copy =
+    eventTranslations[appLanguageBase as keyof typeof eventTranslations] ??
+    eventTranslations.English;
+  const saveCopy =
+    savePlaceTranslations[appLanguageBase as keyof typeof savePlaceTranslations] ??
+    savePlaceTranslations.English;
+  const actionCopy =
+    eventActionTranslations[appLanguageBase as keyof typeof eventActionTranslations] ??
+    eventActionTranslations.English;
   const verificationCopy = verificationWindowTranslations.English;
-  const noiseCopy = noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ?? noiseGuideTranslations.English;
+  const noiseCopy =
+    noiseGuideTranslations[appLanguageBase as keyof typeof noiseGuideTranslations] ??
+    noiseGuideTranslations.English;
   const eventCopy = { ...eventTranslations.English, ...copy };
   const eventActionCopy = { ...eventActionTranslations.English, ...actionCopy };
   const eventVerificationCopy = { ...verificationWindowTranslations.English, ...verificationCopy };
@@ -882,44 +1178,62 @@ export default function EventDetailsScreen() {
     return () => clearTimeout(feedbackTimer);
   }, [copyFeedback]);
 
-  const rawEvent = allEvents.find((item) => item.id === id) ?? createdEvents.find((item) => item.id === id) ?? movieNight;
+  const rawEvent =
+    allEvents.find((item) => item.id === id) ??
+    createdEvents.find((item) => item.id === id) ??
+    movieNight;
   const isCreatedEvent = createdEvents.some((item) => item.id === id);
-  const event: EventItem = isCreatedEvent ? {
-    id: (rawEvent as CreatedEvent).id,
-    title: (rawEvent as CreatedEvent).title,
-    category: "Custom",
-    venue: (rawEvent as CreatedEvent).venue,
-    time: (rawEvent as CreatedEvent).time,
-    people: "2–10 people",
-    description: (rawEvent as CreatedEvent).description,
-    tone: "Balanced",
-    noiseLevel: (rawEvent as CreatedEvent).noiseLevel as any,
-    weather: "Indoor ready",
-    imageTone: "#29365E",
-    emoji: "📅",
-    tags: ["Custom"],
-    preEventQuestions: (rawEvent as CreatedEvent).preEventQuestions,
-    postEventQuestions: (rawEvent as CreatedEvent).postEventQuestions,
-  } : rawEvent as EventItem;
-  const localizedEvent = { ...event, ...(detailEventTranslations[appLanguageBase]?.[event.id] ?? {}) };
+  const event: EventItem = isCreatedEvent
+    ? {
+        id: (rawEvent as CreatedEvent).id,
+        title: (rawEvent as CreatedEvent).title,
+        category: "Custom",
+        venue: (rawEvent as CreatedEvent).venue,
+        time: (rawEvent as CreatedEvent).time,
+        people: "2–10 people",
+        description: (rawEvent as CreatedEvent).description,
+        tone: "Balanced",
+        noiseLevel: (rawEvent as CreatedEvent).noiseLevel as any,
+        weather: "Indoor ready",
+        imageTone: "#29365E",
+        emoji: "📅",
+        tags: ["Custom"],
+        preEventQuestions: (rawEvent as CreatedEvent).preEventQuestions,
+        postEventQuestions: (rawEvent as CreatedEvent).postEventQuestions,
+      }
+    : (rawEvent as EventItem);
+  const localizedEvent = {
+    ...event,
+    ...(detailEventTranslations[appLanguageBase]?.[event.id] ?? {}),
+  };
   const isMovieNight = event.id === movieNight.id;
   const eventTitle = isMovieNight ? copy.title : localizedEvent.title.replace(" — ", " —\n");
   const eventCategory = isMovieNight ? copy.category : localizedEvent.category;
-  const eventTone = isMovieNight ? copy.tone : `Pace: ${getDetailSocialPaceLabel(localizedEvent.tone)}`;
-  const eventDate = isMovieNight ? copy.date : isCreatedEvent ? `${(rawEvent as CreatedEvent).date} · ${(rawEvent as CreatedEvent).time}` : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
+  const eventTone = isMovieNight
+    ? copy.tone
+    : `Pace: ${getDetailSocialPaceLabel(localizedEvent.tone)}`;
+  const eventDate = isMovieNight
+    ? copy.date
+    : isCreatedEvent
+      ? `${(rawEvent as CreatedEvent).date} · ${(rawEvent as CreatedEvent).time}`
+      : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
   const eventPeople = isMovieNight ? copy.people : localizedEvent.people;
   const groupPlanCopy = isMovieNight ? "Around 2-4 people expected" : `${eventPeople} expected`;
-  const eventDescription = isMovieNight ? copy.description : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
+  const eventDescription = isMovieNight
+    ? copy.description
+    : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
+  const eventDetailImage = eventDetailImageSources[event.id];
   const eventNoise = noiseCopy.levels[event.noiseLevel];
   const eventWeatherCopy = event.weather.includes("Weather")
     ? copy.weatherAffectedCopy
     : copy.weatherFriendlyCopy;
-  const eventWeatherFallbacks = getWeatherFallbackSuggestions(event, event.weather.includes("Weather") ? "rainy" : "clear");
+  const eventWeatherFallbacks = getWeatherFallbackSuggestions(
+    event,
+    event.weather.includes("Weather") ? "rainy" : "clear",
+  );
   const eventTrustSummary = getEventTrustSummary(event.trustProfile);
   const mediaComfortLabels = getDetailMediaComfortLabels(event, photoRecordingComfortPreferences);
-  const eventMeetingCopy = isMovieNight
-    ? copy.meetingCopy
-    : copy.genericMeetingCopy(event.venue);
+  const eventMeetingCopy = isMovieNight ? copy.meetingCopy : copy.genericMeetingCopy(event.venue);
   const membership = getEventMembership(event.id, eventMemberships);
   const canOpenMeetupChat = shouldOpenMeetupChat(membership.status);
   const rsvpChoices: { status: EventMembershipStatus; label: string }[] = [
@@ -930,7 +1244,10 @@ export default function EventDetailsScreen() {
     { status: "unable", label: "Unable to make it" },
     { status: "none", label: "Clear" },
   ];
-  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel({ contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument }, verificationLevel);
+  const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel(
+    { contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument },
+    verificationLevel,
+  );
   const canMeet = canMeetInPerson(effectiveVerificationLevel);
   const existingFeedback = postEventFeedback.find((item) => item.eventId === event.id);
   const savedPlaceId = `event:${event.id}:${event.venue}`;
@@ -940,12 +1257,18 @@ export default function EventDetailsScreen() {
   const showFullEventReading = !isMobileEventPage || isMobileReadingExpanded;
   const quickReferenceItems = [
     { iconName: "location", label: "Essentials", copy: `${event.venue} · ${eventDate}` },
-    { iconName: "volume", label: "Comfort", copy: `${eventNoise.label} noise · ${eventTone.replace("Pace: ", "")}` },
+    {
+      iconName: "volume",
+      label: "Comfort",
+      copy: `${eventNoise.label} noise · ${eventTone.replace("Pace: ", "")}`,
+    },
     { iconName: "low-pressure", label: "Pacing", copy: "Low pressure · quiet starts welcome." },
     { iconName: "shield", label: "Trust", copy: eventTrustSummary },
   ] satisfies { iconName: IconSymbolName; label: string; copy: string }[];
   const quickJumpItems = getEventDetailQuickJumpItems();
-  const eventTutorialCards = meetupTutorialCards.filter((card) => card.id === "meetup-readiness" || card.id === "soft-exit");
+  const eventTutorialCards = meetupTutorialCards.filter(
+    (card) => card.id === "meetup-readiness" || card.id === "soft-exit",
+  );
   const isSectionExpanded = (section: EventDetailSectionId) => expandedSections.includes(section);
   const toggleEventDetailSection = (section: EventDetailSectionId) => {
     setExpandedSections((current) => {
@@ -996,10 +1319,15 @@ export default function EventDetailsScreen() {
   const handleEventDetailScroll = (scrollY: number) => {
     const measuredSections = eventDetailSectionPlan
       .map((section) => ({ id: section.id, y: sectionOffsetsRef.current[section.id] }))
-      .filter((section): section is { id: EventDetailSectionId; y: number } => typeof section.y === "number")
+      .filter(
+        (section): section is { id: EventDetailSectionId; y: number } =>
+          typeof section.y === "number",
+      )
       .sort((a, b) => a.y - b.y);
 
-    const activeSection = [...measuredSections].reverse().find((section) => scrollY >= section.y - 96);
+    const activeSection = [...measuredSections]
+      .reverse()
+      .find((section) => scrollY >= section.y - 96);
     if (activeSection && activeSection.id !== focusedSection) setFocusedSection(activeSection.id);
   };
 
@@ -1016,7 +1344,9 @@ export default function EventDetailsScreen() {
     });
   };
   const toggleComfortRole = (role: MeetupComfortRoleOption) => {
-    setSelectedComfortRoles((current) => (current.includes(role) ? current.filter((item) => item !== role) : [...current, role]));
+    setSelectedComfortRoles((current) =>
+      current.includes(role) ? current.filter((item) => item !== role) : [...current, role],
+    );
   };
 
   const shareEvent = async () => {
@@ -1058,7 +1388,9 @@ export default function EventDetailsScreen() {
   };
 
   const dismissTutorial = (tutorialId: MeetupTutorialCard["id"]) => {
-    setDismissedTutorialIds((current) => (current.includes(tutorialId) ? current : [...current, tutorialId]));
+    setDismissedTutorialIds((current) =>
+      current.includes(tutorialId) ? current : [...current, tutorialId],
+    );
   };
 
   const handleOptOutAction = async (action: MeetupOptOutAction) => {
@@ -1070,12 +1402,20 @@ export default function EventDetailsScreen() {
     }
 
     if (action.id === "not-right-fit") {
-      await saveSoftHelloMvpState({ eventMemberships: setEventRsvpStatus(event.id, eventMemberships, "not_this_time") });
+      await saveSoftHelloMvpState({
+        eventMemberships: setEventRsvpStatus(event.id, eventMemberships, "not_this_time"),
+      });
       return;
     }
 
-    if (action.id === "change-group" || action.id === "calmer-option" || action.id === "maybe-later") {
-      await saveSoftHelloMvpState({ eventMemberships: setEventRsvpStatus(event.id, eventMemberships, "deciding_later") });
+    if (
+      action.id === "change-group" ||
+      action.id === "calmer-option" ||
+      action.id === "maybe-later"
+    ) {
+      await saveSoftHelloMvpState({
+        eventMemberships: setEventRsvpStatus(event.id, eventMemberships, "deciding_later"),
+      });
       return;
     }
 
@@ -1116,7 +1456,7 @@ export default function EventDetailsScreen() {
         wouldMeetAgain,
         createdAt: new Date().toISOString(),
       },
-      postEventFeedback
+      postEventFeedback,
     );
 
     await saveSoftHelloMvpState({ postEventFeedback: nextFeedback });
@@ -1135,7 +1475,7 @@ export default function EventDetailsScreen() {
             weather: event.weather,
             savedAt: new Date().toISOString(),
           },
-          savedPlaces
+          savedPlaces,
         );
 
     await saveSoftHelloMvpState({ savedPlaces: nextSavedPlaces });
@@ -1143,24 +1483,44 @@ export default function EventDetailsScreen() {
   };
 
   const togglePinnedEvent = async () => {
-    const nextPinnedEventIds = isEventPinned ? unpinEvent(event.id, pinnedEventIds) : pinEvent(event.id, pinnedEventIds);
-    const nextHiddenEventIds = isEventPinned ? hiddenEventIds : unhideEvent(event.id, hiddenEventIds);
+    const nextPinnedEventIds = isEventPinned
+      ? unpinEvent(event.id, pinnedEventIds)
+      : pinEvent(event.id, pinnedEventIds);
+    const nextHiddenEventIds = isEventPinned
+      ? hiddenEventIds
+      : unhideEvent(event.id, hiddenEventIds);
 
-    await saveSoftHelloMvpState({ pinnedEventIds: nextPinnedEventIds, hiddenEventIds: nextHiddenEventIds });
+    await saveSoftHelloMvpState({
+      pinnedEventIds: nextPinnedEventIds,
+      hiddenEventIds: nextHiddenEventIds,
+    });
     setIsMoreMenuOpen(false);
     Alert.alert(isEventPinned ? actionCopy.unpinnedMessage : actionCopy.pinnedMessage, event.title);
   };
 
   const toggleHiddenEvent = async () => {
-    const nextHiddenEventIds = isEventHidden ? unhideEvent(event.id, hiddenEventIds) : hideEvent(event.id, hiddenEventIds);
-    const nextPinnedEventIds = isEventHidden ? pinnedEventIds : unpinEvent(event.id, pinnedEventIds);
+    const nextHiddenEventIds = isEventHidden
+      ? unhideEvent(event.id, hiddenEventIds)
+      : hideEvent(event.id, hiddenEventIds);
+    const nextPinnedEventIds = isEventHidden
+      ? pinnedEventIds
+      : unpinEvent(event.id, pinnedEventIds);
 
-    await saveSoftHelloMvpState({ hiddenEventIds: nextHiddenEventIds, pinnedEventIds: nextPinnedEventIds });
+    await saveSoftHelloMvpState({
+      hiddenEventIds: nextHiddenEventIds,
+      pinnedEventIds: nextPinnedEventIds,
+    });
     setIsMoreMenuOpen(false);
     Alert.alert(isEventHidden ? actionCopy.unhiddenMessage : actionCopy.hiddenMessage, event.title);
   };
 
-  const renderAccordionSection = (section: EventDetailSectionId, title: string, summary: string, iconName: IconSymbolName, children: ReactNode) => {
+  const renderAccordionSection = (
+    section: EventDetailSectionId,
+    title: string,
+    summary: string,
+    iconName: IconSymbolName,
+    children: ReactNode,
+  ) => {
     const expanded = isSectionExpanded(section);
 
     return (
@@ -1183,11 +1543,31 @@ export default function EventDetailsScreen() {
               <IconSymbol name={iconName} color={isDay ? "#53677A" : "#8FAFD1"} size={18} />
             </View>
             <View style={styles.eventAccordionTitleBlock}>
-              <Text style={[styles.eventAccordionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{title}</Text>
-              <Text style={[styles.eventAccordionSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{summary}</Text>
+              <Text
+                style={[
+                  styles.eventAccordionTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {title}
+              </Text>
+              <Text
+                style={[
+                  styles.eventAccordionSummary,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {summary}
+              </Text>
             </View>
           </View>
-          <IconSymbol name={expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+          <IconSymbol
+            name={expanded ? "chevron.up" : "chevron.down"}
+            color={isDay ? "#53677A" : nsnColors.muted}
+            size={18}
+          />
         </TouchableOpacity>
         {expanded ? <View style={styles.eventAccordionBody}>{children}</View> : null}
       </View>
@@ -1195,7 +1575,11 @@ export default function EventDetailsScreen() {
   };
 
   return (
-    <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayScreen}>
+    <ScreenContainer
+      containerClassName="bg-background"
+      safeAreaClassName="bg-background"
+      style={isDay && styles.dayScreen}
+    >
       <Stack.Screen options={{ headerShown: false }} />
       <ScrollView
         ref={scrollRef}
@@ -1206,7 +1590,14 @@ export default function EventDetailsScreen() {
         onScroll={(event) => handleEventDetailScroll(event.nativeEvent.contentOffset.y)}
       >
         <View style={[styles.topBar, isRtl && styles.rtlRow]}>
-          <TouchableOpacity activeOpacity={0.75} onPress={() => router.back()} style={[styles.iconButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={eventActionCopy.goBack} accessibilityHint={screenReaderHints ? eventActionCopy.goBackHint : undefined}>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={() => router.back()}
+            style={[styles.iconButton, isDay && styles.dayIconButton]}
+            accessibilityRole="button"
+            accessibilityLabel={eventActionCopy.goBack}
+            accessibilityHint={screenReaderHints ? eventActionCopy.goBackHint : undefined}
+          >
             <IconSymbol name="chevron.left" color={iconColor} size={26} />
           </TouchableOpacity>
           <View style={styles.topActions}>
@@ -1215,10 +1606,24 @@ export default function EventDetailsScreen() {
               onPress={toggleSavedPlace}
               accessibilityRole="button"
               accessibilityLabel={isPlaceSaved ? saveCopy.saved : saveCopy.save}
-              accessibilityHint={screenReaderHints ? (isPlaceSaved ? eventActionCopy.removeSavedPlaceHint : eventActionCopy.savePlaceHint) : undefined}
-              style={[styles.iconButton, isDay && styles.dayIconButton, isPlaceSaved && styles.savedIconButton]}
+              accessibilityHint={
+                screenReaderHints
+                  ? isPlaceSaved
+                    ? eventActionCopy.removeSavedPlaceHint
+                    : eventActionCopy.savePlaceHint
+                  : undefined
+              }
+              style={[
+                styles.iconButton,
+                isDay && styles.dayIconButton,
+                isPlaceSaved && styles.savedIconButton,
+              ]}
             >
-              <IconSymbol name={isPlaceSaved ? "bookmark" : "bookmark.border"} color={isPlaceSaved ? nsnColors.day : iconColor} size={22} />
+              <IconSymbol
+                name={isPlaceSaved ? "bookmark" : "bookmark.border"}
+                color={isPlaceSaved ? nsnColors.day : iconColor}
+                size={22}
+              />
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.75}
@@ -1236,26 +1641,79 @@ export default function EventDetailsScreen() {
               accessibilityRole="button"
               accessibilityLabel={actionCopy.moreTitle}
               accessibilityHint={screenReaderHints ? eventActionCopy.moreHint : undefined}
-              style={[styles.iconButton, isDay && styles.dayIconButton, (isEventPinned || isEventHidden) && styles.activeMoreButton]}
+              style={[
+                styles.iconButton,
+                isDay && styles.dayIconButton,
+                (isEventPinned || isEventHidden) && styles.activeMoreButton,
+              ]}
             >
               <IconSymbol name="more" color={iconColor} size={23} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <Modal transparent animationType="fade" visible={isMoreMenuOpen} onRequestClose={() => setIsMoreMenuOpen(false)}>
+        <Modal
+          transparent
+          animationType="fade"
+          visible={isMoreMenuOpen}
+          onRequestClose={() => setIsMoreMenuOpen(false)}
+        >
           <View style={styles.modalBackdrop}>
             <View style={[styles.actionSheet, isDay && styles.dayActionSheet]}>
-              <Text style={[styles.actionSheetTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{actionCopy.moreTitle}</Text>
-              <Text style={[styles.actionSheetCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{actionCopy.moreCopy}</Text>
+              <Text
+                style={[
+                  styles.actionSheetTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {actionCopy.moreTitle}
+              </Text>
+              <Text
+                style={[
+                  styles.actionSheetCopy,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {actionCopy.moreCopy}
+              </Text>
               <View style={styles.actionList}>
-                <TouchableOpacity activeOpacity={0.82} onPress={togglePinnedEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? eventActionCopy.pinHint : undefined}>
-                  <IconSymbol name="pin" color={isEventPinned ? nsnColors.day : iconColor} size={20} />
-                  <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isEventPinned ? actionCopy.unpin : actionCopy.pin}</Text>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={togglePinnedEvent}
+                  style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
+                  accessibilityRole="button"
+                  accessibilityHint={screenReaderHints ? eventActionCopy.pinHint : undefined}
+                >
+                  <IconSymbol
+                    name="pin"
+                    color={isEventPinned ? nsnColors.day : iconColor}
+                    size={20}
+                  />
+                  <Text
+                    style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}
+                  >
+                    {isEventPinned ? actionCopy.unpin : actionCopy.pin}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity activeOpacity={0.82} onPress={toggleHiddenEvent} style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]} accessibilityRole="button" accessibilityHint={screenReaderHints ? eventActionCopy.hideHint : undefined}>
-                  <IconSymbol name={isEventHidden ? "visibility" : "visibility.off"} color={isEventHidden ? "#2F80ED" : nsnColors.danger} size={20} />
-                  <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isEventHidden ? actionCopy.unhide : actionCopy.hide}</Text>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={toggleHiddenEvent}
+                  style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
+                  accessibilityRole="button"
+                  accessibilityHint={screenReaderHints ? eventActionCopy.hideHint : undefined}
+                >
+                  <IconSymbol
+                    name={isEventHidden ? "visibility" : "visibility.off"}
+                    color={isEventHidden ? "#2F80ED" : nsnColors.danger}
+                    size={20}
+                  />
+                  <Text
+                    style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}
+                  >
+                    {isEventHidden ? actionCopy.unhide : actionCopy.hide}
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   activeOpacity={0.82}
@@ -1265,41 +1723,119 @@ export default function EventDetailsScreen() {
                   }}
                   style={[styles.actionRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
                   accessibilityRole="button"
-                  accessibilityHint={screenReaderHints ? eventActionCopy.viewSavedPlacesHint : undefined}
+                  accessibilityHint={
+                    screenReaderHints ? eventActionCopy.viewSavedPlacesHint : undefined
+                  }
                 >
                   <IconSymbol name="bookmark" color={nsnColors.day} size={20} />
-                  <Text style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}>{actionCopy.viewSavedPlaces}</Text>
+                  <Text
+                    style={[styles.actionText, isDay && styles.dayText, isRtl && styles.rtlText]}
+                  >
+                    {actionCopy.viewSavedPlaces}
+                  </Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity activeOpacity={0.82} onPress={() => setIsMoreMenuOpen(false)} style={styles.closeActionButton}>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => setIsMoreMenuOpen(false)}
+                style={styles.closeActionButton}
+              >
                 <Text style={styles.closeActionText}>{actionCopy.close}</Text>
               </TouchableOpacity>
             </View>
           </View>
         </Modal>
 
-        <Modal transparent animationType="fade" visible={isVerificationOpen} onRequestClose={() => setIsVerificationOpen(false)}>
+        <Modal
+          transparent
+          animationType="fade"
+          visible={isVerificationOpen}
+          onRequestClose={() => setIsVerificationOpen(false)}
+        >
           <View style={styles.modalBackdrop}>
             <View style={[styles.verificationSheet, isDay && styles.dayActionSheet]}>
-              <Text style={[styles.actionSheetTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{verificationCopy.title}</Text>
-              <Text style={[styles.actionSheetCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{verificationCopy.copy}</Text>
+              <Text
+                style={[
+                  styles.actionSheetTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {verificationCopy.title}
+              </Text>
+              <Text
+                style={[
+                  styles.actionSheetCopy,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {verificationCopy.copy}
+              </Text>
               <View style={styles.verificationList}>
                 {[
-                  { label: verificationCopy.displayName, value: displayName || eventVerificationCopy.defaultMemberName },
+                  {
+                    label: verificationCopy.displayName,
+                    value: displayName || eventVerificationCopy.defaultMemberName,
+                  },
                   { label: verificationCopy.suburb, value: suburb || event.venue },
-                  { label: verificationCopy.age, value: ageConfirmed ? verificationCopy.ageConfirmed : verificationCopy.ageMissing },
-                  { label: verificationCopy.photo, value: profilePhotoUri ? verificationCopy.photoAdded : verificationCopy.photoMissing },
-                  { label: verificationCopy.contact, value: getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase) },
+                  {
+                    label: verificationCopy.age,
+                    value: ageConfirmed
+                      ? verificationCopy.ageConfirmed
+                      : verificationCopy.ageMissing,
+                  },
+                  {
+                    label: verificationCopy.photo,
+                    value: profilePhotoUri
+                      ? verificationCopy.photoAdded
+                      : verificationCopy.photoMissing,
+                  },
+                  {
+                    label: verificationCopy.contact,
+                    value: getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase),
+                  },
                   { label: verificationCopy.transport, value: transportationMethod },
                 ].map((item) => (
-                  <View key={item.label} style={[styles.verificationRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}>
-                    <Text style={[styles.verificationLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.label}</Text>
-                    <Text style={[styles.verificationValue, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.value}</Text>
+                  <View
+                    key={item.label}
+                    style={[
+                      styles.verificationRow,
+                      isDay && styles.dayActionRow,
+                      isRtl && styles.rtlRow,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.verificationLabel,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.verificationValue,
+                        isDay && styles.dayText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {item.value}
+                    </Text>
                   </View>
                 ))}
               </View>
               <View style={styles.verificationActions}>
-              <TouchableOpacity activeOpacity={0.82} onPress={confirmVerificationDetails} style={styles.confirmVerificationButton} accessibilityRole="button" accessibilityHint={screenReaderHints ? eventVerificationCopy.confirmHint : undefined}>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={confirmVerificationDetails}
+                  style={styles.confirmVerificationButton}
+                  accessibilityRole="button"
+                  accessibilityHint={
+                    screenReaderHints ? eventVerificationCopy.confirmHint : undefined
+                  }
+                >
                   <Text style={styles.confirmVerificationText}>{verificationCopy.confirm}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -1310,11 +1846,19 @@ export default function EventDetailsScreen() {
                   }}
                   style={[styles.secondaryVerificationButton, isDay && styles.dayActionRow]}
                   accessibilityRole="button"
-                  accessibilityHint={screenReaderHints ? eventVerificationCopy.editProfileHint : undefined}
+                  accessibilityHint={
+                    screenReaderHints ? eventVerificationCopy.editProfileHint : undefined
+                  }
                 >
-                  <Text style={[styles.secondaryVerificationText, isDay && styles.dayText]}>{verificationCopy.editProfile}</Text>
+                  <Text style={[styles.secondaryVerificationText, isDay && styles.dayText]}>
+                    {verificationCopy.editProfile}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity activeOpacity={0.82} onPress={() => setIsVerificationOpen(false)} style={styles.closeActionButton}>
+                <TouchableOpacity
+                  activeOpacity={0.82}
+                  onPress={() => setIsVerificationOpen(false)}
+                  style={styles.closeActionButton}
+                >
                   <Text style={styles.closeActionText}>{verificationCopy.close}</Text>
                 </TouchableOpacity>
               </View>
@@ -1323,21 +1867,45 @@ export default function EventDetailsScreen() {
         </Modal>
 
         <View style={[styles.heroPanel, isDay && styles.dayPanel]}>
-          <View style={styles.eventAvatar}>
-            <Text style={styles.avatarEmoji}>{event.emoji}</Text>
-          </View>
-          <Text style={[styles.title, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventTitle}</Text>
+          {eventDetailImage ? (
+            <View style={styles.eventHeroImageFrame}>
+              <Image source={eventDetailImage} resizeMode="cover" style={styles.eventHeroImage} />
+              <View style={styles.eventHeroImageBadge}>
+                <Text style={styles.avatarEmoji}>{event.emoji}</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.eventAvatar}>
+              <Text style={styles.avatarEmoji}>{event.emoji}</Text>
+            </View>
+          )}
+          <Text style={[styles.title, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+            {eventTitle}
+          </Text>
           <View style={[styles.tagRow, isRtl && styles.rtlRow]}>
             <Text style={[styles.primaryChip, isRtl && styles.rtlText]}>{eventCategory}</Text>
-            <Text style={[styles.quietChip, isDay && styles.dayQuietChip, isRtl && styles.rtlText]}>{eventTone}</Text>
+            <Text style={[styles.quietChip, isDay && styles.dayQuietChip, isRtl && styles.rtlText]}>
+              {eventTone}
+            </Text>
             {(event.atmosphereLabels ?? []).slice(0, 2).map((label) => (
-              <Text key={label} style={[styles.quietChip, isDay && styles.dayQuietChip, isRtl && styles.rtlText]}>{label}</Text>
+              <Text
+                key={label}
+                style={[styles.quietChip, isDay && styles.dayQuietChip, isRtl && styles.rtlText]}
+              >
+                {label}
+              </Text>
             ))}
           </View>
         </View>
 
         <View style={styles.metaStack}>
-          <DetailMetaRow iconName="location" label={event.venue} onPress={openEventLocation} isDay={isDay} isRtl={isRtl} />
+          <DetailMetaRow
+            iconName="location"
+            label={event.venue}
+            onPress={openEventLocation}
+            isDay={isDay}
+            isRtl={isRtl}
+          />
           <DetailMetaRow iconName="calendar" label={eventDate} isDay={isDay} isRtl={isRtl} />
           <DetailMetaRow iconName="group" label={eventPeople} isDay={isDay} isRtl={isRtl} />
         </View>
@@ -1345,30 +1913,91 @@ export default function EventDetailsScreen() {
         <TouchableOpacity
           activeOpacity={0.86}
           onPress={toggleSavedPlace}
-          style={[styles.savePlaceButton, isDay && styles.daySavePlaceButton, isRtl && styles.rtlRow]}
+          style={[
+            styles.savePlaceButton,
+            isDay && styles.daySavePlaceButton,
+            isRtl && styles.rtlRow,
+          ]}
           accessibilityRole="button"
-          accessibilityHint={screenReaderHints ? (isPlaceSaved ? eventActionCopy.removeSavedPlaceHint : eventActionCopy.savePlaceHint) : undefined}
+          accessibilityHint={
+            screenReaderHints
+              ? isPlaceSaved
+                ? eventActionCopy.removeSavedPlaceHint
+                : eventActionCopy.savePlaceHint
+              : undefined
+          }
         >
-          <IconSymbol name={isPlaceSaved ? "bookmark" : "bookmark.border"} color={isPlaceSaved ? nsnColors.day : iconColor} size={20} />
-          <Text style={[styles.savePlaceText, isDay && styles.dayText, isRtl && styles.rtlText]}>{isPlaceSaved ? saveCopy.saved : saveCopy.save}</Text>
+          <IconSymbol
+            name={isPlaceSaved ? "bookmark" : "bookmark.border"}
+            color={isPlaceSaved ? nsnColors.day : iconColor}
+            size={20}
+          />
+          <Text style={[styles.savePlaceText, isDay && styles.dayText, isRtl && styles.rtlText]}>
+            {isPlaceSaved ? saveCopy.saved : saveCopy.save}
+          </Text>
         </TouchableOpacity>
 
-        <Text style={[styles.description, isDay && styles.dayText, isRtl && styles.rtlText]}>{eventDescription}</Text>
+        <Text style={[styles.description, isDay && styles.dayText, isRtl && styles.rtlText]}>
+          {eventDescription}
+        </Text>
 
         {!isMobileEventPage ? (
           <View style={[styles.quickReferenceSection, isRtl && styles.rtlBlock]}>
             <View style={[styles.quickReferenceHeader, isRtl && styles.rtlBlock]}>
-              <Text style={[styles.quickReferenceKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Quick reference</Text>
-              <Text style={[styles.quickReferenceTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Scan before reading the full event details</Text>
+              <Text
+                style={[
+                  styles.quickReferenceKicker,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Quick reference
+              </Text>
+              <Text
+                style={[
+                  styles.quickReferenceTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Scan before reading the full event details
+              </Text>
             </View>
             <View style={[styles.quickReferenceGrid, isRtl && styles.rtlRow]}>
               {quickReferenceItems.map((item) => (
-                <View key={item.label} style={[styles.quickReferenceCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+                <View
+                  key={item.label}
+                  style={[
+                    styles.quickReferenceCard,
+                    isDay && styles.dayCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
                   <View style={[styles.quickReferenceCardHeader, isRtl && styles.rtlRow]}>
-                    <IconSymbol name={item.iconName} color={isDay ? "#53677A" : "#8FAFD1"} size={16} />
-                    <Text style={[styles.quickReferenceCardTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{item.label}</Text>
+                    <IconSymbol
+                      name={item.iconName}
+                      color={isDay ? "#53677A" : "#8FAFD1"}
+                      size={16}
+                    />
+                    <Text
+                      style={[
+                        styles.quickReferenceCardTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
                   </View>
-                  <Text style={[styles.quickReferenceCardCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
+                  <Text
+                    style={[
+                      styles.quickReferenceCardCopy,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {item.copy}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -1376,38 +2005,112 @@ export default function EventDetailsScreen() {
         ) : null}
 
         {isMobileEventPage ? (
-          <View style={[styles.mobileReadingGuideCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+          <View
+            style={[
+              styles.mobileReadingGuideCard,
+              isDay && styles.dayCard,
+              isRtl && styles.rtlBlock,
+            ]}
+          >
             <View style={[styles.mobileReadingGuideHeader, isRtl && styles.rtlRow]}>
               <View style={styles.mobileReadingGuideBody}>
-                <Text style={[styles.mobileReadingGuideKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Quick read</Text>
-                <Text style={[styles.mobileReadingGuideTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>The essentials first</Text>
+                <Text
+                  style={[
+                    styles.mobileReadingGuideKicker,
+                    isDay && styles.dayMutedText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Quick read
+                </Text>
+                <Text
+                  style={[
+                    styles.mobileReadingGuideTitle,
+                    isDay && styles.dayHeadingText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  The essentials first
+                </Text>
               </View>
-              <Text style={[styles.verificationChip, isDay && styles.dayVerificationChip]}>{canMeet ? "Ready" : "Prototype gate"}</Text>
+              <Text style={[styles.verificationChip, isDay && styles.dayVerificationChip]}>
+                {canMeet ? "Ready" : "Prototype gate"}
+              </Text>
             </View>
             <View style={styles.mobileReadingGuideList}>
-              <Text style={[styles.mobileReadingGuideLine, isDay && styles.dayText, isRtl && styles.rtlText]}>Where: {event.venue}</Text>
-              <Text style={[styles.mobileReadingGuideLine, isDay && styles.dayText, isRtl && styles.rtlText]}>When: {eventDate}</Text>
-              <Text style={[styles.mobileReadingGuideLine, isDay && styles.dayText, isRtl && styles.rtlText]}>Feel: {eventNoise.label} noise, {eventTone.toLowerCase()}</Text>
-              <Text style={[styles.mobileReadingGuideLine, isDay && styles.dayText, isRtl && styles.rtlText]}>Comfort: low pressure, quiet starts welcome.</Text>
+              <Text
+                style={[
+                  styles.mobileReadingGuideLine,
+                  isDay && styles.dayText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Where: {event.venue}
+              </Text>
+              <Text
+                style={[
+                  styles.mobileReadingGuideLine,
+                  isDay && styles.dayText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                When: {eventDate}
+              </Text>
+              <Text
+                style={[
+                  styles.mobileReadingGuideLine,
+                  isDay && styles.dayText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Feel: {eventNoise.label} noise, {eventTone.toLowerCase()}
+              </Text>
+              <Text
+                style={[
+                  styles.mobileReadingGuideLine,
+                  isDay && styles.dayText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Comfort: low pressure, quiet starts welcome.
+              </Text>
             </View>
             <TouchableOpacity
               activeOpacity={0.82}
               onPress={() => setIsMobileReadingExpanded((current) => !current)}
               accessibilityRole="button"
               accessibilityState={{ expanded: isMobileReadingExpanded }}
-              accessibilityLabel={isMobileReadingExpanded ? "Hide full event reading" : "Show full event reading"}
-              style={[styles.mobileReadingGuideButton, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
+              accessibilityLabel={
+                isMobileReadingExpanded ? "Hide full event reading" : "Show full event reading"
+              }
+              style={[
+                styles.mobileReadingGuideButton,
+                isDay && styles.dayActionRow,
+                isRtl && styles.rtlRow,
+              ]}
             >
               <Text style={[styles.mobileReadingGuideButtonText, isDay && styles.dayText]}>
                 {isMobileReadingExpanded ? "Hide extra reading" : "Show full details"}
               </Text>
-              <IconSymbol name={isMobileReadingExpanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+              <IconSymbol
+                name={isMobileReadingExpanded ? "chevron.up" : "chevron.down"}
+                color={isDay ? "#53677A" : nsnColors.muted}
+                size={18}
+              />
             </TouchableOpacity>
           </View>
         ) : null}
 
         <View style={[styles.quickJumpSection, isRtl && styles.rtlBlock]}>
-          <Text style={[styles.quickReferenceKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Quick jump</Text>
+          <Text
+            style={[
+              styles.quickReferenceKicker,
+              isDay && styles.dayMutedText,
+              isRtl && styles.rtlText,
+            ]}
+          >
+            Quick jump
+          </Text>
           <View style={[styles.quickJumpRow, isRtl && styles.rtlRow]}>
             {quickJumpItems.map((item) => {
               const active = focusedSection === item.section;
@@ -1423,10 +2126,26 @@ export default function EventDetailsScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
                   accessibilityLabel={`Open ${item.label} section`}
-                  style={[styles.quickJumpChip, isDay && styles.dayActionRow, active && styles.quickJumpChipActive]}
+                  style={[
+                    styles.quickJumpChip,
+                    isDay && styles.dayActionRow,
+                    active && styles.quickJumpChipActive,
+                  ]}
                 >
-                  <IconSymbol name={item.iconName} color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={14} />
-                  <Text style={[styles.quickJumpChipText, isDay && styles.dayText, active && styles.quickJumpChipTextActive]}>{item.label}</Text>
+                  <IconSymbol
+                    name={item.iconName}
+                    color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted}
+                    size={14}
+                  />
+                  <Text
+                    style={[
+                      styles.quickJumpChipText,
+                      isDay && styles.dayText,
+                      active && styles.quickJumpChipTextActive,
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -1434,415 +2153,1086 @@ export default function EventDetailsScreen() {
         </View>
 
         {showFullEventReading ? (
-        <View style={styles.eventAccordionStack}>
-        {renderAccordionSection("whatToExpect", "What to expect", "The plan, sound level, weather, and practical basics.", "experience", (
-          <>
-          <TouchableOpacity activeOpacity={0.86} style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
-          <View style={[styles.weatherIconWrap, isDay && styles.dayMetaIconWrap]}>
-            <IconSymbol name="weather" color={isDay ? "#53677A" : "#8FAFD1"} size={24} />
-          </View>
-          <View style={[styles.weatherCopyBlock, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.weatherTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.weatherTitle}</Text>
-            <Text style={[styles.weatherCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{isMovieNight ? copy.weatherCopy : eventWeatherCopy}</Text>
-            {eventWeatherFallbacks.length > 0 ? (
-              <Text style={[styles.weatherCopy, styles.weatherFallbackCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Rain or wind fallback: {eventWeatherFallbacks.slice(0, 4).join(", ")}.
-              </Text>
-            ) : null}
-          </View>
-        </TouchableOpacity>
-
-        <View style={[styles.noiseGuideCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}>
-          <View style={[styles.noiseIconWrap, isDay && styles.dayMetaIconWrap]}>
-            <IconSymbol name={event.noiseLevel === "Quiet" ? "volume.off" : "volume"} color={isDay ? "#53677A" : "#8FAFD1"} size={22} />
-          </View>
-          <View style={[styles.noiseCopyBlock, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.noiseTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{noiseCopy.title}: {eventNoise.label}</Text>
-            <Text style={[styles.noiseDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventNoise.copy}. {noiseCopy.copy}</Text>
-          </View>
-        </View>
-
-        {event.trustProfile ? (
-          <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                <IconSymbol name="shield" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-              </View>
-              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Trust & small group shape</Text>
-            </View>
-            <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {eventTrustSummary}. Host: {event.trustProfile.host.displayName}. {event.trustProfile.accountabilityNote}
-            </Text>
-            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-              <Text style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
-                {getPrototypeVerificationStateLabel(event.trustProfile.host.verificationState)}
-              </Text>
-              {event.trustProfile.coHosts?.map((coHost) => (
-                <Text key={coHost.id} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
-                  Co-host: {coHost.displayName}
-                </Text>
-              ))}
-              <Text style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
-                {event.trustProfile.participantLimit.min}-{event.trustProfile.participantLimit.max} people
-              </Text>
-              <Text style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
-                {event.trustProfile.venueType.replace("-", " ")}
-              </Text>
-            </View>
-          </View>
-        ) : null}
-
-        <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.whatToExpect}</Text>
-        <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
-          <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <IconSymbol name="low-pressure" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.lowPressure}</Text>
-            <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.lowPressureCopy}</Text>
-          </View>
-          <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <IconSymbol name="experience" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.sharedExperience}</Text>
-            <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.sharedExperienceCopy}</Text>
-          </View>
-          <View style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <IconSymbol name="flexible" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            <Text style={[styles.expectTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.flexible}</Text>
-            <Text style={[styles.expectCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.flexibleCopy}</Text>
-          </View>
-        </View>
-        <View style={[styles.meetupSupportPanel, styles.guidancePanelTight, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-              <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            </View>
-            <View style={styles.weatherCopyBlock}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Practical notes</Text>
-              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Calm planning reminders, not live support.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.practicalGuidanceList}>
-            {practicalMeetupGuidanceItems.slice(0, 3).map((item) => (
-              <View key={item.label} style={[styles.practicalGuidanceRow, isDay && styles.dayActionRow]}>
-                <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>• {item.label}</Text>
-                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-          </>
-        ))}
-
-        {renderAccordionSection("optionalConversation", "Optional conversation", "Gentle prompts and clarity questions only if they help.", "message", (
-          <>
-          {event.preEventQuestions && event.preEventQuestions.length > 0 && (
-          <View style={[styles.questionsPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.sectionTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.preEventQuestionsTitle}</Text>
-            <Text style={[styles.questionsCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.preEventQuestionsCopy}</Text>
-            <View style={styles.questionsList}>
-              {conversationStarterPrompts.map((question) => (
-                <Text key={question} style={[styles.questionText, isDay && styles.dayText, isRtl && styles.rtlText]}>
-                  • {question}
-                </Text>
-              ))}
-              {event.preEventQuestions.map((question, index) => (
-                <Text key={index} style={[styles.questionText, isDay && styles.dayText, isRtl && styles.rtlText]}>
-                  • {question}
-                </Text>
-              ))}
-            </View>
-            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-              {quickReplyOptions.map((reply) => (
+          <View style={styles.eventAccordionStack}>
+            {renderAccordionSection(
+              "whatToExpect",
+              "What to expect",
+              "The plan, sound level, weather, and practical basics.",
+              "experience",
+              <>
                 <TouchableOpacity
-                  key={reply}
-                  activeOpacity={0.82}
-                  onPress={() => setSelectedMeetupQuestion(reply)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: selectedMeetupQuestion === reply }}
-                  accessibilityLabel={reply}
-                  style={[styles.meetupQuestionChip, isDay && styles.dayActionRow, selectedMeetupQuestion === reply && styles.meetupSupportChipActive]}
+                  activeOpacity={0.86}
+                  style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}
                 >
-                  <Text style={[styles.meetupQuestionText, isDay && styles.dayText, selectedMeetupQuestion === reply && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{reply}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
-
-        <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-            <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-              <IconSymbol name="message" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-            </View>
-            <View style={styles.weatherCopyBlock}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meetup clarity questions</Text>
-              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Demo question chips for clarity. For report, block, leave, or emergency help, use existing safety flows.
-              </Text>
-            </View>
-          </View>
-          {askAboutMeetupQuestionGroups.map((group) => (
-            <View key={group.phase} style={styles.meetupQuestionGroup}>
-              <Text style={[styles.meetupQuestionPhase, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{group.title}</Text>
-              <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
-                {group.questions.map((question) => {
-                  const active = selectedMeetupQuestion === question;
-
-                  return (
-                    <TouchableOpacity
-                      key={question}
-                      activeOpacity={0.82}
-                      onPress={() => setSelectedMeetupQuestion(question)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                      accessibilityLabel={question}
-                      style={[styles.meetupQuestionChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                  <View style={[styles.weatherIconWrap, isDay && styles.dayMetaIconWrap]}>
+                    <IconSymbol name="weather" color={isDay ? "#53677A" : "#8FAFD1"} size={24} />
+                  </View>
+                  <View style={[styles.weatherCopyBlock, isRtl && styles.rtlBlock]}>
+                    <Text
+                      style={[
+                        styles.weatherTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
                     >
-                      <Text style={[styles.meetupQuestionText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{question}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
-          ))}
-          {selectedMeetupQuestion ? (
-            <View style={[styles.meetupHelperResult, isDay && styles.dayActionRow]}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Demo helper selected</Text>
-              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{selectedMeetupQuestion}</Text>
-            </View>
-          ) : null}
-        </View>
-          </>
-        ))}
-
-        {renderAccordionSection("arrival", "Arrival", "Where to meet and how the host can clarify the exact spot.", "location", (
-          <View style={[styles.meetingPanel, isDay && styles.dayMeetingPanel, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.meetingCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventMeetingCopy}</Text>
-            <Text style={[styles.meetingCopy, styles.meetingPrivacyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              NSN uses broad local area details here. Future precise sharing should be opt-in, temporary, event-specific, and show who can see it, for how long, and how to stop it.
-            </Text>
-          </View>
-        ))}
-
-        {renderAccordionSection("comfortPacing", "Comfort & pacing", "Ways to arrive, participate, pause, and be around photos.", "low-pressure", (
-          <>
-          {event.trustProfile?.comfortTags.length ? (
-            <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-              <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-                <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                  <IconSymbol name="sliders" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                </View>
-                <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Comfort tags</Text>
-              </View>
-              <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Tags describe the meetup setting. They are not labels for people, and they can help you choose a calmer fit.
-              </Text>
-              <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-                {event.trustProfile.comfortTags.map((tag) => (
-                  <Text key={tag} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>
-                    {tag.replace(/-/g, " ")}
-                  </Text>
-                ))}
-              </View>
-            </View>
-          ) : null}
-
-          {event.comfortLabels?.length ? (
-            <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-              <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-                <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                  <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                </View>
-                <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meetup comfort & participation</Text>
-              </View>
-              <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Optional environment cues for joining at your own pace. Energetic and calmer styles can both belong here, and stepping away or rejoining is okay.
-              </Text>
-              <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-                {event.comfortLabels.map((label) => (
-                  <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
-                ))}
-              </View>
-            </View>
-          ) : null}
-
-          <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                <IconSymbol name="low-pressure" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-              </View>
-              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Arriving alone is normal here</Text>
-            </View>
-            <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Small NSN meetups should make room for solo arrivals, quiet starts, and warming up slowly.
-            </Text>
-            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-              {arrivingAloneReassuranceItems.map((item) => (
-                <View key={item.label} style={[styles.meetupReassuranceCard, isDay && styles.dayActionRow]}>
-                  <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, isRtl && styles.rtlText]}>{item.label}</Text>
-                  <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{item.copy}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                <IconSymbol name="visibility" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-              </View>
-              <Text style={[styles.mediaComfortTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.mediaTitle}</Text>
-            </View>
-            <Text style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {eventCommunityGuidelinesCopy.mediaCopy}
-            </Text>
-            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-              {mediaComfortLabels.map((label) => (
-                <Text key={label} style={[styles.mediaComfortChip, isDay && styles.dayMediaComfortChip, isRtl && styles.rtlText]}>{label}</Text>
-              ))}
-            </View>
-            <Text style={[styles.mediaComfortNote, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {eventCommunityGuidelinesCopy.mediaNote}
-            </Text>
-          </View>
-
-          <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-              <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-              </View>
-              <View style={styles.weatherCopyBlock}>
-                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.firstMeetupSupportTitle}</Text>
-                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  {eventCommunityGuidelinesCopy.firstMeetupSupportCopy}
-                </Text>
-              </View>
-            </View>
-            <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
-              {firstMeetupSupportOptions.map((option) => {
-                const active = selectedFirstMeetupSupport.includes(option.label);
-
-                return (
-                  <TouchableOpacity
-                    key={option.label}
-                    activeOpacity={0.82}
-                    onPress={() => toggleFirstMeetupSupportOption(option.label)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    accessibilityLabel={option.label}
-                    accessibilityHint={option.description}
-                    style={[styles.meetupSupportChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
-                  >
-                    <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>
-                      {option.label}
+                      {copy.weatherTitle}
                     </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <Text style={[styles.meetupSupportSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Current: {getFirstMeetupSupportSummary(selectedFirstMeetupSupport)}
-            </Text>
-          </View>
+                    <Text
+                      style={[
+                        styles.weatherCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {isMovieNight ? copy.weatherCopy : eventWeatherCopy}
+                    </Text>
+                    {eventWeatherFallbacks.length > 0 ? (
+                      <Text
+                        style={[
+                          styles.weatherCopy,
+                          styles.weatherFallbackCopy,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Rain or wind fallback: {eventWeatherFallbacks.slice(0, 4).join(", ")}.
+                      </Text>
+                    ) : null}
+                  </View>
+                </TouchableOpacity>
 
-          <View style={[styles.meetupSupportPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-            <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-              <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                <IconSymbol name="group" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-              </View>
-              <View style={styles.weatherCopyBlock}>
-                <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.comfortRolesTitle}</Text>
-                <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                  {eventCommunityGuidelinesCopy.comfortRolesCopy}
-                </Text>
-              </View>
-            </View>
-            <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
-              {meetupComfortRoleOptions.map((option) => {
-                const active = selectedComfortRoles.includes(option.label);
+                <View
+                  style={[styles.noiseGuideCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}
+                >
+                  <View style={[styles.noiseIconWrap, isDay && styles.dayMetaIconWrap]}>
+                    <IconSymbol
+                      name={event.noiseLevel === "Quiet" ? "volume.off" : "volume"}
+                      color={isDay ? "#53677A" : "#8FAFD1"}
+                      size={22}
+                    />
+                  </View>
+                  <View style={[styles.noiseCopyBlock, isRtl && styles.rtlBlock]}>
+                    <Text
+                      style={[
+                        styles.noiseTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {noiseCopy.title}: {eventNoise.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.noiseDescription,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {eventNoise.copy}. {noiseCopy.copy}
+                    </Text>
+                  </View>
+                </View>
 
-                return (
-                  <TouchableOpacity
-                    key={option.label}
-                    activeOpacity={0.82}
-                    onPress={() => toggleComfortRole(option.label)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    accessibilityLabel={option.label}
-                    accessibilityHint={option.description}
-                    style={[styles.meetupSupportChip, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                {event.trustProfile ? (
+                  <View
+                    style={[
+                      styles.mediaComfortCard,
+                      isDay && styles.dayCard,
+                      isRtl && styles.rtlBlock,
+                    ]}
                   >
-                    <Text style={[styles.meetupSupportChipText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{option.label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <Text style={[styles.meetupSupportSummary, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              Current: {selectedComfortRoles.length ? selectedComfortRoles.join(", ") : "None selected"}
-            </Text>
-          </View>
-          </>
-        ))}
+                    <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                      <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                        <IconSymbol name="shield" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                      </View>
+                      <Text
+                        style={[
+                          styles.mediaComfortTitle,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Trust & small group shape
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.mediaComfortCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {eventTrustSummary}. Host: {event.trustProfile.host.displayName}.{" "}
+                      {event.trustProfile.accountabilityNote}
+                    </Text>
+                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                      <Text
+                        style={[
+                          styles.mediaComfortChip,
+                          isDay && styles.dayMediaComfortChip,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {getPrototypeVerificationStateLabel(
+                          event.trustProfile.host.verificationState,
+                        )}
+                      </Text>
+                      {event.trustProfile.coHosts?.map((coHost) => (
+                        <Text
+                          key={coHost.id}
+                          style={[
+                            styles.mediaComfortChip,
+                            isDay && styles.dayMediaComfortChip,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          Co-host: {coHost.displayName}
+                        </Text>
+                      ))}
+                      <Text
+                        style={[
+                          styles.mediaComfortChip,
+                          isDay && styles.dayMediaComfortChip,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {event.trustProfile.participantLimit.min}-
+                        {event.trustProfile.participantLimit.max} people
+                      </Text>
+                      <Text
+                        style={[
+                          styles.mediaComfortChip,
+                          isDay && styles.dayMediaComfortChip,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {event.trustProfile.venueType.replace("-", " ")}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
 
-        {renderAccordionSection("safetyBoundaries", eventCommunityGuidelinesCopy.sectionTitle, eventCommunityGuidelinesCopy.sectionSummary, "shield", (
-          <>
-          <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{copy.softExitTitle}</Text>
-            <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.softExitCopy}</Text>
-          </View>
-          <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.mismatchTitle}</Text>
-            <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {eventCommunityGuidelinesCopy.mismatchCopy}
-            </Text>
-          </View>
-          <View style={[styles.softExitCard, isDay && styles.daySoftExitCard, isRtl && styles.rtlBlock]}>
-            <Text style={[styles.softExitTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCommunityGuidelinesCopy.reportsTitle}</Text>
-            <Text style={[styles.softExitCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {eventCommunityGuidelinesCopy.reportsCopy}
-            </Text>
-          </View>
-          </>
-        ))}
+                <Text
+                  style={[
+                    styles.sectionTitle,
+                    isDay && styles.dayHeadingText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {copy.whatToExpect}
+                </Text>
+                <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
+                  <View
+                    style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
+                  >
+                    <IconSymbol
+                      name="low-pressure"
+                      color={isDay ? "#53677A" : "#8FAFD1"}
+                      size={20}
+                    />
+                    <Text
+                      style={[
+                        styles.expectTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.lowPressure}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.expectCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.lowPressureCopy}
+                    </Text>
+                  </View>
+                  <View
+                    style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
+                  >
+                    <IconSymbol name="experience" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                    <Text
+                      style={[
+                        styles.expectTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.sharedExperience}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.expectCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.sharedExperienceCopy}
+                    </Text>
+                  </View>
+                  <View
+                    style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
+                  >
+                    <IconSymbol name="flexible" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                    <Text
+                      style={[
+                        styles.expectTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.flexible}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.expectCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.flexibleCopy}
+                    </Text>
+                  </View>
+                </View>
+                <View
+                  style={[
+                    styles.meetupSupportPanel,
+                    styles.guidancePanelTight,
+                    isDay && styles.dayCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+                    <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+                      <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                    </View>
+                    <View style={styles.weatherCopyBlock}>
+                      <Text
+                        style={[
+                          styles.safetyTitle,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Practical notes
+                      </Text>
+                      <Text
+                        style={[
+                          styles.safetyCopy,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Calm planning reminders, not live support.
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.practicalGuidanceList}>
+                    {practicalMeetupGuidanceItems.slice(0, 3).map((item) => (
+                      <View
+                        key={item.label}
+                        style={[styles.practicalGuidanceRow, isDay && styles.dayActionRow]}
+                      >
+                        <Text
+                          style={[
+                            styles.meetupSupportChipText,
+                            isDay && styles.dayText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          • {item.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.safetyCopy,
+                            isDay && styles.dayMutedText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {item.copy}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </>,
+            )}
 
-        <TouchableOpacity
-          activeOpacity={0.82}
-          onPress={scrollToEventTop}
-          accessibilityRole="button"
-          accessibilityLabel="Back to top"
-          style={[styles.backToTopButton, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
-        >
-          <IconSymbol name="chevron.up" color={isDay ? "#53677A" : nsnColors.muted} size={16} />
-          <Text style={[styles.backToTopText, isDay && styles.dayText]}>Back to top</Text>
-        </TouchableOpacity>
-        </View>
+            {renderAccordionSection(
+              "optionalConversation",
+              "Optional conversation",
+              "Gentle prompts and clarity questions only if they help.",
+              "message",
+              <>
+                {event.preEventQuestions && event.preEventQuestions.length > 0 && (
+                  <View
+                    style={[
+                      styles.questionsPanel,
+                      isDay && styles.dayCard,
+                      isRtl && styles.rtlBlock,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.sectionTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.preEventQuestionsTitle}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.questionsCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {copy.preEventQuestionsCopy}
+                    </Text>
+                    <View style={styles.questionsList}>
+                      {conversationStarterPrompts.map((question) => (
+                        <Text
+                          key={question}
+                          style={[
+                            styles.questionText,
+                            isDay && styles.dayText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          • {question}
+                        </Text>
+                      ))}
+                      {event.preEventQuestions.map((question, index) => (
+                        <Text
+                          key={index}
+                          style={[
+                            styles.questionText,
+                            isDay && styles.dayText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          • {question}
+                        </Text>
+                      ))}
+                    </View>
+                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                      {quickReplyOptions.map((reply) => (
+                        <TouchableOpacity
+                          key={reply}
+                          activeOpacity={0.82}
+                          onPress={() => setSelectedMeetupQuestion(reply)}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: selectedMeetupQuestion === reply }}
+                          accessibilityLabel={reply}
+                          style={[
+                            styles.meetupQuestionChip,
+                            isDay && styles.dayActionRow,
+                            selectedMeetupQuestion === reply && styles.meetupSupportChipActive,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.meetupQuestionText,
+                              isDay && styles.dayText,
+                              selectedMeetupQuestion === reply &&
+                                styles.meetupSupportChipTextActive,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {reply}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <View
+                  style={[
+                    styles.meetupSupportPanel,
+                    isDay && styles.dayCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+                    <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+                      <IconSymbol name="message" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                    </View>
+                    <View style={styles.weatherCopyBlock}>
+                      <Text
+                        style={[
+                          styles.safetyTitle,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Meetup clarity questions
+                      </Text>
+                      <Text
+                        style={[
+                          styles.safetyCopy,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Demo question chips for clarity. For report, block, leave, or emergency
+                        help, use existing safety flows.
+                      </Text>
+                    </View>
+                  </View>
+                  {askAboutMeetupQuestionGroups.map((group) => (
+                    <View key={group.phase} style={styles.meetupQuestionGroup}>
+                      <Text
+                        style={[
+                          styles.meetupQuestionPhase,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {group.title}
+                      </Text>
+                      <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+                        {group.questions.map((question) => {
+                          const active = selectedMeetupQuestion === question;
+
+                          return (
+                            <TouchableOpacity
+                              key={question}
+                              activeOpacity={0.82}
+                              onPress={() => setSelectedMeetupQuestion(question)}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: active }}
+                              accessibilityLabel={question}
+                              style={[
+                                styles.meetupQuestionChip,
+                                isDay && styles.dayActionRow,
+                                active && styles.meetupSupportChipActive,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.meetupQuestionText,
+                                  isDay && styles.dayText,
+                                  active && styles.meetupSupportChipTextActive,
+                                  isRtl && styles.rtlText,
+                                ]}
+                              >
+                                {question}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  ))}
+                  {selectedMeetupQuestion ? (
+                    <View style={[styles.meetupHelperResult, isDay && styles.dayActionRow]}>
+                      <Text
+                        style={[
+                          styles.safetyTitle,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Demo helper selected
+                      </Text>
+                      <Text
+                        style={[
+                          styles.safetyCopy,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {selectedMeetupQuestion}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </>,
+            )}
+
+            {renderAccordionSection(
+              "arrival",
+              "Arrival",
+              "Where to meet and how the host can clarify the exact spot.",
+              "location",
+              <View
+                style={[
+                  styles.meetingPanel,
+                  isDay && styles.dayMeetingPanel,
+                  isRtl && styles.rtlBlock,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.meetingCopy,
+                    isDay && styles.dayMutedText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {eventMeetingCopy}
+                </Text>
+                <Text
+                  style={[
+                    styles.meetingCopy,
+                    styles.meetingPrivacyCopy,
+                    isDay && styles.dayMutedText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  NSN uses broad local area details here. Future precise sharing should be opt-in,
+                  temporary, event-specific, and show who can see it, for how long, and how to stop
+                  it.
+                </Text>
+              </View>,
+            )}
+
+            {renderAccordionSection(
+              "comfortPacing",
+              "Comfort & pacing",
+              "Ways to arrive, participate, pause, and be around photos.",
+              "low-pressure",
+              <>
+                {event.trustProfile?.comfortTags.length ? (
+                  <View
+                    style={[
+                      styles.mediaComfortCard,
+                      isDay && styles.dayCard,
+                      isRtl && styles.rtlBlock,
+                    ]}
+                  >
+                    <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                      <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                        <IconSymbol
+                          name="sliders"
+                          color={isDay ? "#53677A" : "#8FAFD1"}
+                          size={20}
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          styles.mediaComfortTitle,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Comfort tags
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.mediaComfortCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Tags describe the meetup setting. They are not labels for people, and they can
+                      help you choose a calmer fit.
+                    </Text>
+                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                      {event.trustProfile.comfortTags.map((tag) => (
+                        <Text
+                          key={tag}
+                          style={[
+                            styles.mediaComfortChip,
+                            isDay && styles.dayMediaComfortChip,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {tag.replace(/-/g, " ")}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+
+                {event.comfortLabels?.length ? (
+                  <View
+                    style={[
+                      styles.mediaComfortCard,
+                      isDay && styles.dayCard,
+                      isRtl && styles.rtlBlock,
+                    ]}
+                  >
+                    <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                      <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                        <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                      </View>
+                      <Text
+                        style={[
+                          styles.mediaComfortTitle,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        Meetup comfort & participation
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.mediaComfortCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Optional environment cues for joining at your own pace. Energetic and calmer
+                      styles can both belong here, and stepping away or rejoining is okay.
+                    </Text>
+                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                      {event.comfortLabels.map((label) => (
+                        <Text
+                          key={label}
+                          style={[
+                            styles.mediaComfortChip,
+                            isDay && styles.dayMediaComfortChip,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {label}
+                        </Text>
+                      ))}
+                    </View>
+                  </View>
+                ) : null}
+
+                <View
+                  style={[
+                    styles.mediaComfortCard,
+                    isDay && styles.dayCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                    <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                      <IconSymbol
+                        name="low-pressure"
+                        color={isDay ? "#53677A" : "#8FAFD1"}
+                        size={20}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.mediaComfortTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Arriving alone is normal here
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.mediaComfortCopy,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Small NSN meetups should make room for solo arrivals, quiet starts, and warming
+                    up slowly.
+                  </Text>
+                  <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                    {arrivingAloneReassuranceItems.map((item) => (
+                      <View
+                        key={item.label}
+                        style={[styles.meetupReassuranceCard, isDay && styles.dayActionRow]}
+                      >
+                        <Text
+                          style={[
+                            styles.meetupSupportChipText,
+                            isDay && styles.dayText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {item.label}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.mediaComfortNote,
+                            isDay && styles.dayMutedText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {item.copy}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View
+                  style={[
+                    styles.mediaComfortCard,
+                    isDay && styles.dayCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                    <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                      <IconSymbol
+                        name="visibility"
+                        color={isDay ? "#53677A" : "#8FAFD1"}
+                        size={20}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.mediaComfortTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {eventCommunityGuidelinesCopy.mediaTitle}
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.mediaComfortCopy,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {eventCommunityGuidelinesCopy.mediaCopy}
+                  </Text>
+                  <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                    {mediaComfortLabels.map((label) => (
+                      <Text
+                        key={label}
+                        style={[
+                          styles.mediaComfortChip,
+                          isDay && styles.dayMediaComfortChip,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {label}
+                      </Text>
+                    ))}
+                  </View>
+                  <Text
+                    style={[
+                      styles.mediaComfortNote,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {eventCommunityGuidelinesCopy.mediaNote}
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.meetupSupportPanel,
+                    isDay && styles.dayCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+                    <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+                      <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                    </View>
+                    <View style={styles.weatherCopyBlock}>
+                      <Text
+                        style={[
+                          styles.safetyTitle,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {eventCommunityGuidelinesCopy.firstMeetupSupportTitle}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.safetyCopy,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {eventCommunityGuidelinesCopy.firstMeetupSupportCopy}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+                    {firstMeetupSupportOptions.map((option) => {
+                      const active = selectedFirstMeetupSupport.includes(option.label);
+
+                      return (
+                        <TouchableOpacity
+                          key={option.label}
+                          activeOpacity={0.82}
+                          onPress={() => toggleFirstMeetupSupportOption(option.label)}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: active }}
+                          accessibilityLabel={option.label}
+                          accessibilityHint={option.description}
+                          style={[
+                            styles.meetupSupportChip,
+                            isDay && styles.dayActionRow,
+                            active && styles.meetupSupportChipActive,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.meetupSupportChipText,
+                              isDay && styles.dayText,
+                              active && styles.meetupSupportChipTextActive,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  <Text
+                    style={[
+                      styles.meetupSupportSummary,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Current: {getFirstMeetupSupportSummary(selectedFirstMeetupSupport)}
+                  </Text>
+                </View>
+
+                <View
+                  style={[
+                    styles.meetupSupportPanel,
+                    isDay && styles.dayCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+                    <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
+                      <IconSymbol name="group" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                    </View>
+                    <View style={styles.weatherCopyBlock}>
+                      <Text
+                        style={[
+                          styles.safetyTitle,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {eventCommunityGuidelinesCopy.comfortRolesTitle}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.safetyCopy,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {eventCommunityGuidelinesCopy.comfortRolesCopy}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+                    {meetupComfortRoleOptions.map((option) => {
+                      const active = selectedComfortRoles.includes(option.label);
+
+                      return (
+                        <TouchableOpacity
+                          key={option.label}
+                          activeOpacity={0.82}
+                          onPress={() => toggleComfortRole(option.label)}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected: active }}
+                          accessibilityLabel={option.label}
+                          accessibilityHint={option.description}
+                          style={[
+                            styles.meetupSupportChip,
+                            isDay && styles.dayActionRow,
+                            active && styles.meetupSupportChipActive,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.meetupSupportChipText,
+                              isDay && styles.dayText,
+                              active && styles.meetupSupportChipTextActive,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  <Text
+                    style={[
+                      styles.meetupSupportSummary,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Current:{" "}
+                    {selectedComfortRoles.length
+                      ? selectedComfortRoles.join(", ")
+                      : "None selected"}
+                  </Text>
+                </View>
+              </>,
+            )}
+
+            {renderAccordionSection(
+              "safetyBoundaries",
+              eventCommunityGuidelinesCopy.sectionTitle,
+              eventCommunityGuidelinesCopy.sectionSummary,
+              "shield",
+              <>
+                <View
+                  style={[
+                    styles.softExitCard,
+                    isDay && styles.daySoftExitCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.softExitTitle,
+                      isDay && styles.dayHeadingText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {copy.softExitTitle}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.softExitCopy,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {copy.softExitCopy}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.softExitCard,
+                    isDay && styles.daySoftExitCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.softExitTitle,
+                      isDay && styles.dayHeadingText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {eventCommunityGuidelinesCopy.mismatchTitle}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.softExitCopy,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {eventCommunityGuidelinesCopy.mismatchCopy}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.softExitCard,
+                    isDay && styles.daySoftExitCard,
+                    isRtl && styles.rtlBlock,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.softExitTitle,
+                      isDay && styles.dayHeadingText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {eventCommunityGuidelinesCopy.reportsTitle}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.softExitCopy,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {eventCommunityGuidelinesCopy.reportsCopy}
+                  </Text>
+                </View>
+              </>,
+            )}
+
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={scrollToEventTop}
+              accessibilityRole="button"
+              accessibilityLabel="Back to top"
+              style={[styles.backToTopButton, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}
+            >
+              <IconSymbol name="chevron.up" color={isDay ? "#53677A" : nsnColors.muted} size={16} />
+              <Text style={[styles.backToTopText, isDay && styles.dayText]}>Back to top</Text>
+            </TouchableOpacity>
+          </View>
         ) : null}
 
-        <View style={[styles.safetyPanel, styles.compactReadinessPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+        <View
+          style={[
+            styles.safetyPanel,
+            styles.compactReadinessPanel,
+            isDay && styles.dayCard,
+            isRtl && styles.rtlBlock,
+          ]}
+        >
           <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
-            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{eventCopy.meetingSafety}</Text>
-            <Text style={[styles.verificationChip, isDay && styles.dayVerificationChip, canMeet && styles.verificationChipReady, isDay && canMeet && styles.dayVerificationChipReady]}>
+            <Text
+              style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+            >
+              {eventCopy.meetingSafety}
+            </Text>
+            <Text
+              style={[
+                styles.verificationChip,
+                isDay && styles.dayVerificationChip,
+                canMeet && styles.verificationChipReady,
+                isDay && canMeet && styles.dayVerificationChipReady,
+              ]}
+            >
               {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
             </Text>
           </View>
-          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}</Text>
+          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            {getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}
+          </Text>
         </View>
 
         <View style={[styles.rsvpPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
-            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Local RSVP preview</Text>
+            <Text
+              style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+            >
+              Local RSVP preview
+            </Text>
             <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>
               {getRsvpLabel(membership.status)}
             </Text>
           </View>
           <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Prototype only: this RSVP is saved locally on this device. It does not reserve a real spot, message anyone, or change the meetup plan.
+            Prototype only: this RSVP is saved locally on this device. It does not reserve a real
+            spot, message anyone, or change the meetup plan.
           </Text>
-          <Text style={[styles.rsvpDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{getRsvpDescription(membership.status)}</Text>
+          <Text
+            style={[styles.rsvpDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+          >
+            {getRsvpDescription(membership.status)}
+          </Text>
           <View style={styles.rsvpActions}>
             {rsvpChoices.map((choice) => {
-              const active = choice.status === membership.status || (choice.status === "going" && membership.status === "joined");
+              const active =
+                choice.status === membership.status ||
+                (choice.status === "going" && membership.status === "joined");
 
               return (
                 <TouchableOpacity
@@ -1851,9 +3241,21 @@ export default function EventDetailsScreen() {
                   onPress={() => saveRsvpStatus(choice.status)}
                   accessibilityRole="button"
                   accessibilityState={{ selected: active }}
-                  style={[styles.rsvpChoice, isDay && styles.dayActionRow, active && styles.rsvpChoiceActive]}
+                  style={[
+                    styles.rsvpChoice,
+                    isDay && styles.dayActionRow,
+                    active && styles.rsvpChoiceActive,
+                  ]}
                 >
-                  <Text style={[styles.rsvpChoiceText, isDay && styles.dayText, active && styles.rsvpChoiceTextActive]}>{choice.label}</Text>
+                  <Text
+                    style={[
+                      styles.rsvpChoiceText,
+                      isDay && styles.dayText,
+                      active && styles.rsvpChoiceTextActive,
+                    ]}
+                  >
+                    {choice.label}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -1863,12 +3265,25 @@ export default function EventDetailsScreen() {
         <View style={[styles.readinessPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
             <View style={styles.readinessHeaderCopy}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Pre-meetup readiness</Text>
-              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Local-only checklist for feeling prepared. It does not reserve a spot, contact a host, or connect live support.
+              <Text
+                style={[
+                  styles.safetyTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Pre-meetup readiness
+              </Text>
+              <Text
+                style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+              >
+                Local-only checklist for feeling prepared. It does not reserve a spot, contact a
+                host, or connect live support.
               </Text>
             </View>
-            <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>Prototype</Text>
+            <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>
+              Prototype
+            </Text>
           </View>
           <View style={styles.readinessList}>
             {meetupReadinessItems.map((item) => {
@@ -1882,13 +3297,40 @@ export default function EventDetailsScreen() {
                       : item.copy;
 
               return (
-                <View key={item.id} style={[styles.readinessRow, isDay && styles.dayActionRow, isRtl && styles.rtlRow]}>
+                <View
+                  key={item.id}
+                  style={[
+                    styles.readinessRow,
+                    isDay && styles.dayActionRow,
+                    isRtl && styles.rtlRow,
+                  ]}
+                >
                   <View style={[styles.readinessIconWrap, isDay && styles.dayMetaIconWrap]}>
-                    <IconSymbol name={item.iconName} color={isDay ? "#53677A" : "#8FAFD1"} size={17} />
+                    <IconSymbol
+                      name={item.iconName}
+                      color={isDay ? "#53677A" : "#8FAFD1"}
+                      size={17}
+                    />
                   </View>
                   <View style={[styles.readinessCopyBlock, isRtl && styles.rtlBlock]}>
-                    <Text style={[styles.readinessTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{item.title}</Text>
-                    <Text style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{itemCopy}</Text>
+                    <Text
+                      style={[
+                        styles.readinessTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {item.title}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.readinessCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {itemCopy}
+                    </Text>
                   </View>
                 </View>
               );
@@ -1899,9 +3341,20 @@ export default function EventDetailsScreen() {
         <View style={[styles.optOutPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
           <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
             <View style={styles.readinessHeaderCopy}>
-              <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Change your mind</Text>
-              <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                Skip, leave, hide, or choose a calmer option without a public explanation. These actions stay local to this prototype.
+              <Text
+                style={[
+                  styles.safetyTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Change your mind
+              </Text>
+              <Text
+                style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+              >
+                Skip, leave, hide, or choose a calmer option without a public explanation. These
+                actions stay local to this prototype.
               </Text>
             </View>
           </View>
@@ -1918,36 +3371,101 @@ export default function EventDetailsScreen() {
                   accessibilityState={{ selected: active }}
                   accessibilityLabel={action.label}
                   accessibilityHint={action.copy}
-                  style={[styles.optOutChoice, isDay && styles.dayActionRow, active && styles.meetupSupportChipActive]}
+                  style={[
+                    styles.optOutChoice,
+                    isDay && styles.dayActionRow,
+                    active && styles.meetupSupportChipActive,
+                  ]}
                 >
-                  <IconSymbol name={action.iconName} color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted} size={15} />
-                  <Text style={[styles.optOutChoiceText, isDay && styles.dayText, active && styles.meetupSupportChipTextActive, isRtl && styles.rtlText]}>{action.label}</Text>
+                  <IconSymbol
+                    name={action.iconName}
+                    color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted}
+                    size={15}
+                  />
+                  <Text
+                    style={[
+                      styles.optOutChoiceText,
+                      isDay && styles.dayText,
+                      active && styles.meetupSupportChipTextActive,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {action.label}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
           {selectedOptOutAction ? (
             <View style={[styles.optOutResult, isDay && styles.dayActionRow]}>
-              <Text style={[styles.readinessTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{selectedOptOutAction.label}</Text>
-              <Text style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{selectedOptOutAction.result}</Text>
+              <Text
+                style={[
+                  styles.readinessTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {selectedOptOutAction.label}
+              </Text>
+              <Text
+                style={[
+                  styles.readinessCopy,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {selectedOptOutAction.result}
+              </Text>
             </View>
           ) : null}
         </View>
 
         <View style={[styles.tutorialPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <Text style={[styles.quickReferenceKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Tiny tutorial</Text>
-          <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Meetup flow basics</Text>
+          <Text
+            style={[
+              styles.quickReferenceKicker,
+              isDay && styles.dayMutedText,
+              isRtl && styles.rtlText,
+            ]}
+          >
+            Tiny tutorial
+          </Text>
+          <Text
+            style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+          >
+            Meetup flow basics
+          </Text>
           <View style={styles.tutorialCardList}>
             {eventTutorialCards
               .filter((card) => !dismissedTutorialIds.includes(card.id))
               .map((card) => (
                 <View key={card.id} style={[styles.tutorialCard, isDay && styles.dayActionRow]}>
                   <View style={[styles.readinessIconWrap, isDay && styles.dayMetaIconWrap]}>
-                    <IconSymbol name={card.iconName} color={isDay ? "#53677A" : "#8FAFD1"} size={17} />
+                    <IconSymbol
+                      name={card.iconName}
+                      color={isDay ? "#53677A" : "#8FAFD1"}
+                      size={17}
+                    />
                   </View>
                   <View style={styles.readinessCopyBlock}>
-                    <Text style={[styles.readinessTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>{card.title}</Text>
-                    <Text style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{card.copy}</Text>
+                    <Text
+                      style={[
+                        styles.readinessTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {card.title}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.readinessCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {card.copy}
+                    </Text>
                   </View>
                   <TouchableOpacity
                     activeOpacity={0.78}
@@ -1956,56 +3474,94 @@ export default function EventDetailsScreen() {
                     accessibilityLabel={`Dismiss ${card.title}`}
                     style={[styles.dismissTutorialButton, isDay && styles.dayActionRow]}
                   >
-                    <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
+                    <IconSymbol
+                      name="xmark"
+                      color={isDay ? "#53677A" : nsnColors.muted}
+                      size={15}
+                    />
                   </TouchableOpacity>
                 </View>
               ))}
           </View>
           {eventTutorialCards.every((card) => dismissedTutorialIds.includes(card.id)) ? (
-            <Text style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            <Text
+              style={[styles.readinessCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+            >
               Tutorial cards dismissed for this visit. Nothing was saved to a backend.
             </Text>
           ) : null}
         </View>
 
-        <Text style={[styles.ctaReassurance, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{eventCopy.ctaReassurance}</Text>
+        <Text
+          style={[styles.ctaReassurance, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+        >
+          {eventCopy.ctaReassurance}
+        </Text>
 
         <TouchableOpacity
           activeOpacity={0.88}
           onPress={handleJoin}
           style={[styles.joinButton, !canMeet && styles.joinButtonLocked]}
           accessibilityRole="button"
-          accessibilityHint={screenReaderHints ? (canOpenMeetupChat ? eventCopy.openMeetupChatHint : canMeet ? eventCopy.joinHint : eventCopy.verifyBeforeMeetingHint) : undefined}
+          accessibilityHint={
+            screenReaderHints
+              ? canOpenMeetupChat
+                ? eventCopy.openMeetupChatHint
+                : canMeet
+                  ? eventCopy.joinHint
+                  : eventCopy.verifyBeforeMeetingHint
+              : undefined
+          }
         >
           <Text style={styles.joinText}>
-            {canOpenMeetupChat ? eventCopy.openMeetupChat : canMeet ? copy.join : eventCopy.verifyBeforeMeeting}
+            {canOpenMeetupChat
+              ? eventCopy.openMeetupChat
+              : canMeet
+                ? copy.join
+                : eventCopy.verifyBeforeMeeting}
           </Text>
         </TouchableOpacity>
         <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{groupPlanCopy}</Text>
 
         {canOpenMeetupChat ? (
           <View style={[styles.feedbackPanel, isDay && styles.dayCard]}>
-            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText]}>{eventCopy.postEventCheckIn}</Text>
+            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText]}>
+              {eventCopy.postEventCheckIn}
+            </Text>
             <Text style={[styles.safetyCopy, isDay && styles.dayMutedText]}>
               {existingFeedback ? eventCopy.feedbackSaved : eventCopy.feedbackPrompt}
             </Text>
-            {event.postEventQuestions && event.postEventQuestions.length > 0 && !existingFeedback && (
-              <View style={styles.postQuestionsList}>
-                {event.postEventQuestions.map((question, index) => (
-                  <Text key={index} style={[styles.postQuestionText, isDay && styles.dayText]}>
-                    • {question}
-                  </Text>
-                ))}
-              </View>
-            )}
+            {event.postEventQuestions &&
+              event.postEventQuestions.length > 0 &&
+              !existingFeedback && (
+                <View style={styles.postQuestionsList}>
+                  {event.postEventQuestions.map((question, index) => (
+                    <Text key={index} style={[styles.postQuestionText, isDay && styles.dayText]}>
+                      • {question}
+                    </Text>
+                  ))}
+                </View>
+              )}
             <View style={styles.feedbackActions}>
-              <TouchableOpacity activeOpacity={0.82} onPress={() => saveFeedback("Good", true)} style={styles.feedbackButton}>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => saveFeedback("Good", true)}
+                style={styles.feedbackButton}
+              >
                 <Text style={styles.feedbackButtonText}>{eventCopy.feedbackGood}</Text>
               </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.82} onPress={() => saveFeedback("Mixed", false)} style={styles.feedbackButton}>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => saveFeedback("Mixed", false)}
+                style={styles.feedbackButton}
+              >
                 <Text style={styles.feedbackButtonText}>{eventCopy.feedbackMixed}</Text>
               </TouchableOpacity>
-              <TouchableOpacity activeOpacity={0.82} onPress={() => saveFeedback("Unsafe", false)} style={[styles.feedbackButton, styles.feedbackButtonDanger]}>
+              <TouchableOpacity
+                activeOpacity={0.82}
+                onPress={() => saveFeedback("Unsafe", false)}
+                style={[styles.feedbackButton, styles.feedbackButtonDanger]}
+              >
                 <Text style={styles.feedbackButtonText}>{eventCopy.feedbackUnsafe}</Text>
               </TouchableOpacity>
             </View>
@@ -2013,7 +3569,10 @@ export default function EventDetailsScreen() {
         ) : null}
       </ScrollView>
       {copyFeedback ? (
-        <View pointerEvents="none" style={[styles.copyFeedbackToast, isDay && styles.dayActionSheet]}>
+        <View
+          pointerEvents="none"
+          style={[styles.copyFeedbackToast, isDay && styles.dayActionSheet]}
+        >
           <IconSymbol name="checkmark" color={isDay ? "#0F6B2F" : nsnColors.green} size={18} />
           <Text style={[styles.copyFeedbackText, isDay && styles.dayText]}>{copyFeedback}</Text>
         </View>
@@ -2024,197 +3583,973 @@ export default function EventDetailsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayScreen: { backgroundColor: "#E8EDF2" },
-  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
+  dayScreen: { backgroundColor: "#FFFFFF" },
+  dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D7E0EA" },
   dayHeadingText: { color: "#0B1220" },
   dayIconButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   dayMeetingPanel: { borderColor: "#C5D0DA" },
   dayMetaIconWrap: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   dayMutedText: { color: "#53677A" },
-  dayPanel: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
-  dayQuietChip: { color: "#53677A", backgroundColor: "#E8EDF2" },
+  dayPanel: { backgroundColor: "#FFFFFF", borderColor: "#D7E0EA" },
+  dayQuietChip: { color: "#53677A", backgroundColor: "#F7FAFC" },
   dayText: { color: "#0B1220" },
   dayActionSheet: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
-  dayActionRow: { backgroundColor: "#E8EDF2", borderColor: "#C5D0DA" },
+  dayActionRow: { backgroundColor: "#FFFFFF", borderColor: "#D7E0EA" },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 128 },
-  topBar: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
   topActions: { flexDirection: "row", gap: 8 },
   rtlRow: { flexDirection: "row-reverse" },
   rtlBlock: { alignItems: "flex-end" },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
-  iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: nsnColors.border },
-  savedIconButton: { borderColor: "rgba(247,200,91,0.68)", backgroundColor: "rgba(247,200,91,0.12)" },
-  activeMoreButton: { borderColor: "rgba(47,128,237,0.52)", backgroundColor: "rgba(47,128,237,0.12)" },
-  modalBackdrop: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(2,8,20,0.42)", padding: 16 },
-  actionSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0F1B2C", padding: 16 },
-  verificationSheet: { borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0F1B2C", padding: 16 },
+  iconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
+  savedIconButton: {
+    borderColor: "rgba(247,200,91,0.68)",
+    backgroundColor: "rgba(247,200,91,0.12)",
+  },
+  activeMoreButton: {
+    borderColor: "rgba(47,128,237,0.52)",
+    backgroundColor: "rgba(47,128,237,0.12)",
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(2,8,20,0.42)",
+    padding: 16,
+  },
+  actionSheet: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0F1B2C",
+    padding: 16,
+  },
+  verificationSheet: {
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0F1B2C",
+    padding: 16,
+  },
   actionSheetTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 },
-  actionSheetCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginTop: 3, marginBottom: 12 },
+  actionSheetCopy: {
+    color: nsnColors.muted,
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 3,
+    marginBottom: 12,
+  },
   actionList: { gap: 8 },
-  actionRow: { minHeight: 48, flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 10 },
+  actionRow: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
   actionText: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
-  closeActionButton: { minHeight: 46, alignItems: "center", justifyContent: "center", borderRadius: 15, backgroundColor: nsnColors.primary, marginTop: 12 },
+  closeActionButton: {
+    minHeight: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    backgroundColor: nsnColors.primary,
+    marginTop: 12,
+  },
   closeActionText: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   verificationList: { gap: 8 },
-  verificationRow: { minHeight: 56, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 9 },
-  verificationLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, marginBottom: 2 },
+  verificationRow: {
+    minHeight: 56,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  verificationLabel: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+    marginBottom: 2,
+  },
   verificationValue: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   verificationActions: { marginTop: 12, gap: 9 },
-  confirmVerificationButton: { minHeight: 48, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center" },
-  confirmVerificationText: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
-  secondaryVerificationButton: { minHeight: 46, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
-  secondaryVerificationText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  heroPanel: { alignItems: "center", borderRadius: 28, paddingTop: 8, paddingBottom: 22, backgroundColor: "#061121", borderWidth: 1, borderColor: "rgba(56,72,255,0.22)", marginBottom: 18 },
-  eventAvatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: "#21123E", borderWidth: 2, borderColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: -2, marginBottom: 18 },
+  confirmVerificationButton: {
+    minHeight: 48,
+    borderRadius: 15,
+    backgroundColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  confirmVerificationText: {
+    color: nsnColors.text,
+    fontSize: 14,
+    fontWeight: "900",
+    lineHeight: 20,
+  },
+  secondaryVerificationButton: {
+    minHeight: 46,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  secondaryVerificationText: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  heroPanel: {
+    alignItems: "center",
+    borderRadius: 28,
+    paddingTop: 8,
+    paddingBottom: 22,
+    backgroundColor: "#061121",
+    borderWidth: 1,
+    borderColor: "rgba(56,72,255,0.22)",
+    marginBottom: 18,
+  },
+  eventAvatar: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "#21123E",
+    borderWidth: 2,
+    borderColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: -2,
+    marginBottom: 18,
+  },
+  eventHeroImageFrame: {
+    width: "100%",
+    height: 190,
+    borderRadius: 24,
+    overflow: "hidden",
+    marginBottom: 18,
+    backgroundColor: "#102743",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  eventHeroImage: { width: "100%", height: "100%" },
+  eventHeroImageBadge: {
+    position: "absolute",
+    left: 14,
+    bottom: 14,
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    backgroundColor: "rgba(33,18,62,0.92)",
+    borderWidth: 2,
+    borderColor: nsnColors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   avatarEmoji: { fontSize: 43 },
-  title: { color: nsnColors.text, fontSize: 28, fontWeight: "800", textAlign: "center", letterSpacing: 0, lineHeight: 34 },
+  title: {
+    color: nsnColors.text,
+    fontSize: 28,
+    fontWeight: "800",
+    textAlign: "center",
+    letterSpacing: 0,
+    lineHeight: 34,
+  },
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
-  primaryChip: { maxWidth: "100%", color: nsnColors.text, fontSize: 12, fontWeight: "800", lineHeight: 17, backgroundColor: nsnColors.primary, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 14, overflow: "hidden" },
-  quietChip: { maxWidth: "100%", color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 17, backgroundColor: "rgba(255,255,255,0.06)", paddingHorizontal: 13, paddingVertical: 7, borderRadius: 14, overflow: "hidden" },
+  primaryChip: {
+    maxWidth: "100%",
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 17,
+    backgroundColor: nsnColors.primary,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+  quietChip: {
+    maxWidth: "100%",
+    color: nsnColors.muted,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 17,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 14,
+    overflow: "hidden",
+  },
   metaStack: { gap: 8, marginBottom: 12 },
-  savePlaceButton: { minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", marginBottom: 14, paddingHorizontal: 10 },
+  savePlaceButton: {
+    minHeight: 44,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    marginBottom: 14,
+    paddingHorizontal: 10,
+  },
   daySavePlaceButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
-  savePlaceText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, textAlign: "center" },
+  savePlaceText: {
+    flexShrink: 1,
+    minWidth: 0,
+    color: nsnColors.text,
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 20,
+    textAlign: "center",
+  },
   metaRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   metaRowAction: { minHeight: 38, borderRadius: 14, paddingRight: 8 },
-  metaIconWrap: { width: 32, height: 32, borderRadius: 12, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: "rgba(148,163,184,0.18)" },
+  metaIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.18)",
+  },
   metaLine: { flex: 1, color: nsnColors.text, fontSize: 14, lineHeight: 20 },
   description: { color: nsnColors.text, fontSize: 15, lineHeight: 23, marginBottom: 14 },
   quickReferenceSection: { marginBottom: 18 },
   quickReferenceHeader: { marginBottom: 9 },
-  quickReferenceKicker: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
-  quickReferenceTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21, marginTop: 1 },
+  quickReferenceKicker: {
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
+  quickReferenceTitle: {
+    color: nsnColors.text,
+    fontSize: 15,
+    fontWeight: "900",
+    lineHeight: 21,
+    marginTop: 1,
+  },
   quickReferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
-  quickReferenceCard: { flexGrow: 1, flexBasis: 190, minHeight: 86, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", paddingHorizontal: 12, paddingVertical: 11, gap: 4 },
+  quickReferenceCard: {
+    flexGrow: 1,
+    flexBasis: 190,
+    minHeight: 86,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    gap: 4,
+  },
   quickReferenceCardHeader: { flexDirection: "row", alignItems: "center", gap: 7 },
-  quickReferenceCardTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  quickReferenceCardTitle: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
   quickReferenceCardCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
   quickJumpSection: { marginBottom: 14 },
   quickJumpRow: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 7 },
-  quickJumpChip: { minHeight: 34, maxWidth: "100%", borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 10, paddingVertical: 7, flexShrink: 1 },
+  quickJumpChip: {
+    minHeight: 34,
+    maxWidth: "100%",
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    flexShrink: 1,
+  },
   quickJumpChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
-  quickJumpChipText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15, textAlign: "center" },
+  quickJumpChipText: {
+    flexShrink: 1,
+    minWidth: 0,
+    color: nsnColors.text,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+    textAlign: "center",
+  },
   quickJumpChipTextActive: { color: "#FFFFFF" },
   eventAccordionStack: { gap: 13, marginBottom: 18 },
-  eventAccordion: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", overflow: "hidden" },
-  eventAccordionHeader: { minHeight: 68, flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingHorizontal: 15, paddingVertical: 12 },
-  eventAccordionTitleRow: { flex: 1, minWidth: 0, flexDirection: "row", alignItems: "center", gap: 10 },
-  eventAccordionIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  eventAccordion: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    overflow: "hidden",
+  },
+  eventAccordionHeader: {
+    minHeight: 68,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+  },
+  eventAccordionTitleRow: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  eventAccordionIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
   eventAccordionTitleBlock: { flex: 1, minWidth: 0 },
   eventAccordionTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   eventAccordionSummary: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   eventAccordionBody: { paddingHorizontal: 13, paddingBottom: 15 },
-  backToTopButton: { alignSelf: "center", minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 8 },
+  backToTopButton: {
+    alignSelf: "center",
+    minHeight: 38,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
   backToTopText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
-  mobileReadingGuideCard: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 10, marginBottom: 14 },
-  mobileReadingGuideHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  mobileReadingGuideCard: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    gap: 10,
+    marginBottom: 14,
+  },
+  mobileReadingGuideHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+  },
   mobileReadingGuideBody: { flex: 1, minWidth: 0 },
-  mobileReadingGuideKicker: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
-  mobileReadingGuideTitle: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21, marginTop: 1 },
+  mobileReadingGuideKicker: {
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
+  mobileReadingGuideTitle: {
+    color: nsnColors.text,
+    fontSize: 15,
+    fontWeight: "900",
+    lineHeight: 21,
+    marginTop: 1,
+  },
   mobileReadingGuideList: { gap: 5 },
-  mobileReadingGuideLine: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 19 },
-  mobileReadingGuideButton: { minHeight: 42, maxWidth: "100%", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 12, flexShrink: 1 },
-  mobileReadingGuideButtonText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
-  weatherCard: { minHeight: 78, flexDirection: "row", alignItems: "flex-start", gap: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 13, backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: "#284476", marginBottom: 19 },
+  mobileReadingGuideLine: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "800",
+    lineHeight: 19,
+  },
+  mobileReadingGuideButton: {
+    minHeight: 42,
+    maxWidth: "100%",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    flexShrink: 1,
+  },
+  mobileReadingGuideButtonText: {
+    flexShrink: 1,
+    minWidth: 0,
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 17,
+    textAlign: "center",
+  },
+  weatherCard: {
+    minHeight: 78,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    backgroundColor: nsnColors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: "#284476",
+    marginBottom: 19,
+  },
   weatherCopyBlock: { flex: 1, minWidth: 0 },
   weatherTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   weatherCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, maxWidth: 320 },
   weatherFallbackCopy: { marginTop: 4, maxWidth: 320, fontWeight: "800" },
-  weatherIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  weatherIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
   weatherIcon: { fontSize: 28 },
-  noiseGuideCard: { minHeight: 74, flexDirection: "row", alignItems: "flex-start", gap: 12, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 13, marginBottom: 16 },
-  noiseIconWrap: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  noiseGuideCard: {
+    minHeight: 74,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 13,
+    marginBottom: 16,
+  },
+  noiseIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
   noiseIcon: { fontSize: 21, lineHeight: 24 },
   noiseCopyBlock: { flex: 1, minWidth: 0 },
   noiseTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   noiseDescription: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 2 },
-  mediaComfortCard: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 9, marginBottom: 16 },
+  mediaComfortCard: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    gap: 9,
+    marginBottom: 16,
+  },
   mediaComfortHeader: { flexDirection: "row", alignItems: "center", gap: 10 },
-  mediaComfortIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  mediaComfortIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
   mediaComfortTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   mediaComfortCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   mediaComfortChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
-  mediaComfortChip: { maxWidth: "100%", color: "#D2E0FF", borderColor: "rgba(124,170,201,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 5, fontSize: 11, fontWeight: "900", lineHeight: 15, overflow: "hidden", backgroundColor: "rgba(124,170,201,0.1)" },
+  mediaComfortChip: {
+    maxWidth: "100%",
+    color: "#D2E0FF",
+    borderColor: "rgba(124,170,201,0.45)",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+    overflow: "hidden",
+    backgroundColor: "rgba(124,170,201,0.1)",
+  },
   dayMediaComfortChip: { color: "#445E93", borderColor: "#9AADE8", backgroundColor: "#EDF2FF" },
   mediaComfortNote: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, fontWeight: "700" },
-  sectionTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 23, marginBottom: 10 },
+  sectionTitle: {
+    color: nsnColors.text,
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 23,
+    marginBottom: 10,
+  },
   expectGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
-  expectCard: { width: "48%", minHeight: 82, borderRadius: 16, padding: 13, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border },
+  expectCard: {
+    width: "48%",
+    minHeight: 82,
+    borderRadius: 16,
+    padding: 13,
+    backgroundColor: nsnColors.surface,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
   expectIcon: { color: "#8FAFD1", fontSize: 18, marginBottom: 4 },
   expectTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 18 },
   expectCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 1 },
-  meetingPanel: { borderTopWidth: 1, borderColor: nsnColors.border, paddingTop: 14, marginTop: 2, marginBottom: 18 },
+  meetingPanel: {
+    borderTopWidth: 1,
+    borderColor: nsnColors.border,
+    paddingTop: 14,
+    marginTop: 2,
+    marginBottom: 18,
+  },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   meetingPrivacyCopy: { marginTop: 8, fontSize: 12, lineHeight: 18 },
-  meetupSupportPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, gap: 10, marginBottom: 14 },
+  meetupSupportPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    gap: 10,
+    marginBottom: 14,
+  },
   guidancePanelTight: { marginBottom: 2 },
   meetupSupportHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
-  meetupSupportIconWrap: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border },
+  meetupSupportIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
   meetupSupportChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
-  meetupReassuranceCard: { flexGrow: 1, flexBasis: 138, minHeight: 70, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 10, paddingVertical: 8, gap: 3 },
-  meetupSupportChip: { minHeight: 36, maxWidth: "100%", borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
+  meetupReassuranceCard: {
+    flexGrow: 1,
+    flexBasis: 138,
+    minHeight: 70,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 3,
+  },
+  meetupSupportChip: {
+    minHeight: 36,
+    maxWidth: "100%",
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
   meetupSupportChipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
-  meetupSupportChipText: { flexShrink: 1, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  meetupSupportChipText: {
+    flexShrink: 1,
+    color: nsnColors.text,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+  },
   meetupSupportChipTextActive: { color: "#FFFFFF" },
   meetupSupportSummary: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   meetupQuestionGroup: { gap: 6 },
-  meetupQuestionPhase: { color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
-  meetupQuestionChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 7 },
-  meetupQuestionText: { flexShrink: 1, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
-  meetupHelperResult: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(114,214,126,0.3)", backgroundColor: "rgba(114,214,126,0.1)", padding: 10 },
+  meetupQuestionPhase: {
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
+  meetupQuestionChip: {
+    minHeight: 34,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  meetupQuestionText: {
+    flexShrink: 1,
+    color: nsnColors.text,
+    fontSize: 11,
+    fontWeight: "900",
+    lineHeight: 15,
+  },
+  meetupHelperResult: {
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "rgba(114,214,126,0.3)",
+    backgroundColor: "rgba(114,214,126,0.1)",
+    padding: 10,
+  },
   practicalGuidanceList: { gap: 8 },
-  practicalGuidanceRow: { borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 10, paddingVertical: 9, gap: 3 },
-  softExitCard: { borderRadius: 18, backgroundColor: "rgba(255,255,255,0.04)", borderWidth: 1, borderColor: nsnColors.border, padding: 15, marginBottom: 18 },
+  practicalGuidanceRow: {
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    gap: 3,
+  },
+  softExitCard: {
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    padding: 15,
+    marginBottom: 18,
+  },
   daySoftExitCard: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
-  softExitTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20, marginBottom: 4 },
+  softExitTitle: {
+    color: nsnColors.text,
+    fontSize: 14,
+    fontWeight: "800",
+    lineHeight: 20,
+    marginBottom: 4,
+  },
   softExitCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
-  ctaReassurance: { color: nsnColors.muted, fontSize: 13, fontWeight: "800", lineHeight: 19, textAlign: "center", marginBottom: 9 },
-  safetyPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
+  ctaReassurance: {
+    color: nsnColors.muted,
+    fontSize: 13,
+    fontWeight: "800",
+    lineHeight: 19,
+    textAlign: "center",
+    marginBottom: 9,
+  },
+  safetyPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    marginBottom: 14,
+  },
   compactReadinessPanel: { marginTop: 2, marginBottom: 10 },
-  safetyHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 6, flexWrap: "wrap" },
-  safetyTitle: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  safetyHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 10,
+    marginBottom: 6,
+    flexWrap: "wrap",
+  },
+  safetyTitle: {
+    flexShrink: 1,
+    minWidth: 0,
+    color: nsnColors.text,
+    fontSize: 14,
+    fontWeight: "900",
+    lineHeight: 20,
+  },
   safetyCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
-  verificationChip: { flexShrink: 1, maxWidth: "100%", color: nsnColors.warning, borderColor: "rgba(247,200,91,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
+  verificationChip: {
+    flexShrink: 1,
+    maxWidth: "100%",
+    color: nsnColors.warning,
+    borderColor: "rgba(247,200,91,0.45)",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    fontSize: 11,
+    fontWeight: "900",
+    overflow: "hidden",
+  },
   verificationChipReady: { color: nsnColors.green, borderColor: "rgba(114,214,126,0.45)" },
   dayVerificationChip: { color: "#7C5A00", backgroundColor: "#FFF7D8", borderColor: "#D4A91E" },
-  dayVerificationChipReady: { color: "#0F6B2F", backgroundColor: "#E8F8EE", borderColor: "#55A96E" },
-  rsvpPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
-  rsvpStatusChip: { flexShrink: 1, maxWidth: "100%", color: nsnColors.day, borderColor: "rgba(124,170,201,0.45)", borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
+  dayVerificationChipReady: {
+    color: "#0F6B2F",
+    backgroundColor: "#E8F8EE",
+    borderColor: "#55A96E",
+  },
+  rsvpPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    marginBottom: 14,
+  },
+  rsvpStatusChip: {
+    flexShrink: 1,
+    maxWidth: "100%",
+    color: nsnColors.day,
+    borderColor: "rgba(124,170,201,0.45)",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    fontSize: 11,
+    fontWeight: "900",
+    overflow: "hidden",
+  },
   rsvpDescription: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 7 },
   rsvpActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
-  rsvpChoice: { minHeight: 40, maxWidth: "100%", flexGrow: 1, flexShrink: 1, flexBasis: 118, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 11, paddingVertical: 8 },
+  rsvpChoice: {
+    minHeight: 40,
+    maxWidth: "100%",
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 118,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 11,
+    paddingVertical: 8,
+  },
   rsvpChoiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
-  rsvpChoiceText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
+  rsvpChoiceText: {
+    flexShrink: 1,
+    minWidth: 0,
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 16,
+    textAlign: "center",
+  },
   rsvpChoiceTextActive: { color: "#FFFFFF" },
-  readinessPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14, gap: 12 },
+  readinessPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    marginBottom: 14,
+    gap: 12,
+  },
   readinessHeaderCopy: { flex: 1, minWidth: 0 },
   readinessList: { gap: 8 },
-  readinessRow: { minHeight: 72, flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 11, paddingVertical: 10 },
-  readinessIconWrap: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.05)", borderWidth: 1, borderColor: nsnColors.border, flexShrink: 0 },
+  readinessRow: {
+    minHeight: 72,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+  },
+  readinessIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    flexShrink: 0,
+  },
   readinessCopyBlock: { flex: 1, minWidth: 0 },
   readinessTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   readinessCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
-  optOutPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14, gap: 12 },
+  optOutPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    marginBottom: 14,
+    gap: 12,
+  },
   optOutActions: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  optOutChoice: { minHeight: 40, maxWidth: "100%", flexGrow: 1, flexShrink: 1, flexBasis: 142, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 10, paddingVertical: 8 },
-  optOutChoiceText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
-  optOutResult: { borderRadius: 14, borderWidth: 1, borderColor: "rgba(114,214,126,0.3)", backgroundColor: "rgba(114,214,126,0.1)", padding: 10 },
-  tutorialPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14, gap: 9 },
+  optOutChoice: {
+    minHeight: 40,
+    maxWidth: "100%",
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 142,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  optOutChoiceText: {
+    flexShrink: 1,
+    minWidth: 0,
+    color: nsnColors.text,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 16,
+    textAlign: "center",
+  },
+  optOutResult: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(114,214,126,0.3)",
+    backgroundColor: "rgba(114,214,126,0.1)",
+    padding: 10,
+  },
+  tutorialPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    marginBottom: 14,
+    gap: 9,
+  },
   tutorialCardList: { gap: 8 },
-  tutorialCard: { minHeight: 74, flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 11, paddingVertical: 10 },
-  dismissTutorialButton: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  joinButton: { minHeight: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary, paddingHorizontal: 16, paddingVertical: 10 },
+  tutorialCard: {
+    minHeight: 74,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+  },
+  dismissTutorialButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  joinButton: {
+    minHeight: 54,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: nsnColors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
   joinButtonLocked: { backgroundColor: "#3A4358" },
-  joinText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 21, textAlign: "center" },
-  spotsText: { color: nsnColors.muted, textAlign: "center", marginTop: 10, fontSize: 13, lineHeight: 19 },
-  feedbackPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginTop: 14 },
+  joinText: {
+    flexShrink: 1,
+    minWidth: 0,
+    color: nsnColors.text,
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 21,
+    textAlign: "center",
+  },
+  spotsText: {
+    color: nsnColors.muted,
+    textAlign: "center",
+    marginTop: 10,
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  feedbackPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    marginTop: 14,
+  },
   feedbackActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
-  feedbackButton: { flex: 1, minHeight: 38, borderRadius: 13, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.surfaceRaised, borderWidth: 1, borderColor: nsnColors.border },
+  feedbackButton: {
+    flex: 1,
+    minHeight: 38,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: nsnColors.surfaceRaised,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+  },
   feedbackButtonDanger: { borderColor: "rgba(255,119,119,0.45)" },
   feedbackButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900" },
-  copyFeedbackToast: { position: "absolute", left: 20, right: 20, bottom: 20, minHeight: 46, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0F1B2C", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 14 },
-  copyFeedbackText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
-  questionsPanel: { borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
+  copyFeedbackToast: {
+    position: "absolute",
+    left: 20,
+    right: 20,
+    bottom: 20,
+    minHeight: 46,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0F1B2C",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+  },
+  copyFeedbackText: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  questionsPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    marginBottom: 14,
+  },
   questionsCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginBottom: 10 },
   questionsList: { gap: 6 },
   questionText: { color: nsnColors.text, fontSize: 14, lineHeight: 20 },

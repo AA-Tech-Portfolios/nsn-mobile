@@ -18,15 +18,27 @@ For the real current state, including what is working, what is mocked, and what 
 
 NSN is currently a Sydney/North Shore alpha prototype for calmer first meetups: small groups, clear expectations, privacy-conscious profile controls, and local-only demo states that are easy to review with trusted testers.
 
-The screenshots below are checkpoint assets from the current prototype. They are presentation aids only; they do not imply production verification, live matching, emergency tooling, payments, or connected moderation systems.
+The screenshots below are checkpoint assets from the current prototype, captured from browser and mobile viewports in both Day and Night modes. They are presentation aids only; they do not imply production verification, live matching, emergency tooling, payments, or connected moderation systems.
 
-| Home discovery                                                     | Event details                                                             | Profile & privacy                                                     |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| ![NSN Home discovery screenshot](screenshots/home-web-desktop.png) | ![NSN Event Details screenshot](screenshots/checkpoint/event-details.png) | ![NSN Profile screenshot](screenshots/checkpoint/profile-privacy.png) |
+### Day Preview
 
-| Settings & Privacy                                                                     | Onboarding                                                                                     |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| ![NSN Settings and Privacy screenshot](screenshots/checkpoint/06-settings-privacy.png) | ![NSN onboarding welcome screenshot](screenshots/checkpoint/07-onboarding-stage-1-welcome.png) |
+| Screen             | Browser                                                                                                       | Mobile                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Home Discovery     | ![NSN Day Home Discovery browser screenshot](screenshots/visual-preview/day/home-discovery-browser.png)       | ![NSN Day Home Discovery mobile screenshot](screenshots/visual-preview/day/home-discovery-mobile.png)       |
+| Event Details      | ![NSN Day Event Details browser screenshot](screenshots/visual-preview/day/event-details-browser.png)         | ![NSN Day Event Details mobile screenshot](screenshots/visual-preview/day/event-details-mobile.png)         |
+| Profile & Privacy  | ![NSN Day Profile & Privacy browser screenshot](screenshots/visual-preview/day/profile-privacy-browser.png)   | ![NSN Day Profile & Privacy mobile screenshot](screenshots/visual-preview/day/profile-privacy-mobile.png)   |
+| Settings & Privacy | ![NSN Day Settings & Privacy browser screenshot](screenshots/visual-preview/day/settings-privacy-browser.png) | ![NSN Day Settings & Privacy mobile screenshot](screenshots/visual-preview/day/settings-privacy-mobile.png) |
+| Onboarding         | ![NSN Day Onboarding browser screenshot](screenshots/visual-preview/day/onboarding-browser.png)               | ![NSN Day Onboarding mobile screenshot](screenshots/visual-preview/day/onboarding-mobile.png)               |
+
+### Night Preview
+
+| Screen             | Browser                                                                                                           | Mobile                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Home Discovery     | ![NSN Night Home Discovery browser screenshot](screenshots/visual-preview/night/home-discovery-browser.png)       | ![NSN Night Home Discovery mobile screenshot](screenshots/visual-preview/night/home-discovery-mobile.png)       |
+| Event Details      | ![NSN Night Event Details browser screenshot](screenshots/visual-preview/night/event-details-browser.png)         | ![NSN Night Event Details mobile screenshot](screenshots/visual-preview/night/event-details-mobile.png)         |
+| Profile & Privacy  | ![NSN Night Profile & Privacy browser screenshot](screenshots/visual-preview/night/profile-privacy-browser.png)   | ![NSN Night Profile & Privacy mobile screenshot](screenshots/visual-preview/night/profile-privacy-mobile.png)   |
+| Settings & Privacy | ![NSN Night Settings & Privacy browser screenshot](screenshots/visual-preview/night/settings-privacy-browser.png) | ![NSN Night Settings & Privacy mobile screenshot](screenshots/visual-preview/night/settings-privacy-mobile.png) |
+| Onboarding         | ![NSN Night Onboarding browser screenshot](screenshots/visual-preview/night/onboarding-browser.png)               | ![NSN Night Onboarding mobile screenshot](screenshots/visual-preview/night/onboarding-mobile.png)               |
 
 NSN's tone should stay low-pressure and plain-spoken: people can browse quietly, decide later, keep profile details private, and treat every alpha action as feedback rather than a commitment.
 
@@ -170,6 +182,8 @@ See [`design.md`](design.md) for the broader interface plan and [`docs/brand-sys
 A lightweight future website can reuse these same prototype-safe messages:
 
 - Small meetups for big moments.
+- Supporting visual copy: Small moments. Big skies.
+- Optional mood line: Sometimes the best conversations start with simply showing up.
 - NSN is the Sydney/North Shore pilot for small, low-pressure local gatherings.
 - SoftHello is the broader product direction once the local learning is clearer.
 - Privacy and trust are design principles first; production safety, verification, matching, payments, and moderation claims should wait until those systems are real and reviewed.

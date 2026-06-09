@@ -6,6 +6,24 @@ const appUrl = process.env.SCREENSHOT_URL ?? "http://localhost:8081";
 const debugPort = Number(process.env.EDGE_DEBUG_PORT ?? 9333);
 const outputDir = resolve(process.cwd(), "screenshots");
 const edgeProfileDir = resolve(outputDir, `.edge-profile-${Date.now()}`);
+const screenshotClockScript = `
+(() => {
+  const fixedNow = Date.parse("2026-06-09T02:00:00.000Z");
+  const RealDate = Date;
+  class ScreenshotDate extends RealDate {
+    constructor(...args) {
+      super(...(args.length ? args : [fixedNow]));
+    }
+    static now() {
+      return fixedNow;
+    }
+  }
+  ScreenshotDate.UTC = RealDate.UTC;
+  ScreenshotDate.parse = RealDate.parse;
+  Object.setPrototypeOf(ScreenshotDate, RealDate);
+  globalThis.Date = ScreenshotDate;
+})();
+`;
 const edgeCandidates = [
   process.env.EDGE_PATH,
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
@@ -33,8 +51,12 @@ const viewports = [
 ];
 
 function findEdge() {
-  const candidate = edgeCandidates.find((path) => path && (path.includes("\\") || path.includes("/")) && existsSync(path));
-  return candidate ?? edgeCandidates.find((path) => path && !path.includes("\\") && !path.includes("/"));
+  const candidate = edgeCandidates.find(
+    (path) => path && (path.includes("\\") || path.includes("/")) && existsSync(path),
+  );
+  return (
+    candidate ?? edgeCandidates.find((path) => path && !path.includes("\\") && !path.includes("/"))
+  );
 }
 
 function delay(ms) {
@@ -82,7 +104,9 @@ async function waitForDebugServer() {
 }
 
 async function createPageTarget() {
-  const response = await fetch(`http://127.0.0.1:${debugPort}/json/new?about:blank`, { method: "PUT" });
+  const response = await fetch(`http://127.0.0.1:${debugPort}/json/new?about:blank`, {
+    method: "PUT",
+  });
 
   if (!response.ok) {
     throw new Error(`Could not create a browser target: ${response.status}`);
@@ -115,7 +139,9 @@ function createCdpClient(webSocketDebuggerUrl) {
   });
 
   socket.addEventListener("close", () => {
-    rejectPending(new Error("Browser DevTools WebSocket closed before the screenshot capture completed."));
+    rejectPending(
+      new Error("Browser DevTools WebSocket closed before the screenshot capture completed."),
+    );
   });
 
   socket.addEventListener("message", (event) => {
@@ -223,17 +249,21 @@ if (!edgePath) {
 
 mkdirSync(outputDir, { recursive: true });
 
-const edge = spawn(edgePath, [
-  "--headless=new",
-  "--disable-gpu",
-  "--hide-scrollbars",
-  `--remote-debugging-port=${debugPort}`,
-  `--user-data-dir=${edgeProfileDir}`,
-  "about:blank",
-], {
-  stdio: "ignore",
-  windowsHide: true,
-});
+const edge = spawn(
+  edgePath,
+  [
+    "--headless=new",
+    "--disable-gpu",
+    "--hide-scrollbars",
+    `--remote-debugging-port=${debugPort}`,
+    `--user-data-dir=${edgeProfileDir}`,
+    "about:blank",
+  ],
+  {
+    stdio: "ignore",
+    windowsHide: true,
+  },
+);
 
 const capturedPaths = [];
 
@@ -244,6 +274,7 @@ try {
   await client.open();
   await client.send("Page.enable");
   await client.send("Runtime.enable");
+  await client.send("Page.addScriptToEvaluateOnNewDocument", { source: screenshotClockScript });
 
   for (const viewport of viewports) {
     capturedPaths.push(await captureViewport(client, viewport));

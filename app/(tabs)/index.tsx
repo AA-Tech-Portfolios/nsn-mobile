@@ -7,6 +7,7 @@ import * as Location from "expo-location";
 import { defaultHomeSectionOrder, defaultHomeVisibleSections, getTranslationLanguageBase, type CardOutlineStyle, type GroupSizePreference, type HomeCardLayout, type HomeEventLayout, type HomeEventVisualMode, type HomeHeaderControlsDensity, type HomeLayoutDensity, type HomeSectionOrderKey, type HomeViewMode, type HomeVisibleSections, type NoiseLevelPreference, type PhotoRecordingComfortPreference, type SocialEnergyPreference, useAppSettings } from "@/lib/app-settings";
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
+import { SkyThemeAccent } from "@/components/sky-theme-accent";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { allEvents, dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
 import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAreaSuggestion, searchNsnEvents } from "@/lib/nsn-search";
@@ -1182,7 +1183,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeFitToScreen, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, largerTouchTargets, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeFitToScreen, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, largerTouchTargets, skyTheme, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -2797,6 +2798,8 @@ export default function HomeScreen() {
             </HeaderActionButton>
           </View>
         </View>
+
+        <SkyThemeAccent theme={skyTheme} isNightMode={isNightMode} variant="band" />
 
         <View style={[styles.localDashboardHeader, { borderRadius: homeLayoutPreset.heroRadius, paddingVertical: homeLayoutPreset.heroPaddingVertical, marginBottom: homeLayoutPreset.sectionGap }, shouldAutoFitDashboard && styles.localDashboardHeaderAutoFit, shouldAutoFitDashboard && { minHeight: viewportHeight <= 820 ? 54 : 76 }, isDay && styles.dayLocalDashboardHeader, outlinedCardStyle]}>
           <View style={[styles.localDashboardBody, shouldAutoFitDashboard && styles.localDashboardBodyAutoFit, isRtl && styles.rtlBlock]}>

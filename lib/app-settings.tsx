@@ -13,6 +13,12 @@ import {
 import type { NoiseLevel } from "./nsn-data";
 import { getBrandTheme, normalizeBrandThemeId, type BrandThemeId } from "./brand-theme";
 import {
+  defaultSkyThemeId,
+  getSkyTheme,
+  normalizeSkyThemeId,
+  type SkyThemeId,
+} from "./sky-themes";
+import {
   defaultCalendarMomentStates,
   defaultCalendarMomentVisibility,
   defaultCustomCalendarMoments,
@@ -1676,6 +1682,7 @@ export type OnboardingSnapshot = {
   appLanguage?: string;
   translationLanguage?: string;
   brandThemeId?: BrandThemeId;
+  skyThemeId?: SkyThemeId;
 };
 
 export type TimezoneSetting = {
@@ -2227,6 +2234,9 @@ type AppSettings = {
   brandThemeId: BrandThemeId;
   setBrandThemeId: (value: BrandThemeId) => void;
   brandTheme: ReturnType<typeof getBrandTheme>;
+  skyThemeId: SkyThemeId;
+  setSkyThemeId: (value: SkyThemeId) => void;
+  skyTheme: ReturnType<typeof getSkyTheme>;
   softSurfaces: boolean;
   setSoftSurfaces: (value: boolean) => void;
   clearBorders: boolean;
@@ -2511,6 +2521,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     useState<NsnLocalLanguage>(DEFAULT_NSN_LANGUAGE);
   const [appPalette, setAppPalette] = useState<AppPalette>(appPalettes[0]);
   const [brandThemeId, setBrandThemeIdState] = useState<BrandThemeId>("nsn");
+  const [skyThemeId, setSkyThemeIdState] = useState<SkyThemeId>(defaultSkyThemeId);
   const [softSurfaces, setSoftSurfaces] = useState(false);
   const [clearBorders, setClearBorders] = useState(false);
   const [timezone, setTimezone] = useState<TimezoneSetting>(defaultNsnTimezone);
@@ -2892,6 +2903,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
         setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
         setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
+        setSkyThemeIdState(normalizeSkyThemeId(snapshot.skyThemeId));
         setTimezone(normalizeTimezoneSetting(snapshot.timezone));
         setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
         setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
@@ -3268,6 +3280,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
+    setSkyThemeIdState(normalizeSkyThemeId(snapshot.skyThemeId));
     setTimezone(normalizeTimezoneSetting(snapshot.timezone));
     setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
     setDateFormatPreference(normalizeDateFormatPreference(snapshot.dateFormatPreference));
@@ -3301,6 +3314,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           preferredAgeMax: nextAgeRange.max,
           appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
           translationLanguage: normalizeNsnLanguage(snapshot.translationLanguage),
+          skyThemeId: normalizeSkyThemeId(snapshot.skyThemeId),
           homeHeaderControlsDensity: normalizeHomeHeaderControlsDensity(
             snapshot.homeHeaderControlsDensity,
           ),
@@ -3528,6 +3542,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       appLanguage,
       translationLanguage,
       brandThemeId,
+      skyThemeId,
       timezone,
       timeContextMode,
       dateFormatPreference,
@@ -3555,6 +3570,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     nextSnapshot.appLanguage = normalizeNsnLanguage(nextSnapshot.appLanguage);
     nextSnapshot.translationLanguage = normalizeNsnLanguage(nextSnapshot.translationLanguage);
     nextSnapshot.brandThemeId = normalizeBrandThemeId(nextSnapshot.brandThemeId);
+    nextSnapshot.skyThemeId = normalizeSkyThemeId(nextSnapshot.skyThemeId);
     nextSnapshot.timezone = normalizeTimezoneSetting(nextSnapshot.timezone);
     nextSnapshot.timeContextMode = normalizeTimeContextMode(nextSnapshot.timeContextMode);
     nextSnapshot.dateFormatPreference = normalizeDateFormatPreference(
@@ -4141,6 +4157,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     if (snapshot.brandThemeId !== undefined)
       setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
+    if (snapshot.skyThemeId !== undefined)
+      setSkyThemeIdState(normalizeSkyThemeId(snapshot.skyThemeId));
     if (snapshot.timezone !== undefined) setTimezone(normalizeTimezoneSetting(snapshot.timezone));
     if (snapshot.timeContextMode !== undefined)
       setTimeContextMode(normalizeTimeContextMode(snapshot.timeContextMode));
@@ -4191,6 +4209,12 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     const nextBrandThemeId = normalizeBrandThemeId(value);
     setBrandThemeIdState(nextBrandThemeId);
     saveSoftHelloMvpState({ brandThemeId: nextBrandThemeId });
+  };
+
+  const setSkyThemeId = (value: SkyThemeId) => {
+    const nextSkyThemeId = normalizeSkyThemeId(value);
+    setSkyThemeIdState(nextSkyThemeId);
+    saveSoftHelloMvpState({ skyThemeId: nextSkyThemeId });
   };
 
   useEffect(() => {
@@ -4628,6 +4652,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         brandThemeId,
         setBrandThemeId,
         brandTheme: getBrandTheme(brandThemeId),
+        skyThemeId,
+        setSkyThemeId,
+        skyTheme: getSkyTheme(skyThemeId),
         softSurfaces,
         setSoftSurfaces,
         clearBorders,

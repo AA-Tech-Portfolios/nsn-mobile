@@ -8,15 +8,17 @@ SoftShore remains historical naming exploration. It should not be positioned as 
 
 The shared tagline is: **Small meetups for big moments.**
 
+Supporting marketing or visual-preview copy can use: **Small moments. Big skies.** This should evoke the feeling behind NSN's calm local gatherings, not replace the official tagline. A longer optional mood line is: **Sometimes the best conversations start with simply showing up.**
+
 Repository, package, folder, bundle identifier, and broad code-symbol renames should be planned as separate future tasks.
 
 ## Naming Model
 
-| Name                     | Role                             | Use                                                                                                                                             |
-| ------------------------ | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name                     | Role                             | Use                                                                                                                                               |
+| ------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | North Shore Nights / NSN | Current Sydney/North Shore pilot | Current app copy, tester-facing docs, local prototype context, screenshots, repository/package continuity, and Sydney/North Shore alpha language. |
-| SoftHello                | Future broader product direction | Long-term product strategy, shared principles, future broader/global copy, neutral contributor context, and post-pilot planning.                 |
-| SoftShore                | Historical naming exploration    | Older planning docs or naming research only. Do not use as the current pilot name without a scoped naming decision.                              |
+| SoftHello                | Future broader product direction | Long-term product strategy, shared principles, future broader/global copy, neutral contributor context, and post-pilot planning.                  |
+| SoftShore                | Historical naming exploration    | Older planning docs or naming research only. Do not use as the current pilot name without a scoped naming decision.                               |
 
 ## Contributor Guidance
 
@@ -32,6 +34,8 @@ Repository, package, folder, bundle identifier, and broad code-symbol renames sh
 ## Prototype-Safe Copy
 
 - "Small meetups for big moments."
+- "Small moments. Big skies."
+- "Sometimes the best conversations start with simply showing up."
 - "NSN is the current Sydney/North Shore alpha pilot."
 - "Find small, low-pressure gatherings around the North Shore."
 - "Reach out gently, reconnect at your own pace, and keep privacy choices visible."

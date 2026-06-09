@@ -13,10 +13,19 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
-import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type ReactNode,
+} from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
+import { SkyThemeAccent } from "@/components/sky-theme-accent";
 import {
   appPalettes,
   communicationPreferenceOptions,
@@ -64,6 +73,7 @@ import {
 import { nsnColors } from "@/lib/nsn-data";
 import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { brandThemes, isSoftHelloThemeEnabled, type BrandThemeId } from "@/lib/brand-theme";
+import { skyThemes } from "@/lib/sky-themes";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { englishSettingsPrivacyCopy } from "@/lib/settings-privacy-copy";
 import {
@@ -105,7 +115,10 @@ const softRevealPaceOptions: { value: SoftRevealPace; label: string; copy: strin
   },
 ];
 const comfortModeOptions: { value: NsnComfortMode; copy: string }[] = [
-  { value: "Comfort Mode", copy: "Details stay blurred unless you choose to show more in prototype previews." },
+  {
+    value: "Comfort Mode",
+    copy: "Details stay blurred unless you choose to show more in prototype previews.",
+  },
   {
     value: "Warm Up Mode",
     copy: "Profiles are partly visible and can use a softer blur while warming up.",
@@ -3763,6 +3776,8 @@ export default function SettingsScreen() {
     brandThemeId,
     setBrandThemeId,
     brandTheme,
+    skyThemeId,
+    setSkyThemeId,
     softSurfaces,
     setSoftSurfaces,
     clearBorders,
@@ -4167,31 +4182,37 @@ export default function SettingsScreen() {
   const registerAccordionLayout = (id: SettingsAccordionId) => (event: LayoutChangeEvent) => {
     accordionOffsets.current[id] = event.nativeEvent.layout.y;
   };
-  const scrollToSectionOrAccordion = useCallback((id: SettingsSectionJumpId) => {
-    const accordionId = accordionByJumpSection[id];
-    const sectionY = sectionOffsets.current[id];
-    const accordionY = accordionOffsets.current[accordionId];
-    const y = typeof sectionY === "number" ? sectionY : accordionY;
-    if (typeof y !== "number") return;
+  const scrollToSectionOrAccordion = useCallback(
+    (id: SettingsSectionJumpId) => {
+      const accordionId = accordionByJumpSection[id];
+      const sectionY = sectionOffsets.current[id];
+      const accordionY = accordionOffsets.current[accordionId];
+      const y = typeof sectionY === "number" ? sectionY : accordionY;
+      if (typeof y !== "number") return;
 
-    scrollViewRef.current?.scrollTo({
-      y: Math.max(0, y - 8),
-      animated: !batterySaver && !reduceMotion,
-    });
-  }, [batterySaver, reduceMotion]);
-  const jumpToSection = useCallback((id: SettingsSectionJumpId) => {
-    const accordionId = accordionByJumpSection[id];
+      scrollViewRef.current?.scrollTo({
+        y: Math.max(0, y - 8),
+        animated: !batterySaver && !reduceMotion,
+      });
+    },
+    [batterySaver, reduceMotion],
+  );
+  const jumpToSection = useCallback(
+    (id: SettingsSectionJumpId) => {
+      const accordionId = accordionByJumpSection[id];
 
-    setOpenAccordionSections((current) =>
-      current.includes(accordionId) ? current : [...current, accordionId],
-    );
-    setHighlightedAccordionSection(accordionId);
+      setOpenAccordionSections((current) =>
+        current.includes(accordionId) ? current : [...current, accordionId],
+      );
+      setHighlightedAccordionSection(accordionId);
 
-    setTimeout(() => {
-      scrollToSectionOrAccordion(id);
-      setTimeout(() => setHighlightedAccordionSection(null), 1600);
-    }, 80);
-  }, [scrollToSectionOrAccordion]);
+      setTimeout(() => {
+        scrollToSectionOrAccordion(id);
+        setTimeout(() => setHighlightedAccordionSection(null), 1600);
+      }, 80);
+    },
+    [scrollToSectionOrAccordion],
+  );
   const renderSettingsAccordion = (id: SettingsAccordionId, children: ReactNode) => {
     if (!visibleSettingsAccordionIds.includes(id)) return null;
 
@@ -4761,31 +4782,92 @@ export default function SettingsScreen() {
           {copy.subtitle}
         </Text>
 
-        <View style={[styles.settingsTutorialPanel, isDay && styles.dayCard, highContrast && styles.highContrastCard]}>
-          <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>Tiny tutorial</Text>
-          <Text style={[styles.settingsTutorialTitle, isDay && styles.dayTitle, contrastTextStyle, isRtl && styles.rtlText]}>
+        <View
+          style={[
+            styles.settingsTutorialPanel,
+            isDay && styles.dayCard,
+            highContrast && styles.highContrastCard,
+          ]}
+        >
+          <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+            Tiny tutorial
+          </Text>
+          <Text
+            style={[
+              styles.settingsTutorialTitle,
+              isDay && styles.dayTitle,
+              contrastTextStyle,
+              isRtl && styles.rtlText,
+            ]}
+          >
             Comfort and visibility controls
           </Text>
           <View style={styles.settingsTutorialList}>
             {meetupTutorialCards
-              .filter((card) => (card.id === "comfort-modes" || card.id === "visibility-preview") && !dismissedTutorialIds.includes(card.id))
+              .filter(
+                (card) =>
+                  (card.id === "comfort-modes" || card.id === "visibility-preview") &&
+                  !dismissedTutorialIds.includes(card.id),
+              )
               .map((card) => (
-                <View key={card.id} style={[styles.settingsTutorialCard, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton, isRtl && styles.rtlRow]}>
+                <View
+                  key={card.id}
+                  style={[
+                    styles.settingsTutorialCard,
+                    isDay && styles.dayQuickJumpButton,
+                    highContrast && styles.highContrastButton,
+                    isRtl && styles.rtlRow,
+                  ]}
+                >
                   <View style={[styles.tutorialIconBubble, isDay && styles.dayIconButton]}>
-                    <IconSymbol name={card.iconName} color={isDay ? "#445E93" : nsnColors.day} size={18} />
+                    <IconSymbol
+                      name={card.iconName}
+                      color={isDay ? "#445E93" : nsnColors.day}
+                      size={18}
+                    />
                   </View>
                   <View style={styles.settingsTutorialCopy}>
-                    <Text style={[styles.settingsTutorialCardTitle, isDay && styles.dayLabel, contrastTextStyle, isRtl && styles.rtlText]}>{card.title}</Text>
-                    <Text style={[styles.settingsTutorialCardCopy, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>{card.copy}</Text>
+                    <Text
+                      style={[
+                        styles.settingsTutorialCardTitle,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {card.title}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.settingsTutorialCardCopy,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {card.copy}
+                    </Text>
                   </View>
                   <TouchableOpacity
                     activeOpacity={0.78}
-                    onPress={() => setDismissedTutorialIds((current) => (current.includes(card.id) ? current : [...current, card.id]))}
+                    onPress={() =>
+                      setDismissedTutorialIds((current) =>
+                        current.includes(card.id) ? current : [...current, card.id],
+                      )
+                    }
                     accessibilityRole="button"
                     accessibilityLabel={`Dismiss ${card.title}`}
-                    style={[styles.settingsTutorialDismiss, isDay && styles.dayQuickJumpButton, highContrast && styles.highContrastButton]}
+                    style={[
+                      styles.settingsTutorialDismiss,
+                      isDay && styles.dayQuickJumpButton,
+                      highContrast && styles.highContrastButton,
+                    ]}
                   >
-                    <IconSymbol name="xmark" color={isDay ? "#53677A" : nsnColors.muted} size={15} />
+                    <IconSymbol
+                      name="xmark"
+                      color={isDay ? "#53677A" : nsnColors.muted}
+                      size={15}
+                    />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -4793,8 +4875,16 @@ export default function SettingsScreen() {
           {meetupTutorialCards
             .filter((card) => card.id === "comfort-modes" || card.id === "visibility-preview")
             .every((card) => dismissedTutorialIds.includes(card.id)) ? (
-            <Text style={[styles.settingsTutorialCardCopy, isDay && styles.daySubtitle, contrastMutedStyle, isRtl && styles.rtlText]}>
-              Tutorial cards dismissed for this visit. No analytics or backend persistence is connected.
+            <Text
+              style={[
+                styles.settingsTutorialCardCopy,
+                isDay && styles.daySubtitle,
+                contrastMutedStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Tutorial cards dismissed for this visit. No analytics or backend persistence is
+              connected.
             </Text>
           ) : null}
         </View>
@@ -5156,7 +5246,8 @@ export default function SettingsScreen() {
                     isRtl && styles.rtlText,
                   ]}
                 >
-                  Choose whether Profile opens as a simpler social preview or the fuller detail view.
+                  Choose whether Profile opens as a simpler social preview or the fuller detail
+                  view.
                 </Text>
                 <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
                   {profileShortcutLayoutOptions.map((option) => {
@@ -5966,8 +6057,8 @@ export default function SettingsScreen() {
                     isRtl && styles.rtlText,
                   ]}
                 >
-                  Photo comfort, consent reminders, and local readiness previews stay grouped here so
-                  boundary actions remain calm and clear.
+                  Photo comfort, consent reminders, and local readiness previews stay grouped here
+                  so boundary actions remain calm and clear.
                 </Text>
                 <View style={[styles.settingsGroup, { marginTop: settingsLayout.optionGap }]}>
                   <Text
@@ -6178,8 +6269,8 @@ export default function SettingsScreen() {
                       ]}
                     >
                       Your contact/readiness preview can be shown without making your profile fully
-                      open. Prototype readiness preview only - no real verification provider is connected
-                      yet.
+                      open. Prototype readiness preview only - no real verification provider is
+                      connected yet.
                     </Text>
                     {renderSettingMeta("verifiedButPrivate")}
                   </View>
@@ -7452,6 +7543,109 @@ export default function SettingsScreen() {
                   })}
                 </View>
               </View>
+              <View
+                style={[
+                  styles.brandThemeBlock,
+                  styles.rowDivider,
+                  isDay && styles.dayRowDivider,
+                  highContrast && styles.highContrastDivider,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.label,
+                    largerText && styles.largeLabel,
+                    boldText && styles.boldInterfaceText,
+                    isDay && styles.dayLabel,
+                    contrastTextStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Sky Theme
+                </Text>
+                <Text
+                  style={[
+                    styles.helperText,
+                    largerText && styles.largeHelperText,
+                    isDay && styles.daySubtitle,
+                    contrastMutedStyle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Choose a gentle sky accent for headers and quiet moments. Your main screens stay
+                  clean and readable.
+                </Text>
+                <View style={styles.brandThemeGrid}>
+                  {skyThemes.map((theme) => {
+                    const active = skyThemeId === theme.id;
+
+                    return (
+                      <TouchableOpacity
+                        key={theme.id}
+                        activeOpacity={0.82}
+                        onPress={() => setSkyThemeId(theme.id)}
+                        style={[
+                          styles.brandThemeOption,
+                          { borderRadius: brandTheme.radius.control },
+                          isDay && styles.dayDropdownButton,
+                          active && { backgroundColor: paletteAccent, borderColor: paletteAccent },
+                        ]}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: active }}
+                        accessibilityLabel={`Sky Theme: ${theme.label}`}
+                        accessibilityHint={screenReaderHints ? theme.description : undefined}
+                      >
+                        <View style={styles.skyThemeSwatch}>
+                          {theme.id === "default" ? (
+                            <View
+                              style={[
+                                styles.brandThemeMark,
+                                active && styles.brandThemeMarkActive,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.brandThemeMarkText,
+                                  active && styles.blurLevelTextActive,
+                                ]}
+                              >
+                                NSN
+                              </Text>
+                            </View>
+                          ) : (
+                            <SkyThemeAccent
+                              theme={theme}
+                              isNightMode={isNightMode}
+                              variant="preview"
+                              style={styles.skyThemePreview}
+                            />
+                          )}
+                        </View>
+                        <View style={styles.settingCopy}>
+                          <Text
+                            style={[
+                              styles.dropdownOptionText,
+                              isDay && styles.dayLabel,
+                              active && styles.blurLevelTextActive,
+                            ]}
+                          >
+                            {theme.label}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.dropdownNativeText,
+                              isDay && styles.daySubtitle,
+                              active && styles.blurLevelTextActive,
+                            ]}
+                          >
+                            {theme.description}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
               {[
                 {
                   label: appearanceOptionCopy.softSurfaces,
@@ -8692,7 +8886,7 @@ const styles = StyleSheet.create({
     paddingBottom: 112,
   },
   dayContainer: {
-    backgroundColor: "#E8EDF2",
+    backgroundColor: "#FFFFFF",
   },
   backButton: {
     width: 42,
@@ -8704,7 +8898,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   dayIconButton: {
-    backgroundColor: "#EEF3F4",
+    backgroundColor: "#FFFFFF",
   },
   title: {
     color: nsnColors.text,
@@ -8741,8 +8935,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   dayQuickJumpBlock: {
-    backgroundColor: "#EEF3F4",
-    borderColor: "#C5D0DA",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D7E0EA",
   },
   quickJumpHeader: {
     flexDirection: "row",
@@ -8791,8 +8985,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   dayQuickJumpButton: {
-    backgroundColor: "#EEF3F4",
-    borderColor: "#C5D0DA",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D7E0EA",
   },
   quickJumpText: {
     flexShrink: 1,
@@ -8833,8 +9027,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   dayAccordionSection: {
-    backgroundColor: "#F4F7F8",
-    borderColor: "#9FB2C8",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D7E0EA",
   },
   accordionSectionHighlighted: {
     borderColor: "#D2E0FF",
@@ -9028,8 +9222,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   dayCard: {
-    backgroundColor: "#EEF3F4",
-    borderColor: "#C5D0DA",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D7E0EA",
   },
   highContrastCard: {
     borderColor: "#536C9E",
@@ -9379,8 +9573,8 @@ const styles = StyleSheet.create({
     flexDirection: "row-reverse",
   },
   dayDropdownButton: {
-    backgroundColor: "#E8EDF2",
-    borderColor: "#C5D0DA",
+    backgroundColor: "#FFFFFF",
+    borderColor: "#D7E0EA",
   },
   highContrastButton: {
     borderColor: "#536C9E",
@@ -9410,8 +9604,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#10213A",
   },
   dayDropdownMenu: {
-    borderColor: "#8EACD6",
-    backgroundColor: "#F7FBFF",
+    borderColor: "#D7E0EA",
+    backgroundColor: "#FFFFFF",
   },
   dropdownMenuContent: {
     paddingVertical: 6,
@@ -9440,9 +9634,9 @@ const styles = StyleSheet.create({
     writingDirection: "rtl",
   },
   dayLanguageSearchInput: {
-    borderColor: "#8EACD6",
+    borderColor: "#D7E0EA",
     color: "#0B1220",
-    backgroundColor: "#E8EDF2",
+    backgroundColor: "#FFFFFF",
   },
   dropdownOption: {
     minHeight: 50,
@@ -9652,6 +9846,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "900",
   },
+  skyThemeSwatch: {
+    width: 58,
+  },
+  skyThemePreview: {
+    marginBottom: 0,
+    minHeight: 42,
+  },
   comfortModeGrid: {
     gap: 10,
   },
@@ -9765,8 +9966,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   dayConfirmDialog: {
-    borderColor: "#C5D0DA",
-    backgroundColor: "#F7FBFF",
+    borderColor: "#D7E0EA",
+    backgroundColor: "#FFFFFF",
   },
   confirmTitle: {
     color: nsnColors.text,
