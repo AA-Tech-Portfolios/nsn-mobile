@@ -121,12 +121,14 @@ const visualPreviewScreens = [
     path: "/profile",
     snapshot: profileSnapshot,
     wait: "Privacy and visibility",
+    visualScrollY: { browser: 320, mobile: 260 },
   },
   {
     name: "settings-privacy",
     path: "/settings",
     snapshot: profileSnapshot,
     wait: "Settings & Privacy",
+    visualScrollY: { browser: 560, mobile: 260 },
   },
   {
     name: "onboarding",
@@ -297,6 +299,25 @@ async function capture(client, name) {
   return outputPath;
 }
 
+async function scrollVisualPreview(client, scrollY) {
+  if (!scrollY) return;
+
+  await client.send("Runtime.evaluate", {
+    expression: `
+      (() => {
+        const scrollY = ${Number(scrollY)};
+        const candidates = [document.scrollingElement, ...document.querySelectorAll("*")]
+          .filter((element) => element && element.scrollHeight > element.clientHeight + 40)
+          .sort((a, b) => (b.scrollHeight - b.clientHeight) - (a.scrollHeight - a.clientHeight));
+        const target = candidates[0] ?? document.scrollingElement;
+        if (target) target.scrollTo({ top: scrollY, behavior: "instant" });
+        window.scrollTo({ top: scrollY, behavior: "instant" });
+      })();
+    `,
+  });
+  await delay(650);
+}
+
 const edgePath = findEdge();
 if (!edgePath) throw new Error("Could not find Microsoft Edge, Chrome, or Chromium.");
 
@@ -364,6 +385,11 @@ try {
       await client.send("Emulation.setDeviceMetricsOverride", previewViewport);
       await navigateAndWait(client, `${appUrl}${previewScreen.path}`);
       await waitForText(client, previewScreen.wait);
+      const previewScrollY =
+        typeof previewScreen.visualScrollY === "number"
+          ? previewScreen.visualScrollY
+          : previewScreen.visualScrollY?.[previewViewport.label] ?? 0;
+      await scrollVisualPreview(client, previewScrollY);
       const screenshot = await client.send("Page.captureScreenshot", {
         format: "png",
         captureBeyondViewport: false,

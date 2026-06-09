@@ -1014,7 +1014,7 @@ function Summary({ label, value, isDay }: { label: string; value: string; isDay:
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayScreen: { backgroundColor: "#FFFFFF" },
+  dayScreen: { backgroundColor: "#FAFBFC" },
   content: { paddingHorizontal: 22, paddingTop: 22, paddingBottom: 36, gap: 16 },
   brandLockup: { alignItems: "center" },
   logoMark: {
@@ -1196,6 +1196,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 54,
     borderRadius: 17,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#1BB6C8",
     backgroundColor: nsnColors.primary,
     alignItems: "center",
     justifyContent: "center",

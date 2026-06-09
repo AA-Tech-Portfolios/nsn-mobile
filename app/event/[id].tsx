@@ -4478,6 +4478,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: nsnColors.primary,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#1BB6C8",
     paddingHorizontal: 16,
     paddingVertical: 10,
   },

@@ -190,7 +190,7 @@ export default function AlphaWalkthroughScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayContainer: { backgroundColor: "#E8EDF2" },
+  dayContainer: { backgroundColor: "#FAFBFC" },
   content: { width: "100%", maxWidth: 720, alignSelf: "center", padding: 20, paddingBottom: 36 },
   backButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.04)", marginBottom: 12 },
   dayIconButton: { backgroundColor: "#EEF3F4" },
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   dayMutedText: { color: "#53677A" },
   dayAccentText: { color: "#445E93" },
   progressCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 14, marginBottom: 12 },
-  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
+  dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   progressText: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
   progressTrack: { height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.08)", overflow: "hidden" },
   dayProgressTrack: { backgroundColor: "#C7D8F0" },
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   stepCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   localAreaNote: { borderRadius: 14, borderWidth: 1, borderColor: "rgba(247,200,91,0.45)", backgroundColor: "rgba(247,200,91,0.12)", color: "#F7C85B", fontSize: 12, fontWeight: "800", lineHeight: 18, padding: 11, marginTop: 12 },
   dayLocalAreaNote: { backgroundColor: "#FFF7D8", borderColor: "#D4A91E", color: "#7C5A00" },
-  primaryButton: { alignSelf: "flex-start", maxWidth: "100%", minHeight: 44, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 16, marginTop: 16 },
+  primaryButton: { alignSelf: "flex-start", maxWidth: "100%", minHeight: 44, borderRadius: 15, borderWidth: StyleSheet.hairlineWidth, borderColor: "#1BB6C8", backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 16, marginTop: 16 },
   primaryButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
   stepList: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 14 },
   stepPill: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },

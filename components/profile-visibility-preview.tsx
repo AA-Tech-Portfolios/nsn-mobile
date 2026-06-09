@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "center",
   },
-  dayCard: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
+  dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   header: { flexDirection: "row", alignItems: "center", gap: 12 },
   identity: { flex: 1 },
   name: { color: nsnColors.text, fontSize: 16, fontWeight: "900", lineHeight: 22 },

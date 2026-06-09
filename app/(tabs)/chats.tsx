@@ -3300,7 +3300,7 @@ export default function ChatsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background, paddingHorizontal: 18 },
-  dayContainer: { backgroundColor: "#E8EDF2" },
+  dayContainer: { backgroundColor: "#FAFBFC" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -3557,7 +3557,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 13,
     marginBottom: 18,
   },
-  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
+  dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   systemText: { color: nsnColors.text, textAlign: "center", fontSize: 12, lineHeight: 17 },
   systemSubtext: { color: nsnColors.muted, textAlign: "center", fontSize: 12, lineHeight: 17 },
   trustGateCard: {
