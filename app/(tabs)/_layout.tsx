@@ -111,8 +111,8 @@ export default function TabLayout() {
           paddingTop: 8,
           paddingBottom: bottomSafeArea + 14,
           overflow: "visible",
-          backgroundColor: reduceTransparency ? (isDay ? "#F8F6EE" : "#0B1626") : isDay ? "#ECEFE6" : nsnColors.background,
-          borderTopColor: clearBorders ? (isDay ? "#7E95AA" : "#5A6EA5") : softSurfaces ? (isDay ? "#E7EBDD" : "rgba(148,163,184,0.18)") : isDay ? "#B9C6C0" : nsnColors.border,
+          backgroundColor: reduceTransparency ? (isDay ? "#FFFFFF" : "#0B1626") : isDay ? "#FAFBFC" : nsnColors.background,
+          borderTopColor: clearBorders ? (isDay ? "#6F89A8" : "#5A6EA5") : softSurfaces ? (isDay ? "#E6EDF5" : "rgba(148,163,184,0.18)") : isDay ? "#D8E1EA" : nsnColors.border,
           borderTopWidth: clearBorders ? 1.5 : softSurfaces ? 0.6 : 0.8,
         },
       }}

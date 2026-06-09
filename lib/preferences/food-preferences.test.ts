@@ -33,4 +33,11 @@ describe("food and beverage preferences", () => {
     expect(searchFoodBeveragePreferences("confectionery").map((option) => option.label)).toContain("Gummies");
     expect(searchFoodBeveragePreferences("sugar-free").map((option) => option.label)).toEqual(expect.arrayContaining(["Sugar-free", "Sugar-free sweets"]));
   });
+
+  it("uses a hot-dog style emoji for sausages while keeping the label", () => {
+    expect(getFoodBeverageOptionsByGroup("casualMeals").find((option) => option.id === "sausages")).toMatchObject({
+      label: "Sausages",
+      icon: "🌭",
+    });
+  });
 });

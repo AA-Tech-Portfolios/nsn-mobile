@@ -10,6 +10,6 @@ describe("app status bar style", () => {
 
   it("keeps the initial status bar background aligned with the app theme", () => {
     expect(getAppStatusBarBackgroundColor(true)).toBe("#020814");
-    expect(getAppStatusBarBackgroundColor(false)).toBe("#ECEFE6");
+    expect(getAppStatusBarBackgroundColor(false)).toBe("#FAFBFC");
   });
 });

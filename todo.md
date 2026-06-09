@@ -44,7 +44,7 @@ These labels are a prioritisation pass for the outstanding backlog. They do not 
 - [ ] 🟠 Add a real trust-state backend before treating verification or privacy gates as production systems
 - [ ] 🟠 Continue suburb/locality refinement with an API-backed or maintained Australian locality dataset
 - [ ] 🟠 Add real Sydney/OpenStreetMap integration with proper attribution and no paid map-key dependency
-- [ ] 🟠 Add lightweight transportation and routing support with nearby stops, estimated travel time, suggested arrival windows, selected-event map focus, and links out to maps
+- [ ] 🟠 Add lightweight Arrival & Transport Confidence support on meetup details with local notes/tags for nearby stops, parking, short walks, step-free/well-lit routes, late arrival, leaving early, and safe return confidence; see `docs/user-experience-roadmap.md`. Do not add live route planning or real-time transport APIs yet
 - [ ] 🟠 Add profile photo crop, resize, filter, blur, and privacy-control tools after real upload/storage decisions are made
 
 ### 🔴 Future / Planning Only

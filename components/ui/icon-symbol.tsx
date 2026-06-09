@@ -93,8 +93,12 @@ const renderIconShape = (name: IconSymbolName, { color, strokeWidth }: IconShape
     case "settings":
       return (
         <>
-          <Circle cx="12" cy="12" r="3.2" {...strokeProps} />
-          <Path d="M12 3.7v2.1M12 18.2v2.1M4.8 7.1l1.8 1.1M17.4 15.8l1.8 1.1M4.8 16.9l1.8-1.1M17.4 8.2l1.8-1.1" {...strokeProps} />
+          <Line x1="5" y1="7" x2="19" y2="7" {...strokeProps} />
+          <Line x1="5" y1="12" x2="19" y2="12" {...strokeProps} />
+          <Line x1="5" y1="17" x2="19" y2="17" {...strokeProps} />
+          <Circle cx="14.5" cy="7" r="1.7" {...strokeProps} />
+          <Circle cx="8.5" cy="12" r="1.7" {...strokeProps} />
+          <Circle cx="15.5" cy="17" r="1.7" {...strokeProps} />
         </>
       );
     case "sliders":

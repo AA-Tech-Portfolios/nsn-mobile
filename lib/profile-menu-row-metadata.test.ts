@@ -76,7 +76,7 @@ describe("profile menu row metadata", () => {
   it("can switch preference row copy between simple and detailed text", () => {
     expect(getUserPreferenceRowDescription("comfort", "Simple")).toBe("Privacy, visibility, and meeting comfort.");
     expect(getUserPreferenceRowDescription("comfort", "Detailed")).toBe(
-      "Privacy, profile visibility, social energy, communication, group size, photo comfort, and local-only meeting preferences."
+      "Privacy, visibility, social energy, communication, group size, and photo comfort."
     );
     expect(getUserPreferenceRowDescription("personality", "Simple")).toBe("Optional human context.");
     expect(getUserPreferenceRowDescription("food", "Simple")).toBe("Food, drinks, and dietary comfort.");

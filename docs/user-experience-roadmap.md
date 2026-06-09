@@ -38,6 +38,52 @@ Future work:
 - Optional atmosphere features such as music, widgets, wallpapers, or gentle prompts.
 - Careful testing to ensure personalisation does not become pressure.
 
+## Arrival & Transport Confidence
+
+Planning only. Sydney users may want to attend a meetup but hesitate because getting there feels uncertain, stressful, or hard to recover from if something changes. NSN should reduce that confidence barrier without becoming a full transport-planning app.
+
+Future meetup detail pages could include a lightweight "Arrival & Transport" or "Getting There" section that answers practical questions before someone commits:
+
+- How do I get there?
+- Is it near a train station or bus stop?
+- Is parking available?
+- How long is the walk?
+- What if I arrive late?
+- Will I be able to get home safely?
+- Is the route simple, well-lit, or step-free?
+
+Possible prototype metadata/tags:
+
+- Near train station
+- Nearby bus stop
+- Easy public transport
+- Parking nearby
+- Short walk
+- Step-free access
+- Well-lit arrival route
+- Late transport available
+- Easy to leave early
+- Rideshare/taxi pickup nearby
+
+Example section copy:
+
+> Getting there should feel simple. This meetup includes arrival notes so you can decide whether the location feels manageable before you go.
+
+Example event notes:
+
+- 7 min walk from Chatswood Station
+- Nearby buses on Victoria Ave
+- Westfield parking nearby
+- It is okay to arrive a little late
+- Leave whenever you need - no explanation required
+
+Constraints:
+
+- Do not build live route planning yet.
+- Do not integrate real-time transport APIs yet.
+- Treat this as prototype/local event metadata and UX copy until product, safety, accessibility, and privacy expectations are clearer.
+- Keep the tone low-pressure and confidence-building: help people decide whether the trip feels manageable without implying NSN guarantees safety, transport availability, lighting, accessibility, or exact route conditions.
+
 ## Future Guides & Tips Preferences
 
 Planning only. NSN may later offer optional guidance levels so people can choose how much contextual help they want:

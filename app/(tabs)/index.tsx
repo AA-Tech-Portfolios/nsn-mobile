@@ -145,7 +145,7 @@ const homeDensityOptions: { value: HomeLayoutDensity; icon: string; label: strin
 
 const homeHeaderControlDensityOptions: { value: HomeHeaderControlsDensity; icon: ComponentProps<typeof IconSymbol>["name"]; label: string; copy: string }[] = [
   { value: "Compact", icon: "ellipsis", label: "Compact", copy: "Smallest header buttons" },
-  { value: "Comfortable", icon: "settings", label: "Comfortable", copy: "Balanced spacing" },
+  { value: "Comfortable", icon: "sliders", label: "Comfortable", copy: "Balanced spacing" },
   { value: "Spacious", icon: "palette", label: "Spacious", copy: "Larger tap targets" },
 ];
 
@@ -1904,7 +1904,7 @@ export default function HomeScreen() {
 
     const animatedScreenColor = modeTransition.interpolate({
       inputRange: [0, 1],
-      outputRange: ["#0B1626", "#ECEFE6"],
+      outputRange: ["#0B1626", "#FAFBFC"],
     });
 
     const modeGlowOpacity = modePulse.interpolate({
@@ -2793,7 +2793,7 @@ export default function HomeScreen() {
               isDay={isDay}
               density={homeHeaderControlsDensity}
             >
-              <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={headerIconSize} />
+              <IconSymbol name="sliders" color={isDay ? "#0B1220" : nsnColors.text} size={headerIconSize} />
             </HeaderActionButton>
           </View>
         </View>
@@ -3108,7 +3108,7 @@ export default function HomeScreen() {
                 accessibilityHint="Disabled for the alpha while the mobile Home layout is simplified."
                 style={[styles.homeControlChip, styles.homePanelNavChip, homeLayoutChipStyle, isDay && styles.dayLocationResultButton, !alphaHomeCustomizationEnabled && styles.disabledMoveButton]}
               >
-                <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
+                <IconSymbol name="sliders" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
                 <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Customise Home paused</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -3137,7 +3137,7 @@ export default function HomeScreen() {
                   accessibilityLabel="Open Home Preferences"
                   style={[styles.homeControlChip, styles.homePanelNavChip, homeLayoutChipStyle, isDay && styles.dayLocationResultButton]}
                 >
-                  <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
+                  <IconSymbol name="sliders" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
                   <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Home Preferences</Text>
                 </TouchableOpacity>
               </View>
@@ -3213,7 +3213,7 @@ export default function HomeScreen() {
                     accessibilityLabel="Open Home Preferences"
                     style={[styles.homeControlChip, styles.homePanelNavChip, homeLayoutChipStyle, isDay && styles.dayLocationResultButton]}
                   >
-                    <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
+                    <IconSymbol name="sliders" color={isDay ? "#445E93" : "#C7B07A"} size={16} />
                     <Text style={[styles.homeControlChipText, isDay && styles.dayHeadingText]}>Home Preferences</Text>
                   </TouchableOpacity>
                 </View>
@@ -3544,37 +3544,37 @@ export default function HomeScreen() {
 // Styling
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#0B1626" },
-  dayScreen: { backgroundColor: "#ECEFE6" },
+  dayScreen: { backgroundColor: "#FAFBFC" },
   animatedScreen: { flex: 1 },
   scrollSurface: { flex: 1, backgroundColor: "transparent" },
   scrollSurfaceLocked: { overflow: "hidden" },
   modeGlow: { position: "absolute", top: -58, alignSelf: "center", width: 230, height: 230, borderRadius: 115 },
-  dayBellButton: {backgroundColor: "#F8F6EE", },
+  dayBellButton: { backgroundColor: "#FFFFFF", borderColor: "#C6D3E0" },
   dayBellText: { color: "#0B1220", },
-  dayCard: { backgroundColor: "#F8F6EE", borderColor: "#B9C6C0", },
+  dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA", },
   dayHeadingText: { color: "#0B1220", },
   dayLinkText: { color: "#445E93", },
   dayMutedText: { color: "#53677A", },
   outlineMinimal: { borderWidth: 1, borderColor: "#2A3C59" },
   outlineStandard: { borderWidth: 1.25, borderColor: "#4D6794" },
   outlineStrong: { borderWidth: 1.75, borderColor: "#7890B8" },
-  dayOutlineMinimal: { borderWidth: 1, borderColor: "#B9C6C0" },
-  dayOutlineStandard: { borderWidth: 1.25, borderColor: "#A7B7C2" },
-  dayOutlineStrong: { borderWidth: 1.75, borderColor: "#7E95AA" },
+  dayOutlineMinimal: { borderWidth: 1, borderColor: "#D8E1EA" },
+  dayOutlineStandard: { borderWidth: 1.25, borderColor: "#C6D3E0" },
+  dayOutlineStrong: { borderWidth: 1.75, borderColor: "#6F89A8" },
   buttonOutlineMinimal: { borderWidth: 1, borderColor: "#38527C" },
   buttonOutlineStandard: { borderWidth: 1.25, borderColor: "#5F79A9" },
   buttonOutlineStrong: { borderWidth: 1.5, borderColor: "#7890B8" },
-  dayButtonOutlineMinimal: { borderWidth: 1, borderColor: "#B9C6C0" },
-  dayButtonOutlineStandard: { borderWidth: 1.25, borderColor: "#A7B7C2" },
-  dayButtonOutlineStrong: { borderWidth: 1.5, borderColor: "#7E95AA" },
-  dayLivePreview: { borderColor: "#B9C6C0", backgroundColor: "#F2F0E7" },
-  dayPill: { backgroundColor: "#FBFAF5", borderColor: "#B9C6C0", },
+  dayButtonOutlineMinimal: { borderWidth: 1, borderColor: "#D8E1EA" },
+  dayButtonOutlineStandard: { borderWidth: 1.25, borderColor: "#C6D3E0" },
+  dayButtonOutlineStrong: { borderWidth: 1.5, borderColor: "#6F89A8" },
+  dayLivePreview: { borderColor: "#D8E1EA", backgroundColor: "#F4F7FA" },
+  dayPill: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA", },
   dayPillActive: { backgroundColor: "#536C9E", borderColor: "#536C9E", },
   dayPillText: { color: "#0B1220", },
   dayPillTextActive: { color: "#FFFFFF", },
   dayText: { color: "#1E252C", },
-  dayNoiseLevelItem: { backgroundColor: "#F8F6EE", borderColor: "#B9C6C0" },
-  dayNoiseLevelItemActive: { backgroundColor: "#E8EEE6", borderColor: "#7E95AA" },
+  dayNoiseLevelItem: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
+  dayNoiseLevelItemActive: { backgroundColor: "#EAF1FA", borderColor: "#6F89A8" },
   content: { paddingHorizontal: 18, paddingTop: 12, paddingBottom: 112 },
   contentCompact: { paddingTop: 6, paddingBottom: 96 },
   contentSpacious: { paddingTop: 14, paddingBottom: 126 },
@@ -3588,16 +3588,16 @@ const styles = StyleSheet.create({
   headerActionButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "#163F8D" },
   headerActionButtonCompact: { width: 38, height: 38, borderRadius: 19 },
   headerActionButtonSpacious: { width: 46, height: 46, borderRadius: 23 },
-  headerModeToggle: { height: 42, flexDirection: "row", gap: 4, borderRadius: 21, padding: 4, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#38527C" },
+  headerModeToggle: { height: 42, flexDirection: "row", gap: 4, borderRadius: 21, padding: 4, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#5F79A9" },
   headerModeToggleCompact: { height: 38, borderRadius: 19, padding: 3 },
   headerModeToggleSpacious: { height: 46, borderRadius: 23, padding: 5 },
   headerModeToggleOption: { width: 34, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   headerModeToggleOptionCompact: { width: 31, height: 30, borderRadius: 15 },
   headerModeToggleOptionSpacious: { width: 36, height: 34, borderRadius: 17 },
-  headerModeToggleIcon: { color: "#FFFFFF", fontSize: 16, fontWeight: "900", lineHeight: 20 },
+  headerModeToggleIcon: { color: "#FFFFFF", fontSize: 16, fontWeight: "900", lineHeight: 22, textAlign: "center" },
   localDashboardHeader: { alignItems: "center", justifyContent: "center", borderRadius: 24, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#0F2340", paddingHorizontal: 20, paddingVertical: 18, marginBottom: 12 },
   localDashboardHeaderAutoFit: { paddingVertical: 6, marginBottom: 6 },
-  dayLocalDashboardHeader: { backgroundColor: "#F8F6EE", borderColor: "#A7B7C2" },
+  dayLocalDashboardHeader: { backgroundColor: "#FFFFFF", borderColor: "#C6D3E0" },
   localDashboardBody: { alignItems: "center", minWidth: 0 },
   localDashboardBodyAutoFit: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "center", gap: 14 },
   localDashboardKicker: { color: "#A8B7DA", fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase", marginBottom: 5 },
@@ -3616,7 +3616,7 @@ const styles = StyleSheet.create({
   homeControlsSummaryCard: { flexDirection: "row", alignItems: "center", gap: 10, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 14, paddingVertical: 11, marginBottom: 16 },
   homeSummaryChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 6 },
   homeSummaryChip: { maxWidth: 142, borderRadius: 999, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", color: nsnColors.muted, fontSize: 10, fontWeight: "900", lineHeight: 14, paddingHorizontal: 8, paddingVertical: 3, overflow: "hidden" },
-  daySummaryChip: { borderColor: "#B9C6C0", backgroundColor: "#F2F0E7", color: "#53677A" },
+  daySummaryChip: { borderColor: "#D8E1EA", backgroundColor: "#F4F7FA", color: "#53677A" },
   homeSummaryAdjustButton: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
   homeSummaryAdjustText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   homeCollapseButton: { minHeight: 34, borderRadius: 17, borderWidth: 1, borderColor: "#7890B8", backgroundColor: "rgba(31,78,154,0.18)", paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
@@ -3707,7 +3707,7 @@ const styles = StyleSheet.create({
   layoutPreviewLayered: { alignItems: "center", justifyContent: "center" },
   layoutPreviewMagazine: { flexDirection: "row", gap: 5 },
   layoutPreviewBlock: { backgroundColor: "#7890B8", borderRadius: 3 },
-  dayLayoutPreviewBlock: { backgroundColor: "#7E95AA" },
+  dayLayoutPreviewBlock: { backgroundColor: "#6F89A8" },
   layoutPreviewBlockActive: { backgroundColor: "#FFFFFF" },
   layoutPreviewTallBlock: { width: 13, height: 27 },
   layoutPreviewGridBlock: { width: 18, height: 14 },
@@ -3728,7 +3728,7 @@ const styles = StyleSheet.create({
   homeSectionOrderMeta: { color: "#A8B7DA", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 1 },
   homeSectionRowControls: { flexDirection: "row", alignItems: "center", gap: 7 },
   homeSectionToggle: { minHeight: 34, flex: 1, borderRadius: 12, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 10, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center" },
-  daySectionToggle: { backgroundColor: "#F2F0E7", borderColor: "#A7B7C2" },
+  daySectionToggle: { backgroundColor: "#F4F7FA", borderColor: "#C6D3E0" },
   homeSectionToggleActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
   homeSectionVisibilityButton: { minHeight: 32, minWidth: 70, borderRadius: 12, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
   homeSectionVisibilityButtonActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
@@ -3737,17 +3737,17 @@ const styles = StyleSheet.create({
   homeSectionMoveButton: { width: 32, height: 32, borderRadius: 12, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" },
   disabledMoveButton: { opacity: 0.56 },
   homeUpdateNotice: { color: "#A8B7DA", fontSize: 11, fontWeight: "900", lineHeight: 15 },
-  dayHeaderPlaceholderCard: { borderColor: "#B9C6C0", backgroundColor: "#F8F6EE" },
+  dayHeaderPlaceholderCard: { borderColor: "#D8E1EA", backgroundColor: "#FFFFFF" },
   headerPlaceholderBody: { flex: 1, minWidth: 0 },
   headerPlaceholderTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   headerPlaceholderCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   headerPlaceholderDismiss: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
-  dayHeaderPlaceholderDismiss: { borderColor: "#B9C6C0" },
+  dayHeaderPlaceholderDismiss: { borderColor: "#D8E1EA" },
   headerPlaceholderDismissText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
   locationSearchCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", padding: 14, marginBottom: 12, gap: 12 },
   locationSearchHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   locationInputWrap: { minHeight: 44, borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 12, flexDirection: "row", alignItems: "center", gap: 8 },
-  dayLocationInputWrap: { backgroundColor: "#F8F6EE", borderColor: "#B9C6C0" },
+  dayLocationInputWrap: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   locationInput: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "700", paddingVertical: 8 },
   detectLocationButton: { minHeight: 42, borderRadius: 14, backgroundColor: "#536C9E", paddingHorizontal: 13, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   detectLocationButtonDisabled: { opacity: 0.72 },
@@ -3769,15 +3769,15 @@ const styles = StyleSheet.create({
   mapPreviewCard: { flexDirection: "row", alignItems: "flex-start", gap: 10, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 11, paddingVertical: 10 },
   locationResultButton: { borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, paddingVertical: 8 },
   meetupSearchResultButton: { backgroundColor: "rgba(255,255,255,0.035)" },
-  dayLocationResultButton: { backgroundColor: "#F8F6EE", borderColor: "#B9C6C0" },
+  dayLocationResultButton: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   activeLocationResultButton: { borderColor: "#C7B07A", backgroundColor: "#172A5C" },
-  dayActiveLocationResultButton: { borderColor: "#7E95AA", backgroundColor: "#E8EEE6" },
+  dayActiveLocationResultButton: { borderColor: "#6F89A8", backgroundColor: "#EAF1FA" },
   locationResultTitle: { minWidth: 0, color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   locationResultMeta: { minWidth: 0, color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 3 },
   activeLocationResultText: { color: nsnColors.text },
   brandRow: { flexDirection: "row", alignItems: "center", gap: 11 },
   nsnLogoMark: { width: 42, height: 42, borderRadius: 21, backgroundColor: "#1590C9", alignItems: "center", justifyContent: "center", overflow: "hidden", borderWidth: 1.25, borderColor: "rgba(255,255,255,0.28)" },
-  dayNsnLogoMark: { borderColor: "#A7B7C2" },
+  dayNsnLogoMark: { borderColor: "#C6D3E0" },
   nsnLogoMoon: { position: "absolute", left: 8, top: 2, color: "#FFE074", fontSize: 17, fontWeight: "900", lineHeight: 21 },
   nsnLogoText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 15, marginTop: 9 },
   logo: { color: nsnColors.text, fontSize: 28, fontWeight: "900", letterSpacing: 0, lineHeight: 34 },
@@ -3786,7 +3786,7 @@ const styles = StyleSheet.create({
   bellButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   bellText: { color: nsnColors.text, fontSize: 20 },
   modeToggle: { alignSelf: "center", flexDirection: "row", gap: 6, borderRadius: 999, padding: 5, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#38527C", marginBottom: 16 },
-  dayModeToggle: { backgroundColor: "#E7EBDD", borderColor: "#A7B7C2" },
+  dayModeToggle: { backgroundColor: "#FFFFFF", borderColor: "#C6D3E0" },
   modeToggleOption: { minHeight: 38, minWidth: 94, borderRadius: 999, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 14 },
   modeToggleDayActive: { backgroundColor: "#D9C78E" },
   modeToggleNightActive: { backgroundColor: "#284E92" },
@@ -3796,7 +3796,7 @@ const styles = StyleSheet.create({
   modeToggleDayActiveText: { color: "#1B2233" },
   dayModeToggleText: { color: "#53677A" },
   segmented: { flexDirection: "row", borderRadius: 24, padding: 4, backgroundColor: "#0F1B2C", borderWidth: 1, borderColor: "#2A3C59", marginBottom: 16 },
-  segmentedDay: { backgroundColor: "#E7EBDD", borderColor: "#B9C6C0", },
+  segmentedDay: { backgroundColor: "#F4F7FA", borderColor: "#D8E1EA", },
   segment: { flex: 1, height: 38, borderRadius: 19, alignItems: "center", justifyContent: "center" },
   segmentDay: { backgroundColor: "#D9C78E" },
   segmentInactiveDayText: {backgroundColor: "transparent", color: "#63758A", },
@@ -3805,7 +3805,7 @@ const styles = StyleSheet.create({
   segmentDayText: { color: "#1B2233" },
   segmentNightText: { color: nsnColors.text },
   themeSuggestionCard: { flexDirection: "row", alignItems: "flex-start", gap: 11, borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 14, paddingVertical: 12, marginBottom: 12 },
-  dayThemeSuggestionCard: { borderColor: "#B9C6C0", backgroundColor: "#F8F6EE" },
+  dayThemeSuggestionCard: { borderColor: "#D8E1EA", backgroundColor: "#FFFFFF" },
   themeSuggestionIcon: { fontSize: 22, lineHeight: 27 },
   themeSuggestionBody: { flex: 1, minWidth: 0 },
   themeSuggestionTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
@@ -3814,7 +3814,7 @@ const styles = StyleSheet.create({
   themeSuggestionSwitch: { minHeight: 34, borderRadius: 16, backgroundColor: "#1F4E9A", paddingHorizontal: 14, alignItems: "center", justifyContent: "center" },
   themeSuggestionSwitchText: { color: nsnColors.text, fontSize: 12, fontWeight: "900" },
   themeSuggestionDismiss: { minHeight: 32, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 12, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
-  dayThemeSuggestionDismiss: { borderColor: "#B9C6C0" },
+  dayThemeSuggestionDismiss: { borderColor: "#D8E1EA" },
   themeSuggestionDismissText: { color: nsnColors.muted, fontSize: 12, fontWeight: "800" },
   contextRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 },
   dateText: { color: nsnColors.text, fontSize: 13, lineHeight: 19 },
@@ -3823,7 +3823,7 @@ const styles = StyleSheet.create({
   homeSectionFlow: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 10, marginBottom: 8, width: "100%" },
   localContextGroup: { flexGrow: 0.8, flexShrink: 1, flexBasis: 360, alignSelf: "stretch", gap: 10, minWidth: 0 },
   localContextZone: { borderRadius: 24, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(10,24,43,0.72)", padding: 12 },
-  dayLocalContextZone: { borderColor: "#B9C6C0", backgroundColor: "rgba(248,246,238,0.78)" },
+  dayLocalContextZone: { borderColor: "#D8E1EA", backgroundColor: "rgba(255,255,255,0.84)" },
   localContextGroupAutoFit: { flexBasis: 410, gap: 9 },
   dashboardCard: { flexGrow: 1, flexShrink: 1, flexBasis: 210 },
   dashboardContextTile: { borderWidth: 0, backgroundColor: "rgba(255,255,255,0.035)" },
@@ -3856,11 +3856,11 @@ const styles = StyleSheet.create({
   locationMapTitleRow: { flex: 0 },
   locationMapTitle: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   prototypeMapModeBadge: { flexShrink: 1, maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "#4D6794", color: "#C7D3EA", fontSize: 9, fontWeight: "900", lineHeight: 12, paddingHorizontal: 7, paddingVertical: 2, overflow: "hidden" },
-  dayPrototypeMapModeBadge: { borderColor: "#A7B7C2", color: "#53677A", backgroundColor: "#F8F6EE" },
+  dayPrototypeMapModeBadge: { borderColor: "#C6D3E0", color: "#53677A", backgroundColor: "#FFFFFF" },
   prototypeMapCanvas: { minHeight: 148, flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#102B4E", overflow: "hidden", marginTop: 9, marginBottom: 8 },
   prototypeMapCanvasAutoFit: { flexGrow: 0, marginTop: 4, marginBottom: 4 },
   prototypeMapContent: { flex: 1, minHeight: 148 },
-  dayPrototypeMapCanvas: { backgroundColor: "#E4ECE8", borderColor: "#A7B7C2" },
+  dayPrototypeMapCanvas: { backgroundColor: "#EEF4F8", borderColor: "#C6D3E0" },
   prototypeMapCorridor: { position: "absolute", left: 18, right: 64, top: 31, bottom: 24, borderRadius: 34, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(199,211,234,0.11)" },
   dayPrototypeMapCorridor: { backgroundColor: "rgba(255,255,255,0.36)", borderColor: "rgba(111,135,161,0.22)" },
   prototypeMapRoad: { position: "absolute", backgroundColor: "rgba(199,211,234,0.25)", borderRadius: 999 },
@@ -3903,20 +3903,20 @@ const styles = StyleSheet.create({
   dayPrototypeMapAttribution: { color: "rgba(45,59,82,0.72)" },
   prototypeMapZoomControls: { position: "absolute", top: 10, right: 10, flexDirection: "row", gap: 6 },
   prototypeMapZoomButton: { width: 32, height: 32, borderRadius: 12, borderWidth: 1, borderColor: "#7890B8", backgroundColor: "rgba(8,17,31,0.82)", alignItems: "center", justifyContent: "center" },
-  dayPrototypeMapZoomButton: { borderColor: "#7E95AA", backgroundColor: "rgba(255,255,255,0.92)" },
+  dayPrototypeMapZoomButton: { borderColor: "#6F89A8", backgroundColor: "rgba(255,255,255,0.94)" },
   prototypeMapResetButton: {},
   prototypeMapZoomText: { color: "#FFFFFF", fontSize: 20, fontWeight: "900", lineHeight: 24 },
   dayPrototypeMapZoomText: { color: "#284E92" },
   locationMapEvent: { flexShrink: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   locationMapSummary: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(120,144,184,0.52)", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 9, paddingVertical: 7, marginTop: 2 },
-  dayLocationMapSummary: { borderColor: "#A7B7C2", backgroundColor: "#F8F6EE" },
+  dayLocationMapSummary: { borderColor: "#C6D3E0", backgroundColor: "#FFFFFF" },
   locationMapMeta: { flexShrink: 1, color: "#C7D3EA", fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 1 },
   locationMapDetailRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 5 },
   locationMapDetailChip: { flexGrow: 1, flexBasis: 150, minHeight: 20, borderRadius: 9, borderWidth: 1, borderColor: "#38527C", color: "#C7D3EA", fontSize: 9, fontWeight: "800", lineHeight: 13, paddingHorizontal: 7, paddingVertical: 2, overflow: "hidden" },
-  dayLocationMapDetailChip: { borderColor: "#B9C6C0", color: "#53677A", backgroundColor: "#FFFFFF" },
+  dayLocationMapDetailChip: { borderColor: "#D8E1EA", color: "#53677A", backgroundColor: "#FFFFFF" },
   locationMapActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 7 },
   locationMapAction: { flexGrow: 1, flexShrink: 1, minHeight: 32, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
-  dayLocationMapAction: { backgroundColor: "#E7EBDD" },
+  dayLocationMapAction: { backgroundColor: "#F4F7FA" },
   locationMapActionText: { flexShrink: 1, minWidth: 0, color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15, textAlign: "center" },
   locationMapPrimaryAction: { backgroundColor: "#214B95", borderColor: "#D2E0FF" },
   locationMapPrimaryActionText: { flexShrink: 1, minWidth: 0, color: "#FFFFFF", fontSize: 11, fontWeight: "900", lineHeight: 15, textAlign: "center" },
@@ -3943,7 +3943,7 @@ const styles = StyleSheet.create({
   sectionTitleRow: { flexDirection: "row", alignItems: "center", gap: 7, flex: 1, minWidth: 0 },
   sectionTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
   sectionActionButton: { minHeight: 32, borderRadius: 15, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.18)", paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
-  daySectionActionButton: { backgroundColor: "#E7EBDD", borderColor: "#A7B7C2" },
+  daySectionActionButton: { backgroundColor: "#F4F7FA", borderColor: "#C6D3E0" },
   seeAll: { color: "#A8B7DA", fontSize: 12, fontWeight: "700" },
   cardStack: { gap: 10 },
   cardStackCompact: { gap: 7 },
@@ -3957,9 +3957,9 @@ const styles = StyleSheet.create({
   eventCardOutlineMinimal: { borderWidth: 1, borderColor: "#2A3C59" },
   eventCardOutlineStandard: { borderWidth: 1.25, borderColor: "#4D6794" },
   eventCardOutlineStrong: { borderWidth: 1.75, borderColor: "#7890B8" },
-  dayEventCardOutlineMinimal: { borderWidth: 1, borderColor: "#B9C6C0" },
-  dayEventCardOutlineStandard: { borderWidth: 1.25, borderColor: "#A7B7C2" },
-  dayEventCardOutlineStrong: { borderWidth: 1.75, borderColor: "#7E95AA" },
+  dayEventCardOutlineMinimal: { borderWidth: 1, borderColor: "#D8E1EA" },
+  dayEventCardOutlineStandard: { borderWidth: 1.25, borderColor: "#C6D3E0" },
+  dayEventCardOutlineStrong: { borderWidth: 1.75, borderColor: "#6F89A8" },
   eventCardCompact: { minHeight: 108, padding: 8 },
   eventCardSpacious: { minHeight: 148, padding: 12 },
   eventCardHorizontal: { width: 236, minHeight: 236, flexDirection: "column" },
@@ -3968,7 +3968,7 @@ const styles = StyleSheet.create({
   eventCardMagazine: { minHeight: 132 },
   eventCardMagazineFeatured: { minHeight: 180 },
   eventCardHighlighted: { borderColor: "#D2E0FF", backgroundColor: "#122A55" },
-  dayEventCardHighlighted: { borderColor: "#7E95AA", backgroundColor: "#EEF2EA" },
+  dayEventCardHighlighted: { borderColor: "#6F89A8", backgroundColor: "#F4F8FD" },
   rtlEventCard: { flexDirection: "row-reverse" },
   eventImage: { position: "relative", width: 104, height: 104, minHeight: 104, maxHeight: 104, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" },
   eventImagePhoto: { overflow: "hidden", backgroundColor: "#102743" },
@@ -4035,7 +4035,7 @@ const styles = StyleSheet.create({
   eventTags: { flexDirection: "row", gap: 6, flexWrap: "wrap", marginTop: 7 },
   eventTagsCompact: { marginTop: 5 },
   eventTag: { maxWidth: "100%", minHeight: 22, flexDirection: "row", alignItems: "flex-start", gap: 4, backgroundColor: "rgba(255,255,255,0.05)", paddingHorizontal: 7, paddingVertical: 3, borderRadius: 8, flexShrink: 1 },
-  dayEventTag: { backgroundColor: "#FBFAF5", borderWidth: 1, borderColor: "#B9C6C0" },
+  dayEventTag: { backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D8E1EA" },
   eventTagText: { flexShrink: 1, color: nsnColors.muted, fontSize: 10, lineHeight: 14 },
   livePreview: { width: 82, height: 104, borderRadius: 15, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#081A2F", overflow: "hidden", marginLeft: 6 },
   miniMap: { height: 42, backgroundColor: "#102743", overflow: "hidden", justifyContent: "flex-end", paddingHorizontal: 7, paddingBottom: 5 },

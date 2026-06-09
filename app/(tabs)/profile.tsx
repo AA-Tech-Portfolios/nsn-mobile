@@ -137,7 +137,7 @@ const rows = [
   { icon: "location", key: "places", route: "/saved-places" },
 ] as const;
 
-const settingsRow = { icon: "settings", key: "settings", route: "/settings" } as const;
+const settingsRow = { icon: "sliders", key: "settings", route: "/settings" } as const;
 type ProfileShortcutRow = (typeof rows)[number] | typeof settingsRow;
 type ProfileShortcutKey = ProfileShortcutRow["key"];
 type ProfileMenuPanel =
@@ -213,7 +213,7 @@ const helpFaqItems = [
   {
     id: "prototype-only",
     title: "What is prototype-only?",
-    copy: "Some controls are local demo settings. They show intended behaviour, but real accounts, moderation, verification, and feedback sending are not connected yet.",
+    copy: "Some controls are local alpha demos. They show intended behaviour while accounts, moderation, verification, and feedback remain prototype-only.",
   },
   {
     id: "privacy-settings",
@@ -2095,7 +2095,7 @@ export default function ProfileScreen() {
         `Message: ${helpFeedbackMessage.trim() || "(add details here)"}`,
         `Contact me about this: ${helpContactMe ? "Yes" : "No"}`,
         helpIncludeContext ? `Context: Profile > User Options > Help & Support; ${isNightMode ? "night" : "day"} mode; viewport width ${Math.round(width)}px` : "",
-        "Prototype note: feedback sending is not connected yet.",
+        "Alpha note: this draft is prepared locally. Use Demo Draft, Copy Demo Draft, or Open GitHub Issue when you are ready.",
       ]
         .filter(Boolean)
         .join("\n"),
@@ -2271,7 +2271,7 @@ export default function ProfileScreen() {
     setHelpDraftPrepared(true);
 
     if (!copyToClipboard) {
-      Alert.alert("Feedback Draft Prepared", "Feedback sending is not connected yet. A draft is shown below so you can copy or open a GitHub issue.");
+      Alert.alert("Demo Draft Prepared", "A local alpha draft is shown below. Copy it or open a GitHub issue when you're ready.");
       return;
     }
 
@@ -2279,11 +2279,11 @@ export default function ProfileScreen() {
 
     if (clipboard?.writeText) {
       await clipboard.writeText(feedbackDraft);
-      Alert.alert("Feedback Draft Copied", "Paste it into a GitHub issue or message to the NSN developers.");
+      Alert.alert("Demo Draft Copied", "Paste it into GitHub or send it to the NSN developers.");
       return;
     }
 
-    Alert.alert("Feedback Draft Prepared", "Copy support is available on web. The draft is shown below as selectable text.");
+    Alert.alert("Demo Draft Prepared", "A local draft is shown below as selectable text.");
   };
 
   const openSupportIssue = async () => {
@@ -3604,7 +3604,7 @@ export default function ProfileScreen() {
               accessibilityLabel="Open profile controls"
               accessibilityHint={screenReaderHints ? profileCopy.profileMenuHint : undefined}
             >
-              <IconSymbol name="settings" color={isDay ? "#0B1220" : nsnColors.text} size={19} />
+              <IconSymbol name="sliders" color={isDay ? "#0B1220" : nsnColors.text} size={19} />
               <Text style={[styles.profileControlsButtonText, isDay && styles.dayTitle]} numberOfLines={1}>
                 {profileControlsButtonLabel}
               </Text>
@@ -3632,7 +3632,7 @@ export default function ProfileScreen() {
                         {profileOptionsPanelTitle}
                       </Text>
                       <Text style={[styles.profileOptionsCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                        Profile stays social-first. Options are grouped into Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings.
+                        Compact access to Profile, Preferences, Appearance & Layout, Safety & Support, and App Settings.
                       </Text>
                     </View>
                     <TouchableOpacity
@@ -3660,10 +3660,10 @@ export default function ProfileScreen() {
                     <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>User Options</Text>
                     <View style={[styles.profilePreferenceDisplayToggle, isDay && styles.daySoftOption]}>
                       <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Row Style</Text>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Menu style</Text>
                         {!compactUserOptionRows ? (
                           <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                            Switch between compact title/icon rows and descriptive settings cards.
+                            Choose compact rows or cards with short descriptions.
                           </Text>
                         ) : null}
                       </View>
@@ -3679,10 +3679,10 @@ export default function ProfileScreen() {
                               style={[styles.profilePreferenceModeButton, active && styles.profilePreferenceModeButtonActive]}
                               accessibilityRole="button"
                               accessibilityState={{ selected: active }}
-                              accessibilityLabel={`${mode === "Simple" ? "Compact title and icon only" : "Descriptive settings cards"} User Options row style`}
+                              accessibilityLabel={`${mode === "Simple" ? "Compact title and icon only" : "Short description cards"} User Options menu style`}
                             >
                               <Text style={[styles.profilePreferenceModeButtonText, active && styles.profileLayoutTextActive]}>
-                                {mode === "Simple" ? "Compact" : "Descriptive"}
+                                {mode === "Simple" ? "Compact" : "Cards"}
                               </Text>
                             </TouchableOpacity>
                           );
@@ -3904,7 +3904,7 @@ export default function ProfileScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={getRowLabel("settings")}
                     >
-                      <IconSymbol name="settings" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                      <IconSymbol name="sliders" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                       <View style={styles.profileMenuItemBody}>
                         <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getRowLabel("settings")}</Text>
                         {!compactUserOptionRows ? <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Language, privacy settings, alerts, and prototype account controls.</Text> : null}
@@ -4009,9 +4009,9 @@ export default function ProfileScreen() {
                     ) : null}
                     <View style={[styles.profilePreferenceDisplayToggle, isDay && styles.daySoftOption]}>
                       <View style={styles.profileMenuItemBody}>
-                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Row Style</Text>
+                        <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Menu style</Text>
                         <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                          Switch between the compact title-only list and the fuller descriptive preference cards.
+                          Choose compact rows or cards with short descriptions.
                         </Text>
                       </View>
                       <View style={styles.profilePreferenceModeButtons}>
@@ -4026,10 +4026,10 @@ export default function ProfileScreen() {
                               style={[styles.profilePreferenceModeButton, active && styles.profilePreferenceModeButtonActive]}
                               accessibilityRole="button"
                               accessibilityState={{ selected: active }}
-                              accessibilityLabel={`${mode === "Simple" ? "Compact title only" : "Descriptive cards"} preference row style`}
+                              accessibilityLabel={`${mode === "Simple" ? "Compact title only" : "Short description cards"} preference menu style`}
                             >
                               <Text style={[styles.profilePreferenceModeButtonText, active && styles.profileLayoutTextActive]}>
-                                {mode === "Simple" ? "Compact" : "Descriptive"}
+                                {mode === "Simple" ? "Compact" : "Cards"}
                               </Text>
                             </TouchableOpacity>
                           );
@@ -5175,7 +5175,7 @@ export default function ProfileScreen() {
                                 accessibilityLabel={`${option} header controls`}
                                 style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
                               >
-                                <IconSymbol name="settings" color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
+                                <IconSymbol name="sliders" color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
                                 <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
                               </TouchableOpacity>
                             );
@@ -5200,7 +5200,7 @@ export default function ProfileScreen() {
                           accessibilityHint={screenReaderHints ? "Opens Settings to adjust date, time, clock and unit display." : undefined}
                           style={[styles.profileDisplayChip, styles.profileDisplayActionChip, isDay && styles.daySoftOption]}
                         >
-                          <IconSymbol name="settings" color={isDay ? "#445E93" : "#A8B7DA"} size={14} />
+                          <IconSymbol name="sliders" color={isDay ? "#445E93" : "#A8B7DA"} size={14} />
                           <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>View preferences</Text>
                         </TouchableOpacity>
                       </View>
@@ -5409,7 +5409,7 @@ export default function ProfileScreen() {
                       ))}
                       <View style={[styles.profileMenuGuideRow, styles.helpGuidanceCard, isDay && styles.daySoftOption]}>
                         <View style={[styles.helpSupportCardRow, isRtl && styles.rtlRow]}>
-                          <IconSymbol name="settings" color={isDay ? "#445E93" : "#C7B07A"} size={19} />
+                          <IconSymbol name="sliders" color={isDay ? "#445E93" : "#C7B07A"} size={19} />
                           <View style={styles.profileLayoutBody}>
                             <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Trust & Support Pathways</Text>
                             <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
@@ -5657,12 +5657,12 @@ export default function ProfileScreen() {
                       ) : null}
                     </View>
                     <View onLayout={(event) => registerHelpSectionLayout("feedback-draft", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
-                      {renderHelpSectionHeader("feedback-draft", "Feedback Draft", "Prepare a local prototype note for bugs, confusion, or support feedback.", "edit")}
+                      {renderHelpSectionHeader("feedback-draft", "Feedback Draft", "Prepare a calm local note for bugs, confusion, or ideas.", "edit")}
                       {openHelpSectionIds.includes("feedback-draft") ? (
                         <View style={[styles.profileMenuInfoCard, styles.helpSubsectionBody, isDay && styles.daySoftOption]}>
-                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Feedback Form</Text>
+                      <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle]}>Feedback Draft</Text>
                       <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText]}>
-                        Prototype note: feedback sending is not connected yet. Prepare a draft, copy it on web, or open a GitHub issue.
+                        Prepare feedback locally, then choose Demo Draft, Copy Demo Draft, or Open GitHub Issue.
                       </Text>
                       <Text style={[styles.profileDisplayGroupLabel, styles.helpFieldLabel, isDay && styles.dayMutedText]}>Feedback Type</Text>
                       <View style={[styles.profileDisplayChipRow, isRtl && styles.rtlRow]}>
@@ -6153,7 +6153,7 @@ export default function ProfileScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={getRowLabel("settings")}
                 >
-                  <IconSymbol name="settings" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                  <IconSymbol name="sliders" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                   <View style={styles.profileMenuItemBody}>
                     <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>{getRowLabel("settings")}</Text>
                     <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>General settings, privacy, and account controls.</Text>
@@ -6168,7 +6168,7 @@ export default function ProfileScreen() {
                   accessibilityRole="button"
                   accessibilityLabel="Reset to defaults"
                 >
-                  <IconSymbol name="settings" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                  <IconSymbol name="sliders" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                   <View style={styles.profileMenuItemBody}>
                     <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>Reset to defaults</Text>
                     <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>Restore NSN privacy and comfort defaults.</Text>
@@ -6340,7 +6340,7 @@ export default function ProfileScreen() {
                       accessibilityLabel={`${option} header controls`}
                       style={[styles.profileDisplayChip, isDay && styles.daySoftOption, active && styles.profileDisplayChipActive]}
                     >
-                      <IconSymbol name="settings" color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
+                      <IconSymbol name="sliders" color={active ? "#FFFFFF" : isDay ? "#445E93" : "#C7B07A"} size={15} />
                       <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle, active && styles.profileLayoutTextActive]}>{option}</Text>
                     </TouchableOpacity>
                   );
@@ -6363,7 +6363,7 @@ export default function ProfileScreen() {
                 accessibilityHint={screenReaderHints ? "Opens Settings to adjust date, time, clock and unit display." : undefined}
                 style={[styles.profileDisplayChip, styles.profileDisplayActionChip, isDay && styles.daySoftOption]}
               >
-                <IconSymbol name="settings" color={isDay ? "#445E93" : "#A8B7DA"} size={14} />
+                <IconSymbol name="sliders" color={isDay ? "#445E93" : "#A8B7DA"} size={14} />
                 <Text style={[styles.profileDisplayChipText, isDay && styles.dayTitle]}>View Preferences</Text>
               </TouchableOpacity>
             </View>
@@ -6557,7 +6557,7 @@ export default function ProfileScreen() {
                 { icon: "location" as const, title: "Local Area", copy: suburb || "Local area not set", action: () => openPreferenceDestination("locationPreferencePanel", "location") },
                 { icon: "interests" as const, title: "Interests", copy: hobbiesInterests.slice(0, 3).join(", ") || "Add a few interests", action: () => openPreferenceDestination("hobbiesInterests", "interests") },
                 { icon: "shield" as const, title: "Privacy & Comfort", copy: `${comfortMode} · ${groupSizePreference}`, action: () => openPreferenceDestination("comfortTrust", "comfort") },
-                { icon: "settings" as const, title: "Privacy", copy: privateProfile ? "Private profile on" : "Profile controls available", action: () => openSettingsFromProfile() },
+                { icon: "sliders" as const, title: "Privacy", copy: privateProfile ? "Private profile on" : "Profile controls available", action: () => openSettingsFromProfile() },
               ].map((row, index, rows) => (
                 <TouchableOpacity
                   key={row.title}
@@ -7448,7 +7448,7 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: nsnColors.background },
-  dayContainer: { backgroundColor: "#E8EDF2" },
+  dayContainer: { backgroundColor: "#FAFBFC" },
   content: { width: "100%", maxWidth: 1120, alignSelf: "center", paddingHorizontal: 20, paddingTop: 18, paddingBottom: 136 },
   contentWide: { maxWidth: "100%" },
   softHelloContent: { alignItems: "stretch", paddingBottom: 132 },
@@ -7458,13 +7458,13 @@ const styles = StyleSheet.create({
   profileControlsButton: { minHeight: 42, maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.055)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 13, paddingVertical: 8 },
   profileControlsButtonCompact: { paddingHorizontal: 11 },
   profileControlsButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
-  dayProfileControlsButton: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
+  dayProfileControlsButton: { backgroundColor: "#FFFFFF", borderColor: "#C6D3E0" },
   profileDrawerBackdrop: { flex: 1, alignItems: "flex-end", justifyContent: "center", backgroundColor: "rgba(2,8,20,0.58)", padding: 18 },
   profileDrawerBackdropMobile: { justifyContent: "flex-end", padding: 10 },
   profileOptionsDrawer: { width: 440, maxWidth: "96%", height: "100%", maxHeight: 820, borderRadius: 24, borderWidth: 1, borderColor: "#536C9E", backgroundColor: "#0B1626", padding: 14, gap: 12, ...(Platform.OS === "web" ? ({ boxShadow: "-8px 10px 24px rgba(0,0,0,0.32)" } as any) : { shadowColor: "#000000", shadowOpacity: 0.32, shadowRadius: 24, shadowOffset: { width: -8, height: 10 }, elevation: 16 }) },
   profileOptionsDrawerHelpDesktop: { width: 980, maxWidth: "94%", maxHeight: 860, padding: 18 },
   profileOptionsDrawerMobile: { width: "100%", maxWidth: "100%", height: "92%", maxHeight: "92%", borderBottomLeftRadius: 0, borderBottomRightRadius: 0, paddingBottom: 18 },
-  dayProfileOptionsDrawer: { backgroundColor: "#E8EDF2", borderColor: "#9FB2C8" },
+  dayProfileOptionsDrawer: { backgroundColor: "#FAFBFC", borderColor: "#C6D3E0" },
   profileOptionsHeader: { flexDirection: "row", alignItems: "flex-start", gap: 12, paddingHorizontal: 4, paddingTop: 2 },
   profileOptionsEyebrow: { color: "#9EC8E1", fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   profileOptionsTitle: { color: nsnColors.text, fontSize: 22, fontWeight: "900", lineHeight: 28 },
@@ -7483,7 +7483,7 @@ const styles = StyleSheet.create({
   profilePreferenceMenuItemCompact: { minHeight: 48, paddingVertical: 9, borderWidth: 0, backgroundColor: "transparent" },
   profilePreferenceDisplayToggle: { borderRadius: 14, borderWidth: 1, borderColor: "rgba(124,170,201,0.24)", backgroundColor: "rgba(255,255,255,0.035)", padding: 12, gap: 10, marginBottom: 6, minWidth: 0 },
   profilePreferenceModeButtons: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  profilePreferenceModeButton: { minHeight: 34, borderRadius: 12, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.18)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
+  profilePreferenceModeButton: { minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.18)", alignItems: "center", justifyContent: "center", paddingHorizontal: 13 },
   profilePreferenceModeButtonActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   profilePreferenceModeButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   profileMenuFeaturedItem: { borderWidth: 1, borderColor: "rgba(124,170,201,0.45)", backgroundColor: "rgba(124,170,201,0.1)" },
@@ -7496,8 +7496,8 @@ const styles = StyleSheet.create({
   profileMenuBack: { minHeight: 48, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 10, paddingHorizontal: 10, marginBottom: 8 },
   profileMenuItemBody: { flex: 1, minWidth: 0, gap: 2 },
   profileMenuText: { flex: 1, minWidth: 0, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 19 },
-  profileMenuDescription: { minWidth: 0, color: nsnSupportReadabilityColors.darkMutedText, fontSize: 12, fontWeight: "800", lineHeight: 18 },
-  profileMenuDescriptionCompact: { fontSize: 11, lineHeight: 15 },
+  profileMenuDescription: { minWidth: 0, color: nsnSupportReadabilityColors.darkMutedText, fontSize: 12, fontWeight: "800", lineHeight: 19 },
+  profileMenuDescriptionCompact: { fontSize: 11, lineHeight: 16 },
   profileMenuChevron: { color: nsnColors.muted, fontSize: 20, fontWeight: "900", lineHeight: 24 },
   profileMenuDivider: { height: 1, backgroundColor: nsnColors.border, marginVertical: 10 },
   profileMenuDestructiveDivider: { backgroundColor: "rgba(226,61,90,0.28)", marginTop: 14 },
@@ -7587,17 +7587,17 @@ const styles = StyleSheet.create({
   rowIconBubble: { width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   profileTutorialCopy: { flex: 1, minWidth: 0 },
   profileTutorialDismiss: { width: 34, height: 34, borderRadius: 17, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  dayChip: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
+  dayChip: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   profileDisplayCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: "#38527C", backgroundColor: "#0F223D", padding: 14, marginBottom: 16, gap: 12 },
   profileDisplayTitleRow: { flex: 1, flexDirection: "row", alignItems: "flex-start", gap: 9 },
   profileDisplayGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   profileDisplayGroup: { flexGrow: 1, flexBasis: 220, gap: 7 },
   profileDisplayGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   profileDisplayChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
-  profileDisplayChip: { minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
+  profileDisplayChip: { minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 11, paddingVertical: 7, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 1 },
   profileDisplayActionChip: { alignSelf: "flex-start", marginTop: 4 },
   profileDisplayChipActive: { borderColor: "#D2E0FF", backgroundColor: "#214B95" },
-  profileDisplayChipText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  profileDisplayChipText: { minWidth: 0, color: nsnColors.text, fontSize: 11.5, fontWeight: "900", lineHeight: 16 },
   profileLayoutStack: { gap: 8 },
   profileWidthStack: { marginTop: 8 },
   profileLayoutOption: { minHeight: 58, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 10, minWidth: 0 },
@@ -7606,12 +7606,12 @@ const styles = StyleSheet.create({
   profilePreparednessResourceHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   profilePreparednessResourceIcon: { width: 26, height: 26, borderRadius: 13, borderWidth: 1, borderColor: "rgba(184,196,216,0.34)", backgroundColor: "rgba(255,255,255,0.05)", alignItems: "center", justifyContent: "center", overflow: "hidden" },
   profilePreparednessResourceImage: { width: 16, height: 16, opacity: 0.88 },
-  daySoftOption: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
-  dayProfileMenuIconBadge: { backgroundColor: "#E8EEF3", borderColor: "#C5D0DA" },
+  daySoftOption: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
+  dayProfileMenuIconBadge: { backgroundColor: "#F4F7FA", borderColor: "#D8E1EA" },
   profileLayoutOptionActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   profileLayoutBody: { flex: 1, minWidth: 0 },
   profileLayoutTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  profileLayoutCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
+  profileLayoutCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 2 },
   profileLayoutCheck: { width: 22, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
   profileLayoutTextActive: { color: "#FFFFFF" },
   profileDrawerDoneText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17 },
@@ -7657,7 +7657,7 @@ const styles = StyleSheet.create({
   pausedProfileCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 4 },
   avatarRing: { width: 104, height: 104, borderRadius: 52, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.10)" },
   photoButton: { marginTop: 10, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, alignSelf: "center", },
-  dayPhotoButton: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
+  dayPhotoButton: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   photoButtonText: { color: "#7786FF", fontSize: 12, fontWeight: "800" },
   dayPhotoButtonText: { color: "#445E93" },
   identitySummary: { alignItems: "center", gap: 6, marginTop: 2, marginBottom: 4, width: "100%" },
@@ -7693,12 +7693,12 @@ const styles = StyleSheet.create({
   localAreaVisibilityText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   localAreaVisibilityTextActive: { color: "#FFFFFF" },
   visibilityModeCard: { width: "100%", maxWidth: 480, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 12, marginTop: 12 },
-  dayVisibilityModeCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
+  dayVisibilityModeCard: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   visibilityModeTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, marginBottom: 8, textAlign: "center" },
   visibilityModeSegmented: { minHeight: 40, flexDirection: "row", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.04)" },
-  dayVisibilityModeSegmented: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
+  dayVisibilityModeSegmented: { backgroundColor: "#F4F7FA", borderColor: "#D8E1EA" },
   visibilityModeOption: { flex: 1, minHeight: 38, alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },
-  dayVisibilityModeOption: { backgroundColor: "#F4F7F8" },
+  dayVisibilityModeOption: { backgroundColor: "#F4F7FA" },
   visibilityModeOptionActive: { backgroundColor: nsnColors.primary },
   dayVisibilityModeOptionActive: { backgroundColor: "#536C9E" },
   visibilityModeText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
@@ -7726,7 +7726,7 @@ const styles = StyleSheet.create({
   trustTitle: { fontWeight: "900" },
   trustPill: { color: nsnSupportReadabilityColors.badgeText, borderColor: nsnSupportReadabilityColors.darkBadgeBorder, backgroundColor: nsnSupportReadabilityColors.darkBadgeBackground, borderWidth: 1, borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, fontSize: 11, fontWeight: "900", overflow: "hidden" },
   trustPillReady: { color: nsnColors.green, borderColor: "rgba(114,214,126,0.45)" },
-  dayTrustPill: { color: nsnSupportReadabilityColors.lightWarningText, backgroundColor: "#FFF7D8", borderColor: "#D4A91E" },
+  dayTrustPill: { color: "#2D4664", backgroundColor: "#EEF4FB", borderColor: "#8EA6C2" },
   dayTrustPillReady: { color: "#0F6B2F", backgroundColor: "#E8F8EE", borderColor: "#55A96E" },
   trustCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
   simpleTrustCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
@@ -7742,7 +7742,7 @@ const styles = StyleSheet.create({
   verificationStepActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.22)" },
   verificationStepText: { color: nsnColors.muted, fontSize: 11, fontWeight: "800" },
   verificationStepTextActive: { color: nsnColors.text },
-  dayVerificationStep: { backgroundColor: "#F4F7F8", borderColor: "#6D83A8" },
+  dayVerificationStep: { backgroundColor: "#F4F7FA", borderColor: "#8EA6C2" },
   dayVerificationStepActive: { backgroundColor: "#536C9E", borderColor: "#536C9E" },
   dayVerificationStepText: { color: "#38465F" },
   dayVerificationStepTextActive: { color: "#FFFFFF" },
@@ -7753,7 +7753,7 @@ const styles = StyleSheet.create({
   verificationSheet: { width: "100%", maxHeight: "100%", borderRadius: 22, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, overflow: "hidden" },
   verificationSheetScroll: { width: "100%" },
   verificationSheetContent: { padding: 16, paddingBottom: 24 },
-  dayModalSheet: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
+  dayModalSheet: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   verificationReviewTitle: { color: nsnColors.text, fontSize: 20, fontWeight: "900", lineHeight: 26 },
   verificationReviewCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19, marginTop: 4, marginBottom: 12 },
   verificationReturnGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
@@ -7768,7 +7768,7 @@ const styles = StyleSheet.create({
   verificationLevelList: { gap: 8, paddingHorizontal: 10, paddingBottom: 10 },
   verificationLevelCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 10 },
   verificationLevelCardActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(56,72,255,0.18)" },
-  dayVerificationLevelCardActive: { borderColor: "#536C9E", backgroundColor: "#E1E7FF" },
+  dayVerificationLevelCardActive: { borderColor: "#536C9E", backgroundColor: "#EAF1FA" },
   verificationLevelHeader: { flexDirection: "row", justifyContent: "space-between", gap: 10, marginBottom: 4 },
   verificationLevelKicker: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   verificationLevelName: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
@@ -7786,7 +7786,7 @@ const styles = StyleSheet.create({
   verificationCompactInput: { flexGrow: 1, flexBasis: 190 },
   verificationActionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   verificationActionCard: { flexGrow: 1, flexBasis: 190, minHeight: 62, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 10 },
-  dayInput: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA", color: "#0B1220" },
+  dayInput: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA", color: "#0B1220" },
   confirmReviewButton: { minHeight: 48, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: 12 },
   confirmReviewText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20 },
   secondaryReviewButton: { minHeight: 46, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", marginTop: 9 },
@@ -7822,11 +7822,11 @@ const styles = StyleSheet.create({
   settingsList: { borderRadius: 18, overflow: "hidden", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface },
   row: { minHeight: 54, flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 14 },
   rowBorder: { borderBottomWidth: 1, borderBottomColor: nsnColors.border },
-  dayRowBorder: { borderBottomColor: "#C5D0DA" },
+  dayRowBorder: { borderBottomColor: "#D8E1EA" },
   rowIcon: { width: 30, color: nsnColors.text, fontSize: 17 },
   rowLabel: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "600", lineHeight: 20 },
   rowChevron: { color: nsnColors.muted, fontSize: 26, lineHeight: 30 },
-  dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
+  dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   softSurfaceCard: { backgroundColor: "rgba(220,238,255,0.72)", borderColor: "rgba(184,201,230,0.56)" },
   clearBorderCard: { borderColor: "#6F8BB8", borderWidth: 1.5 },
 });

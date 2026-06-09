@@ -67,7 +67,7 @@ export const optionsHubSections: OptionsHubSection[] = [
     rows: [
       row({
         id: "home-preferences",
-        icon: "settings",
+        icon: "sliders",
         title: "Home & event cards",
         description: "Essential Home filters, event-card layout, and preview controls.",
         badge: "Saved locally",
@@ -90,7 +90,7 @@ export const optionsHubSections: OptionsHubSection[] = [
   },
   {
     id: "userPreferences",
-    icon: "settings",
+    icon: "sliders",
     title: "Preferences",
     description: "Local profile, meetup, and comfort preferences without crowding Home.",
     rows: [

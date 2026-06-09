@@ -167,7 +167,7 @@ export const foodBeveragePreferenceOptions: FoodBeveragePreference[] = [
   { id: "wraps", label: "Wraps", group: "casualMeals", eventKeywords: ["wrap", "wraps"] },
   { id: "schnitzels", label: "Schnitzels", group: "casualMeals", eventKeywords: ["schnitzel"] },
   { id: "pies", label: "Pies", group: "casualMeals", eventKeywords: ["pie", "pies"] },
-  { id: "sausages", label: "Sausages", group: "casualMeals", eventKeywords: ["sausage", "sausages"] },
+  { id: "sausages", label: "Sausages", group: "casualMeals", icon: "🌭", eventKeywords: ["sausage", "sausages"] },
   { id: "chips", label: "Chips", group: "casualMeals", aliases: ["fries"], eventKeywords: ["chips", "fries"] },
   { id: "pizza", label: "Pizza", group: "casualMeals", icon: "🍕", eventKeywords: ["pizza", "italian"] },
   { id: "pasta", label: "Pasta", group: "casualMeals", eventKeywords: ["pasta", "italian"] },
