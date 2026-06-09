@@ -8,6 +8,25 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import type { IconSymbolName } from "@/components/ui/icon-symbol-map";
 import { nsnColors } from "@/lib/nsn-data";
 
+type TabIconLabelProps = {
+  boldText: boolean;
+  color: string;
+  label: string;
+  name: IconSymbolName;
+  size: number;
+};
+
+function TabIconLabel({ boldText, color, label, name, size }: TabIconLabelProps) {
+  return (
+    <View style={styles.tabIconLabel}>
+      <IconSymbol size={size} name={name} color={color} />
+      <Text numberOfLines={1} style={[styles.tabIconLabelText, { color }, boldText && styles.tabIconLabelTextBold]}>
+        {label}
+      </Text>
+    </View>
+  );
+}
+
 const tabLabels: Record<string, { home: string; meetups: string; chats: string; alerts: string; profile: string }> = {
   English: { home: "Home", meetups: "Meetups", chats: "Chats", alerts: "Alerts", profile: "Profile" },
   Arabic: { home: "الرئيسية", meetups: "اللقاءات", chats: "الدردشات", alerts: "التنبيهات", profile: "الملف" },
@@ -65,14 +84,9 @@ export default function TabLayout() {
   const tabContentHeight = largerTouchTargets ? 96 : 88;
   const tabIconSize = largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25;
   const renderTabIcon = (name: IconSymbolName, label: string) =>
-    ({ color }: { color: string }) => (
-      <View style={styles.tabIconLabel}>
-        <IconSymbol size={tabIconSize} name={name} color={color} />
-        <Text numberOfLines={1} style={[styles.tabIconLabelText, { color }, boldText && styles.tabIconLabelTextBold]}>
-          {label}
-        </Text>
-      </View>
-    );
+    function TabIconRenderer({ color }: { color: string }) {
+      return <TabIconLabel boldText={boldText} color={color} label={label} name={name} size={tabIconSize} />;
+    };
 
   return (
       <Tabs
