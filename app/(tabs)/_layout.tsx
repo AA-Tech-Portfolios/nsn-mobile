@@ -1,10 +1,11 @@
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import type { IconSymbolName } from "@/components/ui/icon-symbol-map";
 import { nsnColors } from "@/lib/nsn-data";
 
 const tabLabels: Record<string, { home: string; meetups: string; chats: string; alerts: string; profile: string }> = {
@@ -60,8 +61,18 @@ export default function TabLayout() {
   const labels = tabLabels[getTranslationLanguageBase(appLanguage)] ?? tabLabels.English;
   const activeTintColor = appPalette.swatches[2];
   const insets = useSafeAreaInsets();
-  const bottomSafeArea = Platform.OS === "web" ? Math.max(insets.bottom, 24) : Math.max(insets.bottom, 14);
-  const tabContentHeight = largerTouchTargets ? 82 : 74;
+  const bottomSafeArea = Platform.OS === "web" ? Math.max(insets.bottom, 42) : Math.max(insets.bottom, 24);
+  const tabContentHeight = largerTouchTargets ? 96 : 88;
+  const tabIconSize = largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25;
+  const renderTabIcon = (name: IconSymbolName, label: string) =>
+    ({ color }: { color: string }) => (
+      <View style={styles.tabIconLabel}>
+        <IconSymbol size={tabIconSize} name={name} color={color} />
+        <Text numberOfLines={1} style={[styles.tabIconLabelText, { color }, boldText && styles.tabIconLabelTextBold]}>
+          {label}
+        </Text>
+      </View>
+    );
 
   return (
       <Tabs
@@ -70,37 +81,38 @@ export default function TabLayout() {
         tabBarActiveTintColor: activeTintColor,
         tabBarInactiveTintColor: nsnColors.mutedSoft,
         tabBarButton: HapticTab,
+        tabBarShowLabel: false,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: boldText ? "800" : "600",
-          lineHeight: 16,
+          lineHeight: 18,
           maxWidth: 70,
           marginTop: 2,
-          marginBottom: 0,
+          marginBottom: Platform.OS === "web" ? 28 : 12,
           textAlign: "center",
         },
         tabBarIconStyle: {
-          marginTop: 0,
-          marginBottom: 4,
+          marginTop: 2,
+          marginBottom: 2,
         },
         tabBarItemStyle: {
           minHeight: tabContentHeight,
           height: tabContentHeight,
           paddingTop: largerTouchTargets ? 10 : 8,
-          paddingBottom: largerTouchTargets ? 12 : 10,
+          paddingBottom: largerTouchTargets ? 10 : 8,
           alignItems: "center",
           justifyContent: "center",
           gap: 2,
           overflow: "visible",
         },
         tabBarStyle: {
-          minHeight: tabContentHeight + bottomSafeArea + 12,
-          height: tabContentHeight + bottomSafeArea + 12,
-          paddingTop: 5,
-          paddingBottom: bottomSafeArea + 7,
+          minHeight: tabContentHeight + bottomSafeArea + 22,
+          height: tabContentHeight + bottomSafeArea + 22,
+          paddingTop: 8,
+          paddingBottom: bottomSafeArea + 14,
           overflow: "visible",
-          backgroundColor: reduceTransparency ? (isDay ? "#F4F7F8" : "#0B1626") : isDay ? "#E8EDF2" : nsnColors.background,
-          borderTopColor: clearBorders ? (isDay ? "#6F87A1" : "#5A6EA5") : softSurfaces ? (isDay ? "#DDE6EC" : "rgba(148,163,184,0.18)") : isDay ? "#C5D0DA" : nsnColors.border,
+          backgroundColor: reduceTransparency ? (isDay ? "#F8F6EE" : "#0B1626") : isDay ? "#ECEFE6" : nsnColors.background,
+          borderTopColor: clearBorders ? (isDay ? "#7E95AA" : "#5A6EA5") : softSurfaces ? (isDay ? "#E7EBDD" : "rgba(148,163,184,0.18)") : isDay ? "#B9C6C0" : nsnColors.border,
           borderTopWidth: clearBorders ? 1.5 : softSurfaces ? 0.6 : 0.8,
         },
       }}
@@ -110,7 +122,7 @@ export default function TabLayout() {
         options={{
           title: labels.home,
           tabBarAccessibilityLabel: screenReaderHints ? `${labels.home}. Opens your home feed and event suggestions.` : labels.home,
-          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="house.fill" color={color} />,
+          tabBarIcon: renderTabIcon("house.fill", labels.home),
         }}
       />
       <Tabs.Screen
@@ -118,7 +130,7 @@ export default function TabLayout() {
         options={{
           title: labels.meetups,
           tabBarAccessibilityLabel: screenReaderHints ? `${labels.meetups}. Opens your joined and upcoming meetups.` : labels.meetups,
-          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="calendar" color={color} />,
+          tabBarIcon: renderTabIcon("calendar", labels.meetups),
         }}
       />
       <Tabs.Screen
@@ -126,7 +138,7 @@ export default function TabLayout() {
         options={{
           title: labels.chats,
           tabBarAccessibilityLabel: screenReaderHints ? `${labels.chats}. Opens meetup group chats and private chats.` : labels.chats,
-          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="message" color={color} />,
+          tabBarIcon: renderTabIcon("message", labels.chats),
         }}
       />
       <Tabs.Screen
@@ -134,7 +146,7 @@ export default function TabLayout() {
         options={{
           title: labels.alerts,
           tabBarAccessibilityLabel: screenReaderHints ? `${labels.alerts}. Opens reminders and safety alerts.` : labels.alerts,
-          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="bell" color={color} />,
+          tabBarIcon: renderTabIcon("bell", labels.alerts),
         }}
       />
       <Tabs.Screen
@@ -142,7 +154,7 @@ export default function TabLayout() {
         options={{
           title: labels.profile,
           tabBarAccessibilityLabel: screenReaderHints ? `${labels.profile}. Opens profile, preferences, and trust settings.` : labels.profile,
-          tabBarIcon: ({ color }) => <IconSymbol size={largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25} name="person.fill" color={color} />,
+          tabBarIcon: renderTabIcon("person.fill", labels.profile),
         }}
       />
       <Tabs.Screen
@@ -208,3 +220,23 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabIconLabel: {
+    height: 56,
+    minWidth: 68,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+  },
+  tabIconLabelText: {
+    maxWidth: 74,
+    fontSize: 11,
+    fontWeight: "600",
+    lineHeight: 15,
+    textAlign: "center",
+  },
+  tabIconLabelTextBold: {
+    fontWeight: "800",
+  },
+});

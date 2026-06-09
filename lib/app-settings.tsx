@@ -1055,6 +1055,14 @@ const previousHomeSectionOrders: HomeSectionOrderKey[][] = [
   ["weather", "map", "recommendedEvents", "dayEvents", "nightEvents", "search", "noiseGuide"],
 ];
 
+const getFirstHomeEventSectionIndex = (order: HomeSectionOrderKey[]) => {
+  const indexes = (["recommendedEvents", "dayEvents", "nightEvents"] as const)
+    .map((key) => order.indexOf(key))
+    .filter((index) => index >= 0);
+
+  return indexes.length > 0 ? Math.min(...indexes) : -1;
+};
+
 export const transportationPreferenceOptions: TransportationPreference[] = [
   "Walking",
   "Public transport",
@@ -1265,6 +1273,18 @@ const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSe
         previousOrder.every((key, index) => ordered[index] === key),
     )
   ) {
+    return [...defaultHomeSectionOrder];
+  }
+
+  const firstEventSectionIndex = getFirstHomeEventSectionIndex(ordered);
+  const weatherIndex = ordered.indexOf("weather");
+  const mapIndex = ordered.indexOf("map");
+  const supportingSectionBeforeEvents =
+    firstEventSectionIndex >= 0 &&
+    ((weatherIndex >= 0 && weatherIndex < firstEventSectionIndex) ||
+      (mapIndex >= 0 && mapIndex < firstEventSectionIndex));
+
+  if (supportingSectionBeforeEvents) {
     return [...defaultHomeSectionOrder];
   }
 
