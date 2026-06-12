@@ -37,7 +37,7 @@ can fail or match the wrong files on Windows.
 
 ## Node Runtime On Windows
 
-CI uses Node 22. For Windows local Expo/Metro development, use Node 22 LTS for now.
+CI uses Node 22. For Windows local Expo/Metro development, use Node 22 LTS for now. The repo pins Corepack-managed `pnpm` 11.6.0, which requires Node 22.13 or newer.
 
 Expo SDK 54 and React Native 0.81 document Node 20.19.x as the minimum runtime. Node 24 is a supported LTS release, but local Windows testing has shown that Node 24 can trigger Metro fallback watcher errors while crawling pnpm junctions under `node_modules/.pnpm`.
 
@@ -59,7 +59,7 @@ pnpm expo start -c
 The expected local runtime is:
 
 ```text
-v22.x.x
+v22.13.0 or newer
 ```
 
 Revisit Node 24 after Expo/Metro support is clearer or after Metro watcher behaviour changes.
@@ -80,11 +80,11 @@ pnpm test
 
 When validating from Ubuntu under WSL, clone the repository into the native Linux filesystem, such as `~/Projects/nsn-mobile`, instead of running it from a Windows-mounted path like `/mnt/c/...`.
 
-Native dependencies such as `esbuild` can fail during `pnpm install` on mounted Windows paths with `ERR_PNPM_EPERM`. The native Linux filesystem avoids that install issue and has validated with Node.js 22 via `nvm` and Corepack-managed `pnpm` 11.5.2.
+Native dependencies such as `esbuild` can fail during `pnpm install` on mounted Windows paths with `ERR_PNPM_EPERM`. The native Linux filesystem avoids that install issue and has validated with Node.js 22 via `nvm` and Corepack-managed `pnpm` 11.6.0.
 
 ### Ubuntu 26.04 VirtualBox VM
 
-Ubuntu 26.04 LTS has also been validated successfully in VirtualBox 7.2.8. The repository cloned cleanly in a fresh Ubuntu environment using Node.js 22.22.1 and Corepack-managed `pnpm` 11.5.2.
+Ubuntu 26.04 LTS has also been validated successfully in VirtualBox 7.2.8. The repository cloned cleanly in a fresh Ubuntu environment using Node.js 22.22.1 and Corepack-managed `pnpm` 11.6.0.
 
 These commands completed successfully:
 

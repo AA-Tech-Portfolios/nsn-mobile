@@ -124,7 +124,7 @@ SoftHello is the future broader product direction. These docs describe shared pr
 
 ## Getting Started
 
-On Windows, use Node 22 LTS for local Expo/Metro development. Node 24 may trigger Metro watcher `EACCES` errors while crawling pnpm junctions; see [`docs/development-workflow.md`](docs/development-workflow.md#node-runtime-on-windows).
+On Windows, use Node 22 LTS for local Expo/Metro development. The repo pins Corepack-managed `pnpm` 11.6.0, which requires Node 22.13 or newer. Node 24 may trigger Metro watcher `EACCES` errors while crawling pnpm junctions; see [`docs/development-workflow.md`](docs/development-workflow.md#node-runtime-on-windows).
 
 Install dependencies:
 
