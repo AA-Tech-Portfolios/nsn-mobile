@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ChatProfilePreviewSheet } from "@/components/chat-profile-preview-sheet";
 import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -3391,7 +3392,7 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 10,
   },
-  chatMenuItemActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  chatMenuItemActive: { ...nsnActionButtonStyles.selectedPill },
   chatMenuEmoji: {
     width: 40,
     height: 40,
@@ -3584,29 +3585,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   trustGateButton: {
+    ...nsnActionButtonStyles.primary,
     width: "100%",
-    minHeight: 46,
-    borderRadius: 15,
-    backgroundColor: nsnColors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 14,
     paddingVertical: 10,
   },
   trustGateButtonText: {
-    color: "#FFFFFF",
+    ...nsnActionTextStyles.primary,
     fontSize: 14,
-    fontWeight: "900",
     lineHeight: 20,
-    textAlign: "center",
   },
   trustGateBypassButton: {
-    backgroundColor: "rgba(255,255,255,0.045)",
-    borderWidth: 1,
-    borderColor: nsnColors.border,
+    ...nsnActionButtonStyles.secondary,
     marginBottom: 10,
   },
-  trustGateBypassButtonText: { color: nsnColors.text },
+  trustGateBypassButtonText: { ...nsnActionTextStyles.secondary },
   dayTrustGateBypassButton: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   dayTrustGateBypassButtonText: { color: "#0B1220" },
   softExitPanel: {
@@ -3670,7 +3662,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  reportTargetButtonActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  reportTargetButtonActive: { ...nsnActionButtonStyles.selectedPill },
   reportTargetName: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   reportTargetRole: {
     color: nsnColors.muted,
@@ -3895,7 +3887,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 3,
   },
-  chatPlusChipActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  chatPlusChipActive: { ...nsnActionButtonStyles.selectedPill },
   chatPlusChipText: {
     flexShrink: 1,
     color: nsnColors.text,
@@ -3912,7 +3904,7 @@ const styles = StyleSheet.create({
   },
   chatPlusChipTextActive: { color: nsnColors.selectedChipText },
   chatPlusMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15 },
-  addButtonActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  addButtonActive: { ...nsnActionButtonStyles.selectedPill },
   composerRow: {
     minHeight: 44,
     flexDirection: "row",

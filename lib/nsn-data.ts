@@ -36,6 +36,25 @@ export type EventArrivalConfidenceNote =
   | "Clear meeting point"
   | "Accessible venue";
 export type EventLifeStageCue = "Young adults" | "Adults" | "Mixed ages" | "Similar life stage";
+export type EventArrivalPreviewImageKind = "venue" | "arrival" | "landmark";
+
+export type EventArrivalPreviewImage = {
+  kind: EventArrivalPreviewImageKind;
+  title: string;
+  caption: string;
+  imageKey?: string;
+  placeholderIcon: string;
+};
+
+export type EventArrivalPreview = {
+  approximateArea: string;
+  nearbyLandmark: string;
+  arrivalSummary: string;
+  meetingPointHint: string;
+  mapSearchArea: string;
+  confidenceNotes: string[];
+  venuePreviewImages?: EventArrivalPreviewImage[];
+};
 
 export type EventComfortSignals = {
   socialEnergy: EventSocialEnergy;
@@ -169,6 +188,7 @@ export type EventItem = {
   tags: string[];
   comfortSignals?: EventComfortSignals;
   arrivalConfidenceNotes?: EventArrivalConfidenceNote[];
+  arrivalPreview?: EventArrivalPreview;
   lifeStageCues?: EventLifeStageCue[];
   comfortLabels?: EventComfortLabel[];
   atmosphereLabels?: EventAtmosphereLabel[];
@@ -212,6 +232,29 @@ export const dayEvents: EventItem[] = [
       "Clear meeting point",
       "First-time friendly",
     ],
+    arrivalPreview: {
+      approximateArea: "Lane Cove National Park picnic area",
+      nearbyLandmark: "Near a main park path and picnic tables",
+      arrivalSummary: "Outdoor meetup in a broad park area, with space to arrive slowly and settle before joining.",
+      meetingPointHint: "Meet near the picnic tables by a main path. The host can clarify the calmest nearby spot in chat.",
+      mapSearchArea: "Lane Cove National Park picnic area",
+      confidenceNotes: ["Broad park area", "Public transport friendly", "Clear meeting point"],
+      venuePreviewImages: [
+        {
+          kind: "landmark",
+          title: "Park meeting point",
+          caption: "Demo outdoor landmark preview",
+          imageKey: "picnic-easy-hangout",
+          placeholderIcon: "picnic",
+        },
+        {
+          kind: "arrival",
+          title: "Arrival path",
+          caption: "Look for the main path near picnic tables",
+          placeholderIcon: "path",
+        },
+      ],
+    },
     lifeStageCues: ["Mixed ages", "Adults"],
     comfortLabels: ["Calm & quiet", "Casual social", "Food-focused", "Conversation-light", "Small groups preferred", "Lower-pressure participation", "Outdoor airflow", "Join at your own pace", "Leave whenever you need"],
     atmosphereLabels: ["Quiet", "Small group", "Low-pressure", "Outdoor calm", "First-time friendly"],
@@ -261,6 +304,23 @@ export const dayEvents: EventItem[] = [
       "Parking nearby",
       "Clear meeting point",
     ],
+    arrivalPreview: {
+      approximateArea: "Palm Beach foreshore area",
+      nearbyLandmark: "Near the beach path and visible foreshore entry",
+      arrivalSummary: "Broad outdoor area with a visible landmark and room to wait at your own pace.",
+      meetingPointHint: "Meet near the beach path entrance before deciding where to sit or walk.",
+      mapSearchArea: "Palm Beach NSW foreshore",
+      confidenceNotes: ["Broad foreshore area", "Parking nearby", "Clear meeting point"],
+      venuePreviewImages: [
+        {
+          kind: "landmark",
+          title: "Foreshore landmark",
+          caption: "Demo beach arrival preview",
+          imageKey: "beach-day-chill-vibes",
+          placeholderIcon: "wave",
+        },
+      ],
+    },
     lifeStageCues: ["Young adults", "Mixed ages"],
     comfortLabels: ["Explorative/day out", "Activity-focused", "Energetic/social vibe", "Flexible pacing", "Large crowds okay", "Flexible social pacing", "High-energy social vibe", "Loud environment possible", "Outdoor animal exposure possible", "Outdoor airflow", "Join/leave flexibly"],
     atmosphereLabels: ["Balanced", "Lively", "Outdoor calm"],
@@ -299,6 +359,28 @@ export const dayEvents: EventItem[] = [
       "First-time friendly",
       "Accessible venue",
     ],
+    arrivalPreview: {
+      approximateArea: "Chatswood Library area",
+      nearbyLandmark: "Near the library entrance and quiet study levels",
+      arrivalSummary: "Indoor venue preview with a simple arrival point and quiet places nearby.",
+      meetingPointHint: "Meet near the library entrance, then move to a table that feels calm enough.",
+      mapSearchArea: "Chatswood Library",
+      confidenceNotes: ["Short walk from station", "Indoor venue", "First-time friendly"],
+      venuePreviewImages: [
+        {
+          kind: "venue",
+          title: "Library entrance",
+          caption: "Demo image placeholder for this alpha",
+          placeholderIcon: "book",
+        },
+        {
+          kind: "arrival",
+          title: "Quiet arrival spot",
+          caption: "Look for a calm table after meeting",
+          placeholderIcon: "chair",
+        },
+      ],
+    },
     lifeStageCues: ["Adults", "Similar life stage"],
     comfortLabels: ["Calm & quiet", "Cozy indoor", "Conversation-light", "Crowd-sensitive", "Quiet corners available", "Lower sensory stimulation", "Noise-sensitive friendly", "Pet-free meetup", "Calm seating area", "Quiet recharge space nearby"],
     atmosphereLabels: ["Quiet", "Cozy", "Small group", "Low-pressure", "First-time friendly"],
@@ -337,6 +419,22 @@ export const dayEvents: EventItem[] = [
       "Parking nearby",
       "First-time friendly",
     ],
+    arrivalPreview: {
+      approximateArea: "Lane Cove Village cafe strip",
+      nearbyLandmark: "Near the cafe entrances around the village plaza",
+      arrivalSummary: "Small cafe-area meetup with nearby seats and an easy option to browse first.",
+      meetingPointHint: "Meet near a cafe entrance in the village area before choosing a table together.",
+      mapSearchArea: "Lane Cove Village cafes",
+      confidenceNotes: ["Public transport friendly", "Parking nearby", "First-time friendly"],
+      venuePreviewImages: [
+        {
+          kind: "venue",
+          title: "Cafe exterior",
+          caption: "Demo image placeholder for this alpha",
+          placeholderIcon: "coffee",
+        },
+      ],
+    },
     lifeStageCues: ["Mixed ages", "Similar life stage"],
     comfortLabels: ["Casual social", "Cozy indoor", "Food-focused", "Conversation-light", "Small groups preferred", "Flexible social pacing", "Calm seating area", "Join at your own pace", "Leave whenever you need"],
     atmosphereLabels: ["Balanced", "Cozy", "Small group", "Low-pressure", "Indoor backup"],
@@ -385,6 +483,22 @@ export const dayEvents: EventItem[] = [
       "Clear meeting point",
       "First-time friendly",
     ],
+    arrivalPreview: {
+      approximateArea: "Waverton Park and foreshore area",
+      nearbyLandmark: "Near the park path with harbour-side open space",
+      arrivalSummary: "Outdoor walking meetup with a broad start point and easy side-by-side arrival.",
+      meetingPointHint: "Meet near the park path entrance, then start the walk once everyone is ready.",
+      mapSearchArea: "Waverton Park",
+      confidenceNotes: ["Short walk from station", "Broad outdoor area", "First-time friendly"],
+      venuePreviewImages: [
+        {
+          kind: "landmark",
+          title: "Park path",
+          caption: "Demo image placeholder for this alpha",
+          placeholderIcon: "path",
+        },
+      ],
+    },
     lifeStageCues: ["Adults", "Mixed ages"],
     comfortLabels: ["Explorative/day out", "Activity-focused", "Conversation-light", "Flexible pacing", "Small groups preferred", "Easy step-out/reset nearby", "Outdoor animal exposure possible", "Outdoor airflow", "Flexible pacing welcome"],
     atmosphereLabels: ["Quiet", "Balanced", "Small group", "Outdoor calm", "Low-pressure"],
@@ -426,6 +540,29 @@ export const eveningEvents: EventItem[] = [
       "Parking nearby",
       "Clear meeting point",
     ],
+    arrivalPreview: {
+      approximateArea: "Macquarie Centre cinema area",
+      nearbyLandmark: "Near the cinema entrance inside the shopping centre",
+      arrivalSummary: "Indoor meetup with a clear pre-movie meeting point and places to wait nearby.",
+      meetingPointHint: "Meet near the cinema entrance before tickets or snacks, then decide how much to chat.",
+      mapSearchArea: "Macquarie Centre cinema",
+      confidenceNotes: ["Short walk from station", "Indoor venue", "Clear meeting point"],
+      venuePreviewImages: [
+        {
+          kind: "venue",
+          title: "Cinema entrance",
+          caption: "Demo indoor venue preview",
+          imageKey: "movie-night-watch-chat",
+          placeholderIcon: "cinema",
+        },
+        {
+          kind: "arrival",
+          title: "Inside arrival point",
+          caption: "Meet near the cinema entrance before the session",
+          placeholderIcon: "door",
+        },
+      ],
+    },
     lifeStageCues: ["Young adults", "Adults"],
     comfortLabels: ["Cozy indoor", "Conversation-light", "Flexible pacing", "Large crowds okay", "Loud music possible", "Bring earbuds/headphones if helpful", "Lower-noise alternative nearby", "Lower-pressure participation", "Pet-free meetup", "Join/leave flexibly"],
     atmosphereLabels: ["Quiet", "Cozy", "Low-pressure", "Indoor backup", "First-time friendly"],
@@ -475,6 +612,28 @@ export const eveningEvents: EventItem[] = [
       "First-time friendly",
       "Clear meeting point",
     ],
+    arrivalPreview: {
+      approximateArea: "Chatswood cafe area near the station",
+      nearbyLandmark: "Near the cafe entrance and station-side streets",
+      arrivalSummary: "Indoor table meetup with a familiar station-side area and a simple first hello.",
+      meetingPointHint: "Meet near the cafe entrance before choosing the table or game.",
+      mapSearchArea: "Chatswood cafes near station",
+      confidenceNotes: ["Short walk from station", "Indoor venue", "First-time friendly"],
+      venuePreviewImages: [
+        {
+          kind: "venue",
+          title: "Cafe entrance",
+          caption: "Demo image placeholder for this alpha",
+          placeholderIcon: "coffee",
+        },
+        {
+          kind: "landmark",
+          title: "Station-side area",
+          caption: "Use broad area cues rather than seat-level details",
+          placeholderIcon: "station",
+        },
+      ],
+    },
     lifeStageCues: ["Mixed ages", "Similar life stage"],
     comfortLabels: ["Casual social", "Cozy indoor", "Activity-focused", "Conversation-heavy", "Close-friends vibe", "Small celebrations", "Flexible social pacing", "Smaller subgroup available", "Calm meetup alternative nearby"],
     atmosphereLabels: ["Balanced", "Cozy", "Small group", "First-time friendly"],
@@ -513,6 +672,22 @@ export const eveningEvents: EventItem[] = [
       "Parking nearby",
       "First-time friendly",
     ],
+    arrivalPreview: {
+      approximateArea: "Crows Nest village dining area",
+      nearbyLandmark: "Near the restaurant strip and village footpaths",
+      arrivalSummary: "Small table meetup in a familiar dining area with room to arrive with someone you know.",
+      meetingPointHint: "Meet just outside the restaurant area before going in together.",
+      mapSearchArea: "Crows Nest NSW restaurants",
+      confidenceNotes: ["Public transport friendly", "Parking nearby", "First-time friendly"],
+      venuePreviewImages: [
+        {
+          kind: "venue",
+          title: "Restaurant strip",
+          caption: "Demo image placeholder for this alpha",
+          placeholderIcon: "bowl",
+        },
+      ],
+    },
     lifeStageCues: ["Adults", "Mixed ages"],
     comfortLabels: ["Casual social", "Food-focused", "Conversation-heavy", "Small groups preferred", "Close-friends vibe", "Strong smells possible", "Join/leave flexibly"],
     atmosphereLabels: ["Balanced", "Small group", "Low-pressure", "Indoor backup"],
@@ -551,6 +726,28 @@ export const eveningEvents: EventItem[] = [
       "First-time friendly",
       "Accessible venue",
     ],
+    arrivalPreview: {
+      approximateArea: "North Sydney community room area",
+      nearbyLandmark: "Near the community room entrance and quieter indoor seating",
+      arrivalSummary: "Indoor low-noise meetup with a gentle arrival point and a clear room-style setting.",
+      meetingPointHint: "Meet near the community room entrance before finding seats together.",
+      mapSearchArea: "North Sydney community centre",
+      confidenceNotes: ["Public transport friendly", "Indoor venue", "Accessible venue"],
+      venuePreviewImages: [
+        {
+          kind: "venue",
+          title: "Community room entrance",
+          caption: "Demo image placeholder for this alpha",
+          placeholderIcon: "room",
+        },
+        {
+          kind: "arrival",
+          title: "Quiet entry",
+          caption: "Arrive near the entrance, then settle in slowly",
+          placeholderIcon: "music",
+        },
+      ],
+    },
     lifeStageCues: ["Adults", "Similar life stage"],
     comfortLabels: ["Calm & quiet", "Cozy indoor", "Conversation-light", "Calm gathering", "Lower sensory stimulation", "Quiet recharge nearby", "Quiet recharge space nearby", "Calm seating area", "Flexible pacing welcome"],
     atmosphereLabels: ["Quiet", "Cozy", "Small group", "Low-pressure", "First-time friendly"],

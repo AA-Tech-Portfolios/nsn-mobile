@@ -14,7 +14,7 @@ export function GuidesAndTipsCard({ tip, isDay = false, onDismiss }: GuidesAndTi
   return (
     <View style={[styles.card, isDay && styles.dayCard]}>
       <View style={[styles.iconBubble, isDay && styles.dayIconBubble]}>
-        <IconSymbol name="help" color={isDay ? "#445E93" : "#A8B7DA"} size={18} />
+        <IconSymbol name="lightbulb" color={isDay ? "#445E93" : "#A8B7DA"} size={18} />
       </View>
       <View style={styles.body}>
         <Text style={[styles.label, isDay && styles.dayMutedText]}>{tip.label}</Text>

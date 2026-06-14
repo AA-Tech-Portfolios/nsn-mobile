@@ -67,7 +67,7 @@ describe("profile menu row metadata", () => {
     expect(userPreferenceRowMetadata.find((row) => row.key === "personality")?.icon).toBe("person.fill");
     expect(userPreferenceRowMetadata.find((row) => row.key === "contact")?.icon).toBe("contact");
     expect(userPreferenceRowMetadata.find((row) => row.key === "location")?.icon).toBe("location");
-    expect(profileSupportRowMetadata.icon).toBe("help");
+    expect(profileSupportRowMetadata.icon).toBe("guide");
     expect(profileResourceSupportRowMetadata.icon).toBe("heart");
     expect(profileResourceSupportRowMetadata.title).toBe("Support & Resources");
     expect(profileResourceSupportRowMetadata.badge).toBe("Demo");

@@ -18,6 +18,7 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import type { IconSymbolName } from "@/components/ui/icon-symbol-map";
 import {
@@ -35,7 +36,7 @@ import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
 import { getExpectedGroupSizeCopy, getExpectedGroupSizeValue } from "@/lib/event-attendance-copy";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { NSN_CREATED_EVENTS_STORAGE_KEY } from "@/lib/local-prototype-storage";
-import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
+import { allEvents, movieNight, nsnColors, type EventArrivalPreview, type EventItem } from "@/lib/nsn-data";
 import {
   askAboutMeetupQuestionGroups,
   arrivingAloneReassuranceItems,
@@ -91,6 +92,12 @@ import {
 const CREATED_EVENTS_KEY = NSN_CREATED_EVENTS_STORAGE_KEY;
 
 const eventDetailImageSources: Record<string, ImageSourcePropType> = {
+  "beach-day-chill-vibes": require("../../assets/images/events/event-beach-day-chill-vibes.png"),
+  "movie-night-watch-chat": require("../../assets/images/events/event-movie-night-watch-chat.png"),
+  "picnic-easy-hangout": require("../../assets/images/events/event-picnic-easy-hangout.png"),
+};
+
+const arrivalPreviewImageSources: Record<string, ImageSourcePropType> = {
   "beach-day-chill-vibes": require("../../assets/images/events/event-beach-day-chill-vibes.png"),
   "movie-night-watch-chat": require("../../assets/images/events/event-movie-night-watch-chat.png"),
   "picnic-easy-hangout": require("../../assets/images/events/event-picnic-easy-hangout.png"),
@@ -751,7 +758,7 @@ const eventTranslations = {
       "Weather may affect this plan, so check the backup option before heading out.",
     weatherFriendlyCopy: "This event has a weather-friendly plan.",
     genericMeetingCopy: (venue: string) =>
-      `Meet near ${venue} about 10 minutes before the start time. The host can share a calmer exact spot in chat.`,
+      `Meet near ${venue} about 10 minutes before the start time. The host can share a calmer nearby spot in chat.`,
     meetingSafety: "Prototype meetup readiness",
     softExitTitle: "You can change your mind",
     softExitCopy:
@@ -1042,7 +1049,7 @@ const eventTranslations = {
       "El clima puede afectar este plan, así que revisa la opción de respaldo antes de salir.",
     weatherFriendlyCopy: "Este evento tiene un plan adecuado para el clima.",
     genericMeetingCopy: (venue: string) =>
-      `Quedamos cerca de ${venue} unos 10 minutos antes de la hora de inicio. La persona anfitriona puede compartir un punto exacto más tranquilo en el chat.`,
+      `Quedamos cerca de ${venue} unos 10 minutos antes de la hora de inicio. La persona anfitriona puede compartir un punto cercano más tranquilo en el chat.`,
     softExitTitle: "Puedes cambiar de opinión",
     softExitCopy:
       "Está bien saltarte esta quedada si hoy no va a tu ritmo. Puedes encontrar otro grupo, apartarte del chat o volver más tarde.",
@@ -1071,7 +1078,8 @@ function DetailMetaRow({
       activeOpacity={0.82}
       onPress={onPress}
       accessibilityRole={onPress ? "link" : undefined}
-      accessibilityLabel={onPress ? `Open maps for ${label}` : undefined}
+      accessibilityLabel={onPress ? `Open broad area in maps for ${label}` : undefined}
+      accessibilityHint={onPress ? "Opens an approximate area search, not live navigation." : undefined}
       style={[styles.metaRow, onPress && styles.metaRowAction, isRtl && styles.rtlRow]}
     >
       <View style={[styles.metaIconWrap, isDay && styles.dayMetaIconWrap]}>
@@ -1289,6 +1297,15 @@ export default function EventDetailsScreen() {
   const eventTrustSummary = getEventTrustSummary(event.trustProfile);
   const mediaComfortLabels = getDetailMediaComfortLabels(event, photoRecordingComfortPreferences);
   const eventMeetingCopy = isMovieNight ? copy.meetingCopy : copy.genericMeetingCopy(event.venue);
+  const arrivalPreview: EventArrivalPreview = event.arrivalPreview ?? {
+    approximateArea: event.venue,
+    nearbyLandmark: "Local prototype landmark details are not set yet.",
+    arrivalSummary: "Use the broad venue area and host notes before leaving.",
+    meetingPointHint: eventMeetingCopy,
+    mapSearchArea: event.venue,
+    confidenceNotes: event.arrivalConfidenceNotes ?? ["Clear meeting point"],
+    venuePreviewImages: [],
+  };
   const membership = getEventMembership(event.id, eventMemberships);
   const canOpenMeetupChat = shouldOpenMeetupChat(membership.status);
   const rsvpChoices: { status: EventMembershipStatus; label: string }[] = [
@@ -1367,15 +1384,22 @@ export default function EventDetailsScreen() {
     setFocusedSection(null);
   };
   const openEventLocation = async () => {
-    const mapsUrl = buildEventLocationSearchUrl(event.venue);
+    const mapsUrl = buildEventLocationSearchUrl(arrivalPreview.mapSearchArea);
 
-    if (Platform.OS === "web") {
-      const webWindow = typeof window !== "undefined" ? window : undefined;
-      webWindow?.open(mapsUrl, "_blank", "noopener,noreferrer");
-      return;
+    try {
+      if (Platform.OS === "web") {
+        const webWindow = typeof window !== "undefined" ? window : undefined;
+        webWindow?.open(mapsUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      await Linking.openURL(mapsUrl);
+    } catch {
+      Alert.alert(
+        "Maps unavailable",
+        `Use the broad arrival area shown here: ${arrivalPreview.approximateArea}.`,
+      );
     }
-
-    await Linking.openURL(mapsUrl);
   };
   const handleEventDetailScroll = (scrollY: number) => {
     const measuredSections = eventDetailSectionPlan
@@ -2535,7 +2559,7 @@ export default function EventDetailsScreen() {
                 >
                   <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
                     <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                      <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                      <IconSymbol name="clipboard" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
                     </View>
                     <View style={styles.weatherCopyBlock}>
                       <Text
@@ -2785,8 +2809,8 @@ export default function EventDetailsScreen() {
 
             {renderAccordionSection(
               "arrival",
-              "Arrival",
-              "Where to meet and how the host can clarify the exact spot.",
+              "Arrival Preview",
+              "Broad area cues, familiar landmarks and what arriving may feel like.",
               "location",
               <View
                 style={[
@@ -2804,6 +2828,68 @@ export default function EventDetailsScreen() {
                 >
                   {eventMeetingCopy}
                 </Text>
+                <View style={[styles.arrivalPreviewSummaryCard, isDay && styles.dayArrivalPreviewSummaryCard]}>
+                  <View style={[styles.arrivalPreviewKickerRow, isRtl && styles.rtlRow]}>
+                    <IconSymbol name="location" color={isDay ? "#284E92" : "#B7CFFF"} size={15} />
+                    <Text
+                      style={[
+                        styles.arrivalPreviewKicker,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Approximate meetup area
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.arrivalPreviewArea,
+                      isDay && styles.dayHeadingText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {arrivalPreview.approximateArea}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.arrivalPreviewSummary,
+                      isDay && styles.dayMutedText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {arrivalPreview.arrivalSummary}
+                  </Text>
+                </View>
+                <View style={[styles.arrivalPreviewDetailGrid, isRtl && styles.rtlRow]}>
+                  {[
+                    { icon: "guide" as const, label: "Nearby landmark", value: arrivalPreview.nearbyLandmark },
+                    { icon: "clipboard" as const, label: "Meeting point", value: arrivalPreview.meetingPointHint },
+                  ].map((item) => (
+                    <View key={item.label} style={[styles.arrivalPreviewDetailCard, isDay && styles.dayArrivalPreviewDetailCard]}>
+                      <View style={[styles.arrivalPreviewKickerRow, isRtl && styles.rtlRow]}>
+                        <IconSymbol name={item.icon} color={isDay ? "#284E92" : "#B7CFFF"} size={14} />
+                        <Text
+                          style={[
+                            styles.arrivalPreviewDetailLabel,
+                            isDay && styles.dayMutedText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {item.label}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.arrivalPreviewDetailValue,
+                          isDay && styles.dayHeadingText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {item.value}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
                 {event.arrivalConfidenceNotes?.length ? (
                   <View style={[styles.arrivalConfidenceBlock, isRtl && styles.rtlBlock]}>
                     <Text
@@ -2816,7 +2902,7 @@ export default function EventDetailsScreen() {
                       Arrival & transport confidence
                     </Text>
                     <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-                      {event.arrivalConfidenceNotes.map((note) => (
+                      {(arrivalPreview.confidenceNotes.length ? arrivalPreview.confidenceNotes : event.arrivalConfidenceNotes).map((note) => (
                         <Text
                           key={note}
                           style={[
@@ -2840,6 +2926,67 @@ export default function EventDetailsScreen() {
                     </Text>
                   </View>
                 ) : null}
+                <View style={[styles.arrivalFamiliarityBlock, isRtl && styles.rtlBlock]}>
+                  <Text
+                    style={[
+                      styles.mediaComfortTitle,
+                      isDay && styles.dayHeadingText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Venue familiarity preview
+                  </Text>
+                  <View style={[styles.arrivalFamiliarityGrid, isRtl && styles.rtlRow]}>
+                    {(arrivalPreview.venuePreviewImages?.length
+                      ? arrivalPreview.venuePreviewImages
+                      : [
+                          {
+                            kind: "venue" as const,
+                            title: "Venue preview",
+                            caption: "No demo image is attached yet.",
+                            placeholderIcon: "location",
+                          },
+                        ]
+                    ).map((image) => {
+                      const imageSource = image.imageKey ? arrivalPreviewImageSources[image.imageKey] : undefined;
+
+                      return (
+                        <View key={`${image.kind}-${image.title}`} style={[styles.arrivalFamiliarityCard, isDay && styles.dayArrivalFamiliarityCard]}>
+                          {imageSource ? (
+                            <Image source={imageSource} style={styles.arrivalFamiliarityImage} />
+                          ) : (
+                            <View style={[styles.arrivalFamiliarityPlaceholder, isDay && styles.dayArrivalFamiliarityPlaceholder]}>
+                              <IconSymbol name="location" color={isDay ? "#5B6D8E" : "#B7CFFF"} size={18} />
+                              <Text style={[styles.arrivalFamiliarityPlaceholderText, isDay && styles.dayMutedText]}>
+                                Preview coming soon
+                              </Text>
+                            </View>
+                          )}
+                          <View style={styles.arrivalFamiliarityText}>
+                            <Text
+                              style={[
+                                styles.arrivalFamiliarityTitle,
+                                isDay && styles.dayHeadingText,
+                                isRtl && styles.rtlText,
+                              ]}
+                            >
+                              {image.title}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.arrivalFamiliarityCaption,
+                                isDay && styles.dayMutedText,
+                                isRtl && styles.rtlText,
+                              ]}
+                            >
+                              {image.caption}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
                 <Text
                   style={[
                     styles.meetingCopy,
@@ -2848,9 +2995,8 @@ export default function EventDetailsScreen() {
                     isRtl && styles.rtlText,
                   ]}
                 >
-                  NSN uses broad local area details here. Future precise sharing should be opt-in,
-                  temporary, event-specific, and show who can see it, for how long, and how to stop
-                  it.
+                  NSN uses broad local area details here. This preview is for arrival comfort and
+                  does not show participant locations or live mapping.
                 </Text>
               </View>,
             )}
@@ -2924,7 +3070,7 @@ export default function EventDetailsScreen() {
                   >
                     <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
                       <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                        <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                        <IconSymbol name="info" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
                       </View>
                       <Text
                         style={[
@@ -3095,7 +3241,7 @@ export default function EventDetailsScreen() {
                 >
                   <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
                     <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                      <IconSymbol name="help" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+                      <IconSymbol name="guide" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
                     </View>
                     <View style={styles.weatherCopyBlock}>
                       <Text
@@ -3840,40 +3986,24 @@ const styles = StyleSheet.create({
   },
   notFoundActions: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 18 },
   notFoundPrimaryButton: {
-    minHeight: 46,
+    ...nsnActionButtonStyles.primary,
     flexGrow: 1,
     flexBasis: 150,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 15,
-    backgroundColor: nsnColors.primary,
-    paddingHorizontal: 14,
   },
   notFoundPrimaryText: {
-    color: "#FFFFFF",
+    ...nsnActionTextStyles.primary,
     fontSize: 14,
-    fontWeight: "900",
     lineHeight: 20,
-    textAlign: "center",
   },
   notFoundSecondaryButton: {
-    minHeight: 46,
+    ...nsnActionButtonStyles.secondary,
     flexGrow: 1,
     flexBasis: 120,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: nsnColors.border,
-    backgroundColor: "rgba(255,255,255,0.04)",
-    paddingHorizontal: 14,
   },
   notFoundSecondaryText: {
-    color: nsnColors.text,
+    ...nsnActionTextStyles.secondary,
     fontSize: 14,
-    fontWeight: "900",
     lineHeight: 20,
-    textAlign: "center",
   },
   topBar: {
     flexDirection: "row",
@@ -3946,14 +4076,11 @@ const styles = StyleSheet.create({
   },
   actionText: { flex: 1, color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
   closeActionButton: {
+    ...nsnActionButtonStyles.primary,
     minHeight: 46,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 15,
-    backgroundColor: nsnColors.primary,
     marginTop: 12,
   },
-  closeActionText: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  closeActionText: { ...nsnActionTextStyles.primary, fontSize: 14, lineHeight: 20 },
   verificationList: { gap: 8 },
   verificationRow: {
     minHeight: 56,
@@ -4058,14 +4185,13 @@ const styles = StyleSheet.create({
   },
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
   primaryChip: {
+    ...nsnActionButtonStyles.selectedPill,
     maxWidth: "100%",
-    color: nsnColors.selectedChipText,
+    ...nsnActionTextStyles.selectedPill,
     fontSize: 12,
     fontWeight: "800",
     lineHeight: 17,
-    backgroundColor: nsnColors.selectedChip,
     borderWidth: 1,
-    borderColor: nsnColors.selectedChipBorder,
     paddingHorizontal: 13,
     paddingVertical: 7,
     borderRadius: 14,
@@ -4208,7 +4334,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     flexShrink: 1,
   },
-  quickJumpChipActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  quickJumpChipActive: { ...nsnActionButtonStyles.selectedPill },
   quickJumpChipText: {
     flexShrink: 1,
     minWidth: 0,
@@ -4454,7 +4580,84 @@ const styles = StyleSheet.create({
   },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   meetingPrivacyCopy: { marginTop: 8, fontSize: 12, lineHeight: 18 },
+  arrivalPreviewSummaryCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(124,170,201,0.34)",
+    backgroundColor: "rgba(124,170,201,0.08)",
+    padding: 13,
+    gap: 5,
+    marginTop: 12,
+  },
+  dayArrivalPreviewSummaryCard: { borderColor: "#AFC4DD", backgroundColor: "#F3F7FF" },
+  arrivalPreviewKickerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  arrivalPreviewKicker: {
+    color: "#B7CFFF",
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
+  arrivalPreviewArea: { color: nsnColors.text, fontSize: 16, fontWeight: "900", lineHeight: 22 },
+  arrivalPreviewSummary: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
+  arrivalPreviewDetailGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginTop: 10 },
+  arrivalPreviewDetailCard: {
+    flexGrow: 1,
+    flexBasis: 190,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+    gap: 5,
+  },
+  dayArrivalPreviewDetailCard: { borderColor: "#D2DCE8", backgroundColor: "#FFFFFF" },
+  arrivalPreviewDetailLabel: {
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
+  arrivalPreviewDetailValue: { color: nsnColors.text, fontSize: 12, fontWeight: "800", lineHeight: 18 },
   arrivalConfidenceBlock: { gap: 8, marginTop: 13 },
+  arrivalFamiliarityBlock: { gap: 8, marginTop: 14 },
+  arrivalFamiliarityGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
+  arrivalFamiliarityCard: {
+    flexGrow: 1,
+    flexBasis: 156,
+    minHeight: 168,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    overflow: "hidden",
+  },
+  dayArrivalFamiliarityCard: { borderColor: "#D2DCE8", backgroundColor: "#FFFFFF" },
+  arrivalFamiliarityImage: { width: "100%", height: 92, resizeMode: "cover" },
+  arrivalFamiliarityPlaceholder: {
+    height: 92,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    backgroundColor: "rgba(124,170,201,0.08)",
+    borderBottomWidth: 1,
+    borderBottomColor: nsnColors.border,
+  },
+  dayArrivalFamiliarityPlaceholder: {
+    backgroundColor: "#F4F7FB",
+    borderBottomColor: "#D2DCE8",
+  },
+  arrivalFamiliarityPlaceholderText: {
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "800",
+    lineHeight: 13,
+  },
+  arrivalFamiliarityText: { paddingHorizontal: 10, paddingVertical: 9, gap: 2 },
+  arrivalFamiliarityTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  arrivalFamiliarityCaption: { color: nsnColors.muted, fontSize: 11, lineHeight: 16 },
   meetupSupportPanel: {
     borderRadius: 17,
     borderWidth: 1,
@@ -4501,7 +4704,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
-  meetupSupportChipActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  meetupSupportChipActive: { ...nsnActionButtonStyles.selectedPill },
   meetupSupportChipText: {
     flexShrink: 1,
     color: nsnColors.text,
@@ -4670,7 +4873,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 8,
   },
-  rsvpChoiceActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  rsvpChoiceActive: { ...nsnActionButtonStyles.selectedPill },
   rsvpChoiceText: {
     flexShrink: 1,
     minWidth: 0,

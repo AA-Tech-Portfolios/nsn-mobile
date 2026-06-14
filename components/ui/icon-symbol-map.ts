@@ -55,6 +55,11 @@ export const ICON_SYMBOL_MAPPING = {
   interests: "interests",
   contact: "contact-phone",
   help: "help-outline",
+  info: "info-outline",
+  lightbulb: "lightbulb-outline",
+  guide: "menu-book",
+  clipboard: "content-paste",
+  moon: "dark-mode",
   weather: "wb-cloudy",
   "low-pressure": "sentiment-satisfied-alt",
   experience: "local-activity",
@@ -66,7 +71,7 @@ export const ICON_SYMBOL_MAPPING = {
 
 export type IconSymbolName = keyof typeof ICON_SYMBOL_MAPPING;
 
-export const ICON_SYMBOL_FALLBACK: MaterialIconName = "help-outline";
+export const ICON_SYMBOL_FALLBACK: MaterialIconName = "info-outline";
 
 export function getMaterialIconName(name: IconSymbolName | string): MaterialIconName {
   return ICON_SYMBOL_MAPPING[name as IconSymbolName] ?? ICON_SYMBOL_FALLBACK;

@@ -12,6 +12,7 @@ export type ProfileMenuIcon =
   | "contact"
   | "location"
   | "help"
+  | "guide"
   | "heart";
 
 export type ProfileOptionGroupId =
@@ -242,7 +243,7 @@ export function getUserPreferenceRowDescription(key: UserPreferenceRowKey, mode:
 
 export const profileSupportRowMetadata = {
   key: "helpSupport",
-  icon: "help" as const,
+  icon: "guide" as const,
   title: "Help & Support",
   description: "Help, feedback, and low-pressure support.",
   badge: "Demo",

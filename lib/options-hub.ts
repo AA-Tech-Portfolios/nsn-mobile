@@ -7,7 +7,12 @@ type OptionsHubIcon =
   | "contact"
   | "location"
   | "help"
+  | "info"
+  | "lightbulb"
+  | "guide"
+  | "clipboard"
   | "heart"
+  | "low-pressure"
   | "group"
   | "message"
   | "shield"
@@ -125,7 +130,7 @@ export const optionsHubSections: OptionsHubSection[] = [
     rows: [
       row({
         id: "first-meetup-support",
-        icon: "help",
+        icon: "guide",
         title: "First meetup support",
         description: "Mock support preferences for arriving with less pressure.",
         badge: "Prototype",
@@ -176,7 +181,7 @@ export const optionsHubSections: OptionsHubSection[] = [
       }),
       row({
         id: "help-support",
-        icon: "help",
+        icon: "guide",
         title: "Help & Support",
         description: "Open non-urgent help, outside support, and preparedness guidance.",
         badge: "Support",
@@ -409,7 +414,7 @@ export const safetyBoundaryGuidanceCategories = [
   },
   {
     label: "Low-pressure participation",
-    icon: "help",
+    icon: "low-pressure",
     description: "Quiet participation is welcome.",
     detail: "Listening, joining slowly, or taking part in short moments can all be valid ways to attend.",
   },
@@ -452,7 +457,7 @@ export const preparednessGuidanceCategories = [
   },
   {
     label: "Non-emergency support",
-    icon: "help",
+    icon: "heart",
     description: "Optional external support links can sit outside reporting and blocking tools.",
     badge: "Optional",
     detailTitle: "Non-emergency support",
@@ -465,7 +470,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://www.healthdirect.gov.au/",
         faviconUrl: getCalmFaviconUrl("healthdirect.gov.au"),
-        iconFallback: "help",
+        iconFallback: "heart",
       },
       {
         title: "NSW Mental Health Line",
@@ -473,7 +478,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://www.health.nsw.gov.au/mentalhealth/Pages/Mental-Health-Line.aspx",
         faviconUrl: getCalmFaviconUrl("health.nsw.gov.au"),
-        iconFallback: "help",
+        iconFallback: "heart",
       },
       {
         title: "Lifeline Australia",
@@ -481,7 +486,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://www.lifeline.org.au/",
         faviconUrl: getCalmFaviconUrl("lifeline.org.au"),
-        iconFallback: "help",
+        iconFallback: "heart",
       },
       {
         title: "NSW Ambulance Non-Emergency Guidance",
@@ -489,7 +494,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://www.ambulance.nsw.gov.au/our-services/emergency-services",
         faviconUrl: getCalmFaviconUrl("ambulance.nsw.gov.au"),
-        iconFallback: "help",
+        iconFallback: "heart",
       },
       {
         title: "Beyond Blue",
@@ -497,7 +502,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://www.beyondblue.org.au/",
         faviconUrl: getCalmFaviconUrl("beyondblue.org.au"),
-        iconFallback: "help",
+        iconFallback: "heart",
       },
       {
         title: "headspace",
@@ -505,7 +510,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://headspace.org.au/",
         faviconUrl: getCalmFaviconUrl("headspace.org.au"),
-        iconFallback: "help",
+        iconFallback: "heart",
       },
       {
         title: "QLife",
@@ -513,7 +518,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://qlife.org.au/",
         faviconUrl: getCalmFaviconUrl("qlife.org.au"),
-        iconFallback: "help",
+        iconFallback: "heart",
       },
       {
         title: "Autism Connect",
@@ -529,7 +534,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://griefline.org.au/",
         faviconUrl: getCalmFaviconUrl("griefline.org.au"),
-        iconFallback: "help",
+        iconFallback: "heart",
       },
       {
         title: "1800RESPECT",
@@ -632,7 +637,7 @@ export const preparednessGuidanceCategories = [
   },
   {
     label: "First-aid awareness",
-    icon: "help",
+    icon: "guide",
     description: "Informational awareness only; rely on qualified services for health concerns.",
     badge: "Informational",
     detailTitle: "First-aid awareness",
@@ -645,7 +650,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://www.redcross.org.au/firstaid/",
         faviconUrl: getCalmFaviconUrl("redcross.org.au"),
-        iconFallback: "help",
+        iconFallback: "guide",
       },
       {
         title: "St John Ambulance resources",
@@ -653,7 +658,7 @@ export const preparednessGuidanceCategories = [
         badge: "External",
         url: "https://stjohnnsw.com.au/",
         faviconUrl: getCalmFaviconUrl("stjohnnsw.com.au"),
-        iconFallback: "help",
+        iconFallback: "guide",
       },
     ],
   },

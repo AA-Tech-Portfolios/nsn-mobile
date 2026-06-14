@@ -8,6 +8,7 @@ import { defaultHomeSectionOrder, defaultHomeVisibleSections, getTranslationLang
 import { LocalAreaPicker } from "@/components/local-area-picker";
 import { ScreenContainer } from "@/components/screen-container";
 import { SkyThemeAccent } from "@/components/sky-theme-accent";
+import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { allEvents, dayEvents, eveningEvents, type EventItem, noiseLevelOptions, nsnColors } from "@/lib/nsn-data";
 import { findNearestNsnSydneyLocalArea, normalizeNsnSearchQuery, type NsnLocalAreaSuggestion, searchNsnEvents } from "@/lib/nsn-search";
@@ -21,6 +22,7 @@ import { getHomeFitToScreenPreset, getHomeLayoutPreset, homeLayoutPreferenceRole
 import { getHomeEventPreviewAsset, type HomeEventPreviewAssetKey } from "@/lib/home-event-preview-assets";
 import { getHomeTodayContextLabel } from "@/lib/home-header-context";
 import { getMeetupEmptyStateCopy } from "@/lib/meetup-empty-state";
+import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
 import {
   askAboutMeetupQuestionGroups,
   arrivingAloneReassuranceItems,
@@ -1205,8 +1207,6 @@ export default function HomeScreen() {
   const [nsnSearchQuery, setNsnSearchQuery] = useState("");
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null);
-  const [mapZoomLevel, setMapZoomLevel] = useState(0);
-  const [mapFocusMode, setMapFocusMode] = useState<"area" | "event">("area");
   const [openHomeAdvancedSettings, setOpenHomeAdvancedSettings] = useState(false);
   const [openHomeLayoutStyles, setOpenHomeLayoutStyles] = useState(false);
   const [activeOptionsSectionId, setActiveOptionsSectionId] = useState<OptionsHubSectionId | null>(null);
@@ -1352,8 +1352,6 @@ export default function HomeScreen() {
   const autoFitWideCardStyle = shouldAutoFitDashboard
     ? { flexBasis: viewportWidth >= 1500 ? 720 : 520, flexGrow: viewportWidth >= 1500 ? 1.35 : 1.65 }
     : null;
-  const mapZoomScale = 0.9 + mapZoomLevel * 0.12 + (mapFocusMode === "event" ? 0.08 : 0);
-
   const selectNoiseLevelPreference = (preference: NoiseLevelPreference) => {
     saveSoftHelloMvpState({ noiseLevelPreference: preference });
   };
@@ -1479,6 +1477,7 @@ export default function HomeScreen() {
   const selectedMapEventCopy = selectedMapEvent ? { ...selectedMapEvent, ...(eventTranslations[appLanguageBase]?.[selectedMapEvent.id] ?? {}) } : null;
   const selectedMapEventIndex = selectedMapEvent ? displayedEvents.findIndex((event) => event.id === selectedMapEvent.id) : -1;
   const selectedMapDetails = selectedMapEvent ? eventMapDetails[selectedMapEvent.id] : null;
+  const selectedArrivalPreview = selectedMapEvent?.arrivalPreview;
   const selectedMapTime = selectedMapEvent ? formatEventTimeLabel(selectedMapEvent.time, { locale, timeFormatPreference }) : null;
   const canCycleMapEvent = displayedEvents.length > 1;
   const shouldShowModeEvents =
@@ -1490,22 +1489,29 @@ export default function HomeScreen() {
 
     const nextIndex = selectedMapEventIndex < 0 ? 0 : (selectedMapEventIndex + 1) % displayedEvents.length;
     setHighlightedEventId(displayedEvents[nextIndex].id);
-    setMapFocusMode("event");
-    setMapZoomLevel(2);
   };
 
-  const zoomInMap = () => {
-    setMapZoomLevel((level) => Math.min(4, level + 1));
-  };
+  const openSelectedMapArea = async () => {
+    const mapSearchArea =
+      selectedArrivalPreview?.mapSearchArea ??
+      selectedArrivalPreview?.approximateArea ??
+      selectedMapDetails?.suburb ??
+      selectedMapEvent?.venue ??
+      timezone.label;
+    const mapsUrl = buildEventLocationSearchUrl(mapSearchArea);
 
-  const zoomOutMap = () => {
-    setMapFocusMode("area");
-    setMapZoomLevel((level) => Math.max(0, level - 1));
-  };
+    try {
+      if (Platform.OS === "web") {
+        const webWindow = typeof window !== "undefined" ? window : undefined;
+        webWindow?.open(mapsUrl, "_blank", "noopener,noreferrer");
+        showPrototypeUpdate("Opened broad area in Maps");
+        return;
+      }
 
-  const focusSelectedMapEvent = () => {
-    setMapFocusMode("event");
-    setMapZoomLevel(2);
+      await Linking.openURL(mapsUrl);
+    } catch {
+      showPrototypeUpdate("Maps unavailable - use the broad area shown here");
+    }
   };
 
   const renderPrototypeMapCanvas = () => {
@@ -1521,7 +1527,7 @@ export default function HomeScreen() {
 
     return (
     <View style={[styles.prototypeMapCanvas, shouldAutoFitDashboard && styles.prototypeMapCanvasAutoFit, { height: prototypeMapHeight, minHeight: prototypeMapHeight, borderRadius: Math.max(14, homeLayoutPreset.cardRadius - 4) }, isDay && styles.dayPrototypeMapCanvas]}>
-      <View pointerEvents="none" style={[styles.prototypeMapContent, { minHeight: prototypeMapHeight, transform: [{ scale: mapZoomScale }] }]}>
+      <View pointerEvents="none" style={[styles.prototypeMapContent, { minHeight: prototypeMapHeight }]}>
         <View style={[styles.prototypeMapWater, isDay && styles.dayPrototypeMapWater]} />
         <View style={[styles.prototypeMapGreen, styles.prototypeMapGreenTop]} />
         <View style={[styles.prototypeMapGreen, styles.prototypeMapGreenBottom]} />
@@ -1561,50 +1567,15 @@ export default function HomeScreen() {
       <View pointerEvents="none" style={[styles.prototypeMapVenueBadge, isDay && styles.dayPrototypeMapArea]}>
         <Text style={[styles.prototypeMapVenueKicker, isDay && styles.dayMutedText]}>Selected event</Text>
         <Text style={[styles.prototypeMapVenueName, isDay && styles.dayHeadingText]} numberOfLines={1}>
-          {selectedMapEvent?.venue ?? selectedMapDetails?.suburb ?? timezone.label}
+          {selectedArrivalPreview?.approximateArea ?? selectedMapEvent?.venue ?? selectedMapDetails?.suburb ?? timezone.label}
         </Text>
         <Text style={[styles.prototypeMapVenueSuburb, isDay && styles.dayMutedText]} numberOfLines={1}>
-          {selectedMapDetails?.suburb ?? timezone.city}
+          {selectedArrivalPreview?.nearbyLandmark ?? selectedMapDetails?.suburb ?? timezone.city}
         </Text>
       </View>
       <Text pointerEvents="none" style={[styles.prototypeMapAttribution, isDay && styles.dayPrototypeMapAttribution]}>
-        Prototype map preview - Map data © OpenStreetMap contributors
+        Static prototype area preview - not live navigation
       </Text>
-      <View style={styles.prototypeMapZoomControls}>
-        <TouchableOpacity
-          activeOpacity={0.78}
-          onPress={zoomInMap}
-          disabled={mapZoomLevel >= 4}
-          accessibilityRole="button"
-          accessibilityLabel="Zoom in"
-          accessibilityHint={mapZoomLevel >= 4 ? "Maximum demo map zoom reached." : "Zooms in the demo map."}
-          accessibilityState={{ disabled: mapZoomLevel >= 4 }}
-          style={[styles.prototypeMapZoomButton, homeLayoutRoundButtonStyle, isDay && styles.dayPrototypeMapZoomButton, mapZoomLevel >= 4 && styles.disabledMoveButton]}
-        >
-          <Text style={[styles.prototypeMapZoomText, isDay && styles.dayPrototypeMapZoomText]}>+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={0.78}
-          onPress={zoomOutMap}
-          disabled={mapZoomLevel <= 0 && mapFocusMode === "area"}
-          accessibilityRole="button"
-          accessibilityLabel="Zoom out"
-          accessibilityHint={mapZoomLevel <= 0 && mapFocusMode === "area" ? "Minimum demo map zoom reached." : "Zooms out the demo map."}
-          accessibilityState={{ disabled: mapZoomLevel <= 0 && mapFocusMode === "area" }}
-          style={[styles.prototypeMapZoomButton, homeLayoutRoundButtonStyle, isDay && styles.dayPrototypeMapZoomButton, mapZoomLevel <= 0 && mapFocusMode === "area" && styles.disabledMoveButton]}
-        >
-          <Text style={[styles.prototypeMapZoomText, isDay && styles.dayPrototypeMapZoomText]}>{"\u2212"}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          activeOpacity={0.78}
-          onPress={focusSelectedMapEvent}
-          accessibilityRole="button"
-          accessibilityLabel="Recenter on selected event location"
-          style={[styles.prototypeMapZoomButton, homeLayoutRoundButtonStyle, styles.prototypeMapResetButton, isDay && styles.dayPrototypeMapZoomButton]}
-        >
-          <IconSymbol name="location" color={isDay ? "#284E92" : "#FFFFFF"} size={14} />
-        </TouchableOpacity>
-      </View>
     </View>
     );
   };
@@ -2466,9 +2437,9 @@ export default function HomeScreen() {
         return homeVisibleSections.map ? (
           <View key={sectionKey} style={[styles.locationMapCard, styles.dashboardCard, homeLayoutMapCardStyle, styles.locationMapStandalone, isDay && styles.dayCard, outlinedCardStyle]}>
             <View style={[styles.sectionTitleRow, styles.locationMapTitleRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
-              <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={18} />
-              <Text style={[styles.locationMapTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Sydney North Shore map</Text>
-              <Text style={[styles.prototypeMapModeBadge, isDay && styles.dayPrototypeMapModeBadge]}>Prototype</Text>
+              <IconSymbol name="location" color={isDay ? "#284E92" : "#9FB7E8"} size={18} />
+              <Text style={[styles.locationMapTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>Arrival Preview</Text>
+              <Text style={[styles.prototypeMapModeBadge, isDay && styles.dayPrototypeMapModeBadge]}>Broad area</Text>
             </View>
             {renderPrototypeMapCanvas()}
             <View style={[styles.locationMapSummary, isDay && styles.dayLocationMapSummary]}>
@@ -2476,13 +2447,20 @@ export default function HomeScreen() {
                 {selectedMapEventCopy?.title ?? "Local area"}
               </Text>
               <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
-                {selectedMapEvent ? `${selectedMapEvent.venue}, ${selectedMapDetails?.suburb ?? timezone.label} • ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
+                {selectedMapEvent ? `${selectedArrivalPreview?.approximateArea ?? selectedMapDetails?.suburb ?? selectedMapEvent.venue} • ${selectedMapTime}` : `${timezone.label}, ${timezone.country}`}
               </Text>
               <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
-                Prototype preview only - broad local discovery, not exact live location sharing.
+                {selectedArrivalPreview?.arrivalSummary ?? "Broad local discovery without live location sharing."}
               </Text>
               <View style={[styles.locationMapDetailRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
-                {(shouldUseVeryTightDashboardFit ? [] : [selectedMapDetails?.routeHint, selectedMapDetails?.accessibilityHint].filter(Boolean)).map((detail) => (
+                {(shouldUseVeryTightDashboardFit
+                  ? []
+                  : [
+                      selectedArrivalPreview?.nearbyLandmark,
+                      selectedArrivalPreview?.meetingPointHint,
+                      ...(selectedArrivalPreview?.confidenceNotes ?? [selectedMapDetails?.routeHint, selectedMapDetails?.accessibilityHint].filter(Boolean)),
+                    ].filter(Boolean)
+                ).slice(0, 4).map((detail) => (
                   <Text key={detail} style={[styles.locationMapDetailChip, isDay && styles.dayLocationMapDetailChip]} numberOfLines={1}>
                     {detail}
                   </Text>
@@ -2504,14 +2482,14 @@ export default function HomeScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.82}
-                onPress={() => showPrototypeUpdate("Open in maps placeholder")}
+                onPress={openSelectedMapArea}
                 accessibilityRole="button"
-                accessibilityLabel="Open in maps placeholder"
-                accessibilityHint="Real map links are not connected in this prototype."
+                accessibilityLabel="Open approximate area in maps"
+                accessibilityHint="Opens a broad event area search, not live navigation."
                 style={[styles.locationMapAction, homeLayoutSmallActionStyle, isDay && styles.dayLocationMapAction, outlinedButtonStyle]}
               >
-                <IconSymbol name="location" color={isDay ? "#284E92" : "#C7B07A"} size={14} />
-                <Text style={[styles.locationMapActionText, isDay && styles.dayLinkText]}>Open in maps</Text>
+                <IconSymbol name="location" color={isDay ? "#284E92" : "#9FB7E8"} size={14} />
+                <Text style={[styles.locationMapActionText, isDay && styles.dayLinkText]}>Open area in Maps</Text>
               </TouchableOpacity>
               {selectedMapEvent ? (
                 <TouchableOpacity
@@ -3668,7 +3646,7 @@ const styles = StyleSheet.create({
   homeControlGroupLabel: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
   homeControlRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   homeControlChip: { minHeight: 38, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "#101D31", paddingHorizontal: 12, alignItems: "center", justifyContent: "center" },
-  homeControlChipActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  homeControlChipActive: { ...nsnActionButtonStyles.selectedPill },
   homeControlChipText: { color: "#C7D3EA", fontSize: 12, fontWeight: "900", lineHeight: 16 },
   homeControlChipTextActive: { color: nsnColors.selectedChipText },
   homeDisclosureToggle: { minHeight: 54, borderRadius: 16, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 12, paddingVertical: 10, flexDirection: "row", alignItems: "center", gap: 10 },
@@ -3679,7 +3657,7 @@ const styles = StyleSheet.create({
   homeSelectedCopy: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15 },
   homeDensityRow: { flexDirection: "row", gap: 10 },
   homeDensityCard: { flex: 1, minHeight: 92, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 11, paddingVertical: 12, alignItems: "center", justifyContent: "center" },
-  homeDensityCardActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  homeDensityCardActive: { ...nsnActionButtonStyles.selectedPill },
   homeDensityIcon: { color: nsnColors.muted, fontSize: 30, fontWeight: "900", lineHeight: 34 },
   homeDensityTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center", marginTop: 3 },
   homeDensityCopy: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15, textAlign: "center", marginTop: 2 },
@@ -3690,7 +3668,7 @@ const styles = StyleSheet.create({
   homePanelNavChip: { flexDirection: "row", gap: 7 },
   layoutPreferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   layoutPreferenceCard: { flexGrow: 1, flexBasis: 138, minHeight: 130, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 12 },
-  layoutPreferenceCardActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  layoutPreferenceCardActive: { ...nsnActionButtonStyles.selectedPill },
   layoutPreferenceIcon: { color: nsnColors.muted, fontSize: 18, fontWeight: "900", lineHeight: 22, marginTop: 4 },
   layoutPreferenceTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center", marginTop: 7 },
   layoutPreferenceCopy: { color: nsnColors.muted, fontSize: 10, fontWeight: "800", lineHeight: 14, textAlign: "center", marginTop: 1 },
@@ -3723,7 +3701,7 @@ const styles = StyleSheet.create({
   homeSectionToggleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingTop: 2 },
   homeSectionOrderList: { gap: 7, paddingTop: 2 },
   homeSectionOrderItem: { minHeight: 56, borderRadius: 15, borderWidth: 1, borderColor: "#3B5276", backgroundColor: "rgba(16,29,49,0.86)", flexDirection: "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 9, paddingHorizontal: 10, paddingVertical: 8 },
-  homeSectionOrderItemActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  homeSectionOrderItemActive: { ...nsnActionButtonStyles.selectedPill },
   homeSectionOrderMain: { flex: 1, minWidth: 190, flexDirection: "row", alignItems: "center", gap: 9 },
   homeSectionHandle: { width: 28, height: 32, borderRadius: 11, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
   homeSectionOrderText: { flex: 1, minWidth: 0 },
@@ -3732,9 +3710,9 @@ const styles = StyleSheet.create({
   homeSectionRowControls: { flexDirection: "row", alignItems: "center", gap: 7 },
   homeSectionToggle: { minHeight: 34, flex: 1, borderRadius: 12, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", paddingHorizontal: 10, flexDirection: "row", gap: 6, alignItems: "center", justifyContent: "center" },
   daySectionToggle: { backgroundColor: "#F4F7FA", borderColor: "#C6D3E0" },
-  homeSectionToggleActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  homeSectionToggleActive: { ...nsnActionButtonStyles.selectedPill },
   homeSectionVisibilityButton: { minHeight: 32, minWidth: 70, borderRadius: 12, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
-  homeSectionVisibilityButtonActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  homeSectionVisibilityButtonActive: { ...nsnActionButtonStyles.selectedPill },
   homeSectionVisibilityText: { color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15 },
   homeSectionMoveControls: { flexDirection: "row", gap: 6 },
   homeSectionMoveButton: { width: 32, height: 32, borderRadius: 12, borderWidth: 1, borderColor: "#5F79A9", backgroundColor: "rgba(255,255,255,0.08)", alignItems: "center", justifyContent: "center" },
@@ -3757,7 +3735,7 @@ const styles = StyleSheet.create({
   detectLocationButtonText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
   searchModeTabs: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   searchModeTab: { flexGrow: 1, flexShrink: 1, flexBasis: 132, minHeight: 36, borderRadius: 12, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#101D31", alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
-  searchModeTabActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  searchModeTabActive: { ...nsnActionButtonStyles.selectedPill },
   searchModeTabText: { flexShrink: 1, minWidth: 0, color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
   searchModeTabTextActive: { color: nsnColors.selectedChipText },
   searchResultGroup: { gap: 7 },
@@ -3773,7 +3751,7 @@ const styles = StyleSheet.create({
   locationResultButton: { borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, paddingVertical: 8 },
   meetupSearchResultButton: { backgroundColor: "rgba(255,255,255,0.035)" },
   dayLocationResultButton: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
-  activeLocationResultButton: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  activeLocationResultButton: { ...nsnActionButtonStyles.selectedPill },
   dayActiveLocationResultButton: { borderColor: "#6F89A8", backgroundColor: "#EAF1FA" },
   locationResultTitle: { minWidth: 0, color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   locationResultMeta: { minWidth: 0, color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 3 },
@@ -3929,7 +3907,7 @@ const styles = StyleSheet.create({
   noiseGuideCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   noiseLevelRow: { flexDirection: "row", gap: 8, marginBottom: 12 },
   noiseLevelItem: { flex: 1, minHeight: 78, borderRadius: 14, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 8, paddingVertical: 10 },
-  noiseLevelItemActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  noiseLevelItemActive: { ...nsnActionButtonStyles.selectedPill },
   noiseLevelIcon: { fontSize: 20, lineHeight: 24, marginBottom: 4 },
   noiseLevelTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
   noiseLevelTitleActive: { color: nsnColors.selectedChipText },
@@ -3939,7 +3917,7 @@ const styles = StyleSheet.create({
   homeWrappingChipRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center" },
   eventCategoryFilterRow: { gap: 8, paddingTop: 6, paddingBottom: 8, paddingRight: 4 },
   pill: { minHeight: 34, maxWidth: "100%", paddingHorizontal: 16, borderRadius: 17, backgroundColor: "#101D31", borderWidth: 1, borderColor: "#2A3C59", alignItems: "center", justifyContent: "center" },
-  pillActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  pillActive: { ...nsnActionButtonStyles.selectedPill },
   pillText: { color: nsnColors.muted, fontWeight: "700", fontSize: 12, lineHeight: 16, textAlign: "center" },
   pillTextActive: { color: nsnColors.selectedChipText },
   sectionHeader: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 2 },
@@ -4053,8 +4031,8 @@ const styles = StyleSheet.create({
   liveBadgeText: { color: nsnColors.text, fontSize: 9, fontWeight: "900" },
   cardArrow: { width: 30, flexShrink: 0, alignItems: "center", justifyContent: "center" },
   cardArrowText: { color: nsnColors.text, fontSize: 32, lineHeight: 34 },
-  createMeetupButton: { minHeight: 52, borderRadius: 15, marginTop: 18, marginBottom: 2, backgroundColor: "#1F4E9A", overflow: "hidden", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, paddingHorizontal: 14, paddingVertical: 10 },
-  createMeetupButtonText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 20, textAlign: "center" },
+  createMeetupButton: { ...nsnActionButtonStyles.primary, minHeight: 52, borderRadius: 15, marginTop: 18, marginBottom: 2, overflow: "hidden", flexDirection: "row", gap: 7, paddingVertical: 10 },
+  createMeetupButtonText: { ...nsnActionTextStyles.primary, flexShrink: 1, minWidth: 0, fontSize: 15, lineHeight: 20 },
   insightGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 16 },
   insightCard: { flexGrow: 1, flexShrink: 1, flexBasis: 210, minHeight: 116, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "#0D1A2C", padding: 14 },
   insightIcon: { fontSize: 25, marginBottom: 7 },

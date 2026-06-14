@@ -181,6 +181,47 @@ describe("NSN prototype data", () => {
     }
   });
 
+  it("keeps arrival previews broad, practical, and prototype-safe", () => {
+    const exactAddressPattern = /\b\d{1,5}\s+[A-Za-z][A-Za-z\s]+(?:street|st|road|rd|avenue|ave|drive|dr|lane|ln|place|pl)\b/i;
+    const misleadingMapClaims = /\bexact|live|tracking|participant location|turn-by-turn|navigation|verified venue|guarantee|guaranteed\b/i;
+    const allowedImageKinds = ["venue", "arrival", "landmark"];
+
+    for (const event of allEvents) {
+      expect(event.arrivalPreview).toBeDefined();
+      expect(event.arrivalPreview?.approximateArea).toMatch(/\w/);
+      expect(event.arrivalPreview?.nearbyLandmark).toMatch(/\w/);
+      expect(event.arrivalPreview?.arrivalSummary).toMatch(/\w/);
+      expect(event.arrivalPreview?.meetingPointHint).toMatch(/\w/);
+      expect(event.arrivalPreview?.mapSearchArea).toMatch(/\w/);
+      expect(event.arrivalPreview?.confidenceNotes.length).toBeGreaterThanOrEqual(2);
+
+      const combinedPreviewText = [
+        event.arrivalPreview?.approximateArea,
+        event.arrivalPreview?.nearbyLandmark,
+        event.arrivalPreview?.arrivalSummary,
+        event.arrivalPreview?.meetingPointHint,
+        event.arrivalPreview?.mapSearchArea,
+        ...(event.arrivalPreview?.confidenceNotes ?? []),
+        ...(event.arrivalPreview?.venuePreviewImages ?? []).flatMap((image) => [
+          image.title,
+          image.caption,
+          image.imageKey,
+          image.placeholderIcon,
+        ]),
+      ].join(" ");
+
+      expect(combinedPreviewText).not.toMatch(exactAddressPattern);
+      expect(combinedPreviewText).not.toMatch(misleadingMapClaims);
+
+      for (const image of event.arrivalPreview?.venuePreviewImages ?? []) {
+        expect(allowedImageKinds).toContain(image.kind);
+        expect(image.title).toMatch(/\w/);
+        expect(image.caption).toMatch(/\w/);
+        expect(image.placeholderIcon).toMatch(/\w/);
+      }
+    }
+  });
+
   it("uses optional life-stage cues without hard age or identity filtering", () => {
     const allowedCues = ["Young adults", "Adults", "Mixed ages", "Similar life stage"];
     const forbidden = /\b\d+\s*-\s*\d+|only|exclude|filter|race|ethnicity|gender|religion|disability|compatibility|score|rank|match\b/i;

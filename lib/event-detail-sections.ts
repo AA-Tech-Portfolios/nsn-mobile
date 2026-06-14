@@ -28,7 +28,7 @@ export const eventDetailSectionPlan: EventDetailSectionPlan[] = [
   {
     id: "arrival",
     title: "Arrival",
-    summary: "Where to meet and how to clarify the exact spot.",
+    summary: "Broad arrival cues and how to clarify the meeting point.",
     iconName: "location",
     initiallyExpanded: false,
   },
