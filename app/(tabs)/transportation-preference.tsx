@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   optionStackWide: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch" },
   optionCard: { minHeight: 72, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, flexDirection: "row", alignItems: "center", gap: 12, padding: 13 },
   dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
-  optionCardActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  optionCardActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   optionIcon: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(255,255,255,0.10)" },
   optionBody: { flex: 1 },
   optionTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
   dayMutedText: { color: "#53677A" },
   activeText: { color: "#FFFFFF" },
   check: { width: 22, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
-  checkActive: { color: "#FFFFFF" },
+  checkActive: { color: nsnColors.selectedChipText },
 });

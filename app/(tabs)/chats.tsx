@@ -3391,7 +3391,7 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 10,
   },
-  chatMenuItemActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  chatMenuItemActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   chatMenuEmoji: {
     width: 40,
     height: 40,
@@ -3410,7 +3410,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     textAlign: "center",
   },
-  chatMenuItemTextActive: { color: "#FFFFFF" },
+  chatMenuItemTextActive: { color: nsnColors.selectedChipText },
   chat: { flex: 1 },
   chatContent: { paddingTop: 16, paddingBottom: 48 },
   chatSelectionContent: { paddingTop: 22, paddingBottom: 128 },
@@ -3670,7 +3670,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  reportTargetButtonActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  reportTargetButtonActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   reportTargetName: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   reportTargetRole: {
     color: nsnColors.muted,
@@ -3679,7 +3679,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     marginTop: 1,
   },
-  reportTargetTextActive: { color: "#FFFFFF" },
+  reportTargetTextActive: { color: nsnColors.selectedChipText },
   reportRouteStack: { gap: 8 },
   reportRouteButton: {
     borderRadius: 12,
@@ -3895,7 +3895,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     gap: 3,
   },
-  chatPlusChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  chatPlusChipActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
   chatPlusChipText: {
     flexShrink: 1,
     color: nsnColors.text,
@@ -3910,9 +3910,9 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     lineHeight: 15,
   },
-  chatPlusChipTextActive: { color: "#FFFFFF" },
+  chatPlusChipTextActive: { color: nsnColors.selectedChipText },
   chatPlusMeta: { color: nsnColors.muted, fontSize: 11, fontWeight: "800", lineHeight: 15 },
-  addButtonActive: { borderColor: nsnColors.primary, backgroundColor: "rgba(80,104,255,0.18)" },
+  addButtonActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
   composerRow: {
     minHeight: 44,
     flexDirection: "row",

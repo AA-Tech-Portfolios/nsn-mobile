@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   chip: { minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
   dayChip: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
-  chipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  chipActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   chipText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
   dayCard: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
   dayTitle: { color: "#0B1220" },

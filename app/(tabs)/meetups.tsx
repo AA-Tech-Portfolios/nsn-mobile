@@ -11,7 +11,8 @@ import { getGuideTipForSurface } from "@/lib/guides-and-tips";
 import { getMeetupEmptyStateCopy } from "@/lib/meetup-empty-state";
 import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
 import { dayEvents, eveningEvents, nsnColors } from "@/lib/nsn-data";
-import { canChatPrivately, getEffectivePrototypeVerificationLevel, getEventMembership, getEventTrustSummary, getRsvpLabel, getVerificationLevelLabel } from "@/lib/softhello-mvp";
+import { getCurrentRsvpCopy, getExpectedGroupSizeCopy } from "@/lib/event-attendance-copy";
+import { canChatPrivately, getEffectivePrototypeVerificationLevel, getEventMembership, getEventTrustSummary, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const upcoming = [eveningEvents[0], dayEvents[0], eveningEvents[1]];
 const alphaMeetupAttendeeIds = ["nsn-tester", "maya-host", "jordan-member"];
@@ -305,7 +306,6 @@ export default function MeetupsScreen() {
           {upcoming.map((event) => {
             const localizedEvent = meetupEventTranslations[translationLanguageBase]?.[event.id] ?? event;
             const membership = getEventMembership(event.id, eventMemberships);
-            const rsvpLabel = getRsvpLabel(membership.status);
 
             return (
             <TouchableOpacity key={event.id} activeOpacity={0.85} style={[styles.meetupCard, isDay && styles.dayCard]} onPress={() => router.push(`/event/${event.id}`)} accessibilityRole="button" accessibilityHint={screenReaderHints ? meetupCopy.eventDetailsHint(localizedEvent.title) : undefined}>
@@ -313,7 +313,7 @@ export default function MeetupsScreen() {
               <View style={styles.cardBody}>
                 <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedEvent.title}</Text>
                 <Text style={[styles.cardMeta, isDay && styles.dayMutedText]}>{event.venue} · {event.time}</Text>
-                <Text style={[styles.cardCopy, isDay && styles.daySuccessText]}>{localizedEvent.people} · {rsvpLabel}</Text>
+                <Text style={[styles.cardCopy, isDay && styles.daySuccessText]}>{getCurrentRsvpCopy(membership.status)}</Text>
                 {event.comfortSignals ? (
                   <View style={styles.comfortSignalRow}>
                     <Text style={[styles.comfortSignalChip, isDay && styles.dayComfortSignalChip]}>
@@ -323,7 +323,7 @@ export default function MeetupsScreen() {
                       {event.comfortSignals.noiseLevel}
                     </Text>
                     <Text style={[styles.comfortSignalChip, isDay && styles.dayComfortSignalChip]}>
-                      {event.comfortSignals.groupSize}
+                      {getExpectedGroupSizeCopy(event)}
                     </Text>
                     <Text style={[styles.comfortSignalChip, isDay && styles.dayComfortSignalChip]}>
                       {event.comfortSignals.conversationStyle}

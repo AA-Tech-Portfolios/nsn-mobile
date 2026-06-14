@@ -260,8 +260,8 @@ export default function LocationPreferenceScreen() {
                       style={[styles.localityOption, isRtl && styles.rtlRow, selected && styles.localityOptionActive]}
                     >
                       <View style={styles.localityBody}>
-                        <Text style={[styles.localityName, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{locality.suburb}</Text>
-                        <Text style={[styles.localityMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                        <Text style={[styles.localityName, isDay && styles.dayTitle, selected && styles.localityTextActive, isRtl && styles.rtlText]}>{locality.suburb}</Text>
+                        <Text style={[styles.localityMeta, isDay && styles.dayMutedText, selected && styles.localityTextActive, isRtl && styles.rtlText]}>
                           {locality.state} {locality.postcode}
                         </Text>
                       </View>
@@ -345,18 +345,19 @@ const styles = StyleSheet.create({
   localityStatus: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 7 },
   localityList: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, overflow: "hidden", marginTop: 10 },
   localityOption: { minHeight: 58, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: nsnColors.border },
-  localityOptionActive: { backgroundColor: "rgba(56,72,255,0.16)" },
+  localityOptionActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   localityBody: { flex: 1 },
   localityName: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   localityMeta: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 1 },
+  localityTextActive: { color: nsnColors.selectedChipText },
   localityCheck: { width: 24, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
-  localityCheckActive: { color: nsnColors.primary },
+  localityCheckActive: { color: nsnColors.selectedChipText },
   optionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   intentOption: { minHeight: 44, minWidth: "47%", flexGrow: 1, alignItems: "center", justifyContent: "center", borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 12, paddingVertical: 10 },
   dayChoice: { backgroundColor: "#F4F7F8", borderColor: "#C5D0DA" },
-  choiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  choiceActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   choiceText: { color: nsnColors.muted, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
-  choiceTextActive: { color: "#FFFFFF" },
+  choiceTextActive: { color: nsnColors.selectedChipText },
   primaryButton: { minHeight: 52, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: nsnColors.primary, paddingHorizontal: 18 },
   primaryButtonDisabled: { opacity: 0.45 },
   primaryButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900", lineHeight: 20 },
