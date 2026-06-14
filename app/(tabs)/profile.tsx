@@ -4,6 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import {
   backgroundCommunityOptions,
   backgroundStudyAreaOptions,
@@ -187,9 +188,9 @@ type HelpFeedbackType = "Suggestion" | "Bug/problem" | "Confusing experience" | 
 const helpFeedbackTypes: HelpFeedbackType[] = ["Suggestion", "Bug/problem", "Confusing experience", "Safety/trust concern", "Accessibility issue", "Other"];
 type HelpSupportSectionId = "ways-to-get-help" | "support-belonging" | "external-resources" | "preparedness-guidance" | "connection-guides" | "feedback-draft" | "faq-accessibility";
 const helpSupportSections = [
-  { id: "ways-to-get-help", title: "Ways to Get Help", icon: "help" },
+  { id: "ways-to-get-help", title: "Ways to Get Help", icon: "guide" },
   { id: "support-belonging", title: "Support & Belonging", icon: "shield" },
-  { id: "external-resources", title: "Outside Support", icon: "help" },
+  { id: "external-resources", title: "Outside Support", icon: "heart" },
   { id: "preparedness-guidance", title: "Preparedness", icon: "transport" },
   { id: "connection-guides", title: "Friendship & Dating", icon: "heart" },
   { id: "feedback-draft", title: "Feedback Draft", icon: "edit" },
@@ -246,7 +247,7 @@ const externalSupportResources = [
     copy: "24/7 crisis support and suicide prevention support for people in Australia.",
     url: "https://www.lifeline.org.au/",
     faviconUrl: getCalmFaviconUrl("lifeline.org.au"),
-    iconFallback: "help",
+    iconFallback: "heart",
   },
   {
     category: "Mental health support",
@@ -254,7 +255,7 @@ const externalSupportResources = [
     copy: "Mental health information, counselling, and support options.",
     url: "https://www.beyondblue.org.au/",
     faviconUrl: getCalmFaviconUrl("beyondblue.org.au"),
-    iconFallback: "help",
+    iconFallback: "heart",
   },
   {
     category: "Mental health helplines",
@@ -262,7 +263,7 @@ const externalSupportResources = [
     copy: "Australian health information and mental health helpline pathways.",
     url: "https://www.healthdirect.gov.au/mental-health-helplines",
     faviconUrl: getCalmFaviconUrl("healthdirect.gov.au"),
-    iconFallback: "help",
+    iconFallback: "heart",
   },
   {
     category: "Youth support",
@@ -270,7 +271,7 @@ const externalSupportResources = [
     copy: "Mental health and wellbeing support for young people and families.",
     url: "https://headspace.org.au/",
     faviconUrl: getCalmFaviconUrl("headspace.org.au"),
-    iconFallback: "help",
+    iconFallback: "heart",
   },
   {
     category: "LGBTQIA+ support",
@@ -278,7 +279,7 @@ const externalSupportResources = [
     copy: "Anonymous and free LGBTIQ+ peer support and referral in Australia.",
     url: "https://qlife.org.au/",
     faviconUrl: getCalmFaviconUrl("qlife.org.au"),
-    iconFallback: "help",
+    iconFallback: "heart",
   },
   {
     category: "Loneliness/social connection",
@@ -286,7 +287,7 @@ const externalSupportResources = [
     copy: "A free service for people who would like a friendly conversation.",
     url: "https://friendline.org.au/",
     faviconUrl: getCalmFaviconUrl("friendline.org.au"),
-    iconFallback: "help",
+    iconFallback: "heart",
   },
   {
     category: "ND/autism support",
@@ -302,7 +303,7 @@ const externalSupportResources = [
     copy: "Free grief and loss support resources and helpline information.",
     url: "https://griefline.org.au/",
     faviconUrl: getCalmFaviconUrl("griefline.org.au"),
-    iconFallback: "help",
+    iconFallback: "heart",
   },
   {
     category: "Domestic violence support",
@@ -5370,11 +5371,11 @@ export default function ProfileScreen() {
                       )}
                     </View>
                     <View onLayout={(event) => registerHelpSectionLayout("ways-to-get-help", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
-                      {renderHelpSectionHeader("ways-to-get-help", "Ways to Get Help", "Feedback, problems, developer contact, and feature ideas.", "help")}
+                      {renderHelpSectionHeader("ways-to-get-help", "Ways to Get Help", "Feedback, problems, developer contact, and feature ideas.", "guide")}
                       {openHelpSectionIds.includes("ways-to-get-help") ? (
                         <View style={styles.helpSubsectionBody}>
                           {[
-                            { icon: "help" as const, title: "Send Feedback", copy: "Suggestions, UX feedback, bugs, or confusing areas." },
+                            { icon: "message" as const, title: "Send Feedback", copy: "Suggestions, UX feedback, bugs, or confusing areas." },
                             { icon: "message" as const, title: "Contact the Developers", copy: "Use a feedback draft or GitHub issue while alpha support is being shaped." },
                             { icon: "flag" as const, title: "Report a Problem", copy: "Broken buttons, display issues, prototype bugs, or accessibility concerns." },
                             { icon: "interests" as const, title: "Feature Ideas", copy: "Suggest improvements without turning NSN into a high-pressure app." },
@@ -5435,7 +5436,7 @@ export default function ProfileScreen() {
                                 accessibilityRole="button"
                                 accessibilityLabel={`Learn more about ${item.title}`}
                               >
-                                <IconSymbol name="help" color="#FFFFFF" size={15} />
+                                <IconSymbol name="guide" color="#FFFFFF" size={15} />
                                 <Text style={[styles.profileDisplayChipText, styles.profileLayoutTextActive]}>Learn more</Text>
                               </TouchableOpacity>
                             </>
@@ -5471,7 +5472,7 @@ export default function ProfileScreen() {
                             </TouchableOpacity>
                           ))}
                           <View style={[styles.profileDisplayChip, styles.helpPathwayButton, styles.helpPathwayButtonDisabled, isDay && styles.daySoftOption]}>
-                            <IconSymbol name="help" color={isDay ? "#6E7B88" : nsnColors.muted} size={15} />
+                            <IconSymbol name="guide" color={isDay ? "#6E7B88" : nsnColors.muted} size={15} />
                             <Text style={[styles.profileDisplayChipText, isDay && styles.dayMutedText]}>Buddy/Guide Mode - coming later</Text>
                           </View>
                           <TouchableOpacity
@@ -5678,7 +5679,7 @@ export default function ProfileScreen() {
                                 accessibilityRole="button"
                                 accessibilityLabel={`Learn more about ${item.title}`}
                               >
-                                <IconSymbol name="help" color="#FFFFFF" size={15} />
+                            <IconSymbol name="guide" color="#FFFFFF" size={15} />
                                 <Text style={[styles.profileDisplayChipText, styles.profileLayoutTextActive]}>Learn More</Text>
                               </TouchableOpacity>
                             </>
@@ -7577,7 +7578,7 @@ const styles = StyleSheet.create({
   profilePreferenceDisplayToggle: { borderRadius: 14, borderWidth: 1, borderColor: "rgba(124,170,201,0.24)", backgroundColor: "rgba(255,255,255,0.035)", padding: 12, gap: 10, marginBottom: 6, minWidth: 0 },
   profilePreferenceModeButtons: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   profilePreferenceModeButton: { minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.18)", alignItems: "center", justifyContent: "center", paddingHorizontal: 13 },
-  profilePreferenceModeButtonActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  profilePreferenceModeButtonActive: { ...nsnActionButtonStyles.selectedPill },
   profilePreferenceModeButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   profileMenuFeaturedItem: { borderWidth: 1, borderColor: "rgba(124,170,201,0.45)", backgroundColor: "rgba(124,170,201,0.1)" },
   profileMenuIconBadge: { width: 34, height: 34, borderRadius: 14, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
@@ -7621,7 +7622,7 @@ const styles = StyleSheet.create({
   helpDesktopSidebar: { width: 214, borderRadius: 16, borderWidth: 1, borderColor: "#3D567E", backgroundColor: "rgba(255,255,255,0.045)", padding: 10, gap: 8, ...(Platform.OS === "web" ? ({ position: "sticky", top: 0, alignSelf: "flex-start" } as any) : {}) },
   helpDesktopContent: { flex: 1, minWidth: 0, gap: 2 },
   helpDesktopNavItem: { minHeight: 38, borderRadius: 12, borderWidth: 1, borderColor: "rgba(124,170,201,0.18)", backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 9, paddingVertical: 8 },
-  helpDesktopNavItemActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  helpDesktopNavItemActive: { ...nsnActionButtonStyles.selectedPill },
   helpDesktopNavText: { flex: 1, minWidth: 0, color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   helpDesktopNavTextActive: { color: nsnColors.selectedChipText },
   helpGuidanceCard: { gap: 10 },
@@ -7660,7 +7661,7 @@ const styles = StyleSheet.create({
   foodPreferenceNotice: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 17, paddingHorizontal: 12, paddingBottom: 8 },
   foodPreferenceChipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, paddingHorizontal: 10, paddingBottom: 10 },
   foodPreferenceChip: { minHeight: 38, maxWidth: "100%", borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 10, paddingVertical: 7, justifyContent: "center", flexShrink: 1 },
-  foodPreferenceChipActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  foodPreferenceChipActive: { ...nsnActionButtonStyles.selectedPill },
   foodPreferenceChipText: { minWidth: 0, color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   foodPreferenceChipMeta: { minWidth: 0, color: nsnColors.muted, fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 1 },
   foodPreferenceShowMoreButton: { alignSelf: "flex-start", minHeight: 34, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, marginLeft: 10, marginBottom: 10 },
@@ -7689,7 +7690,7 @@ const styles = StyleSheet.create({
   profileDisplayChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 7 },
   profileDisplayChip: { minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.045)", paddingHorizontal: 11, paddingVertical: 7, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, flexShrink: 1 },
   profileDisplayActionChip: { alignSelf: "flex-start", marginTop: 4 },
-  profileDisplayChipActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  profileDisplayChipActive: { ...nsnActionButtonStyles.selectedPill },
   profileDisplayChipText: { minWidth: 0, color: nsnColors.text, fontSize: 11.5, fontWeight: "900", lineHeight: 16 },
   profileLayoutStack: { gap: 8 },
   profileWidthStack: { marginTop: 8 },
@@ -7701,7 +7702,7 @@ const styles = StyleSheet.create({
   profilePreparednessResourceImage: { width: 16, height: 16, opacity: 0.88 },
   daySoftOption: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   dayProfileMenuIconBadge: { backgroundColor: "#F4F7FA", borderColor: "#D8E1EA" },
-  profileLayoutOptionActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  profileLayoutOptionActive: { ...nsnActionButtonStyles.selectedPill },
   profileLayoutBody: { flex: 1, minWidth: 0 },
   profileLayoutTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   profileLayoutCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 2 },
@@ -7723,7 +7724,7 @@ const styles = StyleSheet.create({
   simpleVisibilityModeCard: { width: "100%", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 12, gap: 10 },
   simpleVisibilityModeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   simpleVisibilityModeOption: { flexGrow: 1, flexShrink: 1, flexBasis: 142, minHeight: 42, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, paddingVertical: 8 },
-  simpleVisibilityModeOptionActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  simpleVisibilityModeOptionActive: { ...nsnActionButtonStyles.selectedPill },
   simpleVisibilityModeOptionText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
   simpleVisibilityModeCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
   simpleWarmUpBlurOption: { marginTop: 0 },
@@ -7782,7 +7783,7 @@ const styles = StyleSheet.create({
   localAreaValue: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20, marginTop: 8 },
   localAreaVisibilityToggle: { minHeight: 38, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 12, marginTop: 10 },
   previewVisibilityToggle: { alignSelf: "flex-start", minHeight: 38, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 12, marginTop: 12 },
-  localAreaVisibilityToggleActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  localAreaVisibilityToggleActive: { ...nsnActionButtonStyles.selectedPill },
   localAreaVisibilityText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   localAreaVisibilityTextActive: { color: nsnColors.selectedChipText },
   visibilityModeCard: { width: "100%", maxWidth: 480, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 12, marginTop: 12 },
@@ -7792,13 +7793,13 @@ const styles = StyleSheet.create({
   dayVisibilityModeSegmented: { backgroundColor: "#F4F7FA", borderColor: "#D8E1EA" },
   visibilityModeOption: { flex: 1, minHeight: 38, alignItems: "center", justifyContent: "center", paddingHorizontal: 8 },
   dayVisibilityModeOption: { backgroundColor: "#F4F7FA" },
-  visibilityModeOptionActive: { backgroundColor: nsnColors.selectedChip },
+  visibilityModeOptionActive: { ...nsnActionButtonStyles.selectedPill },
   dayVisibilityModeOptionActive: { backgroundColor: "#536C9E" },
   visibilityModeText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17, textAlign: "center" },
   visibilityModeTextActive: { color: nsnColors.selectedChipText },
   visibilityModeCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 8, textAlign: "center" },
   warmUpBlurOption: { minHeight: 58, borderRadius: 13, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 10, marginTop: 10 },
-  warmUpBlurOptionActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  warmUpBlurOptionActive: { ...nsnActionButtonStyles.selectedPill },
   profilePreviewBlock: { width: "100%", maxWidth: 480, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 12, marginTop: 12 },
   profileSectionCard: { width: "100%", maxWidth: 980, alignSelf: "center", borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 16, marginBottom: 18 },
   detailedSectionCard: { width: "100%", maxWidth: 980, alignSelf: "center", marginBottom: 14 },
@@ -7806,7 +7807,7 @@ const styles = StyleSheet.create({
   sectionSubtitle: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 2 },
   profileCardDivider: { height: 1, backgroundColor: nsnColors.border, marginVertical: 14 },
   compactGrid: { marginBottom: 0 },
-  interestChipActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  interestChipActive: { ...nsnActionButtonStyles.selectedPill },
   cardInlineMessage: { marginTop: 10, marginBottom: 0, textAlign: "left" },
   privacySummaryGrid: { flexDirection: "row", flexWrap: "wrap", alignItems: "stretch", gap: 10, marginTop: 4 },
   privacySummaryItem: { flexGrow: 1, flexShrink: 1, flexBasis: 160, minWidth: 0, maxWidth: "100%", overflow: "hidden", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 12, paddingVertical: 10 },
@@ -7828,11 +7829,11 @@ const styles = StyleSheet.create({
   trustFoundationTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   trustFoundationCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17 },
   verifiedPrivateOption: { minHeight: 72, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", gap: 10, padding: 12, marginTop: 14 },
-  verifiedPrivateOptionActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  verifiedPrivateOptionActive: { ...nsnActionButtonStyles.selectedPill },
   verifiedPrivateTextActive: { color: nsnColors.selectedChipText },
   verificationSteps: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 12 },
   verificationStep: { borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, paddingHorizontal: 9, paddingVertical: 5, backgroundColor: "rgba(255,255,255,0.03)" },
-  verificationStepActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  verificationStepActive: { ...nsnActionButtonStyles.selectedPill },
   verificationStepText: { color: nsnColors.muted, fontSize: 11, fontWeight: "800" },
   verificationStepTextActive: { color: nsnColors.selectedChipText },
   dayVerificationStep: { backgroundColor: "#F4F7FA", borderColor: "#8EA6C2" },
@@ -7860,7 +7861,7 @@ const styles = StyleSheet.create({
   verificationGuideCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17, marginTop: 2 },
   verificationLevelList: { gap: 8, paddingHorizontal: 10, paddingBottom: 10 },
   verificationLevelCard: { borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 10 },
-  verificationLevelCardActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
+  verificationLevelCardActive: { ...nsnActionButtonStyles.selectedPill },
   dayVerificationLevelCardActive: { borderColor: "#536C9E", backgroundColor: "#EAF1FA" },
   verificationLevelHeader: { flexDirection: "row", justifyContent: "space-between", gap: 10, marginBottom: 4 },
   verificationLevelKicker: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
@@ -7880,10 +7881,10 @@ const styles = StyleSheet.create({
   verificationActionGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   verificationActionCard: { flexGrow: 1, flexBasis: 190, minHeight: 62, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", paddingHorizontal: 12, paddingVertical: 10 },
   dayInput: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA", color: "#0B1220" },
-  confirmReviewButton: { minHeight: 48, borderRadius: 15, backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", marginTop: 12 },
-  confirmReviewText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20 },
-  secondaryReviewButton: { minHeight: 46, borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", marginTop: 9 },
-  secondaryReviewText: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  confirmReviewButton: { ...nsnActionButtonStyles.primary, minHeight: 48, marginTop: 12 },
+  confirmReviewText: { ...nsnActionTextStyles.primary, fontSize: 14, lineHeight: 20 },
+  secondaryReviewButton: { ...nsnActionButtonStyles.secondary, marginTop: 9 },
+  secondaryReviewText: { ...nsnActionTextStyles.secondary, fontSize: 13, lineHeight: 18 },
   photoMenu: { marginTop: 8, width: 185, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, overflow: "hidden", alignSelf: "center", },
   photoMenuItem: { paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: nsnColors.border, },
   photoMenuItemLast: { paddingVertical: 12, paddingHorizontal: 14, },
@@ -7902,7 +7903,7 @@ const styles = StyleSheet.create({
   preferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginTop: 2 },
   vibeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
   vibeChip: { color: nsnColors.text, fontSize: 13, lineHeight: 18, fontWeight: "700", paddingHorizontal: 13, paddingVertical: 9, borderRadius: 14, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, overflow: "hidden" },
-  comfortChipActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder, color: nsnColors.selectedChipText },
+  comfortChipActive: { ...nsnActionButtonStyles.selectedPill, color: nsnColors.selectedChipText },
   dayComfortChipActive: { backgroundColor: "#536C9E", borderColor: "#536C9E", color: "#FFFFFF" },
   vibeChipMuted: { opacity: 0.45, borderStyle: "dashed" },
   rtlRow: { flexDirection: "row-reverse" },

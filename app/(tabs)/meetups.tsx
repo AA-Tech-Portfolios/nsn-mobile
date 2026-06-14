@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-nati
 import { useRouter } from "expo-router";
 
 import { GuidesAndTipsCard } from "@/components/guides-and-tips-card";
+import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import { getMeetupConnectionInsights } from "@/lib/connection-prompts";
 import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { ScreenContainer } from "@/components/screen-container";
@@ -358,8 +359,8 @@ const styles = StyleSheet.create({
   dayAccentText: { color: "#445E93" },
   summaryTitle: { color: nsnColors.text, fontSize: 21, fontWeight: "800", lineHeight: 27 },
   summaryCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 14 },
-  summaryButton: { alignSelf: "flex-start", maxWidth: "100%", backgroundColor: nsnColors.primary, borderRadius: 15, borderWidth: StyleSheet.hairlineWidth, borderColor: "#1BB6C8", paddingHorizontal: 16, paddingVertical: 9 },
-  summaryButtonText: { color: nsnColors.text, fontWeight: "800", fontSize: 13, lineHeight: 18, textAlign: "center" },
+  summaryButton: { ...nsnActionButtonStyles.primary, minHeight: 38, alignSelf: "flex-start", maxWidth: "100%", paddingHorizontal: 16, paddingVertical: 9 },
+  summaryButtonText: { ...nsnActionTextStyles.primary, fontWeight: "800", fontSize: 13, lineHeight: 18 },
   alphaGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 14 },
   timingCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.03)", padding: 14, marginBottom: 14 },
   connectionInsightCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginBottom: 18 },
@@ -378,8 +379,8 @@ const styles = StyleSheet.create({
   gateTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "900", lineHeight: 23 },
   gateCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 6, marginBottom: 10 },
   gateStatus: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 12 },
-  gateButton: { width: "100%", minHeight: 46, borderRadius: 15, borderWidth: StyleSheet.hairlineWidth, borderColor: "#1BB6C8", backgroundColor: nsnColors.primary, alignItems: "center", justifyContent: "center", paddingHorizontal: 14, paddingVertical: 10 },
-  gateButtonText: { color: "#FFFFFF", fontSize: 14, fontWeight: "900", lineHeight: 20, textAlign: "center" },
+  gateButton: { ...nsnActionButtonStyles.primary, width: "100%", paddingVertical: 10 },
+  gateButtonText: { ...nsnActionTextStyles.primary, fontSize: 14, lineHeight: 20 },
   sectionTitle: { color: nsnColors.text, fontSize: 17, fontWeight: "800", lineHeight: 24, marginBottom: 10 },
   list: { gap: 10 },
   meetupCard: { minHeight: 88, borderRadius: 18, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, flexDirection: "row", alignItems: "flex-start", padding: 10 },

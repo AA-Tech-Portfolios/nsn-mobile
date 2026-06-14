@@ -334,6 +334,45 @@ const renderIconShape = (name: IconSymbolName, { color, strokeWidth }: IconShape
           <Path d="M7.2 5.2h3l1.4 3.4-2 1.2a11 11 0 0 0 4.6 4.6l1.2-2 3.4 1.4v3a2 2 0 0 1-2.2 2C9.4 18.1 5.9 14.6 5.2 7.4a2 2 0 0 1 2-2.2Z" {...strokeProps} />
         </>
       );
+    case "info":
+      return (
+        <>
+          <Circle cx="12" cy="12" r="8" {...strokeProps} />
+          <Circle cx="12" cy="8.2" r=".75" fill={color} />
+          <Line x1="12" y1="11" x2="12" y2="16" {...strokeProps} />
+        </>
+      );
+    case "lightbulb":
+      return (
+        <>
+          <Path d="M8.2 11.2a4 4 0 1 1 7.6 0c-.4 1.2-1.3 2-2.1 2.9-.5.5-.8 1.1-.8 1.9h-1.8c0-.8-.3-1.4-.8-1.9-.8-.9-1.7-1.7-2.1-2.9Z" {...strokeProps} />
+          <Line x1="10" y1="18" x2="14" y2="18" {...strokeProps} />
+          <Line x1="10.7" y1="20.2" x2="13.3" y2="20.2" {...strokeProps} />
+          <Line x1="12" y1="2.8" x2="12" y2="4.4" {...strokeProps} />
+          <Line x1="4.8" y1="9" x2="6.2" y2="9" {...strokeProps} />
+          <Line x1="17.8" y1="9" x2="19.2" y2="9" {...strokeProps} />
+        </>
+      );
+    case "guide":
+      return (
+        <>
+          <Path d="M5.5 5.2h5.2c.8 0 1.3.5 1.3 1.3v12.3c0-.8-.5-1.3-1.3-1.3H5.5V5.2Z" {...strokeProps} />
+          <Path d="M18.5 5.2h-5.2c-.8 0-1.3.5-1.3 1.3v12.3c0-.8.5-1.3 1.3-1.3h5.2V5.2Z" {...strokeProps} />
+          <Line x1="8" y1="8.5" x2="10" y2="8.5" {...strokeProps} />
+          <Line x1="14" y1="8.5" x2="16" y2="8.5" {...strokeProps} />
+        </>
+      );
+    case "clipboard":
+      return (
+        <>
+          <Rect x="6" y="5.5" width="12" height="15" rx="2.2" {...strokeProps} />
+          <Path d="M9.5 6.2a2.5 2.5 0 0 1 5 0v1.3h-5V6.2Z" {...strokeProps} />
+          <Line x1="9" y1="12" x2="15" y2="12" {...strokeProps} />
+          <Line x1="9" y1="15.3" x2="14" y2="15.3" {...strokeProps} />
+        </>
+      );
+    case "moon":
+      return <Path d="M18.8 15.6A7.3 7.3 0 0 1 8.4 5.2 7.8 7.8 0 1 0 18.8 15.6Z" {...strokeProps} />;
     case "weather":
       return (
         <>
@@ -400,7 +439,7 @@ export function IconSymbol({
   style?: StyleProp<ViewStyle>;
   weight?: SymbolWeight;
 }) {
-  const iconName = ICON_SYMBOL_MAPPING[name] ? name : "help";
+  const iconName = ICON_SYMBOL_MAPPING[name] ? name : "info";
 
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" style={style} pointerEvents="none">

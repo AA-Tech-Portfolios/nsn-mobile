@@ -26,6 +26,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { ProfileVisibilityPreview } from "@/components/profile-visibility-preview";
 import { SkyThemeAccent } from "@/components/sky-theme-accent";
+import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import {
   appPalettes,
   communicationPreferenceOptions,
@@ -10061,25 +10062,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   cancelButton: {
-    borderWidth: 1,
-    borderColor: nsnColors.border,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    ...nsnActionButtonStyles.secondary,
+    minHeight: 42,
   },
   confirmPrimaryButton: {
+    ...nsnActionButtonStyles.primary,
+    minHeight: 42,
     backgroundColor: "#445E93",
   },
   confirmDestructiveButton: {
     backgroundColor: "#B83A50",
   },
   confirmButtonText: {
-    color: nsnColors.text,
+    ...nsnActionTextStyles.secondary,
     fontSize: 13,
-    fontWeight: "900",
   },
   confirmPrimaryText: {
-    color: "#FFFFFF",
+    ...nsnActionTextStyles.primary,
     fontSize: 13,
-    fontWeight: "900",
   },
   blurLevelText: {
     color: nsnColors.text,

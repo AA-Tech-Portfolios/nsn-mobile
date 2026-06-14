@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { PrototypeLocalNote } from "@/components/prototype-local-note";
 import { ScreenContainer } from "@/components/screen-container";
+import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import {
@@ -216,7 +217,7 @@ const workStudySectionIcons: Record<string, ComponentProps<typeof IconSymbol>["n
   "Broad field or area": "badge",
   "Interested in / learning about": "interests",
   "Social comfort & life pacing": "low-pressure",
-  "Things that can feel difficult sometimes": "help",
+  "Things that can feel difficult sometimes": "guide",
   "Things I'm working through": "life-context",
   Study: "life-context",
   Work: "badge",
@@ -2640,8 +2641,8 @@ const styles = StyleSheet.create({
   topActions: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)" },
   dayIconButton: { backgroundColor: "#EEF3F4", borderColor: "#C5D0DA" },
-  secondaryButton: { minHeight: 40, maxWidth: "100%", borderRadius: 14, borderWidth: 1, borderColor: "#5A6EA5", backgroundColor: "rgba(85, 111, 186, 0.2)", flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 14, flexShrink: 1 },
-  secondaryButtonText: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18, textAlign: "center" },
+  secondaryButton: { ...nsnActionButtonStyles.secondary, minHeight: 40, maxWidth: "100%", borderRadius: 14, flexDirection: "row", gap: 8, flexShrink: 1 },
+  secondaryButtonText: { ...nsnActionTextStyles.secondary, flexShrink: 1, minWidth: 0, fontSize: 13, lineHeight: 18 },
   headerCard: { borderRadius: 20, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, padding: 18, gap: 13, flexDirection: "row", alignItems: "flex-start", flexWrap: "wrap" },
   headerIcon: { fontSize: 34, lineHeight: 42 },
   headerText: { flex: 1, minWidth: 240, gap: 4 },
@@ -2653,7 +2654,7 @@ const styles = StyleSheet.create({
   sectionNav: { gap: 9, paddingVertical: 2 },
   sectionNavWide: { flexDirection: "row", flexWrap: "wrap" },
   navPill: { minHeight: 38, borderRadius: 999, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "center", justifyContent: "center", paddingHorizontal: 13 },
-  navPillActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  navPillActive: { ...nsnActionButtonStyles.selectedPill },
   navPillText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   overviewGrid: { gap: 12 },
   overviewGridWide: { flexDirection: "row", flexWrap: "wrap" },
@@ -2682,7 +2683,7 @@ const styles = StyleSheet.create({
   interestComfortModifierGrid: { width: "100%", overflow: "visible" },
   chip: { minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", alignItems: "flex-start", justifyContent: "center", paddingHorizontal: 12, paddingVertical: 8, maxWidth: "100%", flexShrink: 1 },
   chipWide: { flexBasis: 160, flexGrow: 1, flexShrink: 1 },
-  chipActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  chipActive: { ...nsnActionButtonStyles.selectedPill },
   chipText: { minWidth: 0, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   chipMeta: { minWidth: 0, color: nsnColors.muted, fontSize: 11, fontWeight: "700", lineHeight: 16, marginTop: 2 },
   inlinePreferenceStack: { gap: 10 },
@@ -2705,7 +2706,7 @@ const styles = StyleSheet.create({
   showMoreButton: { minHeight: 38, alignSelf: "flex-start", borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
   optionCard: { minHeight: 88, borderRadius: 18, borderWidth: 1.2, borderColor: "#5A6EA5", backgroundColor: nsnColors.surface, flexDirection: "row", alignItems: "flex-start", gap: 13, padding: 14, minWidth: 0 },
   optionCardWide: { flexGrow: 1, flexShrink: 1, flexBasis: 300, minWidth: 0 },
-  optionCardActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
+  optionCardActive: { ...nsnActionButtonStyles.selectedPill },
   optionEmoji: { width: 34, fontSize: 24, lineHeight: 30, textAlign: "center" },
   optionTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   optionCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 2 },

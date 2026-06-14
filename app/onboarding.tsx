@@ -19,6 +19,7 @@ import {
   getEffectiveBlurLevel,
 } from "@/components/profile-visibility-preview";
 import { ScreenContainer } from "@/components/screen-container";
+import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import { getOnboardingAboutRequirement } from "@/lib/alpha-readiness-controls";
 import type {
   NsnBlurLevel,
@@ -1193,29 +1194,22 @@ const styles = StyleSheet.create({
   summaryValue: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   buttonRow: { flexDirection: "row", gap: 10, marginTop: 6 },
   primaryButton: {
+    ...nsnActionButtonStyles.primary,
     flex: 1,
     minHeight: 54,
     borderRadius: 17,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "#1BB6C8",
-    backgroundColor: nsnColors.primary,
-    alignItems: "center",
-    justifyContent: "center",
     paddingHorizontal: 16,
   },
   primaryButtonDisabled: { opacity: 0.42 },
-  primaryButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
+  primaryButtonText: { ...nsnActionTextStyles.primary, fontSize: 16 },
   secondaryButton: {
+    ...nsnActionButtonStyles.secondary,
     minHeight: 54,
     borderRadius: 17,
-    borderWidth: 1,
-    borderColor: nsnColors.border,
     backgroundColor: nsnColors.surface,
-    alignItems: "center",
-    justifyContent: "center",
     paddingHorizontal: 18,
   },
-  secondaryButtonText: { color: nsnColors.text, fontSize: 14, fontWeight: "900" },
+  secondaryButtonText: { ...nsnActionTextStyles.secondary, fontSize: 14 },
   skipButton: {
     minHeight: 60,
     borderRadius: 17,
