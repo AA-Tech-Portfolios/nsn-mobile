@@ -96,6 +96,7 @@ import {
 } from "@/lib/softhello-mvp";
 import type { SoftRevealPace } from "@/lib/soft-reveal";
 import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
+import { legalPrivacyDocuments, legalPrivacySettingsSummary } from "@/lib/legal-privacy-alpha";
 
 const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
 const softRevealPaceOptions: { value: SoftRevealPace; label: string; copy: string }[] = [
@@ -314,6 +315,7 @@ const jumpIconBySection: Record<SettingsSectionJumpId, ComponentProps<typeof Ico
     notifications: "bell",
     locationDiscovery: "location",
     regionalFormats: "language",
+    legalPrivacy: "shield",
     safetyContact: "shield",
     accessibility: "accessibility",
     appearance: "palette",
@@ -361,6 +363,7 @@ type SettingsSectionJumpId =
   | "notifications"
   | "locationDiscovery"
   | "regionalFormats"
+  | "legalPrivacy"
   | "safetyContact"
   | "accessibility"
   | "appearance"
@@ -374,6 +377,7 @@ type SettingsAccordionId =
   | "comfortSafety"
   | "notifications"
   | "timeUnits"
+  | "legalPrivacy"
   | "safetyContact"
   | "advancedDisplay"
   | "account";
@@ -385,6 +389,7 @@ const allSettingsAccordionIds: SettingsAccordionId[] = [
   "comfortSafety",
   "notifications",
   "timeUnits",
+  "legalPrivacy",
   "safetyContact",
   "advancedDisplay",
   "account",
@@ -403,6 +408,7 @@ const accordionByJumpSection: Record<SettingsSectionJumpId, SettingsAccordionId>
   notifications: "notifications",
   locationDiscovery: "timeUnits",
   regionalFormats: "timeUnits",
+  legalPrivacy: "legalPrivacy",
   safetyContact: "safetyContact",
   accessibility: "advancedDisplay",
   appearance: "advancedDisplay",
@@ -447,6 +453,11 @@ const settingsAccordionMeta: Record<
   safetyContact: {
     title: "Safety & Support",
     copy: "Prototype-safe guidance, support links, onboarding restart, and contact controls.",
+    icon: "shield",
+  },
+  legalPrivacy: {
+    title: "Legal & Privacy",
+    copy: legalPrivacySettingsSummary,
     icon: "shield",
   },
   advancedDisplay: {
@@ -3892,11 +3903,13 @@ export default function SettingsScreen() {
             { id: "notifications" as const, label: "Notifications" },
             { id: "locationDiscovery" as const, label: "Location" },
             { id: "regionalFormats" as const, label: "Formats" },
+            { id: "legalPrivacy" as const, label: "Legal & Privacy" },
             { id: "safetyContact" as const, label: "Safety" },
             { id: "accessibility" as const, label: "Accessibility" },
             { id: "language" as const, label: "Language" },
           ]
         : []),
+      ...(!isAdvancedSettings ? [{ id: "legalPrivacy" as const, label: "Legal & Privacy" }] : []),
       { id: "generalSettings", label: "Prototype account" },
     ],
     [comfortMode, isAdvancedSettings],
@@ -8592,6 +8605,89 @@ export default function SettingsScreen() {
                 </View>
               </>
             ) : null}
+          </>,
+        )}
+
+        {renderSettingsAccordion(
+          "legalPrivacy",
+          <>
+            <Text
+              onLayout={registerSectionLayout("legalPrivacy")}
+              style={[
+                styles.sectionTitle,
+                largerText && styles.largeSectionTitle,
+                isDay && styles.dayTitle,
+                contrastTextStyle,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Legal & Privacy
+            </Text>
+            <View
+              style={[
+                styles.card,
+                isDay && styles.dayCard,
+                highContrast && styles.highContrastCard,
+              ]}
+            >
+              {legalPrivacyDocuments.map((document, index) => (
+                <TouchableOpacity
+                  key={document.id}
+                  activeOpacity={0.78}
+                  onPress={() => router.push(document.route as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open ${document.title}`}
+                  accessibilityHint={document.summary}
+                  style={[
+                    styles.actionRow,
+                    isRtl && styles.rtlRow,
+                    index < legalPrivacyDocuments.length - 1 && styles.rowDivider,
+                    isDay && index < legalPrivacyDocuments.length - 1 && styles.dayRowDivider,
+                    highContrast &&
+                      index < legalPrivacyDocuments.length - 1 &&
+                      styles.highContrastDivider,
+                  ]}
+                >
+                  <View style={[styles.accordionIcon, isDay && styles.dayQuickJumpButton]}>
+                    <IconSymbol
+                      name={document.iconName}
+                      color={isDay ? "#445E93" : "#A8B7DA"}
+                      size={18}
+                    />
+                  </View>
+                  <View style={styles.settingCopy}>
+                    <Text
+                      style={[
+                        styles.label,
+                        largerText && styles.largeLabel,
+                        isDay && styles.dayLabel,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {document.title}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.helperText,
+                        largerText && styles.largeHelperText,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {document.summary}
+                    </Text>
+                    <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                      <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
+                        {document.eyebrow}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.actionText, isDay && styles.dayActionText]}>Open</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </>,
         )}
 
