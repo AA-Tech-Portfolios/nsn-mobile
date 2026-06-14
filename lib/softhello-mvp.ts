@@ -22,9 +22,12 @@ export type EventMembershipStatus =
   | "left"
   | "joined";
 
+export type AttendTogetherStatus = "solo" | "bringing_someone" | "maybe_bringing_someone";
+
 export type EventMembership = {
   eventId: string;
   status: EventMembershipStatus;
+  attendTogetherStatus?: AttendTogetherStatus;
   joinedAt?: string;
   leftAt?: string;
   updatedAt?: string;
@@ -218,6 +221,31 @@ export function getRsvpDescription(status: EventMembershipStatus) {
   return "No RSVP has been saved for this local prototype preview.";
 }
 
+export const attendTogetherStatusOptions: AttendTogetherStatus[] = [
+  "solo",
+  "bringing_someone",
+  "maybe_bringing_someone",
+];
+
+export function getAttendTogetherLabel(status: AttendTogetherStatus) {
+  if (status === "bringing_someone") return "Bringing someone";
+  if (status === "maybe_bringing_someone") return "Maybe bringing someone";
+
+  return "Going solo";
+}
+
+export function getAttendTogetherDescription(status: AttendTogetherStatus) {
+  if (status === "bringing_someone") {
+    return "Bring a friend, sibling, partner, parent, or support person. They do not need to be on NSN for this local prototype note.";
+  }
+
+  if (status === "maybe_bringing_someone") {
+    return "You might bring someone familiar. This stays as a local planning note and does not message anyone.";
+  }
+
+  return "Going solo is okay too. You can still arrive slowly, browse first, or change this local note later.";
+}
+
 export function shouldOpenMeetupChat(status: EventMembershipStatus) {
   return status === "going" || status === "joined";
 }
@@ -236,6 +264,25 @@ export function setEventRsvpStatus(
     updatedAt: now,
     joinedAt: status === "going" || status === "joined" ? existing.joinedAt ?? now : existing.joinedAt,
     leftAt: status === "left" ? now : undefined,
+  };
+
+  return memberships.some((membership) => membership.eventId === eventId)
+    ? memberships.map((membership) => (membership.eventId === eventId ? next : membership))
+    : [...memberships, next];
+}
+
+export function setEventAttendTogetherStatus(
+  eventId: string,
+  memberships: EventMembership[],
+  attendTogetherStatus: AttendTogetherStatus,
+  now = new Date().toISOString()
+): EventMembership[] {
+  const existing = getEventMembership(eventId, memberships);
+  const next: EventMembership = {
+    ...existing,
+    eventId,
+    attendTogetherStatus,
+    updatedAt: now,
   };
 
   return memberships.some((membership) => membership.eventId === eventId)

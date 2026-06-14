@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { allEvents, chatSeed, dayEvents, eveningEvents, eventChatSeeds, eventComfortLabelOptions, eventAtmosphereLabelOptions, movieNight, nsnColors, profileVibes } from "./nsn-data";
+import {
+  allEvents,
+  chatSeed,
+  dayEvents,
+  eveningEvents,
+  eventChatSeeds,
+  eventComfortLabelOptions,
+  eventAtmosphereLabelOptions,
+  movieNight,
+  nsnColors,
+  profileVibes,
+} from "./nsn-data";
 
 describe("NSN prototype data", () => {
   it("keeps event identifiers unique and route-safe", () => {
@@ -134,6 +145,52 @@ describe("NSN prototype data", () => {
       for (const label of event.atmosphereLabels ?? []) {
         expect(eventAtmosphereLabelOptions).toContain(label);
       }
+    }
+  });
+
+  it("gives each meetup compact social comfort and arrival confidence cues", () => {
+    const forbidden = /\btrust|verified|verification|guarantee|guaranteed|safe|safety\b/i;
+
+    for (const event of allEvents) {
+      expect(["Low", "Medium", "Higher"]).toContain(event.comfortSignals?.socialEnergy);
+      expect(["Quiet", "Moderate", "Lively"]).toContain(event.comfortSignals?.noiseLevel);
+      expect(event.comfortSignals?.groupSize).toMatch(/^\d+–\d+$/);
+      expect(["Casual", "Guided", "Activity-based", "Mostly flexible"]).toContain(
+        event.comfortSignals?.conversationStyle,
+      );
+      expect(event.arrivalConfidenceNotes?.length).toBeGreaterThanOrEqual(2);
+      expect(
+        event.arrivalConfidenceNotes?.some((note) =>
+          ["Public transport friendly", "Parking nearby", "Short walk from station"].includes(note),
+        ),
+      ).toBe(true);
+      expect(
+        event.arrivalConfidenceNotes?.some((note) =>
+          ["First-time friendly", "Clear meeting point", "Accessible venue"].includes(note),
+        ),
+      ).toBe(true);
+      expect(
+        [
+          event.comfortSignals?.socialEnergy,
+          event.comfortSignals?.noiseLevel,
+          event.comfortSignals?.groupSize,
+          event.comfortSignals?.conversationStyle,
+          ...(event.arrivalConfidenceNotes ?? []),
+        ].join(" "),
+      ).not.toMatch(forbidden);
+    }
+  });
+
+  it("uses optional life-stage cues without hard age or identity filtering", () => {
+    const allowedCues = ["Young adults", "Adults", "Mixed ages", "Similar life stage"];
+    const forbidden = /\b\d+\s*-\s*\d+|only|exclude|filter|race|ethnicity|gender|religion|disability|compatibility|score|rank|match\b/i;
+
+    for (const event of allEvents) {
+      expect(event.lifeStageCues?.length).toBeGreaterThan(0);
+      for (const cue of event.lifeStageCues ?? []) {
+        expect(allowedCues).toContain(cue);
+      }
+      expect(event.lifeStageCues?.join(" ")).not.toMatch(forbidden);
     }
   });
 

@@ -14,6 +14,8 @@ import {
   getPrototypeVerificationStateLabel,
   getWeatherFallbackSuggestions,
   getVerificationLevelLabel,
+  getAttendTogetherDescription,
+  getAttendTogetherLabel,
   getRsvpDescription,
   getRsvpLabel,
   hideEvent,
@@ -24,6 +26,7 @@ import {
   removeSavedPlace,
   savePlace,
   savePostEventFeedback,
+  setEventAttendTogetherStatus,
   setEventRsvpStatus,
   shouldOpenMeetupChat,
   unblockUser,
@@ -204,6 +207,44 @@ describe("SoftHello MVP domain rules", () => {
     expect(shouldOpenMeetupChat("joined")).toBe(true);
     expect(shouldOpenMeetupChat("interested")).toBe(false);
     expect(shouldOpenMeetupChat("running_late")).toBe(false);
+  });
+
+  it("supports local attend-together RSVP context without requiring an NSN guest", () => {
+    const withGuest = setEventAttendTogetherStatus(
+      "movie-night-watch-chat",
+      [],
+      "bringing_someone",
+      "2026-05-07T01:10:00.000Z",
+    );
+    const maybeGuest = setEventAttendTogetherStatus(
+      "movie-night-watch-chat",
+      withGuest,
+      "maybe_bringing_someone",
+      "2026-05-07T01:20:00.000Z",
+    );
+
+    expect(withGuest[0]).toMatchObject({
+      eventId: "movie-night-watch-chat",
+      attendTogetherStatus: "bringing_someone",
+      updatedAt: "2026-05-07T01:10:00.000Z",
+    });
+    expect(maybeGuest[0]).toMatchObject({
+      attendTogetherStatus: "maybe_bringing_someone",
+      updatedAt: "2026-05-07T01:20:00.000Z",
+    });
+    expect(getAttendTogetherLabel("solo")).toBe("Going solo");
+    expect(getAttendTogetherLabel("bringing_someone")).toBe("Bringing someone");
+    expect(getAttendTogetherLabel("maybe_bringing_someone")).toBe("Maybe bringing someone");
+    expect(getAttendTogetherDescription("bringing_someone")).toContain(
+      "friend, sibling, partner, parent, or support person",
+    );
+    expect(
+      [
+        getAttendTogetherDescription("solo"),
+        getAttendTogetherDescription("bringing_someone"),
+        getAttendTogetherDescription("maybe_bringing_someone"),
+      ].join(" "),
+    ).not.toMatch(/\bNSN account|required|invite|contacts|address book|sync|filter|matching|score|verified|verification\b/i);
   });
 
   it("keeps block state private and idempotent", () => {
