@@ -131,8 +131,8 @@ export function getEffectivePrototypeVerificationLevel(
 const meetingSafetyCopyTranslations: Record<string, Record<SoftHelloVerificationLevel, string>> = {
   English: {
     "Readiness not reviewed": "You can browse and prepare in this local prototype. Meetup access is only a local readiness preview.",
-    "Prototype contact preview": "This local contact preview can open prototype chat surfaces. No real verification or live messaging system is connected.",
-    "Prototype readiness reviewed": "Prototype readiness reviewed on this device. This is a local meetup preview state, not real identity verification.",
+    "Prototype contact preview": "This local contact preview can open prototype chat surfaces. No real contact provider or live messaging system is connected.",
+    "Prototype readiness reviewed": "Prototype readiness reviewed on this device. This is a local meetup preview state, not a real identity check.",
   },
 };
 

@@ -47,12 +47,12 @@ export const prototypeMyCircleMembers: MyCircleMember[] = [
   },
   {
     id: "circle-other",
-    displayName: "Trusted person",
+    displayName: "Familiar person",
     relationship: "Other trusted person",
     note: "Someone familiar you choose for planning support.",
   },
 ];
 
 export function getMyCirclePrototypeSummary() {
-  return "My Circle is a local prototype area for trusted people who can help you share or plan attendance. It stays on this device and does not message anyone.";
+  return "My Circle is a local prototype area for familiar people who can help you share or plan attendance. It stays on this device and does not message anyone.";
 }

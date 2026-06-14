@@ -34,6 +34,10 @@ import {
   normalizeFoodBeveragePreferenceIds,
 } from "./preferences/food-preferences";
 import {
+  clearAllLocalPrototypeData as clearStoredLocalPrototypeData,
+  SOFTHELLO_ONBOARDING_STORAGE_KEY,
+} from "./local-prototype-storage";
+import {
   defaultInterestComfortTagsByInterest,
   defaultInterestPreferenceIds,
   normalizeInterestComfortTagsByInterest,
@@ -444,7 +448,7 @@ export function getTranslationLanguageBase(language: string) {
   return languageOption?.translationBase ?? getLanguageBase(normalizedLanguage);
 }
 
-const ONBOARDING_STORAGE_KEY = "softhello.onboarding.v1";
+const ONBOARDING_STORAGE_KEY = SOFTHELLO_ONBOARDING_STORAGE_KEY;
 const MIN_ADULT_AGE = 18;
 const MAX_PROFILE_AGE = 95;
 const MAX_PREFERRED_AGE_SPAN = 35;
@@ -492,7 +496,7 @@ export type FriendshipStylePreference =
   | "Casual friendships"
   | "Deeper friendships"
   | "Activity-based friendships"
-  | "Small trusted circle"
+  | "Small familiar circle"
   | "Open to gradual connection"
   | "Conversation-focused"
   | "Shared hobbies first";
@@ -607,7 +611,7 @@ export type LocationComfortPreference =
   | "Prefer avoiding politics initially"
   | "Prefer avoiding religion debates"
   | "Avoid personal questioning early on"
-  | "Prefer gradual trust-building"
+  | "Prefer gradual familiarity"
   | "Sensitive to sarcasm-heavy humour"
   | "Prefer calmer humour"
   | "Comfortable with playful banter"
@@ -1100,7 +1104,7 @@ export const friendshipStyleOptions: FriendshipStylePreference[] = [
   "Casual friendships",
   "Deeper friendships",
   "Activity-based friendships",
-  "Small trusted circle",
+  "Small familiar circle",
   "Open to gradual connection",
   "Conversation-focused",
   "Shared hobbies first",
@@ -1206,7 +1210,7 @@ export const locationComfortPreferenceOptions: LocationComfortPreference[] = [
   "Prefer avoiding politics initially",
   "Prefer avoiding religion debates",
   "Avoid personal questioning early on",
-  "Prefer gradual trust-building",
+  "Prefer gradual familiarity",
   "Sensitive to sarcasm-heavy humour",
   "Prefer calmer humour",
   "Comfortable with playful banter",
@@ -2181,6 +2185,7 @@ type AppSettings = {
     snapshot?: Partial<Omit<OnboardingSnapshot, "hasCompletedOnboarding">>,
   ) => Promise<void>;
   resetOnboarding: () => Promise<void>;
+  clearAllLocalPrototypeData: () => Promise<void>;
   isNightMode: boolean;
   setIsNightMode: (value: boolean) => void;
   blurProfilePhoto: boolean;
@@ -4327,6 +4332,123 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     };
   }, [batterySaver, notificationSnoozed, timezone, weatherAlerts]);
 
+  const resetLocalPrototypeState = () => {
+    setHasCompletedOnboarding(false);
+    setAccountPaused(false);
+    setAccountPauseTimeline("Until I return");
+    setAgeConfirmed(false);
+    setAge(null);
+    setPreferredAgeMin(25);
+    setPreferredAgeMax(40);
+    setSuburb("");
+    setIntent("Exploring");
+    setDisplayName("NSN Tester");
+    setMiddleName("");
+    setLastName("");
+    setGender("Not specified");
+    setMiddleNameDisplay("Hidden");
+    setLastNameDisplay("Hidden");
+    setShowMiddleName(false);
+    setShowLastName(false);
+    setShowAge(false);
+    setShowPreferredAgeRange(false);
+    setShowGender(false);
+    setProfilePhotoUri(null);
+    setContactEmail("");
+    setContactPhone("");
+    setIdentitySelfieUri(null);
+    setHasIdentityDocument(false);
+    setVisibilityPreference("Blurred");
+    setComfortMode("Comfort Mode");
+    setPrivateProfile(false);
+    setBlurLevel("Medium blur");
+    setSoftRevealSuggestions(true);
+    setSoftRevealPace("Gradual reveal");
+    setPreferSoftRevealPeople(false);
+    setWarmUpLowerBlur(true);
+    setShowSuburbArea(false);
+    setShowInterests(false);
+    setShowComfortPreferences(false);
+    setMinimalProfileView(false);
+    setComfortPreferences(defaultComfortPreferences);
+    setVerificationLevel("Readiness not reviewed");
+    setEventMemberships([]);
+    setBlockedUserIds([]);
+    setSafetyReports([]);
+    setPostEventFeedback([]);
+    setSavedPlaces([]);
+    setPinnedEventIds([]);
+    setHiddenEventIds([]);
+    setNoiseLevelPreference("Any");
+    setContactPreferences(["Text"]);
+    setFriendshipStylePreferences([]);
+    setDatingStylePreferences([]);
+    setMeetupRhythmPreferences(["Occasional/random"]);
+    setAvailabilityTimingPreferences([]);
+    setSocialDurationPreferences([]);
+    setLanguageComfortPreferences([]);
+    setSocialEnergyPreference("Calm");
+    setCommunicationPreferences([]);
+    setGroupSizePreference("Small groups only");
+    setPhotoRecordingComfortPreferences(defaultPhotoRecordingComfortPreferences);
+    setPhysicalContactComfortPreferences(defaultPhysicalContactComfortPreferences);
+    setBackgroundStudyStatuses([]);
+    setBackgroundStudyAreas([]);
+    setBackgroundStudyVisibility("Private");
+    setBackgroundWorkPreferences([]);
+    setBackgroundWorkRhythms([]);
+    setBackgroundWorkVisibility("Private");
+    setBackgroundCommunityPreferences([]);
+    setBackgroundCommunityVisibility("Private");
+    setLifeContextCurrentStates([]);
+    setLifeContextCurrentVisibility("Private");
+    setLifeContextFields([]);
+    setLifeContextFieldVisibility("Private");
+    setLifeContextLearningInterests([]);
+    setLifeContextLearningVisibility("Shared preview visibility only");
+    setLifeComfortPreferences([]);
+    setLifeComfortVisibility("Private");
+    setLifeContextLastUpdatedAt(null);
+    setVerifiedButPrivate(true);
+    setPersonalityPresenceHair("Prefer not to say");
+    setPersonalityPresenceHairCues([]);
+    setPersonalityPresenceEyes("Prefer not to say");
+    setPersonalityPresenceFacialHair("Prefer not to say");
+    setPersonalityPresenceStyle("Prefer not to say");
+    setPersonalityPresencePresentation("Prefer not to say");
+    setPersonalityPresencePersonalStyles([]);
+    setPersonalityPresenceAccessories([]);
+    setPersonalityPresenceGrooming([]);
+    setPersonalityPresenceVoicePresence([]);
+    setPersonalityPresenceSocialStyles([]);
+    setPersonalityPresenceConnectionPreferences([]);
+    setPersonalityPresenceComfortAround([]);
+    setPersonalityPresencePromptResponses([]);
+    setShowPersonalityPresenceOnProfile(false);
+    setShowPersonalityPresencePromptsOnProfile(false);
+    setCalendarMomentStates(defaultCalendarMomentStates);
+    setCalendarMomentVisibility(defaultCalendarMomentVisibility);
+    setCustomCalendarMoments(defaultCustomCalendarMoments);
+    setTransportationMethod("Public transport");
+    setDietaryPreferences(["No preference"]);
+    setTransportationPreferences(defaultTransportationPreferences);
+    setMeetupContactPreferences([]);
+    setLocationComfortPreferences(defaultLocationComfortPreferences);
+    setFoodBeveragePreferenceIds(defaultFoodBeveragePreferenceIds);
+    setHobbiesInterests(["Coffee", "Movies", "Walks"]);
+    setInterestPreferenceIds(defaultInterestPreferenceIds);
+    setInterestComfortTagsByInterest(defaultInterestComfortTagsByInterest);
+    setProfileShortcutLayout("Clean");
+    setProfileWidthPreference("Contained");
+    setSettingsPrivacyMode("Basic");
+    setUserPreferenceTextMode("Simple");
+    setEmojiDisplayMode("Full emoji display");
+    setShowProfileControlsShortcut(true);
+    setShowAlertsSettingsShortcut(true);
+    setNotificationSnoozed(false);
+    setNotificationSnoozePreset("Tonight");
+  };
+
   const resetOnboarding = async () => {
     setHasCompletedOnboarding(false);
     setAgeConfirmed(false);
@@ -4335,6 +4457,16 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       await AsyncStorage.removeItem(ONBOARDING_STORAGE_KEY);
     } catch (error) {
       console.warn("NSN onboarding could not reset:", error);
+    }
+  };
+
+  const clearAllLocalPrototypeData = async () => {
+    try {
+      await clearStoredLocalPrototypeData();
+      resetLocalPrototypeState();
+    } catch (error) {
+      console.warn("NSN local prototype data could not be cleared:", error);
+      throw error;
     }
   };
 
@@ -4599,6 +4731,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         completeOnboarding,
         saveSoftHelloMvpState,
         resetOnboarding,
+        clearAllLocalPrototypeData,
         isNightMode,
         setIsNightMode,
         blurProfilePhoto,

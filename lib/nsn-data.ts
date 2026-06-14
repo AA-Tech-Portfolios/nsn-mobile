@@ -233,7 +233,7 @@ export const dayEvents: EventItem[] = [
       venueType: "park",
       comfortTags: ["quiet", "beginner-friendly", "public-place", "indoor-backup", "transport-friendly"],
       weatherAlternatives: ["Chatswood shopping centre", "casual cafe table", "library meetup", "board games indoors"],
-      accountabilityNote: "Privacy keeps personal details limited, while hosts and participants still carry a prototype trust state.",
+      accountabilityNote: "Privacy keeps personal details limited, while hosts and participants still carry a local readiness preview.",
     },
   },
   {
@@ -395,7 +395,7 @@ export const dayEvents: EventItem[] = [
       venueType: "walk",
       comfortTags: ["quiet", "public-place", "transport-friendly", "beginner-friendly"],
       weatherAlternatives: ["cafe nearby", "library meetup", "casual dining", "movie"],
-      accountabilityNote: "Walks stay public, flexible, and tied to participant trust signals.",
+      accountabilityNote: "Walks stay public, flexible, and tied to participant readiness notes.",
     },
   },
 ];

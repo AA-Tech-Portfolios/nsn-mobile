@@ -34,6 +34,7 @@ import {
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
 import { getExpectedGroupSizeCopy, getExpectedGroupSizeValue } from "@/lib/event-attendance-copy";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
+import { NSN_CREATED_EVENTS_STORAGE_KEY } from "@/lib/local-prototype-storage";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
   askAboutMeetupQuestionGroups,
@@ -87,7 +88,7 @@ import {
   type MeetupTutorialCard,
 } from "@/lib/meetup-alpha-ux";
 
-const CREATED_EVENTS_KEY = "nsn.created-events.v1";
+const CREATED_EVENTS_KEY = NSN_CREATED_EVENTS_STORAGE_KEY;
 
 const eventDetailImageSources: Record<string, ImageSourcePropType> = {
   "beach-day-chill-vibes": require("../../assets/images/events/event-beach-day-chill-vibes.png"),
@@ -295,7 +296,7 @@ const eventActionTranslations = {
 const verificationWindowTranslations = {
   English: {
     title: "Review prototype details",
-    copy: "Local preview only: review the basics this alpha uses to explain future meetup readiness. No real identity verification provider is connected.",
+    copy: "Local preview only: review the basics this alpha uses to explain future meetup readiness. No real identity provider or production review is connected.",
     displayName: "Name",
     suburb: "Local area",
     age: "Age confirmation",
@@ -760,7 +761,7 @@ const eventTranslations = {
     openMeetupChat: "Open Meetup Chat",
     openMeetupChatHint: "Opens the meetup group chat.",
     joinHint: "Joins this meetup.",
-    verifyBeforeMeetingHint: "Opens verification details required before meeting in person.",
+    verifyBeforeMeetingHint: "Opens local prototype details before meeting in person.",
     postEventCheckIn: "Private post-event check-in",
     feedbackSaved: "Feedback saved privately for this meetup.",
     feedbackPrompt: "After the meetup, note how it felt. This is never a public rating.",
@@ -1183,28 +1184,78 @@ export default function EventDetailsScreen() {
     return () => clearTimeout(feedbackTimer);
   }, [copyFeedback]);
 
-  const rawEvent =
-    allEvents.find((item) => item.id === id) ??
-    createdEvents.find((item) => item.id === id) ??
-    movieNight;
-  const isCreatedEvent = createdEvents.some((item) => item.id === id);
-  const event: EventItem = isCreatedEvent
+  const routeEventId = Array.isArray(id) ? id[0] : id;
+  const createdEvent = createdEvents.find((item) => item.id === routeEventId);
+  const rawEvent = allEvents.find((item) => item.id === routeEventId) ?? createdEvent;
+
+  if (!rawEvent) {
+    return (
+      <ScreenContainer
+        containerClassName="bg-background"
+        safeAreaClassName="bg-background"
+        style={isDay && styles.dayScreen}
+      >
+        <Stack.Screen options={{ headerShown: false }} />
+        <ScrollView
+          style={[styles.screen, isDay && styles.dayScreen]}
+          contentContainerStyle={styles.content}
+        >
+          <View style={[styles.notFoundCard, isDay && styles.dayCard]}>
+            <Text style={[styles.notFoundEyebrow, isDay && styles.dayMutedText]}>
+              Local alpha
+            </Text>
+            <Text style={[styles.notFoundTitle, isDay && styles.dayHeadingText]}>
+              Event not found in this alpha
+            </Text>
+            <Text style={[styles.notFoundCopy, isDay && styles.dayMutedText]}>
+              This meetup is not available in the local prototype data on this device. You can go
+              back to Home or Meetups and choose another plan.
+            </Text>
+            <View style={styles.notFoundActions}>
+              <TouchableOpacity
+                activeOpacity={0.84}
+                onPress={() => router.replace("/(tabs)" as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Back to Home"
+                style={styles.notFoundPrimaryButton}
+              >
+                <Text style={styles.notFoundPrimaryText}>Back to Home</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={() => router.replace("/(tabs)/meetups" as never)}
+                accessibilityRole="button"
+                accessibilityLabel="Open Meetups"
+                style={[styles.notFoundSecondaryButton, isDay && styles.dayActionRow]}
+              >
+                <Text style={[styles.notFoundSecondaryText, isDay && styles.dayText]}>
+                  Meetups
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
+
+  const event: EventItem = createdEvent
     ? {
-        id: (rawEvent as CreatedEvent).id,
-        title: (rawEvent as CreatedEvent).title,
+        id: createdEvent.id,
+        title: createdEvent.title,
         category: "Custom",
-        venue: (rawEvent as CreatedEvent).venue,
-        time: (rawEvent as CreatedEvent).time,
+        venue: createdEvent.venue,
+        time: createdEvent.time,
         people: "2–10 people",
-        description: (rawEvent as CreatedEvent).description,
+        description: createdEvent.description,
         tone: "Balanced",
-        noiseLevel: (rawEvent as CreatedEvent).noiseLevel as any,
+        noiseLevel: createdEvent.noiseLevel as any,
         weather: "Indoor ready",
         imageTone: "#29365E",
         emoji: "📅",
         tags: ["Custom"],
-        preEventQuestions: (rawEvent as CreatedEvent).preEventQuestions,
-        postEventQuestions: (rawEvent as CreatedEvent).postEventQuestions,
+        preEventQuestions: createdEvent.preEventQuestions,
+        postEventQuestions: createdEvent.postEventQuestions,
       }
     : (rawEvent as EventItem);
   const localizedEvent = {
@@ -1219,8 +1270,8 @@ export default function EventDetailsScreen() {
     : `Pace: ${getDetailSocialPaceLabel(localizedEvent.tone)}`;
   const eventDate = isMovieNight
     ? copy.date
-    : isCreatedEvent
-      ? `${(rawEvent as CreatedEvent).date} · ${(rawEvent as CreatedEvent).time}`
+    : createdEvent
+      ? `${createdEvent.date} · ${createdEvent.time}`
       : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
   const expectedGroupSizeCopy = getExpectedGroupSizeCopy(event);
   const eventDescription = isMovieNight
@@ -1273,7 +1324,7 @@ export default function EventDetailsScreen() {
       copy: `${eventNoise.label} noise · ${eventTone.replace("Pace: ", "")}`,
     },
     { iconName: "low-pressure", label: "Pacing", copy: "Low pressure · quiet starts welcome." },
-    { iconName: "shield", label: "Trust", copy: eventTrustSummary },
+    { iconName: "shield", label: "Readiness", copy: eventTrustSummary },
   ] satisfies { iconName: IconSymbolName; label: string; copy: string }[];
   const quickJumpItems = getEventDetailQuickJumpItems();
   const eventTutorialCards = meetupTutorialCards.filter(
@@ -2330,7 +2381,7 @@ export default function EventDetailsScreen() {
                           isRtl && styles.rtlText,
                         ]}
                       >
-                        Trust & small group shape
+                        Host details & small group shape
                       </Text>
                     </View>
                     <Text
@@ -3758,6 +3809,72 @@ const styles = StyleSheet.create({
   dayActionSheet: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
   dayActionRow: { backgroundColor: "#FFFFFF", borderColor: "#D7E0EA" },
   content: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 128 },
+  notFoundCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    padding: 18,
+    marginTop: 44,
+  },
+  notFoundEyebrow: {
+    color: nsnColors.muted,
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0,
+    textTransform: "uppercase",
+  },
+  notFoundTitle: {
+    color: nsnColors.text,
+    fontSize: 24,
+    fontWeight: "900",
+    lineHeight: 30,
+    marginTop: 8,
+  },
+  notFoundCopy: {
+    color: nsnColors.muted,
+    fontSize: 14,
+    fontWeight: "700",
+    lineHeight: 21,
+    marginTop: 8,
+  },
+  notFoundActions: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 18 },
+  notFoundPrimaryButton: {
+    minHeight: 46,
+    flexGrow: 1,
+    flexBasis: 150,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    backgroundColor: nsnColors.primary,
+    paddingHorizontal: 14,
+  },
+  notFoundPrimaryText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  notFoundSecondaryButton: {
+    minHeight: 46,
+    flexGrow: 1,
+    flexBasis: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 14,
+  },
+  notFoundSecondaryText: {
+    color: nsnColors.text,
+    fontSize: 14,
+    fontWeight: "900",
+    lineHeight: 20,
+    textAlign: "center",
+  },
   topBar: {
     flexDirection: "row",
     alignItems: "center",

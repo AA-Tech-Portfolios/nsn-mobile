@@ -77,7 +77,7 @@ const meetupsTranslations = {
     joined: "Joined",
     suggested: "Suggested",
     trustRequiredTitle: "Prototype meetup preview",
-    trustRequiredCopy: "Meetups and private chats are gated by a local demo readiness state. No real verification provider or live chat is connected.",
+    trustRequiredCopy: "Meetups and private chats are gated by a local demo readiness state. No real contact provider or live chat is connected.",
     reviewSettings: "Review readiness preview",
     reviewTrustStatusHint: "Opens Profile so you can review local prototype readiness details.",
     nextMeetupHint: "Opens the next meetup details and practical prototype information.",
@@ -190,7 +190,7 @@ const meetupsTranslations = {
 const meetupsTrustGateTranslations = {
   English: {
     trustRequiredTitle: "Prototype meetup preview",
-    trustRequiredCopy: "Meetups and private chats are gated by a local demo readiness state. No real verification provider or live chat is connected.",
+    trustRequiredCopy: "Meetups and private chats are gated by a local demo readiness state. No real contact provider or live chat is connected.",
     reviewSettings: "Review readiness preview",
   },
 } as const;
@@ -228,7 +228,7 @@ export default function MeetupsScreen() {
           <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Alpha testing</Text>
           <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle]}>What to try here</Text>
           <Text style={[styles.alphaGuideCopy, isDay && styles.dayMutedText]}>
-            Browse the demo meetup cards, open event details, and notice whether the plan feels low-pressure. Joining, trust gates, and private meetup access are prototype states for now.
+            Browse the demo meetup cards, open event details, and notice whether the plan feels low-pressure. Joining, readiness previews, and private meetup access are prototype states for now.
           </Text>
         </View>
 
