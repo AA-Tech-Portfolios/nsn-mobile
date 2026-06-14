@@ -63,6 +63,9 @@ export const englishSettingsPrivacyCopy = {
   showDistanceInMeetups: "Show distance in meetups",
   showDistanceInMeetupsCopy:
     "Display approximate distance on event and meetup cards, not precise live positioning.",
+  askBeforeOpeningExternalApps: "Ask before opening external apps (recommended)",
+  askBeforeOpeningExternalAppsCopy:
+    "Show a confirmation before opening maps, websites, or other apps outside NSN.",
   timeLocalContext: "Time & local context",
   timeLocalContextCopy:
     "Choose how NSN decides local time for the Home greeting, Day/Night mode, weather, and local prompts.",

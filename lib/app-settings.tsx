@@ -77,6 +77,11 @@ import {
   type PersonalityPresenceVoicePresence,
 } from "./preferences/personality-presence";
 import type { SoftRevealPace } from "./soft-reveal";
+import {
+  defaultExternalLinksPreference,
+  normalizeExternalLinksPreference,
+  type ExternalLinksPreference,
+} from "./external-links";
 
 export type AppPaletteId = "midnight" | "ocean" | "forest" | "sunset" | "lavender";
 
@@ -1653,6 +1658,7 @@ export type OnboardingSnapshot = {
   emojiDisplayMode?: EmojiDisplayMode;
   showProfileControlsShortcut?: boolean;
   showAlertsSettingsShortcut?: boolean;
+  externalLinks?: ExternalLinksPreference;
   batterySaver?: boolean;
   lowLightMode?: boolean;
   lowLightLevel?: LowLightLevel;
@@ -2148,6 +2154,8 @@ type AppSettings = {
   setShowProfileControlsShortcut: (value: boolean) => void;
   showAlertsSettingsShortcut: boolean;
   setShowAlertsSettingsShortcut: (value: boolean) => void;
+  externalLinks: ExternalLinksPreference;
+  setExternalLinks: (value: ExternalLinksPreference) => void;
   batterySaver: boolean;
   setBatterySaver: (value: boolean) => void;
   lowLightMode: boolean;
@@ -2478,6 +2486,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [emojiDisplayMode, setEmojiDisplayMode] = useState<EmojiDisplayMode>("Full emoji display");
   const [showProfileControlsShortcut, setShowProfileControlsShortcut] = useState(true);
   const [showAlertsSettingsShortcut, setShowAlertsSettingsShortcut] = useState(true);
+  const [externalLinks, setExternalLinks] = useState<ExternalLinksPreference>(
+    defaultExternalLinksPreference,
+  );
   const [batterySaver, setBatterySaver] = useState(false);
   const [lowLightMode, setLowLightMode] = useState(false);
   const [lowLightLevel, setLowLightLevel] = useState<LowLightLevel>("Medium");
@@ -2885,6 +2896,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setEmojiDisplayMode(normalizeEmojiDisplayMode(snapshot.emojiDisplayMode));
         setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut ?? true);
         setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut ?? true);
+        setExternalLinks(normalizeExternalLinksPreference(snapshot.externalLinks));
         setBatterySaver(Boolean(snapshot.batterySaver));
         setLowLightMode(Boolean(snapshot.lowLightMode));
         setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
@@ -3262,6 +3274,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setEmojiDisplayMode(normalizeEmojiDisplayMode(snapshot.emojiDisplayMode));
     setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut ?? true);
     setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut ?? true);
+    setExternalLinks(normalizeExternalLinksPreference(snapshot.externalLinks));
     setBatterySaver(Boolean(snapshot.batterySaver));
     setLowLightMode(Boolean(snapshot.lowLightMode));
     setLowLightLevel(snapshot.lowLightLevel ?? "Medium");
@@ -3526,6 +3539,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       emojiDisplayMode,
       showProfileControlsShortcut,
       showAlertsSettingsShortcut,
+      externalLinks,
       batterySaver,
       lowLightMode,
       lowLightLevel,
@@ -4116,6 +4130,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut);
     if (snapshot.showAlertsSettingsShortcut !== undefined)
       setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut);
+    if (snapshot.externalLinks !== undefined)
+      setExternalLinks(normalizeExternalLinksPreference(snapshot.externalLinks));
     if (snapshot.batterySaver !== undefined) setBatterySaver(snapshot.batterySaver);
     if (snapshot.lowLightMode !== undefined) setLowLightMode(snapshot.lowLightMode);
     if (snapshot.lowLightLevel !== undefined) setLowLightLevel(snapshot.lowLightLevel);
@@ -4445,6 +4461,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setEmojiDisplayMode("Full emoji display");
     setShowProfileControlsShortcut(true);
     setShowAlertsSettingsShortcut(true);
+    setExternalLinks(defaultExternalLinksPreference);
     setNotificationSnoozed(false);
     setNotificationSnoozePreset("Tonight");
   };
@@ -4698,6 +4715,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setShowProfileControlsShortcut,
         showAlertsSettingsShortcut,
         setShowAlertsSettingsShortcut,
+        externalLinks,
+        setExternalLinks,
         batterySaver,
         setBatterySaver,
         lowLightMode,

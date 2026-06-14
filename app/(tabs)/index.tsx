@@ -1,5 +1,5 @@
 import { type ComponentProps, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Image, type ImageSourcePropType, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { Alert, Animated, Image, type ImageSourcePropType, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Location from "expo-location";
@@ -23,6 +23,7 @@ import { getHomeEventPreviewAsset, type HomeEventPreviewAssetKey } from "@/lib/h
 import { getHomeTodayContextLabel } from "@/lib/home-header-context";
 import { getMeetupEmptyStateCopy } from "@/lib/meetup-empty-state";
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
+import { getExternalOpenConfirmationCopy, type ExternalOpenDestination } from "@/lib/external-links";
 import {
   askAboutMeetupQuestionGroups,
   arrivingAloneReassuranceItems,
@@ -1185,7 +1186,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
-  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeFitToScreen, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, largerTouchTargets, skyTheme, saveSoftHelloMvpState } = useAppSettings();
+  const { isNightMode, setIsNightMode, timezone, timeContextMode, weather, appLanguage, batterySaver, reduceMotion, slowerTransitions, comfortPreferences, socialEnergyPreference, groupSizePreference, photoRecordingComfortPreferences, foodBeveragePreferenceIds, interestPreferenceIds, interestComfortTagsByInterest, verifiedButPrivate, pinnedEventIds, hiddenEventIds, noiseLevelPreference, homeViewMode, homeNearbyOnly, homeSmallGroupsOnly, homeWeatherSafeOnly, homeEventLayout, homeLayoutDensity, homeFitToScreen, homeHeaderControlsDensity, homeCardLayout, homeEventVisualMode, homeVisibleSections, homeSectionOrder, suggestNightModeInEvenings, timeFormatPreference, temperatureUnitPreference, dayNightModePreference, cardOutlineStyle, largerTouchTargets, skyTheme, externalLinks, saveSoftHelloMvpState } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy = homeTranslations[appLanguageBase as keyof typeof homeTranslations] ?? homeTranslations.English;
   const homeCopy = { ...homeTranslations.English, ...copy };
@@ -1360,6 +1361,23 @@ export default function HomeScreen() {
     setHomeUpdateNotice(message);
     setTimeout(() => setHomeUpdateNotice(null), 1600);
   };
+  const confirmExternalOpen = (
+    destination: ExternalOpenDestination,
+    openExternalDestination: () => void,
+  ) => {
+    if (!externalLinks.askBeforeOpeningExternalApps) {
+      openExternalDestination();
+      return;
+    }
+
+    const confirmationCopy = getExternalOpenConfirmationCopy(destination);
+    const message = [confirmationCopy.body, ...confirmationCopy.details].join("\n\n");
+
+    Alert.alert(confirmationCopy.title, message, [
+      { text: confirmationCopy.cancelLabel, style: "cancel" },
+      { text: confirmationCopy.openLabel, onPress: openExternalDestination },
+    ]);
+  };
 
   const updateHomeViewMode = (value: HomeViewMode) => {
     saveSoftHelloMvpState({ homeViewMode: value });
@@ -1500,7 +1518,8 @@ export default function HomeScreen() {
       timezone.label;
     const mapsUrl = buildEventLocationSearchUrl(mapSearchArea);
 
-    try {
+    const openMaps = async () => {
+      try {
       if (Platform.OS === "web") {
         const webWindow = typeof window !== "undefined" ? window : undefined;
         webWindow?.open(mapsUrl, "_blank", "noopener,noreferrer");
@@ -1512,6 +1531,18 @@ export default function HomeScreen() {
     } catch {
       showPrototypeUpdate("Maps unavailable - use the broad area shown here");
     }
+    };
+
+    confirmExternalOpen(
+      {
+        kind: "maps",
+        destinationAppName: "Maps",
+        broadAreaName: mapSearchArea,
+      },
+      () => {
+        void openMaps();
+      },
+    );
   };
 
   const renderPrototypeMapCanvas = () => {
@@ -2008,11 +2039,20 @@ export default function HomeScreen() {
         return;
       }
 
-      try {
-        await Linking.openURL(url);
-      } catch {
-        showPrototypeUpdate("External link could not be opened");
-      }
+      const openResource = async () => {
+        try {
+          await Linking.openURL(url);
+        } catch {
+          showPrototypeUpdate("External link could not be opened");
+        }
+      };
+
+      confirmExternalOpen(
+        { kind: "website", destinationAppName: "Website" },
+        () => {
+          void openResource();
+        },
+      );
     };
 
     const renderOptionsHubRow = (row: OptionsHubRow) => (
