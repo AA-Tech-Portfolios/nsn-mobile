@@ -466,11 +466,11 @@ const eventMapDetails: Record<string, PrototypeMapDetails> = {
   "beach-day-chill-vibes": { suburb: "Palm Beach", x: 70, y: 20, roads: ["Barrenjoey Rd", "Ocean Rd", "Pittwater Rd"], transit: ["Palm Beach ferry wharf", "Bus stop: Barrenjoey Rd"], routeHint: "Prototype arrival hint via beachside bus stop.", accessibilityHint: "Sand/steep path detail coming later." },
   "library-calm-study": { suburb: "Chatswood", x: 48, y: 40, roads: ["Victoria Ave", "Archer St", "Pacific Hwy"], transit: ["Chatswood Station", "Metro: Chatswood"], routeHint: "A few minutes from Chatswood transport hub.", accessibilityHint: "Indoor venue access placeholder." },
   "coffee-lane-cove": { suburb: "Lane Cove", x: 40, y: 52, roads: ["Longueville Rd", "Pacific Hwy", "Epping Rd"], transit: ["Lane Cove Interchange", "Bus stop: Burns Bay Rd"], routeHint: "Prototype arrival hint via village bus interchange.", accessibilityHint: "Street-level cafe access to confirm." },
-  "harbour-walk-waverton": { suburb: "Waverton", x: 36, y: 68, roads: ["Bay Rd", "Balls Head Rd", "Harbour foreshore"], transit: ["Waverton Station", "Bus stop: Bay Rd"], routeHint: "Short walk from Waverton Station in this preview.", accessibilityHint: "Harbour path gradients to verify later." },
+  "harbour-walk-waverton": { suburb: "Waverton", x: 36, y: 68, roads: ["Bay Rd", "Balls Head Rd", "Harbour foreshore"], transit: ["Waverton Station", "Bus stop: Bay Rd"], routeHint: "Short walk from Waverton Station in this preview.", accessibilityHint: "Harbour path gradients need local prototype details later." },
   "movie-night-watch-chat": { suburb: "Macquarie Park", x: 62, y: 36, roads: ["Herring Rd", "Waterloo Rd", "M2"], transit: ["Macquarie University Metro", "Bus stop: Herring Rd"], routeHint: "Prototype arrival hint via Macquarie centre area.", accessibilityHint: "Indoor lift/path details coming later." },
   "board-games-coffee": { suburb: "Chatswood", x: 50, y: 42, roads: ["Victoria Ave", "Anderson St", "Pacific Hwy"], transit: ["Chatswood Station", "Bus stop: Victoria Ave"], routeHint: "Prototype arrival hint via Chatswood Station.", accessibilityHint: "Table spacing/access notes to confirm." },
   "ramen-small-table": { suburb: "Crows Nest", x: 42, y: 62, roads: ["Willoughby Rd", "Falcon St", "Pacific Hwy"], transit: ["Crows Nest Metro", "Bus stop: Willoughby Rd"], routeHint: "Prototype arrival hint via Crows Nest village.", accessibilityHint: "Restaurant access placeholder." },
-  "quiet-music-listening": { suburb: "North Sydney", x: 44, y: 70, roads: ["Miller St", "Pacific Hwy", "Walker St"], transit: ["North Sydney Station", "Victoria Cross Metro"], routeHint: "Prototype arrival hint via North Sydney transport.", accessibilityHint: "Venue entry access to verify later." },
+  "quiet-music-listening": { suburb: "North Sydney", x: 44, y: 70, roads: ["Miller St", "Pacific Hwy", "Walker St"], transit: ["North Sydney Station", "Victoria Cross Metro"], routeHint: "Prototype arrival hint via North Sydney transport.", accessibilityHint: "Venue entry access needs local prototype details later." },
 };
 
 const getNoiseTagLabel = (label: string) => (label === "Balanced" ? "Moderate sound" : `${label} sound`);
@@ -504,7 +504,7 @@ const getTrustFoundationEventChips = (event: EventItem, socialEnergyPreference: 
   if (groupSizePreference !== "Flexible" && range.max <= 4) chips.push("Small group");
   if (socialEnergyPreference === "Calm" && (event.noiseLevel === "Quiet" || event.tone === "Quiet")) chips.push("Calm vibe");
   if (event.tone === "Quiet") chips.push("Low chat");
-  if (verifiedButPrivate) chips.push("Verified/private friendly");
+  if (verifiedButPrivate) chips.push("Readiness preview friendly");
 
   return chips.filter((chip, index, all) => all.indexOf(chip) === index).slice(0, 2);
 };

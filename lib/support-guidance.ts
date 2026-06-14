@@ -66,7 +66,7 @@ export const supportGuidanceItems: SupportGuidance[] = [
     icon: "group",
     eyebrow: "Local prototype",
     title: "Choosing a calmer first meetup",
-    copy: "Optional ideas for people who like more predictability, quiet, or trust before joining groups.",
+    copy: "Optional ideas for people who like more predictability, quiet, or familiarity before joining groups.",
     points: [
       "Choose small groups first.",
       "Pick quiet venues where possible.",

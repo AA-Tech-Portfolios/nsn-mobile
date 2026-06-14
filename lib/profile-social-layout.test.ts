@@ -45,7 +45,7 @@ describe("profile social layout", () => {
     expect(getSimpleProfileSummaryRows().map((row) => row.id)).toEqual(["verificationTrust"]);
   });
 
-  it("moves Local Area, Interests, Comfort & Trust, and Privacy into Detailed layout", () => {
+  it("moves Local Area, Interests, Comfort & Readiness, and Privacy into Detailed layout", () => {
     expect(getDetailedProfileSummaryRows().map((row) => row.id)).toEqual([
       "localArea",
       "interests",

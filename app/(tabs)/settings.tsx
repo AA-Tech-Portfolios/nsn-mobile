@@ -965,7 +965,7 @@ const settingsTranslations: Record<string, SettingsCopy> = {
     revealAfterRsvp: "Ipakita lang ang profile pagkatapos ng RSVP",
     revealAfterRsvpCopy: "Ipakita ang profile kapag parehong panig ay committed na sa plano.",
     friendsOfFriendsOnly: "Friends-of-friends lang",
-    friendsOfFriendsOnlyCopy: "Unahin ang taong konektado sa trusted network mo.",
+    friendsOfFriendsOnlyCopy: "Unahin ang taong konektado sa familiar circle mo.",
     appLanguage: "Wika ng app",
     appLanguageCopy: "Piliin ang wikang gagamitin sa NSN.",
     translateMeetupsChats: "Isalin ang meetups at chats",
@@ -3784,6 +3784,7 @@ export default function SettingsScreen() {
     setClearBorders,
     saveSoftHelloMvpState,
     resetOnboarding,
+    clearAllLocalPrototypeData,
   } = useAppSettings();
   const isDay = !isNightMode;
   const [showFirstNameOnly, setShowFirstNameOnly] = useState(true);
@@ -4726,6 +4727,34 @@ export default function SettingsScreen() {
     Alert.alert(
       "Demo only",
       "No real account or profile data was deleted. This NSN alpha has not connected account deletion to a backend.",
+    );
+  };
+
+  const confirmClearLocalPrototypeData = () => {
+    Alert.alert(
+      "Delete local prototype data?",
+      "This clears local profile, RSVP, My Circle and planning notes, saved places, hidden events, reports and feedback, and created demo meetups on this device. It does not delete a real account or backend data.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete local data",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAllLocalPrototypeData();
+              Alert.alert(
+                "Deleted locally",
+                "Local prototype data was cleared on this device. No real account or backend data was changed.",
+              );
+            } catch {
+              Alert.alert(
+                "Could not delete local data",
+                "Please try again. This only affects local prototype data on this device.",
+              );
+            }
+          },
+        },
+      ],
     );
   };
 
@@ -5814,7 +5843,7 @@ export default function SettingsScreen() {
                 isRtl && styles.rtlText,
               ]}
             >
-              Trust foundations
+              Readiness foundations
             </Text>
             <View
               style={[
@@ -6184,7 +6213,7 @@ export default function SettingsScreen() {
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Prototype verification status
+                    Readiness preview status
                   </Text>
                   <Text
                     style={[
@@ -6196,8 +6225,8 @@ export default function SettingsScreen() {
                     ]}
                   >
                     Choose a local-only readiness preview for alpha testing. This opens prototype
-                    chat and meetup preview gates on this device, but does not perform real identity
-                    verification.
+                    chat and meetup preview gates on this device, but does not perform a real
+                    identity check.
                   </Text>
                   <View style={[styles.blurLevelGrid, { gap: settingsLayout.optionGap }]}>
                     {verificationLevels.map((level) => {
@@ -6216,7 +6245,7 @@ export default function SettingsScreen() {
                           onPress={() => savePrototypeVerificationLevel(level)}
                           style={responsiveOptionButtonStyle(active)}
                           accessibilityRole="radio"
-                          accessibilityLabel={`Prototype verification status ${level}`}
+                          accessibilityLabel={`Readiness preview status ${level}`}
                           accessibilityHint={helper}
                           accessibilityState={{ checked: active }}
                         >
@@ -6269,7 +6298,7 @@ export default function SettingsScreen() {
                       ]}
                     >
                       Your contact/readiness preview can be shown without making your profile fully
-                      open. Prototype readiness preview only - no real verification provider is
+                      open. Prototype readiness preview only - no real contact provider is
                       connected yet.
                     </Text>
                     {renderSettingMeta("verifiedButPrivate")}
@@ -8735,6 +8764,40 @@ export default function SettingsScreen() {
                   )}
                 </View>
               </View>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={confirmClearLocalPrototypeData}
+                accessibilityRole="button"
+                accessibilityLabel="Delete local prototype data"
+                accessibilityHint="Clears local prototype data on this device only. No real account or backend data is deleted."
+                style={[styles.actionRow, isRtl && styles.rtlRow]}
+              >
+                <View style={styles.settingCopy}>
+                  <Text
+                    style={[
+                      styles.label,
+                      largerText && styles.largeLabel,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Delete local prototype data
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Clears local profile, RSVP, My Circle and planning notes, saved places, hidden
+                    events, reports and feedback, and created demo meetups on this device.
+                  </Text>
+                  <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
+                    <Text style={styles.prototypeBadge}>Local only</Text>
+                  </View>
+                </View>
+                <Text style={styles.destructiveSettingsAction}>Delete</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.78}
                 onPress={() => setAccountConfirmation({ kind: "delete" })}

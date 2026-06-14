@@ -122,7 +122,7 @@ export function getSettingsPreferenceLayout(width: number, density: PreferenceLa
 
 export const preferenceCategoryDisplayMetadata: Record<PreferenceCategoryKey, { icon: string; title: string }> = {
   overview: { icon: "👤", title: "User Preferences" },
-  comfort: { icon: "🛡️", title: "Comfort & Trust" },
+  comfort: { icon: "🛡️", title: "Comfort & Readiness" },
   personality: { icon: "🌿", title: "Personality & Presence" },
   background: { icon: "🎓", title: "Work, Study & Life Context" },
   calendar: { icon: "🗓️", title: "Calendar & Cultural Moments" },

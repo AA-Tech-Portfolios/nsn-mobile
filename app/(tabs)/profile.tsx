@@ -971,7 +971,7 @@ const profileVerificationTranslations = {
   English: {
     reviewSettings: "Review settings",
     title: "Confirm your details",
-    copy: "Review the profile details used for trust and in-person meetup safety.",
+    copy: "Review the local prototype details used for meetup readiness previews.",
     name: "Name",
     suburb: "Local Area",
     age: "Age confirmation",
@@ -980,11 +980,11 @@ const profileVerificationTranslations = {
     emailPlaceholder: "you@example.com",
     phone: "Phone number",
     phonePlaceholder: "+61 400 000 000",
-    selfie: "Facial recognition selfie",
+    selfie: "Prototype selfie",
     selfieMissing: "Needs selfie",
     selfieAdded: "Selfie added",
     addSelfie: "Add selfie",
-    selfieHint: "Adds or replaces the selfie used for identity verification.",
+    selfieHint: "Adds or replaces the selfie used for this local prototype preview.",
     idDocument: "Government ID",
     idMissing: "Needs ID check",
     idProvided: "ID provided",
@@ -1228,6 +1228,7 @@ export default function ProfileScreen() {
     foodBeveragePreferenceIds,
     interestPreferenceIds,
     interestComfortTagsByInterest,
+    clearAllLocalPrototypeData,
   } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const isDay = !isNightMode;
@@ -2441,6 +2442,35 @@ export default function ProfileScreen() {
     );
   };
 
+  const confirmClearLocalPrototypeData = () => {
+    closeProfileMenu();
+    Alert.alert(
+      "Delete local prototype data?",
+      "This clears local profile, RSVP, My Circle and planning notes, saved places, hidden events, reports and feedback, and created demo meetups on this device. It does not delete a real account or backend data.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete local data",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await clearAllLocalPrototypeData();
+              Alert.alert(
+                "Deleted locally",
+                "Local prototype data was cleared on this device. No real account or backend data was changed.",
+              );
+            } catch {
+              Alert.alert(
+                "Could not delete local data",
+                "Please try again. This only affects local prototype data on this device.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const toggleVibe = (vibe: string) => {
     if (selectedVibes.includes(vibe)) {
       setSelectedVibes(selectedVibes.filter((item) => item !== vibe));
@@ -2473,14 +2503,14 @@ export default function ProfileScreen() {
       level: "Prototype contact preview" as const,
       title: "Level 1",
       meaning: "Email or phone is saved locally for this prototype preview.",
-      treatment: "Can open prototype chat surfaces without a real verification provider.",
+      treatment: "Can open prototype chat surfaces without a real contact provider.",
       active: effectiveReviewVerificationLevel === "Prototype contact preview",
     },
     {
       level: "Prototype readiness reviewed" as const,
       title: "Level 2",
       meaning: "Selfie and ID fields are modelled locally for alpha testing.",
-      treatment: "Shows a local meetup preview state only; it is not identity verification.",
+      treatment: "Shows a local meetup preview state only; it is not a real identity check.",
       active: effectiveReviewVerificationLevel === "Prototype readiness reviewed",
     },
   ];
@@ -2861,7 +2891,7 @@ export default function ProfileScreen() {
             Readiness preview private
           </Text>
           <Text style={[styles.trustFoundationCopy, verifiedButPrivate && styles.verifiedPrivateTextActive, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Your contact/readiness preview can be shown without making your profile fully open. Prototype only - no real verification provider is connected yet.
+            Your contact/readiness preview can be shown without making your profile fully open. Prototype only - no real contact provider is connected yet.
           </Text>
         </View>
         <View style={styles.profileLayoutCheck}>{verifiedButPrivate ? <IconSymbol name="checkmark" color="#FFFFFF" size={18} /> : null}</View>
@@ -3418,8 +3448,8 @@ export default function ProfileScreen() {
           onPress={openVerificationReview}
           style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
           accessibilityRole="button"
-          accessibilityLabel="Open prototype verification controls"
-          accessibilityHint="Opens local-only prototype trust controls. This does not perform real identity verification."
+          accessibilityLabel="Open readiness preview controls"
+          accessibilityHint="Opens local-only prototype readiness controls. This does not perform a real identity check."
         >
           <Text style={styles.reviewSettingsText}>{profileVerificationCopy.reviewSettings}</Text>
         </TouchableOpacity>
@@ -3462,7 +3492,7 @@ export default function ProfileScreen() {
       <View style={[styles.detailedProfileSummaryCard, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
         <View style={[styles.trustHeader, isRtl && styles.rtlRow]}>
           <View style={styles.profileLayoutBody}>
-            <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Comfort & Trust Summary</Text>
+            <Text style={[styles.sectionTitle, styles.trustTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Comfort & Readiness Summary</Text>
             <Text style={[styles.simpleTrustCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{comfortMode} / {socialEnergyPreference} energy / {groupSizePreference}</Text>
           </View>
           <Text style={[styles.trustPill, isDay && styles.dayTrustPill]}>Saved locally</Text>
@@ -3485,7 +3515,7 @@ export default function ProfileScreen() {
           onPress={() => openPreferenceDestination("comfortTrust", "comfort")}
           style={[styles.reviewSettingsButton, styles.simpleReviewButton, isRtl && styles.rtlRow]}
           accessibilityRole="button"
-          accessibilityLabel="Open comfort and trust preferences"
+          accessibilityLabel="Open comfort and readiness preferences"
         >
           <Text style={styles.reviewSettingsText}>Open User Preferences</Text>
         </TouchableOpacity>
@@ -5416,7 +5446,7 @@ export default function ProfileScreen() {
                         <View style={[styles.helpSupportCardRow, isRtl && styles.rtlRow]}>
                           <IconSymbol name="sliders" color={isDay ? "#445E93" : "#C7B07A"} size={19} />
                           <View style={styles.profileLayoutBody}>
-                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Trust & Support Pathways</Text>
+                            <Text style={[styles.profileLayoutTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Comfort & Support Pathways</Text>
                             <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
                               Optional shortcuts to prototype settings that can make first meetups feel easier. These do not collect sensitive health, anxiety, disability, trauma, or support details.
                             </Text>
@@ -5468,7 +5498,7 @@ export default function ProfileScreen() {
                       <View style={[styles.profileMenuInfoCard, styles.helpFutureIdeaCard, isDay && styles.daySoftOption]}>
                         <Text style={[styles.profileDisplayGroupLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>Future Safety-Awareness Concept</Text>
                         <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                          Planned check-ins should feel like quiet reassurance, not pressure. Possible optional prompts include got home safely, leaving now, heading home later, quiet exit/check-in, share meetup plan, and trusted contact reminders after privacy review.
+                          Planned check-ins should feel like quiet reassurance, not pressure. Possible optional prompts include got home safely, leaving now, heading home later, quiet exit/check-in, share meetup plan, and familiar contact reminders after privacy review.
                         </Text>
                         <View style={styles.helpGuidancePointGrid}>
                           {["Optional check-in", "Leave anytime", "Guidance only", "No live tracking", "External help links"].map((point) => (
@@ -5485,7 +5515,7 @@ export default function ProfileScreen() {
                       ) : null}
                     </View>
                     <View onLayout={(event) => registerHelpSectionLayout("external-resources", event.nativeEvent.layout.y)} style={[styles.helpSubsection, isDesktopHelpSupport && styles.helpSubsectionDesktop, isDay && styles.daySoftOption]}>
-                      {renderHelpSectionHeader("external-resources", "Outside Support", "Optional trusted links for help beyond NSN.", "help")}
+                      {renderHelpSectionHeader("external-resources", "Outside Support", "Optional support links beyond NSN.", "help")}
                       {openHelpSectionIds.includes("external-resources") ? (
                         <View style={styles.helpSubsectionBody}>
                           <View style={[styles.profileMenuInfoCard, styles.helpExternalNotice, isDay && styles.daySoftOption]}>
@@ -6180,6 +6210,29 @@ export default function ProfileScreen() {
                   </View>
                 </TouchableOpacity>
                 <View style={[styles.profileMenuDivider, styles.profileMenuDestructiveDivider]} />
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={confirmClearLocalPrototypeData}
+                  style={[styles.profileMenuItem, styles.profileMenuDestructiveItem]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Delete local prototype data"
+                >
+                  <IconSymbol name="xmark" color="#E23D5A" size={20} />
+                  <View style={styles.profileMenuItemBody}>
+                    <Text style={[styles.profileMenuText, styles.profileMenuDestructiveText]}>
+                      Delete local prototype data
+                    </Text>
+                    <Text
+                      style={[
+                        styles.profileMenuDescription,
+                        styles.profileMenuDestructiveDescription,
+                      ]}
+                    >
+                      Clears local profile, RSVP, My Circle/planning notes, saved places, hidden
+                      events, reports/feedback, and created demo meetups on this device.
+                    </Text>
+                  </View>
+                </TouchableOpacity>
                 <TouchableOpacity
                   activeOpacity={0.78}
                   onPress={showDeleteAccountNotice}

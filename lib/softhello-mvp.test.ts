@@ -83,7 +83,7 @@ describe("SoftHello MVP domain rules", () => {
   it("localizes trust copy while falling back to English", () => {
     expect(getMeetingSafetyCopy("Prototype contact preview", "Yiddish")).toContain("local contact preview");
     expect(getMeetingSafetyCopy("Prototype contact preview", "Unknown")).toBe(
-      "This local contact preview can open prototype chat surfaces. No real verification or live messaging system is connected.",
+      "This local contact preview can open prototype chat surfaces. No real contact provider or live messaging system is connected.",
     );
     expect(getVerificationLevelLabel("Prototype readiness reviewed", "Yiddish")).toBe(
       "Prototype readiness reviewed",

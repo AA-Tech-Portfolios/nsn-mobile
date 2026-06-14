@@ -911,7 +911,7 @@ const chatTranslations = {
     reopenOptions: "Reopen chat options",
     trustRequiredTitle: "Prototype contact preview",
     trustRequiredCopy:
-      "Private chats are gated by a local demo readiness state. No real verification provider or live private messaging is connected.",
+      "Private chats are gated by a local demo readiness state. No real contact provider or live private messaging is connected.",
     reviewSettings: "Review readiness preview",
     reviewTrustStatusHint: "Opens Profile so you can review local prototype readiness details.",
     backToChatChooserHint: "Returns to the chat chooser.",
@@ -1355,7 +1355,7 @@ const chatTrustGateTranslations = {
   English: {
     trustRequiredTitle: "Prototype contact preview",
     trustRequiredCopy:
-      "Private chats are gated by a local demo readiness state. No real verification provider or live private messaging is connected.",
+      "Private chats are gated by a local demo readiness state. No real contact provider or live private messaging is connected.",
     reviewSettings: "Review readiness preview",
   },
 } as const;
@@ -1681,7 +1681,7 @@ export default function ChatsScreen() {
             <Text
               style={[styles.trustGateCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
             >
-              This gate is a prototype state. No real verification provider or private messaging
+              This gate is a prototype state. No real contact provider or private messaging
               system is connected yet.
             </Text>
             <Text
@@ -1703,7 +1703,7 @@ export default function ChatsScreen() {
               ]}
               accessibilityRole="button"
               accessibilityLabel="Browse prototype chats for alpha testing"
-              accessibilityHint="Bypasses this local prototype gate for the current session without changing verification status."
+              accessibilityHint="Bypasses this local prototype gate for the current session without changing readiness preview status."
             >
               <Text
                 style={[

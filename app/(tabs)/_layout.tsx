@@ -444,7 +444,7 @@ export default function TabLayout() {
         options={{
           title: labels.profile,
           tabBarAccessibilityLabel: screenReaderHints
-            ? `${labels.profile}. Opens profile, preferences, and trust settings.`
+            ? `${labels.profile}. Opens profile, preferences, and readiness settings.`
             : labels.profile,
           tabBarIcon: renderTabIcon("person.fill", labels.profile),
         }}
