@@ -33,6 +33,7 @@ import {
   type EventDetailSectionId,
 } from "@/lib/event-detail-sections";
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
+import { getExternalOpenConfirmationCopy, type ExternalOpenDestination } from "@/lib/external-links";
 import { getExpectedGroupSizeCopy, getExpectedGroupSizeValue } from "@/lib/event-attendance-copy";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { NSN_CREATED_EVENTS_STORAGE_KEY } from "@/lib/local-prototype-storage";
@@ -1137,6 +1138,7 @@ export default function EventDetailsScreen() {
     pinnedEventIds,
     hiddenEventIds,
     screenReaderHints,
+    externalLinks,
     saveSoftHelloMvpState,
   } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
@@ -1383,23 +1385,53 @@ export default function EventDetailsScreen() {
     scrollRef.current?.scrollTo({ y: 0, animated: true });
     setFocusedSection(null);
   };
+  const confirmExternalOpen = (
+    destination: ExternalOpenDestination,
+    openExternalDestination: () => void,
+  ) => {
+    if (!externalLinks.askBeforeOpeningExternalApps) {
+      openExternalDestination();
+      return;
+    }
+
+    const confirmationCopy = getExternalOpenConfirmationCopy(destination);
+    const message = [confirmationCopy.body, ...confirmationCopy.details].join("\n\n");
+
+    Alert.alert(confirmationCopy.title, message, [
+      { text: confirmationCopy.cancelLabel, style: "cancel" },
+      { text: confirmationCopy.openLabel, onPress: openExternalDestination },
+    ]);
+  };
   const openEventLocation = async () => {
     const mapsUrl = buildEventLocationSearchUrl(arrivalPreview.mapSearchArea);
 
-    try {
-      if (Platform.OS === "web") {
-        const webWindow = typeof window !== "undefined" ? window : undefined;
-        webWindow?.open(mapsUrl, "_blank", "noopener,noreferrer");
-        return;
-      }
+    const openMaps = async () => {
+      try {
+        if (Platform.OS === "web") {
+          const webWindow = typeof window !== "undefined" ? window : undefined;
+          webWindow?.open(mapsUrl, "_blank", "noopener,noreferrer");
+          return;
+        }
 
-      await Linking.openURL(mapsUrl);
-    } catch {
-      Alert.alert(
-        "Maps unavailable",
-        `Use the broad arrival area shown here: ${arrivalPreview.approximateArea}.`,
-      );
-    }
+        await Linking.openURL(mapsUrl);
+      } catch {
+        Alert.alert(
+          "Maps unavailable",
+          `Use the broad arrival area shown here: ${arrivalPreview.approximateArea}.`,
+        );
+      }
+    };
+
+    confirmExternalOpen(
+      {
+        kind: "maps",
+        destinationAppName: "Maps",
+        broadAreaName: arrivalPreview.mapSearchArea,
+      },
+      () => {
+        void openMaps();
+      },
+    );
   };
   const handleEventDetailScroll = (scrollY: number) => {
     const measuredSections = eventDetailSectionPlan

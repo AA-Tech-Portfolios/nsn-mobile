@@ -330,6 +330,7 @@ const prototypeBadgeBySetting: Record<string, AlphaActionLabel> = {
   safetyCheckIns: "Coming soon",
   useApproximateLocation: "Saved locally",
   showDistanceInMeetups: "Demo",
+  askBeforeOpeningExternalApps: "Saved locally",
   socialEnergyPreference: "Saved locally",
   communicationPreferences: "Saved locally",
   groupSizePreference: "Saved locally",
@@ -518,6 +519,8 @@ type SettingsCopy = {
   useApproximateLocationCopy?: string;
   showDistanceInMeetups?: string;
   showDistanceInMeetupsCopy?: string;
+  askBeforeOpeningExternalApps?: string;
+  askBeforeOpeningExternalAppsCopy?: string;
   timeLocalContext?: string;
   timeLocalContextCopy?: string;
   timeLocalContextPrototypeNote?: string;
@@ -3745,9 +3748,10 @@ export default function SettingsScreen() {
     setNotificationSnoozePreset,
     useApproximateLocation,
     setUseApproximateLocation,
-    showDistanceInMeetups,
-    setShowDistanceInMeetups,
-    contactEmail,
+  showDistanceInMeetups,
+  setShowDistanceInMeetups,
+  externalLinks,
+  contactEmail,
     contactPhone,
     identitySelfieUri,
     hasIdentityDocument,
@@ -4148,6 +4152,11 @@ export default function SettingsScreen() {
   const setAndSaveNotificationSnoozed = (value: boolean) => {
     setNotificationSnoozed(value);
     saveSoftHelloMvpState({ notificationSnoozed: value });
+  };
+  const setAndSaveAskBeforeOpeningExternalApps = (value: boolean) => {
+    saveSoftHelloMvpState({
+      externalLinks: { ...externalLinks, askBeforeOpeningExternalApps: value },
+    });
   };
   const saveNotificationSnoozePreset = (value: NotificationSnoozePreset) => {
     setNotificationSnoozePreset(value);
@@ -4581,6 +4590,7 @@ export default function SettingsScreen() {
       suggestNightModeInEvenings,
       useApproximateLocation,
       showDistanceInMeetups,
+      askBeforeOpeningExternalApps: externalLinks.askBeforeOpeningExternalApps,
       allowMessageRequests,
       safetyCheckIns,
       batterySaver,
@@ -4608,6 +4618,7 @@ export default function SettingsScreen() {
         saveSoftHelloMvpState({ suggestNightModeInEvenings: value }),
       setUseApproximateLocation,
       setShowDistanceInMeetups,
+      setAskBeforeOpeningExternalApps: setAndSaveAskBeforeOpeningExternalApps,
       setAllowMessageRequests,
       setSafetyCheckIns,
       setBatterySaver: setAndSaveBatterySaver,

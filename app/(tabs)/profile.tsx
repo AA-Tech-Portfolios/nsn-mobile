@@ -58,6 +58,7 @@ import { ProfileAvatar } from "@/components/profile-avatar";
 import { ScreenContainer } from "@/components/screen-container";
 import { SkyThemeAccent } from "@/components/sky-theme-accent";
 import { ProfileVisibilityPreview, type ProfileVisibilityPreviewProps } from "@/components/profile-visibility-preview";
+import { getExternalOpenConfirmationCopy, type ExternalOpenDestination } from "@/lib/external-links";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   getProfilePreferenceDestination,
@@ -1230,6 +1231,7 @@ export default function ProfileScreen() {
     interestPreferenceIds,
     interestComfortTagsByInterest,
     clearAllLocalPrototypeData,
+    externalLinks,
   } = useAppSettings();
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const isDay = !isNightMode;
@@ -2291,22 +2293,58 @@ export default function ProfileScreen() {
     Alert.alert("Demo Draft Prepared", "A local draft is shown below as selectable text.");
   };
 
+  const confirmExternalOpen = (
+    destination: ExternalOpenDestination,
+    openExternalDestination: () => void,
+  ) => {
+    if (!externalLinks.askBeforeOpeningExternalApps) {
+      openExternalDestination();
+      return;
+    }
+
+    const confirmationCopy = getExternalOpenConfirmationCopy(destination);
+    const message = [confirmationCopy.body, ...confirmationCopy.details].join("\n\n");
+
+    Alert.alert(confirmationCopy.title, message, [
+      { text: confirmationCopy.cancelLabel, style: "cancel" },
+      { text: confirmationCopy.openLabel, onPress: openExternalDestination },
+    ]);
+  };
+
   const openSupportIssue = async () => {
     setHelpDraftPrepared(true);
 
-    try {
-      await Linking.openURL(supportIssueUrl);
-    } catch {
-      Alert.alert("Open GitHub issue", "Could not open the issue page from this device. A feedback draft is shown below instead.");
-    }
+    const openIssue = async () => {
+      try {
+        await Linking.openURL(supportIssueUrl);
+      } catch {
+        Alert.alert("Open GitHub issue", "Could not open the issue page from this device. A feedback draft is shown below instead.");
+      }
+    };
+
+    confirmExternalOpen(
+      { kind: "website", destinationAppName: "GitHub" },
+      () => {
+        void openIssue();
+      },
+    );
   };
 
   const openExternalSupportResource = async (url: string, title: string) => {
-    try {
-      await Linking.openURL(url);
-    } catch {
-      Alert.alert(title, "Could not open this support link from the current device.");
-    }
+    const openResource = async () => {
+      try {
+        await Linking.openURL(url);
+      } catch {
+        Alert.alert(title, "Could not open this support link from the current device.");
+      }
+    };
+
+    confirmExternalOpen(
+      { kind: "website", destinationAppName: title },
+      () => {
+        void openResource();
+      },
+    );
   };
 
   const toggleVerifiedButPrivate = async () => {

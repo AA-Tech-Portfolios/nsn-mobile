@@ -43,6 +43,9 @@ const copy: SettingsCopySource = {
   useApproximateLocationCopy: "Use a nearby area.",
   showDistanceInMeetups: "Show distance",
   showDistanceInMeetupsCopy: "Show distance in meetups.",
+  askBeforeOpeningExternalApps: "Ask before opening external apps",
+  askBeforeOpeningExternalAppsCopy:
+    "Show a confirmation before opening maps, websites, or other apps outside NSN.",
   allowMessageRequests: "Message requests",
   allowMessageRequestsCopy: "Allow new requests.",
   safetyCheckIns: "Meetup check-in reminders",
@@ -81,6 +84,7 @@ const state: SettingsControlState = {
   suggestNightModeInEvenings: false,
   useApproximateLocation: true,
   showDistanceInMeetups: true,
+  askBeforeOpeningExternalApps: true,
   allowMessageRequests: false,
   safetyCheckIns: true,
   batterySaver: false,
@@ -109,6 +113,7 @@ function createActions() {
     setSuggestNightModeInEvenings: vi.fn(),
     setUseApproximateLocation: vi.fn(),
     setShowDistanceInMeetups: vi.fn(),
+    setAskBeforeOpeningExternalApps: vi.fn(),
     setAllowMessageRequests: vi.fn(),
     setSafetyCheckIns: vi.fn(),
     setBatterySaver: vi.fn(),
@@ -156,6 +161,7 @@ describe("settings controls", () => {
       "suggestNightModeInEvenings",
       "useApproximateLocation",
       "showDistanceInMeetups",
+      "askBeforeOpeningExternalApps",
       "allowMessageRequests",
       "safetyCheckIns",
       "batterySaver",
@@ -186,6 +192,7 @@ describe("settings controls", () => {
     expect(actions.setSuggestNightModeInEvenings).toHaveBeenCalledWith(true);
     expect(actions.setUseApproximateLocation).toHaveBeenCalledWith(false);
     expect(actions.setShowDistanceInMeetups).toHaveBeenCalledWith(false);
+    expect(actions.setAskBeforeOpeningExternalApps).toHaveBeenCalledWith(false);
     expect(actions.setAllowMessageRequests).toHaveBeenCalledWith(true);
     expect(actions.setSafetyCheckIns).toHaveBeenCalledWith(false);
     expect(actions.setBatterySaver).toHaveBeenCalledWith(true);

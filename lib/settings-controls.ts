@@ -33,6 +33,8 @@ export type SettingsCopySource = {
   useApproximateLocationCopy?: string;
   showDistanceInMeetups?: string;
   showDistanceInMeetupsCopy?: string;
+  askBeforeOpeningExternalApps?: string;
+  askBeforeOpeningExternalAppsCopy?: string;
   allowMessageRequests?: string;
   allowMessageRequestsCopy?: string;
   safetyCheckIns?: string;
@@ -71,6 +73,7 @@ export type SettingsControlState = {
   suggestNightModeInEvenings: boolean;
   useApproximateLocation: boolean;
   showDistanceInMeetups: boolean;
+  askBeforeOpeningExternalApps: boolean;
   allowMessageRequests: boolean;
   safetyCheckIns: boolean;
   batterySaver: boolean;
@@ -98,6 +101,7 @@ export type SettingsControlActions = {
   setSuggestNightModeInEvenings: (value: boolean) => void;
   setUseApproximateLocation: (value: boolean) => void;
   setShowDistanceInMeetups: (value: boolean) => void;
+  setAskBeforeOpeningExternalApps: (value: boolean) => void;
   setAllowMessageRequests: (value: boolean) => void;
   setSafetyCheckIns: (value: boolean) => void;
   setBatterySaver: (value: boolean) => void;
@@ -256,6 +260,19 @@ export function createSettingsToggleSections({
         copy: copy.showDistanceInMeetupsCopy ?? englishCopy.showDistanceInMeetupsCopy ?? "",
         value: state.showDistanceInMeetups,
         onValueChange: actions.setShowDistanceInMeetups,
+      },
+      {
+        key: "askBeforeOpeningExternalApps",
+        label:
+          copy.askBeforeOpeningExternalApps ??
+          englishCopy.askBeforeOpeningExternalApps ??
+          "",
+        copy:
+          copy.askBeforeOpeningExternalAppsCopy ??
+          englishCopy.askBeforeOpeningExternalAppsCopy ??
+          "",
+        value: state.askBeforeOpeningExternalApps,
+        onValueChange: actions.setAskBeforeOpeningExternalApps,
       },
     ],
     safetyRows: [
