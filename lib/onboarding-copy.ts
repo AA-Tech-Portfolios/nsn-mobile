@@ -1,12 +1,15 @@
 export const onboardingCopy = {
   welcomeIntro: {
-    mobile: "NSN is a Sydney North Shore alpha for trying calm, low-pressure meetup ideas.",
+    mobile:
+      "NSN is a Sydney North Shore alpha for trying calm, low-pressure meetup ideas. You do not need to prove yourself to belong.",
     desktop:
-      "NSN is a Sydney North Shore alpha prototype for trying calm, low-pressure meetup ideas: coffee, walks, movies, dinner, games and small local plans.",
+      "NSN is a Sydney North Shore alpha prototype for trying calm, low-pressure meetup ideas: coffee, walks, movies, dinner, games and small local plans. You do not need to prove yourself to belong.",
   },
   welcomePrivacy: {
-    mobile: "You can keep things private, move slowly, or skip setup for testing.",
-    desktop: "You choose what appears in this local prototype. Start private, warm up gradually, or keep things more open in event previews.",
+    mobile:
+      "You can browse quietly, browse first, join at your own pace, or skip setup for testing. You can attend with someone you know and do not need to arrive alone. Small meetups are enough.",
+    desktop:
+      "You choose what appears in this local prototype. Browse quietly, browse first, join at your own pace, and warm up gradually. You can attend with someone you know and do not need to arrive alone. Small meetups are enough.",
   },
   preferredAgeRangeHint: "NSN starts at 18+ and keeps age ranges realistic for this adult local alpha.",
   showPreferredAgeRange: "Show the adult age range you prefer in your profile preview.",

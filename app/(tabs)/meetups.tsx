@@ -314,6 +314,22 @@ export default function MeetupsScreen() {
                 <Text style={[styles.cardTitle, isDay && styles.dayTitle]}>{localizedEvent.title}</Text>
                 <Text style={[styles.cardMeta, isDay && styles.dayMutedText]}>{event.venue} · {event.time}</Text>
                 <Text style={[styles.cardCopy, isDay && styles.daySuccessText]}>{localizedEvent.people} · {rsvpLabel}</Text>
+                {event.comfortSignals ? (
+                  <View style={styles.comfortSignalRow}>
+                    <Text style={[styles.comfortSignalChip, isDay && styles.dayComfortSignalChip]}>
+                      Energy {event.comfortSignals.socialEnergy}
+                    </Text>
+                    <Text style={[styles.comfortSignalChip, isDay && styles.dayComfortSignalChip]}>
+                      {event.comfortSignals.noiseLevel}
+                    </Text>
+                    <Text style={[styles.comfortSignalChip, isDay && styles.dayComfortSignalChip]}>
+                      {event.comfortSignals.groupSize}
+                    </Text>
+                    <Text style={[styles.comfortSignalChip, isDay && styles.dayComfortSignalChip]}>
+                      {event.comfortSignals.conversationStyle}
+                    </Text>
+                  </View>
+                ) : null}
                 {event.trustProfile ? (
                   <Text style={[styles.cardTrust, isDay && styles.dayAccentText]}>{getEventTrustSummary(event.trustProfile)}</Text>
                 ) : null}
@@ -373,6 +389,22 @@ const styles = StyleSheet.create({
   cardTitle: { minWidth: 0, color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 19 },
   cardMeta: { minWidth: 0, color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginTop: 2 },
   cardCopy: { minWidth: 0, color: nsnColors.green, fontSize: 11, lineHeight: 16, marginTop: 3, fontWeight: "700" },
+  comfortSignalRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 7 },
+  comfortSignalChip: {
+    maxWidth: "100%",
+    color: "#D2E0FF",
+    borderColor: "rgba(124,170,201,0.42)",
+    borderWidth: 1,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    overflow: "hidden",
+    backgroundColor: "rgba(124,170,201,0.08)",
+  },
+  dayComfortSignalChip: { color: "#445E93", borderColor: "#B8C6E2", backgroundColor: "#F2F5FA" },
   cardTrust: { color: nsnColors.day, fontSize: 11, lineHeight: 16, marginTop: 2, fontWeight: "900" },
   daySuccessText: { color: "#2F7A3C" },
   chevron: { flexShrink: 0, color: nsnColors.muted, fontSize: 30, lineHeight: 34 },

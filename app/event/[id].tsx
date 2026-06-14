@@ -58,6 +58,8 @@ import {
   getPrototypeVerificationStateLabel,
   getRsvpDescription,
   getRsvpLabel,
+  getAttendTogetherDescription,
+  getAttendTogetherLabel,
   getWeatherFallbackSuggestions,
   getVerificationLevelLabel,
   hideEvent,
@@ -67,8 +69,10 @@ import {
   savePlace,
   savePostEventFeedback,
   pinEvent,
+  setEventAttendTogetherStatus,
   setEventRsvpStatus,
   shouldOpenMeetupChat,
+  type AttendTogetherStatus,
   type EventMembershipStatus,
   type PostEventFeedback,
   unhideEvent,
@@ -1244,6 +1248,12 @@ export default function EventDetailsScreen() {
     { status: "unable", label: "Unable to make it" },
     { status: "none", label: "Clear" },
   ];
+  const attendTogetherChoices: AttendTogetherStatus[] = [
+    "solo",
+    "bringing_someone",
+    "maybe_bringing_someone",
+  ];
+  const attendTogetherStatus = membership.attendTogetherStatus ?? "solo";
   const effectiveVerificationLevel = getEffectivePrototypeVerificationLevel(
     { contactEmail, contactPhone, identitySelfieUri, hasIdentityDocument },
     verificationLevel,
@@ -1384,6 +1394,11 @@ export default function EventDetailsScreen() {
     }
 
     const nextMemberships = setEventRsvpStatus(event.id, eventMemberships, status);
+    await saveSoftHelloMvpState({ eventMemberships: nextMemberships });
+  };
+
+  const saveAttendTogetherStatus = async (status: AttendTogetherStatus) => {
+    const nextMemberships = setEventAttendTogetherStatus(event.id, eventMemberships, status);
     await saveSoftHelloMvpState({ eventMemberships: nextMemberships });
   };
 
@@ -1909,6 +1924,69 @@ export default function EventDetailsScreen() {
           <DetailMetaRow iconName="calendar" label={eventDate} isDay={isDay} isRtl={isRtl} />
           <DetailMetaRow iconName="group" label={eventPeople} isDay={isDay} isRtl={isRtl} />
         </View>
+
+        {event.comfortSignals ? (
+          <View style={[styles.walkingIntoCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+            <View style={[styles.walkingIntoHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="low-pressure" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <View style={[styles.noiseCopyBlock, isRtl && styles.rtlBlock]}>
+                <Text
+                  style={[
+                    styles.mediaComfortTitle,
+                    isDay && styles.dayHeadingText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  What you are walking into
+                </Text>
+                <Text
+                  style={[
+                    styles.mediaComfortCopy,
+                    isDay && styles.dayMutedText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Lightweight prototype cues for the group feel before you decide how to arrive.
+                </Text>
+              </View>
+            </View>
+            <View style={[styles.walkingIntoGrid, isRtl && styles.rtlRow]}>
+              {[
+                { label: "Social energy", value: event.comfortSignals.socialEnergy },
+                { label: "Noise level", value: event.comfortSignals.noiseLevel },
+                { label: "Group size", value: event.comfortSignals.groupSize },
+                { label: "Conversation", value: event.comfortSignals.conversationStyle },
+              ].map((signal) => (
+                <View key={signal.label} style={[styles.walkingIntoSignal, isDay && styles.dayWalkingIntoSignal]}>
+                  <Text style={[styles.walkingIntoLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                    {signal.label}
+                  </Text>
+                  <Text style={[styles.walkingIntoValue, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+                    {signal.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            {event.lifeStageCues?.length ? (
+              <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                {event.lifeStageCues.map((cue) => (
+                  <Text
+                    key={cue}
+                    style={[
+                      styles.mediaComfortChip,
+                      isDay && styles.dayMediaComfortChip,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    {cue}
+                  </Text>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
 
         <TouchableOpacity
           activeOpacity={0.86}
@@ -2675,6 +2753,42 @@ export default function EventDetailsScreen() {
                 >
                   {eventMeetingCopy}
                 </Text>
+                {event.arrivalConfidenceNotes?.length ? (
+                  <View style={[styles.arrivalConfidenceBlock, isRtl && styles.rtlBlock]}>
+                    <Text
+                      style={[
+                        styles.mediaComfortTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Arrival & transport confidence
+                    </Text>
+                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                      {event.arrivalConfidenceNotes.map((note) => (
+                        <Text
+                          key={note}
+                          style={[
+                            styles.mediaComfortChip,
+                            isDay && styles.dayMediaComfortChip,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {note}
+                        </Text>
+                      ))}
+                    </View>
+                    <Text
+                      style={[
+                        styles.mediaComfortNote,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Prototype notes only; check venue details before leaving.
+                    </Text>
+                  </View>
+                ) : null}
                 <Text
                   style={[
                     styles.meetingCopy,
@@ -3260,6 +3374,54 @@ export default function EventDetailsScreen() {
               );
             })}
           </View>
+          <View style={styles.attendTogetherBlock}>
+            <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+              You do not have to walk in alone
+            </Text>
+            <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              Bring a friend, sibling, partner, parent, or support person. They do not need to be
+              on NSN for this local prototype note.
+            </Text>
+            <View style={styles.rsvpActions}>
+              {attendTogetherChoices.map((choice) => {
+                const active = choice === attendTogetherStatus;
+
+                return (
+                  <TouchableOpacity
+                    key={choice}
+                    activeOpacity={0.82}
+                    onPress={() => saveAttendTogetherStatus(choice)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    style={[
+                      styles.rsvpChoice,
+                      isDay && styles.dayActionRow,
+                      active && styles.rsvpChoiceActive,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.rsvpChoiceText,
+                        isDay && styles.dayText,
+                        active && styles.rsvpChoiceTextActive,
+                      ]}
+                    >
+                      {getAttendTogetherLabel(choice)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text
+              style={[
+                styles.rsvpDescription,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {getAttendTogetherDescription(attendTogetherStatus)}
+            </Text>
+          </View>
         </View>
 
         <View style={[styles.readinessPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
@@ -3803,6 +3965,38 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   metaStack: { gap: 8, marginBottom: 12 },
+  walkingIntoCard: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "#0D1A2C",
+    padding: 14,
+    gap: 12,
+    marginBottom: 14,
+  },
+  walkingIntoHeader: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  walkingIntoGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  walkingIntoSignal: {
+    flexGrow: 1,
+    flexBasis: 132,
+    minHeight: 58,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    gap: 2,
+  },
+  dayWalkingIntoSignal: { backgroundColor: "#F7FAFC", borderColor: "#C5D0DA" },
+  walkingIntoLabel: {
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
+  walkingIntoValue: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   savePlaceButton: {
     minHeight: 44,
     flexDirection: "row",
@@ -4140,6 +4334,7 @@ const styles = StyleSheet.create({
   },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   meetingPrivacyCopy: { marginTop: 8, fontSize: 12, lineHeight: 18 },
+  arrivalConfidenceBlock: { gap: 8, marginTop: 13 },
   meetupSupportPanel: {
     borderRadius: 17,
     borderWidth: 1,
@@ -4333,6 +4528,13 @@ const styles = StyleSheet.create({
   },
   rsvpDescription: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 7 },
   rsvpActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
+  attendTogetherBlock: {
+    borderTopWidth: 1,
+    borderTopColor: nsnColors.border,
+    marginTop: 14,
+    paddingTop: 14,
+    gap: 2,
+  },
   rsvpChoice: {
     minHeight: 40,
     maxWidth: "100%",

@@ -22,6 +22,25 @@ export type NoiseLevel = "Quiet" | "Balanced" | "Lively";
 
 export const noiseLevelOptions: NoiseLevel[] = ["Quiet", "Balanced", "Lively"];
 
+export type EventSocialEnergy = "Low" | "Medium" | "Higher";
+export type EventDisplayNoiseLevel = "Quiet" | "Moderate" | "Lively";
+export type EventConversationStyle = "Casual" | "Guided" | "Activity-based" | "Mostly flexible";
+export type EventArrivalConfidenceNote =
+  | "Public transport friendly"
+  | "Parking nearby"
+  | "Short walk from station"
+  | "First-time friendly"
+  | "Clear meeting point"
+  | "Accessible venue";
+export type EventLifeStageCue = "Young adults" | "Adults" | "Mixed ages" | "Similar life stage";
+
+export type EventComfortSignals = {
+  socialEnergy: EventSocialEnergy;
+  noiseLevel: EventDisplayNoiseLevel;
+  groupSize: string;
+  conversationStyle: EventConversationStyle;
+};
+
 export const eventAtmosphereLabelOptions = [
   "Quiet",
   "Balanced",
@@ -145,6 +164,9 @@ export type EventItem = {
   imageTone: string;
   emoji: string;
   tags: string[];
+  comfortSignals?: EventComfortSignals;
+  arrivalConfidenceNotes?: EventArrivalConfidenceNote[];
+  lifeStageCues?: EventLifeStageCue[];
   comfortLabels?: EventComfortLabel[];
   atmosphereLabels?: EventAtmosphereLabel[];
   mediaComfortLabels?: string[];
@@ -176,6 +198,18 @@ export const dayEvents: EventItem[] = [
     imageTone: "#19432D",
     emoji: "🧺",
     tags: ["Outdoor", "Balanced", "Picnic gathering", "Food-focused", "Conversation-light"],
+    comfortSignals: {
+      socialEnergy: "Low",
+      noiseLevel: "Quiet",
+      groupSize: "3–5",
+      conversationStyle: "Mostly flexible",
+    },
+    arrivalConfidenceNotes: [
+      "Public transport friendly",
+      "Clear meeting point",
+      "First-time friendly",
+    ],
+    lifeStageCues: ["Mixed ages", "Adults"],
     comfortLabels: ["Calm & quiet", "Casual social", "Food-focused", "Conversation-light", "Small groups preferred", "Lower-pressure participation", "Outdoor airflow", "Join at your own pace", "Leave whenever you need"],
     atmosphereLabels: ["Quiet", "Small group", "Low-pressure", "Outdoor calm", "First-time friendly"],
     mediaComfortLabels: ["Ask before photos", "Group photos by consent"],
@@ -213,6 +247,18 @@ export const dayEvents: EventItem[] = [
     imageTone: "#1A4964",
     emoji: "🌊",
     tags: ["Outdoor", "Balanced", "Beach walk", "Activity-focused", "Explorative/day out"],
+    comfortSignals: {
+      socialEnergy: "Medium",
+      noiseLevel: "Lively",
+      groupSize: "4–6",
+      conversationStyle: "Activity-based",
+    },
+    arrivalConfidenceNotes: [
+      "Public transport friendly",
+      "Parking nearby",
+      "Clear meeting point",
+    ],
+    lifeStageCues: ["Young adults", "Mixed ages"],
     comfortLabels: ["Explorative/day out", "Activity-focused", "Energetic/social vibe", "Flexible pacing", "Large crowds okay", "Flexible social pacing", "High-energy social vibe", "Loud environment possible", "Outdoor animal exposure possible", "Outdoor airflow", "Join/leave flexibly"],
     atmosphereLabels: ["Balanced", "Lively", "Outdoor calm"],
     mediaComfortLabels: ["Ask before photos", "Venue photos okay"],
@@ -239,6 +285,18 @@ export const dayEvents: EventItem[] = [
     imageTone: "#29365E",
     emoji: "📚",
     tags: ["Indoor", "Quiet", "Cozy indoor", "Conversation-light"],
+    comfortSignals: {
+      socialEnergy: "Low",
+      noiseLevel: "Quiet",
+      groupSize: "3–5",
+      conversationStyle: "Guided",
+    },
+    arrivalConfidenceNotes: [
+      "Short walk from station",
+      "First-time friendly",
+      "Accessible venue",
+    ],
+    lifeStageCues: ["Adults", "Similar life stage"],
     comfortLabels: ["Calm & quiet", "Cozy indoor", "Conversation-light", "Crowd-sensitive", "Quiet corners available", "Lower sensory stimulation", "Noise-sensitive friendly", "Pet-free meetup", "Calm seating area", "Quiet recharge space nearby"],
     atmosphereLabels: ["Quiet", "Cozy", "Small group", "Low-pressure", "First-time friendly"],
     mediaComfortLabels: ["Private meetup", "No public posting"],
@@ -265,6 +323,18 @@ export const dayEvents: EventItem[] = [
     imageTone: "#5A3823",
     emoji: "☕",
     tags: ["Food", "Indoor", "Balanced", "Café meetup", "Food-focused", "Conversation-light"],
+    comfortSignals: {
+      socialEnergy: "Low",
+      noiseLevel: "Moderate",
+      groupSize: "3–5",
+      conversationStyle: "Casual",
+    },
+    arrivalConfidenceNotes: [
+      "Public transport friendly",
+      "Parking nearby",
+      "First-time friendly",
+    ],
+    lifeStageCues: ["Mixed ages", "Similar life stage"],
     comfortLabels: ["Casual social", "Cozy indoor", "Food-focused", "Conversation-light", "Small groups preferred", "Flexible social pacing", "Calm seating area", "Join at your own pace", "Leave whenever you need"],
     atmosphereLabels: ["Balanced", "Cozy", "Small group", "Low-pressure", "Indoor backup"],
     mediaComfortLabels: ["Ask before photos", "Private meetup"],
@@ -301,6 +371,18 @@ export const dayEvents: EventItem[] = [
     imageTone: "#1E4F55",
     emoji: "🚶",
     tags: ["Active", "Outdoor", "Balanced", "Beach walk", "Activity-focused", "Conversation-light"],
+    comfortSignals: {
+      socialEnergy: "Medium",
+      noiseLevel: "Quiet",
+      groupSize: "4–6",
+      conversationStyle: "Activity-based",
+    },
+    arrivalConfidenceNotes: [
+      "Short walk from station",
+      "Clear meeting point",
+      "First-time friendly",
+    ],
+    lifeStageCues: ["Adults", "Mixed ages"],
     comfortLabels: ["Explorative/day out", "Activity-focused", "Conversation-light", "Flexible pacing", "Small groups preferred", "Easy step-out/reset nearby", "Outdoor animal exposure possible", "Outdoor airflow", "Flexible pacing welcome"],
     atmosphereLabels: ["Quiet", "Balanced", "Small group", "Outdoor calm", "Low-pressure"],
     mediaComfortLabels: ["Venue photos okay", "Ask before photos"],
@@ -330,6 +412,18 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#281C45",
     emoji: "🍿",
     tags: ["Indoor", "Quiet", "Movie marathons", "Conversation-light", "Cozy indoor"],
+    comfortSignals: {
+      socialEnergy: "Low",
+      noiseLevel: "Lively",
+      groupSize: "3–5",
+      conversationStyle: "Guided",
+    },
+    arrivalConfidenceNotes: [
+      "Public transport friendly",
+      "Parking nearby",
+      "Clear meeting point",
+    ],
+    lifeStageCues: ["Young adults", "Adults"],
     comfortLabels: ["Cozy indoor", "Conversation-light", "Flexible pacing", "Large crowds okay", "Loud music possible", "Bring earbuds/headphones if helpful", "Lower-noise alternative nearby", "Lower-pressure participation", "Pet-free meetup", "Join/leave flexibly"],
     atmosphereLabels: ["Quiet", "Cozy", "Low-pressure", "Indoor backup", "First-time friendly"],
     mediaComfortLabels: ["No filming", "Private meetup"],
@@ -367,6 +461,18 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#3B2D15",
     emoji: "🎲",
     tags: ["Indoor", "Food", "Balanced", "Board games", "Café meetup", "Activity-focused"],
+    comfortSignals: {
+      socialEnergy: "Medium",
+      noiseLevel: "Moderate",
+      groupSize: "4–6",
+      conversationStyle: "Activity-based",
+    },
+    arrivalConfidenceNotes: [
+      "Short walk from station",
+      "First-time friendly",
+      "Clear meeting point",
+    ],
+    lifeStageCues: ["Mixed ages", "Similar life stage"],
     comfortLabels: ["Casual social", "Cozy indoor", "Activity-focused", "Conversation-heavy", "Close-friends vibe", "Small celebrations", "Flexible social pacing", "Smaller subgroup available", "Calm meetup alternative nearby"],
     atmosphereLabels: ["Balanced", "Cozy", "Small group", "First-time friendly"],
     mediaComfortLabels: ["Ask before photos", "Private meetup"],
@@ -393,6 +499,18 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#55331C",
     emoji: "🍜",
     tags: ["Food", "Indoor", "Balanced", "Casual dining", "Group lunch/dinner", "Food-focused"],
+    comfortSignals: {
+      socialEnergy: "Medium",
+      noiseLevel: "Moderate",
+      groupSize: "4–6",
+      conversationStyle: "Casual",
+    },
+    arrivalConfidenceNotes: [
+      "Public transport friendly",
+      "Parking nearby",
+      "First-time friendly",
+    ],
+    lifeStageCues: ["Adults", "Mixed ages"],
     comfortLabels: ["Casual social", "Food-focused", "Conversation-heavy", "Small groups preferred", "Close-friends vibe", "Strong smells possible", "Join/leave flexibly"],
     atmosphereLabels: ["Balanced", "Small group", "Low-pressure", "Indoor backup"],
     mediaComfortLabels: ["Private meetup", "No public posting"],
@@ -419,6 +537,18 @@ export const eveningEvents: EventItem[] = [
     imageTone: "#1F2B4A",
     emoji: "🎧",
     tags: ["Indoor", "Quiet", "Cozy indoor", "Conversation-light"],
+    comfortSignals: {
+      socialEnergy: "Low",
+      noiseLevel: "Quiet",
+      groupSize: "3–5",
+      conversationStyle: "Guided",
+    },
+    arrivalConfidenceNotes: [
+      "Public transport friendly",
+      "First-time friendly",
+      "Accessible venue",
+    ],
+    lifeStageCues: ["Adults", "Similar life stage"],
     comfortLabels: ["Calm & quiet", "Cozy indoor", "Conversation-light", "Calm gathering", "Lower sensory stimulation", "Quiet recharge nearby", "Quiet recharge space nearby", "Calm seating area", "Flexible pacing welcome"],
     atmosphereLabels: ["Quiet", "Cozy", "Small group", "Low-pressure", "First-time friendly"],
     mediaComfortLabels: ["No filming", "Private meetup"],

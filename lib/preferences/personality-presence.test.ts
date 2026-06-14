@@ -149,11 +149,24 @@ describe("personality and presence preferences", () => {
       "What helps you recharge socially?",
       "What snack or drink instantly improves your mood?",
       "What small thing makes a meetup feel welcoming?",
+      "What helps you warm up at a meetup?",
       "What hobby or activity would you love to try one day?",
       "What kind of places help you feel relaxed?",
       "If you could instantly learn one skill, what would it be?",
     ]);
     expect(personalityPresencePromptOptions.map((option) => option.prompt).join(" ")).not.toMatch(/truth|lies|rank|score|popular|attractive|compatibility/i);
+    expect(personalityPresencePromptOptions.map((option) => option.prompt).join(" ")).toContain(
+      "What helps you warm up at a meetup?",
+    );
+    expect(personalityPresencePromptOptions.flatMap((option) => option.options)).toEqual(
+      expect.arrayContaining([
+        "I prefer listening first",
+        "I may need a few minutes to settle in",
+        "Happy to chat if someone starts",
+        "I enjoy smaller groups",
+        "I like knowing the plan before arriving",
+      ]),
+    );
     expect(personalityPresencePromptOptions[0].options).toEqual([
       "Teleportation",
       "Healing",

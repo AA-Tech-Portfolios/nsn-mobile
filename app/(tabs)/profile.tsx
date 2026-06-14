@@ -120,6 +120,7 @@ import { getProfilePreferenceCopy } from "@/lib/profile-preference-translations"
 import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-validation";
 import { getGuideTipForSurface } from "@/lib/guides-and-tips";
 import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel, type SoftHelloComfortPreference, type SoftHelloVerificationLevel, verificationLevels } from "@/lib/softhello-mvp";
+import { getMyCirclePrototypeSummary, prototypeMyCircleMembers } from "@/lib/my-circle";
 import { gentleConnectionGuidance, supportBelongingGuidance, type SupportGuidanceId } from "@/lib/support-guidance";
 import { getCalmFaviconUrl, preparednessGuidanceCategories, safetyBoundaryGuidanceCategories, type PreparednessGuidanceCategory } from "@/lib/options-hub";
 import { communityRoleOptions, meetupAccessShortcutRows } from "@/lib/profile-community-roles";
@@ -7182,6 +7183,41 @@ export default function ProfileScreen() {
             </View>
           </View>
         ) : null}
+
+        <View style={[styles.profileSectionCard, styles.detailedSectionCard, isWideProfile && styles.detailedSectionCardWide, isDay && styles.dayCard, softSurfaces && styles.softSurfaceCard, clearBorders && styles.clearBorderCard]}>
+          <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
+            <View style={styles.profileLayoutBody}>
+              <Text style={[styles.sectionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>My Circle</Text>
+              <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Local prototype for planning to attend with someone familiar.
+              </Text>
+            </View>
+            <Text style={[styles.profileMenuStatusBadge, isDay && styles.dayTrustPill]}>
+              Prototype
+            </Text>
+          </View>
+          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            {getMyCirclePrototypeSummary()}
+          </Text>
+          <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            You can attend with someone you know. You do not need to arrive alone, and small meetups are enough.
+          </Text>
+          <View style={styles.preferenceGrid}>
+            {prototypeMyCircleMembers.map((member) => (
+              <View key={member.id} style={[styles.profileMenuGuideRow, isDay && styles.daySoftOption]}>
+                <IconSymbol name="group" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                <View style={styles.profileLayoutBody}>
+                  <Text style={[styles.profileMenuText, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                    {member.relationship}
+                  </Text>
+                  <Text style={[styles.profileLayoutCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                    {member.note}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
 
         {false ? (
           <>

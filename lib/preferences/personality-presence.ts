@@ -148,6 +148,7 @@ export type PersonalityPresencePromptId =
   | "recharge-socially"
   | "mood-snack-drink"
   | "welcoming-meetup"
+  | "meetup-warm-up"
   | "try-one-day"
   | "relaxed-places"
   | "instant-skill";
@@ -350,6 +351,11 @@ export const personalityPresencePromptOptions: PersonalityPresencePrompt[] = [
     id: "welcoming-meetup",
     prompt: "What small thing makes a meetup feel welcoming?",
     options: ["Clear plans", "Friendly hello", "Quiet corner", "Easy seating", "Text-first check-in", "Someone saving a spot", "Gentle introductions", "No pressure to talk", "Other..."],
+  },
+  {
+    id: "meetup-warm-up",
+    prompt: "What helps you warm up at a meetup?",
+    options: ["I prefer listening first", "I may need a few minutes to settle in", "Happy to chat if someone starts", "I enjoy smaller groups", "I like knowing the plan before arriving", "Other..."],
   },
   {
     id: "try-one-day",
