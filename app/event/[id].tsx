@@ -32,6 +32,7 @@ import {
   type EventDetailSectionId,
 } from "@/lib/event-detail-sections";
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
+import { getExpectedGroupSizeCopy, getExpectedGroupSizeValue } from "@/lib/event-attendance-copy";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { allEvents, movieNight, nsnColors, type EventItem } from "@/lib/nsn-data";
 import {
@@ -1221,8 +1222,7 @@ export default function EventDetailsScreen() {
     : isCreatedEvent
       ? `${(rawEvent as CreatedEvent).date} · ${(rawEvent as CreatedEvent).time}`
       : `${isNightMode ? copy.tonight : copy.today} · ${event.time}`;
-  const eventPeople = isMovieNight ? copy.people : localizedEvent.people;
-  const groupPlanCopy = isMovieNight ? "Around 2-4 people expected" : `${eventPeople} expected`;
+  const expectedGroupSizeCopy = getExpectedGroupSizeCopy(event);
   const eventDescription = isMovieNight
     ? copy.description
     : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
@@ -1922,7 +1922,7 @@ export default function EventDetailsScreen() {
             isRtl={isRtl}
           />
           <DetailMetaRow iconName="calendar" label={eventDate} isDay={isDay} isRtl={isRtl} />
-          <DetailMetaRow iconName="group" label={eventPeople} isDay={isDay} isRtl={isRtl} />
+          <DetailMetaRow iconName="group" label={expectedGroupSizeCopy} isDay={isDay} isRtl={isRtl} />
         </View>
 
         {event.comfortSignals ? (
@@ -1956,7 +1956,7 @@ export default function EventDetailsScreen() {
               {[
                 { label: "Social energy", value: event.comfortSignals.socialEnergy },
                 { label: "Noise level", value: event.comfortSignals.noiseLevel },
-                { label: "Group size", value: event.comfortSignals.groupSize },
+                { label: "Expected group size", value: getExpectedGroupSizeValue(event) },
                 { label: "Conversation", value: event.comfortSignals.conversationStyle },
               ].map((signal) => (
                 <View key={signal.label} style={[styles.walkingIntoSignal, isDay && styles.dayWalkingIntoSignal]}>
@@ -3683,7 +3683,7 @@ export default function EventDetailsScreen() {
                 : eventCopy.verifyBeforeMeeting}
           </Text>
         </TouchableOpacity>
-        <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{groupPlanCopy}</Text>
+        <Text style={[styles.spotsText, isDay && styles.dayMutedText]}>{expectedGroupSizeCopy}</Text>
 
         {canOpenMeetupChat ? (
           <View style={[styles.feedbackPanel, isDay && styles.dayCard]}>
