@@ -1898,7 +1898,7 @@ export default function EventDetailsScreen() {
             {eventTitle}
           </Text>
           <View style={[styles.tagRow, isRtl && styles.rtlRow]}>
-            <Text style={[styles.primaryChip, isRtl && styles.rtlText]}>{eventCategory}</Text>
+            <Text style={[styles.primaryChip, isDay && styles.dayPrimaryChip, isRtl && styles.rtlText]}>{eventCategory}</Text>
             <Text style={[styles.quietChip, isDay && styles.dayQuietChip, isRtl && styles.rtlText]}>
               {eventTone}
             </Text>
@@ -3942,16 +3942,19 @@ const styles = StyleSheet.create({
   tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 },
   primaryChip: {
     maxWidth: "100%",
-    color: nsnColors.text,
+    color: nsnColors.selectedChipText,
     fontSize: 12,
     fontWeight: "800",
     lineHeight: 17,
-    backgroundColor: nsnColors.primary,
+    backgroundColor: nsnColors.selectedChip,
+    borderWidth: 1,
+    borderColor: nsnColors.selectedChipBorder,
     paddingHorizontal: 13,
     paddingVertical: 7,
     borderRadius: 14,
     overflow: "hidden",
   },
+  dayPrimaryChip: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
   quietChip: {
     maxWidth: "100%",
     color: nsnColors.muted,
@@ -4088,7 +4091,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     flexShrink: 1,
   },
-  quickJumpChipActive: { borderColor: nsnColors.primary, backgroundColor: nsnColors.primary },
+  quickJumpChipActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
   quickJumpChipText: {
     flexShrink: 1,
     minWidth: 0,
@@ -4098,7 +4101,7 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     textAlign: "center",
   },
-  quickJumpChipTextActive: { color: "#FFFFFF" },
+  quickJumpChipTextActive: { color: nsnColors.selectedChipText },
   eventAccordionStack: { gap: 13, marginBottom: 18 },
   eventAccordion: {
     borderRadius: 17,
@@ -4381,7 +4384,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
-  meetupSupportChipActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  meetupSupportChipActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   meetupSupportChipText: {
     flexShrink: 1,
     color: nsnColors.text,
@@ -4389,7 +4392,7 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     lineHeight: 15,
   },
-  meetupSupportChipTextActive: { color: "#FFFFFF" },
+  meetupSupportChipTextActive: { color: nsnColors.selectedChipText },
   meetupSupportSummary: { color: nsnColors.muted, fontSize: 11, fontWeight: "900", lineHeight: 15 },
   meetupQuestionGroup: { gap: 6 },
   meetupQuestionPhase: {
@@ -4550,7 +4553,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 11,
     paddingVertical: 8,
   },
-  rsvpChoiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  rsvpChoiceActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   rsvpChoiceText: {
     flexShrink: 1,
     minWidth: 0,
@@ -4560,7 +4563,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     textAlign: "center",
   },
-  rsvpChoiceTextActive: { color: "#FFFFFF" },
+  rsvpChoiceTextActive: { color: nsnColors.selectedChipText },
   readinessPanel: {
     borderRadius: 17,
     borderWidth: 1,

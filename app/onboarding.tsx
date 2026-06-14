@@ -1140,9 +1140,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   dayChoice: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
-  choiceActive: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  choiceActive: { backgroundColor: nsnColors.selectedChip, borderColor: nsnColors.selectedChipBorder },
   choiceText: { color: nsnColors.muted, fontSize: 13, fontWeight: "900", textAlign: "center" },
-  choiceTextActive: { color: "#FFFFFF" },
+  choiceTextActive: { color: nsnColors.selectedChipText },
   selectionCard: {
     minHeight: 72,
     borderRadius: 18,
@@ -1154,7 +1154,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
   },
-  selectionActive: { borderColor: nsnColors.cyan, backgroundColor: "rgba(56,72,255,0.16)" },
+  selectionActive: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
   selectionCopy: { flex: 1 },
   selectionCheck: {
     width: 24,

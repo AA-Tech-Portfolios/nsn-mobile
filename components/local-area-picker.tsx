@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   resultTopLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
   resultButton: { borderRadius: 12, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, paddingHorizontal: 10, paddingVertical: 8 },
   dayResultButton: { backgroundColor: "#F7FBFF", borderColor: "#C5D0DA" },
-  activeResultButton: { borderColor: nsnColors.day, backgroundColor: "#172A5C" },
+  activeResultButton: { borderColor: nsnColors.selectedChipBorder, backgroundColor: nsnColors.selectedChip },
   dayActiveResultButton: { borderColor: "#445E93", backgroundColor: "#DFE8EF" },
   resultTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
   resultMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 15, marginTop: 2 },
