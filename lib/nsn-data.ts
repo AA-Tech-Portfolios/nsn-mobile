@@ -464,7 +464,7 @@ export const dayEvents: EventItem[] = [
     category: "Active",
     venue: "Waverton Park",
     time: "4:00pm",
-    people: "3–6 people",
+    people: "4–8 people",
     description: "A slow walk with room for quiet moments and side chats.",
     tone: "Balanced",
     noiseLevel: "Quiet",
@@ -475,7 +475,7 @@ export const dayEvents: EventItem[] = [
     comfortSignals: {
       socialEnergy: "Medium",
       noiseLevel: "Quiet",
-      groupSize: "4–6",
+      groupSize: "4–8",
       conversationStyle: "Activity-based",
     },
     arrivalConfidenceNotes: [
@@ -505,7 +505,7 @@ export const dayEvents: EventItem[] = [
     mediaComfortLabels: ["Venue photos okay", "Ask before photos"],
     trustProfile: {
       host: jordanHost,
-      participantLimit: { min: 3, max: 6 },
+      participantLimit: { min: 4, max: 8 },
       venueType: "walk",
       comfortTags: ["quiet", "public-place", "transport-friendly", "beginner-friendly"],
       weatherAlternatives: ["cafe nearby", "library meetup", "casual dining", "movie"],

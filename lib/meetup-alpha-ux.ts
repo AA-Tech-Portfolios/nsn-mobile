@@ -24,6 +24,13 @@ export type MeetupTutorialCard = {
   iconName: IconSymbolName;
 };
 
+export type PlanningToolAction = {
+  id: "arrival" | "bring" | "quieter-option" | "leave-early" | "change-mind";
+  label: string;
+  description: string;
+  iconName: IconSymbolName;
+};
+
 export const meetupReadinessItems: MeetupReadinessItem[] = [
   {
     id: "expect",
@@ -111,6 +118,40 @@ export const meetupOptOutActions: MeetupOptOutAction[] = [
     copy: "Keep the door open without joining or explaining.",
     result: "Saved locally as deciding later. You can revisit when it feels easier.",
     iconName: "calendar",
+  },
+];
+
+export const planningToolActions: PlanningToolAction[] = [
+  {
+    id: "arrival",
+    label: "Plan my arrival",
+    description: "Local-only prompts for the broad meeting point, route, and how to arrive gently.",
+    iconName: "location",
+  },
+  {
+    id: "bring",
+    label: "What should I bring?",
+    description: "Prototype packing notes for simple travel comfort and a calmer trip home.",
+    iconName: "transport",
+  },
+  {
+    id: "quieter-option",
+    label: "Need a quieter option?",
+    description:
+      "Local-only reminders for backup plans if the venue, weather, or pace feels too much.",
+    iconName: "weather",
+  },
+  {
+    id: "leave-early",
+    label: "Leaving early is okay",
+    description: "Prototype reassurance only. No live support or host follow-up is connected.",
+    iconName: "pace",
+  },
+  {
+    id: "change-mind",
+    label: "Change my mind",
+    description: "Use local-only controls below if you want to step back without messaging a host.",
+    iconName: "low-pressure",
   },
 ];
 

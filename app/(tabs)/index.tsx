@@ -19,9 +19,13 @@ import { getEventFoodPreferenceMatches } from "@/lib/preferences/food-preference
 import { getEventInterestPreferenceMatches } from "@/lib/preferences/interests";
 import { getHomePreferenceDisclosure } from "@/lib/progressive-disclosure";
 import { getHomeFitToScreenPreset, getHomeLayoutPreset, homeLayoutPreferenceRoles, shouldUseHomeFitToScreen } from "@/lib/home-layout-presets";
-import { getHomeEventPreviewAsset, type HomeEventPreviewAssetKey } from "@/lib/home-event-preview-assets";
 import { getHomeTodayContextLabel } from "@/lib/home-header-context";
 import { getMeetupEmptyStateCopy } from "@/lib/meetup-empty-state";
+import { getArrivalPreviewDetailChips } from "@/lib/arrival-preview-copy";
+import {
+  getHomeEventPreviewAsset,
+  type HomeEventPreviewAssetKey,
+} from "@/lib/home-event-preview-assets";
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
 import {
   openExternalDestinationWithConfirmation,
@@ -254,64 +258,73 @@ const noiseGuideTranslations = {
   },
 } as const;
 
-const remotePreview = (uri: string): ImageSourcePropType => ({ uri });
 const alphaHomeCustomizationEnabled = false;
 
-const photoStylePreviewSources: Record<HomeEventPreviewAssetKey, ImageSourcePropType> = {
-  picnic: remotePreview("https://unsplash.com/photos/Bsyj_GezIQQ/download?force=true"),
-  beach: require("../../assets/images/events/event-beach-day-chill-vibes.png"),
-  movie: remotePreview("https://unsplash.com/photos/GvJBboqOebI/download?force=true"),
+const remotePreview = (uri: string): ImageSourcePropType => ({ uri });
+
+const homeEventPreviewSources: Record<HomeEventPreviewAssetKey, ImageSourcePropType> = {
+  "picnic-list": remotePreview("https://unsplash.com/photos/Bsyj_GezIQQ/download?force=true"),
+  "beach-list": require("../../assets/images/events/event-beach-day-chill-vibes.png"),
+  "beach-photo-list": require("../../assets/images/events/detail-beach-day-chill-vibes.png"),
+  "library-list": remotePreview("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=280&q=80"),
+  "coffee-list": remotePreview("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=280&q=80"),
+  "walk-list": remotePreview("https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=280&q=80"),
+  "harbour-walk-list": require("../../assets/images/events/detail-harbour-walk-waverton.png"),
+  "movie-list": remotePreview("https://unsplash.com/photos/GvJBboqOebI/download?force=true"),
+  "board-games-list": remotePreview("https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=280&q=80"),
+  "ramen-list": remotePreview("https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=280&q=80"),
+  "music-list": remotePreview("https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=280&q=80"),
 };
 
-const photoStylePreview = (eventId: string) => {
+const getHomeEventPreviewSource = (eventId: string) => {
   const previewAsset = getHomeEventPreviewAsset(eventId);
 
-  return previewAsset ? photoStylePreviewSources[previewAsset.assetKey] : undefined;
+  return previewAsset ? homeEventPreviewSources[previewAsset.assetKey] : undefined;
 };
 
 const eventLivePreviews: Record<string, { photo: ImageSourcePropType; place: string; pulse: string }> = {
   "picnic-easy-hangout": {
-    photo: photoStylePreview("picnic-easy-hangout")!,
+    photo: getHomeEventPreviewSource("picnic-easy-hangout")!,
     place: "Lane Cove",
     pulse: "Demo group",
   },
   "beach-day-chill-vibes": {
-    photo: photoStylePreview("beach-day-chill-vibes")!,
+    photo: getHomeEventPreviewSource("beach-day-chill-vibes")!,
     place: "Palm Beach",
     pulse: "Alpha sample",
   },
   "library-calm-study": {
-    photo: remotePreview("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=280&q=80"),
+    photo: getHomeEventPreviewSource("library-calm-study")!,
     place: "Chatswood",
     pulse: "Preview",
   },
   "coffee-lane-cove": {
-    photo: remotePreview("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=280&q=80"),
+    photo: getHomeEventPreviewSource("coffee-lane-cove")!,
     place: "Lane Cove",
     pulse: "Demo group",
   },
   "harbour-walk-waverton": {
-    photo: remotePreview("https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=280&q=80"),
+    photo: getHomeEventPreviewSource("harbour-walk-waverton")!,
     place: "Waverton",
     pulse: "Alpha sample",
   },
   "movie-night-watch-chat": {
-    photo: photoStylePreview("movie-night-watch-chat")!,
+    photo: getHomeEventPreviewSource("movie-night-watch-chat")!,
     place: "Macquarie",
     pulse: "Preview",
   },
   "board-games-coffee": {
-    photo: remotePreview("https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=280&q=80"),
+    photo: getHomeEventPreviewSource("board-games-coffee")!,
     place: "Chatswood",
     pulse: "Demo group",
   },
   "ramen-small-table": {
-    photo: remotePreview("https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=280&q=80"),
+    photo: getHomeEventPreviewSource("ramen-small-table")!,
     place: "Crows Nest",
     pulse: "Alpha sample",
   },
   "quiet-music-listening": {
-    photo: remotePreview("https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=280&q=80"),
+    photo: getHomeEventPreviewSource("quiet-music-listening")!,
     place: "North Sydney",
     pulse: "Preview",
   },
@@ -1553,8 +1566,8 @@ export default function HomeScreen() {
     const mapTransitStops = (selectedMapDetails?.transit ?? ["Train/metro nearby", "Bus stop nearby"]).slice(0, 2);
     const mapRouteLabels = (selectedMapDetails?.roads ?? ["Pacific Hwy", "Local route"]).slice(0, 2);
     const prototypeMapHeight = shouldAutoFitDashboard
-      ? homeLayoutPreset.mapHeight
-      : homeLayoutPreset.mapHeight + (isMobileHome ? 36 : 56);
+      ? homeLayoutPreset.mapHeight + 16
+      : homeLayoutPreset.mapHeight + (isMobileHome ? 52 : 76);
 
     return (
     <View style={[styles.prototypeMapCanvas, shouldAutoFitDashboard && styles.prototypeMapCanvasAutoFit, { height: prototypeMapHeight, minHeight: prototypeMapHeight, borderRadius: Math.max(14, homeLayoutPreset.cardRadius - 4) }, isDay && styles.dayPrototypeMapCanvas]}>
@@ -1594,15 +1607,6 @@ export default function HomeScreen() {
             Event area
           </Text>
         </View>
-      </View>
-      <View pointerEvents="none" style={[styles.prototypeMapVenueBadge, isDay && styles.dayPrototypeMapArea]}>
-        <Text style={[styles.prototypeMapVenueKicker, isDay && styles.dayMutedText]}>Selected event</Text>
-        <Text style={[styles.prototypeMapVenueName, isDay && styles.dayHeadingText]} numberOfLines={1}>
-          {selectedArrivalPreview?.approximateArea ?? selectedMapEvent?.venue ?? selectedMapDetails?.suburb ?? timezone.label}
-        </Text>
-        <Text style={[styles.prototypeMapVenueSuburb, isDay && styles.dayMutedText]} numberOfLines={1}>
-          {selectedArrivalPreview?.nearbyLandmark ?? selectedMapDetails?.suburb ?? timezone.city}
-        </Text>
       </View>
       <Text pointerEvents="none" style={[styles.prototypeMapAttribution, isDay && styles.dayPrototypeMapAttribution]}>
         Static prototype area preview - not live navigation
@@ -2474,6 +2478,13 @@ export default function HomeScreen() {
       }
 
       if (sectionKey === "map") {
+        const arrivalPreviewDetailChips = shouldUseVeryTightDashboardFit
+          ? []
+          : getArrivalPreviewDetailChips(selectedArrivalPreview, [
+              selectedMapDetails?.routeHint,
+              selectedMapDetails?.accessibilityHint,
+            ]);
+
         return homeVisibleSections.map ? (
           <View key={sectionKey} style={[styles.locationMapCard, styles.dashboardCard, homeLayoutMapCardStyle, styles.locationMapStandalone, isDay && styles.dayCard, outlinedCardStyle]}>
             <View style={[styles.sectionTitleRow, styles.locationMapTitleRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
@@ -2483,6 +2494,9 @@ export default function HomeScreen() {
             </View>
             {renderPrototypeMapCanvas()}
             <View style={[styles.locationMapSummary, isDay && styles.dayLocationMapSummary]}>
+              <Text style={[styles.locationMapSummaryKicker, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                Selected event
+              </Text>
               <Text style={[styles.locationMapEvent, isDay && styles.dayHeadingText, isRtl && styles.rtlText]} numberOfLines={2}>
                 {selectedMapEventCopy?.title ?? "Local area"}
               </Text>
@@ -2492,18 +2506,14 @@ export default function HomeScreen() {
               <Text style={[styles.locationMapMeta, isDay && styles.dayMutedText, isRtl && styles.rtlText]} numberOfLines={2}>
                 {selectedArrivalPreview?.arrivalSummary ?? "Broad local discovery without live location sharing."}
               </Text>
-              <View style={[styles.locationMapDetailRow, { gap: homeLayoutPreset.chipGap }, isRtl && styles.rtlRow]}>
-                {(shouldUseVeryTightDashboardFit
-                  ? []
-                  : [
-                      selectedArrivalPreview?.nearbyLandmark,
-                      selectedArrivalPreview?.meetingPointHint,
-                      ...(selectedArrivalPreview?.confidenceNotes ?? [selectedMapDetails?.routeHint, selectedMapDetails?.accessibilityHint].filter(Boolean)),
-                    ].filter(Boolean)
-                ).slice(0, 4).map((detail) => (
-                  <Text key={detail} style={[styles.locationMapDetailChip, isDay && styles.dayLocationMapDetailChip]} numberOfLines={1}>
-                    {detail}
-                  </Text>
+              <View style={[styles.locationMapDetailRow, { gap: Math.max(10, homeLayoutPreset.chipGap + 2) }, isRtl && styles.rtlRow]}>
+                {arrivalPreviewDetailChips.map((detail) => (
+                  <View key={detail} style={[styles.locationMapDetailChip, isDay && styles.dayLocationMapDetailChip]}>
+                    <View style={[styles.locationMapDetailChipDot, isDay && styles.dayLocationMapDetailChipDot]} />
+                    <Text style={[styles.locationMapDetailChipText, isDay && styles.dayLocationMapDetailChipText, isRtl && styles.rtlText]} numberOfLines={2}>
+                      {detail}
+                    </Text>
+                  </View>
                 ))}
               </View>
             </View>
@@ -3870,17 +3880,17 @@ const styles = StyleSheet.create({
   todayDate: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 19, marginTop: 7 },
   todayCopy: { color: "#C7D3EA", fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 3 },
   todayNote: { color: "#9FB0CD", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 5 },
-  locationMapCard: { minHeight: 266, flexGrow: 1, borderRadius: 20, padding: 13, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
-  locationMapStandalone: { flexBasis: "100%", minHeight: 360 },
+  locationMapCard: { minHeight: 282, flexGrow: 1, borderRadius: 20, padding: 15, backgroundColor: "#0F223D", borderWidth: 1, borderColor: "#38527C" },
+  locationMapStandalone: { flexBasis: "100%", minHeight: 392 },
   locationMapCardIntegrated: { minHeight: 318, borderWidth: 0, backgroundColor: "rgba(255,255,255,0.035)" },
   dayLocationMapCardIntegrated: { backgroundColor: "rgba(255,255,255,0.78)" },
   locationMapTitleRow: { flex: 0 },
-  locationMapTitle: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  locationMapTitle: { flexShrink: 1, minWidth: 0, color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   prototypeMapModeBadge: { flexShrink: 1, maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "#4D6794", color: "#C7D3EA", fontSize: 9, fontWeight: "900", lineHeight: 12, paddingHorizontal: 7, paddingVertical: 2, overflow: "hidden" },
   dayPrototypeMapModeBadge: { borderColor: "#C6D3E0", color: "#53677A", backgroundColor: "#FFFFFF" },
-  prototypeMapCanvas: { minHeight: 148, flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#102B4E", overflow: "hidden", marginTop: 9, marginBottom: 8 },
-  prototypeMapCanvasAutoFit: { flexGrow: 0, marginTop: 4, marginBottom: 4 },
-  prototypeMapContent: { flex: 1, minHeight: 148 },
+  prototypeMapCanvas: { minHeight: 168, flexGrow: 1, borderRadius: 16, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#102B4E", overflow: "hidden", marginTop: 12, marginBottom: 14 },
+  prototypeMapCanvasAutoFit: { flexGrow: 0, marginTop: 8, marginBottom: 10 },
+  prototypeMapContent: { flex: 1, minHeight: 168 },
   dayPrototypeMapCanvas: { backgroundColor: "#EEF4F8", borderColor: "#C6D3E0" },
   prototypeMapCorridor: { position: "absolute", left: 18, right: 64, top: 31, bottom: 24, borderRadius: 34, backgroundColor: "rgba(255,255,255,0.035)", borderWidth: 1, borderColor: "rgba(199,211,234,0.11)" },
   dayPrototypeMapCorridor: { backgroundColor: "rgba(255,255,255,0.36)", borderColor: "rgba(111,135,161,0.22)" },
@@ -3901,8 +3911,8 @@ const styles = StyleSheet.create({
   prototypeMapRoadLabelSecond: { left: "36%", top: "25%" },
   prototypeMapRoadLabelThird: { left: 128, bottom: 20, top: undefined },
   dayPrototypeMapRoadLabel: { color: "rgba(45,59,82,0.78)" },
-  prototypeMapTransitStack: { position: "absolute", left: 12, bottom: 28, maxWidth: "48%", gap: 4 },
-  prototypeMapTransitLabel: { alignSelf: "flex-start", maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "rgba(199,211,234,0.22)", backgroundColor: "rgba(8,17,31,0.58)", color: "rgba(245,247,255,0.88)", fontSize: 9, fontWeight: "900", lineHeight: 12, paddingHorizontal: 7, paddingVertical: 3, overflow: "hidden" },
+  prototypeMapTransitStack: { position: "absolute", left: 14, bottom: 32, maxWidth: "50%", gap: 6 },
+  prototypeMapTransitLabel: { alignSelf: "flex-start", maxWidth: "100%", borderRadius: 999, borderWidth: 1, borderColor: "rgba(199,211,234,0.22)", backgroundColor: "rgba(8,17,31,0.58)", color: "rgba(245,247,255,0.88)", fontSize: 10, fontWeight: "900", lineHeight: 13, paddingHorizontal: 8, paddingVertical: 4, overflow: "hidden" },
   prototypeMapTransitLabelSecond: {},
   dayPrototypeMapTransitLabel: { borderColor: "rgba(111,135,161,0.34)", backgroundColor: "rgba(255,255,255,0.7)", color: "rgba(45,59,82,0.82)" },
   prototypeMapCityLabel: { position: "absolute", right: "12%", bottom: 24, maxWidth: "34%", color: "rgba(245,247,255,0.62)", fontSize: 9, fontWeight: "900" },
@@ -3910,17 +3920,13 @@ const styles = StyleSheet.create({
   prototypeMapPinHalo: { position: "absolute", marginLeft: -23, marginTop: -23, width: 46, height: 46, borderRadius: 23, backgroundColor: "rgba(199,176,122,0.2)", borderWidth: 1, borderColor: "rgba(255,255,255,0.2)" },
   prototypeMapPin: { position: "absolute", marginLeft: -15, marginTop: -15, width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: "#FFFFFF", backgroundColor: "#214B95", alignItems: "center", justifyContent: "center", ...(Platform.OS === "web" ? ({ boxShadow: "0px 3px 8px rgba(0,0,0,0.22)" } as any) : { shadowColor: "#000000", shadowOpacity: 0.22, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 4 }) },
   dayPrototypeMapPin: { backgroundColor: "#284E92" },
-  prototypeMapArea: { position: "absolute", right: 12, top: 44, maxWidth: "36%", borderRadius: 12, backgroundColor: "rgba(8,17,31,0.72)", paddingHorizontal: 9, paddingVertical: 5 },
+  prototypeMapArea: { position: "absolute", right: 14, top: 48, maxWidth: "38%", borderRadius: 12, backgroundColor: "rgba(8,17,31,0.72)", paddingHorizontal: 10, paddingVertical: 6 },
   dayPrototypeMapArea: { backgroundColor: "rgba(255,255,255,0.72)" },
-  prototypeMapAreaText: { color: nsnColors.text, fontSize: 10, fontWeight: "900", lineHeight: 14 },
-  prototypeMapPinLabel: { position: "absolute", maxWidth: "28%", borderRadius: 10, borderWidth: 1, borderColor: "rgba(199,211,234,0.22)", backgroundColor: "rgba(8,17,31,0.68)", paddingHorizontal: 7, paddingVertical: 4 },
+  prototypeMapAreaText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  prototypeMapPinLabel: { position: "absolute", maxWidth: "30%", borderRadius: 10, borderWidth: 1, borderColor: "rgba(199,211,234,0.22)", backgroundColor: "rgba(8,17,31,0.68)", paddingHorizontal: 8, paddingVertical: 5 },
   dayPrototypeMapPinLabel: { borderColor: "rgba(111,135,161,0.28)", backgroundColor: "rgba(255,255,255,0.78)" },
-  prototypeMapPinLabelText: { color: nsnColors.text, fontSize: 9, fontWeight: "900", lineHeight: 12 },
-  prototypeMapVenueBadge: { position: "absolute", left: 10, top: 10, maxWidth: "56%", borderRadius: 13, backgroundColor: "rgba(8,17,31,0.82)", paddingHorizontal: 10, paddingVertical: 7 },
-  prototypeMapVenueKicker: { color: "#A8B7DA", fontSize: 8, fontWeight: "900", lineHeight: 11, textTransform: "uppercase" },
-  prototypeMapVenueName: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
-  prototypeMapVenueSuburb: { color: "#C7D3EA", fontSize: 10, fontWeight: "800", lineHeight: 14, marginTop: 1 },
-  prototypeMapAttribution: { position: "absolute", left: 10, right: 58, bottom: 8, color: "rgba(245,247,255,0.72)", fontSize: 8, fontWeight: "800", lineHeight: 11 },
+  prototypeMapPinLabelText: { color: nsnColors.text, fontSize: 10, fontWeight: "900", lineHeight: 13 },
+  prototypeMapAttribution: { position: "absolute", left: 14, right: 72, bottom: 12, color: "rgba(245,247,255,0.72)", fontSize: 8, fontWeight: "800", lineHeight: 11 },
   dayPrototypeMapAttribution: { color: "rgba(45,59,82,0.72)" },
   prototypeMapZoomControls: { position: "absolute", top: 10, right: 10, flexDirection: "row", gap: 6 },
   prototypeMapZoomButton: { width: 32, height: 32, borderRadius: 12, borderWidth: 1, borderColor: "#7890B8", backgroundColor: "rgba(8,17,31,0.82)", alignItems: "center", justifyContent: "center" },
@@ -3928,19 +3934,24 @@ const styles = StyleSheet.create({
   prototypeMapResetButton: {},
   prototypeMapZoomText: { color: "#FFFFFF", fontSize: 20, fontWeight: "900", lineHeight: 24 },
   dayPrototypeMapZoomText: { color: "#284E92" },
-  locationMapEvent: { flexShrink: 1, color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
-  locationMapSummary: { borderRadius: 13, borderWidth: 1, borderColor: "rgba(120,144,184,0.52)", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 9, paddingVertical: 7, marginTop: 2 },
+  locationMapSummary: { borderRadius: 14, borderWidth: 1, borderColor: "rgba(120,144,184,0.52)", backgroundColor: "rgba(255,255,255,0.035)", paddingHorizontal: 12, paddingVertical: 11, marginTop: 8 },
   dayLocationMapSummary: { borderColor: "#C6D3E0", backgroundColor: "#FFFFFF" },
-  locationMapMeta: { flexShrink: 1, color: "#C7D3EA", fontSize: 11, fontWeight: "800", lineHeight: 15, marginTop: 1 },
-  locationMapDetailRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 5 },
-  locationMapDetailChip: { flexGrow: 1, flexBasis: 150, minHeight: 20, borderRadius: 9, borderWidth: 1, borderColor: "#38527C", color: "#C7D3EA", fontSize: 9, fontWeight: "800", lineHeight: 13, paddingHorizontal: 7, paddingVertical: 2, overflow: "hidden" },
-  dayLocationMapDetailChip: { borderColor: "#D8E1EA", color: "#53677A", backgroundColor: "#FFFFFF" },
-  locationMapActions: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 7 },
-  locationMapAction: { flexGrow: 1, flexShrink: 1, minHeight: 32, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5 },
+  locationMapSummaryKicker: { color: "#A8B7DA", fontSize: 9, fontWeight: "900", lineHeight: 12, textTransform: "uppercase", marginBottom: 3 },
+  locationMapEvent: { flexShrink: 1, color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
+  locationMapMeta: { flexShrink: 1, color: "#C7D3EA", fontSize: 12, fontWeight: "800", lineHeight: 17, marginTop: 4 },
+  locationMapDetailRow: { flexDirection: "row", flexWrap: "wrap", marginTop: 10 },
+  locationMapDetailChip: { flexGrow: 1, flexBasis: 210, minHeight: 32, borderRadius: 11, borderWidth: 1, borderColor: "#49658F", backgroundColor: "rgba(255,255,255,0.045)", flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 10, paddingVertical: 7, overflow: "hidden" },
+  dayLocationMapDetailChip: { borderColor: "#CAD8E6", backgroundColor: "#F8FAFC" },
+  locationMapDetailChipDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#C7B07A" },
+  dayLocationMapDetailChipDot: { backgroundColor: "#284E92" },
+  locationMapDetailChipText: { flexShrink: 1, minWidth: 0, color: "#DDE7F6", fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  dayLocationMapDetailChipText: { color: "#42566B" },
+  locationMapActions: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 14 },
+  locationMapAction: { flexGrow: 1, flexShrink: 1, minHeight: 38, borderRadius: 14, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(255,255,255,0.055)", paddingHorizontal: 12, paddingVertical: 6, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
   dayLocationMapAction: { backgroundColor: "#F4F7FA" },
-  locationMapActionText: { flexShrink: 1, minWidth: 0, color: "#C7D3EA", fontSize: 11, fontWeight: "900", lineHeight: 15, textAlign: "center" },
+  locationMapActionText: { flexShrink: 1, minWidth: 0, color: "#C7D3EA", fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
   locationMapPrimaryAction: { backgroundColor: "#214B95", borderColor: "#D2E0FF" },
-  locationMapPrimaryActionText: { flexShrink: 1, minWidth: 0, color: "#FFFFFF", fontSize: 11, fontWeight: "900", lineHeight: 15, textAlign: "center" },
+  locationMapPrimaryActionText: { flexShrink: 1, minWidth: 0, color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 16, textAlign: "center" },
   noiseGuideCard: { borderRadius: 18, borderWidth: 1, borderColor: "#2A3C59", backgroundColor: "#0D1A2C", padding: 14, marginBottom: 14 },
   noiseGuideHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 },
   noiseGuideTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },

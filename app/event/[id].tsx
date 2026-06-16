@@ -6,6 +6,7 @@ import {
   Linking,
   Modal,
   Platform,
+  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -26,9 +27,28 @@ import {
   useAppSettings,
 } from "@/lib/app-settings";
 import {
+  eventDetailViewModes,
+  getEventDetailSupportBlockOrder,
+  getInitialExpandedEventDetailSections,
+  getVisibleEventDetailSections,
   initialExpandedEventDetailSections,
   type EventDetailSectionId,
+  type EventDetailViewMode,
 } from "@/lib/event-detail-sections";
+import {
+  getEventDetailActionHoverPalette,
+  getEventDetailHeroImageOutlinePalette,
+  getEventDetailHeroImageViewerCopy,
+  getEventDetailHeroImageResizeMode,
+  getEventDetailHumanMomentPalette,
+  getEventDetailSelectedPalette,
+  getEventVibeLabel,
+} from "@/lib/event-detail-ui";
+import {
+  getEventDetailHeroAsset,
+  type EventDetailHeroAssetKey,
+} from "@/lib/event-detail-hero-assets";
+import { buildEventCalendarFile, getEventCalendarSaveCopy } from "@/lib/event-calendar-file";
 import { shouldShowMissingEvent, shouldWaitForCreatedEventLookup } from "@/lib/event-detail-lookup";
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
 import {
@@ -91,21 +111,30 @@ import {
 import {
   meetupOptOutActions,
   meetupReadinessItems,
+  planningToolActions,
   type MeetupOptOutAction,
 } from "@/lib/meetup-alpha-ux";
 
 const CREATED_EVENTS_KEY = NSN_CREATED_EVENTS_STORAGE_KEY;
+const EVENT_DETAIL_VIEW_MODE_STORAGE_KEY = "nsn.event-detail.view-mode.v1";
+const DEFAULT_EVENT_DETAIL_VIEW_MODE: EventDetailViewMode = "essential";
 
-const eventDetailImageSources: Record<string, ImageSourcePropType> = {
-  "beach-day-chill-vibes": require("../../assets/images/events/event-beach-day-chill-vibes.png"),
-  "movie-night-watch-chat": require("../../assets/images/events/event-movie-night-watch-chat.png"),
-  "picnic-easy-hangout": require("../../assets/images/events/event-picnic-easy-hangout.png"),
+const eventDetailImageSources: Record<EventDetailHeroAssetKey, ImageSourcePropType> = {
+  picnicBlanket: require("../../assets/images/events/detail-picnic-easy-hangout.png"),
+  beach: require("../../assets/images/events/detail-beach-day-chill-vibes.png"),
+  movie: { uri: "https://unsplash.com/photos/GvJBboqOebI/download?force=true" },
+  library: { uri: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1200&q=85" },
+  coffee: { uri: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=85" },
+  harbourWalk: require("../../assets/images/events/detail-harbour-walk-waverton.png"),
+  boardGames: { uri: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?auto=format&fit=crop&w=1200&q=85" },
+  ramen: { uri: "https://images.unsplash.com/photo-1557872943-16a5ac26437e?auto=format&fit=crop&w=1200&q=85" },
+  music: { uri: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1200&q=85" },
 };
 
-const arrivalPreviewImageSources: Record<string, ImageSourcePropType> = {
-  "beach-day-chill-vibes": require("../../assets/images/events/event-beach-day-chill-vibes.png"),
-  "movie-night-watch-chat": require("../../assets/images/events/event-movie-night-watch-chat.png"),
-  "picnic-easy-hangout": require("../../assets/images/events/event-picnic-easy-hangout.png"),
+const getEventDetailImageSource = (eventId: string) => {
+  const heroAsset = getEventDetailHeroAsset(eventId);
+
+  return heroAsset ? eventDetailImageSources[heroAsset.assetKey] : undefined;
 };
 
 type CreatedEvent = {
@@ -1064,31 +1093,27 @@ const eventTranslations = {
 } as const;
 
 function DetailMetaRow({
+  actionAccessibilityHint,
+  actionAccessibilityLabel,
+  actionIconName = "explore",
   iconName,
   label,
   onPress,
   isDay,
   isRtl,
 }: {
+  actionAccessibilityHint?: string;
+  actionAccessibilityLabel?: string;
+  actionIconName?: IconSymbolName;
   iconName: "location" | "calendar" | "group";
   label: string;
   onPress?: () => void;
   isDay?: boolean;
   isRtl?: boolean;
 }) {
-  const RowContainer = onPress ? TouchableOpacity : View;
-
-  return (
-    <RowContainer
-      activeOpacity={0.82}
-      onPress={onPress}
-      accessibilityRole={onPress ? "link" : undefined}
-      accessibilityLabel={onPress ? `Open broad area in maps for ${label}` : undefined}
-      accessibilityHint={
-        onPress ? "Opens an approximate area search, not live navigation." : undefined
-      }
-      style={[styles.metaRow, onPress && styles.metaRowAction, isRtl && styles.rtlRow]}
-    >
+  const hoverPalette = getEventDetailActionHoverPalette(Boolean(isDay));
+  const content = (isHovered = false) => (
+    <>
       <View style={[styles.metaIconWrap, isDay && styles.dayMetaIconWrap]}>
         <IconSymbol name={iconName} color={isDay ? "#2F80ED" : "#E5E7EB"} size={19} />
       </View>
@@ -1096,9 +1121,47 @@ function DetailMetaRow({
         {label}
       </Text>
       {onPress ? (
-        <IconSymbol name="explore" color={isDay ? "#53677A" : nsnColors.muted} size={17} />
+        <View
+          style={[
+            styles.metaActionIconWrap,
+            isDay && styles.dayMetaActionIconWrap,
+            isHovered && {
+              backgroundColor: hoverPalette.backgroundColor,
+              borderColor: hoverPalette.borderColor,
+            },
+          ]}
+        >
+          <IconSymbol
+            name={actionIconName}
+            color={isHovered ? (isDay ? "#284E92" : "#E5E7EB") : isDay ? "#53677A" : nsnColors.muted}
+            size={17}
+          />
+        </View>
       ) : null}
-    </RowContainer>
+    </>
+  );
+
+  if (!onPress) {
+    return <View style={[styles.metaRow, isRtl && styles.rtlRow]}>{content()}</View>;
+  }
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={actionAccessibilityLabel ?? `Open broad area in maps for ${label}`}
+      accessibilityHint={
+        actionAccessibilityHint ?? "Opens an approximate area search, not live navigation."
+      }
+      style={({ hovered, pressed }) => [
+        styles.metaRow,
+        styles.metaRowAction,
+        (hovered || pressed) && styles.metaRowActionHovered,
+        isRtl && styles.rtlRow,
+      ]}
+    >
+      {({ hovered, pressed }) => content(hovered || pressed)}
+    </Pressable>
   );
 }
 
@@ -1107,8 +1170,11 @@ export default function EventDetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
+  const [isHeroImageOpen, setIsHeroImageOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<EventDetailViewMode>(DEFAULT_EVENT_DETAIL_VIEW_MODE);
   const [expandedSections, setExpandedSections] = useState<EventDetailSectionId[]>(
-    initialExpandedEventDetailSections,
+    getInitialExpandedEventDetailSections(DEFAULT_EVENT_DETAIL_VIEW_MODE) ??
+      initialExpandedEventDetailSections,
   );
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
@@ -1121,6 +1187,8 @@ export default function EventDetailsScreen() {
   >(null);
   const [selectedComfortRoles, setSelectedComfortRoles] = useState<MeetupComfortRoleOption[]>([]);
   const [selectedOptOutAction, setSelectedOptOutAction] = useState<MeetupOptOutAction | null>(null);
+  const [selectedPlanningToolId, setSelectedPlanningToolId] =
+    useState<(typeof planningToolActions)[number]["id"]>("arrival");
   const [isReadinessToolsOpen, setIsReadinessToolsOpen] = useState(false);
   const {
     ageConfirmed,
@@ -1194,11 +1262,59 @@ export default function EventDetailsScreen() {
   }, []);
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function loadViewMode() {
+      try {
+        const storedMode = await AsyncStorage.getItem(EVENT_DETAIL_VIEW_MODE_STORAGE_KEY);
+
+        if (
+          isMounted &&
+          (storedMode === "essential" || storedMode === "detailed" || storedMode === "onTheWay")
+        ) {
+          setViewMode(storedMode);
+        }
+      } catch (error) {
+        console.warn("Event detail view mode could not load:", error);
+      }
+    }
+
+    void loadViewMode();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!copyFeedback) return undefined;
 
     const feedbackTimer = setTimeout(() => setCopyFeedback(null), 2600);
     return () => clearTimeout(feedbackTimer);
   }, [copyFeedback]);
+
+  useEffect(() => {
+    AsyncStorage.setItem(EVENT_DETAIL_VIEW_MODE_STORAGE_KEY, viewMode).catch((error) => {
+      console.warn("Event detail view mode could not save:", error);
+    });
+  }, [viewMode]);
+
+  useEffect(() => {
+    const visibleNextSections = getVisibleEventDetailSections(viewMode);
+    const defaultExpandedSections = getInitialExpandedEventDetailSections(viewMode);
+
+    setExpandedSections((current) => {
+      const stillVisibleSections = current.filter((section) =>
+        visibleNextSections.includes(section),
+      );
+
+      if (stillVisibleSections.length > 0) {
+        return stillVisibleSections;
+      }
+
+      return defaultExpandedSections.filter((section) => visibleNextSections.includes(section));
+    });
+  }, [viewMode]);
 
   const routeEventId = Array.isArray(id) ? id[0] : id;
   const demoEvent = allEvents.find((item) => item.id === routeEventId);
@@ -1309,6 +1425,7 @@ export default function EventDetailsScreen() {
   };
   const isMovieNight = event.id === movieNight.id;
   const eventTitle = isMovieNight ? copy.title : localizedEvent.title.replace(" — ", " —\n");
+  const eventTitlePlain = eventTitle.replace(/\n/g, " ");
   const eventCategory = isMovieNight ? copy.category : localizedEvent.category;
   const eventTone = isMovieNight
     ? copy.tone
@@ -1322,7 +1439,10 @@ export default function EventDetailsScreen() {
   const eventDescription = isMovieNight
     ? copy.description
     : `${localizedEvent.description} ${copy.genericDescriptionSuffix}`;
-  const eventDetailImage = eventDetailImageSources[event.id];
+  const eventDetailImage = getEventDetailImageSource(event.id);
+  const heroImageViewerCopy = getEventDetailHeroImageViewerCopy(eventTitlePlain);
+  const heroImageOutlinePalette = getEventDetailHeroImageOutlinePalette();
+  const humanMomentPalette = getEventDetailHumanMomentPalette(isDay);
   const eventNoise = noiseCopy.levels[event.noiseLevel];
   const eventWeatherCopy = event.weather.includes("Weather")
     ? copy.weatherAffectedCopy
@@ -1369,17 +1489,74 @@ export default function EventDetailsScreen() {
   const isPlaceSaved = savedPlaces.some((place) => place.id === savedPlaceId);
   const isEventPinned = pinnedEventIds.includes(event.id);
   const isEventHidden = hiddenEventIds.includes(event.id);
-  const showFullEventReading = true;
   const eventSnapshotItems = [
-    { iconName: "location", label: "Venue", copy: event.venue },
+    { iconName: "location", label: "Venue", copy: event.venue, accentColor: "#63B3FF" },
     {
       iconName: "volume",
       label: "Noise",
       copy: `${eventNoise.label} · ${eventTone.replace("Pace: ", "")}`,
+      accentColor: "#75C8D8",
     },
-    { iconName: "low-pressure", label: "Vibe", copy: "Low pressure · optional chat." },
-    { iconName: "group", label: "Group", copy: getExpectedGroupSizeValue(event) },
-  ] satisfies { iconName: IconSymbolName; label: string; copy: string }[];
+    {
+      iconName: "low-pressure",
+      label: "Vibe",
+      copy: "Low pressure · optional chat.",
+      accentColor: "#5FC8AE",
+    },
+    {
+      iconName: "group",
+      label: "Group",
+      copy: getExpectedGroupSizeValue(event),
+      accentColor: "#8DA7FF",
+    },
+  ] satisfies { iconName: IconSymbolName; label: string; copy: string; accentColor: string }[];
+  const visibleSections = getVisibleEventDetailSections(viewMode);
+  const supportBlockOrder = getEventDetailSupportBlockOrder(viewMode);
+  const viewModeOption = eventDetailViewModes.find((mode) => mode.id === viewMode);
+  const isOnTheWayMode = viewMode === "onTheWay";
+  const selectedControlPalette = getEventDetailSelectedPalette(isDay);
+  const selectedControlSurfaceStyle = {
+    backgroundColor: selectedControlPalette.backgroundColor,
+    borderColor: selectedControlPalette.borderColor,
+  } as const;
+  const selectedControlTextStyle = { color: selectedControlPalette.textColor } as const;
+  const vibeLabel = getEventVibeLabel();
+  const tonightVibeCopy = isMovieNight
+    ? "Watch first, chat later. Most people arrive quietly, settle in, and ease into conversation after the movie. It is okay to listen first or say hello when you are ready."
+    : "Arrive gently, settle in, and let the meetup warm up around you. Some people may chat early, others may listen first, and it is okay to join when you feel ready.";
+  const firstFiveMinutesCopy = isMovieNight
+    ? "You arrive near the cinema entrance. Someone from the group may already be waiting. Some people may chat, others may simply stand nearby. It is okay to watch first, listen first, or step away if you need."
+    : "You arrive near the meetup area and look for a small group waiting nearby. Some people may already be chatting, while others are just settling in. You can listen first, join slowly, or take a moment before saying hello.";
+  const findingTheGroupCopy = isMovieNight
+    ? "Meet near the cinema entrance before tickets or snacks. Look for a small group waiting nearby. You can arrive slowly, check the space first, and join when ready."
+    : `${arrivalPreview.meetingPointHint} Look for a small group waiting nearby. You can arrive slowly, check the space first, and join when ready.`;
+  const planningToolGuidance = {
+    arrival: {
+      title: "Plan my arrival",
+      copy: `${meetupReadinessItems.find((item) => item.id === "meeting-point")?.copy ?? ""} Venue reminder: ${event.venue}.`,
+    },
+    bring: {
+      title: "What should I bring?",
+      copy: meetupReadinessItems.find((item) => item.id === "plan")?.copy ?? "",
+    },
+    "quieter-option": {
+      title: "Need a quieter option?",
+      copy:
+        eventWeatherFallbacks.length > 0
+          ? `${meetupReadinessItems.find((item) => item.id === "backup")?.copy ?? ""} Nearby ideas: ${eventWeatherFallbacks
+              .slice(0, 2)
+              .join(", ")}.`
+          : (meetupReadinessItems.find((item) => item.id === "comfort")?.copy ?? ""),
+    },
+    "leave-early": {
+      title: "Leaving early is okay",
+      copy: meetupReadinessItems.find((item) => item.id === "exit")?.copy ?? "",
+    },
+    "change-mind": {
+      title: "Change my mind",
+      copy: "Use the local-only actions below if this meetup stops feeling right. Nothing here contacts a host, reserves a spot, or starts live support.",
+    },
+  } as const;
   const isSectionExpanded = (section: EventDetailSectionId) => expandedSections.includes(section);
   const toggleEventDetailSection = (section: EventDetailSectionId) => {
     setExpandedSections((current) => {
@@ -1392,6 +1569,441 @@ export default function EventDetailsScreen() {
       return [section];
     });
   };
+  const isSectionVisible = (section: EventDetailSectionId) => visibleSections.includes(section);
+  const renderViewModeToggle = () => (
+    <View style={[styles.viewModePanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+      <View style={[styles.viewModeRow, isRtl && styles.rtlRow]}>
+        {eventDetailViewModes.map((mode) => {
+          const active = mode.id === viewMode;
+
+          return (
+            <TouchableOpacity
+              key={mode.id}
+              activeOpacity={0.82}
+              onPress={() => setViewMode(mode.id)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              style={[
+                styles.viewModeChip,
+                isDay && styles.dayActionRow,
+                active && styles.viewModeChipActive,
+                active && selectedControlSurfaceStyle,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.viewModeChipText,
+                  isDay && styles.dayText,
+                  active && styles.viewModeChipTextActive,
+                  active && selectedControlTextStyle,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {mode.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      <Text style={[styles.viewModeHelper, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+        {viewModeOption?.helper}
+      </Text>
+    </View>
+  );
+  const renderArrivalContent = (mode: EventDetailViewMode, compact = false) => {
+    const showDetailedArrival = mode === "detailed";
+    const isFastArrivalMode = mode === "onTheWay";
+    const containerStyles = [
+      styles.meetingPanel,
+      isDay && styles.dayMeetingPanel,
+      isRtl && styles.rtlBlock,
+      compact && styles.meetingPanelCompact,
+    ];
+    const confidenceNotes = arrivalPreview.confidenceNotes.length
+      ? arrivalPreview.confidenceNotes
+      : (event.arrivalConfidenceNotes ?? []);
+    const lookForCopy = isMovieNight
+      ? "A small group waiting near the cinema entrance."
+      : "A small group waiting near the meetup area.";
+    const arrivalRows = isFastArrivalMode
+      ? [
+          { label: "Venue", value: event.venue },
+          { label: "Time", value: eventDate },
+          { label: "Meeting point", value: arrivalPreview.meetingPointHint },
+          { label: "Nearby landmark", value: arrivalPreview.nearbyLandmark },
+          { label: "Look for", value: lookForCopy },
+        ]
+      : [
+          { label: "Approximate area", value: arrivalPreview.approximateArea },
+          { label: "Meeting point", value: arrivalPreview.meetingPointHint },
+          { label: "Nearby landmark", value: arrivalPreview.nearbyLandmark },
+          { label: "Look for", value: lookForCopy },
+        ];
+    const logisticsRows = [
+      { label: "Weather", copy: isMovieNight ? copy.weatherCopy : eventWeatherCopy },
+      ...practicalMeetupGuidanceItems.slice(0, 2).map((item) => ({
+        label: item.label,
+        copy: item.copy,
+      })),
+    ];
+
+    return (
+      <View style={containerStyles}>
+        <View
+          style={[
+            styles.arrivalLeadCard,
+            isDay && styles.dayArrivalLeadCard,
+            compact && styles.arrivalLeadCardCompact,
+          ]}
+        >
+          <View style={[styles.arrivalPreviewKickerRow, isRtl && styles.rtlRow]}>
+            <IconSymbol name="location" color={isDay ? "#284E92" : "#B7CFFF"} size={15} />
+            <Text
+              style={[
+                styles.arrivalPreviewKicker,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {isFastArrivalMode ? "Next step" : "Finding the group"}
+            </Text>
+          </View>
+          <Text
+            style={[
+              styles.arrivalLeadTitle,
+              isDay && styles.dayHeadingText,
+              isRtl && styles.rtlText,
+            ]}
+          >
+            {isFastArrivalMode ? arrivalPreview.meetingPointHint : arrivalPreview.approximateArea}
+          </Text>
+          <Text
+            style={[styles.arrivalLeadCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+          >
+            {findingTheGroupCopy}
+          </Text>
+        </View>
+        <View
+          style={[styles.arrivalList, isDay && styles.dayArrivalList, isRtl && styles.rtlBlock]}
+        >
+          {arrivalRows.map((item, index) => (
+            <View
+              key={item.label}
+              style={[
+                styles.arrivalListRow,
+                index < arrivalRows.length - 1 && styles.arrivalListRowBorder,
+                isDay && index < arrivalRows.length - 1 && styles.dayDivider,
+                isRtl && styles.rtlRow,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.arrivalListLabel,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {item.label}
+              </Text>
+              <Text
+                style={[
+                  styles.arrivalListValue,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {item.value}
+              </Text>
+            </View>
+          ))}
+        </View>
+        {isFastArrivalMode ? (
+          <TouchableOpacity
+            activeOpacity={0.84}
+            onPress={() => {
+              void openEventLocation();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Get directions"
+            accessibilityHint="Opens a broad map search for this meetup area."
+            style={[
+              styles.mapActionButton,
+              isDay && styles.dayMapActionButton,
+              isRtl && styles.rtlRow,
+            ]}
+          >
+            <IconSymbol name="explore" color={isDay ? "#0F3F73" : "#EAF3FF"} size={18} />
+            <Text
+              style={[
+                styles.mapActionButtonText,
+                isDay && styles.dayHeadingText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Get directions
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+        {confidenceNotes.length > 0 && !isFastArrivalMode ? (
+          <View style={[styles.arrivalConfidenceBlock, isRtl && styles.rtlBlock]}>
+            <Text
+              style={[
+                styles.arrivalNoticeTitle,
+                isDay && styles.dayHeadingText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Arrival confidence
+            </Text>
+            <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+              {confidenceNotes.map((note) => (
+                <Text
+                  key={note}
+                  style={[
+                    styles.mediaComfortChip,
+                    isDay && styles.dayMediaComfortChip,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {note}
+                </Text>
+              ))}
+            </View>
+            <Text
+              style={[
+                styles.mediaComfortNote,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Prototype notes only; check venue details before leaving.
+            </Text>
+          </View>
+        ) : null}
+        <View
+          style={[
+            styles.reassuranceBlock,
+            styles.supportAccentBlock,
+            isDay && styles.daySupportAccentBlock,
+            isRtl && styles.rtlBlock,
+          ]}
+        >
+          <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+            <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+              <IconSymbol name="low-pressure" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+            </View>
+            <Text
+              style={[
+                styles.mediaComfortTitle,
+                isDay && styles.dayHeadingText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              You can arrive slowly or leave anytime
+            </Text>
+          </View>
+          <Text
+            style={[styles.mediaComfortCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+          >
+            Wait nearby, watch first, or step out early if that feels better. This is local-only
+            guidance, not live host tracking or safety support.
+          </Text>
+        </View>
+        <View
+          style={[
+            styles.arrivalNoticeBlock,
+            isDay && styles.dayArrivalNoticeBlock,
+            isRtl && styles.rtlBlock,
+          ]}
+        >
+          <Text
+            style={[
+              styles.arrivalNoticeTitle,
+              isDay && styles.dayHeadingText,
+              isRtl && styles.rtlText,
+            ]}
+          >
+            {isFastArrivalMode ? "Weather and transport" : "Weather, transport, and access"}
+          </Text>
+          <View style={styles.arrivalNoticeList}>
+            {logisticsRows.map((item, index) => (
+              <View key={`${item.label}-${index}`} style={styles.arrivalNoticeRow}>
+                <Text
+                  style={[
+                    styles.arrivalNoticeLabel,
+                    isDay && styles.dayMutedText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {item.label}
+                </Text>
+                <Text
+                  style={[
+                    styles.arrivalNoticeCopy,
+                    isDay && styles.dayMutedText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  {item.copy}
+                </Text>
+              </View>
+            ))}
+            {!isFastArrivalMode && eventWeatherFallbacks.length > 0 ? (
+              <Text
+                style={[
+                  styles.mediaComfortNote,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Backup idea: {eventWeatherFallbacks.slice(0, 2).join(", ")}.
+              </Text>
+            ) : null}
+          </View>
+        </View>
+        {showDetailedArrival && event.trustProfile ? (
+          <View
+            style={[styles.mediaComfortCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
+          >
+            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="shield" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <Text
+                style={[
+                  styles.mediaComfortTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Host & venue preview
+              </Text>
+            </View>
+            <Text
+              style={[
+                styles.mediaComfortCopy,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {eventTrustSummary}. Host preview: {event.trustProfile.host.displayName}. Venue type:{" "}
+              {event.trustProfile.venueType.replace("-", " ")}.
+            </Text>
+          </View>
+        ) : null}
+        {showDetailedArrival ? (
+          <>
+            <View style={[styles.arrivalFamiliarityBlock, isRtl && styles.rtlBlock]}>
+              <Text
+                style={[
+                  styles.mediaComfortTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                Venue familiarity preview
+              </Text>
+              <View style={[styles.arrivalFamiliarityGrid, isRtl && styles.rtlRow]}>
+                {(arrivalPreview.venuePreviewImages?.length
+                  ? arrivalPreview.venuePreviewImages
+                  : [
+                      {
+                        kind: "venue" as const,
+                        title: "Venue preview",
+                        caption: "No demo image is attached yet.",
+                        placeholderIcon: "location",
+                      },
+                    ]
+                ).map((image) => {
+                    const imageSource = image.imageKey
+                      ? getEventDetailImageSource(image.imageKey)
+                      : undefined;
+
+                  return (
+                    <View
+                      key={`${image.kind}-${image.title}`}
+                      style={[
+                        styles.arrivalFamiliarityCard,
+                        isDay && styles.dayArrivalFamiliarityCard,
+                      ]}
+                    >
+                      {imageSource ? (
+                        <Image source={imageSource} style={styles.arrivalFamiliarityImage} />
+                      ) : (
+                        <View
+                          style={[
+                            styles.arrivalFamiliarityPlaceholder,
+                            isDay && styles.dayArrivalFamiliarityPlaceholder,
+                          ]}
+                        >
+                          <IconSymbol
+                            name="location"
+                            color={isDay ? "#5B6D8E" : "#B7CFFF"}
+                            size={18}
+                          />
+                          <Text
+                            style={[
+                              styles.arrivalFamiliarityPlaceholderText,
+                              isDay && styles.dayMutedText,
+                            ]}
+                          >
+                            Preview coming soon
+                          </Text>
+                        </View>
+                      )}
+                      <View style={styles.arrivalFamiliarityText}>
+                        <Text
+                          style={[
+                            styles.arrivalFamiliarityTitle,
+                            isDay && styles.dayHeadingText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {image.title}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.arrivalFamiliarityCaption,
+                            isDay && styles.dayMutedText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {image.caption}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+            <Text
+              style={[
+                styles.meetingCopy,
+                styles.meetingPrivacyCopy,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              NSN uses broad local area details here. This preview is for arrival comfort and does
+              not show participant locations or live mapping.
+            </Text>
+          </>
+        ) : null}
+      </View>
+    );
+  };
+  const renderOnTheWayPanel = () => (
+    <View style={[styles.onTheWayPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+      <Text style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}>
+        On the way now
+      </Text>
+      <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+        Start with the meeting point, landmark, and broad venue area. Exact live tracking and
+        emergency support are not connected in this prototype.
+      </Text>
+      {renderArrivalContent("onTheWay", true)}
+    </View>
+  );
   const confirmExternalOpen = (
     destination: ExternalOpenDestination,
     openExternalDestination: () => void,
@@ -1407,7 +2019,19 @@ export default function EventDetailsScreen() {
     );
   };
   const openEventLocation = async () => {
-    const mapsUrl = buildEventLocationSearchUrl(arrivalPreview.mapSearchArea);
+    const preferredMapAppName =
+      externalLinks.preferredMapApp === "apple-maps"
+        ? "Apple Maps"
+        : externalLinks.preferredMapApp === "google-maps"
+          ? "Google Maps"
+          : externalLinks.preferredMapApp === "waze"
+            ? "Waze"
+            : "Maps";
+    const mapsUrl = buildEventLocationSearchUrl(
+      arrivalPreview.mapSearchArea,
+      undefined,
+      externalLinks.preferredMapApp,
+    );
 
     const openMaps = async () => {
       try {
@@ -1432,13 +2056,74 @@ export default function EventDetailsScreen() {
     confirmExternalOpen(
       {
         kind: "maps",
-        destinationAppName: "Maps",
+        destinationAppName: preferredMapAppName,
         broadAreaName: arrivalPreview.mapSearchArea,
       },
       () => {
         void openMaps();
       },
     );
+  };
+  const saveEventToCalendar = () => {
+    const calendarCopy = getEventCalendarSaveCopy(eventTitle.replace(/\n/g, " "));
+    const saveCalendarFile = async () => {
+      const calendarFile = buildEventCalendarFile({
+        title: eventTitle.replace(/\n/g, " "),
+        venue: event.venue,
+        dateLabel: eventDate,
+        timeLabel: event.time,
+        description: eventDescription,
+      });
+
+      try {
+        if (Platform.OS === "web") {
+          const webWindow = typeof window !== "undefined" ? window : undefined;
+          const webDocument = typeof document !== "undefined" ? document : undefined;
+
+          if (!webWindow || !webDocument) return;
+
+          const calendarBlob = new Blob([calendarFile.content], { type: calendarFile.mimeType });
+          const calendarUrl = webWindow.URL.createObjectURL(calendarBlob);
+          const downloadLink = webDocument.createElement("a");
+          downloadLink.href = calendarUrl;
+          downloadLink.download = calendarFile.filename;
+          downloadLink.rel = "noopener";
+          webDocument.body.appendChild(downloadLink);
+          downloadLink.click();
+          downloadLink.remove();
+          webWindow.URL.revokeObjectURL(calendarUrl);
+          setCopyFeedback("Calendar file created locally.");
+          return;
+        }
+
+        await Linking.openURL(
+          `data:${calendarFile.mimeType},${encodeURIComponent(calendarFile.content)}`,
+        );
+      } catch {
+        showExternalOpenFailure({
+          platform: Platform.OS,
+          title: "Calendar unavailable",
+          message: "Could not create a local calendar file for this prototype event.",
+          alert: Alert.alert,
+          notify: setCopyFeedback,
+        });
+      }
+    };
+
+    if (Platform.OS === "web") {
+      const webConfirm = typeof window !== "undefined" ? window.confirm : undefined;
+
+      if (webConfirm?.(calendarCopy.body)) {
+        void saveCalendarFile();
+      }
+
+      return;
+    }
+
+    Alert.alert(calendarCopy.title, calendarCopy.body, [
+      { text: calendarCopy.cancelLabel, style: "cancel" },
+      { text: calendarCopy.saveLabel, onPress: () => void saveCalendarFile() },
+    ]);
   };
   const toggleFirstMeetupSupportOption = (option: FirstMeetupSupportOption) => {
     setSelectedFirstMeetupSupport((current) => {
@@ -1534,6 +2219,422 @@ export default function EventDetailsScreen() {
       });
     }
   };
+
+  const renderPlanningToolsPanel = () => (
+    <View style={[styles.eventAccordion, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+      <TouchableOpacity
+        activeOpacity={0.82}
+        onPress={() => setIsReadinessToolsOpen((current) => !current)}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isReadinessToolsOpen }}
+        accessibilityLabel={`${isReadinessToolsOpen ? "Collapse" : "Expand"} planning tools`}
+        style={[styles.eventAccordionHeader, isRtl && styles.rtlRow]}
+      >
+        <View style={[styles.eventAccordionTitleRow, isRtl && styles.rtlRow]}>
+          <View style={[styles.eventAccordionIconWrap, isDay && styles.dayMetaIconWrap]}>
+            <IconSymbol name="guide" color={isDay ? "#53677A" : "#8FAFD1"} size={18} />
+          </View>
+          <View style={styles.eventAccordionTitleBlock}>
+            <Text
+              style={[
+                styles.eventAccordionTitle,
+                isDay && styles.dayHeadingText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Planning tools
+            </Text>
+            <Text
+              style={[
+                styles.eventAccordionSummary,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              Optional local-only tools for arrival, backup plans, and quiet exits.
+            </Text>
+          </View>
+        </View>
+        <IconSymbol
+          name={isReadinessToolsOpen ? "chevron.up" : "chevron.down"}
+          color={isDay ? "#53677A" : nsnColors.muted}
+          size={18}
+        />
+      </TouchableOpacity>
+      {isReadinessToolsOpen ? (
+        <View style={styles.eventAccordionBody}>
+          <View
+            style={[
+              styles.planningToolbox,
+              isDay && styles.dayArrivalList,
+              isRtl && styles.rtlBlock,
+            ]}
+          >
+            <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
+              <View style={styles.readinessHeaderCopy}>
+                <Text
+                  style={[
+                    styles.safetyTitle,
+                    isDay && styles.dayHeadingText,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  Optional toolbox
+                </Text>
+                <Text
+                  style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+                >
+                  Local-only prompts for planning, pacing, and stepping back if you need to.
+                </Text>
+              </View>
+              <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>
+                Prototype
+              </Text>
+            </View>
+            <View style={[styles.planningToolChipRow, isRtl && styles.rtlRow]}>
+              {planningToolActions.map((tool) => {
+                const active = selectedPlanningToolId === tool.id;
+
+                return (
+                  <TouchableOpacity
+                    key={tool.id}
+                    activeOpacity={0.82}
+                    onPress={() => {
+                      setSelectedPlanningToolId(tool.id);
+                      if (tool.id !== "change-mind") {
+                        setSelectedOptOutAction(null);
+                      }
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    accessibilityLabel={tool.label}
+                    accessibilityHint={tool.description}
+                    style={[
+                      styles.meetupSupportChip,
+                      isDay && styles.dayActionRow,
+                      active && styles.meetupSupportChipActive,
+                      active && selectedControlSurfaceStyle,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.meetupSupportChipText,
+                        isDay && styles.dayText,
+                        active && styles.meetupSupportChipTextActive,
+                        active && selectedControlTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {tool.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <View
+              style={[
+                styles.planningToolResult,
+                selectedPlanningToolId === "change-mind"
+                  ? styles.supportAccentBlock
+                  : styles.arrivalNoticeBlock,
+                selectedPlanningToolId === "change-mind" && isDay && styles.daySupportAccentBlock,
+                selectedPlanningToolId !== "change-mind" && isDay && styles.dayArrivalNoticeBlock,
+                isRtl && styles.rtlBlock,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.planningToolResultTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {planningToolGuidance[selectedPlanningToolId].title}
+              </Text>
+              <Text
+                style={[
+                  styles.planningToolResultCopy,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {planningToolGuidance[selectedPlanningToolId].copy}
+              </Text>
+            </View>
+            {selectedPlanningToolId === "change-mind" || selectedOptOutAction ? (
+              <View
+                style={[
+                  styles.optOutPanel,
+                  styles.planningToolOptOutPanel,
+                  isRtl && styles.rtlBlock,
+                ]}
+              >
+                <View style={[styles.optOutActions, isRtl && styles.rtlRow]}>
+                  {meetupOptOutActions.map((action) => {
+                    const active = selectedOptOutAction?.id === action.id;
+
+                    return (
+                      <TouchableOpacity
+                        key={action.id}
+                        activeOpacity={0.82}
+                        onPress={() => handleOptOutAction(action)}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        accessibilityLabel={action.label}
+                        accessibilityHint={action.copy}
+                        style={[
+                          styles.optOutChoice,
+                          isDay && styles.dayActionRow,
+                          active && styles.meetupSupportChipActive,
+                          active && selectedControlSurfaceStyle,
+                        ]}
+                      >
+                        <IconSymbol
+                          name={action.iconName}
+                          color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted}
+                          size={15}
+                        />
+                        <Text
+                          style={[
+                            styles.optOutChoiceText,
+                            isDay && styles.dayText,
+                            active && styles.meetupSupportChipTextActive,
+                            active && selectedControlTextStyle,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {action.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {selectedOptOutAction ? (
+                  <View style={[styles.optOutResult, isDay && styles.dayActionRow]}>
+                    <Text
+                      style={[
+                        styles.readinessTitle,
+                        isDay && styles.dayHeadingText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {selectedOptOutAction.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.readinessCopy,
+                        isDay && styles.dayMutedText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {selectedOptOutAction.result}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+            <Text
+              style={[
+                styles.planningToolFootnote,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              These tools stay local to this prototype. They do not contact a host, reserve a spot,
+              or connect live safety support.
+            </Text>
+          </View>
+        </View>
+      ) : null}
+    </View>
+  );
+
+  const renderRsvpPanel = () =>
+    isOnTheWayMode ? (
+      <View
+        style={[
+          styles.rsvpPanel,
+          styles.compactRsvpPanel,
+          isDay && styles.dayCard,
+          isRtl && styles.rtlBlock,
+        ]}
+      >
+        <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
+          <Text
+            style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+          >
+            Current RSVP & support note
+          </Text>
+          <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>
+            {getRsvpLabel(membership.status)}
+          </Text>
+        </View>
+        <View style={[styles.arrivalList, styles.compactMetaList, isDay && styles.dayArrivalList]}>
+          {[
+            { label: "RSVP", value: getRsvpDescription(membership.status) },
+            { label: "Walking in", value: getAttendTogetherDescription(attendTogetherStatus) },
+          ].map((item, index, items) => (
+            <View
+              key={item.label}
+              style={[
+                styles.arrivalListRow,
+                index < items.length - 1 && styles.arrivalListRowBorder,
+                isDay && index < items.length - 1 && styles.dayDivider,
+                isRtl && styles.rtlRow,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.arrivalListLabel,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {item.label}
+              </Text>
+              <Text
+                style={[
+                  styles.arrivalListValue,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {item.value}
+              </Text>
+            </View>
+          ))}
+        </View>
+        <View
+          style={[
+            styles.reassuranceBlock,
+            styles.supportAccentBlock,
+            isDay && styles.daySupportAccentBlock,
+            isRtl && styles.rtlBlock,
+          ]}
+        >
+          <Text
+            style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+          >
+            You do not have to walk in alone
+          </Text>
+          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Bring a friend, sibling, partner, parent, or support person. Open Essential or Detailed
+            if you want to change your RSVP or support note.
+          </Text>
+        </View>
+      </View>
+    ) : (
+      <View style={[styles.rsvpPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
+        <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
+          <Text
+            style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+          >
+            Local RSVP preview
+          </Text>
+          <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>
+            {getRsvpLabel(membership.status)}
+          </Text>
+        </View>
+        <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+          Prototype only: this RSVP is saved locally on this device. It does not reserve a real
+          spot, message anyone, or change the meetup plan.
+        </Text>
+        <Text
+          style={[styles.rsvpDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+        >
+          {getRsvpDescription(membership.status)}
+        </Text>
+        <View style={styles.rsvpActions}>
+          {rsvpChoices.map((choice) => {
+            const active =
+              choice.status === membership.status ||
+              (choice.status === "going" && membership.status === "joined");
+
+            return (
+              <TouchableOpacity
+                key={choice.status}
+                activeOpacity={0.82}
+                onPress={() => saveRsvpStatus(choice.status)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+                style={[
+                  styles.rsvpChoice,
+                  isDay && styles.dayActionRow,
+                  active && styles.rsvpChoiceActive,
+                  active && selectedControlSurfaceStyle,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.rsvpChoiceText,
+                    isDay && styles.dayText,
+                    active && styles.rsvpChoiceTextActive,
+                    active && selectedControlTextStyle,
+                  ]}
+                >
+                  {choice.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <View
+          style={[
+            styles.attendTogetherReassurance,
+            styles.supportAccentBlock,
+            isDay && styles.daySupportAccentBlock,
+            isRtl && styles.rtlBlock,
+          ]}
+        >
+          <Text
+            style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
+          >
+            You do not have to walk in alone
+          </Text>
+          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            Bring a friend, sibling, partner, parent, or support person. They do not need to be on
+            NSN for this local prototype note.
+          </Text>
+          <View style={styles.rsvpActions}>
+            {attendTogetherChoices.map((choice) => {
+              const active = choice === attendTogetherStatus;
+
+              return (
+                <TouchableOpacity
+                  key={choice}
+                  activeOpacity={0.82}
+                  onPress={() => saveAttendTogetherStatus(choice)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={[
+                    styles.rsvpChoice,
+                    isDay && styles.dayActionRow,
+                    active && styles.rsvpChoiceActive,
+                    active && selectedControlSurfaceStyle,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.rsvpChoiceText,
+                      isDay && styles.dayText,
+                      active && styles.rsvpChoiceTextActive,
+                      active && selectedControlTextStyle,
+                    ]}
+                  >
+                    {getAttendTogetherLabel(choice)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          <Text
+            style={[styles.rsvpDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+          >
+            {getAttendTogetherDescription(attendTogetherStatus)}
+          </Text>
+        </View>
+      </View>
+    );
 
   const handleJoin = async () => {
     if (canOpenMeetupChat) {
@@ -1702,30 +2803,6 @@ export default function EventDetailsScreen() {
             <IconSymbol name="chevron.left" color={iconColor} size={26} />
           </TouchableOpacity>
           <View style={styles.topActions}>
-            <TouchableOpacity
-              activeOpacity={0.75}
-              onPress={toggleSavedPlace}
-              accessibilityRole="button"
-              accessibilityLabel={isPlaceSaved ? saveCopy.saved : saveCopy.save}
-              accessibilityHint={
-                screenReaderHints
-                  ? isPlaceSaved
-                    ? eventActionCopy.removeSavedPlaceHint
-                    : eventActionCopy.savePlaceHint
-                  : undefined
-              }
-              style={[
-                styles.iconButton,
-                isDay && styles.dayIconButton,
-                isPlaceSaved && styles.savedIconButton,
-              ]}
-            >
-              <IconSymbol
-                name={isPlaceSaved ? "bookmark" : "bookmark.border"}
-                color={isPlaceSaved ? nsnColors.day : iconColor}
-                size={22}
-              />
-            </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.75}
               onPress={shareEvent}
@@ -1967,14 +3044,100 @@ export default function EventDetailsScreen() {
           </View>
         </Modal>
 
+        <Modal
+          transparent
+          animationType="fade"
+          visible={Boolean(eventDetailImage && isHeroImageOpen)}
+          onRequestClose={() => setIsHeroImageOpen(false)}
+        >
+          <View style={styles.heroImageModalBackdrop}>
+            <View style={styles.heroImageModalTopBar}>
+              <TouchableOpacity
+                activeOpacity={0.78}
+                onPress={() => setIsHeroImageOpen(false)}
+                accessibilityRole="button"
+                accessibilityLabel={heroImageViewerCopy.closeLabel}
+                style={styles.heroImageModalCloseButton}
+              >
+                <IconSymbol name="chevron.left" color={nsnColors.text} size={24} />
+              </TouchableOpacity>
+              <Text
+                style={[
+                  styles.heroImageModalTitle,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {heroImageViewerCopy.title}
+              </Text>
+            </View>
+            {eventDetailImage ? (
+              <View style={styles.heroImageModalImageFrame}>
+                <Image
+                  source={eventDetailImage}
+                  resizeMode="contain"
+                  style={styles.heroImageModalImage}
+                />
+                <View
+                  pointerEvents="none"
+                  style={[
+                    styles.heroImageInnerOutline,
+                    {
+                      backgroundColor: heroImageOutlinePalette.overlayColor,
+                      borderColor: heroImageOutlinePalette.borderColor,
+                    },
+                  ]}
+                />
+              </View>
+            ) : null}
+            <TouchableOpacity
+              activeOpacity={0.82}
+              onPress={() => setIsHeroImageOpen(false)}
+              accessibilityRole="button"
+              accessibilityLabel={heroImageViewerCopy.closeLabel}
+              style={styles.heroImageModalReturnButton}
+            >
+              <Text style={styles.heroImageModalReturnText}>
+                {heroImageViewerCopy.closeLabel}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+
         <View style={[styles.heroPanel, isDay && styles.dayPanel]}>
           {eventDetailImage ? (
-            <View style={styles.eventHeroImageFrame}>
-              <Image source={eventDetailImage} resizeMode="cover" style={styles.eventHeroImage} />
+            <Pressable
+              onPress={() => setIsHeroImageOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel={heroImageViewerCopy.openLabel}
+              accessibilityHint={screenReaderHints ? heroImageViewerCopy.openHint : undefined}
+              style={({ hovered, pressed }) => [
+                styles.eventHeroImageFrame,
+                isDay && styles.dayEventHeroImageFrame,
+                (hovered || pressed) && styles.eventHeroImageFrameHovered,
+              ]}
+            >
+              <Image
+                source={eventDetailImage}
+                resizeMode={getEventDetailHeroImageResizeMode()}
+                style={styles.eventHeroImage}
+              />
+              <View
+                pointerEvents="none"
+                style={[
+                  styles.heroImageInnerOutline,
+                  {
+                    backgroundColor: heroImageOutlinePalette.overlayColor,
+                    borderColor: heroImageOutlinePalette.borderColor,
+                  },
+                ]}
+              />
+              <View style={styles.eventHeroImageExpandCue}>
+                <IconSymbol name="resize" color={nsnColors.text} size={17} />
+              </View>
               <View style={styles.eventHeroImageBadge}>
                 <Text style={styles.avatarEmoji}>{event.emoji}</Text>
               </View>
-            </View>
+            </Pressable>
           ) : (
             <View style={styles.eventAvatar}>
               <Text style={styles.avatarEmoji}>{event.emoji}</Text>
@@ -2011,7 +3174,16 @@ export default function EventDetailsScreen() {
             isDay={isDay}
             isRtl={isRtl}
           />
-          <DetailMetaRow iconName="calendar" label={eventDate} isDay={isDay} isRtl={isRtl} />
+          <DetailMetaRow
+            actionAccessibilityHint="Creates a local calendar file. This does not reserve a spot or message anyone."
+            actionAccessibilityLabel={`Save ${eventTitle.replace(/\n/g, " ")} to local calendar`}
+            actionIconName="calendar"
+            iconName="calendar"
+            label={eventDate}
+            onPress={saveEventToCalendar}
+            isDay={isDay}
+            isRtl={isRtl}
+          />
           <DetailMetaRow
             iconName="group"
             label={expectedGroupSizeCopy}
@@ -2020,576 +3192,926 @@ export default function EventDetailsScreen() {
           />
         </View>
 
-        <View
-          style={[styles.quickReferenceSection, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
-        >
-          <View style={[styles.quickReferenceHeader, isRtl && styles.rtlBlock]}>
-            <Text
-              style={[
-                styles.quickReferenceKicker,
-                isDay && styles.dayMutedText,
-                isRtl && styles.rtlText,
-              ]}
-            >
-              Event snapshot
-            </Text>
-            <Text
-              style={[
-                styles.quickReferenceTitle,
-                isDay && styles.dayHeadingText,
-                isRtl && styles.rtlText,
-              ]}
-            >
-              The basics before you decide how to arrive
-            </Text>
-          </View>
-          <View style={[styles.quickReferenceGrid, isRtl && styles.rtlRow]}>
-            {eventSnapshotItems.map((item) => (
-              <View
-                key={item.label}
+        {!isOnTheWayMode ? (
+          <View
+            style={[
+              styles.quickReferenceSection,
+              isDay && styles.dayCard,
+              isRtl && styles.rtlBlock,
+            ]}
+          >
+            <View style={[styles.quickReferenceHeader, isRtl && styles.rtlBlock]}>
+              <Text
                 style={[
-                  styles.quickReferenceCard,
-                  isDay && styles.dayActionRow,
-                  isRtl && styles.rtlBlock,
+                  styles.quickReferenceKicker,
+                  isDay && styles.dayMutedText,
+                  isRtl && styles.rtlText,
                 ]}
               >
-                <View style={[styles.quickReferenceCardHeader, isRtl && styles.rtlRow]}>
-                  <IconSymbol
-                    name={item.iconName}
-                    color={isDay ? "#53677A" : "#8FAFD1"}
-                    size={16}
-                  />
-                  <Text
-                    style={[
-                      styles.quickReferenceCardTitle,
-                      isDay && styles.dayHeadingText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
-                </View>
-                <Text
+                Event snapshot
+              </Text>
+              <Text
+                style={[
+                  styles.quickReferenceTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                The basics before you decide how to arrive
+              </Text>
+            </View>
+            <View style={[styles.quickReferenceGrid, isRtl && styles.rtlRow]}>
+              {eventSnapshotItems.map((item) => (
+                <View
+                  key={item.label}
                   style={[
-                    styles.quickReferenceCardCopy,
-                    isDay && styles.dayMutedText,
-                    isRtl && styles.rtlText,
+                    styles.quickReferenceCard,
+                    isDay && styles.dayActionRow,
+                    isRtl && styles.rtlBlock,
+                    {
+                      borderLeftWidth: 3,
+                      borderLeftColor: item.accentColor,
+                    },
                   ]}
                 >
-                  {item.copy}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View
-          style={[
-            styles.safetyPanel,
-            styles.compactReadinessPanel,
-            isDay && styles.dayCard,
-            isRtl && styles.rtlBlock,
-          ]}
-        >
-          <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
-            <Text
-              style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
-            >
-              {eventCopy.meetingSafety}
-            </Text>
-            <Text
-              style={[
-                styles.verificationChip,
-                isDay && styles.dayVerificationChip,
-                canMeet && styles.verificationChipReady,
-                isDay && canMeet && styles.dayVerificationChipReady,
-              ]}
-            >
-              {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
-            </Text>
-          </View>
-          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            {getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}
-          </Text>
-          {!canMeet ? (
-            <TouchableOpacity
-              activeOpacity={0.84}
-              onPress={() => setIsVerificationOpen(true)}
-              accessibilityRole="button"
-              accessibilityLabel={eventCopy.verifyBeforeMeeting}
-              style={[styles.verifyInlineButton, isRtl && styles.rtlRow]}
-            >
-              <IconSymbol name="shield" color="#FFFFFF" size={16} />
-              <Text style={styles.verifyInlineButtonText}>{eventCopy.verifyBeforeMeeting}</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.86}
-          onPress={toggleSavedPlace}
-          style={[
-            styles.savePlaceButton,
-            isDay && styles.daySavePlaceButton,
-            isRtl && styles.rtlRow,
-          ]}
-          accessibilityRole="button"
-          accessibilityHint={
-            screenReaderHints
-              ? isPlaceSaved
-                ? eventActionCopy.removeSavedPlaceHint
-                : eventActionCopy.savePlaceHint
-              : undefined
-          }
-        >
-          <IconSymbol
-            name={isPlaceSaved ? "bookmark" : "bookmark.border"}
-            color={isPlaceSaved ? nsnColors.day : iconColor}
-            size={20}
-          />
-          <Text style={[styles.savePlaceText, isDay && styles.dayText, isRtl && styles.rtlText]}>
-            {isPlaceSaved ? saveCopy.saved : saveCopy.save}
-          </Text>
-        </TouchableOpacity>
-
-        <Text style={[styles.description, isDay && styles.dayText, isRtl && styles.rtlText]}>
-          {eventDescription}
-        </Text>
-
-        {showFullEventReading ? (
-          <View style={styles.eventAccordionStack}>
-            {renderAccordionSection(
-              "whatToExpect",
-              "What to expect",
-              "The social feel, pace, and how much participation is optional.",
-              "experience",
-              <>
-                <View style={[styles.expectGrid, isRtl && styles.rtlRow]}>
-                  <View
-                    style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
-                  >
+                  <View style={[styles.quickReferenceCardHeader, isRtl && styles.rtlRow]}>
                     <IconSymbol
-                      name="low-pressure"
+                      name={item.iconName}
                       color={isDay ? "#53677A" : "#8FAFD1"}
-                      size={20}
+                      size={16}
                     />
                     <Text
                       style={[
-                        styles.expectTitle,
+                        styles.quickReferenceCardTitle,
                         isDay && styles.dayHeadingText,
                         isRtl && styles.rtlText,
                       ]}
                     >
-                      {copy.lowPressure}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.expectCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {copy.lowPressureCopy}
-                    </Text>
-                  </View>
-                  <View
-                    style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
-                  >
-                    <IconSymbol name="experience" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                    <Text
-                      style={[
-                        styles.expectTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {copy.sharedExperience}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.expectCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {copy.sharedExperienceCopy}
-                    </Text>
-                  </View>
-                  <View
-                    style={[styles.expectCard, isDay && styles.dayCard, isRtl && styles.rtlBlock]}
-                  >
-                    <IconSymbol name="flexible" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                    <Text
-                      style={[
-                        styles.expectTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {copy.flexible}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.expectCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {copy.flexibleCopy}
-                    </Text>
-                  </View>
-                </View>
-                <View
-                  style={[
-                    styles.mediaComfortCard,
-                    styles.soloArrivalCard,
-                    isDay && styles.dayCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-                    <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                      <IconSymbol
-                        name="low-pressure"
-                        color={isDay ? "#53677A" : "#8FAFD1"}
-                        size={20}
-                      />
-                    </View>
-                    <Text
-                      style={[
-                        styles.mediaComfortTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      You do not have to walk in alone
+                      {item.label}
                     </Text>
                   </View>
                   <Text
                     style={[
-                      styles.mediaComfortCopy,
+                      styles.quickReferenceCardCopy,
                       isDay && styles.dayMutedText,
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Bring a friend, sibling, partner, parent, or support person. Arriving slowly,
-                    watching first, or leaving early is okay in this local prototype.
+                    {item.copy}
                   </Text>
                 </View>
-              </>,
-            )}
+              ))}
+            </View>
+          </View>
+        ) : null}
 
-            {renderAccordionSection(
-              "optionalConversation",
-              "Optional conversation",
-              "Gentle prompts and clarity questions only if they help.",
-              "message",
-              <>
-                {event.preEventQuestions && event.preEventQuestions.length > 0 && (
-                  <View
-                    style={[
-                      styles.questionsPanel,
-                      isDay && styles.dayCard,
-                      isRtl && styles.rtlBlock,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.sectionTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {copy.preEventQuestionsTitle}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.questionsCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {copy.preEventQuestionsCopy}
-                    </Text>
-                    <View style={styles.questionsList}>
-                      {conversationStarterPrompts.map((question) => (
-                        <Text
-                          key={question}
+        {renderViewModeToggle()}
+
+        {!isOnTheWayMode ? (
+          <View
+            style={[
+              styles.safetyPanel,
+              styles.compactReadinessPanel,
+              isDay && styles.dayCompactReadinessPanel,
+              isDay && styles.dayCard,
+              isRtl && styles.rtlBlock,
+            ]}
+          >
+            <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
+              <Text
+                style={[
+                  styles.safetyTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {eventCopy.meetingSafety}
+              </Text>
+              <Text
+                style={[
+                  styles.verificationChip,
+                  isDay && styles.dayVerificationChip,
+                  canMeet && styles.verificationChipReady,
+                  isDay && canMeet && styles.dayVerificationChipReady,
+                ]}
+              >
+                {getVerificationLevelLabel(effectiveVerificationLevel, appLanguageBase)}
+              </Text>
+            </View>
+            <Text
+              style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
+            >
+              {getMeetingSafetyCopy(effectiveVerificationLevel, appLanguageBase)}
+            </Text>
+            {!canMeet ? (
+              <TouchableOpacity
+                activeOpacity={0.84}
+                onPress={() => setIsVerificationOpen(true)}
+                accessibilityRole="button"
+                accessibilityLabel={eventCopy.verifyBeforeMeeting}
+                style={[styles.verifyInlineButton, isRtl && styles.rtlRow]}
+              >
+                <IconSymbol name="shield" color="#FFFFFF" size={16} />
+                <Text style={styles.verifyInlineButtonText}>{eventCopy.verifyBeforeMeeting}</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        ) : null}
+
+        {!isOnTheWayMode ? (
+          <TouchableOpacity
+            activeOpacity={0.86}
+            onPress={toggleSavedPlace}
+            style={[
+              styles.savePlaceButton,
+              isDay && styles.daySavePlaceButton,
+              isRtl && styles.rtlRow,
+            ]}
+            accessibilityRole="button"
+            accessibilityHint={
+              screenReaderHints
+                ? isPlaceSaved
+                  ? eventActionCopy.removeSavedPlaceHint
+                  : eventActionCopy.savePlaceHint
+                : undefined
+            }
+          >
+            <IconSymbol
+              name={isPlaceSaved ? "bookmark" : "bookmark.border"}
+              color={isPlaceSaved ? nsnColors.day : iconColor}
+              size={20}
+            />
+            <Text style={[styles.savePlaceText, isDay && styles.dayText, isRtl && styles.rtlText]}>
+              {isPlaceSaved ? saveCopy.saved : saveCopy.save}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {!isOnTheWayMode ? (
+          <Text style={[styles.description, isDay && styles.dayText, isRtl && styles.rtlText]}>
+            {eventDescription}
+          </Text>
+        ) : null}
+
+        {!isOnTheWayMode ? (
+          <View
+            style={[
+              styles.humanMomentCard,
+              styles.tonightVibeCard,
+              isDay && styles.dayCard,
+              isRtl && styles.rtlBlock,
+            ]}
+          >
+            <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+              <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
+                <IconSymbol name="experience" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
+              </View>
+              <Text
+                style={[
+                  styles.mediaComfortTitle,
+                  isDay && styles.dayHeadingText,
+                  isRtl && styles.rtlText,
+                ]}
+              >
+                {vibeLabel}
+              </Text>
+            </View>
+            <Text
+              style={[
+                styles.mediaComfortCopy,
+                styles.humanMomentCopy,
+                isDay && styles.dayMutedText,
+                isRtl && styles.rtlText,
+              ]}
+            >
+              {tonightVibeCopy}
+            </Text>
+          </View>
+        ) : null}
+
+        {!isOnTheWayMode ? (
+          <View style={styles.eventAccordionStack}>
+            {isSectionVisible("whatToExpect")
+              ? renderAccordionSection(
+                  "whatToExpect",
+                  "What to expect",
+                  "The social feel, first few minutes, and how optional chat can stay.",
+                  "experience",
+                  <>
+                    <View style={styles.expectList}>
+                      {[
+                        {
+                          iconName: "low-pressure" as const,
+                          title: copy.lowPressure,
+                          copy: copy.lowPressureCopy,
+                        },
+                        {
+                          iconName: "experience" as const,
+                          title: copy.sharedExperience,
+                          copy: copy.sharedExperienceCopy,
+                        },
+                        {
+                          iconName: "flexible" as const,
+                          title: copy.flexible,
+                          copy: copy.flexibleCopy,
+                        },
+                      ].map((item) => (
+                        <View
+                          key={item.title}
                           style={[
-                            styles.questionText,
-                            isDay && styles.dayText,
+                            styles.expectRow,
+                            isDay && styles.dayDivider,
+                            isRtl && styles.rtlRow,
+                          ]}
+                        >
+                          <View style={[styles.expectRowIconWrap, isDay && styles.dayMetaIconWrap]}>
+                            <IconSymbol
+                              name={item.iconName}
+                              color={isDay ? "#53677A" : "#8FAFD1"}
+                              size={18}
+                            />
+                          </View>
+                          <View style={[styles.expectRowCopy, isRtl && styles.rtlBlock]}>
+                            <Text
+                              style={[
+                                styles.expectTitle,
+                                isDay && styles.dayHeadingText,
+                                isRtl && styles.rtlText,
+                              ]}
+                            >
+                              {item.title}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.expectCopy,
+                                isDay && styles.dayMutedText,
+                                isRtl && styles.rtlText,
+                              ]}
+                            >
+                              {item.copy}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                    <View
+                      style={[
+                        styles.reassuranceBlock,
+                        styles.soloArrivalCard,
+                        {
+                          backgroundColor: humanMomentPalette.backgroundColor,
+                          borderColor: humanMomentPalette.borderColor,
+                        },
+                        isRtl && styles.rtlBlock,
+                      ]}
+                    >
+                      <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                        <View
+                          style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}
+                        >
+                          <IconSymbol
+                            name="low-pressure"
+                            color={isDay ? "#53677A" : "#8FAFD1"}
+                            size={20}
+                          />
+                        </View>
+                        <Text
+                          style={[
+                            styles.mediaComfortTitle,
+                            isDay && styles.dayHeadingText,
                             isRtl && styles.rtlText,
                           ]}
                         >
-                          • {question}
+                          Imagine the first five minutes
                         </Text>
-                      ))}
-                      {event.preEventQuestions.map((question, index) => (
-                        <Text
-                          key={index}
-                          style={[
-                            styles.questionText,
-                            isDay && styles.dayText,
-                            isRtl && styles.rtlText,
-                          ]}
-                        >
-                          • {question}
-                        </Text>
-                      ))}
-                    </View>
-                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-                      {quickReplyOptions.map((reply) => (
-                        <TouchableOpacity
-                          key={reply}
-                          activeOpacity={0.82}
-                          onPress={() => setSelectedMeetupQuestion(reply)}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: selectedMeetupQuestion === reply }}
-                          accessibilityLabel={reply}
-                          style={[
-                            styles.meetupQuestionChip,
-                            isDay && styles.dayActionRow,
-                            selectedMeetupQuestion === reply && styles.meetupSupportChipActive,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.meetupQuestionText,
-                              isDay && styles.dayText,
-                              selectedMeetupQuestion === reply &&
-                                styles.meetupSupportChipTextActive,
-                              isRtl && styles.rtlText,
-                            ]}
-                          >
-                            {reply}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                <View
-                  style={[
-                    styles.meetupSupportPanel,
-                    isDay && styles.dayCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-                    <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                      <IconSymbol name="message" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                    </View>
-                    <View style={styles.weatherCopyBlock}>
+                      </View>
                       <Text
                         style={[
-                          styles.safetyTitle,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        Meetup clarity questions
-                      </Text>
-                      <Text
-                        style={[
-                          styles.safetyCopy,
+                          styles.mediaComfortCopy,
                           isDay && styles.dayMutedText,
                           isRtl && styles.rtlText,
                         ]}
                       >
-                        Demo question chips for clarity. For report, block, leave, or emergency
-                        help, use existing safety flows.
+                        {firstFiveMinutesCopy}
                       </Text>
                     </View>
-                  </View>
-                  {askAboutMeetupQuestionGroups.map((group) => (
-                    <View key={group.phase} style={styles.meetupQuestionGroup}>
-                      <Text
+                  </>,
+                )
+              : null}
+
+            {isSectionVisible("optionalConversation")
+              ? renderAccordionSection(
+                  "optionalConversation",
+                  "Optional conversation",
+                  "Gentle prompts and clarity questions only if they help.",
+                  "message",
+                  <>
+                    {event.preEventQuestions && event.preEventQuestions.length > 0 && (
+                      <View
                         style={[
-                          styles.meetupQuestionPhase,
-                          isDay && styles.dayMutedText,
-                          isRtl && styles.rtlText,
+                          styles.questionsPanel,
+                          isDay && styles.dayCard,
+                          isRtl && styles.rtlBlock,
                         ]}
                       >
-                        {group.title}
-                      </Text>
-                      <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
-                        {group.questions.map((question) => {
-                          const active = selectedMeetupQuestion === question;
-
-                          return (
-                            <TouchableOpacity
+                        <Text
+                          style={[
+                            styles.sectionTitle,
+                            isDay && styles.dayHeadingText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {copy.preEventQuestionsTitle}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.questionsCopy,
+                            isDay && styles.dayMutedText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {copy.preEventQuestionsCopy}
+                        </Text>
+                        <View style={styles.questionsList}>
+                          {conversationStarterPrompts.map((question) => (
+                            <Text
                               key={question}
+                              style={[
+                                styles.questionText,
+                                isDay && styles.dayText,
+                                isRtl && styles.rtlText,
+                              ]}
+                            >
+                              • {question}
+                            </Text>
+                          ))}
+                          {event.preEventQuestions.map((question, index) => (
+                            <Text
+                              key={index}
+                              style={[
+                                styles.questionText,
+                                isDay && styles.dayText,
+                                isRtl && styles.rtlText,
+                              ]}
+                            >
+                              • {question}
+                            </Text>
+                          ))}
+                        </View>
+                        <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                          {quickReplyOptions.map((reply) => (
+                            <TouchableOpacity
+                              key={reply}
                               activeOpacity={0.82}
-                              onPress={() => setSelectedMeetupQuestion(question)}
+                              onPress={() => setSelectedMeetupQuestion(reply)}
                               accessibilityRole="button"
-                              accessibilityState={{ selected: active }}
-                              accessibilityLabel={question}
+                              accessibilityState={{ selected: selectedMeetupQuestion === reply }}
+                              accessibilityLabel={reply}
                               style={[
                                 styles.meetupQuestionChip,
                                 isDay && styles.dayActionRow,
-                                active && styles.meetupSupportChipActive,
+                                selectedMeetupQuestion === reply && styles.meetupSupportChipActive,
+                                selectedMeetupQuestion === reply && selectedControlSurfaceStyle,
                               ]}
                             >
                               <Text
                                 style={[
                                   styles.meetupQuestionText,
                                   isDay && styles.dayText,
-                                  active && styles.meetupSupportChipTextActive,
+                                  selectedMeetupQuestion === reply &&
+                                    styles.meetupSupportChipTextActive,
+                                  selectedMeetupQuestion === reply && selectedControlTextStyle,
                                   isRtl && styles.rtlText,
                                 ]}
                               >
-                                {question}
+                                {reply}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+
+                    <View
+                      style={[
+                        styles.meetupSupportPanel,
+                        isDay && styles.dayCard,
+                        isRtl && styles.rtlBlock,
+                      ]}
+                    >
+                      <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+                        <View
+                          style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}
+                        >
+                          <IconSymbol
+                            name="message"
+                            color={isDay ? "#53677A" : "#8FAFD1"}
+                            size={20}
+                          />
+                        </View>
+                        <View style={styles.weatherCopyBlock}>
+                          <Text
+                            style={[
+                              styles.safetyTitle,
+                              isDay && styles.dayHeadingText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            Meetup clarity questions
+                          </Text>
+                          <Text
+                            style={[
+                              styles.safetyCopy,
+                              isDay && styles.dayMutedText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            Demo question chips for clarity. For report, block, leave, or emergency
+                            help, use existing safety flows.
+                          </Text>
+                        </View>
+                      </View>
+                      {askAboutMeetupQuestionGroups.map((group) => (
+                        <View key={group.phase} style={styles.meetupQuestionGroup}>
+                          <Text
+                            style={[
+                              styles.meetupQuestionPhase,
+                              isDay && styles.dayMutedText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {group.title}
+                          </Text>
+                          <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+                            {group.questions.map((question) => {
+                              const active = selectedMeetupQuestion === question;
+
+                              return (
+                                <TouchableOpacity
+                                  key={question}
+                                  activeOpacity={0.82}
+                                  onPress={() => setSelectedMeetupQuestion(question)}
+                                  accessibilityRole="button"
+                                  accessibilityState={{ selected: active }}
+                                  accessibilityLabel={question}
+                                  style={[
+                                    styles.meetupQuestionChip,
+                                    isDay && styles.dayActionRow,
+                                    active && styles.meetupSupportChipActive,
+                                    active && selectedControlSurfaceStyle,
+                                  ]}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.meetupQuestionText,
+                                      isDay && styles.dayText,
+                                      active && styles.meetupSupportChipTextActive,
+                                      active && selectedControlTextStyle,
+                                      isRtl && styles.rtlText,
+                                    ]}
+                                  >
+                                    {question}
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                        </View>
+                      ))}
+                      {selectedMeetupQuestion ? (
+                        <View style={[styles.meetupHelperResult, isDay && styles.dayActionRow]}>
+                          <Text
+                            style={[
+                              styles.safetyTitle,
+                              isDay && styles.dayHeadingText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            Demo helper selected
+                          </Text>
+                          <Text
+                            style={[
+                              styles.safetyCopy,
+                              isDay && styles.dayMutedText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {selectedMeetupQuestion}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </>,
+                )
+              : null}
+
+            {isSectionVisible("arrival")
+              ? renderAccordionSection(
+                  "arrival",
+                  "Finding the group",
+                  "Where to go first, what landmark to look for, and how to join at your pace.",
+                  "location",
+                  renderArrivalContent(viewMode),
+                )
+              : null}
+
+            {isSectionVisible("comfortPacing")
+              ? renderAccordionSection(
+                  "comfortPacing",
+                  "Comfort & pacing",
+                  "Ways to arrive, participate, pause, and be around photos.",
+                  "low-pressure",
+                  <>
+                    {event.trustProfile?.comfortTags.length ? (
+                      <View
+                        style={[
+                          styles.mediaComfortCard,
+                          isDay && styles.dayCard,
+                          isRtl && styles.rtlBlock,
+                        ]}
+                      >
+                        <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                          <View
+                            style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}
+                          >
+                            <IconSymbol
+                              name="sliders"
+                              color={isDay ? "#53677A" : "#8FAFD1"}
+                              size={20}
+                            />
+                          </View>
+                          <Text
+                            style={[
+                              styles.mediaComfortTitle,
+                              isDay && styles.dayHeadingText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            Comfort tags
+                          </Text>
+                        </View>
+                        <Text
+                          style={[
+                            styles.mediaComfortCopy,
+                            isDay && styles.dayMutedText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          Tags describe the meetup setting. They are not labels for people, and they
+                          can help you choose a calmer fit.
+                        </Text>
+                        <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                          {event.trustProfile.comfortTags.map((tag) => (
+                            <Text
+                              key={tag}
+                              style={[
+                                styles.mediaComfortChip,
+                                isDay && styles.dayMediaComfortChip,
+                                isRtl && styles.rtlText,
+                              ]}
+                            >
+                              {tag.replace(/-/g, " ")}
+                            </Text>
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
+
+                    {event.comfortLabels?.length ? (
+                      <View
+                        style={[
+                          styles.mediaComfortCard,
+                          isDay && styles.dayCard,
+                          isRtl && styles.rtlBlock,
+                        ]}
+                      >
+                        <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                          <View
+                            style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}
+                          >
+                            <IconSymbol
+                              name="info"
+                              color={isDay ? "#53677A" : "#8FAFD1"}
+                              size={20}
+                            />
+                          </View>
+                          <Text
+                            style={[
+                              styles.mediaComfortTitle,
+                              isDay && styles.dayHeadingText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            Meetup comfort & participation
+                          </Text>
+                        </View>
+                        <Text
+                          style={[
+                            styles.mediaComfortCopy,
+                            isDay && styles.dayMutedText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          Optional environment cues for joining at your own pace. Energetic and
+                          calmer styles can both belong here, and stepping away or rejoining is
+                          okay.
+                        </Text>
+                        <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                          {event.comfortLabels.map((label) => (
+                            <Text
+                              key={label}
+                              style={[
+                                styles.mediaComfortChip,
+                                isDay && styles.dayMediaComfortChip,
+                                isRtl && styles.rtlText,
+                              ]}
+                            >
+                              {label}
+                            </Text>
+                          ))}
+                        </View>
+                      </View>
+                    ) : null}
+
+                    <View
+                      style={[
+                        styles.mediaComfortCard,
+                        isDay && styles.dayCard,
+                        isRtl && styles.rtlBlock,
+                      ]}
+                    >
+                      <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
+                        <View
+                          style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}
+                        >
+                          <IconSymbol
+                            name="visibility"
+                            color={isDay ? "#53677A" : "#8FAFD1"}
+                            size={20}
+                          />
+                        </View>
+                        <Text
+                          style={[
+                            styles.mediaComfortTitle,
+                            isDay && styles.dayHeadingText,
+                            isRtl && styles.rtlText,
+                          ]}
+                        >
+                          {eventCommunityGuidelinesCopy.mediaTitle}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.mediaComfortCopy,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {eventCommunityGuidelinesCopy.mediaCopy}
+                      </Text>
+                      <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
+                        {mediaComfortLabels.map((label) => (
+                          <Text
+                            key={label}
+                            style={[
+                              styles.mediaComfortChip,
+                              isDay && styles.dayMediaComfortChip,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {label}
+                          </Text>
+                        ))}
+                      </View>
+                      <Text
+                        style={[
+                          styles.mediaComfortNote,
+                          isDay && styles.dayMutedText,
+                          isRtl && styles.rtlText,
+                        ]}
+                      >
+                        {eventCommunityGuidelinesCopy.mediaNote}
+                      </Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.meetupSupportPanel,
+                        isDay && styles.dayCard,
+                        isRtl && styles.rtlBlock,
+                      ]}
+                    >
+                      <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+                        <View
+                          style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}
+                        >
+                          <IconSymbol
+                            name="guide"
+                            color={isDay ? "#53677A" : "#8FAFD1"}
+                            size={20}
+                          />
+                        </View>
+                        <View style={styles.weatherCopyBlock}>
+                          <Text
+                            style={[
+                              styles.safetyTitle,
+                              isDay && styles.dayHeadingText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {eventCommunityGuidelinesCopy.firstMeetupSupportTitle}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.safetyCopy,
+                              isDay && styles.dayMutedText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {eventCommunityGuidelinesCopy.firstMeetupSupportCopy}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+                        {firstMeetupSupportOptions.map((option) => {
+                          const active = selectedFirstMeetupSupport.includes(option.label);
+
+                          return (
+                            <TouchableOpacity
+                              key={option.label}
+                              activeOpacity={0.82}
+                              onPress={() => toggleFirstMeetupSupportOption(option.label)}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: active }}
+                              accessibilityLabel={option.label}
+                              accessibilityHint={option.description}
+                              style={[
+                                styles.meetupSupportChip,
+                                isDay && styles.dayActionRow,
+                                active && styles.meetupSupportChipActive,
+                                active && selectedControlSurfaceStyle,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.meetupSupportChipText,
+                                  isDay && styles.dayText,
+                                  active && styles.meetupSupportChipTextActive,
+                                  active && selectedControlTextStyle,
+                                  isRtl && styles.rtlText,
+                                ]}
+                              >
+                                {option.label}
                               </Text>
                             </TouchableOpacity>
                           );
                         })}
                       </View>
-                    </View>
-                  ))}
-                  {selectedMeetupQuestion ? (
-                    <View style={[styles.meetupHelperResult, isDay && styles.dayActionRow]}>
                       <Text
                         style={[
-                          styles.safetyTitle,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        Demo helper selected
-                      </Text>
-                      <Text
-                        style={[
-                          styles.safetyCopy,
+                          styles.meetupSupportSummary,
                           isDay && styles.dayMutedText,
                           isRtl && styles.rtlText,
                         ]}
                       >
-                        {selectedMeetupQuestion}
+                        Current: {getFirstMeetupSupportSummary(selectedFirstMeetupSupport)}
                       </Text>
                     </View>
-                  ) : null}
-                </View>
-              </>,
-            )}
 
-            {renderAccordionSection(
-              "arrival",
-              "Arrival",
-              "Meeting point, weather, transport, and accessibility basics.",
-              "location",
-              <View
-                style={[
-                  styles.meetingPanel,
-                  isDay && styles.dayMeetingPanel,
-                  isRtl && styles.rtlBlock,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.meetingCopy,
-                    isDay && styles.dayMutedText,
-                    isRtl && styles.rtlText,
-                  ]}
-                >
-                  {eventMeetingCopy}
-                </Text>
-                <TouchableOpacity
-                  activeOpacity={0.86}
-                  style={[styles.weatherCard, isDay && styles.dayCard, isRtl && styles.rtlRow]}
-                >
-                  <View style={[styles.weatherIconWrap, isDay && styles.dayMetaIconWrap]}>
-                    <IconSymbol name="weather" color={isDay ? "#53677A" : "#8FAFD1"} size={24} />
-                  </View>
-                  <View style={[styles.weatherCopyBlock, isRtl && styles.rtlBlock]}>
-                    <Text
+                    <View
                       style={[
-                        styles.weatherTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
+                        styles.meetupSupportPanel,
+                        isDay && styles.dayCard,
+                        isRtl && styles.rtlBlock,
                       ]}
                     >
-                      {copy.weatherTitle}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.weatherCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {isMovieNight ? copy.weatherCopy : eventWeatherCopy}
-                    </Text>
-                    {eventWeatherFallbacks.length > 0 ? (
+                      <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
+                        <View
+                          style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}
+                        >
+                          <IconSymbol
+                            name="group"
+                            color={isDay ? "#53677A" : "#8FAFD1"}
+                            size={20}
+                          />
+                        </View>
+                        <View style={styles.weatherCopyBlock}>
+                          <Text
+                            style={[
+                              styles.safetyTitle,
+                              isDay && styles.dayHeadingText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {eventCommunityGuidelinesCopy.comfortRolesTitle}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.safetyCopy,
+                              isDay && styles.dayMutedText,
+                              isRtl && styles.rtlText,
+                            ]}
+                          >
+                            {eventCommunityGuidelinesCopy.comfortRolesCopy}
+                          </Text>
+                        </View>
+                      </View>
+                      <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
+                        {meetupComfortRoleOptions.map((option) => {
+                          const active = selectedComfortRoles.includes(option.label);
+
+                          return (
+                            <TouchableOpacity
+                              key={option.label}
+                              activeOpacity={0.82}
+                              onPress={() => toggleComfortRole(option.label)}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: active }}
+                              accessibilityLabel={option.label}
+                              accessibilityHint={option.description}
+                              style={[
+                                styles.meetupSupportChip,
+                                isDay && styles.dayActionRow,
+                                active && styles.meetupSupportChipActive,
+                                active && selectedControlSurfaceStyle,
+                              ]}
+                            >
+                              <Text
+                                style={[
+                                  styles.meetupSupportChipText,
+                                  isDay && styles.dayText,
+                                  active && styles.meetupSupportChipTextActive,
+                                  active && selectedControlTextStyle,
+                                  isRtl && styles.rtlText,
+                                ]}
+                              >
+                                {option.label}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
                       <Text
                         style={[
-                          styles.weatherCopy,
-                          styles.weatherFallbackCopy,
+                          styles.meetupSupportSummary,
                           isDay && styles.dayMutedText,
                           isRtl && styles.rtlText,
                         ]}
                       >
-                        Backup idea: {eventWeatherFallbacks.slice(0, 2).join(", ")}.
-                      </Text>
-                    ) : null}
-                  </View>
-                </TouchableOpacity>
-                <View
-                  style={[
-                    styles.meetupSupportPanel,
-                    styles.guidancePanelTight,
-                    isDay && styles.dayCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-                    <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                      <IconSymbol
-                        name="clipboard"
-                        color={isDay ? "#53677A" : "#8FAFD1"}
-                        size={20}
-                      />
-                    </View>
-                    <View style={styles.weatherCopyBlock}>
-                      <Text
-                        style={[
-                          styles.safetyTitle,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        Transport & accessibility
-                      </Text>
-                      <Text
-                        style={[
-                          styles.safetyCopy,
-                          isDay && styles.dayMutedText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        Check the venue, transit, parking, lifts, and any route disruption before
-                        leaving. These are planning notes only, not live updates.
+                        Current:{" "}
+                        {selectedComfortRoles.length
+                          ? selectedComfortRoles.join(", ")
+                          : "None selected"}
                       </Text>
                     </View>
-                  </View>
-                  <View style={styles.practicalGuidanceList}>
-                    {practicalMeetupGuidanceItems.slice(0, 2).map((item) => (
+                  </>,
+                )
+              : null}
+
+            {isSectionVisible("safetyBoundaries")
+              ? renderAccordionSection(
+                  "safetyBoundaries",
+                  eventCommunityGuidelinesCopy.sectionTitle,
+                  eventCommunityGuidelinesCopy.sectionSummary,
+                  "shield",
+                  <View
+                    style={[
+                      styles.guidanceList,
+                      isDay && styles.dayArrivalList,
+                      isRtl && styles.rtlBlock,
+                    ]}
+                  >
+                    {[
+                      { title: copy.softExitTitle, copy: copy.softExitCopy },
+                      {
+                        title: eventCommunityGuidelinesCopy.mismatchTitle,
+                        copy: eventCommunityGuidelinesCopy.mismatchCopy,
+                      },
+                      {
+                        title: eventCommunityGuidelinesCopy.reportsTitle,
+                        copy: eventCommunityGuidelinesCopy.reportsCopy,
+                      },
+                    ].map((item, index, items) => (
                       <View
-                        key={item.label}
-                        style={[styles.practicalGuidanceRow, isDay && styles.dayActionRow]}
+                        key={item.title}
+                        style={[
+                          styles.guidanceRow,
+                          index < items.length - 1 && styles.arrivalListRowBorder,
+                          isDay && index < items.length - 1 && styles.dayDivider,
+                        ]}
                       >
                         <Text
                           style={[
-                            styles.meetupSupportChipText,
-                            isDay && styles.dayText,
+                            styles.guidanceTitle,
+                            isDay && styles.dayHeadingText,
                             isRtl && styles.rtlText,
                           ]}
                         >
-                          {item.label}
+                          {item.title}
                         </Text>
                         <Text
                           style={[
-                            styles.safetyCopy,
+                            styles.guidanceCopy,
                             isDay && styles.dayMutedText,
                             isRtl && styles.rtlText,
                           ]}
@@ -2598,991 +4120,22 @@ export default function EventDetailsScreen() {
                         </Text>
                       </View>
                     ))}
-                  </View>
-                </View>
-                {event.trustProfile ? (
-                  <View
-                    style={[
-                      styles.mediaComfortCard,
-                      isDay && styles.dayCard,
-                      isRtl && styles.rtlBlock,
-                    ]}
-                  >
-                    <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-                      <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                        <IconSymbol name="shield" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                      </View>
-                      <Text
-                        style={[
-                          styles.mediaComfortTitle,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        Host & venue preview
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.mediaComfortCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {eventTrustSummary}. Host preview: {event.trustProfile.host.displayName}.
-                      Venue type: {event.trustProfile.venueType.replace("-", " ")}.
-                    </Text>
-                  </View>
-                ) : null}
-                <View
-                  style={[
-                    styles.arrivalPreviewSummaryCard,
-                    isDay && styles.dayArrivalPreviewSummaryCard,
-                  ]}
-                >
-                  <View style={[styles.arrivalPreviewKickerRow, isRtl && styles.rtlRow]}>
-                    <IconSymbol name="location" color={isDay ? "#284E92" : "#B7CFFF"} size={15} />
-                    <Text
-                      style={[
-                        styles.arrivalPreviewKicker,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Approximate meetup area
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.arrivalPreviewArea,
-                      isDay && styles.dayHeadingText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {arrivalPreview.approximateArea}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.arrivalPreviewSummary,
-                      isDay && styles.dayMutedText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {arrivalPreview.arrivalSummary}
-                  </Text>
-                </View>
-                <View style={[styles.arrivalPreviewDetailGrid, isRtl && styles.rtlRow]}>
-                  {[
-                    {
-                      icon: "guide" as const,
-                      label: "Nearby landmark",
-                      value: arrivalPreview.nearbyLandmark,
-                    },
-                    {
-                      icon: "clipboard" as const,
-                      label: "Meeting point",
-                      value: arrivalPreview.meetingPointHint,
-                    },
-                  ].map((item) => (
-                    <View
-                      key={item.label}
-                      style={[
-                        styles.arrivalPreviewDetailCard,
-                        isDay && styles.dayArrivalPreviewDetailCard,
-                      ]}
-                    >
-                      <View style={[styles.arrivalPreviewKickerRow, isRtl && styles.rtlRow]}>
-                        <IconSymbol
-                          name={item.icon}
-                          color={isDay ? "#284E92" : "#B7CFFF"}
-                          size={14}
-                        />
-                        <Text
-                          style={[
-                            styles.arrivalPreviewDetailLabel,
-                            isDay && styles.dayMutedText,
-                            isRtl && styles.rtlText,
-                          ]}
-                        >
-                          {item.label}
-                        </Text>
-                      </View>
-                      <Text
-                        style={[
-                          styles.arrivalPreviewDetailValue,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        {item.value}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-                {event.arrivalConfidenceNotes?.length ? (
-                  <View style={[styles.arrivalConfidenceBlock, isRtl && styles.rtlBlock]}>
-                    <Text
-                      style={[
-                        styles.mediaComfortTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Arrival & transport confidence
-                    </Text>
-                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-                      {(arrivalPreview.confidenceNotes.length
-                        ? arrivalPreview.confidenceNotes
-                        : event.arrivalConfidenceNotes
-                      ).map((note) => (
-                        <Text
-                          key={note}
-                          style={[
-                            styles.mediaComfortChip,
-                            isDay && styles.dayMediaComfortChip,
-                            isRtl && styles.rtlText,
-                          ]}
-                        >
-                          {note}
-                        </Text>
-                      ))}
-                    </View>
-                    <Text
-                      style={[
-                        styles.mediaComfortNote,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Prototype notes only; check venue details before leaving.
-                    </Text>
-                  </View>
-                ) : null}
-                <View style={[styles.arrivalFamiliarityBlock, isRtl && styles.rtlBlock]}>
-                  <Text
-                    style={[
-                      styles.mediaComfortTitle,
-                      isDay && styles.dayHeadingText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    Venue familiarity preview
-                  </Text>
-                  <View style={[styles.arrivalFamiliarityGrid, isRtl && styles.rtlRow]}>
-                    {(arrivalPreview.venuePreviewImages?.length
-                      ? arrivalPreview.venuePreviewImages
-                      : [
-                          {
-                            kind: "venue" as const,
-                            title: "Venue preview",
-                            caption: "No demo image is attached yet.",
-                            placeholderIcon: "location",
-                          },
-                        ]
-                    ).map((image) => {
-                      const imageSource = image.imageKey
-                        ? arrivalPreviewImageSources[image.imageKey]
-                        : undefined;
-
-                      return (
-                        <View
-                          key={`${image.kind}-${image.title}`}
-                          style={[
-                            styles.arrivalFamiliarityCard,
-                            isDay && styles.dayArrivalFamiliarityCard,
-                          ]}
-                        >
-                          {imageSource ? (
-                            <Image source={imageSource} style={styles.arrivalFamiliarityImage} />
-                          ) : (
-                            <View
-                              style={[
-                                styles.arrivalFamiliarityPlaceholder,
-                                isDay && styles.dayArrivalFamiliarityPlaceholder,
-                              ]}
-                            >
-                              <IconSymbol
-                                name="location"
-                                color={isDay ? "#5B6D8E" : "#B7CFFF"}
-                                size={18}
-                              />
-                              <Text
-                                style={[
-                                  styles.arrivalFamiliarityPlaceholderText,
-                                  isDay && styles.dayMutedText,
-                                ]}
-                              >
-                                Preview coming soon
-                              </Text>
-                            </View>
-                          )}
-                          <View style={styles.arrivalFamiliarityText}>
-                            <Text
-                              style={[
-                                styles.arrivalFamiliarityTitle,
-                                isDay && styles.dayHeadingText,
-                                isRtl && styles.rtlText,
-                              ]}
-                            >
-                              {image.title}
-                            </Text>
-                            <Text
-                              style={[
-                                styles.arrivalFamiliarityCaption,
-                                isDay && styles.dayMutedText,
-                                isRtl && styles.rtlText,
-                              ]}
-                            >
-                              {image.caption}
-                            </Text>
-                          </View>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-                <Text
-                  style={[
-                    styles.meetingCopy,
-                    styles.meetingPrivacyCopy,
-                    isDay && styles.dayMutedText,
-                    isRtl && styles.rtlText,
-                  ]}
-                >
-                  NSN uses broad local area details here. This preview is for arrival comfort and
-                  does not show participant locations or live mapping.
-                </Text>
-              </View>,
-            )}
-
-            {renderAccordionSection(
-              "comfortPacing",
-              "Comfort & pacing",
-              "Ways to arrive, participate, pause, and be around photos.",
-              "low-pressure",
-              <>
-                {event.trustProfile?.comfortTags.length ? (
-                  <View
-                    style={[
-                      styles.mediaComfortCard,
-                      isDay && styles.dayCard,
-                      isRtl && styles.rtlBlock,
-                    ]}
-                  >
-                    <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-                      <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                        <IconSymbol
-                          name="sliders"
-                          color={isDay ? "#53677A" : "#8FAFD1"}
-                          size={20}
-                        />
-                      </View>
-                      <Text
-                        style={[
-                          styles.mediaComfortTitle,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        Comfort tags
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.mediaComfortCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Tags describe the meetup setting. They are not labels for people, and they can
-                      help you choose a calmer fit.
-                    </Text>
-                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-                      {event.trustProfile.comfortTags.map((tag) => (
-                        <Text
-                          key={tag}
-                          style={[
-                            styles.mediaComfortChip,
-                            isDay && styles.dayMediaComfortChip,
-                            isRtl && styles.rtlText,
-                          ]}
-                        >
-                          {tag.replace(/-/g, " ")}
-                        </Text>
-                      ))}
-                    </View>
-                  </View>
-                ) : null}
-
-                {event.comfortLabels?.length ? (
-                  <View
-                    style={[
-                      styles.mediaComfortCard,
-                      isDay && styles.dayCard,
-                      isRtl && styles.rtlBlock,
-                    ]}
-                  >
-                    <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-                      <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                        <IconSymbol name="info" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                      </View>
-                      <Text
-                        style={[
-                          styles.mediaComfortTitle,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        Meetup comfort & participation
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.mediaComfortCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Optional environment cues for joining at your own pace. Energetic and calmer
-                      styles can both belong here, and stepping away or rejoining is okay.
-                    </Text>
-                    <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-                      {event.comfortLabels.map((label) => (
-                        <Text
-                          key={label}
-                          style={[
-                            styles.mediaComfortChip,
-                            isDay && styles.dayMediaComfortChip,
-                            isRtl && styles.rtlText,
-                          ]}
-                        >
-                          {label}
-                        </Text>
-                      ))}
-                    </View>
-                  </View>
-                ) : null}
-
-                <View
-                  style={[
-                    styles.mediaComfortCard,
-                    isDay && styles.dayCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <View style={[styles.mediaComfortHeader, isRtl && styles.rtlRow]}>
-                    <View style={[styles.mediaComfortIconWrap, isDay && styles.dayMetaIconWrap]}>
-                      <IconSymbol
-                        name="visibility"
-                        color={isDay ? "#53677A" : "#8FAFD1"}
-                        size={20}
-                      />
-                    </View>
-                    <Text
-                      style={[
-                        styles.mediaComfortTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {eventCommunityGuidelinesCopy.mediaTitle}
-                    </Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.mediaComfortCopy,
-                      isDay && styles.dayMutedText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {eventCommunityGuidelinesCopy.mediaCopy}
-                  </Text>
-                  <View style={[styles.mediaComfortChipRow, isRtl && styles.rtlRow]}>
-                    {mediaComfortLabels.map((label) => (
-                      <Text
-                        key={label}
-                        style={[
-                          styles.mediaComfortChip,
-                          isDay && styles.dayMediaComfortChip,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        {label}
-                      </Text>
-                    ))}
-                  </View>
-                  <Text
-                    style={[
-                      styles.mediaComfortNote,
-                      isDay && styles.dayMutedText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {eventCommunityGuidelinesCopy.mediaNote}
-                  </Text>
-                </View>
-
-                <View
-                  style={[
-                    styles.meetupSupportPanel,
-                    isDay && styles.dayCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-                    <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                      <IconSymbol name="guide" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                    </View>
-                    <View style={styles.weatherCopyBlock}>
-                      <Text
-                        style={[
-                          styles.safetyTitle,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        {eventCommunityGuidelinesCopy.firstMeetupSupportTitle}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.safetyCopy,
-                          isDay && styles.dayMutedText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        {eventCommunityGuidelinesCopy.firstMeetupSupportCopy}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
-                    {firstMeetupSupportOptions.map((option) => {
-                      const active = selectedFirstMeetupSupport.includes(option.label);
-
-                      return (
-                        <TouchableOpacity
-                          key={option.label}
-                          activeOpacity={0.82}
-                          onPress={() => toggleFirstMeetupSupportOption(option.label)}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: active }}
-                          accessibilityLabel={option.label}
-                          accessibilityHint={option.description}
-                          style={[
-                            styles.meetupSupportChip,
-                            isDay && styles.dayActionRow,
-                            active && styles.meetupSupportChipActive,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.meetupSupportChipText,
-                              isDay && styles.dayText,
-                              active && styles.meetupSupportChipTextActive,
-                              isRtl && styles.rtlText,
-                            ]}
-                          >
-                            {option.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                  <Text
-                    style={[
-                      styles.meetupSupportSummary,
-                      isDay && styles.dayMutedText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    Current: {getFirstMeetupSupportSummary(selectedFirstMeetupSupport)}
-                  </Text>
-                </View>
-
-                <View
-                  style={[
-                    styles.meetupSupportPanel,
-                    isDay && styles.dayCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <View style={[styles.meetupSupportHeader, isRtl && styles.rtlRow]}>
-                    <View style={[styles.meetupSupportIconWrap, isDay && styles.dayMetaIconWrap]}>
-                      <IconSymbol name="group" color={isDay ? "#53677A" : "#8FAFD1"} size={20} />
-                    </View>
-                    <View style={styles.weatherCopyBlock}>
-                      <Text
-                        style={[
-                          styles.safetyTitle,
-                          isDay && styles.dayHeadingText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        {eventCommunityGuidelinesCopy.comfortRolesTitle}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.safetyCopy,
-                          isDay && styles.dayMutedText,
-                          isRtl && styles.rtlText,
-                        ]}
-                      >
-                        {eventCommunityGuidelinesCopy.comfortRolesCopy}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={[styles.meetupSupportChipRow, isRtl && styles.rtlRow]}>
-                    {meetupComfortRoleOptions.map((option) => {
-                      const active = selectedComfortRoles.includes(option.label);
-
-                      return (
-                        <TouchableOpacity
-                          key={option.label}
-                          activeOpacity={0.82}
-                          onPress={() => toggleComfortRole(option.label)}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected: active }}
-                          accessibilityLabel={option.label}
-                          accessibilityHint={option.description}
-                          style={[
-                            styles.meetupSupportChip,
-                            isDay && styles.dayActionRow,
-                            active && styles.meetupSupportChipActive,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.meetupSupportChipText,
-                              isDay && styles.dayText,
-                              active && styles.meetupSupportChipTextActive,
-                              isRtl && styles.rtlText,
-                            ]}
-                          >
-                            {option.label}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                  <Text
-                    style={[
-                      styles.meetupSupportSummary,
-                      isDay && styles.dayMutedText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    Current:{" "}
-                    {selectedComfortRoles.length
-                      ? selectedComfortRoles.join(", ")
-                      : "None selected"}
-                  </Text>
-                </View>
-              </>,
-            )}
-
-            {renderAccordionSection(
-              "safetyBoundaries",
-              eventCommunityGuidelinesCopy.sectionTitle,
-              eventCommunityGuidelinesCopy.sectionSummary,
-              "shield",
-              <>
-                <View
-                  style={[
-                    styles.softExitCard,
-                    isDay && styles.daySoftExitCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.softExitTitle,
-                      isDay && styles.dayHeadingText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {copy.softExitTitle}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.softExitCopy,
-                      isDay && styles.dayMutedText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {copy.softExitCopy}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.softExitCard,
-                    isDay && styles.daySoftExitCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.softExitTitle,
-                      isDay && styles.dayHeadingText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {eventCommunityGuidelinesCopy.mismatchTitle}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.softExitCopy,
-                      isDay && styles.dayMutedText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {eventCommunityGuidelinesCopy.mismatchCopy}
-                  </Text>
-                </View>
-                <View
-                  style={[
-                    styles.softExitCard,
-                    isDay && styles.daySoftExitCard,
-                    isRtl && styles.rtlBlock,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.softExitTitle,
-                      isDay && styles.dayHeadingText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {eventCommunityGuidelinesCopy.reportsTitle}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.softExitCopy,
-                      isDay && styles.dayMutedText,
-                      isRtl && styles.rtlText,
-                    ]}
-                  >
-                    {eventCommunityGuidelinesCopy.reportsCopy}
-                  </Text>
-                </View>
-              </>,
-            )}
+                  </View>,
+                )
+              : null}
           </View>
-        ) : null}
+        ) : (
+          <View style={styles.eventAccordionStack}>{renderOnTheWayPanel()}</View>
+        )}
 
-        <View style={[styles.rsvpPanel, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
-            <Text
-              style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
-            >
-              Local RSVP preview
-            </Text>
-            <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>
-              {getRsvpLabel(membership.status)}
-            </Text>
-          </View>
-          <Text style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            Prototype only: this RSVP is saved locally on this device. It does not reserve a real
-            spot, message anyone, or change the meetup plan.
-          </Text>
-          <Text
-            style={[styles.rsvpDescription, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
-          >
-            {getRsvpDescription(membership.status)}
-          </Text>
-          <View style={styles.rsvpActions}>
-            {rsvpChoices.map((choice) => {
-              const active =
-                choice.status === membership.status ||
-                (choice.status === "going" && membership.status === "joined");
-
-              return (
-                <TouchableOpacity
-                  key={choice.status}
-                  activeOpacity={0.82}
-                  onPress={() => saveRsvpStatus(choice.status)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  style={[
-                    styles.rsvpChoice,
-                    isDay && styles.dayActionRow,
-                    active && styles.rsvpChoiceActive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.rsvpChoiceText,
-                      isDay && styles.dayText,
-                      active && styles.rsvpChoiceTextActive,
-                    ]}
-                  >
-                    {choice.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-          <View style={styles.attendTogetherBlock}>
-            <Text
-              style={[styles.safetyTitle, isDay && styles.dayHeadingText, isRtl && styles.rtlText]}
-            >
-              You do not have to walk in alone
-            </Text>
-            <Text
-              style={[styles.safetyCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}
-            >
-              Bring a friend, sibling, partner, parent, or support person. They do not need to be on
-              NSN for this local prototype note.
-            </Text>
-            <View style={styles.rsvpActions}>
-              {attendTogetherChoices.map((choice) => {
-                const active = choice === attendTogetherStatus;
-
-                return (
-                  <TouchableOpacity
-                    key={choice}
-                    activeOpacity={0.82}
-                    onPress={() => saveAttendTogetherStatus(choice)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: active }}
-                    style={[
-                      styles.rsvpChoice,
-                      isDay && styles.dayActionRow,
-                      active && styles.rsvpChoiceActive,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.rsvpChoiceText,
-                        isDay && styles.dayText,
-                        active && styles.rsvpChoiceTextActive,
-                      ]}
-                    >
-                      {getAttendTogetherLabel(choice)}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            <Text
-              style={[
-                styles.rsvpDescription,
-                isDay && styles.dayMutedText,
-                isRtl && styles.rtlText,
-              ]}
-            >
-              {getAttendTogetherDescription(attendTogetherStatus)}
-            </Text>
-          </View>
-        </View>
-
-        <View style={[styles.eventAccordion, isDay && styles.dayCard, isRtl && styles.rtlBlock]}>
-          <TouchableOpacity
-            activeOpacity={0.82}
-            onPress={() => setIsReadinessToolsOpen((current) => !current)}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: isReadinessToolsOpen }}
-            accessibilityLabel={`${isReadinessToolsOpen ? "Collapse" : "Expand"} readiness tools`}
-            style={[styles.eventAccordionHeader, isRtl && styles.rtlRow]}
-          >
-            <View style={[styles.eventAccordionTitleRow, isRtl && styles.rtlRow]}>
-              <View style={[styles.eventAccordionIconWrap, isDay && styles.dayMetaIconWrap]}>
-                <IconSymbol name="guide" color={isDay ? "#53677A" : "#8FAFD1"} size={18} />
-              </View>
-              <View style={styles.eventAccordionTitleBlock}>
-                <Text
-                  style={[
-                    styles.eventAccordionTitle,
-                    isDay && styles.dayHeadingText,
-                    isRtl && styles.rtlText,
-                  ]}
-                >
-                  Readiness tools
-                </Text>
-                <Text
-                  style={[
-                    styles.eventAccordionSummary,
-                    isDay && styles.dayMutedText,
-                    isRtl && styles.rtlText,
-                  ]}
-                >
-                  Optional planning, support, and quiet-exit controls.
-                </Text>
-              </View>
-            </View>
-            <IconSymbol
-              name={isReadinessToolsOpen ? "chevron.up" : "chevron.down"}
-              color={isDay ? "#53677A" : nsnColors.muted}
-              size={18}
-            />
-          </TouchableOpacity>
-          {isReadinessToolsOpen ? (
-            <View style={styles.eventAccordionBody}>
-              <View style={[styles.readinessPanel, isRtl && styles.rtlBlock]}>
-                <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
-                  <View style={styles.readinessHeaderCopy}>
-                    <Text
-                      style={[
-                        styles.safetyTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Pre-meetup readiness
-                    </Text>
-                    <Text
-                      style={[
-                        styles.safetyCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Local-only checklist for feeling prepared. It does not reserve a spot, contact
-                      a host, or connect live support.
-                    </Text>
-                  </View>
-                  <Text style={[styles.rsvpStatusChip, isDay && styles.dayVerificationChip]}>
-                    Prototype
-                  </Text>
-                </View>
-                <View style={styles.readinessList}>
-                  {meetupReadinessItems.map((item) => {
-                    const itemCopy =
-                      item.id === "meeting-point"
-                        ? `${item.copy} Venue reminder: ${event.venue}.`
-                        : item.id === "host-note" && event.trustProfile
-                          ? `${item.copy} Host preview: ${event.trustProfile.host.displayName}.`
-                          : item.id === "backup" && eventWeatherFallbacks.length
-                            ? `${item.copy} Nearby ideas: ${eventWeatherFallbacks.slice(0, 2).join(", ")}.`
-                            : item.copy;
-
-                    return (
-                      <View
-                        key={item.id}
-                        style={[
-                          styles.readinessRow,
-                          isDay && styles.dayActionRow,
-                          isRtl && styles.rtlRow,
-                        ]}
-                      >
-                        <View style={[styles.readinessIconWrap, isDay && styles.dayMetaIconWrap]}>
-                          <IconSymbol
-                            name={item.iconName}
-                            color={isDay ? "#53677A" : "#8FAFD1"}
-                            size={17}
-                          />
-                        </View>
-                        <View style={[styles.readinessCopyBlock, isRtl && styles.rtlBlock]}>
-                          <Text
-                            style={[
-                              styles.readinessTitle,
-                              isDay && styles.dayHeadingText,
-                              isRtl && styles.rtlText,
-                            ]}
-                          >
-                            {item.title}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.readinessCopy,
-                              isDay && styles.dayMutedText,
-                              isRtl && styles.rtlText,
-                            ]}
-                          >
-                            {itemCopy}
-                          </Text>
-                        </View>
-                      </View>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View style={[styles.optOutPanel, isRtl && styles.rtlBlock]}>
-                <View style={[styles.safetyHeader, isRtl && styles.rtlRow]}>
-                  <View style={styles.readinessHeaderCopy}>
-                    <Text
-                      style={[
-                        styles.safetyTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Change your mind
-                    </Text>
-                    <Text
-                      style={[
-                        styles.safetyCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      Skip, leave, hide, or choose a calmer option without a public explanation.
-                      These actions stay local to this prototype.
-                    </Text>
-                  </View>
-                </View>
-                <View style={[styles.optOutActions, isRtl && styles.rtlRow]}>
-                  {meetupOptOutActions.map((action) => {
-                    const active = selectedOptOutAction?.id === action.id;
-
-                    return (
-                      <TouchableOpacity
-                        key={action.id}
-                        activeOpacity={0.82}
-                        onPress={() => handleOptOutAction(action)}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: active }}
-                        accessibilityLabel={action.label}
-                        accessibilityHint={action.copy}
-                        style={[
-                          styles.optOutChoice,
-                          isDay && styles.dayActionRow,
-                          active && styles.meetupSupportChipActive,
-                        ]}
-                      >
-                        <IconSymbol
-                          name={action.iconName}
-                          color={active ? "#FFFFFF" : isDay ? "#53677A" : nsnColors.muted}
-                          size={15}
-                        />
-                        <Text
-                          style={[
-                            styles.optOutChoiceText,
-                            isDay && styles.dayText,
-                            active && styles.meetupSupportChipTextActive,
-                            isRtl && styles.rtlText,
-                          ]}
-                        >
-                          {action.label}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-                {selectedOptOutAction ? (
-                  <View style={[styles.optOutResult, isDay && styles.dayActionRow]}>
-                    <Text
-                      style={[
-                        styles.readinessTitle,
-                        isDay && styles.dayHeadingText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {selectedOptOutAction.label}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.readinessCopy,
-                        isDay && styles.dayMutedText,
-                        isRtl && styles.rtlText,
-                      ]}
-                    >
-                      {selectedOptOutAction.result}
-                    </Text>
-                  </View>
-                ) : null}
-              </View>
-            </View>
-          ) : null}
+        <View style={styles.eventAccordionStack}>
+          {supportBlockOrder.map((blockId) =>
+            blockId === "planningTools" ? (
+              <View key={blockId}>{renderPlanningToolsPanel()}</View>
+            ) : (
+              <View key={blockId}>{renderRsvpPanel()}</View>
+            ),
+          )}
         </View>
 
         <Text
@@ -3814,6 +4367,61 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   closeActionText: { ...nsnActionTextStyles.primary, fontSize: 14, lineHeight: 20 },
+  heroImageModalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(2,8,20,0.96)",
+    paddingHorizontal: 18,
+    paddingTop: 18,
+    paddingBottom: 24,
+  },
+  heroImageModalTopBar: {
+    minHeight: 48,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 12,
+  },
+  heroImageModalCloseButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(199,176,122,0.68)",
+  },
+  heroImageModalTitle: {
+    flex: 1,
+    color: nsnColors.text,
+    fontSize: 17,
+    fontWeight: "900",
+    lineHeight: 23,
+  },
+  heroImageModalImageFrame: {
+    flex: 1,
+    borderRadius: 24,
+    overflow: "hidden",
+    backgroundColor: "#050B14",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+  },
+  heroImageModalImage: { width: "100%", height: "100%" },
+  heroImageInnerOutline: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 2,
+    borderRadius: 24,
+  },
+  heroImageModalReturnButton: {
+    ...nsnActionButtonStyles.primary,
+    minHeight: 48,
+    marginTop: 14,
+  },
+  heroImageModalReturnText: {
+    ...nsnActionTextStyles.primary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
   verificationList: { gap: 8 },
   verificationRow: {
     minHeight: 56,
@@ -3885,15 +4493,36 @@ const styles = StyleSheet.create({
   },
   eventHeroImageFrame: {
     width: "100%",
-    height: 190,
+    height: 330,
     borderRadius: 24,
     overflow: "hidden",
     marginBottom: 18,
-    backgroundColor: "#102743",
+    backgroundColor: "#07111F",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
   },
+  dayEventHeroImageFrame: { backgroundColor: "#F7FAFC", borderColor: "#D7E0EA" },
+  eventHeroImageFrameHovered: {
+    borderColor: "rgba(247,200,91,0.9)",
+    shadowColor: "#F7C85B",
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+  },
   eventHeroImage: { width: "100%", height: "100%" },
+  eventHeroImageExpandCue: {
+    position: "absolute",
+    right: 14,
+    top: 14,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(2,8,20,0.64)",
+    borderWidth: 1,
+    borderColor: "rgba(247,200,91,0.68)",
+  },
   eventHeroImageBadge: {
     position: "absolute",
     left: 14,
@@ -4012,6 +4641,17 @@ const styles = StyleSheet.create({
     borderColor: "rgba(148,163,184,0.18)",
   },
   metaLine: { flex: 1, color: nsnColors.text, fontSize: 14, lineHeight: 20 },
+  metaRowActionHovered: { backgroundColor: "rgba(199,176,122,0.055)" },
+  metaActionIconWrap: {
+    width: 31,
+    height: 31,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dayMetaActionIconWrap: { borderColor: "transparent" },
   description: { color: nsnColors.text, fontSize: 15, lineHeight: 23, marginBottom: 14 },
   quickReferenceSection: { marginBottom: 18 },
   quickReferenceHeader: { marginBottom: 9 },
@@ -4033,7 +4673,7 @@ const styles = StyleSheet.create({
   quickReferenceCard: {
     flexGrow: 1,
     flexBasis: 190,
-    minHeight: 86,
+    minHeight: 82,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: nsnColors.border,
@@ -4041,6 +4681,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 11,
     gap: 4,
+    overflow: "hidden",
   },
   quickReferenceCardHeader: { flexDirection: "row", alignItems: "center", gap: 7 },
   quickReferenceCardTitle: {
@@ -4050,7 +4691,58 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   quickReferenceCardCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
+  humanMomentCard: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "rgba(124,170,201,0.34)",
+    backgroundColor: "rgba(124,170,201,0.08)",
+    padding: 14,
+    gap: 8,
+    marginBottom: 16,
+  },
+  tonightVibeCard: { marginTop: -2 },
+  humanMomentCopy: { fontSize: 13, lineHeight: 20 },
+  viewModePanel: { marginBottom: 16, gap: 8 },
+  viewModeRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  viewModeChip: {
+    minHeight: 38,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  viewModeChipActive: {
+    borderColor: "#6FA8FF",
+    backgroundColor: "rgba(47,128,237,0.2)",
+  },
+  viewModeChipText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  viewModeChipTextActive: { color: "#EAF3FF" },
+  viewModeHelper: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   eventAccordionStack: { gap: 13, marginBottom: 18 },
+  onTheWayPanel: {
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "rgba(99,179,255,0.28)",
+    backgroundColor: "rgba(12,26,43,0.96)",
+    padding: 14,
+    gap: 11,
+  },
+  onTheWayMetaGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
+  onTheWayMetaCard: {
+    flexGrow: 1,
+    flexBasis: 160,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+    gap: 4,
+  },
   eventAccordion: {
     borderRadius: 17,
     borderWidth: 1,
@@ -4182,6 +4874,10 @@ const styles = StyleSheet.create({
   dayMediaComfortChip: { color: "#445E93", borderColor: "#9AADE8", backgroundColor: "#EDF2FF" },
   mediaComfortNote: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, fontWeight: "700" },
   soloArrivalCard: { borderColor: "rgba(168, 183, 218, 0.38)", backgroundColor: "#101F34" },
+  findingGroupCard: {
+    borderColor: "rgba(124,170,201,0.34)",
+    backgroundColor: "rgba(124,170,201,0.08)",
+  },
   sectionTitle: {
     color: nsnColors.text,
     fontSize: 16,
@@ -4190,6 +4886,27 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   expectGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 16 },
+  expectList: { gap: 0, marginBottom: 12 },
+  expectRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(148,163,184,0.14)",
+  },
+  expectRowIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.18)",
+    flexShrink: 0,
+  },
+  expectRowCopy: { flex: 1, minWidth: 0, gap: 2 },
   expectCard: {
     width: "48%",
     minHeight: 82,
@@ -4209,6 +4926,25 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 18,
   },
+  meetingPanelCompact: {
+    borderTopWidth: 0,
+    paddingTop: 0,
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  arrivalLeadCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(99,179,255,0.34)",
+    backgroundColor: "rgba(99,179,255,0.08)",
+    padding: 13,
+    gap: 5,
+    marginTop: 12,
+  },
+  arrivalLeadCardCompact: { marginTop: 0 },
+  dayArrivalLeadCard: { borderColor: "#AFC4DD", backgroundColor: "#F3F7FF" },
+  arrivalLeadTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "900", lineHeight: 22 },
+  arrivalLeadCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
   meetingCopy: { color: nsnColors.muted, fontSize: 14, lineHeight: 21 },
   meetingPrivacyCopy: { marginTop: 8, fontSize: 12, lineHeight: 18 },
   arrivalPreviewSummaryCard: {
@@ -4220,6 +4956,7 @@ const styles = StyleSheet.create({
     gap: 5,
     marginTop: 12,
   },
+  arrivalPreviewSummaryCardCompact: { marginTop: 0 },
   dayArrivalPreviewSummaryCard: { borderColor: "#AFC4DD", backgroundColor: "#F3F7FF" },
   arrivalPreviewKickerRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   arrivalPreviewKicker: {
@@ -4257,7 +4994,79 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 18,
   },
+  arrivalList: {
+    marginTop: 11,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.16)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    overflow: "hidden",
+  },
+  compactMetaList: { marginTop: 4 },
+  dayArrivalList: { borderColor: "#D2DCE8", backgroundColor: "#FFFFFF" },
+  arrivalListRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  arrivalListRowBorder: { borderBottomWidth: 1, borderBottomColor: "rgba(148,163,184,0.14)" },
+  arrivalListLabel: {
+    width: 92,
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+    flexShrink: 0,
+  },
+  arrivalListValue: {
+    flex: 1,
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "800",
+    lineHeight: 19,
+  },
+  mapActionButton: {
+    minHeight: 42,
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(99,179,255,0.34)",
+    backgroundColor: "rgba(99,179,255,0.1)",
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    marginTop: 12,
+  },
+  dayMapActionButton: { borderColor: "#AFC4DD", backgroundColor: "#F3F7FF" },
+  mapActionButtonText: { color: "#EAF3FF", fontSize: 12, fontWeight: "900", lineHeight: 16 },
   arrivalConfidenceBlock: { gap: 8, marginTop: 13 },
+  arrivalNoticeBlock: {
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.16)",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    padding: 12,
+    gap: 8,
+    marginTop: 12,
+  },
+  dayArrivalNoticeBlock: { borderColor: "#D2DCE8", backgroundColor: "#FFFFFF" },
+  arrivalNoticeTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  arrivalNoticeList: { gap: 8 },
+  arrivalNoticeRow: { gap: 3 },
+  arrivalNoticeLabel: {
+    color: nsnColors.muted,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+    textTransform: "uppercase",
+  },
+  arrivalNoticeCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
   arrivalFamiliarityBlock: { gap: 8, marginTop: 14 },
   arrivalFamiliarityGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   arrivalFamiliarityCard: {
@@ -4432,6 +5241,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   compactReadinessPanel: { marginTop: 2, marginBottom: 10 },
+  dayCompactReadinessPanel: { borderColor: "#D4A91E", backgroundColor: "#FFF8E2" },
   safetyHeader: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -4477,6 +5287,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 14,
   },
+  compactRsvpPanel: { gap: 10 },
   rsvpStatusChip: {
     flexShrink: 1,
     maxWidth: "100%",
@@ -4497,6 +5308,15 @@ const styles = StyleSheet.create({
     borderTopColor: nsnColors.border,
     marginTop: 14,
     paddingTop: 14,
+    gap: 2,
+  },
+  attendTogetherReassurance: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(95,200,174,0.3)",
+    backgroundColor: "rgba(95,200,174,0.08)",
+    marginTop: 14,
+    padding: 13,
     gap: 2,
   },
   rsvpChoice: {
@@ -4525,6 +5345,35 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   rsvpChoiceTextActive: { color: nsnColors.selectedChipText },
+  planningToolbox: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.16)",
+    backgroundColor: "rgba(255,255,255,0.03)",
+    padding: 13,
+    gap: 12,
+  },
+  planningToolChipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  planningToolResult: { gap: 5, marginTop: 2 },
+  planningToolResultTitle: {
+    color: nsnColors.text,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  planningToolResultCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
+  planningToolOptOutPanel: {
+    marginBottom: 0,
+    borderColor: "rgba(148,163,184,0.16)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    padding: 12,
+  },
+  planningToolFootnote: {
+    color: nsnColors.muted,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: "700",
+  },
   readinessPanel: {
     borderRadius: 17,
     borderWidth: 1,
@@ -4662,8 +5511,8 @@ const styles = StyleSheet.create({
     color: nsnColors.muted,
     textAlign: "center",
     marginTop: 10,
-    fontSize: 13,
-    lineHeight: 19,
+    fontSize: 12,
+    lineHeight: 18,
   },
   feedbackPanel: {
     borderRadius: 17,
@@ -4722,6 +5571,29 @@ const styles = StyleSheet.create({
   questionText: { color: nsnColors.text, fontSize: 14, lineHeight: 20 },
   postQuestionsList: { gap: 6, marginTop: 10, marginBottom: 10 },
   postQuestionText: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
+  guidanceList: {
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "rgba(148,163,184,0.16)",
+    backgroundColor: "rgba(255,255,255,0.025)",
+    overflow: "hidden",
+  },
+  guidanceRow: { paddingHorizontal: 12, paddingVertical: 12, gap: 4 },
+  guidanceTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "800", lineHeight: 20 },
+  guidanceCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 19 },
+  reassuranceBlock: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 13,
+    gap: 8,
+    marginTop: 12,
+  },
+  supportAccentBlock: {
+    borderColor: "rgba(95,200,174,0.3)",
+    backgroundColor: "rgba(95,200,174,0.08)",
+  },
+  daySupportAccentBlock: { borderColor: "#93D5C4", backgroundColor: "#ECFBF7" },
+  dayDivider: { borderBottomColor: "#D2DCE8" },
   verifyInlineButton: {
     alignSelf: "flex-start",
     minHeight: 38,

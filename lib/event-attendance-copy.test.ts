@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { eveningEvents, movieNight } from "./nsn-data";
+import { dayEvents, eveningEvents, movieNight } from "./nsn-data";
 import {
   getCurrentRsvpCopy,
   getExpectedGroupSizeCopy,
@@ -33,6 +33,18 @@ describe("event attendance copy", () => {
     expect(getExpectedGroupSizeValue(boardGames!)).toBe("4–5");
     expect(getExpectedGroupSizeCopy(boardGames!)).toBe(
       "Expected group size: 4–5",
+    );
+  });
+
+  it("matches Harbour Walk expected group size to the eight-person hero image", () => {
+    const harbourWalk = dayEvents.find(
+      (event) => event.id === "harbour-walk-waverton",
+    );
+
+    expect(harbourWalk).toBeDefined();
+    expect(getExpectedGroupSizeValue(harbourWalk!)).toBe("4–8");
+    expect(getExpectedGroupSizeCopy(harbourWalk!)).toBe(
+      "Expected group size: 4–8",
     );
   });
 });

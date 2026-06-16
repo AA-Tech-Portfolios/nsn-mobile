@@ -10,8 +10,9 @@ export const eventCommunityGuidelinesCopy = {
   comfortRolesTitle: "Optional comfort roles",
   comfortRolesCopy:
     "Local preview only. These are broad joining cues, not identity labels, rankings, or strict filters.",
-  sectionTitle: "Community guidelines",
-  sectionSummary: "Consent reminders, soft exits, and prototype limits.",
+  sectionTitle: "Keeping things comfortable",
+  sectionSummary:
+    "Ask first, respect boundaries, leave anytime, and remember this is still a prototype.",
   mismatchTitle: "Mismatch is not failure",
   mismatchCopy:
     "This group may not be the right fit. You can leave, switch plans, mute or block in chat, hide this event, or look for another small meetup without making it a public rejection.",

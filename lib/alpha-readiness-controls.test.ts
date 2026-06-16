@@ -65,6 +65,21 @@ describe("alpha readiness controls", () => {
     });
   });
 
+  it("opens calendar preferences in the wide web preference view", () => {
+    expect(
+      getProfilePreferenceDestination({
+        panel: "calendarMoments",
+        platform: "web",
+        section: "calendar",
+        width: 1024,
+      })
+    ).toEqual({
+      closesDrawer: true,
+      kind: "full-view",
+      section: "calendar",
+    });
+  });
+
   it("marks dependency-disabled settings with a reason", () => {
     expect(
       getDependentSettingAvailability({
