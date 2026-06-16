@@ -1092,6 +1092,17 @@ const eventTranslations = {
   },
 } as const;
 
+type PressableWebState = {
+  pressed: boolean;
+  hovered?: boolean;
+};
+
+const isPressableActive = (state: { pressed: boolean }) => {
+  const webState = state as PressableWebState;
+
+  return state.pressed || Boolean(webState.hovered);
+};
+
 function DetailMetaRow({
   actionAccessibilityHint,
   actionAccessibilityLabel,
@@ -1153,14 +1164,14 @@ function DetailMetaRow({
       accessibilityHint={
         actionAccessibilityHint ?? "Opens an approximate area search, not live navigation."
       }
-      style={({ hovered, pressed }) => [
+      style={(state) => [
         styles.metaRow,
         styles.metaRowAction,
-        (hovered || pressed) && styles.metaRowActionHovered,
+        isPressableActive(state) && styles.metaRowActionHovered,
         isRtl && styles.rtlRow,
       ]}
     >
-      {({ hovered, pressed }) => content(hovered || pressed)}
+      {(state) => content(isPressableActive(state))}
     </Pressable>
   );
 }
@@ -3110,10 +3121,10 @@ export default function EventDetailsScreen() {
               accessibilityRole="button"
               accessibilityLabel={heroImageViewerCopy.openLabel}
               accessibilityHint={screenReaderHints ? heroImageViewerCopy.openHint : undefined}
-              style={({ hovered, pressed }) => [
+              style={(state) => [
                 styles.eventHeroImageFrame,
                 isDay && styles.dayEventHeroImageFrame,
-                (hovered || pressed) && styles.eventHeroImageFrameHovered,
+                isPressableActive(state) && styles.eventHeroImageFrameHovered,
               ]}
             >
               <Image
