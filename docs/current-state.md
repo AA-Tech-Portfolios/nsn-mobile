@@ -22,6 +22,14 @@ The current shared tagline is: **Small meetups for big moments.**
 - Soft Exit, block/report-shaped controls, saved places, event sharing/pinning/hiding, arrival-update style states, and private reflection/post-event feedback logic in prototype form.
 - NSN visual identity with optional future SoftHello theme exploration.
 
+## Groups Safety
+
+- Meetup groups can be marked public or private in the alpha creation flow.
+- Public groups start in review and should not appear in nearby discovery until approved.
+- Private groups are invite-only, but still go through the same basic name and description safety checks.
+- The small moderation/admin preview is demo-only and helps test review wording, approval, needs-changes, and rejection states locally.
+- Real backend persistence, auth trust signals, moderation operations, appeals, and abuse handling remain future work.
+
 ## Mocked / Local-Only Systems
 
 - **Authentication:** OAuth/server scaffolding exists, but the main app experience is still prototype-oriented. Real account lifecycle, password flows, production sessions, and account deletion are not complete production systems.
