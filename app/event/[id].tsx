@@ -39,6 +39,7 @@ import {
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
 import {
   openExternalDestinationWithConfirmation,
+  showExternalOpenFailure,
   type ExternalOpenDestination,
 } from "@/lib/external-links";
 import { getExpectedGroupSizeCopy, getExpectedGroupSizeValue } from "@/lib/event-attendance-copy";
@@ -1459,10 +1460,13 @@ export default function EventDetailsScreen() {
 
         await Linking.openURL(mapsUrl);
       } catch {
-        Alert.alert(
-          "Maps unavailable",
-          `Use the broad arrival area shown here: ${arrivalPreview.approximateArea}.`,
-        );
+        showExternalOpenFailure({
+          platform: Platform.OS,
+          title: "Maps unavailable",
+          message: `Use the broad arrival area shown here: ${arrivalPreview.approximateArea}.`,
+          alert: Alert.alert,
+          notify: setCopyFeedback,
+        });
       }
     };
 

@@ -8,6 +8,14 @@ export const localPrototypeStorageKeys = [
   NSN_CREATED_EVENTS_STORAGE_KEY,
 ] as const;
 
+export async function saveCreatedPrototypeEvents<T>(
+  events: T[],
+  exposeSavedEvents: (events: T[]) => void,
+) {
+  await AsyncStorage.setItem(NSN_CREATED_EVENTS_STORAGE_KEY, JSON.stringify(events));
+  exposeSavedEvents(events);
+}
+
 export async function clearAllLocalPrototypeData() {
   const { clearUserInfo, removeSessionToken } = await import("./_core/auth");
 

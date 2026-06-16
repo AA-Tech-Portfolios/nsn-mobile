@@ -132,7 +132,8 @@ const config: ExpoConfig = {
   ],
   experiments: {
     typedRoutes: true,
-    reactCompiler: true,
+    // TODO: Re-enable after the React Compiler lint migration is completed.
+    reactCompiler: false,
   },
 };
 

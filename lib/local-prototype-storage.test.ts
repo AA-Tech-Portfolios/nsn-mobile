@@ -6,12 +6,14 @@ import {
   clearAllLocalPrototypeData,
   localPrototypeStorageKeys,
   NSN_CREATED_EVENTS_STORAGE_KEY,
+  saveCreatedPrototypeEvents,
   SOFTHELLO_ONBOARDING_STORAGE_KEY,
 } from "./local-prototype-storage";
 
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
     multiRemove: vi.fn(async () => undefined),
+    setItem: vi.fn(async () => undefined),
   },
 }));
 
@@ -39,5 +41,30 @@ describe("local prototype storage", () => {
     ]);
     expect(removeSessionToken).toHaveBeenCalled();
     expect(clearUserInfo).toHaveBeenCalled();
+  });
+
+  it("exposes created events only after the local storage write finishes", async () => {
+    let finishWrite: (() => void) | undefined;
+    vi.mocked(AsyncStorage.setItem).mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishWrite = resolve;
+        }),
+    );
+    const exposeEvents = vi.fn();
+    const createdEvents = [{ id: "created-board-games", title: "Board games" }];
+
+    const savePromise = saveCreatedPrototypeEvents(createdEvents, exposeEvents);
+
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith(
+      NSN_CREATED_EVENTS_STORAGE_KEY,
+      JSON.stringify(createdEvents),
+    );
+    expect(exposeEvents).not.toHaveBeenCalled();
+
+    finishWrite?.();
+    await savePromise;
+
+    expect(exposeEvents).toHaveBeenCalledWith(createdEvents);
   });
 });

@@ -33,6 +33,14 @@ type ExternalOpenConfirmationOptions = {
   confirm?: WebConfirm;
 };
 
+type ExternalOpenFailureOptions = {
+  platform: string;
+  title: string;
+  message: string;
+  alert: ExternalOpenAlert;
+  notify?: (message: string) => void;
+};
+
 export const defaultExternalLinksPreference: ExternalLinksPreference = {
   askBeforeOpeningExternalApps: true,
   preferredMapApp: "system-default",
@@ -106,4 +114,19 @@ export const openExternalDestinationWithConfirmation = (
     { text: confirmationCopy.cancelLabel, style: "cancel" },
     { text: confirmationCopy.openLabel, onPress: openExternalDestination },
   ]);
+};
+
+export const showExternalOpenFailure = ({
+  platform,
+  title,
+  message,
+  alert,
+  notify,
+}: ExternalOpenFailureOptions) => {
+  if (platform === "web") {
+    notify?.(message);
+    return;
+  }
+
+  alert(title, message);
 };

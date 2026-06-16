@@ -17,9 +17,10 @@ import {
   type GroupModerationAction,
 } from "@/lib/group-creation-ui";
 import { getGroupVisibilityCopy, groupVisibilityOptions, type GroupModerationStatus, type GroupVisibility, type NsnGroup } from "@/lib/group-safety";
+import { NSN_CREATED_EVENTS_STORAGE_KEY, saveCreatedPrototypeEvents } from "@/lib/local-prototype-storage";
 import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
-const CREATED_EVENTS_KEY = "nsn.created-events.v1";
+const CREATED_EVENTS_KEY = NSN_CREATED_EVENTS_STORAGE_KEY;
 
 const noiseLevels = ["Quiet", "Balanced", "Lively"] as const;
 const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"]);
@@ -375,12 +376,13 @@ export default function EventsScreen() {
   }, []);
 
   const saveEvents = async (events: CreatedEvent[]) => {
-    setCreatedEvents(events);
-
     try {
-      await AsyncStorage.setItem(CREATED_EVENTS_KEY, JSON.stringify(events));
+      await saveCreatedPrototypeEvents(events, setCreatedEvents);
+      return true;
     } catch (error) {
       console.warn("Created events could not save:", error);
+      setFormNotice("This meetup could not be saved locally yet. Please try again.");
+      return false;
     }
   };
 
@@ -426,7 +428,7 @@ export default function EventsScreen() {
     router.push("/(tabs)/profile");
   };
 
-  const createEvent = () => {
+  const createEvent = async () => {
     if (!isDraftValid) {
       return;
     }
@@ -475,12 +477,14 @@ export default function EventsScreen() {
       ],
     };
 
+    const didSave = await saveEvents([newEvent, ...createdEvents]);
+    if (!didSave) return;
+
     setLatestReviewNotice(submittedGroup.notice);
-    saveEvents([newEvent, ...createdEvents]);
     resetCreator();
   };
 
-  const moderateGroupSubmission = (groupId: string, action: GroupModerationAction) => {
+  const moderateGroupSubmission = async (groupId: string, action: GroupModerationAction) => {
     const nextGroups = applyGroupModerationAction(reviewGroups, groupId, action);
     const groupsById = new Map(nextGroups.map((group) => [group.id, group]));
     const nextEvents = createdEvents.map((event) => {
@@ -496,7 +500,7 @@ export default function EventsScreen() {
         : event;
     });
 
-    saveEvents(nextEvents);
+    await saveEvents(nextEvents);
   };
 
   return (

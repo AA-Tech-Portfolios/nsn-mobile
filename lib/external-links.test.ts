@@ -5,6 +5,7 @@ import {
   getExternalOpenConfirmationCopy,
   openExternalDestinationWithConfirmation,
   normalizeExternalLinksPreference,
+  showExternalOpenFailure,
 } from "./external-links";
 
 describe("external link preferences", () => {
@@ -108,5 +109,21 @@ describe("external link preferences", () => {
       ]),
     );
     expect(openExternalDestination).not.toHaveBeenCalled();
+  });
+
+  it("uses a web-safe notice instead of Alert.alert for external open failures", () => {
+    const alert = vi.fn();
+    const notify = vi.fn();
+
+    showExternalOpenFailure({
+      platform: "web",
+      title: "Open link",
+      message: "Could not open this support link.",
+      alert,
+      notify,
+    });
+
+    expect(notify).toHaveBeenCalledWith("Could not open this support link.");
+    expect(alert).not.toHaveBeenCalled();
   });
 });

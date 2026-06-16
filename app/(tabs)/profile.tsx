@@ -60,6 +60,7 @@ import { SkyThemeAccent } from "@/components/sky-theme-accent";
 import { ProfileVisibilityPreview, type ProfileVisibilityPreviewProps } from "@/components/profile-visibility-preview";
 import {
   openExternalDestinationWithConfirmation,
+  showExternalOpenFailure,
   type ExternalOpenDestination,
 } from "@/lib/external-links";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -2318,7 +2319,13 @@ export default function ProfileScreen() {
       try {
         await Linking.openURL(supportIssueUrl);
       } catch {
-        Alert.alert("Open GitHub issue", "Could not open the issue page from this device. A feedback draft is shown below instead.");
+        showExternalOpenFailure({
+          platform: Platform.OS,
+          title: "Open GitHub issue",
+          message: "Could not open the issue page from this device. A feedback draft is shown below instead.",
+          alert: Alert.alert,
+          notify: () => setHelpDraftPrepared(true),
+        });
       }
     };
 
@@ -2335,7 +2342,13 @@ export default function ProfileScreen() {
       try {
         await Linking.openURL(url);
       } catch {
-        Alert.alert(title, "Could not open this support link from the current device.");
+        showExternalOpenFailure({
+          platform: Platform.OS,
+          title,
+          message: "Could not open this support link from the current device.",
+          alert: Alert.alert,
+          notify: () => setHelpDraftPrepared(true),
+        });
       }
     };
 
