@@ -66,6 +66,21 @@ describe("group safety controls", () => {
     expect(result.categories).toEqual(expect.arrayContaining(["impersonation", "scam"]));
   });
 
+  it("flags common doxing and doxxing harassment terms", () => {
+    for (const term of ["doxing", "doxxing"]) {
+      const result = validateGroupContent({
+        description: `A place for ${term} people who annoy us.`,
+        name: "Local callout list",
+      });
+
+      expect(result.allowed).toBe(false);
+      expect(result.message).toBe(
+        "This group name doesn’t fit NSN’s community guidelines. Try something clearer, safer, and easier for others to understand."
+      );
+      expect(result.categories).toContain("harassment");
+    }
+  });
+
   it("allows valid drafts and submissions to move into review", () => {
     const draft = createGroupDraft({
       creatorId: "nsn-tester",

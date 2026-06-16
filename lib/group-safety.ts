@@ -85,7 +85,7 @@ const contentPatterns: Record<GroupSafetyCategory, RegExp[]> = {
     /\bbully(?:ing)?\b/i,
     /\bharass(?:ment|ing)?\b/i,
     /\bhumiliat(?:e|ing|ion)\b/i,
-    /\bdoxx?\b/i,
+    /\bdoxx?(?:ing)?\b/i,
     /\bstalk(?:ing|er)?\b/i,
   ],
   scam: [
