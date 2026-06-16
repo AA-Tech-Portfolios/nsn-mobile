@@ -462,6 +462,7 @@ These ideas are future planning notes only. Do not add API calls, backend implem
 - [x] 2026-05-12: Removed Home locked-dashboard overflow, added bottom-nav clearance across tabbed scroll views, clarified web photo copy, and separated Simple versus Detailed Profile presentation
 - [x] 2026-05-12: Added and refined local prototype event imagery, then switched Picnic, Beach, and Movie Night preview cards to realistic photo-style sources
 - [x] 2026-05-12: Moved Profile back toward a social-first order with detailed comfort, work/life context, and trust controls behind User Options/Settings entry points
+- [x] 2026-06-16: Added alpha group safety controls with public/private visibility, review-before-discovery, private-group safety checks, and a demo-only moderation preview; real backend/auth/moderation wiring remains future work
 - [x] Add localisation options
 - [x] Add timezone search and expanded timezone picker
 - [x] Add profile display layout preference for Simple/Detailed layouts and Contained/Wide widths

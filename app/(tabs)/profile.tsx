@@ -58,7 +58,10 @@ import { ProfileAvatar } from "@/components/profile-avatar";
 import { ScreenContainer } from "@/components/screen-container";
 import { SkyThemeAccent } from "@/components/sky-theme-accent";
 import { ProfileVisibilityPreview, type ProfileVisibilityPreviewProps } from "@/components/profile-visibility-preview";
-import { getExternalOpenConfirmationCopy, type ExternalOpenDestination } from "@/lib/external-links";
+import {
+  openExternalDestinationWithConfirmation,
+  type ExternalOpenDestination,
+} from "@/lib/external-links";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import {
   getProfilePreferenceDestination,
@@ -2297,18 +2300,15 @@ export default function ProfileScreen() {
     destination: ExternalOpenDestination,
     openExternalDestination: () => void,
   ) => {
-    if (!externalLinks.askBeforeOpeningExternalApps) {
-      openExternalDestination();
-      return;
-    }
-
-    const confirmationCopy = getExternalOpenConfirmationCopy(destination);
-    const message = [confirmationCopy.body, ...confirmationCopy.details].join("\n\n");
-
-    Alert.alert(confirmationCopy.title, message, [
-      { text: confirmationCopy.cancelLabel, style: "cancel" },
-      { text: confirmationCopy.openLabel, onPress: openExternalDestination },
-    ]);
+    openExternalDestinationWithConfirmation(
+      {
+        destination,
+        externalLinks,
+        platform: Platform.OS,
+        alert: Alert.alert,
+      },
+      openExternalDestination,
+    );
   };
 
   const openSupportIssue = async () => {
