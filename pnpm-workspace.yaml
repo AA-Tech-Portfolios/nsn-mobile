@@ -4,6 +4,9 @@ allowBuilds:
   unrs-resolver: true
 overrides:
   "@esbuild-kit/esm-loader": npm:tsx@4.21.0
+  "@react-navigation/bottom-tabs": 7.4.0
+  "@react-navigation/elements": 2.5.0
+  "@react-navigation/native": 7.1.14
   fast-uri: 3.1.2
   glob: 13.0.6
   postcss: 8.5.15
