@@ -32,8 +32,15 @@ import {
   initialExpandedEventDetailSections,
   type EventDetailSectionId,
 } from "@/lib/event-detail-sections";
+import {
+  shouldShowMissingEvent,
+  shouldWaitForCreatedEventLookup,
+} from "@/lib/event-detail-lookup";
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
-import { getExternalOpenConfirmationCopy, type ExternalOpenDestination } from "@/lib/external-links";
+import {
+  openExternalDestinationWithConfirmation,
+  type ExternalOpenDestination,
+} from "@/lib/external-links";
 import { getExpectedGroupSizeCopy, getExpectedGroupSizeValue } from "@/lib/event-attendance-copy";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { NSN_CREATED_EVENTS_STORAGE_KEY } from "@/lib/local-prototype-storage";
@@ -1109,6 +1116,7 @@ export default function EventDetailsScreen() {
   const [focusedSection, setFocusedSection] = useState<EventDetailSectionId | null>("whatToExpect");
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [createdEvents, setCreatedEvents] = useState<CreatedEvent[]>([]);
+  const [createdEventsLoaded, setCreatedEventsLoaded] = useState(false);
   const [selectedFirstMeetupSupport, setSelectedFirstMeetupSupport] = useState<
     FirstMeetupSupportOption[]
   >(["No extra support"]);
@@ -1177,6 +1185,10 @@ export default function EventDetailsScreen() {
         }
       } catch (error) {
         console.warn("Created events could not load:", error);
+      } finally {
+        if (isMounted) {
+          setCreatedEventsLoaded(true);
+        }
       }
     }
 
@@ -1195,10 +1207,45 @@ export default function EventDetailsScreen() {
   }, [copyFeedback]);
 
   const routeEventId = Array.isArray(id) ? id[0] : id;
+  const demoEvent = allEvents.find((item) => item.id === routeEventId);
   const createdEvent = createdEvents.find((item) => item.id === routeEventId);
-  const rawEvent = allEvents.find((item) => item.id === routeEventId) ?? createdEvent;
+  const rawEvent = demoEvent ?? createdEvent;
+  const eventLookupState = {
+    routeEventId,
+    hasDemoEvent: Boolean(demoEvent),
+    hasCreatedEvent: Boolean(createdEvent),
+    createdEventsLoaded,
+  };
 
-  if (!rawEvent) {
+  if (shouldWaitForCreatedEventLookup(eventLookupState)) {
+    return (
+      <ScreenContainer
+        containerClassName="bg-background"
+        safeAreaClassName="bg-background"
+        style={isDay && styles.dayScreen}
+      >
+        <Stack.Screen options={{ headerShown: false }} />
+        <ScrollView
+          style={[styles.screen, isDay && styles.dayScreen]}
+          contentContainerStyle={styles.content}
+        >
+          <View style={[styles.notFoundCard, isDay && styles.dayCard]}>
+            <Text style={[styles.notFoundEyebrow, isDay && styles.dayMutedText]}>
+              Local alpha
+            </Text>
+            <Text style={[styles.notFoundTitle, isDay && styles.dayHeadingText]}>
+              Loading meetup preview
+            </Text>
+            <Text style={[styles.notFoundCopy, isDay && styles.dayMutedText]}>
+              Checking local prototype meetups on this device.
+            </Text>
+          </View>
+        </ScrollView>
+      </ScreenContainer>
+    );
+  }
+
+  if (shouldShowMissingEvent(eventLookupState)) {
     return (
       <ScreenContainer
         containerClassName="bg-background"
@@ -1389,18 +1436,15 @@ export default function EventDetailsScreen() {
     destination: ExternalOpenDestination,
     openExternalDestination: () => void,
   ) => {
-    if (!externalLinks.askBeforeOpeningExternalApps) {
-      openExternalDestination();
-      return;
-    }
-
-    const confirmationCopy = getExternalOpenConfirmationCopy(destination);
-    const message = [confirmationCopy.body, ...confirmationCopy.details].join("\n\n");
-
-    Alert.alert(confirmationCopy.title, message, [
-      { text: confirmationCopy.cancelLabel, style: "cancel" },
-      { text: confirmationCopy.openLabel, onPress: openExternalDestination },
-    ]);
+    openExternalDestinationWithConfirmation(
+      {
+        destination,
+        externalLinks,
+        platform: Platform.OS,
+        alert: Alert.alert,
+      },
+      openExternalDestination,
+    );
   };
   const openEventLocation = async () => {
     const mapsUrl = buildEventLocationSearchUrl(arrivalPreview.mapSearchArea);

@@ -8,6 +8,15 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { nsnColors } from "@/lib/nsn-data";
 import { englishEventCreationCopy } from "@/lib/event-creation-copy";
+import {
+  applyGroupModerationAction,
+  getCreatedGroupReviewState,
+  getDemoGroupCreatorReadiness,
+  getPendingGroupReviewItems,
+  submitVisibleGroupCreation,
+  type GroupModerationAction,
+} from "@/lib/group-creation-ui";
+import { getGroupVisibilityCopy, groupVisibilityOptions, type GroupModerationStatus, type GroupVisibility, type NsnGroup } from "@/lib/group-safety";
 import { canMeetInPerson, getEffectivePrototypeVerificationLevel, getMeetingSafetyCopy, getVerificationLevelLabel } from "@/lib/softhello-mvp";
 
 const CREATED_EVENTS_KEY = "nsn.created-events.v1";
@@ -246,6 +255,11 @@ type CreatedEvent = {
   mapPlace: string;
   coordinates: string;
   description: string;
+  createdAt?: string;
+  creatorId?: string;
+  visibility?: GroupVisibility;
+  moderationStatus?: GroupModerationStatus;
+  updatedAt?: string;
   preEventQuestions?: string[];
   postEventQuestions?: string[];
 };
@@ -263,6 +277,7 @@ const emptyDraft: EventDraft = {
   mapPlace: "",
   coordinates: "",
   description: "",
+  visibility: "public",
 };
 
 const createEventId = (title: string) => {
@@ -306,6 +321,31 @@ export default function EventsScreen() {
   const [showVerificationGate, setShowVerificationGate] = useState(false);
   const [isVerificationReviewOpen, setIsVerificationReviewOpen] = useState(false);
   const [draft, setDraft] = useState<EventDraft>(emptyDraft);
+  const [formNotice, setFormNotice] = useState("");
+  const [latestReviewNotice, setLatestReviewNotice] = useState("");
+  const groupCreatorReadiness = getDemoGroupCreatorReadiness(effectiveVerificationLevel);
+  const reviewGroups = useMemo<NsnGroup[]>(
+    () =>
+      createdEvents.map((event) => ({
+        id: event.id,
+        createdAt: event.createdAt ?? event.updatedAt ?? "2026-06-16T00:00:00.000Z",
+        creatorId: event.creatorId ?? (displayName || "nsn-demo-creator"),
+        description: event.description,
+        moderationStatus: event.moderationStatus ?? "draft",
+        name: event.title,
+        updatedAt: event.updatedAt ?? event.createdAt ?? "2026-06-16T00:00:00.000Z",
+        visibility: event.visibility ?? "private",
+      })),
+    [createdEvents, displayName]
+  );
+  const pendingReviewItems = useMemo(
+    () =>
+      getPendingGroupReviewItems(
+        reviewGroups,
+        Object.fromEntries(reviewGroups.map((group) => [group.creatorId, groupCreatorReadiness]))
+      ),
+    [groupCreatorReadiness, reviewGroups]
+  );
 
   const isDraftValid = useMemo(
     () => Boolean(draft.title.trim() && draft.date.trim() && draft.time.trim() && draft.venue.trim() && draft.address.trim()),
@@ -360,6 +400,7 @@ export default function EventsScreen() {
 
   const resetCreator = () => {
     setDraft(emptyDraft);
+    setFormNotice("");
     setIsCreatorOpen(false);
   };
 
@@ -390,9 +431,26 @@ export default function EventsScreen() {
       return;
     }
 
+    const submittedGroup = submitVisibleGroupCreation(
+      {
+        creatorId: displayName || "nsn-demo-creator",
+        description: draft.description,
+        name: draft.title,
+        visibility: draft.visibility ?? "public",
+      },
+      groupCreatorReadiness
+    );
+
+    if (!submittedGroup.ok) {
+      setFormNotice(submittedGroup.notice);
+      return;
+    }
+
     const newEvent: CreatedEvent = {
       ...draft,
-      id: createEventId(draft.title),
+      id: submittedGroup.group.id || createEventId(draft.title),
+      createdAt: submittedGroup.group.createdAt,
+      creatorId: submittedGroup.group.creatorId,
       title: draft.title.trim(),
       date: draft.date.trim(),
       time: draft.time.trim(),
@@ -402,6 +460,9 @@ export default function EventsScreen() {
       mapPlace: draft.mapPlace.trim(),
       coordinates: draft.coordinates.trim(),
       description: draft.description.trim(),
+      visibility: submittedGroup.group.visibility,
+      moderationStatus: submittedGroup.group.moderationStatus,
+      updatedAt: submittedGroup.group.updatedAt,
       preEventQuestions: [
         "What's something you're looking forward to this week?",
         "What's your favourite way to spend a weekend?",
@@ -414,8 +475,28 @@ export default function EventsScreen() {
       ],
     };
 
+    setLatestReviewNotice(submittedGroup.notice);
     saveEvents([newEvent, ...createdEvents]);
     resetCreator();
+  };
+
+  const moderateGroupSubmission = (groupId: string, action: GroupModerationAction) => {
+    const nextGroups = applyGroupModerationAction(reviewGroups, groupId, action);
+    const groupsById = new Map(nextGroups.map((group) => [group.id, group]));
+    const nextEvents = createdEvents.map((event) => {
+      const group = groupsById.get(event.id);
+
+      return group
+        ? {
+            ...event,
+            moderationStatus: group.moderationStatus,
+            updatedAt: group.updatedAt,
+            visibility: group.visibility,
+          }
+        : event;
+    });
+
+    saveEvents(nextEvents);
   };
 
   return (
@@ -437,6 +518,53 @@ export default function EventsScreen() {
           <IconSymbol name="add" color={nsnColors.text} size={19} />
           <Text style={[styles.createButtonText, isRtl && styles.rtlText]}>{copy.createEvent}</Text>
         </TouchableOpacity>
+
+        {latestReviewNotice ? (
+          <View style={[styles.reviewNoticeCard, isDay && styles.dayCard]}>
+            <Text style={[styles.reviewNoticeTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Group review</Text>
+            <Text style={[styles.reviewNoticeCopy, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{latestReviewNotice}</Text>
+          </View>
+        ) : null}
+
+        {pendingReviewItems.length > 0 ? (
+          <View style={[styles.adminPreviewCard, isDay && styles.dayCard]}>
+            <Text style={[styles.adminPreviewKicker, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>Prototype admin preview only</Text>
+            <Text style={[styles.cardTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Pending meetup groups</Text>
+            <Text style={[styles.cardText, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>
+              Local demo review queue for testing group moderation wording. No backend moderation action is sent.
+            </Text>
+            <View style={styles.adminReviewList}>
+              {pendingReviewItems.map((item) => (
+                <View key={item.id} style={[styles.adminReviewItem, isDay && styles.dayReviewRow]}>
+                  <View style={[styles.adminReviewHeader, isRtl && styles.rtlRow]}>
+                    <Text style={[styles.adminReviewTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{item.name}</Text>
+                    <Text style={styles.adminVisibilityBadge}>{item.visibility === "public" ? "Public" : "Private"}</Text>
+                  </View>
+                  <Text style={[styles.adminReviewCopy, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{item.description}</Text>
+                  <Text style={[styles.adminReviewMeta, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{item.creatorReadinessSummary}</Text>
+                  <Text style={[styles.adminReviewMeta, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{item.safetyCheckSummary}</Text>
+                  <View style={[styles.adminActionRow, isRtl && styles.rtlRow]}>
+                    {[
+                      { action: "approve" as const, label: "Approve" },
+                      { action: "needs_changes" as const, label: "Needs changes" },
+                      { action: "reject" as const, label: "Reject" },
+                    ].map((button) => (
+                      <TouchableOpacity
+                        key={button.action}
+                        activeOpacity={0.82}
+                        onPress={() => moderateGroupSubmission(item.id, button.action)}
+                        style={[styles.adminActionButton, button.action === "approve" && styles.adminApproveButton]}
+                        accessibilityRole="button"
+                      >
+                        <Text style={styles.adminActionText}>{button.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
 
         {showVerificationGate ? (
           <View style={[styles.card, styles.verificationGateCard, isDay && styles.dayCard]}>
@@ -472,6 +600,19 @@ export default function EventsScreen() {
                   </View>
                   <Text style={[styles.eventDate, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{event.date} · {event.time}</Text>
                 </View>
+                {(() => {
+                  const groupState = getCreatedGroupReviewState({
+                    moderationStatus: event.moderationStatus ?? "draft",
+                    visibility: event.visibility ?? "private",
+                  });
+
+                  return (
+                    <View style={[styles.groupReviewBadge, groupState.discoverable && styles.groupReviewBadgeApproved]}>
+                      <Text style={styles.groupReviewBadgeText}>{groupState.label}</Text>
+                      <Text style={[styles.groupReviewBadgeCopy, isDay && styles.daySubtitle]}>{groupState.message}</Text>
+                    </View>
+                  );
+                })()}
                 <Text style={[styles.eventTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{event.title}</Text>
                 <Text style={[styles.eventMeta, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>⌖ {event.venue}</Text>
                 <Text style={[styles.eventMeta, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>◎ {event.mapPlace || event.address}</Text>
@@ -509,6 +650,31 @@ export default function EventsScreen() {
 
             <View style={styles.formStack}>
               <LabeledInput label={copy.eventName} value={draft.title} onChangeText={(value) => updateDraft("title", value)} placeholder={copy.eventNamePlaceholder} isDay={isDay} isRtl={isRtl} />
+
+              <View style={[styles.visibilityPanel, isDay && styles.dayVisibilityPanel]}>
+                <Text style={[styles.label, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Group visibility</Text>
+                <Text style={[styles.visibilityCopy, isDay && styles.daySubtitle, isRtl && styles.rtlText]}>{getGroupVisibilityCopy()}</Text>
+                <View style={[styles.visibilityRow, isRtl && styles.rtlRow]}>
+                  {groupVisibilityOptions.map((visibility) => {
+                    const active = draft.visibility === visibility;
+
+                    return (
+                      <TouchableOpacity
+                        key={visibility}
+                        activeOpacity={0.82}
+                        onPress={() => setDraft((current) => ({ ...current, visibility }))}
+                        style={[styles.visibilityOption, isDay && styles.dayNoiseOption, active && styles.noiseOptionActive]}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                      >
+                        <Text style={[styles.visibilityOptionText, isDay && styles.daySubtitle, active && styles.noiseOptionTextActive]}>
+                          {visibility === "public" ? "Public" : "Private"}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
 
               <View style={[styles.inlineFields, isRtl && styles.rtlRow]}>
                 <View style={styles.inlineField}>
@@ -585,6 +751,12 @@ export default function EventsScreen() {
                 isRtl={isRtl}
                 multiline
               />
+
+              {formNotice ? (
+                <View style={[styles.formNotice, isDay && styles.dayReviewRow]}>
+                  <Text style={[styles.formNoticeText, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{formNotice}</Text>
+                </View>
+              ) : null}
             </View>
 
             <TouchableOpacity activeOpacity={0.88} onPress={createEvent} disabled={!isDraftValid} style={[styles.saveButton, !isDraftValid && styles.saveButtonDisabled]}>
@@ -718,6 +890,61 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
   },
+  reviewNoticeCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#2B4578",
+    backgroundColor: nsnColors.surfaceRaised,
+    padding: 14,
+    marginBottom: 20,
+  },
+  reviewNoticeTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
+  reviewNoticeCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20, marginTop: 3 },
+  adminPreviewCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#2B4578",
+    backgroundColor: "rgba(124,170,201,0.08)",
+    padding: 14,
+    marginBottom: 20,
+  },
+  adminPreviewKicker: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase", marginBottom: 3 },
+  adminReviewList: { gap: 10, marginTop: 12 },
+  adminReviewItem: {
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    padding: 12,
+  },
+  adminReviewHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10 },
+  adminReviewTitle: { flex: 1, minWidth: 0, color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 21 },
+  adminVisibilityBadge: {
+    color: nsnColors.text,
+    backgroundColor: nsnColors.primarySoft,
+    borderRadius: 11,
+    overflow: "hidden",
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    fontSize: 10,
+    fontWeight: "900",
+    lineHeight: 14,
+  },
+  adminReviewCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 6 },
+  adminReviewMeta: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 5, fontWeight: "700" },
+  adminActionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 11 },
+  adminActionButton: {
+    minHeight: 36,
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 11,
+  },
+  adminApproveButton: { backgroundColor: nsnColors.primary, borderColor: nsnColors.primary },
+  adminActionText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 16 },
 
   card: {
     borderRadius: 18,
@@ -773,6 +1000,20 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   eventHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 },
+  groupReviewBadge: {
+    alignSelf: "flex-start",
+    maxWidth: "100%",
+    borderRadius: 13,
+    borderWidth: 1,
+    borderColor: "rgba(124,170,201,0.42)",
+    backgroundColor: "rgba(124,170,201,0.09)",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginBottom: 10,
+  },
+  groupReviewBadgeApproved: { borderColor: "rgba(114,214,126,0.55)", backgroundColor: "rgba(114,214,126,0.12)" },
+  groupReviewBadgeText: { color: nsnColors.text, fontSize: 11, fontWeight: "900", lineHeight: 15 },
+  groupReviewBadgeCopy: { color: nsnColors.muted, fontSize: 11, lineHeight: 16, marginTop: 1 },
   noiseBadge: { borderRadius: 12, backgroundColor: "rgba(247,200,91,0.18)", paddingHorizontal: 10, paddingVertical: 5 },
   quietBadge: { backgroundColor: "rgba(24,200,209,0.18)" },
   livelyBadge: { backgroundColor: "rgba(114,214,126,0.18)" },
@@ -801,6 +1042,28 @@ const styles = StyleSheet.create({
   closeText: { color: nsnColors.muted, fontSize: 12, lineHeight: 16, fontWeight: "900" },
   formStack: { gap: 14 },
   label: { color: nsnColors.text, fontSize: 13, lineHeight: 18, fontWeight: "800", marginBottom: 7 },
+  visibilityPanel: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.035)",
+    padding: 13,
+  },
+  dayVisibilityPanel: { backgroundColor: "#FFFFFF", borderColor: "#C5D0DA" },
+  visibilityCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginBottom: 10 },
+  visibilityRow: { flexDirection: "row", gap: 8 },
+  visibilityOption: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: nsnColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  visibilityOptionText: { color: nsnColors.muted, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   input: {
     minHeight: 48,
     borderRadius: 14,
@@ -871,6 +1134,8 @@ const styles = StyleSheet.create({
   placeAddress: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, marginBottom: 0 },
   placeCheck: { width: 22, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "right" },
   placeCheckActive: { color: nsnColors.selectedChipBorder },
+  formNotice: { borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", padding: 12 },
+  formNoticeText: { color: nsnColors.text, fontSize: 13, fontWeight: "800", lineHeight: 19 },
   saveButton: {
     height: 54,
     borderRadius: 17,
