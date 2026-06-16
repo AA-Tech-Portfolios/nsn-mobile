@@ -11,6 +11,28 @@ export type ExternalOpenDestination = {
   broadAreaName?: string;
 };
 
+type ExternalOpenAlertButton = {
+  text: string;
+  style?: "default" | "cancel" | "destructive";
+  onPress?: () => void;
+};
+
+type ExternalOpenAlert = (
+  title: string,
+  message?: string,
+  buttons?: ExternalOpenAlertButton[],
+) => void;
+
+type WebConfirm = (message: string) => boolean;
+
+type ExternalOpenConfirmationOptions = {
+  destination: ExternalOpenDestination;
+  externalLinks: ExternalLinksPreference;
+  platform: string;
+  alert: ExternalOpenAlert;
+  confirm?: WebConfirm;
+};
+
 export const defaultExternalLinksPreference: ExternalLinksPreference = {
   askBeforeOpeningExternalApps: true,
   preferredMapApp: "system-default",
@@ -38,4 +60,50 @@ export const getExternalOpenConfirmationCopy = (destination: ExternalOpenDestina
     openLabel: "Open",
     cancelLabel: "Cancel",
   };
+};
+
+export const getExternalOpenConfirmationMessage = (destination: ExternalOpenDestination) => {
+  const confirmationCopy = getExternalOpenConfirmationCopy(destination);
+
+  return [confirmationCopy.body, ...confirmationCopy.details].join("\n\n");
+};
+
+const getDefaultWebConfirm = (): WebConfirm | undefined => {
+  const maybeWindow = (globalThis as typeof globalThis & {
+    window?: { confirm?: WebConfirm };
+  }).window;
+
+  return typeof maybeWindow?.confirm === "function" ? maybeWindow.confirm : undefined;
+};
+
+export const openExternalDestinationWithConfirmation = (
+  {
+    destination,
+    externalLinks,
+    platform,
+    alert,
+    confirm = getDefaultWebConfirm(),
+  }: ExternalOpenConfirmationOptions,
+  openExternalDestination: () => void,
+) => {
+  if (!externalLinks.askBeforeOpeningExternalApps) {
+    openExternalDestination();
+    return;
+  }
+
+  const confirmationCopy = getExternalOpenConfirmationCopy(destination);
+  const message = getExternalOpenConfirmationMessage(destination);
+
+  if (platform === "web") {
+    if (confirm?.(message)) {
+      openExternalDestination();
+    }
+
+    return;
+  }
+
+  alert(confirmationCopy.title, message, [
+    { text: confirmationCopy.cancelLabel, style: "cancel" },
+    { text: confirmationCopy.openLabel, onPress: openExternalDestination },
+  ]);
 };

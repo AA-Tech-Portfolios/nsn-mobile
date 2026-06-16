@@ -23,7 +23,10 @@ import { getHomeEventPreviewAsset, type HomeEventPreviewAssetKey } from "@/lib/h
 import { getHomeTodayContextLabel } from "@/lib/home-header-context";
 import { getMeetupEmptyStateCopy } from "@/lib/meetup-empty-state";
 import { buildEventLocationSearchUrl } from "@/lib/event-location-links";
-import { getExternalOpenConfirmationCopy, type ExternalOpenDestination } from "@/lib/external-links";
+import {
+  openExternalDestinationWithConfirmation,
+  type ExternalOpenDestination,
+} from "@/lib/external-links";
 import {
   askAboutMeetupQuestionGroups,
   arrivingAloneReassuranceItems,
@@ -1365,18 +1368,15 @@ export default function HomeScreen() {
     destination: ExternalOpenDestination,
     openExternalDestination: () => void,
   ) => {
-    if (!externalLinks.askBeforeOpeningExternalApps) {
-      openExternalDestination();
-      return;
-    }
-
-    const confirmationCopy = getExternalOpenConfirmationCopy(destination);
-    const message = [confirmationCopy.body, ...confirmationCopy.details].join("\n\n");
-
-    Alert.alert(confirmationCopy.title, message, [
-      { text: confirmationCopy.cancelLabel, style: "cancel" },
-      { text: confirmationCopy.openLabel, onPress: openExternalDestination },
-    ]);
+    openExternalDestinationWithConfirmation(
+      {
+        destination,
+        externalLinks,
+        platform: Platform.OS,
+        alert: Alert.alert,
+      },
+      openExternalDestination,
+    );
   };
 
   const updateHomeViewMode = (value: HomeViewMode) => {
