@@ -28,4 +28,15 @@ describe("event detail lookup state", () => {
       }),
     ).toBe(true);
   });
+
+  it("treats an absent route id as not found after created event storage has loaded", () => {
+    expect(
+      shouldShowMissingEvent({
+        routeEventId: undefined,
+        hasDemoEvent: false,
+        hasCreatedEvent: false,
+        createdEventsLoaded: true,
+      }),
+    ).toBe(true);
+  });
 });

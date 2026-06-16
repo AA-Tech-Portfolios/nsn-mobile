@@ -5,13 +5,15 @@ type EventDetailLookupState = {
   createdEventsLoaded: boolean;
 };
 
+const hasRouteEventId = (routeEventId?: string) => Boolean(routeEventId?.trim());
+
 export function shouldWaitForCreatedEventLookup({
   routeEventId,
   hasDemoEvent,
   hasCreatedEvent,
   createdEventsLoaded,
 }: EventDetailLookupState) {
-  return Boolean(routeEventId && !hasDemoEvent && !hasCreatedEvent && !createdEventsLoaded);
+  return Boolean(hasRouteEventId(routeEventId) && !hasDemoEvent && !hasCreatedEvent && !createdEventsLoaded);
 }
 
 export function shouldShowMissingEvent({
@@ -20,5 +22,5 @@ export function shouldShowMissingEvent({
   hasCreatedEvent,
   createdEventsLoaded,
 }: EventDetailLookupState) {
-  return Boolean(routeEventId && !hasDemoEvent && !hasCreatedEvent && createdEventsLoaded);
+  return Boolean((!hasRouteEventId(routeEventId) || (!hasDemoEvent && !hasCreatedEvent)) && createdEventsLoaded);
 }
