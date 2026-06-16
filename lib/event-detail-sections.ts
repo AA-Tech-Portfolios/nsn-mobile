@@ -1,6 +1,11 @@
 import type { IconSymbolName } from "@/components/ui/icon-symbol-map";
 
-export type EventDetailSectionId = "whatToExpect" | "comfortPacing" | "optionalConversation" | "arrival" | "safetyBoundaries";
+export type EventDetailSectionId =
+  | "whatToExpect"
+  | "comfortPacing"
+  | "optionalConversation"
+  | "arrival"
+  | "safetyBoundaries";
 
 export type EventDetailSectionPlan = {
   id: EventDetailSectionId;
@@ -14,9 +19,9 @@ export const eventDetailSectionPlan: EventDetailSectionPlan[] = [
   {
     id: "whatToExpect",
     title: "What to expect",
-    summary: "The plan, sound level, weather, and practical basics in one place.",
+    summary: "The social feel, pace, and how much participation is optional.",
     iconName: "experience",
-    initiallyExpanded: false,
+    initiallyExpanded: true,
   },
   {
     id: "optionalConversation",
@@ -28,7 +33,7 @@ export const eventDetailSectionPlan: EventDetailSectionPlan[] = [
   {
     id: "arrival",
     title: "Arrival",
-    summary: "Broad arrival cues and how to clarify the meeting point.",
+    summary: "Meeting point, weather, transport, and accessibility basics.",
     iconName: "location",
     initiallyExpanded: false,
   },
@@ -51,6 +56,3 @@ export const eventDetailSectionPlan: EventDetailSectionPlan[] = [
 export const initialExpandedEventDetailSections = eventDetailSectionPlan
   .filter((section) => section.initiallyExpanded)
   .map((section) => section.id);
-
-export const getEventDetailQuickJumpItems = () =>
-  eventDetailSectionPlan.map(({ id, title, iconName }) => ({ section: id, label: title, iconName }));
