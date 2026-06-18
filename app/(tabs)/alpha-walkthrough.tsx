@@ -5,7 +5,14 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
-import { alphaWalkthroughCopy, alphaWalkthroughSteps } from "@/lib/alpha-walkthrough-copy";
+import { getAlphaComparisonAccordionRows } from "@/lib/alpha-proof-of-concept-accordion";
+import {
+  alphaProofOfConceptComparisonCards,
+  alphaProofOfConceptExplorationQuestions,
+  alphaProofOfConceptIntro,
+  alphaWalkthroughCopy,
+  alphaWalkthroughSteps,
+} from "@/lib/alpha-walkthrough-copy";
 import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
 import { nsnColors } from "@/lib/nsn-data";
 
@@ -16,6 +23,7 @@ export default function AlphaWalkthroughScreen() {
   const { isNightMode, appLanguage, suburb, screenReaderHints } = useAppSettings();
   const [stepIndex, setStepIndex] = useState(0);
   const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
+  const [expandedComparisonPlatforms, setExpandedComparisonPlatforms] = useState<Set<(typeof alphaProofOfConceptComparisonCards)[number]["platformType"]>>(new Set());
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(getLanguageBase(appLanguage));
   const step = alphaWalkthroughSteps[stepIndex];
@@ -27,6 +35,7 @@ export default function AlphaWalkthroughScreen() {
   const canGoBack = stepIndex > 0;
   const canGoNext = stepIndex < alphaWalkthroughSteps.length - 1;
   const visibleTutorialCards = meetupTutorialCards.filter((card) => !dismissedTutorialIds.includes(card.id));
+  const comparisonRows = getAlphaComparisonAccordionRows(alphaProofOfConceptComparisonCards, expandedComparisonPlatforms);
 
   const openStepRoute = () => {
     router.push(step.route as never);
@@ -35,6 +44,20 @@ export default function AlphaWalkthroughScreen() {
   const dismissTutorial = (tutorialId: MeetupTutorialCard["id"]) => {
     setDismissedTutorialIds((current) => (current.includes(tutorialId) ? current : [...current, tutorialId]));
   };
+
+  const toggleComparisonPlatform = ((platformType: (typeof alphaProofOfConceptComparisonCards)[number]["platformType"]) => {
+    setExpandedComparisonPlatforms((current) => {
+      const next = new Set(current);
+
+      if (next.has(platformType)) {
+        next.delete(platformType);
+      } else {
+        next.add(platformType);
+      }
+
+      return next;
+    });
+  });
 
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
@@ -53,6 +76,99 @@ export default function AlphaWalkthroughScreen() {
         <Text style={[styles.subtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
           {alphaWalkthroughCopy.subtitle}
         </Text>
+
+        <View style={styles.proofSection}>
+          <View style={[styles.proofIntro, isRtl && styles.rtlBlock]}>
+            <View style={[styles.proofTitleRow, isRtl && styles.rtlRow]}>
+              <View style={[styles.proofIcon, isDay && styles.dayIconBubble]}>
+                <IconSymbol name="experience" color={isDay ? "#445E93" : nsnColors.day} size={19} />
+              </View>
+              <View style={styles.proofTitleCopy}>
+                <Text style={[styles.proofEyebrow, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                  Proof of concept
+                </Text>
+                <Text style={[styles.proofTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                  {alphaProofOfConceptIntro.title}
+                </Text>
+              </View>
+            </View>
+            <Text style={[styles.proofStatement, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+              {alphaProofOfConceptIntro.statement}
+            </Text>
+            <Text style={[styles.proofCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              {alphaProofOfConceptIntro.copy}
+            </Text>
+          </View>
+
+          <View style={styles.comparisonList}>
+            {comparisonRows.map((row) => (
+              <View key={row.platformType} style={[styles.comparisonCard, isDay && styles.dayCard]}>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={() => toggleComparisonPlatform(row.platformType)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${row.expanded ? "Collapse" : "Expand"} ${row.platformType} comparison`}
+                  accessibilityState={{ expanded: row.expanded }}
+                  style={[styles.comparisonToggle, isRtl && styles.rtlRow]}
+                >
+                  <Text style={[styles.comparisonPlatform, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                    {row.platformType}
+                  </Text>
+                  <IconSymbol name={row.expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                </TouchableOpacity>
+                {row.details ? (
+                  <View style={styles.comparisonDetails}>
+                    <View style={styles.comparisonField}>
+                      <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                        What it is good at
+                      </Text>
+                      <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                        {row.details.goodAt}
+                      </Text>
+                    </View>
+                    <View style={styles.comparisonField}>
+                      <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                        What people may still struggle with
+                      </Text>
+                      <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                        {row.details.mayStruggleWith}
+                      </Text>
+                    </View>
+                    <View style={[styles.nsnGapBlock, isDay && styles.dayNsnGapBlock]}>
+                      <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                        How NSN addresses the gap
+                      </Text>
+                      <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                        {row.details.nsnGap}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.questionsSection}>
+            <Text style={[styles.questionsTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+              Questions we are still exploring
+            </Text>
+            <View style={styles.questionList}>
+              {alphaProofOfConceptExplorationQuestions.map((question) => (
+                <View key={question.title} style={[styles.questionRow, isDay && styles.dayQuestionRow, isRtl && styles.rtlRow]}>
+                  <View style={[styles.questionDot, isDay && styles.dayQuestionDot]} />
+                  <View style={styles.questionCopy}>
+                    <Text style={[styles.questionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                      {question.title}
+                    </Text>
+                    <Text style={[styles.questionText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                      {question.copy}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        </View>
 
         <View style={[styles.progressCard, isDay && styles.dayCard]}>
           <Text style={[styles.progressText, isDay && styles.dayAccentText]}>{progressText}</Text>
@@ -199,6 +315,35 @@ const styles = StyleSheet.create({
   subtitle: { color: nsnColors.muted, fontSize: 14, lineHeight: 21, marginTop: 6, marginBottom: 16 },
   dayMutedText: { color: "#53677A" },
   dayAccentText: { color: "#445E93" },
+  proofSection: { gap: 10, marginBottom: 14 },
+  proofIntro: { gap: 8 },
+  proofTitleRow: { flexDirection: "row", alignItems: "center", gap: 11 },
+  proofIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(119,134,255,0.12)", flexShrink: 0 },
+  proofTitleCopy: { flex: 1, minWidth: 0 },
+  proofEyebrow: { color: nsnColors.day, fontSize: 11, fontWeight: "900", lineHeight: 15, textTransform: "uppercase" },
+  proofTitle: { color: nsnColors.text, fontSize: 22, fontWeight: "900", lineHeight: 28 },
+  proofStatement: { color: nsnColors.text, fontSize: 15, fontWeight: "900", lineHeight: 22 },
+  proofCopy: { color: nsnColors.muted, fontSize: 13, lineHeight: 20 },
+  comparisonList: { gap: 7 },
+  comparisonCard: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, overflow: "hidden" },
+  comparisonToggle: { minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, paddingHorizontal: 13, paddingVertical: 9 },
+  comparisonPlatform: { color: nsnColors.text, fontSize: 16, fontWeight: "900", lineHeight: 22 },
+  comparisonDetails: { borderTopWidth: 1, borderTopColor: "rgba(120,144,184,0.22)", padding: 13, gap: 10 },
+  comparisonField: { gap: 3 },
+  comparisonLabel: { color: nsnColors.day, fontSize: 10, fontWeight: "900", lineHeight: 14, textTransform: "uppercase" },
+  comparisonText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18 },
+  nsnGapBlock: { borderRadius: 14, borderWidth: 1, borderColor: "rgba(119,134,255,0.28)", backgroundColor: "rgba(119,134,255,0.08)", padding: 11, gap: 3 },
+  dayNsnGapBlock: { borderColor: "#C7D8F0", backgroundColor: "#F4F7FC" },
+  questionsSection: { gap: 10, marginTop: 4 },
+  questionsTitle: { color: nsnColors.text, fontSize: 18, fontWeight: "900", lineHeight: 24 },
+  questionList: { gap: 8 },
+  questionRow: { borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12 },
+  dayQuestionRow: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
+  questionDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: nsnColors.day, marginTop: 6, flexShrink: 0 },
+  dayQuestionDot: { backgroundColor: "#445E93" },
+  questionCopy: { flex: 1, minWidth: 0 },
+  questionTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
+  questionText: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 2 },
   progressCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: nsnColors.surface, padding: 14, marginBottom: 12 },
   dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D8E1EA" },
   progressText: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17, marginBottom: 8 },
@@ -245,5 +390,6 @@ const styles = StyleSheet.create({
   noteTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   noteCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
   rtlRow: { flexDirection: "row-reverse" },
+  rtlBlock: { alignItems: "flex-end" },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
 });
