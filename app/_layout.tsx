@@ -22,6 +22,7 @@ import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-run
 
 import { AppSettingsProvider, useAppSettings } from "@/lib/app-settings";
 import { getAppStatusBarBackgroundColor, getAppStatusBarStyle } from "@/lib/status-bar-style";
+import { RareVisitorCat } from "@/components/rare-visitor-cat";
 
 const DEFAULT_WEB_INSETS: EdgeInsets = { top: 0, right: 0, bottom: 0, left: 0 };
 const DEFAULT_WEB_FRAME: Rect = { x: 0, y: 0, width: 0, height: 0 };
@@ -91,6 +92,7 @@ export default function RootLayout() {
             <Stack.Screen name="oauth/callback" />
           </Stack>
           <LowLightOverlay />
+          <RareVisitorCat />
           <AppStatusBar />
         </QueryClientProvider>
       </trpc.Provider>
@@ -118,9 +120,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AppSettingsProvider>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          {content}
-        </SafeAreaProvider>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>{content}</SafeAreaProvider>
       </AppSettingsProvider>
     </ThemeProvider>
   );
