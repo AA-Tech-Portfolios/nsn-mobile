@@ -258,3 +258,10 @@ export const profileResourceSupportRowMetadata = {
   badge: "Demo",
   chevron: true,
 };
+
+export const profileAppInfoDedication = {
+  title: "In loving memory",
+  copy:
+    "In loving memory of my grandmother.\n\nHer kindness, compassion, and unwavering support helped shape the values behind NSN: care, belonging, and meaningful human connection.",
+  placement: "appInfoBottom",
+} as const;

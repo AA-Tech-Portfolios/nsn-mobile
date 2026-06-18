@@ -4,6 +4,7 @@ import {
   appearanceLayoutControlMetadata,
   getUserPreferenceRows,
   getUserPreferenceRowDescription,
+  profileAppInfoDedication,
   profileOptionGroups,
   profileResourceSupportRowMetadata,
   profileSupportRowMetadata,
@@ -96,5 +97,15 @@ describe("profile menu row metadata", () => {
       "Transportation Method",
       "Work, Study & Life Context",
     ]);
+  });
+
+  it("keeps the App Info dedication warm and understated", () => {
+    expect(profileAppInfoDedication.title).toBe("In loving memory");
+    expect(profileAppInfoDedication.copy).toContain("In loving memory of my grandmother.");
+    expect(profileAppInfoDedication.copy).toContain("care, belonging, and meaningful human connection");
+    expect(profileAppInfoDedication.placement).toBe("appInfoBottom");
+    expect(`${profileAppInfoDedication.title} ${profileAppInfoDedication.copy}`.toLowerCase()).not.toMatch(
+      /hero|dramatic|spotlight|animated|flashy/
+    );
   });
 });

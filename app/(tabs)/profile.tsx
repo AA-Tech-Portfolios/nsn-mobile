@@ -69,7 +69,7 @@ import {
   type ProfileDrawerPanel,
   type ProfilePreferenceSection,
 } from "@/lib/alpha-readiness-controls";
-import { appearanceLayoutControlMetadata, getUserPreferenceRowDescription, getUserPreferenceRows, profileOptionGroups, profileResourceSupportRowMetadata, profileSupportRowMetadata, type AppearanceLayoutControlKey, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
+import { appearanceLayoutControlMetadata, getUserPreferenceRowDescription, getUserPreferenceRows, profileAppInfoDedication, profileOptionGroups, profileResourceSupportRowMetadata, profileSupportRowMetadata, type AppearanceLayoutControlKey, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { connectionPromptCategories, getConnectionPromptProfile } from "@/lib/connection-prompts";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
@@ -6247,6 +6247,16 @@ export default function ProfileScreen() {
                   </View>
                   <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
                 </TouchableOpacity>
+                <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
+                <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>App Info</Text>
+                <View style={[styles.profileMenuInfoCard, styles.appInfoDedicationCard, isDay && styles.daySoftOption]}>
+                  <Text style={[styles.appInfoDedicationTitle, isDay && styles.dayTitle]}>
+                    {profileAppInfoDedication.title}
+                  </Text>
+                  <Text style={[styles.appInfoDedicationCopy, isDay && styles.dayMutedText]}>
+                    {profileAppInfoDedication.copy}
+                  </Text>
+                </View>
                 <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>Prototype account controls</Text>
                 <TouchableOpacity
                   activeOpacity={0.78}
@@ -7658,6 +7668,9 @@ const styles = StyleSheet.create({
   dayProfileMenuWarningTitle: { color: nsnSupportReadabilityColors.lightWarningText },
   profileMenuWarningCopy: { color: nsnSupportReadabilityColors.darkWarningBody, fontWeight: "800", lineHeight: 18 },
   dayProfileMenuWarningCopy: { color: nsnSupportReadabilityColors.lightWarningBody },
+  appInfoDedicationCard: { paddingVertical: 14, gap: 7, marginBottom: 10 },
+  appInfoDedicationTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  appInfoDedicationCopy: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 12, fontWeight: "700", lineHeight: 19 },
   helpSupportSectionStack: { gap: 8, marginBottom: 8 },
   helpSupportCardRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   helpSubsection: { borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 10, marginBottom: 8 },
