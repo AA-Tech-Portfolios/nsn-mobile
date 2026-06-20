@@ -6,23 +6,50 @@ import { getTranslationLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import type { IconSymbolName } from "@/components/ui/icon-symbol-map";
+import { getBottomTabBarLayout, getBottomTabIconLabelColor } from "@/lib/bottom-tab-layout";
 import { nsnColors } from "@/lib/nsn-data";
 
 type TabIconLabelProps = {
   boldText: boolean;
   color: string;
+  focused: boolean;
+  isDay: boolean;
   label: string;
   name: IconSymbolName;
+  reduceTransparency: boolean;
   size: number;
 };
 
-function TabIconLabel({ boldText, color, label, name, size }: TabIconLabelProps) {
+function TabIconLabel({
+  boldText,
+  color,
+  focused,
+  isDay,
+  label,
+  name,
+  reduceTransparency,
+  size,
+}: TabIconLabelProps) {
+  const foregroundColor = getBottomTabIconLabelColor({ color, focused, isDay });
+
   return (
-    <View style={styles.tabIconLabel}>
-      <IconSymbol size={size} name={name} color={color} />
+    <View
+      style={[
+        styles.tabIconLabel,
+        focused && styles.tabIconLabelActive,
+        focused && isDay && styles.dayTabIconLabelActive,
+        focused && reduceTransparency && styles.reducedTabIconLabelActive,
+      ]}
+    >
+      <IconSymbol size={size} name={name} color={foregroundColor} />
       <Text
         numberOfLines={1}
-        style={[styles.tabIconLabelText, { color }, boldText && styles.tabIconLabelTextBold]}
+        style={[
+          styles.tabIconLabelText,
+          { color: foregroundColor },
+          focused && styles.tabIconLabelTextActive,
+          boldText && styles.tabIconLabelTextBold,
+        ]}
       >
         {label}
       </Text>
@@ -319,18 +346,24 @@ export default function TabLayout() {
   const labels = tabLabels[getTranslationLanguageBase(appLanguage)] ?? tabLabels.English;
   const activeTintColor = appPalette.swatches[2];
   const insets = useSafeAreaInsets();
-  const bottomSafeArea =
-    Platform.OS === "web" ? Math.max(insets.bottom, 42) : Math.max(insets.bottom, 24);
-  const tabContentHeight = largerTouchTargets ? 96 : 88;
+  const tabLayout = getBottomTabBarLayout({
+    bottomInset: insets.bottom,
+    largerTouchTargets,
+    platform: Platform.OS === "web" ? "web" : "native",
+  });
+  const tabContentHeight = tabLayout.tabContentHeight;
   const tabIconSize = largerTouchTargets ? 28 : simplifiedInterface ? 24 : 25;
   const renderTabIcon = (name: IconSymbolName, label: string) => {
-    function TabIconRenderer({ color }: { color: string }) {
+    function TabIconRenderer({ color, focused }: { color: string; focused: boolean }) {
       return (
         <TabIconLabel
           boldText={boldText}
           color={color}
+          focused={focused}
+          isDay={isDay}
           label={label}
           name={name}
+          reduceTransparency={reduceTransparency}
           size={tabIconSize}
         />
       );
@@ -354,7 +387,7 @@ export default function TabLayout() {
           lineHeight: 18,
           maxWidth: 70,
           marginTop: 2,
-          marginBottom: Platform.OS === "web" ? 28 : 12,
+          marginBottom: 0,
           textAlign: "center",
         },
         tabBarIconStyle: {
@@ -364,26 +397,26 @@ export default function TabLayout() {
         tabBarItemStyle: {
           minHeight: tabContentHeight,
           height: tabContentHeight,
-          paddingTop: largerTouchTargets ? 10 : 8,
-          paddingBottom: largerTouchTargets ? 10 : 8,
+          paddingTop: largerTouchTargets ? 7 : 5,
+          paddingBottom: largerTouchTargets ? 7 : 5,
           alignItems: "center",
           justifyContent: "center",
           gap: 2,
           overflow: "visible",
         },
         tabBarStyle: {
-          minHeight: tabContentHeight + bottomSafeArea + 22,
-          height: tabContentHeight + bottomSafeArea + 22,
-          paddingTop: 8,
-          paddingBottom: bottomSafeArea + 14,
+          minHeight: tabLayout.tabBarHeight,
+          height: tabLayout.tabBarHeight,
+          paddingTop: tabLayout.paddingTop,
+          paddingBottom: tabLayout.paddingBottom,
           overflow: "visible",
           backgroundColor: reduceTransparency
             ? isDay
               ? "#FFFFFF"
               : "#0B1626"
             : isDay
-              ? "#FAFBFC"
-              : nsnColors.background,
+              ? "rgba(250,251,252,0.96)"
+              : "rgba(5,14,31,0.96)",
           borderTopColor: clearBorders
             ? isDay
               ? "#6F89A8"
@@ -394,8 +427,23 @@ export default function TabLayout() {
                 : "rgba(148,163,184,0.18)"
               : isDay
                 ? "#D8E1EA"
-                : nsnColors.border,
+              : nsnColors.border,
           borderTopWidth: clearBorders ? 1.5 : softSurfaces ? 0.6 : 0.8,
+          ...(reduceTransparency
+            ? null
+            : Platform.OS === "web"
+              ? ({
+                  boxShadow: isDay
+                    ? "0px -8px 22px rgba(38,61,88,0.10)"
+                    : "0px -10px 24px rgba(0,0,0,0.30)",
+                } as object)
+              : {
+                  shadowColor: "#000000",
+                  shadowOffset: { width: 0, height: -6 },
+                  shadowOpacity: isDay ? 0.08 : 0.28,
+                  shadowRadius: 16,
+                  elevation: 12,
+                }),
         },
       }}
     >
@@ -468,6 +516,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="quiet-space"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="saved-places"
         options={{
           href: null,
@@ -517,9 +571,39 @@ const styles = StyleSheet.create({
   tabIconLabel: {
     height: 56,
     minWidth: 68,
+    maxWidth: 86,
+    paddingHorizontal: 8,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
+  },
+  tabIconLabelActive: {
+    backgroundColor: "rgba(33,75,149,0.64)",
+    borderColor: "rgba(143,175,209,0.72)",
+    ...(Platform.OS === "web"
+      ? ({ boxShadow: "0px 4px 12px rgba(0,0,0,0.22)" } as object)
+      : {
+          shadowColor: "#000000",
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 0.2,
+          shadowRadius: 8,
+          elevation: 4,
+        }),
+  },
+  dayTabIconLabelActive: {
+    backgroundColor: "#EAF2FF",
+    borderColor: "#8FAFD1",
+  },
+  reducedTabIconLabelActive: {
+    ...(Platform.OS === "web"
+      ? ({ boxShadow: "none" } as object)
+      : {
+          elevation: 0,
+          shadowOpacity: 0,
+        }),
   },
   tabIconLabelText: {
     maxWidth: 74,
@@ -527,6 +611,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 15,
     textAlign: "center",
+  },
+  tabIconLabelTextActive: {
+    fontWeight: "800",
   },
   tabIconLabelTextBold: {
     fontWeight: "800",
