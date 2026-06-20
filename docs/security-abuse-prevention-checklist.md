@@ -48,6 +48,27 @@ Use this checklist before real authentication, shared databases, invite links, Q
 - Design reporting, blocking, and moderation workflows before enabling broad user-to-user interaction.
 - Keep audit logs for sensitive admin actions, moderation decisions, verification changes, account restrictions, invite approvals, and data access.
 
+## Network Risk
+
+Network risk detection is a soft safety signal for spam, fake-account, abuse, and repeated suspicious signup patterns. VPN, proxy, or datacenter indicators should increase account risk only in combination with proportional review logic; they are not a standalone ban reason.
+
+Current implementation notes:
+
+- VPN/proxy detection is disabled by default for local and alpha environments.
+- The system never automatically blocks users from network risk alone.
+- Provider failures fail open so auth and session checks are not broken by an IP-intelligence outage.
+- Network signals may contribute to additional verification requirements, including the soft user-facing copy: "For community safety, we need one extra check before you continue."
+- Only coarse safety outcomes are exposed, such as `networkRiskFlag`, `riskLevel`, `riskScoreDelta`, `requiresExtraVerification`, and `verificationCopy`.
+- Detailed browsing history, network history, raw provider payloads, or long-lived IP histories should not be exposed to clients.
+- The current implementation uses an abstraction layer and mock providers. Real IP-intelligence integration, such as IPinfo, MaxMind, Cloudflare, or another provider, is deferred until a production abuse-review model exists.
+
+Architecture notes:
+
+- `lib/security/network-risk.ts` owns the provider abstraction, disabled local fallback, mock provider, coarse risk scoring, soft verification copy, and fail-safe assessment shape.
+- `server/_core/authNetworkRisk.ts` extracts a coarse request IP from trusted forwarding headers, invokes the network-risk abstraction for auth/session checks, and fails open to the disabled provider if detection errors.
+- Auth routes include coarse `accountSafety` output on successful OAuth mobile, `/api/auth/me`, and `/api/auth/session` responses.
+- tRPC context carries `networkRisk`, and `auth.safety` exposes the same coarse safety outcome without changing `auth.me`.
+
 ## Age And Safety Review
 
 - Maintain age-gating and underage safety review before any public release.

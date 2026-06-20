@@ -76,6 +76,24 @@ pnpm test
 
 `pnpm lint` may report existing warnings in unrelated screens. Preserve the current warning policy unless the task is specifically to clean those files up.
 
+## Local Development Server
+
+Preferred local start command:
+
+```powershell
+pnpm dev --clear
+```
+
+This starts both backend and Expo web development processes. The API server runs on port `3000`. Expo Web runs on the configured web port, starting from `EXPO_WEB_PORT` when it is set, or `8081` by default. If that port is busy, `scripts/start-expo-web.mjs` searches the next available port and prints the selected port in the terminal.
+
+Use the explicit cache-clearing alias when that reads better in logs or runbooks:
+
+```powershell
+pnpm dev:clear
+```
+
+`scripts/start-dev.mjs` forwards `--clear` only to Expo/Metro by choosing `pnpm dev:metro:clear`. The API process still runs as `pnpm dev:server`; backend state, database data, and server-side caches are not cleared by this flag.
+
 ### Ubuntu WSL
 
 When validating from Ubuntu under WSL, clone the repository into the native Linux filesystem, such as `~/Projects/nsn-mobile`, instead of running it from a Windows-mounted path like `/mnt/c/...`.
