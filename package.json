@@ -5,9 +5,11 @@
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
-    "dev": "concurrently -k \"pnpm dev:server\" \"pnpm dev:metro\"",
+    "dev": "node scripts/start-dev.mjs",
+    "dev:clear": "node scripts/start-dev.mjs --clear",
     "dev:server": "cross-env NODE_ENV=development tsx watch server/_core/index.ts",
     "dev:metro": "node scripts/start-expo-web.mjs",
+    "dev:metro:clear": "node scripts/start-expo-web.mjs --clear",
     "dev:tunnel": "node scripts/start-expo-tunnel.mjs",
     "build": "esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "cross-env NODE_ENV=production node dist/index.js",
