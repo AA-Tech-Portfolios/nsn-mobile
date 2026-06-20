@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canPlayAmbientAudio,
+  getAmbientPlaybackUnavailableCopy,
   getNextQuietSpacePromptIndex,
   quietSpaceAmbientPreview,
   quietSpaceAmbientPlaceholder,
@@ -8,6 +10,7 @@ import {
   quietSpaceConversationPrompts,
   quietSpaceCopy,
   quietSpaceProfileEntry,
+  resolveAmbientPlaybackState,
 } from "./quiet-space";
 
 describe("quiet space", () => {
@@ -141,6 +144,35 @@ describe("quiet space", () => {
       copy: "Optional pause cards for before or after a meetup.",
       actionLabel: "Open Quiet Space",
       route: "/(tabs)/quiet-space",
+    });
+  });
+
+  it("allows web ambient playback when Web Audio is available", () => {
+    expect(canPlayAmbientAudio({ platformOS: "web", hasAudioContext: true })).toBe(true);
+    expect(resolveAmbientPlaybackState({ didStartAudio: true })).toEqual({
+      isPlaying: true,
+      helperCopy: null,
+    });
+  });
+
+  it("does not enter playing state for unsupported native ambient playback", () => {
+    expect(canPlayAmbientAudio({ platformOS: "ios", hasAudioContext: false })).toBe(false);
+    expect(resolveAmbientPlaybackState({ didStartAudio: false })).toEqual({
+      isPlaying: false,
+      helperCopy: "Ambient audio is currently available on web during alpha testing.",
+    });
+  });
+
+  it("provides native helper copy when ambient playback is unsupported", () => {
+    expect(getAmbientPlaybackUnavailableCopy({ platformOS: "android", hasAudioContext: false })).toBe(
+      "Ambient audio is currently available on web during alpha testing.",
+    );
+  });
+
+  it("keeps playback reset when audio start fails", () => {
+    expect(resolveAmbientPlaybackState({ didStartAudio: false })).toEqual({
+      isPlaying: false,
+      helperCopy: "Ambient audio is currently available on web during alpha testing.",
     });
   });
 });
