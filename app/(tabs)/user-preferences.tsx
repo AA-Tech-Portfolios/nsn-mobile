@@ -992,7 +992,7 @@ export default function UserPreferencesScreen() {
   };
 
   const getMobileSectionSummary = (title: string): { values: string[]; fallback: string } => {
-    if (title === "Progressive visibility") return { values: [comfortMode], fallback: "Choose how visible you want to feel." };
+    if (title === "Visibility settings") return { values: [comfortMode], fallback: "Choose how visible you want to feel." };
     if (title === "Social energy") return { values: [socialEnergyPreference], fallback: "Pick the energy that feels easiest." };
     if (title === "Communication preferences") return { values: communicationPreferences, fallback: "Choose one communication cue." };
     if (title === "Group size preferences") return { values: [groupSizePreference], fallback: "Choose the group size that feels easiest." };
@@ -1336,7 +1336,7 @@ export default function UserPreferencesScreen() {
 
         {activeSection === "comfort" ? (
           <View style={responsiveCardGridStyle}>
-            {renderSectionCard("Progressive visibility", "Choose how much profile detail feels right. Copy is prototype-safe and does not imply production privacy enforcement.", "👁️", (
+            {renderSectionCard("Visibility settings", "Choose how much profile detail feels right. Copy is prototype-safe and does not imply production privacy enforcement.", "👁️", (
               <View style={responsiveChipGridStyle}>
                 {comfortModes.map((mode) => renderChip({ key: mode, label: mode, icon: mode === "Comfort Mode" ? "🛡️" : mode === "Warm Up Mode" ? "🌤️" : "✨", active: comfortMode === mode, onPress: () => saveSoftHelloMvpState({ comfortMode: mode }), wide: true }))}
               </View>

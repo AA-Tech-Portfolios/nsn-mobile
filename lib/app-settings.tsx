@@ -12,12 +12,7 @@ import {
 } from "./softhello-mvp";
 import type { NoiseLevel } from "./nsn-data";
 import { getBrandTheme, normalizeBrandThemeId, type BrandThemeId } from "./brand-theme";
-import {
-  defaultSkyThemeId,
-  getSkyTheme,
-  normalizeSkyThemeId,
-  type SkyThemeId,
-} from "./sky-themes";
+import { defaultSkyThemeId, getSkyTheme, normalizeSkyThemeId, type SkyThemeId } from "./sky-themes";
 import {
   defaultCalendarMomentStates,
   defaultCalendarMomentVisibility,
@@ -468,7 +463,7 @@ export const calculateAgeFromBirthYear = (
   referenceDate = new Date(),
 ) => {
   if (typeof birthYear !== "number" || !Number.isFinite(birthYear)) return null;
-  return referenceDate.getFullYear() - Math.round(birthYear);
+  return referenceDate.getFullYear() - Math.round(birthYear) - 1;
 };
 
 export const calculateBirthYearFromAge = (
@@ -483,14 +478,16 @@ export const isBirthYearInAdultProfileRange = (
   birthYear: number | null | undefined,
   referenceDate = new Date(),
 ) => {
-  const age = calculateAgeFromBirthYear(birthYear, referenceDate);
-  return age !== null && age >= MIN_ADULT_AGE && age <= MAX_PROFILE_AGE;
+  if (typeof birthYear !== "number" || !Number.isFinite(birthYear)) return false;
+  const roundedBirthYear = Math.round(birthYear);
+  const currentYear = referenceDate.getFullYear();
+  const youngestPossibleAge = currentYear - roundedBirthYear - 1;
+  const oldestPossibleAge = currentYear - roundedBirthYear;
+
+  return youngestPossibleAge >= MIN_ADULT_AGE && oldestPossibleAge <= MAX_PROFILE_AGE;
 };
 
-const normalizeBirthYear = (
-  birthYear: number | null | undefined,
-  referenceDate = new Date(),
-) => {
+const normalizeBirthYear = (birthYear: number | null | undefined, referenceDate = new Date()) => {
   if (!isBirthYearInAdultProfileRange(birthYear, referenceDate)) return null;
   return Math.round(birthYear as number);
 };
@@ -706,11 +703,16 @@ export type GroupSizePreference =
   | "Flexible";
 export type PhotoRecordingComfortPreference =
   | "Ask me first"
+  | "Photos of me are usually okay"
   | "No photos of me"
+  | "Ask before group photos"
   | "Group photos are okay"
+  | "No group photos"
   | "Venue/event photos are okay"
+  | "Ask before video or audio recording"
   | "No videos please"
   | "No public posting without permission"
+  | "Ask before screenshots"
   | "Prefer no screenshots of chats/profile";
 export type PhysicalContactComfortPreference =
   | "No physical contact"
@@ -912,17 +914,24 @@ export const groupSizePreferenceOptions: GroupSizePreference[] = [
 ];
 export const photoRecordingComfortOptions: PhotoRecordingComfortPreference[] = [
   "Ask me first",
+  "Photos of me are usually okay",
   "No photos of me",
+  "Ask before group photos",
   "Group photos are okay",
+  "No group photos",
   "Venue/event photos are okay",
+  "Ask before video or audio recording",
   "No videos please",
   "No public posting without permission",
+  "Ask before screenshots",
   "Prefer no screenshots of chats/profile",
 ];
 export const defaultPhotoRecordingComfortPreferences: PhotoRecordingComfortPreference[] = [
   "Ask me first",
-  "No public posting without permission",
+  "Ask before group photos",
+  "Ask before video or audio recording",
   "Prefer no screenshots of chats/profile",
+  "No public posting without permission",
 ];
 export const physicalContactComfortOptions: PhysicalContactComfortPreference[] = [
   "No physical contact",
@@ -1348,7 +1357,9 @@ const normalizeHomeSectionOrder = (value?: HomeSectionOrderKey[] | null): HomeSe
           normalizedOrder.indexOf("nightEvents"),
         );
         normalizedOrder.splice(
-          Math.max(weatherIndex, eventIndex) >= 0 ? Math.max(weatherIndex, eventIndex) + 1 : normalizedOrder.length,
+          Math.max(weatherIndex, eventIndex) >= 0
+            ? Math.max(weatherIndex, eventIndex) + 1
+            : normalizedOrder.length,
           0,
           key,
         );
@@ -4358,7 +4369,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.meetupReminders !== undefined) setMeetupReminders(snapshot.meetupReminders);
     if (snapshot.weatherAlerts !== undefined) setWeatherAlerts(snapshot.weatherAlerts);
     if (snapshot.chatNotifications !== undefined) setChatNotifications(snapshot.chatNotifications);
-    if (snapshot.quietNotifications !== undefined) setQuietNotifications(snapshot.quietNotifications);
+    if (snapshot.quietNotifications !== undefined)
+      setQuietNotifications(snapshot.quietNotifications);
     if (snapshot.suggestNightModeInEvenings !== undefined)
       setSuggestNightModeInEvenings(snapshot.suggestNightModeInEvenings);
     if (snapshot.notificationSnoozed !== undefined)

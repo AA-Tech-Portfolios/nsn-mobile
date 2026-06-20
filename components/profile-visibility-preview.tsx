@@ -13,6 +13,7 @@ import type {
   SocialEnergyPreference,
 } from "@/lib/app-settings";
 import { useAppSettings } from "@/lib/app-settings";
+import { formatBroadLocalArea } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
 import { profileVisibilityPreviewCopy } from "@/lib/profile-visibility-copy";
 import type { SoftHelloComfortPreference } from "@/lib/softhello-mvp";
@@ -132,6 +133,7 @@ export function ProfileVisibilityPreview({
 }: ProfileVisibilityPreviewProps) {
   const { brandTheme } = useAppSettings();
   const name = displayName.trim() || "NSN member";
+  const broadSuburb = formatBroadLocalArea(suburb);
   const formatNamePart = (value: string, mode: ProfileNameDisplayMode | undefined, legacyVisible: boolean) => {
     const trimmed = value.trim();
     const displayMode = mode ?? (legacyVisible ? "Full" : "Hidden");
@@ -233,10 +235,10 @@ export function ProfileVisibilityPreview({
         </Text>
       ) : (
         <View style={styles.detailStack}>
-          {showSuburbArea && suburb.trim() ? renderDetailLine("localArea", `Local Area: ${suburb.trim()}`, true) : null}
+          {showSuburbArea && broadSuburb ? renderDetailLine("localArea", `Local Area: ${broadSuburb}`, true) : null}
           {showAge && age ? renderDetailLine("age", `Age: ${age}`) : null}
           {showPreferredAgeRange && preferredAgeMin && preferredAgeMax ? (
-            renderDetailLine("preferredAgeRange", `Preferred age range: ${preferredAgeMin}-${preferredAgeMax}`)
+            renderDetailLine("preferredAgeRange", `Age comfort range: ${preferredAgeMin}-${preferredAgeMax}`)
           ) : null}
           {showGender && gender !== "Not specified" ? renderDetailLine("gender", `Gender: ${gender}`) : null}
           {visibleAbout ? renderDetailLine(null, visibleAbout) : null}

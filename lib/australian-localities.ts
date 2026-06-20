@@ -6,6 +6,20 @@ export type AustralianLocality = {
   longitude: number;
 };
 
+const australianStatePostcodePattern =
+  /(?:,?\s+(?:ACT|NSW|NT|QLD|SA|TAS|VIC|WA))?\s+\d{4}\b/gi;
+
+export const formatBroadLocalArea = (value: string) => {
+  const broadArea = value
+    .replace(australianStatePostcodePattern, "")
+    .replace(/\s+,/g, ",")
+    .replace(/,\s*$/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  return broadArea || value.trim();
+};
+
 export const australianLocalities: AustralianLocality[] = [
   { suburb: "Adelaide", state: "SA", postcode: "5000", latitude: -34.9285, longitude: 138.6007 },
   { suburb: "Albury", state: "NSW", postcode: "2640", latitude: -36.0737, longitude: 146.9135 },
