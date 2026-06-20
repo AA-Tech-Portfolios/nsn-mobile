@@ -102,6 +102,16 @@ export const englishSettingsPrivacyCopy = {
   restartOnboardingCopy:
     "Revisit age confirmation, suburb, intent, nickname, photo and visibility choices.",
   restartOnboardingAction: "Start",
+  deleteLocalPrototypeData: "Delete local prototype data",
+  deleteLocalPrototypeDataCopy:
+    "Clears local profile, RSVP, My Circle and planning notes, saved places, hidden meetups, reports and feedback, and created demo meetups on this device.",
+  deleteLocalPrototypeDataHint:
+    "Clears local prototype data on this device only. No real account or backend data is deleted.",
+  previewAccountDeletion: "Preview account deletion",
+  previewAccountDeletionCopy:
+    "Demo-only preview for alpha testers. No real account or profile data is deleted; production deletion needs account systems, audit logging, and recovery policy first.",
+  previewAccountDeletionHint:
+    "Opens a prototype confirmation dialog. No real account will be deleted.",
   searchLanguage: "Search local languages...",
   noLanguageFound: "No language found",
   goBack: "Go back",

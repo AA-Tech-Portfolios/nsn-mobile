@@ -198,3 +198,24 @@ export function getSettingsSearchResults(query: string, limit = 8) {
     .slice(0, limit)
     .map((result) => result.item);
 }
+
+export function getSettingsJumpScrollY({
+  sectionY,
+  accordionY,
+  offset = 8,
+  allowAccordionFallback = false,
+}: {
+  sectionY?: number;
+  accordionY?: number;
+  offset?: number;
+  allowAccordionFallback?: boolean;
+}) {
+  const targetY =
+    typeof sectionY === "number"
+      ? sectionY
+      : allowAccordionFallback && typeof accordionY === "number"
+        ? accordionY
+        : null;
+
+  return typeof targetY === "number" ? Math.max(0, targetY - offset) : null;
+}
