@@ -1719,10 +1719,7 @@ export default function ChatsScreen() {
             <TouchableOpacity
               activeOpacity={0.85}
               onPress={() =>
-                router.push({
-                  pathname: "/(tabs)/profile",
-                  params: { menu: "verificationTrust", from: "chats" },
-                } as never)
+                router.push("/(tabs)/profile?menu=verificationTrust&from=chats" as never)
               }
               style={styles.trustGateButton}
               accessibilityRole="button"

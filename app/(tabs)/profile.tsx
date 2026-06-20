@@ -19,6 +19,7 @@ import {
   getLifeContextFreshnessLabel,
   getTranslationLanguageBase,
   groupSizePreferenceOptions,
+  isBirthYearInAdultProfileRange,
   lifeContextCurrentStateOptions,
   lifeContextFieldOptions,
   lifeContextLearningOptions,
@@ -76,6 +77,7 @@ import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManag
 import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
 import { nsnSupportReadabilityColors } from "@/lib/support-readability";
+import { buildHref } from "@/lib/navigation-hrefs";
 import type { LocalAreaSuggestion } from "@/lib/location-lookup";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
 import {
@@ -1131,6 +1133,7 @@ export default function ProfileScreen() {
   const {
     ageConfirmed,
     age,
+    birthYear,
     accountPaused,
     isNightMode,
     blurProfilePhoto,
@@ -1217,6 +1220,7 @@ export default function ProfileScreen() {
     userPreferenceTextMode,
     emojiDisplayMode,
     showProfileControlsShortcut,
+    showTinyTutorials,
     softSurfaces,
     clearBorders,
     brandTheme,
@@ -1311,7 +1315,7 @@ export default function ProfileScreen() {
   const [showLastNameSaved, setShowLastNameSaved] = useState(false);
   const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const [isEditingAge, setIsEditingAge] = useState(false);
-  const [draftAge, setDraftAge] = useState(age ? String(age) : "");
+  const [draftBirthYear, setDraftBirthYear] = useState(birthYear ? String(birthYear) : "");
   const [draftPreferredAgeMin, setDraftPreferredAgeMin] = useState(String(preferredAgeMin));
   const [draftPreferredAgeMax, setDraftPreferredAgeMax] = useState(String(preferredAgeMax));
   const [draftGender, setDraftGender] = useState<ProfileGender>(gender);
@@ -1403,7 +1407,7 @@ export default function ProfileScreen() {
       setShowPhotoMenu(false);
       setIsVerificationReviewOpen(false);
       closeProfileMenu();
-      router.push({ pathname: "/user-preferences", params: { section, returnPanel: profileReturnPanelByPreferenceSection[section] } } as never);
+      router.push(buildHref("/user-preferences", { section, returnPanel: profileReturnPanelByPreferenceSection[section] }) as never);
     },
     [closeProfileMenu, router]
   );
@@ -1413,7 +1417,7 @@ export default function ProfileScreen() {
       setShowPhotoMenu(false);
       setIsVerificationReviewOpen(false);
       closeProfileMenu();
-      router.push({ pathname: "/settings", params: { from: source, ...(params ?? {}) } } as never);
+      router.push(buildHref("/settings", { from: source, ...(params ?? {}) }) as never);
     },
     [closeProfileMenu, router]
   );
@@ -1429,7 +1433,7 @@ export default function ProfileScreen() {
       }
 
       if ("params" in row && row.params) {
-        router.push({ pathname: row.route, params: row.params } as never);
+        router.push(buildHref(row.route, row.params) as never);
         return;
       }
 
@@ -1555,12 +1559,12 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     if (!isEditingAge) {
-      setDraftAge(age ? String(age) : "");
+      setDraftBirthYear(birthYear ? String(birthYear) : "");
       setDraftPreferredAgeMin(String(preferredAgeMin));
       setDraftPreferredAgeMax(String(preferredAgeMax));
       setDraftGender(gender);
     }
-  }, [age, gender, isEditingAge, preferredAgeMax, preferredAgeMin]);
+  }, [birthYear, gender, isEditingAge, preferredAgeMax, preferredAgeMin]);
 
   const saveProfilePhotoPreview = (uri: string | null) => {
     setProfilePhotoUri(uri);
@@ -1576,7 +1580,7 @@ export default function ProfileScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -1654,12 +1658,16 @@ export default function ProfileScreen() {
   };
 
   const saveAgeAndGroup = async () => {
-    const nextAge = Number.parseInt(draftAge, 10);
+    const nextBirthYear = Number.parseInt(draftBirthYear, 10);
     const nextPreferredMin = Number.parseInt(draftPreferredAgeMin, 10);
     const nextPreferredMax = Number.parseInt(draftPreferredAgeMax, 10);
+    const validBirthYear =
+      Number.isFinite(nextBirthYear) && isBirthYearInAdultProfileRange(nextBirthYear)
+        ? nextBirthYear
+        : birthYear;
 
     await saveSoftHelloMvpState({
-      age: Number.isFinite(nextAge) ? nextAge : age,
+      birthYear: validBirthYear,
       preferredAgeMin: Number.isFinite(nextPreferredMin) ? nextPreferredMin : preferredAgeMin,
       preferredAgeMax: Number.isFinite(nextPreferredMax) ? nextPreferredMax : preferredAgeMax,
       gender: draftGender,
@@ -1678,7 +1686,7 @@ export default function ProfileScreen() {
       return;
     }
 
-    setDraftAge(age ? String(age) : "");
+    setDraftBirthYear(birthYear ? String(birthYear) : "");
     setDraftPreferredAgeMin(String(preferredAgeMin));
     setDraftPreferredAgeMax(String(preferredAgeMax));
     setDraftGender(gender);
@@ -1753,7 +1761,7 @@ export default function ProfileScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -2251,7 +2259,7 @@ export default function ProfileScreen() {
 
   const openSupportGuide = (itemId: SupportGuidanceId) => {
     closeProfileMenu();
-    router.push({ pathname: "/support-guidance/[id]", params: { id: itemId } } as never);
+    router.push(`/support-guidance/${encodeURIComponent(itemId)}` as never);
   };
 
   const renderHelpSectionHeader = (sectionId: HelpSupportSectionId, title: string, copy: string, icon: ComponentProps<typeof IconSymbol>["name"]) => {
@@ -2816,7 +2824,7 @@ export default function ProfileScreen() {
                 onPress={() => updateSocialEnergyPreference(option)}
               >
                 <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
-                  {getPreferenceDisplayLabel(option, active)}
+                  {formatProfilePreferenceLabel(option)}
                 </Text>
               </TouchableOpacity>
             );
@@ -3237,7 +3245,7 @@ export default function ProfileScreen() {
       age: {
         label: "Edit",
         onPress: toggleAgeEditing,
-        accessibilityLabel: "Edit age",
+        accessibilityLabel: "Edit birth year",
       },
       preferredAgeRange: {
         label: "Edit",
@@ -3623,9 +3631,9 @@ export default function ProfileScreen() {
     <View style={[styles.profileBasicsCard, styles.ageEditorCard, isCleanProfile && styles.profileDetailsAgeCard, isDay && styles.dayVisibilityModeCard]}>
       <View style={[styles.cardTitleRow, isRtl && styles.rtlRow]}>
         <View style={styles.profileLayoutBody}>
-          <Text style={[styles.visibilityModeTitle, styles.leftAlignedTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Age & group preferences</Text>
+          <Text style={[styles.visibilityModeTitle, styles.leftAlignedTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Birth year & group preferences</Text>
           <Text style={[styles.sectionSubtitle, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-            {age ? `${age} · prefers ${preferredAgeMin}-${preferredAgeMax}` : `Prefers ${preferredAgeMin}-${preferredAgeMax}`}
+            {birthYear && age ? `${birthYear} · age ${age} · prefers ${preferredAgeMin}-${preferredAgeMax}` : `Prefers ${preferredAgeMin}-${preferredAgeMax}`}
             {gender !== "Not specified" ? ` · ${gender}` : ""}
           </Text>
         </View>
@@ -3634,9 +3642,9 @@ export default function ProfileScreen() {
       {isEditingAge ? (
         <>
           <View style={styles.rangeRow}>
-            <TextInput value={draftAge} onChangeText={(value) => setDraftAge(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Age" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
-            <TextInput value={draftPreferredAgeMin} onChangeText={(value) => setDraftPreferredAgeMin(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Min" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
-            <TextInput value={draftPreferredAgeMax} onChangeText={(value) => setDraftPreferredAgeMax(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Max" placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft} style={[styles.rangeInput, isDay && styles.dayInput]} />
+            <TextInput value={draftBirthYear} onChangeText={(value) => setDraftBirthYear(value.replace(/[^0-9]/g, "").slice(0, 4))} keyboardType="number-pad" placeholder="Birth year" placeholderTextColor={isDay ? "#53677A" : nsnColors.muted} style={[styles.rangeInput, isDay && styles.dayInput]} />
+            <TextInput value={draftPreferredAgeMin} onChangeText={(value) => setDraftPreferredAgeMin(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Min" placeholderTextColor={isDay ? "#53677A" : nsnColors.muted} style={[styles.rangeInput, isDay && styles.dayInput]} />
+            <TextInput value={draftPreferredAgeMax} onChangeText={(value) => setDraftPreferredAgeMax(value.replace(/[^0-9]/g, "").slice(0, 2))} keyboardType="number-pad" placeholder="Max" placeholderTextColor={isDay ? "#53677A" : nsnColors.muted} style={[styles.rangeInput, isDay && styles.dayInput]} />
           </View>
           <View style={styles.preferenceGrid}>
             {genderOptions.map((option) => (
@@ -4010,7 +4018,7 @@ export default function ProfileScreen() {
                     {[
                       { icon: "edit" as const, title: "Name", copy: "Update your first name or nickname.", action: () => { closeProfileMenu(); setIsEditingName(true); } },
                       { icon: "person.fill" as const, title: "Photo", copy: "Add, replace, or remove your profile photo.", action: () => { closeProfileMenu(); setShowPhotoMenu(true); } },
-                      { icon: "calendar" as const, title: "Age, Range & Gender", copy: "Edit age, preferred age range, and optional gender.", action: () => { closeProfileMenu(); toggleAgeEditing(); } },
+                      { icon: "calendar" as const, title: "Birth Year, Range & Gender", copy: "Edit birth year, preferred age range, and optional gender.", action: () => { closeProfileMenu(); toggleAgeEditing(); } },
                       { icon: "location" as const, title: "Local Area", copy: "Change your suburb or hide it from preview.", action: () => { closeProfileMenu(); setIsEditingSuburb(true); } },
                       { icon: "interests" as const, title: "Interests", copy: "Choose first-meetup interests shown in preview.", action: () => openPreferenceDestination("hobbiesInterests", "interests") },
                       { icon: "group" as const, title: "My Vibes", copy: "Update the quick feel for your social style.", action: () => { closeProfileMenu(); setIsEditingVibes(true); } },
@@ -6326,6 +6334,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
+        {showTinyTutorials ? (
         <View style={[styles.profileTutorialPanel, isDay && styles.dayCard, clearBorders && styles.clearBorderCard]}>
           <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>Tiny tutorial</Text>
           <Text style={[styles.alphaGuideTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Privacy and visibility</Text>
@@ -6361,6 +6370,7 @@ export default function ProfileScreen() {
             </Text>
           ) : null}
         </View>
+        ) : null}
 
         {false ? (
         <View style={[styles.profileDisplayCard, isDay && styles.dayCard, clearBorders && styles.clearBorderCard]}>
@@ -7963,13 +7973,13 @@ const styles = StyleSheet.create({
   cardTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 8 },
   sectionTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   sectionTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 23 },
-  editText: { color: "#7786FF", fontSize: 13, fontWeight: "700" },
+  editText: { color: "#D9E4FF", fontSize: 13, fontWeight: "800" },
   preferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginTop: 2 },
   vibeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
   vibeChip: { color: nsnColors.text, fontSize: 13, lineHeight: 18, fontWeight: "700", paddingHorizontal: 13, paddingVertical: 9, borderRadius: 14, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, overflow: "hidden" },
   comfortChipActive: { ...nsnActionButtonStyles.selectedPill, color: nsnColors.selectedChipText },
   dayComfortChipActive: { backgroundColor: "#536C9E", borderColor: "#536C9E", color: "#FFFFFF" },
-  vibeChipMuted: { opacity: 0.45, borderStyle: "dashed" },
+  vibeChipMuted: { opacity: 0.72, borderStyle: "dashed" },
   rtlRow: { flexDirection: "row-reverse" },
   rtlText: { textAlign: "right", writingDirection: "rtl" },
   inlineMessage: { color: "#F7C85B", fontSize: 12, lineHeight: 17, fontWeight: "700", marginTop: -10, marginBottom: 16, textAlign: "center" },

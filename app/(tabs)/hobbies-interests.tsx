@@ -77,7 +77,7 @@ export default function HobbiesInterestsScreen() {
   return (
     <ScreenContainer containerClassName="bg-background" safeAreaClassName="bg-background" style={isDay && styles.dayContainer}>
       <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={[styles.content, isWide && styles.contentWide, { gap: preferenceLayout.sectionGap }]} showsVerticalScrollIndicator={false}>
-        <TouchableOpacity activeOpacity={0.75} onPress={() => router.replace({ pathname: "/(tabs)/profile", params: { menu: "preferences" } })} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={backLabel}>
+        <TouchableOpacity activeOpacity={0.75} onPress={() => router.replace("/(tabs)/profile?menu=preferences" as never)} style={[styles.backButton, isDay && styles.dayIconButton]} accessibilityRole="button" accessibilityLabel={backLabel}>
           <IconSymbol name="chevron.left" color={isDay ? "#0B1220" : nsnColors.text} size={24} />
         </TouchableOpacity>
 

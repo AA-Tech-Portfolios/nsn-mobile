@@ -1990,14 +1990,14 @@ export default function HomeScreen() {
           showHomeCustomizationPausedNotice();
           return;
         case "transportation-method":
-          router.push({ pathname: "/(tabs)/profile", params: { menu: "transportPreferences" } } as never);
+          router.push("/(tabs)/profile?menu=transportPreferences" as never);
           return;
         case "contact-preference":
         case "contact-boundaries":
-          router.push({ pathname: "/(tabs)/profile", params: { menu: "contactPreferencePanel" } } as never);
+          router.push("/(tabs)/profile?menu=contactPreferencePanel" as never);
           return;
         case "location-preference":
-          router.push({ pathname: "/(tabs)/profile", params: { menu: "locationPreferencePanel" } } as never);
+          router.push("/(tabs)/profile?menu=locationPreferencePanel" as never);
           return;
         case "first-meetup-support":
           setActiveOptionsDetailId("first-meetup-support");
@@ -2015,13 +2015,13 @@ export default function HomeScreen() {
           router.push("/(tabs)/chats" as never);
           return;
         case "help-support":
-          router.push({ pathname: "/(tabs)/profile", params: { menu: "helpSupport" } } as never);
+          router.push("/(tabs)/profile?menu=helpSupport" as never);
           return;
         case "support-resources":
           router.push("/support-resources" as never);
           return;
         case "block-report":
-          router.push({ pathname: "/(tabs)/profile", params: { menu: "blockReport" } } as never);
+          router.push("/(tabs)/profile?menu=blockReport" as never);
           return;
         case "alpha-walkthrough":
           router.push("/(tabs)/alpha-walkthrough" as never);

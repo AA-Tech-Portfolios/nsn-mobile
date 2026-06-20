@@ -454,13 +454,45 @@ export function getTranslationLanguageBase(language: string) {
 }
 
 const ONBOARDING_STORAGE_KEY = SOFTHELLO_ONBOARDING_STORAGE_KEY;
-const MIN_ADULT_AGE = 18;
-const MAX_PROFILE_AGE = 95;
+export const MIN_ADULT_AGE = 18;
+export const MAX_PROFILE_AGE = 95;
 const MAX_PREFERRED_AGE_SPAN = 35;
 
 const normalizeAdultAge = (value: number | null | undefined) => {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   return Math.min(MAX_PROFILE_AGE, Math.max(MIN_ADULT_AGE, Math.round(value)));
+};
+
+export const calculateAgeFromBirthYear = (
+  birthYear: number | null | undefined,
+  referenceDate = new Date(),
+) => {
+  if (typeof birthYear !== "number" || !Number.isFinite(birthYear)) return null;
+  return referenceDate.getFullYear() - Math.round(birthYear);
+};
+
+export const calculateBirthYearFromAge = (
+  age: number | null | undefined,
+  referenceDate = new Date(),
+) => {
+  const normalizedAge = normalizeAdultAge(age);
+  return normalizedAge === null ? null : referenceDate.getFullYear() - normalizedAge;
+};
+
+export const isBirthYearInAdultProfileRange = (
+  birthYear: number | null | undefined,
+  referenceDate = new Date(),
+) => {
+  const age = calculateAgeFromBirthYear(birthYear, referenceDate);
+  return age !== null && age >= MIN_ADULT_AGE && age <= MAX_PROFILE_AGE;
+};
+
+const normalizeBirthYear = (
+  birthYear: number | null | undefined,
+  referenceDate = new Date(),
+) => {
+  if (!isBirthYearInAdultProfileRange(birthYear, referenceDate)) return null;
+  return Math.round(birthYear as number);
 };
 
 const normalizePreferredAge = (value: number | undefined, fallback: number) => {
@@ -1401,7 +1433,7 @@ const normalizeCommunicationPreferences = (
 const normalizeGroupSizePreference = (value?: GroupSizePreference | null): GroupSizePreference =>
   value && groupSizePreferenceOptions.includes(value) ? value : "Small groups only";
 
-const normalizePhotoRecordingComfortPreferences = (
+export const normalizePhotoRecordingComfortPreferences = (
   value?: PhotoRecordingComfortPreference[] | null,
 ): PhotoRecordingComfortPreference[] => {
   const filtered = (value ?? []).filter(
@@ -1549,6 +1581,8 @@ export type OnboardingSnapshot = {
   accountPaused?: boolean;
   accountPauseTimeline?: AccountPauseTimeline;
   ageConfirmed: boolean;
+  birthYear?: number | null;
+  /** Legacy local snapshots may still contain age; new saves write birthYear only. */
   age?: number | null;
   preferredAgeMin?: number;
   preferredAgeMax?: number;
@@ -1658,6 +1692,7 @@ export type OnboardingSnapshot = {
   emojiDisplayMode?: EmojiDisplayMode;
   showProfileControlsShortcut?: boolean;
   showAlertsSettingsShortcut?: boolean;
+  showTinyTutorials?: boolean;
   externalLinks?: ExternalLinksPreference;
   batterySaver?: boolean;
   lowLightMode?: boolean;
@@ -1674,9 +1709,17 @@ export type OnboardingSnapshot = {
   homeEventVisualMode?: HomeEventVisualMode;
   homeVisibleSections?: HomeVisibleSections;
   homeSectionOrder?: HomeSectionOrderKey[];
+  meetupReminders?: boolean;
+  weatherAlerts?: boolean;
+  chatNotifications?: boolean;
+  quietNotifications?: boolean;
   suggestNightModeInEvenings?: boolean;
   notificationSnoozed?: boolean;
   notificationSnoozePreset?: NotificationSnoozePreset;
+  useApproximateLocation?: boolean;
+  showDistanceInMeetups?: boolean;
+  allowMessageRequests?: boolean;
+  safetyCheckIns?: boolean;
   timezone?: TimezoneSetting;
   timeContextMode?: TimeContextMode;
   dateFormatPreference?: DateFormatPreference;
@@ -1694,6 +1737,93 @@ export type OnboardingSnapshot = {
   brandThemeId?: BrandThemeId;
   skyThemeId?: SkyThemeId;
 };
+
+export type PrototypePreferenceDefaults = Partial<
+  Omit<OnboardingSnapshot, "hasCompletedOnboarding">
+> & {
+  largerText: boolean;
+  highContrast: boolean;
+  reduceMotion: boolean;
+  screenReaderHints: boolean;
+  meetupReminders: boolean;
+  weatherAlerts: boolean;
+  chatNotifications: boolean;
+  quietNotifications: boolean;
+  useApproximateLocation: boolean;
+  showDistanceInMeetups: boolean;
+  allowMessageRequests: boolean;
+  safetyCheckIns: boolean;
+};
+
+export function getPrototypePreferenceDefaults(): PrototypePreferenceDefaults {
+  return {
+    comfortMode: "Comfort Mode",
+    visibilityPreference: "Blurred",
+    privateProfile: false,
+    blurProfilePhoto: true,
+    blurLevel: "Medium blur",
+    softRevealSuggestions: true,
+    softRevealPace: "Gradual reveal",
+    preferSoftRevealPeople: false,
+    warmUpLowerBlur: true,
+    showSuburbArea: false,
+    middleNameDisplay: "Hidden",
+    lastNameDisplay: "Hidden",
+    showMiddleName: false,
+    showLastName: false,
+    showAge: false,
+    showPreferredAgeRange: false,
+    showGender: false,
+    showInterests: false,
+    showComfortPreferences: false,
+    minimalProfileView: false,
+    comfortPreferences: defaultComfortPreferences,
+    verificationLevel: "Readiness not reviewed",
+    contactPreferences: ["Text"],
+    meetupRhythmPreferences: ["Occasional/random"],
+    languageComfortPreferences: [],
+    socialEnergyPreference: "Calm",
+    communicationPreferences: [],
+    groupSizePreference: "Small groups only",
+    photoRecordingComfortPreferences: defaultPhotoRecordingComfortPreferences,
+    physicalContactComfortPreferences: defaultPhysicalContactComfortPreferences,
+    verifiedButPrivate: true,
+    profileShortcutLayout: "Clean",
+    profileWidthPreference: "Contained",
+    settingsPrivacyMode: "Basic",
+    userPreferenceTextMode: "Simple",
+    emojiDisplayMode: "Full emoji display",
+    showProfileControlsShortcut: true,
+    showAlertsSettingsShortcut: true,
+    showTinyTutorials: false,
+    externalLinks: defaultExternalLinksPreference,
+    batterySaver: false,
+    lowLightMode: false,
+    lowLightLevel: "Medium",
+    meetupReminders: true,
+    weatherAlerts: true,
+    chatNotifications: true,
+    quietNotifications: false,
+    notificationSnoozed: false,
+    notificationSnoozePreset: "Tonight",
+    suggestNightModeInEvenings: false,
+    useApproximateLocation: true,
+    showDistanceInMeetups: true,
+    allowMessageRequests: false,
+    safetyCheckIns: true,
+    hobbiesInterests: ["Coffee", "Movies", "Walks"],
+    interestPreferenceIds: defaultInterestPreferenceIds,
+    interestComfortTagsByInterest: defaultInterestComfortTagsByInterest,
+    transportationPreferences: defaultTransportationPreferences,
+    meetupContactPreferences: [],
+    locationComfortPreferences: defaultLocationComfortPreferences,
+    foodBeveragePreferenceIds: defaultFoodBeveragePreferenceIds,
+    largerText: false,
+    highContrast: false,
+    reduceMotion: false,
+    screenReaderHints: true,
+  };
+}
 
 export type TimezoneSetting = {
   id: string;
@@ -1936,6 +2066,8 @@ type AppSettings = {
   setAccountPauseTimeline: (value: AccountPauseTimeline) => void;
   ageConfirmed: boolean;
   setAgeConfirmed: (value: boolean) => void;
+  birthYear: number | null;
+  setBirthYear: (value: number | null) => void;
   age: number | null;
   setAge: (value: number | null) => void;
   preferredAgeMin: number;
@@ -2154,6 +2286,8 @@ type AppSettings = {
   setShowProfileControlsShortcut: (value: boolean) => void;
   showAlertsSettingsShortcut: boolean;
   setShowAlertsSettingsShortcut: (value: boolean) => void;
+  showTinyTutorials: boolean;
+  setShowTinyTutorials: (value: boolean) => void;
   externalLinks: ExternalLinksPreference;
   setExternalLinks: (value: ExternalLinksPreference) => void;
   batterySaver: boolean;
@@ -2291,7 +2425,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [accountPauseTimeline, setAccountPauseTimeline] =
     useState<AccountPauseTimeline>("Until I return");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
-  const [age, setAge] = useState<number | null>(null);
+  const [birthYear, setBirthYearState] = useState<number | null>(null);
+  const age = calculateAgeFromBirthYear(birthYear);
+  const setBirthYear = (value: number | null) => {
+    setBirthYearState(normalizeBirthYear(value));
+  };
+  const setAge = (value: number | null) => {
+    setBirthYear(calculateBirthYearFromAge(value));
+  };
   const [preferredAgeMin, setPreferredAgeMin] = useState(25);
   const [preferredAgeMax, setPreferredAgeMax] = useState(40);
   const [suburb, setSuburb] = useState("");
@@ -2486,6 +2627,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [emojiDisplayMode, setEmojiDisplayMode] = useState<EmojiDisplayMode>("Full emoji display");
   const [showProfileControlsShortcut, setShowProfileControlsShortcut] = useState(true);
   const [showAlertsSettingsShortcut, setShowAlertsSettingsShortcut] = useState(true);
+  const [showTinyTutorials, setShowTinyTutorials] = useState(false);
   const [externalLinks, setExternalLinks] = useState<ExternalLinksPreference>(
     defaultExternalLinksPreference,
   );
@@ -2585,11 +2727,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setAccountPaused(Boolean(snapshot.accountPaused));
         setAccountPauseTimeline(snapshot.accountPauseTimeline ?? "Until I return");
         setAgeConfirmed(Boolean(snapshot.ageConfirmed));
+        const storedBirthYear =
+          normalizeBirthYear(snapshot.birthYear) ?? calculateBirthYearFromAge(snapshot.age);
         const storedAgeRange = normalizePreferredAgeRange(
           snapshot.preferredAgeMin,
           snapshot.preferredAgeMax,
         );
-        setAge(normalizeAdultAge(snapshot.age));
+        setBirthYear(storedBirthYear);
         setPreferredAgeMin(storedAgeRange.min);
         setPreferredAgeMax(storedAgeRange.max);
         setSuburb(snapshot.suburb ?? "");
@@ -2896,6 +3040,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setEmojiDisplayMode(normalizeEmojiDisplayMode(snapshot.emojiDisplayMode));
         setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut ?? true);
         setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut ?? true);
+        setShowTinyTutorials(Boolean(snapshot.showTinyTutorials));
         setExternalLinks(normalizeExternalLinksPreference(snapshot.externalLinks));
         setBatterySaver(Boolean(snapshot.batterySaver));
         setLowLightMode(Boolean(snapshot.lowLightMode));
@@ -2914,9 +3059,17 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
         setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
         setHomeSectionOrder(normalizeHomeSectionOrder(snapshot.homeSectionOrder));
+        setMeetupReminders(snapshot.meetupReminders ?? true);
+        setWeatherAlerts(snapshot.weatherAlerts ?? true);
+        setChatNotifications(snapshot.chatNotifications ?? true);
+        setQuietNotifications(Boolean(snapshot.quietNotifications));
         setSuggestNightModeInEvenings(Boolean(snapshot.suggestNightModeInEvenings));
         setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
         setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
+        setUseApproximateLocation(snapshot.useApproximateLocation ?? true);
+        setShowDistanceInMeetups(snapshot.showDistanceInMeetups ?? true);
+        setAllowMessageRequests(Boolean(snapshot.allowMessageRequests));
+        setSafetyCheckIns(snapshot.safetyCheckIns ?? true);
         setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
         setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
         setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
@@ -2968,8 +3121,9 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       snapshot.preferredAgeMin,
       snapshot.preferredAgeMax,
     );
-    const nextAge = normalizeAdultAge(snapshot.age);
-    setAge(nextAge);
+    const nextBirthYear =
+      normalizeBirthYear(snapshot.birthYear) ?? calculateBirthYearFromAge(snapshot.age);
+    setBirthYear(nextBirthYear);
     setPreferredAgeMin(nextAgeRange.min);
     setPreferredAgeMax(nextAgeRange.max);
     setSuburb(snapshot.suburb);
@@ -3274,6 +3428,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setEmojiDisplayMode(normalizeEmojiDisplayMode(snapshot.emojiDisplayMode));
     setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut ?? true);
     setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut ?? true);
+    setShowTinyTutorials(Boolean(snapshot.showTinyTutorials));
     setExternalLinks(normalizeExternalLinksPreference(snapshot.externalLinks));
     setBatterySaver(Boolean(snapshot.batterySaver));
     setLowLightMode(Boolean(snapshot.lowLightMode));
@@ -3292,9 +3447,17 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHomeEventVisualMode(normalizeHomeEventVisualMode(snapshot.homeEventVisualMode));
     setHomeVisibleSections(normalizeHomeVisibleSections(snapshot.homeVisibleSections));
     setHomeSectionOrder(normalizeHomeSectionOrder(snapshot.homeSectionOrder));
+    setMeetupReminders(snapshot.meetupReminders ?? true);
+    setWeatherAlerts(snapshot.weatherAlerts ?? true);
+    setChatNotifications(snapshot.chatNotifications ?? true);
+    setQuietNotifications(Boolean(snapshot.quietNotifications));
     setSuggestNightModeInEvenings(Boolean(snapshot.suggestNightModeInEvenings));
     setNotificationSnoozed(Boolean(snapshot.notificationSnoozed));
     setNotificationSnoozePreset(snapshot.notificationSnoozePreset ?? "Tonight");
+    setUseApproximateLocation(snapshot.useApproximateLocation ?? true);
+    setShowDistanceInMeetups(snapshot.showDistanceInMeetups ?? true);
+    setAllowMessageRequests(Boolean(snapshot.allowMessageRequests));
+    setSafetyCheckIns(snapshot.safetyCheckIns ?? true);
     setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     setTranslationLanguageState(normalizeNsnLanguage(snapshot.translationLanguage));
     setBrandThemeIdState(normalizeBrandThemeId(snapshot.brandThemeId));
@@ -3323,11 +3486,13 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setHasCompletedOnboarding(true);
 
     try {
+      const snapshotForStorage = { ...snapshot };
+      delete snapshotForStorage.age;
       await AsyncStorage.setItem(
         ONBOARDING_STORAGE_KEY,
         JSON.stringify({
-          ...snapshot,
-          age: nextAge,
+          ...snapshotForStorage,
+          birthYear: nextBirthYear,
           preferredAgeMin: nextAgeRange.min,
           preferredAgeMax: nextAgeRange.max,
           appLanguage: normalizeNsnLanguage(snapshot.appLanguage),
@@ -3339,6 +3504,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           homeEventVisualMode: normalizeHomeEventVisualMode(snapshot.homeEventVisualMode),
           homeVisibleSections: normalizeHomeVisibleSections(snapshot.homeVisibleSections),
           homeSectionOrder: normalizeHomeSectionOrder(snapshot.homeSectionOrder),
+          meetupReminders: snapshot.meetupReminders ?? true,
+          weatherAlerts: snapshot.weatherAlerts ?? true,
+          chatNotifications: snapshot.chatNotifications ?? true,
+          quietNotifications: Boolean(snapshot.quietNotifications),
+          useApproximateLocation: snapshot.useApproximateLocation ?? true,
+          showDistanceInMeetups: snapshot.showDistanceInMeetups ?? true,
+          allowMessageRequests: Boolean(snapshot.allowMessageRequests),
+          safetyCheckIns: snapshot.safetyCheckIns ?? true,
           timezone: normalizeTimezoneSetting(snapshot.timezone),
           timeContextMode: normalizeTimeContextMode(snapshot.timeContextMode),
           dateFormatPreference: normalizeDateFormatPreference(snapshot.dateFormatPreference),
@@ -3399,6 +3572,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           interestPreferenceIds: nextInterestPreferenceIds,
           interestComfortTagsByInterest: nextInterestComfortTagsByInterest,
           emojiDisplayMode: normalizeEmojiDisplayMode(snapshot.emojiDisplayMode),
+          showTinyTutorials: Boolean(snapshot.showTinyTutorials),
           showWeekday: snapshot.showWeekday ?? true,
           timeFormatPreference: normalizeTimeFormatPreference(snapshot.timeFormatPreference),
           clockDisplayStyle: normalizeClockDisplayStyle(snapshot.clockDisplayStyle),
@@ -3430,7 +3604,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       accountPaused,
       accountPauseTimeline,
       ageConfirmed,
-      age,
+      birthYear,
       preferredAgeMin,
       preferredAgeMax,
       suburb,
@@ -3539,6 +3713,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       emojiDisplayMode,
       showProfileControlsShortcut,
       showAlertsSettingsShortcut,
+      showTinyTutorials,
       externalLinks,
       batterySaver,
       lowLightMode,
@@ -3555,9 +3730,17 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       homeEventVisualMode,
       homeVisibleSections,
       homeSectionOrder,
+      meetupReminders,
+      weatherAlerts,
+      chatNotifications,
+      quietNotifications,
       suggestNightModeInEvenings,
       notificationSnoozed,
       notificationSnoozePreset,
+      useApproximateLocation,
+      showDistanceInMeetups,
+      allowMessageRequests,
+      safetyCheckIns,
       appLanguage,
       translationLanguage,
       brandThemeId,
@@ -3576,6 +3759,14 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       cardOutlineStyle,
       ...snapshot,
     };
+    const nextBirthYear =
+      snapshot.age !== undefined && snapshot.birthYear === undefined
+        ? calculateBirthYearFromAge(snapshot.age)
+        : normalizeBirthYear(
+            snapshot.birthYear !== undefined ? snapshot.birthYear : nextSnapshot.birthYear,
+          );
+    nextSnapshot.birthYear = nextBirthYear;
+    delete nextSnapshot.age;
     const lifeContextTouched =
       snapshot.lifeContextCurrentStates !== undefined ||
       snapshot.lifeContextCurrentVisibility !== undefined ||
@@ -3818,11 +4009,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (snapshot.accountPaused !== undefined) setAccountPaused(snapshot.accountPaused);
     if (snapshot.accountPauseTimeline !== undefined)
       setAccountPauseTimeline(snapshot.accountPauseTimeline);
-    if (snapshot.age !== undefined) {
-      const nextAge = normalizeAdultAge(snapshot.age);
-      setAge(nextAge);
-      nextSnapshot.age = nextAge;
-    }
+    if (snapshot.birthYear !== undefined || snapshot.age !== undefined) setBirthYear(nextBirthYear);
     if (snapshot.preferredAgeMin !== undefined || snapshot.preferredAgeMax !== undefined) {
       const nextAgeRange = normalizePreferredAgeRange(
         snapshot.preferredAgeMin ?? preferredAgeMin,
@@ -4130,6 +4317,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       setShowProfileControlsShortcut(snapshot.showProfileControlsShortcut);
     if (snapshot.showAlertsSettingsShortcut !== undefined)
       setShowAlertsSettingsShortcut(snapshot.showAlertsSettingsShortcut);
+    if (snapshot.showTinyTutorials !== undefined)
+      setShowTinyTutorials(Boolean(snapshot.showTinyTutorials));
     if (snapshot.externalLinks !== undefined)
       setExternalLinks(normalizeExternalLinksPreference(snapshot.externalLinks));
     if (snapshot.batterySaver !== undefined) setBatterySaver(snapshot.batterySaver);
@@ -4166,12 +4355,23 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       setHomeSectionOrder(nextOrder);
       nextSnapshot.homeSectionOrder = nextOrder;
     }
+    if (snapshot.meetupReminders !== undefined) setMeetupReminders(snapshot.meetupReminders);
+    if (snapshot.weatherAlerts !== undefined) setWeatherAlerts(snapshot.weatherAlerts);
+    if (snapshot.chatNotifications !== undefined) setChatNotifications(snapshot.chatNotifications);
+    if (snapshot.quietNotifications !== undefined) setQuietNotifications(snapshot.quietNotifications);
     if (snapshot.suggestNightModeInEvenings !== undefined)
       setSuggestNightModeInEvenings(snapshot.suggestNightModeInEvenings);
     if (snapshot.notificationSnoozed !== undefined)
       setNotificationSnoozed(snapshot.notificationSnoozed);
     if (snapshot.notificationSnoozePreset !== undefined)
       setNotificationSnoozePreset(snapshot.notificationSnoozePreset);
+    if (snapshot.useApproximateLocation !== undefined)
+      setUseApproximateLocation(snapshot.useApproximateLocation);
+    if (snapshot.showDistanceInMeetups !== undefined)
+      setShowDistanceInMeetups(snapshot.showDistanceInMeetups);
+    if (snapshot.allowMessageRequests !== undefined)
+      setAllowMessageRequests(snapshot.allowMessageRequests);
+    if (snapshot.safetyCheckIns !== undefined) setSafetyCheckIns(snapshot.safetyCheckIns);
     if (snapshot.appLanguage !== undefined)
       setAppLanguageState(normalizeNsnLanguage(snapshot.appLanguage));
     if (snapshot.translationLanguage !== undefined)
@@ -4353,7 +4553,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setAccountPaused(false);
     setAccountPauseTimeline("Until I return");
     setAgeConfirmed(false);
-    setAge(null);
+    setBirthYear(null);
     setPreferredAgeMin(25);
     setPreferredAgeMax(40);
     setSuburb("");
@@ -4461,6 +4661,7 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setEmojiDisplayMode("Full emoji display");
     setShowProfileControlsShortcut(true);
     setShowAlertsSettingsShortcut(true);
+    setShowTinyTutorials(false);
     setExternalLinks(defaultExternalLinksPreference);
     setNotificationSnoozed(false);
     setNotificationSnoozePreset("Tonight");
@@ -4499,6 +4700,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setAccountPauseTimeline,
         ageConfirmed,
         setAgeConfirmed,
+        birthYear,
+        setBirthYear,
         age,
         setAge,
         preferredAgeMin,
@@ -4715,6 +4918,8 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         setShowProfileControlsShortcut,
         showAlertsSettingsShortcut,
         setShowAlertsSettingsShortcut,
+        showTinyTutorials,
+        setShowTinyTutorials,
         externalLinks,
         setExternalLinks,
         batterySaver,

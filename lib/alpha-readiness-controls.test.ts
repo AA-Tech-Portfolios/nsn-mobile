@@ -111,6 +111,16 @@ describe("alpha readiness controls", () => {
         hasInterests: true,
         hasLocalArea: true,
         hasPreferredAgeRange: true,
+        isAdult: false,
+      })
+    ).toBe("Enter a birth year that shows an age between 18 and 95 to continue.");
+
+    expect(
+      getOnboardingAboutRequirement({
+        hasAllowedName: true,
+        hasInterests: true,
+        hasLocalArea: true,
+        hasPreferredAgeRange: true,
         isAdult: true,
       })
     ).toBeNull();

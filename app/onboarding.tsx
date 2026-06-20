@@ -28,8 +28,12 @@ import type {
   SoftHelloIntent,
 } from "@/lib/app-settings";
 import {
+  MAX_PROFILE_AGE,
+  MIN_ADULT_AGE,
+  calculateAgeFromBirthYear,
   defaultPhotoRecordingComfortPreferences,
   defaultPhysicalContactComfortPreferences,
+  isBirthYearInAdultProfileRange,
   useAppSettings,
 } from "@/lib/app-settings";
 import {
@@ -38,7 +42,7 @@ import {
   getAustralianLocalityLabel,
 } from "@/lib/australian-localities";
 import { nsnColors } from "@/lib/nsn-data";
-import { onboardingCopy } from "@/lib/onboarding-copy";
+import { formatBirthYearAgePreview, onboardingCopy } from "@/lib/onboarding-copy";
 import { createAlphaTesterOnboardingSnapshot } from "@/lib/onboarding-snapshot";
 import { defaultFoodBeveragePreferenceIds } from "@/lib/preferences/food-preferences";
 import {
@@ -49,8 +53,6 @@ import { isAllowedDisplayName, nameNotAllowedMessage } from "@/lib/profile-valid
 import { defaultComfortPreferences, type SoftHelloComfortPreference } from "@/lib/softhello-mvp";
 
 const firstMeetupInterests = ["Coffee", "Movies", "Walks", "Dinner", "Games", "More"];
-const MIN_ADULT_AGE = 18;
-const MAX_PROFILE_AGE = 95;
 const MAX_PREFERRED_AGE_SPAN = 35;
 const comfortModes: { value: NsnComfortMode; copy: string }[] = [
   {
@@ -86,7 +88,16 @@ const normalizeLocalitySearch = (value: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ");
 
-const chatswoodLocality = australianLocalities.find((locality) => locality.suburb === "Chatswood");
+const findLocalityByValue = (value: string) => {
+  const normalizedValue = normalizeLocalitySearch(value);
+  if (!normalizedValue) return undefined;
+
+  return australianLocalities.find((locality) => {
+    const suburbName = normalizeLocalitySearch(locality.suburb);
+    const label = normalizeLocalitySearch(getAustralianLocalityLabel(locality));
+    return suburbName === normalizedValue || label === normalizedValue;
+  });
+};
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -109,8 +120,8 @@ export default function OnboardingScreen() {
   const [middleName, setMiddleName] = useState(settings.middleName);
   const [lastName, setLastName] = useState(settings.lastName);
   const [gender, setGender] = useState<ProfileGender>(settings.gender);
-  const [ageInput, setAgeInput] = useState(
-    settings.age ? String(settings.age) : hasDirectStage ? "28" : "",
+  const [birthYearInput, setBirthYearInput] = useState(
+    settings.birthYear ? String(settings.birthYear) : hasDirectStage ? "1998" : "",
   );
   const [preferredAgeMinInput, setPreferredAgeMinInput] = useState(
     String(settings.preferredAgeMin),
@@ -118,9 +129,9 @@ export default function OnboardingScreen() {
   const [preferredAgeMaxInput, setPreferredAgeMaxInput] = useState(
     String(settings.preferredAgeMax),
   );
-  const [suburb, setSuburb] = useState(settings.suburb || "Chatswood");
+  const [suburb, setSuburb] = useState(settings.suburb);
   const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(
-    chatswoodLocality,
+    findLocalityByValue(settings.suburb),
   );
   const [intent, setIntent] = useState<SoftHelloIntent>(settings.intent);
   const [interests, setInterests] = useState<string[]>(
@@ -150,7 +161,12 @@ export default function OnboardingScreen() {
   const [minimalProfileView, setMinimalProfileView] = useState(settings.minimalProfileView);
   const [nameError, setNameError] = useState("");
 
-  const age = Number.parseInt(ageInput, 10);
+  const birthYear = Number.parseInt(birthYearInput, 10);
+  const age = calculateAgeFromBirthYear(birthYear);
+  const birthYearAgePreview =
+    birthYearInput.trim().length >= 4 && Number.isFinite(birthYear)
+      ? formatBirthYearAgePreview(birthYear)
+      : "";
   const preferredAgeMinRaw = Number.parseInt(preferredAgeMinInput, 10);
   const preferredAgeMaxRaw = Number.parseInt(preferredAgeMaxInput, 10);
   const hasPreferredAgeRange =
@@ -159,7 +175,9 @@ export default function OnboardingScreen() {
   const preferredAgeMax = Number.isFinite(preferredAgeMaxRaw)
     ? preferredAgeMaxRaw
     : preferredAgeMin;
-  const isAdult = Number.isFinite(age) && age >= MIN_ADULT_AGE && age <= MAX_PROFILE_AGE;
+  const hasBirthYear = birthYearInput.trim().length > 0;
+  const isAdult =
+    hasBirthYear && isBirthYearInAdultProfileRange(Number.isFinite(birthYear) ? birthYear : null);
   const preferredAgeRangeIsValid =
     hasPreferredAgeRange &&
     preferredAgeMin >= MIN_ADULT_AGE &&
@@ -167,8 +185,8 @@ export default function OnboardingScreen() {
     preferredAgeMax >= preferredAgeMin &&
     preferredAgeMax - preferredAgeMin <= MAX_PREFERRED_AGE_SPAN;
   const ageValidationMessage =
-    ageInput.trim().length && !isAdult
-      ? `NSN is adult-only, so age needs to be between ${MIN_ADULT_AGE} and ${MAX_PROFILE_AGE}.`
+    hasBirthYear && !isAdult
+      ? `NSN is adult-only, so birth year needs to show an age between ${MIN_ADULT_AGE} and ${MAX_PROFILE_AGE}.`
       : "";
   const preferredAgeValidationMessage =
     hasPreferredAgeRange && !preferredAgeRangeIsValid
@@ -203,14 +221,7 @@ export default function OnboardingScreen() {
 
   const updateSuburb = (value: string) => {
     setSuburb(value);
-    const normalizedValue = normalizeLocalitySearch(value);
-    setSelectedLocality(
-      australianLocalities.find((locality) => {
-        const suburbName = normalizeLocalitySearch(locality.suburb);
-        const label = normalizeLocalitySearch(getAustralianLocalityLabel(locality));
-        return suburbName === normalizedValue || label === normalizedValue;
-      }),
-    );
+    setSelectedLocality(findLocalityByValue(value));
   };
 
   const pickProfilePhoto = async () => {
@@ -224,7 +235,7 @@ export default function OnboardingScreen() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -313,7 +324,7 @@ export default function OnboardingScreen() {
       : suburb.trim();
     await settings.completeOnboarding({
       ageConfirmed: true,
-      age,
+      birthYear,
       preferredAgeMin,
       preferredAgeMax,
       suburb: finalSuburb,
@@ -467,7 +478,7 @@ export default function OnboardingScreen() {
                   if (nameError) setNameError("");
                 }}
                 placeholder="Sam"
-                placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
+                placeholderTextColor={isDay ? "#53677A" : nsnColors.muted}
                 style={[styles.input, isDay && styles.dayInput]}
               />
               {nameError ? (
@@ -482,7 +493,7 @@ export default function OnboardingScreen() {
                     value={middleName}
                     onChangeText={setMiddleName}
                     placeholder="Leave blank"
-                    placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
+                    placeholderTextColor={isDay ? "#53677A" : nsnColors.muted}
                     style={[styles.input, isDay && styles.dayInput]}
                   />
                 </View>
@@ -492,7 +503,7 @@ export default function OnboardingScreen() {
                     value={lastName}
                     onChangeText={setLastName}
                     placeholder="Leave blank"
-                    placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
+                    placeholderTextColor={isDay ? "#53677A" : nsnColors.muted}
                     style={[styles.input, isDay && styles.dayInput]}
                   />
                 </View>
@@ -504,15 +515,22 @@ export default function OnboardingScreen() {
 
             <View style={styles.twoColumn}>
               <View style={styles.column}>
-                <Text style={[styles.label, isDay && styles.dayTitle]}>Age</Text>
+                <Text style={[styles.label, isDay && styles.dayTitle]}>Birth year</Text>
                 <TextInput
-                  value={ageInput}
-                  onChangeText={(value) => setAgeInput(value.replace(/[^0-9]/g, "").slice(0, 2))}
+                  value={birthYearInput}
+                  onChangeText={(value) =>
+                    setBirthYearInput(value.replace(/[^0-9]/g, "").slice(0, 4))
+                  }
                   keyboardType="number-pad"
-                  placeholder="28"
-                  placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
+                  placeholder="1998"
+                  placeholderTextColor={isDay ? "#53677A" : nsnColors.muted}
                   style={[styles.input, isDay && styles.dayInput]}
                 />
+                {birthYearAgePreview ? (
+                  <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+                    {birthYearAgePreview}
+                  </Text>
+                ) : null}
               </View>
               <View style={styles.column}>
                 <Text style={[styles.label, isDay && styles.dayTitle]}>Preferred age range</Text>
@@ -535,6 +553,9 @@ export default function OnboardingScreen() {
                     style={[styles.rangeInput, isDay && styles.dayInput]}
                   />
                 </View>
+                <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
+                  {onboardingCopy.preferredAgeRangePreferenceHelper}
+                </Text>
               </View>
             </View>
             {ageValidationMessage ? (
@@ -580,8 +601,8 @@ export default function OnboardingScreen() {
               <TextInput
                 value={suburb}
                 onChangeText={updateSuburb}
-                placeholder="Chatswood"
-                placeholderTextColor={isDay ? "#63758A" : nsnColors.mutedSoft}
+                placeholder="Select your suburb"
+                placeholderTextColor={isDay ? "#53677A" : nsnColors.muted}
                 style={[styles.input, isDay && styles.dayInput]}
               />
               <Text style={[styles.localityStatus, isDay && styles.dayMutedText]}>
@@ -851,7 +872,11 @@ export default function OnboardingScreen() {
         {stage === 4 ? (
           <View style={[styles.panel, isDay && styles.dayPanel]}>
             <Text style={[styles.title, isDay && styles.dayTitle]}>Review your NSN setup</Text>
-            <Summary label="Age" value={`${age}`} isDay={isDay} />
+            <Summary
+              label="Birth year"
+              value={`${birthYear}${age ? ` (age ${age})` : ""}`}
+              isDay={isDay}
+            />
             <Summary
               label="Preferred age range"
               value={`${preferredAgeMin}-${preferredAgeMax}`}
@@ -1110,7 +1135,7 @@ const styles = StyleSheet.create({
   },
   rangeDash: { color: nsnColors.muted, fontSize: 12, fontWeight: "800" },
   inlineMessage: { color: nsnColors.warning, fontSize: 12, lineHeight: 17, fontWeight: "800" },
-  localityStatus: { color: nsnColors.muted, fontSize: 12, lineHeight: 17 },
+  localityStatus: { color: nsnColors.muted, fontSize: 12, lineHeight: 17, fontWeight: "700" },
   localityList: {
     borderRadius: 16,
     borderWidth: 1,
@@ -1238,7 +1263,7 @@ const styles = StyleSheet.create({
   },
   dayCard: { backgroundColor: "#FFFFFF", borderColor: "#D7E0EA" },
   dayTitle: { color: "#0B1220" },
-  dayMutedText: { color: "#53677A" },
+  dayMutedText: { color: "#3F5368" },
   dayAccentText: { color: nsnColors.primary },
   dayMessage: { color: "#7A5600" },
 });

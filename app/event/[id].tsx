@@ -59,6 +59,7 @@ import {
 import { getExpectedGroupSizeCopy, getExpectedGroupSizeValue } from "@/lib/event-attendance-copy";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { NSN_CREATED_EVENTS_STORAGE_KEY } from "@/lib/local-prototype-storage";
+import { buildHref } from "@/lib/navigation-hrefs";
 import {
   allEvents,
   movieNight,
@@ -2649,7 +2650,7 @@ export default function EventDetailsScreen() {
 
   const handleJoin = async () => {
     if (canOpenMeetupChat) {
-      router.push({ pathname: "/(tabs)/chats", params: { eventId: event.id } } as never);
+      router.push(buildHref("/(tabs)/chats", { eventId: event.id }) as never);
       return;
     }
 
@@ -2660,7 +2661,7 @@ export default function EventDetailsScreen() {
 
     const nextMemberships = joinEvent(event.id, eventMemberships);
     await saveSoftHelloMvpState({ eventMemberships: nextMemberships });
-    router.push({ pathname: "/(tabs)/chats", params: { eventId: event.id } } as never);
+    router.push(buildHref("/(tabs)/chats", { eventId: event.id }) as never);
   };
 
   const confirmVerificationDetails = async () => {

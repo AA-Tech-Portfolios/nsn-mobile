@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensio
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAppSettings } from "@/lib/app-settings";
+import { buildHref } from "@/lib/navigation-hrefs";
 import { nsnColors } from "@/lib/nsn-data";
 import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { getSupportGuidanceById, type SupportGuidanceAction } from "@/lib/support-guidance";
@@ -21,11 +22,11 @@ export default function SupportGuidanceDetailScreen() {
     if (action.route === "coming-later") return;
 
     if (action.route === "help") {
-      router.push({ pathname: "/(tabs)/profile", params: { menu: "helpSupport" } } as never);
+      router.push("/(tabs)/profile?menu=helpSupport" as never);
       return;
     }
 
-    router.push({ pathname: "/user-preferences", params: { section: action.route } } as never);
+    router.push(buildHref("/user-preferences", { section: action.route }) as never);
   };
 
   return (

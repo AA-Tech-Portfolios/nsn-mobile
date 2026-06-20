@@ -12,7 +12,8 @@ describe("alpha tester onboarding snapshot", () => {
 
     expect(snapshot).toMatchObject({
       ageConfirmed: false,
-      age: null,
+      birthYear: null,
+      suburb: "",
       displayName: "NSN Tester",
       intent: "Exploring",
       verificationLevel: "Readiness not reviewed",
@@ -25,6 +26,7 @@ describe("alpha tester onboarding snapshot", () => {
       minimalProfileView: true,
       brandThemeId: "nsn",
     });
+    expect(snapshot).not.toHaveProperty("age");
     expect(snapshot.eventMemberships).toEqual([]);
     expect(snapshot.safetyReports).toEqual([]);
   });
