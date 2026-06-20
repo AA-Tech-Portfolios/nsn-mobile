@@ -15,11 +15,13 @@ describe("alpha readiness controls", () => {
     expect(getAlphaRecentStatusCopy("Demo")).toBe("Demo preview");
     expect(getAlphaRecentStatusCopy("Coming soon")).toBe("Coming soon");
     expect(getAlphaRecentStatusCopy("Saved locally")).toBe("Saved locally");
-    expect([
-      getAlphaRecentStatusCopy("Demo"),
-      getAlphaRecentStatusCopy("Coming soon"),
-      getAlphaRecentStatusCopy("Saved locally"),
-    ].join(" ")).not.toMatch(/\bverified|verification|guarantee|matching|urgent|popular\b/i);
+    expect(
+      [
+        getAlphaRecentStatusCopy("Demo"),
+        getAlphaRecentStatusCopy("Coming soon"),
+        getAlphaRecentStatusCopy("Saved locally"),
+      ].join(" "),
+    ).not.toMatch(/\bverified|verification|guarantee|matching|urgent|popular\b/i);
   });
 
   it("keeps profile preferences reachable inside the mobile drawer", () => {
@@ -29,7 +31,7 @@ describe("alpha readiness controls", () => {
         platform: "ios",
         section: "transport",
         width: 390,
-      })
+      }),
     ).toEqual({
       closesDrawer: false,
       kind: "drawer-panel",
@@ -42,7 +44,7 @@ describe("alpha readiness controls", () => {
         platform: "ios",
         section: "personality",
         width: 390,
-      })
+      }),
     ).toEqual({
       closesDrawer: false,
       kind: "drawer-panel",
@@ -57,7 +59,7 @@ describe("alpha readiness controls", () => {
         platform: "web",
         section: "contact",
         width: 1024,
-      })
+      }),
     ).toEqual({
       closesDrawer: true,
       kind: "full-view",
@@ -72,7 +74,7 @@ describe("alpha readiness controls", () => {
         platform: "web",
         section: "calendar",
         width: 1024,
-      })
+      }),
     ).toEqual({
       closesDrawer: true,
       kind: "full-view",
@@ -86,7 +88,7 @@ describe("alpha readiness controls", () => {
         copy: "Keep numeric time beside the analog clock.",
         disabledCopy: "Choose Analog clock display to enable this option.",
         enabled: false,
-      })
+      }),
     ).toEqual({
       accessibilityHint: "Choose Analog clock display to enable this option.",
       copy: "Keep numeric time beside the analog clock. Choose Analog clock display to enable this option.",
@@ -102,7 +104,7 @@ describe("alpha readiness controls", () => {
         hasLocalArea: true,
         hasPreferredAgeRange: true,
         isAdult: true,
-      })
+      }),
     ).toBe("Choose an allowed name or nickname to continue.");
 
     expect(
@@ -112,7 +114,7 @@ describe("alpha readiness controls", () => {
         hasLocalArea: true,
         hasPreferredAgeRange: true,
         isAdult: false,
-      })
+      }),
     ).toBe("Enter a birth year that shows an age between 18 and 95 to continue.");
 
     expect(
@@ -122,7 +124,17 @@ describe("alpha readiness controls", () => {
         hasLocalArea: true,
         hasPreferredAgeRange: true,
         isAdult: true,
-      })
+      }),
+    ).toBeNull();
+
+    expect(
+      getOnboardingAboutRequirement({
+        hasAllowedName: true,
+        hasInterests: true,
+        hasLocalArea: true,
+        hasPreferredAgeRange: false,
+        isAdult: true,
+      }),
     ).toBeNull();
   });
 });

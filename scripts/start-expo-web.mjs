@@ -26,6 +26,7 @@ async function findAvailablePort(startPort) {
 }
 
 const port = await findAvailablePort(preferredPort);
+const expoArgs = process.argv.slice(2).filter((arg) => arg !== "--");
 
 if (port !== preferredPort) {
   console.log(`[expo] Port ${preferredPort} is busy, using ${port} instead.`);
@@ -34,8 +35,8 @@ if (port !== preferredPort) {
 const command = process.platform === "win32" ? "cmd.exe" : "pnpm";
 const args =
   process.platform === "win32"
-    ? ["/d", "/s", "/c", `pnpm exec expo start --web --port ${port}`]
-    : ["exec", "expo", "start", "--web", "--port", String(port)];
+    ? ["/d", "/s", "/c", `pnpm exec expo start --web --port ${port} ${expoArgs.join(" ")}`.trim()]
+    : ["exec", "expo", "start", "--web", "--port", String(port), ...expoArgs];
 
 const child = spawn(command, args, {
   env: process.env,

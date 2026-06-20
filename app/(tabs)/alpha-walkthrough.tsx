@@ -8,8 +8,11 @@ import { getLanguageBase, useAppSettings } from "@/lib/app-settings";
 import { getAlphaComparisonAccordionRows } from "@/lib/alpha-proof-of-concept-accordion";
 import {
   alphaProofOfConceptComparisonCards,
+  alphaProofOfConceptDisclosure,
   alphaProofOfConceptExplorationQuestions,
   alphaProofOfConceptIntro,
+  alphaQuietSpaceEntry,
+  alphaWalkthroughLearnMore,
   alphaWalkthroughCopy,
   alphaWalkthroughSteps,
 } from "@/lib/alpha-walkthrough-copy";
@@ -23,6 +26,7 @@ export default function AlphaWalkthroughScreen() {
   const { isNightMode, appLanguage, suburb, screenReaderHints, showTinyTutorials } = useAppSettings();
   const [stepIndex, setStepIndex] = useState(0);
   const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
+  const [showProofOfConcept, setShowProofOfConcept] = useState(false);
   const [expandedComparisonPlatforms, setExpandedComparisonPlatforms] = useState<Set<(typeof alphaProofOfConceptComparisonCards)[number]["platformType"]>>(new Set());
   const isDay = !isNightMode;
   const isRtl = rtlLanguages.has(getLanguageBase(appLanguage));
@@ -79,98 +83,36 @@ export default function AlphaWalkthroughScreen() {
           {alphaWalkthroughCopy.subtitle}
         </Text>
 
-        <View style={styles.proofSection}>
-          <View style={[styles.proofIntro, isRtl && styles.rtlBlock]}>
-            <View style={[styles.proofTitleRow, isRtl && styles.rtlRow]}>
-              <View style={[styles.proofIcon, isDay && styles.dayIconBubble]}>
-                <IconSymbol name="experience" color={isDay ? "#445E93" : nsnColors.day} size={19} />
-              </View>
-              <View style={styles.proofTitleCopy}>
-                <Text style={[styles.proofEyebrow, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
-                  Proof of concept
-                </Text>
-                <Text style={[styles.proofTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
-                  {alphaProofOfConceptIntro.title}
-                </Text>
-              </View>
-            </View>
-            <Text style={[styles.proofStatement, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
-              {alphaProofOfConceptIntro.statement}
+        <TouchableOpacity
+          activeOpacity={0.82}
+          onPress={() => router.push(alphaQuietSpaceEntry.route as never)}
+          accessibilityRole="button"
+          accessibilityLabel={alphaQuietSpaceEntry.actionLabel}
+          accessibilityHint={
+            screenReaderHints ? "Opens an optional alpha pause area outside the main tabs." : undefined
+          }
+          style={[styles.quietSpaceEntry, isDay && styles.dayCard, isRtl && styles.rtlRow]}
+        >
+          <View style={[styles.stepIconSmall, isDay && styles.dayIconBubble]}>
+            <IconSymbol
+              name={alphaQuietSpaceEntry.icon}
+              color={isDay ? "#445E93" : nsnColors.day}
+              size={18}
+            />
+          </View>
+          <View style={styles.tutorialCopy}>
+            <Text style={[styles.proofEyebrow, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+              {alphaQuietSpaceEntry.eyebrow}
             </Text>
-            <Text style={[styles.proofCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-              {alphaProofOfConceptIntro.copy}
+            <Text style={[styles.tutorialTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+              {alphaQuietSpaceEntry.title}
+            </Text>
+            <Text style={[styles.tutorialText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+              {alphaQuietSpaceEntry.copy}
             </Text>
           </View>
-
-          <View style={styles.comparisonList}>
-            {comparisonRows.map((row) => (
-              <View key={row.platformType} style={[styles.comparisonCard, isDay && styles.dayCard]}>
-                <TouchableOpacity
-                  activeOpacity={0.78}
-                  onPress={() => toggleComparisonPlatform(row.platformType)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${row.expanded ? "Collapse" : "Expand"} ${row.platformType} comparison`}
-                  accessibilityState={{ expanded: row.expanded }}
-                  style={[styles.comparisonToggle, isRtl && styles.rtlRow]}
-                >
-                  <Text style={[styles.comparisonPlatform, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
-                    {row.platformType}
-                  </Text>
-                  <IconSymbol name={row.expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
-                </TouchableOpacity>
-                {row.details ? (
-                  <View style={styles.comparisonDetails}>
-                    <View style={styles.comparisonField}>
-                      <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
-                        What it is good at
-                      </Text>
-                      <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                        {row.details.goodAt}
-                      </Text>
-                    </View>
-                    <View style={styles.comparisonField}>
-                      <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
-                        What people may still struggle with
-                      </Text>
-                      <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                        {row.details.mayStruggleWith}
-                      </Text>
-                    </View>
-                    <View style={[styles.nsnGapBlock, isDay && styles.dayNsnGapBlock]}>
-                      <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
-                        How NSN addresses the gap
-                      </Text>
-                      <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                        {row.details.nsnGap}
-                      </Text>
-                    </View>
-                  </View>
-                ) : null}
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.questionsSection}>
-            <Text style={[styles.questionsTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
-              Questions we are still exploring
-            </Text>
-            <View style={styles.questionList}>
-              {alphaProofOfConceptExplorationQuestions.map((question) => (
-                <View key={question.title} style={[styles.questionRow, isDay && styles.dayQuestionRow, isRtl && styles.rtlRow]}>
-                  <View style={[styles.questionDot, isDay && styles.dayQuestionDot]} />
-                  <View style={styles.questionCopy}>
-                    <Text style={[styles.questionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
-                      {question.title}
-                    </Text>
-                    <Text style={[styles.questionText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-                      {question.copy}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
+          <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+        </TouchableOpacity>
 
         <View style={[styles.progressCard, isDay && styles.dayCard]}>
           <Text style={[styles.progressText, isDay && styles.dayAccentText]}>{progressText}</Text>
@@ -297,6 +239,147 @@ export default function AlphaWalkthroughScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={[styles.learnMoreSection, isDay && styles.dayCard]}>
+          <Text style={[styles.questionsTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+            {alphaWalkthroughLearnMore.title}
+          </Text>
+          <Text style={[styles.noteCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+            {alphaWalkthroughLearnMore.copy}
+          </Text>
+          <TouchableOpacity
+            activeOpacity={0.78}
+            onPress={() => setShowProofOfConcept((current) => !current)}
+            accessibilityRole="button"
+            accessibilityLabel={
+              showProofOfConcept
+                ? alphaProofOfConceptDisclosure.expandedLabel
+                : alphaProofOfConceptDisclosure.collapsedLabel
+            }
+            accessibilityState={{ expanded: showProofOfConcept }}
+            accessibilityHint={
+              screenReaderHints ? "Toggles the longer proof-of-concept context." : undefined
+            }
+            style={[styles.proofDisclosure, isDay && styles.dayNavButton, isRtl && styles.rtlRow]}
+          >
+            <View style={[styles.proofIcon, isDay && styles.dayIconBubble]}>
+              <IconSymbol name="experience" color={isDay ? "#445E93" : nsnColors.day} size={19} />
+            </View>
+            <View style={styles.proofTitleCopy}>
+              <Text style={[styles.proofEyebrow, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                {alphaProofOfConceptDisclosure.eyebrow}
+              </Text>
+              <Text style={[styles.tutorialTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                {showProofOfConcept
+                  ? alphaProofOfConceptDisclosure.expandedLabel
+                  : alphaProofOfConceptDisclosure.collapsedLabel}
+              </Text>
+              <Text style={[styles.tutorialText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                {alphaProofOfConceptDisclosure.copy}
+              </Text>
+            </View>
+            <IconSymbol
+              name={showProofOfConcept ? "chevron.up" : "chevron.down"}
+              color={isDay ? "#53677A" : nsnColors.muted}
+              size={18}
+            />
+          </TouchableOpacity>
+
+          {showProofOfConcept ? (
+          <View style={styles.proofSection}>
+            <View style={[styles.proofIntro, isRtl && styles.rtlBlock]}>
+              <View style={[styles.proofTitleRow, isRtl && styles.rtlRow]}>
+                <View style={[styles.proofIcon, isDay && styles.dayIconBubble]}>
+                  <IconSymbol name="experience" color={isDay ? "#445E93" : nsnColors.day} size={19} />
+                </View>
+                <View style={styles.proofTitleCopy}>
+                  <Text style={[styles.proofEyebrow, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                    Proof of concept
+                  </Text>
+                  <Text style={[styles.proofTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                    {alphaProofOfConceptIntro.title}
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.proofStatement, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                {alphaProofOfConceptIntro.statement}
+              </Text>
+              <Text style={[styles.proofCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                {alphaProofOfConceptIntro.copy}
+              </Text>
+            </View>
+
+            <View style={styles.comparisonList}>
+              {comparisonRows.map((row) => (
+                <View key={row.platformType} style={[styles.comparisonCard, isDay && styles.dayCard]}>
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    onPress={() => toggleComparisonPlatform(row.platformType)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${row.expanded ? "Collapse" : "Expand"} ${row.platformType} comparison`}
+                    accessibilityState={{ expanded: row.expanded }}
+                    style={[styles.comparisonToggle, isRtl && styles.rtlRow]}
+                  >
+                    <Text style={[styles.comparisonPlatform, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                      {row.platformType}
+                    </Text>
+                    <IconSymbol name={row.expanded ? "chevron.up" : "chevron.down"} color={isDay ? "#53677A" : nsnColors.muted} size={18} />
+                  </TouchableOpacity>
+                  {row.details ? (
+                    <View style={styles.comparisonDetails}>
+                      <View style={styles.comparisonField}>
+                        <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                          What it is good at
+                        </Text>
+                        <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          {row.details.goodAt}
+                        </Text>
+                      </View>
+                      <View style={styles.comparisonField}>
+                        <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                          What people may still struggle with
+                        </Text>
+                        <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          {row.details.mayStruggleWith}
+                        </Text>
+                      </View>
+                      <View style={[styles.nsnGapBlock, isDay && styles.dayNsnGapBlock]}>
+                        <Text style={[styles.comparisonLabel, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>
+                          How NSN addresses the gap
+                        </Text>
+                        <Text style={[styles.comparisonText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                          {row.details.nsnGap}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.questionsSection}>
+              <Text style={[styles.questionsTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                Questions we are still exploring
+              </Text>
+              <View style={styles.questionList}>
+                {alphaProofOfConceptExplorationQuestions.map((question) => (
+                  <View key={question.title} style={[styles.questionRow, isDay && styles.dayQuestionRow, isRtl && styles.rtlRow]}>
+                    <View style={[styles.questionDot, isDay && styles.dayQuestionDot]} />
+                    <View style={styles.questionCopy}>
+                      <Text style={[styles.questionTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
+                        {question.title}
+                      </Text>
+                      <Text style={[styles.questionText, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
+                        {question.copy}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+          ) : null}
+        </View>
+
         <View style={[styles.noteCard, isDay && styles.dayCard]}>
           <Text style={[styles.noteTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{alphaWalkthroughCopy.prototypeNoteTitle}</Text>
           <Text style={[styles.noteCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
@@ -320,6 +403,7 @@ const styles = StyleSheet.create({
   dayMutedText: { color: "#53677A" },
   dayAccentText: { color: "#445E93" },
   proofSection: { gap: 10, marginBottom: 14 },
+  proofDisclosure: { minHeight: 86, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 12, marginBottom: 14 },
   proofIntro: { gap: 8 },
   proofTitleRow: { flexDirection: "row", alignItems: "center", gap: 11 },
   proofIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(119,134,255,0.12)", flexShrink: 0 },
@@ -375,6 +459,7 @@ const styles = StyleSheet.create({
   dayStepPillText: { color: "#53677A" },
   stepPillTextActive: { color: nsnColors.selectedChipText },
   tutorialPanel: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginTop: 16, gap: 10 },
+  quietSpaceEntry: { minHeight: 84, borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", flexDirection: "row", alignItems: "center", gap: 10, padding: 12, marginBottom: 14 },
   tutorialList: { gap: 8 },
   tutorialCard: { minHeight: 88, borderRadius: 16, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12 },
   tutorialCopy: { flex: 1, minWidth: 0 },
@@ -391,6 +476,7 @@ const styles = StyleSheet.create({
   navButtonText: { color: nsnColors.text, fontSize: 13, fontWeight: "900" },
   nextButtonText: { color: "#FFFFFF", fontSize: 13, fontWeight: "900" },
   noteCard: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginTop: 16 },
+  learnMoreSection: { borderRadius: 18, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.035)", padding: 14, marginTop: 16, gap: 10 },
   noteTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   noteCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 3 },
   rtlRow: { flexDirection: "row-reverse" },

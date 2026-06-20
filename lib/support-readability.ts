@@ -24,6 +24,22 @@ export const nsnSupportReadabilityColors = {
   lightWarningSurface: "#FFF6DB",
   lightWarningText: "#674800",
   lightWarningBody: "#5C4308",
+  darkDestructiveSurface: "#2A1822",
+  darkDestructiveText: "#FF8EA3",
+  darkDestructiveBody: "#FFD7DF",
+  darkDestructiveBorder: "#D45B73",
+  lightDestructiveSurface: "#FFF0F3",
+  lightDestructiveText: "#8B1232",
+  lightDestructiveBody: "#5F2030",
+  lightDestructiveBorder: "#D37A8B",
+  darkDemoSurface: "#241D36",
+  darkDemoText: "#D9C8FF",
+  darkDemoBody: "#E9E0FF",
+  darkDemoBorder: "#9D88D8",
+  lightDemoSurface: "#F4F0FF",
+  lightDemoText: "#40206B",
+  lightDemoBody: "#382A55",
+  lightDemoBorder: "#9B87D3",
 } as const;
 
 const expandHex = (hex: string) => {

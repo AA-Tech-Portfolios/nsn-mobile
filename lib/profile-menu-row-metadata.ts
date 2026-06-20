@@ -265,3 +265,35 @@ export const profileAppInfoDedication = {
     "In loving memory of my grandmother.\n\nHer kindness, compassion, and unwavering support helped shape the values behind NSN: care, belonging, and meaningful human connection.",
   placement: "appInfoBottom",
 } as const;
+
+export const profileReleaseOutlook = {
+  title: "Release outlook",
+  body:
+    "NSN is currently an alpha prototype. The realistic next step is a small local beta, not a full public launch.\n\nA rough estimate is 6-12 months for a small public beta, depending on testing, polish, community hosts, and real-world meetup feedback.",
+  stages: [
+    {
+      label: "Now",
+      title: "Alpha prototype",
+      copy:
+        "Testing onboarding, profiles, meetup details, privacy, and comfort settings.",
+    },
+    {
+      label: "Next",
+      title: "Closed local alpha",
+      copy:
+        "Invite a small group of testers and improve the experience based on real feedback.",
+    },
+    {
+      label: "Later",
+      title: "Small public beta",
+      copy:
+        "Open NSN more broadly on the North Shore once the core experience feels stable and respectful.",
+    },
+    {
+      label: "Future",
+      title: "Broader identity",
+      copy:
+        "Explore whether NSN stays local or becomes part of a wider SoftHello-style identity.",
+    },
+  ],
+} as const;

@@ -98,7 +98,11 @@ import {
 import type { SoftRevealPace } from "@/lib/soft-reveal";
 import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
 import { legalPrivacyDocuments, legalPrivacySettingsSummary } from "@/lib/legal-privacy-alpha";
-import { getSettingsSearchResults, type SettingsSectionJumpId } from "@/lib/settings-search";
+import {
+  getSettingsJumpScrollY,
+  getSettingsSearchResults,
+  type SettingsSectionJumpId,
+} from "@/lib/settings-search";
 
 const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
 const softRevealPaceOptions: { value: SoftRevealPace; label: string; copy: string }[] = [
@@ -539,6 +543,12 @@ type SettingsCopy = {
   restartOnboarding?: string;
   restartOnboardingCopy?: string;
   restartOnboardingAction?: string;
+  deleteLocalPrototypeData?: string;
+  deleteLocalPrototypeDataCopy?: string;
+  deleteLocalPrototypeDataHint?: string;
+  previewAccountDeletion?: string;
+  previewAccountDeletionCopy?: string;
+  previewAccountDeletionHint?: string;
   searchLanguage?: string;
   noLanguageFound?: string;
   goBack?: string;
@@ -3800,12 +3810,14 @@ export default function SettingsScreen() {
   );
   const [recentlyChangedKey, setRecentlyChangedKey] = useState<string | null>(null);
   const [accountConfirmation, setAccountConfirmation] = useState<AccountConfirmation>(null);
+  const [accountDeletionDemoShown, setAccountDeletionDemoShown] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const [openAccordionSections, setOpenAccordionSections] = useState<SettingsAccordionId[]>([]);
   const [highlightedAccordionSection, setHighlightedAccordionSection] =
     useState<SettingsAccordionId | null>(null);
   const recentlyChangedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const jumpScrollTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
   const copy: SettingsCopy = {
     ...englishCopy,
@@ -4198,20 +4210,42 @@ export default function SettingsScreen() {
   const registerAccordionLayout = (id: SettingsAccordionId) => (event: LayoutChangeEvent) => {
     accordionOffsets.current[id] = event.nativeEvent.layout.y;
   };
+  const clearJumpScrollTimers = useCallback(() => {
+    jumpScrollTimers.current.forEach((timer) => clearTimeout(timer));
+    jumpScrollTimers.current = [];
+  }, []);
   const scrollToSectionOrAccordion = useCallback(
-    (id: SettingsSectionJumpId) => {
+    (id: SettingsSectionJumpId, allowAccordionFallback = false) => {
       const accordionId = accordionByJumpSection[id];
-      const sectionY = sectionOffsets.current[id];
-      const accordionY = accordionOffsets.current[accordionId];
-      const y = typeof sectionY === "number" ? sectionY : accordionY;
-      if (typeof y !== "number") return;
+      const y = getSettingsJumpScrollY({
+        sectionY: sectionOffsets.current[id],
+        accordionY: accordionOffsets.current[accordionId],
+        allowAccordionFallback,
+      });
+      if (typeof y !== "number") return false;
 
       scrollViewRef.current?.scrollTo({
-        y: Math.max(0, y - 8),
+        y,
         animated: !batterySaver && !reduceMotion,
       });
+      return true;
     },
     [batterySaver, reduceMotion],
+  );
+  const scheduleSectionJumpScroll = useCallback(
+    (id: SettingsSectionJumpId) => {
+      clearJumpScrollTimers();
+      [80, 180, 320, 520, 760].forEach((delay, index) => {
+        const timer = setTimeout(() => {
+          const didScroll = scrollToSectionOrAccordion(id, index >= 3);
+          if (didScroll) {
+            clearJumpScrollTimers();
+          }
+        }, delay);
+        jumpScrollTimers.current.push(timer);
+      });
+    },
+    [clearJumpScrollTimers, scrollToSectionOrAccordion],
   );
   const jumpToSection = useCallback(
     (id: SettingsSectionJumpId) => {
@@ -4222,12 +4256,10 @@ export default function SettingsScreen() {
       );
       setHighlightedAccordionSection(accordionId);
 
-      setTimeout(() => {
-        scrollToSectionOrAccordion(id);
-        setTimeout(() => setHighlightedAccordionSection(null), 1600);
-      }, 80);
+      scheduleSectionJumpScroll(id);
+      setTimeout(() => setHighlightedAccordionSection(null), 1800);
     },
-    [scrollToSectionOrAccordion],
+    [scheduleSectionJumpScroll],
   );
   const renderSettingsAccordion = (id: SettingsAccordionId, children: ReactNode) => {
     if (!visibleSettingsAccordionIds.includes(id)) return null;
@@ -4397,8 +4429,9 @@ export default function SettingsScreen() {
       if (recentlyChangedTimer.current) {
         clearTimeout(recentlyChangedTimer.current);
       }
+      clearJumpScrollTimers();
     };
-  }, []);
+  }, [clearJumpScrollTimers]);
   const saveBooleanPrivacy = (
     key: "showSuburbArea" | "showInterests" | "showComfortPreferences" | "minimalProfileView",
     value: boolean,
@@ -4748,10 +4781,8 @@ export default function SettingsScreen() {
 
   const confirmDeleteAccount = () => {
     setAccountConfirmation(null);
-    Alert.alert(
-      "Demo only",
-      "No real account or profile data was deleted. This NSN alpha has not connected account deletion to a backend.",
-    );
+    setAccountDeletionDemoShown(true);
+    showRecentlyChanged("previewAccountDeletion");
   };
 
   const confirmClearLocalPrototypeData = () => {
@@ -4798,6 +4829,7 @@ export default function SettingsScreen() {
             paddingBottom: Math.max(brandTheme.spacing.screenY + 18, 112),
           },
         ]}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator
         onScroll={handleSettingsScroll}
         scrollEventThrottle={16}
@@ -5949,7 +5981,7 @@ export default function SettingsScreen() {
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Progressive visibility
+                    Visibility settings
                   </Text>
                   <Text
                     style={[
@@ -5974,7 +6006,7 @@ export default function SettingsScreen() {
                         onPress={() => saveComfortMode(option.value)}
                         style={responsiveOptionButtonStyle(active)}
                         accessibilityRole="radio"
-                        accessibilityLabel={`Progressive visibility ${option.value}`}
+                        accessibilityLabel={`Visibility settings ${option.value}`}
                         accessibilityState={{ checked: active }}
                       >
                         <Text
@@ -8897,6 +8929,7 @@ export default function SettingsScreen() {
               <View
                 style={[
                   styles.deactivateSettingsRow,
+                  isDay && styles.dayDeactivateSettingsRow,
                   isRtl && styles.rtlRow,
                   styles.rowDivider,
                   isDay && styles.dayRowDivider,
@@ -8908,6 +8941,7 @@ export default function SettingsScreen() {
                     style={[
                       styles.label,
                       styles.deactivateSettingsText,
+                      isDay && styles.dayDeactivateSettingsText,
                       largerText && styles.largeLabel,
                       isRtl && styles.rtlText,
                     ]}
@@ -8918,6 +8952,7 @@ export default function SettingsScreen() {
                     style={[
                       styles.helperText,
                       styles.deactivateSettingsCopy,
+                      isDay && styles.dayDeactivateSettingsCopy,
                       largerText && styles.largeHelperText,
                       isRtl && styles.rtlText,
                     ]}
@@ -8957,7 +8992,10 @@ export default function SettingsScreen() {
                           onPress={() =>
                             setAccountConfirmation({ kind: "deactivate", timeline: option.value })
                           }
-                          style={styles.pauseTimelineButton}
+                          style={[
+                            styles.pauseTimelineButton,
+                            isDay && styles.dayPauseTimelineButton,
+                          ]}
                           accessibilityRole="button"
                           accessibilityLabel={`Pause prototype account for ${option.label}`}
                           accessibilityHint={
@@ -8966,8 +9004,22 @@ export default function SettingsScreen() {
                               : undefined
                           }
                         >
-                          <Text style={styles.pauseTimelineLabel}>{option.label}</Text>
-                          <Text style={styles.pauseTimelineCopy}>{option.copy}</Text>
+                          <Text
+                            style={[
+                              styles.pauseTimelineLabel,
+                              isDay && styles.dayPauseTimelineLabel,
+                            ]}
+                          >
+                            {option.label}
+                          </Text>
+                          <Text
+                            style={[
+                              styles.pauseTimelineCopy,
+                              isDay && styles.dayPauseTimelineCopy,
+                            ]}
+                          >
+                            {option.copy}
+                          </Text>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -8978,75 +9030,176 @@ export default function SettingsScreen() {
                 activeOpacity={0.78}
                 onPress={confirmClearLocalPrototypeData}
                 accessibilityRole="button"
-                accessibilityLabel="Delete local prototype data"
-                accessibilityHint="Clears local prototype data on this device only. No real account or backend data is deleted."
-                style={[styles.actionRow, isRtl && styles.rtlRow]}
+                accessibilityLabel={copy.deleteLocalPrototypeData}
+                accessibilityHint={copy.deleteLocalPrototypeDataHint}
+                style={[
+                  styles.actionRow,
+                  styles.localDataDeleteSettingsRow,
+                  isDay && styles.dayLocalDataDeleteSettingsRow,
+                  isRtl && styles.rtlRow,
+                ]}
               >
                 <View style={styles.settingCopy}>
                   <Text
                     style={[
                       styles.label,
+                      styles.localDataDeleteSettingsText,
+                      isDay && styles.dayLocalDataDeleteSettingsText,
                       largerText && styles.largeLabel,
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Delete local prototype data
+                    {copy.deleteLocalPrototypeData}
                   </Text>
                   <Text
                     style={[
                       styles.helperText,
+                      styles.localDataDeleteSettingsCopy,
+                      isDay && styles.dayLocalDataDeleteSettingsCopy,
                       largerText && styles.largeHelperText,
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Clears local profile, RSVP, My Circle and planning notes, saved places, hidden
-                    events, reports and feedback, and created demo meetups on this device.
+                    {copy.deleteLocalPrototypeDataCopy}
                   </Text>
                   <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
-                    <Text style={styles.prototypeBadge}>Local only</Text>
+                    <Text
+                      style={[
+                        styles.prototypeBadge,
+                        styles.localDataPrototypeBadge,
+                        isDay && styles.dayLocalDataPrototypeBadge,
+                      ]}
+                    >
+                      Local only
+                    </Text>
                   </View>
                 </View>
-                <Text style={styles.destructiveSettingsAction}>Delete</Text>
+                <Text
+                  style={[
+                    styles.destructiveSettingsAction,
+                    styles.localDataDeleteSettingsAction,
+                    isDay && styles.dayLocalDataDeleteSettingsAction,
+                  ]}
+                >
+                  Delete
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.78}
                 onPress={() => setAccountConfirmation({ kind: "delete" })}
                 accessibilityRole="button"
-                accessibilityLabel="Preview account deletion"
-                accessibilityHint="Opens a prototype confirmation dialog. No real account will be deleted."
-                style={[styles.actionRow, styles.destructiveSettingsRow, isRtl && styles.rtlRow]}
+                accessibilityLabel={copy.previewAccountDeletion}
+                accessibilityHint={copy.previewAccountDeletionHint}
+                style={[styles.actionRow, styles.demoSettingsRow, isDay && styles.dayDemoSettingsRow, isRtl && styles.rtlRow]}
               >
                 <View style={styles.settingCopy}>
                   <Text
                     style={[
                       styles.label,
-                      styles.destructiveSettingsText,
+                      styles.demoSettingsText,
+                      isDay && styles.dayDemoSettingsText,
                       largerText && styles.largeLabel,
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Preview account deletion
+                    {copy.previewAccountDeletion}
                   </Text>
                   <Text
                     style={[
                       styles.helperText,
-                      styles.destructiveSettingsCopy,
+                      styles.demoSettingsCopy,
+                      isDay && styles.dayDemoSettingsCopy,
                       largerText && styles.largeHelperText,
                       isRtl && styles.rtlText,
                     ]}
                   >
-                    Demo-only preview for alpha testers. No real account or profile data is deleted;
-                    production deletion needs account systems, audit logging, and recovery policy
-                    first.
+                    {copy.previewAccountDeletionCopy}
                   </Text>
                   <View style={[styles.settingMetaRow, isRtl && styles.rtlRow]}>
-                    <Text style={[styles.prototypeBadge, styles.destructivePrototypeBadge]}>
+                    <Text
+                      style={[
+                        styles.prototypeBadge,
+                        styles.demoPrototypeBadge,
+                        isDay && styles.dayDemoPrototypeBadge,
+                      ]}
+                    >
                       Demo
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.destructiveSettingsAction}>Preview</Text>
+                <Text
+                  style={[
+                    styles.destructiveSettingsAction,
+                    styles.demoSettingsAction,
+                    isDay && styles.dayDemoSettingsAction,
+                  ]}
+                >
+                  Preview
+                </Text>
               </TouchableOpacity>
+              {accountDeletionDemoShown ? (
+                <View
+                  style={[
+                    styles.accountDeletionDemoResult,
+                    isDay && styles.dayAccountDeletionDemoResult,
+                    highContrast && styles.highContrastCard,
+                  ]}
+                >
+                  <View style={styles.accountDeletionDemoCopy}>
+                    <Text
+                      style={[
+                        styles.accountDeletionDemoTitle,
+                        isDay && styles.dayDemoSettingsText,
+                        largerText && styles.largeLabel,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      Demo result shown
+                    </Text>
+                    <Text
+                      style={[
+                        styles.accountDeletionDemoText,
+                        isDay && styles.dayDemoSettingsCopy,
+                        largerText && styles.largeHelperText,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      No real account or profile data was deleted. Production deletion still needs
+                      account systems, audit logging, and recovery policy first.
+                    </Text>
+                    {recentlyChangedKey === "previewAccountDeletion" ? (
+                      <Text
+                        style={[
+                          styles.recentlyChangedText,
+                          isDay && styles.dayRecentlyChangedText,
+                        ]}
+                      >
+                        Demo action completed
+                      </Text>
+                    ) : null}
+                  </View>
+                  <TouchableOpacity
+                    activeOpacity={0.78}
+                    onPress={() => setAccountDeletionDemoShown(false)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Dismiss account deletion demo result"
+                    style={[
+                      styles.accountDeletionDemoDismiss,
+                      isDay && styles.dayQuickJumpButton,
+                      highContrast && styles.highContrastButton,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.accountDeletionDemoDismissText,
+                        isDay && styles.dayActionText,
+                      ]}
+                    >
+                      Dismiss
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
             </View>
           </>,
         )}
@@ -9607,13 +9760,25 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingHorizontal: 18,
     paddingVertical: 14,
-    backgroundColor: "rgba(247,200,91,0.14)",
+    borderLeftWidth: 3,
+    borderLeftColor: "#55A96E",
+    backgroundColor: "rgba(114,214,126,0.13)",
   },
   deactivateSettingsText: {
-    color: "#9A6A00",
+    color: "#B8F3D0",
   },
   deactivateSettingsCopy: {
-    color: "#7C5A00",
+    color: "#DDFBE7",
+  },
+  dayDeactivateSettingsRow: {
+    borderLeftColor: "#55A96E",
+    backgroundColor: "#E8F8EE",
+  },
+  dayDeactivateSettingsText: {
+    color: "#0F6B2F",
+  },
+  dayDeactivateSettingsCopy: {
+    color: "#255D38",
   },
   pauseTimelineGrid: {
     flexDirection: "row",
@@ -9627,23 +9792,33 @@ const styles = StyleSheet.create({
     minHeight: 60,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(212,169,30,0.7)",
-    backgroundColor: "#FFF7D8",
+    borderColor: "rgba(114,214,126,0.34)",
+    backgroundColor: "rgba(255,255,255,0.045)",
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
   pauseTimelineLabel: {
-    color: "#7C5A00",
+    color: "#B8F3D0",
     fontSize: 12,
     fontWeight: "900",
     lineHeight: 17,
   },
   pauseTimelineCopy: {
-    color: "#7C5A00",
+    color: "#DDFBE7",
     fontSize: 11,
     fontWeight: "700",
     lineHeight: 15,
     marginTop: 2,
+  },
+  dayPauseTimelineButton: {
+    borderColor: "#55A96E",
+    backgroundColor: "#F5FCF7",
+  },
+  dayPauseTimelineLabel: {
+    color: "#0F6B2F",
+  },
+  dayPauseTimelineCopy: {
+    color: "#255D38",
   },
   deactivatePrimaryButton: {
     alignSelf: "flex-start",
@@ -9655,12 +9830,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   reactivateButton: {
-    backgroundColor: "#FFF7D8",
+    backgroundColor: "#E8F8EE",
     borderWidth: 1,
-    borderColor: "#D4A91E",
+    borderColor: "#55A96E",
   },
   reactivateButtonText: {
-    color: "#7C5A00",
+    color: "#0F6B2F",
     fontSize: 12,
     fontWeight: "900",
   },
@@ -9674,8 +9849,105 @@ const styles = StyleSheet.create({
     color: "#B83A50",
   },
   destructiveSettingsAction: {
-    color: "#E23D5A",
     fontSize: 13,
+    fontWeight: "900",
+  },
+  localDataDeleteSettingsRow: {
+    borderLeftWidth: 3,
+    borderLeftColor: nsnSupportReadabilityColors.darkDestructiveBorder,
+    backgroundColor: nsnSupportReadabilityColors.darkDestructiveSurface,
+  },
+  dayLocalDataDeleteSettingsRow: {
+    borderLeftColor: nsnSupportReadabilityColors.lightDestructiveBorder,
+    backgroundColor: nsnSupportReadabilityColors.lightDestructiveSurface,
+  },
+  localDataDeleteSettingsText: {
+    color: nsnSupportReadabilityColors.darkDestructiveText,
+  },
+  dayLocalDataDeleteSettingsText: {
+    color: nsnSupportReadabilityColors.lightDestructiveText,
+  },
+  localDataDeleteSettingsCopy: {
+    color: nsnSupportReadabilityColors.darkDestructiveBody,
+  },
+  dayLocalDataDeleteSettingsCopy: {
+    color: nsnSupportReadabilityColors.lightDestructiveBody,
+  },
+  localDataDeleteSettingsAction: {
+    color: nsnSupportReadabilityColors.darkDestructiveText,
+  },
+  dayLocalDataDeleteSettingsAction: {
+    color: nsnSupportReadabilityColors.lightDestructiveText,
+  },
+  demoSettingsRow: {
+    borderLeftWidth: 3,
+    borderLeftColor: nsnSupportReadabilityColors.darkDemoBorder,
+    backgroundColor: nsnSupportReadabilityColors.darkDemoSurface,
+  },
+  dayDemoSettingsRow: {
+    borderLeftColor: nsnSupportReadabilityColors.lightDemoBorder,
+    backgroundColor: nsnSupportReadabilityColors.lightDemoSurface,
+  },
+  demoSettingsText: {
+    color: nsnSupportReadabilityColors.darkDemoText,
+  },
+  dayDemoSettingsText: {
+    color: nsnSupportReadabilityColors.lightDemoText,
+  },
+  demoSettingsCopy: {
+    color: nsnSupportReadabilityColors.darkDemoBody,
+  },
+  dayDemoSettingsCopy: {
+    color: nsnSupportReadabilityColors.lightDemoBody,
+  },
+  demoSettingsAction: {
+    color: nsnSupportReadabilityColors.darkDemoText,
+  },
+  dayDemoSettingsAction: {
+    color: nsnSupportReadabilityColors.lightDemoText,
+  },
+  accountDeletionDemoResult: {
+    borderWidth: 1,
+    borderColor: nsnSupportReadabilityColors.darkDemoBorder,
+    backgroundColor: "rgba(76, 54, 112, 0.34)",
+    borderRadius: 16,
+    padding: 13,
+    gap: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  dayAccountDeletionDemoResult: {
+    borderColor: nsnSupportReadabilityColors.lightDemoBorder,
+    backgroundColor: "#F2ECFF",
+  },
+  accountDeletionDemoCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  accountDeletionDemoTitle: {
+    color: nsnSupportReadabilityColors.darkDemoText,
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  accountDeletionDemoText: {
+    color: nsnSupportReadabilityColors.darkDemoBody,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 18,
+  },
+  accountDeletionDemoDismiss: {
+    borderWidth: 1,
+    borderColor: nsnColors.border,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  accountDeletionDemoDismissText: {
+    color: nsnColors.text,
+    fontSize: 12,
     fontWeight: "900",
   },
   largeSettingRow: {
@@ -9729,6 +10001,26 @@ const styles = StyleSheet.create({
     borderColor: "#B83A50",
     backgroundColor: "#FFE9EE",
     color: "#7A1730",
+  },
+  localDataPrototypeBadge: {
+    borderColor: nsnSupportReadabilityColors.darkDestructiveBorder,
+    backgroundColor: "#3A1E2A",
+    color: nsnSupportReadabilityColors.darkDestructiveBody,
+  },
+  dayLocalDataPrototypeBadge: {
+    borderColor: nsnSupportReadabilityColors.lightDestructiveBorder,
+    backgroundColor: "#FFE0E7",
+    color: nsnSupportReadabilityColors.lightDestructiveText,
+  },
+  demoPrototypeBadge: {
+    borderColor: nsnSupportReadabilityColors.darkDemoBorder,
+    backgroundColor: "#302247",
+    color: nsnSupportReadabilityColors.darkDemoBody,
+  },
+  dayDemoPrototypeBadge: {
+    borderColor: nsnSupportReadabilityColors.lightDemoBorder,
+    backgroundColor: "#E7DDFF",
+    color: nsnSupportReadabilityColors.lightDemoText,
   },
   recentlyChangedText: {
     color: "#B8F3D0",

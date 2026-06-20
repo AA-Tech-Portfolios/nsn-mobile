@@ -11,6 +11,28 @@ export const alphaWalkthroughCopy = {
     "Account deletion, identity checks, report review, notification delivery, and meetup check-in reminders are not production systems yet. No real account action is taken in this alpha walkthrough.",
 } as const;
 
+export const alphaQuietSpaceEntry = {
+  title: "Quiet Space",
+  eyebrow: "Optional pause",
+  copy:
+    "A small tester-only place to pause before or after a meetup flow. It stays separate from the main tabs for now.",
+  actionLabel: "Open Quiet Space",
+  route: "/(tabs)/quiet-space",
+  icon: "moon",
+} as const;
+
+export const alphaProofOfConceptDisclosure = {
+  eyebrow: "Optional context",
+  collapsedLabel: "Show proof of concept",
+  expandedLabel: "Hide proof of concept",
+  copy: "Open this only if you want the longer product context behind the alpha.",
+} as const;
+
+export const alphaWalkthroughLearnMore = {
+  title: "Learn more",
+  copy: "Optional background for testers who want a little more product context.",
+} as const;
+
 export const alphaProofOfConceptIntro = {
   title: "Why NSN exists",
   statement:

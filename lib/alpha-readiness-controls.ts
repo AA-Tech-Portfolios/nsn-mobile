@@ -91,7 +91,6 @@ export function getOnboardingAboutRequirement({
   hasAllowedName,
   hasInterests,
   hasLocalArea,
-  hasPreferredAgeRange,
   isAdult,
 }: {
   hasAllowedName: boolean;
@@ -102,7 +101,6 @@ export function getOnboardingAboutRequirement({
 }) {
   if (!hasAllowedName) return "Choose an allowed name or nickname to continue.";
   if (!isAdult) return "Enter a birth year that shows an age between 18 and 95 to continue.";
-  if (!hasPreferredAgeRange) return "Choose a valid adult preferred age range to continue.";
   if (!hasLocalArea) return "Choose a suburb or local area to continue.";
   if (!hasInterests) return "Choose at least one first-meetup interest to continue.";
   return null;

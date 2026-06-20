@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { formatBroadLocalArea } from "./australian-localities";
 import { getLocalAreaPickerCopy } from "./local-area-copy";
 
 describe("local area picker copy", () => {
@@ -11,5 +12,11 @@ describe("local area picker copy", () => {
     expect(localCopy.resultGroupTitle).toBe("Suburbs and regions");
     expect(localCopy.emptyTitle).toBe("No suburb or region found yet.");
     expect(visibleCopy).not.toMatch(/\bmatching|matchmaking|popular|limited|hurry|scarcity|growth\b/i);
+  });
+
+  it("removes postcode details from profile preview copy", () => {
+    expect(formatBroadLocalArea("Chatswood NSW 2067")).toBe("Chatswood");
+    expect(formatBroadLocalArea("Crows Nest, NSW 2065")).toBe("Crows Nest");
+    expect(formatBroadLocalArea("Sydney North Shore")).toBe("Sydney North Shore");
   });
 });

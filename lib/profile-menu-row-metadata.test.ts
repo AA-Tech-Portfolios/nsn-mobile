@@ -5,6 +5,7 @@ import {
   getUserPreferenceRows,
   getUserPreferenceRowDescription,
   profileAppInfoDedication,
+  profileReleaseOutlook,
   profileOptionGroups,
   profileResourceSupportRowMetadata,
   profileSupportRowMetadata,
@@ -107,5 +108,27 @@ describe("profile menu row metadata", () => {
     expect(`${profileAppInfoDedication.title} ${profileAppInfoDedication.copy}`.toLowerCase()).not.toMatch(
       /hero|dramatic|spotlight|animated|flashy/
     );
+  });
+
+  it("frames the release outlook as an estimated beta path, not a launch promise", () => {
+    const visibleCopy = [
+      profileReleaseOutlook.title,
+      profileReleaseOutlook.body,
+      ...profileReleaseOutlook.stages.flatMap((stage) => [stage.label, stage.title, stage.copy]),
+    ].join(" ");
+
+    expect(profileReleaseOutlook.title).toBe("Release outlook");
+    expect(profileReleaseOutlook.body).toContain("alpha prototype");
+    expect(profileReleaseOutlook.body).toContain("small local beta");
+    expect(profileReleaseOutlook.body).toContain("rough estimate is 6-12 months");
+    expect(profileReleaseOutlook.stages.map((stage) => `${stage.label} - ${stage.title}`)).toEqual([
+      "Now - Alpha prototype",
+      "Next - Closed local alpha",
+      "Later - Small public beta",
+      "Future - Broader identity",
+    ]);
+    expect(visibleCopy).toContain("community hosts");
+    expect(visibleCopy).toContain("real-world meetup feedback");
+    expect(visibleCopy.toLowerCase()).not.toMatch(/launching in 1 year|guaranteed|guarantee|fixed release date|promised launch/);
   });
 });

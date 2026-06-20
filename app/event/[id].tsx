@@ -163,14 +163,23 @@ const getDetailMediaComfortLabels = (
   const labels = [...(event.mediaComfortLabels ?? ["Ask before photos"])];
 
   if (photoRecordingComfortPreferences.includes("Ask me first")) labels.push("Ask before photos");
+  if (photoRecordingComfortPreferences.includes("Photos of me are usually okay"))
+    labels.push("Photos of me okay");
   if (photoRecordingComfortPreferences.includes("No photos of me")) labels.push("No photos of me");
+  if (photoRecordingComfortPreferences.includes("Ask before group photos"))
+    labels.push("Ask before group photos");
   if (photoRecordingComfortPreferences.includes("Group photos are okay"))
     labels.push("Group photos only if everyone agrees");
+  if (photoRecordingComfortPreferences.includes("No group photos")) labels.push("No group photos");
   if (photoRecordingComfortPreferences.includes("Venue/event photos are okay"))
     labels.push("Venue photos okay");
+  if (photoRecordingComfortPreferences.includes("Ask before video or audio recording"))
+    labels.push("Ask before recording");
   if (photoRecordingComfortPreferences.includes("No videos please")) labels.push("No filming");
   if (photoRecordingComfortPreferences.includes("No public posting without permission"))
     labels.push("No public posting");
+  if (photoRecordingComfortPreferences.includes("Ask before screenshots"))
+    labels.push("Ask before screenshots");
   if (photoRecordingComfortPreferences.includes("Prefer no screenshots of chats/profile"))
     labels.push("Prefer no screenshots");
 
@@ -2239,7 +2248,7 @@ export default function EventDetailsScreen() {
         onPress={() => setIsReadinessToolsOpen((current) => !current)}
         accessibilityRole="button"
         accessibilityState={{ expanded: isReadinessToolsOpen }}
-        accessibilityLabel={`${isReadinessToolsOpen ? "Collapse" : "Expand"} planning tools`}
+        accessibilityLabel={`${isReadinessToolsOpen ? "Collapse" : "Expand"} my comfort settings`}
         style={[styles.eventAccordionHeader, isRtl && styles.rtlRow]}
       >
         <View style={[styles.eventAccordionTitleRow, isRtl && styles.rtlRow]}>
@@ -2254,7 +2263,7 @@ export default function EventDetailsScreen() {
                 isRtl && styles.rtlText,
               ]}
             >
-              Planning tools
+              My comfort settings
             </Text>
             <Text
               style={[
@@ -2263,7 +2272,7 @@ export default function EventDetailsScreen() {
                 isRtl && styles.rtlText,
               ]}
             >
-              Optional local-only tools for arrival, backup plans, and quiet exits.
+              Optional local-only tools for arrival comfort, backup plans, and quiet exits.
             </Text>
           </View>
         </View>

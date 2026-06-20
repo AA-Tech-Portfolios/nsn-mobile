@@ -23,7 +23,6 @@ import {
   lifeContextCurrentStateOptions,
   lifeContextFieldOptions,
   lifeContextLearningOptions,
-  photoRecordingComfortOptions,
   physicalContactComfortOptions,
   socialEnergyOptions,
   toggleMeetupContactPreferenceSelection,
@@ -47,7 +46,6 @@ import {
   type LifeContextFieldPreference,
   type LifeContextLearningPreference,
   type MeetupContactPreference,
-  type PhotoRecordingComfortPreference,
   type PhysicalContactComfortPreference,
   type SocialEnergyPreference,
   type TransportationPreference,
@@ -70,7 +68,7 @@ import {
   type ProfileDrawerPanel,
   type ProfilePreferenceSection,
 } from "@/lib/alpha-readiness-controls";
-import { appearanceLayoutControlMetadata, getUserPreferenceRowDescription, getUserPreferenceRows, profileAppInfoDedication, profileOptionGroups, profileResourceSupportRowMetadata, profileSupportRowMetadata, type AppearanceLayoutControlKey, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
+import { appearanceLayoutControlMetadata, getUserPreferenceRowDescription, getUserPreferenceRows, profileAppInfoDedication, profileOptionGroups, profileReleaseOutlook, profileResourceSupportRowMetadata, profileSupportRowMetadata, type AppearanceLayoutControlKey, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { connectionPromptCategories, getConnectionPromptProfile } from "@/lib/connection-prompts";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
@@ -78,6 +76,13 @@ import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/in
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
 import { nsnSupportReadabilityColors } from "@/lib/support-readability";
 import { buildHref } from "@/lib/navigation-hrefs";
+import {
+  deriveOnboardingMediaPreferences,
+  mediaPreferencesToPhotoRecordingComfortPreferences,
+  onboardingCopy,
+  onboardingMediaPreferenceGroups,
+  type OnboardingMediaPreferences,
+} from "@/lib/onboarding-copy";
 import type { LocalAreaSuggestion } from "@/lib/location-lookup";
 import { nsnColors, profileVibes } from "@/lib/nsn-data";
 import {
@@ -133,6 +138,7 @@ import { gentleConnectionGuidance, supportBelongingGuidance, type SupportGuidanc
 import { getCalmFaviconUrl, preparednessGuidanceCategories, safetyBoundaryGuidanceCategories, type PreparednessGuidanceCategory } from "@/lib/options-hub";
 import { communityRoleOptions, meetupAccessShortcutRows } from "@/lib/profile-community-roles";
 import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
+import { quietSpaceProfileEntry } from "@/lib/quiet-space";
 
 const rows = [
   { icon: "calendar", key: "meetups", route: "/meetups" },
@@ -1878,12 +1884,16 @@ export default function ProfileScreen() {
     await saveSoftHelloMvpState({ communicationPreferences: nextPreferences });
   };
 
-  const togglePhotoRecordingComfortPreference = async (preference: PhotoRecordingComfortPreference) => {
-    const nextPreferences = photoRecordingComfortPreferences.includes(preference)
-      ? photoRecordingComfortPreferences.filter((item) => item !== preference)
-      : [...photoRecordingComfortPreferences, preference];
-
-    await saveSoftHelloMvpState({ photoRecordingComfortPreferences: nextPreferences });
+  const mediaPreferences = deriveOnboardingMediaPreferences(photoRecordingComfortPreferences);
+  const updatePhotoRecordingMediaPreference = async (
+    key: keyof OnboardingMediaPreferences,
+    value: OnboardingMediaPreferences[keyof OnboardingMediaPreferences],
+  ) => {
+    const nextMediaPreferences = { ...mediaPreferences, [key]: value } as OnboardingMediaPreferences;
+    await saveSoftHelloMvpState({
+      photoRecordingComfortPreferences:
+        mediaPreferencesToPhotoRecordingComfortPreferences(nextMediaPreferences),
+    });
   };
 
   const togglePhysicalContactComfortPreference = async (preference: PhysicalContactComfortPreference) => {
@@ -2466,7 +2476,13 @@ export default function ProfileScreen() {
       socialEnergyPreference: "Calm",
       communicationPreferences: ["Low-message mode", "Details only"],
       groupSizePreference: "Small groups only",
-      photoRecordingComfortPreferences: ["Ask me first", "No public posting without permission", "Prefer no screenshots of chats/profile"],
+      photoRecordingComfortPreferences: [
+        "Ask me first",
+        "Ask before group photos",
+        "Ask before video or audio recording",
+        "Prefer no screenshots of chats/profile",
+        "No public posting without permission",
+      ],
       physicalContactComfortPreferences: ["Ask first", "Prefer personal space"],
       backgroundStudyStatuses: [],
       backgroundStudyAreas: [],
@@ -2783,7 +2799,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.trustFoundationGroup}>
-        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Progressive visibility</Text>
+        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Visibility settings</Text>
         <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
           {(["Comfort Mode", "Warm Up Mode", "Open Mode"] as const).map((modeOption) => {
             const active = comfortMode === modeOption;
@@ -2882,32 +2898,38 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.trustFoundationGroup}>
-        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Photo & recording comfort</Text>
+        <Text style={[styles.trustFoundationTitle, isDay && styles.dayTitle, isRtl && styles.rtlText]}>Photo & recording preferences</Text>
         <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
           {eventCommunityGuidelinesCopy.mediaCopy}
         </Text>
-        <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
-          {photoRecordingComfortOptions.map((option) => {
-            const active = photoRecordingComfortPreferences.includes(option);
+        {onboardingMediaPreferenceGroups.map((group) => (
+          <View key={group.id} style={styles.trustFoundationSubgroup}>
+            <Text style={[styles.profileLayoutCopyStrong, isDay && styles.dayTitle, isRtl && styles.rtlText]}>{group.title}</Text>
+            <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{group.helper}</Text>
+            <View style={[styles.preferenceGrid, styles.compactGrid, isRtl && styles.rtlRow]}>
+              {group.options.map((option) => {
+                const active = mediaPreferences[group.id] === option;
 
-            return (
-              <TouchableOpacity
-                key={option}
-                accessibilityRole="button"
-                accessibilityLabel={`Photo and recording comfort ${option}`}
-                accessibilityState={{ selected: active }}
-                activeOpacity={0.78}
-                onPress={() => togglePhotoRecordingComfortPreference(option)}
-              >
-                <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
-                  {getPreferenceDisplayLabel(option, active)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                return (
+                  <TouchableOpacity
+                    key={option}
+                    accessibilityRole="radio"
+                    accessibilityLabel={`${group.title}: ${option}`}
+                    accessibilityState={{ checked: active }}
+                    activeOpacity={0.78}
+                    onPress={() => updatePhotoRecordingMediaPreference(group.id, option)}
+                  >
+                    <Text style={[styles.vibeChip, isDay && styles.dayCard, isDay && styles.dayTitle, !active && styles.vibeChipMuted, active && styles.comfortChipActive, isDay && active && styles.dayComfortChipActive, isRtl && styles.rtlText]}>
+                      {getPreferenceDisplayLabel(option, active)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        ))}
         <Text style={[styles.trustFoundationCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
-          Please don&apos;t screenshot or share someone&apos;s profile, chat, or meetup details without permission.
+          {onboardingCopy.photoRecordingNotice}
         </Text>
       </View>
 
@@ -3771,12 +3793,22 @@ export default function ProfileScreen() {
                               key={mode}
                               activeOpacity={0.78}
                               onPress={() => saveSoftHelloMvpState({ userPreferenceTextMode: mode })}
-                              style={[styles.profilePreferenceModeButton, active && styles.profilePreferenceModeButtonActive]}
+                              style={[
+                                styles.profilePreferenceModeButton,
+                                isDay && !active && styles.dayProfilePreferenceModeButton,
+                                active && styles.profilePreferenceModeButtonActive,
+                              ]}
                               accessibilityRole="button"
                               accessibilityState={{ selected: active }}
                               accessibilityLabel={`${mode === "Simple" ? "Compact title and icon only" : "Short description cards"} User Options menu style`}
                             >
-                              <Text style={[styles.profilePreferenceModeButtonText, active && styles.profileLayoutTextActive]}>
+                              <Text
+                                style={[
+                                  styles.profilePreferenceModeButtonText,
+                                  isDay && !active && styles.dayProfilePreferenceModeButtonText,
+                                  active && styles.profileLayoutTextActive,
+                                ]}
+                              >
                                 {mode === "Simple" ? "Compact" : "Cards"}
                               </Text>
                             </TouchableOpacity>
@@ -4118,12 +4150,22 @@ export default function ProfileScreen() {
                               key={mode}
                               activeOpacity={0.78}
                               onPress={() => saveSoftHelloMvpState({ userPreferenceTextMode: mode })}
-                              style={[styles.profilePreferenceModeButton, active && styles.profilePreferenceModeButtonActive]}
+                              style={[
+                                styles.profilePreferenceModeButton,
+                                isDay && !active && styles.dayProfilePreferenceModeButton,
+                                active && styles.profilePreferenceModeButtonActive,
+                              ]}
                               accessibilityRole="button"
                               accessibilityState={{ selected: active }}
                               accessibilityLabel={`${mode === "Simple" ? "Compact title only" : "Short description cards"} preference menu style`}
                             >
-                              <Text style={[styles.profilePreferenceModeButtonText, active && styles.profileLayoutTextActive]}>
+                              <Text
+                                style={[
+                                  styles.profilePreferenceModeButtonText,
+                                  isDay && !active && styles.dayProfilePreferenceModeButtonText,
+                                  active && styles.profileLayoutTextActive,
+                                ]}
+                              >
                                 {mode === "Simple" ? "Compact" : "Cards"}
                               </Text>
                             </TouchableOpacity>
@@ -6257,6 +6299,47 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
                 <View style={[styles.profileMenuDivider, isDay && styles.dayRowBorder]} />
                 <Text style={[styles.profileMenuTitle, isDay && styles.dayMutedText]}>App Info</Text>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={() => router.push(quietSpaceProfileEntry.route as never)}
+                  style={styles.profileMenuItem}
+                  accessibilityRole="button"
+                  accessibilityLabel={quietSpaceProfileEntry.actionLabel}
+                >
+                  <IconSymbol name="moon" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                  <View style={styles.profileMenuItemBody}>
+                    <Text style={[styles.profileMenuText, isDay && styles.dayTitle]}>
+                      {quietSpaceProfileEntry.title}
+                    </Text>
+                    <Text style={[styles.profileMenuDescription, isDay && styles.dayMutedText]}>
+                      {quietSpaceProfileEntry.copy}
+                    </Text>
+                  </View>
+                  <IconSymbol name="chevron.right" color={isDay ? "#53677A" : nsnColors.muted} size={20} />
+                </TouchableOpacity>
+                <View style={[styles.profileMenuInfoCard, styles.releaseOutlookCard, isDay && styles.daySoftOption]}>
+                  <Text style={[styles.appInfoDedicationTitle, isDay && styles.dayTitle]}>
+                    {profileReleaseOutlook.title}
+                  </Text>
+                  <Text style={[styles.appInfoDedicationCopy, isDay && styles.dayMutedText]}>
+                    {profileReleaseOutlook.body}
+                  </Text>
+                  <View style={styles.releaseOutlookTimeline}>
+                    {profileReleaseOutlook.stages.map((stage) => (
+                      <View key={`${stage.label}-${stage.title}`} style={styles.releaseOutlookStage}>
+                        <View style={[styles.releaseOutlookDot, isDay && styles.dayReleaseOutlookDot]} />
+                        <View style={styles.releaseOutlookStageCopy}>
+                          <Text style={[styles.releaseOutlookStageTitle, isDay && styles.dayTitle]}>
+                            {stage.label} — {stage.title}
+                          </Text>
+                          <Text style={[styles.releaseOutlookStageBody, isDay && styles.dayMutedText]}>
+                            {stage.copy}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
                 <View style={[styles.profileMenuInfoCard, styles.appInfoDedicationCard, isDay && styles.daySoftOption]}>
                   <Text style={[styles.appInfoDedicationTitle, isDay && styles.dayTitle]}>
                     {profileAppInfoDedication.title}
@@ -7651,6 +7734,8 @@ const styles = StyleSheet.create({
   profilePreferenceModeButton: { minHeight: 36, borderRadius: 13, borderWidth: 1, borderColor: "#4D6794", backgroundColor: "rgba(33,75,149,0.18)", alignItems: "center", justifyContent: "center", paddingHorizontal: 13 },
   profilePreferenceModeButtonActive: { ...nsnActionButtonStyles.selectedPill },
   profilePreferenceModeButtonText: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 16 },
+  dayProfilePreferenceModeButton: { borderColor: "#8BA0BF", backgroundColor: "#EEF4FA" },
+  dayProfilePreferenceModeButtonText: { color: "#26384A" },
   profileMenuFeaturedItem: { borderWidth: 1, borderColor: "rgba(124,170,201,0.45)", backgroundColor: "rgba(124,170,201,0.1)" },
   profileMenuIconBadge: { width: 34, height: 34, borderRadius: 14, borderWidth: 1, borderColor: "rgba(124,170,201,0.28)", backgroundColor: "rgba(255,255,255,0.04)", alignItems: "center", justifyContent: "center" },
   profileMenuDisabledOption: { opacity: 0.72, borderStyle: "dashed" },
@@ -7681,6 +7766,14 @@ const styles = StyleSheet.create({
   appInfoDedicationCard: { paddingVertical: 14, gap: 7, marginBottom: 10 },
   appInfoDedicationTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   appInfoDedicationCopy: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 12, fontWeight: "700", lineHeight: 19 },
+  releaseOutlookCard: { paddingVertical: 14, gap: 9, marginBottom: 10 },
+  releaseOutlookTimeline: { gap: 9, marginTop: 2 },
+  releaseOutlookStage: { flexDirection: "row", gap: 9, alignItems: "flex-start" },
+  releaseOutlookDot: { width: 8, height: 8, borderRadius: 4, marginTop: 6, backgroundColor: nsnColors.cyan },
+  dayReleaseOutlookDot: { backgroundColor: "#445E93" },
+  releaseOutlookStageCopy: { flex: 1, minWidth: 0 },
+  releaseOutlookStageTitle: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
+  releaseOutlookStageBody: { color: nsnSupportReadabilityColors.darkMutedText, fontSize: 11, fontWeight: "700", lineHeight: 16, marginTop: 1 },
   helpSupportSectionStack: { gap: 8, marginBottom: 8 },
   helpSupportCardRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   helpSubsection: { borderRadius: 15, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.025)", padding: 10, marginBottom: 8 },
@@ -7780,6 +7873,7 @@ const styles = StyleSheet.create({
   profileLayoutBody: { flex: 1, minWidth: 0 },
   profileLayoutTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   profileLayoutCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18, marginTop: 2 },
+  profileLayoutCopyStrong: { color: nsnColors.text, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   profileLayoutCheck: { width: 22, color: nsnColors.muted, fontSize: 16, fontWeight: "900", textAlign: "center" },
   profileLayoutTextActive: { color: nsnColors.selectedChipText },
   profileDrawerDoneText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900", lineHeight: 17 },
@@ -7900,6 +7994,7 @@ const styles = StyleSheet.create({
   simpleTrustCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 18 },
   visibilityDetailCopy: { marginTop: 6 },
   trustFoundationGroup: { gap: 8, marginTop: 12 },
+  trustFoundationSubgroup: { gap: 6, marginTop: 4 },
   trustFoundationTitle: { color: nsnColors.text, fontSize: 13, fontWeight: "900", lineHeight: 18 },
   trustFoundationCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "700", lineHeight: 17 },
   verifiedPrivateOption: { minHeight: 72, borderRadius: 14, borderWidth: 1, borderColor: nsnColors.border, backgroundColor: "rgba(255,255,255,0.04)", flexDirection: "row", alignItems: "center", gap: 10, padding: 12, marginTop: 14 },
@@ -7973,7 +8068,7 @@ const styles = StyleSheet.create({
   cardTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 8 },
   sectionTitleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
   sectionTitle: { color: nsnColors.text, fontSize: 16, fontWeight: "800", lineHeight: 23 },
-  editText: { color: "#D9E4FF", fontSize: 13, fontWeight: "800" },
+  editText: { color: "#7786FF", fontSize: 13, fontWeight: "800" },
   preferenceGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9, marginTop: 2 },
   vibeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 20 },
   vibeChip: { color: nsnColors.text, fontSize: 13, lineHeight: 18, fontWeight: "700", paddingHorizontal: 13, paddingVertical: 9, borderRadius: 14, backgroundColor: nsnColors.surface, borderWidth: 1, borderColor: nsnColors.border, overflow: "hidden" },
