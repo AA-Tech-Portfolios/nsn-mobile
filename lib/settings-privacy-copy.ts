@@ -93,6 +93,9 @@ export const englishSettingsPrivacyCopy = {
     "Reduce animations, weather refresh, and haptics when you want NSN to use less power.",
   lowLightMode: "Low light mode",
   lowLightModeCopy: "Dim bright surfaces for softer viewing in darker rooms.",
+  showTinyTutorials: "Show tiny tutorials",
+  showTinyTutorialsCopy:
+    "Display small local walkthrough cards on alpha screens. Off by default for a quieter prototype.",
   lowLightLevel: "Brightness level",
   lowLightLevelCopy: "Choose how much Low light mode dims the app.",
   restartOnboarding: "Restart NSN onboarding",

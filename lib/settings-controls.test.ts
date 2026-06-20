@@ -54,6 +54,8 @@ const copy: SettingsCopySource = {
   batterySaverCopy: "Reduce motion and background refresh.",
   lowLightMode: "Low light mode",
   lowLightModeCopy: "Dim bright surfaces.",
+  showTinyTutorials: "Show tiny tutorials",
+  showTinyTutorialsCopy: "Display small local walkthrough cards on alpha screens.",
 };
 
 const accessibilityCopy: AccessibilityCopySource = {
@@ -89,6 +91,7 @@ const state: SettingsControlState = {
   safetyCheckIns: true,
   batterySaver: false,
   lowLightMode: false,
+  showTinyTutorials: false,
   largerText: false,
   highContrast: false,
   reduceMotion: false,
@@ -118,6 +121,7 @@ function createActions() {
     setSafetyCheckIns: vi.fn(),
     setBatterySaver: vi.fn(),
     setLowLightMode: vi.fn(),
+    setShowTinyTutorials: vi.fn(),
     setLargerText: vi.fn(),
     setHighContrast: vi.fn(),
     setReduceMotion: vi.fn(),
@@ -166,6 +170,7 @@ describe("settings controls", () => {
       "safetyCheckIns",
       "batterySaver",
       "lowLightMode",
+      "showTinyTutorials",
       "largerText",
       "highContrast",
       "reduceMotion",
@@ -197,6 +202,7 @@ describe("settings controls", () => {
     expect(actions.setSafetyCheckIns).toHaveBeenCalledWith(false);
     expect(actions.setBatterySaver).toHaveBeenCalledWith(true);
     expect(actions.setLowLightMode).toHaveBeenCalledWith(true);
+    expect(actions.setShowTinyTutorials).toHaveBeenCalledWith(true);
     expect(actions.setLargerText).toHaveBeenCalledWith(true);
     expect(actions.setHighContrast).toHaveBeenCalledWith(true);
     expect(actions.setReduceMotion).toHaveBeenCalledWith(true);

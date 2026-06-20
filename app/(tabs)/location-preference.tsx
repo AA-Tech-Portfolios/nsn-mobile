@@ -19,7 +19,7 @@ const copyByLanguage = {
     copy: "Keep your local area and what you are here for up to date. A manually chosen suburb is enough for this prototype.",
     privacyNote: "NSN uses broad local area discovery by default. No continuous background location is connected here.",
     suburbLabel: "Suburb or local area",
-    suburbPlaceholder: "Chatswood",
+    suburbPlaceholder: "Select your suburb",
     recognised: "Recognised:",
     chooseSuggestion: "Choose a suggestion to confirm your local area.",
     intentLabel: "I am here for",
@@ -31,7 +31,7 @@ const copyByLanguage = {
     title: "تفضيل الموقع",
     copy: "حدّث منطقتك المحلية وما تبحث عنه.",
     suburbLabel: "الضاحية أو المنطقة المحلية",
-    suburbPlaceholder: "Chatswood",
+    suburbPlaceholder: "Select your suburb",
     recognised: "تم التعرف على:",
     chooseSuggestion: "اختر اقتراحاً لتأكيد منطقتك المحلية.",
     intentLabel: "أنا هنا من أجل",
@@ -43,7 +43,7 @@ const copyByLanguage = {
     title: "העדפת מיקום",
     copy: "עדכן את האזור המקומי שלך ואת מה שאתה מחפש כאן.",
     suburbLabel: "פרבר או אזור מקומי",
-    suburbPlaceholder: "Chatswood",
+    suburbPlaceholder: "Select your suburb",
     recognised: "זוהה:",
     chooseSuggestion: "בחר הצעה כדי לאשר את האזור המקומי שלך.",
     intentLabel: "אני כאן בשביל",
@@ -56,7 +56,7 @@ const copyByLanguage = {
     title: "位置偏好",
     copy: "保持你的本地区域和来这里的目的为最新状态。",
     suburbLabel: "郊区或本地区域",
-    suburbPlaceholder: "Chatswood",
+    suburbPlaceholder: "Select your suburb",
     recognised: "已识别：",
     chooseSuggestion: "选择一个建议来确认你的本地区域。",
     intentLabel: "我来这里是为了",
@@ -69,7 +69,7 @@ const copyByLanguage = {
     title: "場所の設定",
     copy: "地域とここで探していることを最新の状態に保ちます。",
     suburbLabel: "郊外または地域",
-    suburbPlaceholder: "Chatswood",
+    suburbPlaceholder: "Select your suburb",
     recognised: "認識済み:",
     chooseSuggestion: "候補を選んで地域を確認してください。",
     intentLabel: "ここで探しているもの",
@@ -82,7 +82,7 @@ const copyByLanguage = {
     title: "위치 선호",
     copy: "내 지역과 이곳에서 찾고 있는 목적을 최신 상태로 유지하세요.",
     suburbLabel: "교외 또는 지역",
-    suburbPlaceholder: "Chatswood",
+    suburbPlaceholder: "Select your suburb",
     recognised: "인식됨:",
     chooseSuggestion: "추천 항목을 선택해 지역을 확인하세요.",
     intentLabel: "이곳에 온 목적",
@@ -94,7 +94,7 @@ const copyByLanguage = {
     title: "Предпочтение локации",
     copy: "Обновите район и то, зачем вы здесь.",
     suburbLabel: "Пригород или район",
-    suburbPlaceholder: "Chatswood",
+    suburbPlaceholder: "Select your suburb",
     recognised: "Распознано:",
     chooseSuggestion: "Выберите подсказку, чтобы подтвердить район.",
     intentLabel: "Я здесь для",
@@ -106,7 +106,7 @@ const copyByLanguage = {
     title: "Preferencia de ubicación",
     copy: "Mantén actualizado tu barrio y lo que buscas aquí.",
     suburbLabel: "Suburbio o zona local",
-    suburbPlaceholder: "Chatswood",
+    suburbPlaceholder: "Select your suburb",
     recognised: "Reconocido:",
     chooseSuggestion: "Elige una sugerencia para confirmar tu zona local.",
     intentLabel: "Estoy aquí para",
@@ -155,8 +155,8 @@ export default function LocationPreferenceScreen() {
   const isRtl = rtlLanguages.has(appLanguageBase);
   const preferenceLayout = getSettingsPreferenceLayout(width, homeLayoutDensity);
   const isWide = preferenceLayout.isDesktop;
-  const [draftSuburb, setDraftSuburb] = useState(suburb || "Chatswood");
-  const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(() => findMatchingLocality(suburb || "Chatswood"));
+  const [draftSuburb, setDraftSuburb] = useState(suburb);
+  const [selectedLocality, setSelectedLocality] = useState<AustralianLocality | undefined>(() => findMatchingLocality(suburb));
   const [draftIntent, setDraftIntent] = useState<SoftHelloIntent>(intent);
   const [showSaved, setShowSaved] = useState(false);
 
@@ -205,7 +205,7 @@ export default function LocationPreferenceScreen() {
       <ScrollView style={[styles.screen, isDay && styles.dayContainer]} contentContainerStyle={[styles.content, isWide && styles.contentWide, { gap: preferenceLayout.sectionGap }]} showsVerticalScrollIndicator={false}>
         <TouchableOpacity
           activeOpacity={0.75}
-          onPress={() => router.replace({ pathname: "/(tabs)/profile", params: { menu: "preferences" } })}
+          onPress={() => router.replace("/(tabs)/profile?menu=preferences" as never)}
           style={[styles.backButton, isDay && styles.dayIconButton]}
           accessibilityRole="button"
           accessibilityLabel={locationCopy.back}
@@ -222,7 +222,7 @@ export default function LocationPreferenceScreen() {
         <View style={[styles.summaryCard, { borderRadius: preferenceLayout.cardRadius, padding: preferenceLayout.cardPadding }, isDay && styles.dayCard]}>
           <Text style={[styles.summaryLabel, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>{copy.currentSummary}</Text>
           <Text style={[styles.summaryText, isDay && styles.dayTitle, isRtl && styles.rtlText]}>
-            {draftSuburb.trim() || copy.suburbPlaceholder} · {localIntentLabels[draftIntent] ?? draftIntent}
+            {draftSuburb.trim() || "Local area not set"} · {localIntentLabels[draftIntent] ?? draftIntent}
           </Text>
         </View>
 

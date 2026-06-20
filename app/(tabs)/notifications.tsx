@@ -129,7 +129,7 @@ export default function NotificationsScreen() {
 
   const displayAlerts: NotificationAlert[] = liveWeatherAlert ? [{ ...liveWeatherAlert, isLive: true }, ...copy.alerts] : [...copy.alerts];
   const openNotificationSettings = () => {
-    router.push({ pathname: "/(tabs)/settings", params: { section: "notifications", from: "notifications" } } as never);
+    router.push("/(tabs)/settings?section=notifications&from=notifications" as never);
   };
   const openAlert = (alert: NotificationAlert) => {
     if (alert.action === "settings") {

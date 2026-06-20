@@ -198,7 +198,7 @@ const meetupsTrustGateTranslations = {
 
 export default function MeetupsScreen() {
   const router = useRouter();
-  const { appLanguage, contactEmail, contactPhone, eventMemberships, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, translationLanguage, verificationLevel } = useAppSettings();
+  const { appLanguage, contactEmail, contactPhone, eventMemberships, hasIdentityDocument, identitySelfieUri, isNightMode, screenReaderHints, showTinyTutorials, translationLanguage, verificationLevel } = useAppSettings();
   const [showGuideTip, setShowGuideTip] = useState(true);
   const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const appLanguageBase = getTranslationLanguageBase(appLanguage);
@@ -233,7 +233,7 @@ export default function MeetupsScreen() {
           </Text>
         </View>
 
-        {meetupTutorialCards
+        {showTinyTutorials ? meetupTutorialCards
           .filter((card) => card.id === "soft-exit" && !dismissedTutorialIds.includes(card.id))
           .map((card) => (
             <View key={card.id} style={[styles.tutorialCard, isDay && styles.dayCard]}>
@@ -259,7 +259,7 @@ export default function MeetupsScreen() {
                 {card.copy}
               </Text>
             </View>
-          ))}
+          )) : null}
 
         <View style={[styles.timingCard, isDay && styles.dayCard]}>
           <Text style={[styles.alphaGuideLabel, isDay && styles.dayAccentText]}>Local alpha timing</Text>

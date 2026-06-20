@@ -7,6 +7,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { nsnActionButtonStyles, nsnActionTextStyles } from "@/components/ui/action-styles";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
+import { buildHref } from "@/lib/navigation-hrefs";
 import {
   backgroundCommunityOptions,
   backgroundStudyAreaOptions,
@@ -519,7 +520,7 @@ export default function UserPreferencesScreen() {
   };
 
   const openCompactView = () => {
-    router.replace({ pathname: "/(tabs)/profile", params: { menu: returnPanel ?? compactPanelBySection[activeSection] } } as never);
+    router.replace(buildHref("/(tabs)/profile", { menu: returnPanel ?? compactPanelBySection[activeSection] }) as never);
   };
 
   const toggleFoodPreference = async (preferenceId: string) => {

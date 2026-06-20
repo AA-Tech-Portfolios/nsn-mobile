@@ -31,6 +31,7 @@ import {
   appPalettes,
   communicationPreferenceOptions,
   getLanguageBase,
+  getPrototypePreferenceDefaults,
   getTranslationLanguageBase,
   groupSizePreferenceOptions,
   nsnLocalLanguageOptions,
@@ -97,6 +98,7 @@ import {
 import type { SoftRevealPace } from "@/lib/soft-reveal";
 import { meetupTutorialCards, type MeetupTutorialCard } from "@/lib/meetup-alpha-ux";
 import { legalPrivacyDocuments, legalPrivacySettingsSummary } from "@/lib/legal-privacy-alpha";
+import { getSettingsSearchResults, type SettingsSectionJumpId } from "@/lib/settings-search";
 
 const blurLevelOptions: NsnBlurLevel[] = ["Soft blur", "Medium blur", "Strong blur"];
 const softRevealPaceOptions: { value: SoftRevealPace; label: string; copy: string }[] = [
@@ -349,26 +351,6 @@ type AccountConfirmation =
   | { kind: "deactivate"; timeline: AccountPauseTimeline }
   | { kind: "delete" }
   | null;
-
-type SettingsSectionJumpId =
-  | "settingsView"
-  | "batteryPerformance"
-  | "generalPrivacy"
-  | "profileVisibility"
-  | "trustFoundations"
-  | "profilePreview"
-  | "nameDisplay"
-  | "photoBlur"
-  | "gender"
-  | "notifications"
-  | "locationDiscovery"
-  | "regionalFormats"
-  | "legalPrivacy"
-  | "safetyContact"
-  | "accessibility"
-  | "appearance"
-  | "language"
-  | "generalSettings";
 
 type SettingsAccordionId =
   | "displayLayout"
@@ -3719,6 +3701,7 @@ export default function SettingsScreen() {
     emojiDisplayMode,
     showProfileControlsShortcut,
     showAlertsSettingsShortcut,
+    showTinyTutorials,
     homeLayoutDensity,
     batterySaver,
     setBatterySaver,
@@ -3759,10 +3742,10 @@ export default function SettingsScreen() {
     setNotificationSnoozePreset,
     useApproximateLocation,
     setUseApproximateLocation,
-  showDistanceInMeetups,
-  setShowDistanceInMeetups,
-  externalLinks,
-  contactEmail,
+    showDistanceInMeetups,
+    setShowDistanceInMeetups,
+    externalLinks,
+    contactEmail,
     contactPhone,
     identitySelfieUri,
     hasIdentityDocument,
@@ -3798,8 +3781,8 @@ export default function SettingsScreen() {
     setSoftSurfaces,
     clearBorders,
     setClearBorders,
+    setHasCompletedOnboarding,
     saveSoftHelloMvpState,
-    resetOnboarding,
     clearAllLocalPrototypeData,
   } = useAppSettings();
   const isDay = !isNightMode;
@@ -3915,23 +3898,32 @@ export default function SettingsScreen() {
     [comfortMode, isAdvancedSettings],
   );
   const normalizedQuickJumpSearch = quickJumpSearch.trim().toLocaleLowerCase();
+  const shouldShowAdvancedSettingsSections =
+    isAdvancedSettings || Boolean(normalizedQuickJumpSearch);
+  const settingsSearchResults = useMemo(
+    () => getSettingsSearchResults(quickJumpSearch),
+    [quickJumpSearch],
+  );
   const filteredQuickJumpOptions = useMemo(
     () =>
       normalizedQuickJumpSearch
-        ? quickJumpOptions.filter((option) =>
-            option.label.toLocaleLowerCase().includes(normalizedQuickJumpSearch),
-          )
+        ? settingsSearchResults.map((result) => ({ id: result.id, label: result.label }))
         : quickJumpOptions,
-    [normalizedQuickJumpSearch, quickJumpOptions],
+    [normalizedQuickJumpSearch, quickJumpOptions, settingsSearchResults],
   );
   const visibleSettingsAccordionIds = useMemo(
-    () =>
-      isAdvancedSettings
+    () => {
+      const baseIds = isAdvancedSettings
         ? allSettingsAccordionIds
         : allSettingsAccordionIds.filter(
             (id) => id !== "notifications" && id !== "timeUnits" && id !== "safetyContact",
-          ),
-    [isAdvancedSettings],
+          );
+      if (!normalizedQuickJumpSearch) return baseIds;
+
+      const searchIds = settingsSearchResults.map((result) => accordionByJumpSection[result.id]);
+      return [...new Set([...baseIds, ...searchIds])];
+    },
+    [isAdvancedSettings, normalizedQuickJumpSearch, settingsSearchResults],
   );
   const expandAllSettingsAccordions = () => {
     setOpenAccordionSections(visibleSettingsAccordionIds);
@@ -4608,6 +4600,7 @@ export default function SettingsScreen() {
       safetyCheckIns,
       batterySaver,
       lowLightMode,
+      showTinyTutorials,
       largerText,
       highContrast,
       reduceMotion,
@@ -4622,20 +4615,27 @@ export default function SettingsScreen() {
       setFriendsOfFriendsOnly,
       setSoftRevealSuggestions: saveSoftRevealSuggestions,
       setPreferSoftRevealPeople: savePreferSoftRevealPeople,
-      setMeetupReminders,
-      setWeatherAlerts,
-      setChatNotifications,
-      setQuietNotifications,
+      setMeetupReminders: (value: boolean) => saveSoftHelloMvpState({ meetupReminders: value }),
+      setWeatherAlerts: (value: boolean) => saveSoftHelloMvpState({ weatherAlerts: value }),
+      setChatNotifications: (value: boolean) =>
+        saveSoftHelloMvpState({ chatNotifications: value }),
+      setQuietNotifications: (value: boolean) =>
+        saveSoftHelloMvpState({ quietNotifications: value }),
       setNotificationSnoozed: setAndSaveNotificationSnoozed,
       setSuggestNightModeInEvenings: (value: boolean) =>
         saveSoftHelloMvpState({ suggestNightModeInEvenings: value }),
-      setUseApproximateLocation,
-      setShowDistanceInMeetups,
+      setUseApproximateLocation: (value: boolean) =>
+        saveSoftHelloMvpState({ useApproximateLocation: value }),
+      setShowDistanceInMeetups: (value: boolean) =>
+        saveSoftHelloMvpState({ showDistanceInMeetups: value }),
       setAskBeforeOpeningExternalApps: setAndSaveAskBeforeOpeningExternalApps,
-      setAllowMessageRequests,
-      setSafetyCheckIns,
+      setAllowMessageRequests: (value: boolean) =>
+        saveSoftHelloMvpState({ allowMessageRequests: value }),
+      setSafetyCheckIns: (value: boolean) => saveSoftHelloMvpState({ safetyCheckIns: value }),
       setBatterySaver: setAndSaveBatterySaver,
       setLowLightMode: setAndSaveLowLightMode,
+      setShowTinyTutorials: (value: boolean) =>
+        saveSoftHelloMvpState({ showTinyTutorials: value }),
       setLargerText,
       setHighContrast,
       setReduceMotion,
@@ -4682,28 +4682,27 @@ export default function SettingsScreen() {
   });
 
   const resetProfileDefaults = async () => {
-    await saveSoftHelloMvpState({
-      comfortMode: "Comfort Mode",
-      visibilityPreference: "Blurred",
-      privateProfile: false,
-      blurProfilePhoto: true,
-      blurLevel: "Medium blur",
-      warmUpLowerBlur: true,
-      showSuburbArea: false,
-      middleNameDisplay: "Hidden",
-      lastNameDisplay: "Hidden",
-      showMiddleName: false,
-      showLastName: false,
-      showAge: false,
-      showPreferredAgeRange: false,
-      showGender: false,
-      showInterests: false,
-      showComfortPreferences: false,
-      minimalProfileView: false,
-      hobbiesInterests: ["Coffee", "Movies", "Walks", "Dinner"],
-      comfortPreferences: ["Small groups", "Text-first", "Quiet"],
-      contactPreferences: ["Text"],
-    });
+    const defaults = getPrototypePreferenceDefaults();
+
+    setMeetupReminders(defaults.meetupReminders);
+    setWeatherAlerts(defaults.weatherAlerts);
+    setChatNotifications(defaults.chatNotifications);
+    setQuietNotifications(defaults.quietNotifications);
+    setUseApproximateLocation(defaults.useApproximateLocation);
+    setShowDistanceInMeetups(defaults.showDistanceInMeetups);
+    setAllowMessageRequests(defaults.allowMessageRequests);
+    setSafetyCheckIns(defaults.safetyCheckIns);
+    setLargerText(defaults.largerText);
+    setHighContrast(defaults.highContrast);
+    setReduceMotion(defaults.reduceMotion);
+    setScreenReaderHints(defaults.screenReaderHints);
+
+    await saveSoftHelloMvpState(defaults);
+    showRecentlyChanged("resetDefaults");
+  };
+
+  const openOnboardingTour = () => {
+    setHasCompletedOnboarding(false);
   };
 
   const saveSettingsPrivacyMode = (value: SettingsPrivacyMode) => {
@@ -4836,13 +4835,14 @@ export default function SettingsScreen() {
           {copy.subtitle}
         </Text>
 
-        <View
-          style={[
-            styles.settingsTutorialPanel,
-            isDay && styles.dayCard,
-            highContrast && styles.highContrastCard,
-          ]}
-        >
+        {showTinyTutorials ? (
+          <View
+            style={[
+              styles.settingsTutorialPanel,
+              isDay && styles.dayCard,
+              highContrast && styles.highContrastCard,
+            ]}
+          >
           <Text style={[styles.prototypeBadge, isDay && styles.dayPrototypeBadge]}>
             Tiny tutorial
           </Text>
@@ -4941,7 +4941,8 @@ export default function SettingsScreen() {
               connected.
             </Text>
           ) : null}
-        </View>
+          </View>
+        ) : null}
 
         <View
           style={[
@@ -4997,7 +4998,7 @@ export default function SettingsScreen() {
               value={quickJumpSearch}
               onChangeText={setQuickJumpSearch}
               placeholder="Search sections..."
-              placeholderTextColor={isDay ? "#5F728F" : nsnColors.mutedSoft}
+              placeholderTextColor={isDay ? "#5F728F" : nsnColors.muted}
               style={[
                 styles.quickJumpSearchInput,
                 isDay && styles.dayLanguageSearchInput,
@@ -5007,6 +5008,66 @@ export default function SettingsScreen() {
               accessibilityLabel="Search settings sections"
             />
           </View>
+          {normalizedQuickJumpSearch ? (
+            <View style={styles.settingsSearchResults}>
+              {settingsSearchResults.map((result) => (
+                <TouchableOpacity
+                  key={result.id}
+                  activeOpacity={0.8}
+                  onPress={() => jumpToSection(result.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open settings section ${result.label}`}
+                  style={[
+                    styles.settingsSearchResultRow,
+                    isDay && styles.dayQuickJumpButton,
+                    highContrast && styles.highContrastButton,
+                    isRtl && styles.rtlRow,
+                  ]}
+                >
+                  <View style={[styles.accordionIcon, isDay && styles.dayQuickJumpButton]}>
+                    <IconSymbol
+                      name={jumpIconBySection[result.id]}
+                      size={16}
+                      color={isDay ? "#445E93" : "#C7D6FF"}
+                    />
+                  </View>
+                  <View style={styles.settingCopy}>
+                    <Text
+                      style={[
+                        styles.settingsSearchResultTitle,
+                        isDay && styles.dayTitle,
+                        contrastTextStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {result.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.settingsSearchResultCopy,
+                        isDay && styles.daySubtitle,
+                        contrastMutedStyle,
+                        isRtl && styles.rtlText,
+                      ]}
+                    >
+                      {result.description}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+              {settingsSearchResults.length === 0 ? (
+                <Text
+                  style={[
+                    styles.noResultsText,
+                    isDay && styles.daySubtitle,
+                    isRtl && styles.rtlText,
+                  ]}
+                >
+                  No matching setting. Try privacy, onboarding, photo, suburb, age, or readiness.
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
           <View style={[styles.quickJumpRow, isRtl && styles.rtlRow]}>
             {filteredQuickJumpOptions.map((option) => (
               <TouchableOpacity
@@ -6206,7 +6267,7 @@ export default function SettingsScreen() {
                               active && styles.blurLevelTextActive,
                             ]}
                           >
-                            {active ? `Selected: ${option}` : option}
+                            {option}
                           </Text>
                         </TouchableOpacity>
                       );
@@ -6350,7 +6411,7 @@ export default function SettingsScreen() {
         {renderSettingsAccordion(
           "profileDetails",
           <>
-            {isAdvancedSettings ? (
+            {shouldShowAdvancedSettingsSections ? (
               <>
                 <Text
                   onLayout={registerSectionLayout("nameDisplay")}
@@ -6619,7 +6680,7 @@ export default function SettingsScreen() {
           </>,
         )}
 
-        {isAdvancedSettings ? (
+        {shouldShowAdvancedSettingsSections ? (
           <>
             {renderSettingsAccordion(
               "notifications",
@@ -7362,7 +7423,7 @@ export default function SettingsScreen() {
                   ))}
                   <TouchableOpacity
                     activeOpacity={0.78}
-                    onPress={resetOnboarding}
+                    onPress={openOnboardingTour}
                     accessibilityRole="button"
                     accessibilityLabel={copy.restartOnboarding ?? englishCopy.restartOnboarding}
                     accessibilityHint={
@@ -7413,7 +7474,7 @@ export default function SettingsScreen() {
         {renderSettingsAccordion(
           "advancedDisplay",
           <>
-            {isAdvancedSettings ? (
+            {shouldShowAdvancedSettingsSections ? (
               <>
                 <Text
                   onLayout={registerSectionLayout("accessibility")}
@@ -8046,7 +8107,7 @@ export default function SettingsScreen() {
               )}
             </View>
 
-            {isAdvancedSettings ? (
+            {shouldShowAdvancedSettingsSections ? (
               <>
                 <Text
                   onLayout={registerSectionLayout("language")}
@@ -8755,6 +8816,47 @@ export default function SettingsScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.78}
+                onPress={openOnboardingTour}
+                accessibilityRole="button"
+                accessibilityLabel="Open onboarding"
+                accessibilityHint="Reopens the onboarding tour without clearing your saved prototype settings."
+                style={[
+                  styles.actionRow,
+                  isRtl && styles.rtlRow,
+                  styles.rowDivider,
+                  isDay && styles.dayRowDivider,
+                  highContrast && styles.highContrastDivider,
+                ]}
+              >
+                <View style={styles.settingCopy}>
+                  <Text
+                    style={[
+                      styles.label,
+                      largerText && styles.largeLabel,
+                      isDay && styles.dayLabel,
+                      contrastTextStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Open onboarding
+                  </Text>
+                  <Text
+                    style={[
+                      styles.helperText,
+                      largerText && styles.largeHelperText,
+                      isDay && styles.daySubtitle,
+                      contrastMutedStyle,
+                      isRtl && styles.rtlText,
+                    ]}
+                  >
+                    Restart the onboarding tour with your current profile and preference data still
+                    saved.
+                  </Text>
+                </View>
+                <Text style={[styles.actionText, isDay && styles.dayActionText]}>Open</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.78}
                 onPress={resetProfileDefaults}
                 accessibilityRole="button"
                 accessibilityLabel="Reset to defaults"
@@ -9134,6 +9236,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
   },
+  settingsSearchResults: {
+    gap: 8,
+  },
+  settingsSearchResultRow: {
+    minHeight: 58,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#3D567E",
+    backgroundColor: "rgba(255,255,255,0.055)",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    paddingHorizontal: 11,
+    paddingVertical: 10,
+  },
+  settingsSearchResultTitle: {
+    color: "#F2F6FF",
+    fontSize: 13,
+    fontWeight: "900",
+    lineHeight: 18,
+  },
+  settingsSearchResultCopy: {
+    color: nsnSupportReadabilityColors.darkMutedText,
+    fontSize: 12,
+    fontWeight: "800",
+    lineHeight: 18,
+  },
   quickJumpRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -9162,7 +9291,7 @@ const styles = StyleSheet.create({
   quickJumpText: {
     flexShrink: 1,
     minWidth: 0,
-    color: "#7786FF",
+    color: "#D9E4FF",
     fontSize: 12,
     fontWeight: "900",
     lineHeight: 17,
@@ -9184,7 +9313,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   accordionQuickActionText: {
-    color: "#A8B7DA",
+    color: "#D9E4FF",
     fontSize: 12,
     fontWeight: "900",
     lineHeight: 17,
@@ -9463,7 +9592,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   actionText: {
-    color: "#7786FF",
+    color: "#D9E4FF",
     fontSize: 13,
     fontWeight: "900",
   },

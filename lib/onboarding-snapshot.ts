@@ -14,10 +14,10 @@ export function createAlphaTesterOnboardingSnapshot(options: {
 }): Omit<OnboardingSnapshot, "hasCompletedOnboarding"> {
   return {
     ageConfirmed: false,
-    age: null,
+    birthYear: null,
     preferredAgeMin: 18,
     preferredAgeMax: 35,
-    suburb: "Chatswood",
+    suburb: "",
     intent: "Exploring",
     displayName: "NSN Tester",
     middleName: "",

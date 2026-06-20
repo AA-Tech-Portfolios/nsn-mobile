@@ -43,6 +43,8 @@ export type SettingsCopySource = {
   batterySaverCopy?: string;
   lowLightMode?: string;
   lowLightModeCopy?: string;
+  showTinyTutorials?: string;
+  showTinyTutorialsCopy?: string;
 };
 
 export type AccessibilityCopySource = {
@@ -78,6 +80,7 @@ export type SettingsControlState = {
   safetyCheckIns: boolean;
   batterySaver: boolean;
   lowLightMode: boolean;
+  showTinyTutorials: boolean;
   largerText: boolean;
   highContrast: boolean;
   reduceMotion: boolean;
@@ -106,6 +109,7 @@ export type SettingsControlActions = {
   setSafetyCheckIns: (value: boolean) => void;
   setBatterySaver: (value: boolean) => void;
   setLowLightMode: (value: boolean) => void;
+  setShowTinyTutorials: (value: boolean) => void;
   setLargerText: (value: boolean) => void;
   setHighContrast: (value: boolean) => void;
   setReduceMotion: (value: boolean) => void;
@@ -305,6 +309,13 @@ export function createSettingsToggleSections({
         copy: copy.lowLightModeCopy ?? englishCopy.lowLightModeCopy ?? "",
         value: state.lowLightMode,
         onValueChange: actions.setLowLightMode,
+      },
+      {
+        key: "showTinyTutorials",
+        label: copy.showTinyTutorials ?? englishCopy.showTinyTutorials ?? "",
+        copy: copy.showTinyTutorialsCopy ?? englishCopy.showTinyTutorialsCopy ?? "",
+        value: state.showTinyTutorials,
+        onValueChange: actions.setShowTinyTutorials,
       },
     ],
     accessibilityRows: [

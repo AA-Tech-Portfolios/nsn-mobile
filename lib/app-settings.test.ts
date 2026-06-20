@@ -3,20 +3,28 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_NSN_LANGUAGE,
   availabilityTimingOptions,
+  calculateAgeFromBirthYear,
+  calculateBirthYearFromAge,
   datingStyleOptions,
   defaultHomeSectionOrder,
+  defaultPhotoRecordingComfortPreferences,
+  defaultPhysicalContactComfortPreferences,
+  getPrototypePreferenceDefaults,
   friendshipStyleOptions,
   getTranslationLanguageBase,
+  isBirthYearInAdultProfileRange,
   languageComfortOptions,
   locationComfortPreferenceOptions,
   lifeComfortOptions,
   meetupRhythmOptions,
+  normalizePhotoRecordingComfortPreferences,
   normalizeLanguageComfortPreferences,
   normalizeNsnLanguage,
   normalizeMeetupContactPreferences,
   nsnLocalLanguageOptions,
   nsnPlannedGlobalLanguageOptions,
   nsnPlannedLocalCommunityLanguageOptions,
+  photoRecordingComfortOptions,
   socialDurationOptions,
   toggleMeetupContactPreferenceSelection,
 } from "./app-settings";
@@ -99,6 +107,116 @@ describe("meetup contact preference conflicts", () => {
     expect(toggleMeetupContactPreferenceSelection(["No voice calls"], "Voice call okay")).toEqual(["Voice call okay"]);
     expect(toggleMeetupContactPreferenceSelection(["Chat before meetup", "Group chat okay"], "Details only")).toEqual(["Details only"]);
     expect(toggleMeetupContactPreferenceSelection(["Prefer planning ahead"], "Last-minute plans okay")).toEqual(["Last-minute plans okay"]);
+  });
+});
+
+describe("birth year profile age", () => {
+  const referenceDate = new Date("2026-06-20T12:00:00.000Z");
+
+  it("calculates displayed age from birth year instead of storing a static age", () => {
+    expect(calculateAgeFromBirthYear(1998, referenceDate)).toBe(28);
+    expect(calculateAgeFromBirthYear(1998, new Date("2027-06-20T12:00:00.000Z"))).toBe(29);
+    expect(calculateAgeFromBirthYear(null, referenceDate)).toBeNull();
+  });
+
+  it("can migrate a legacy saved age into a birth year", () => {
+    expect(calculateBirthYearFromAge(28, referenceDate)).toBe(1998);
+    expect(calculateBirthYearFromAge(null, referenceDate)).toBeNull();
+  });
+
+  it("preserves the adult profile age range with birth-year validation", () => {
+    expect(isBirthYearInAdultProfileRange(2008, referenceDate)).toBe(true);
+    expect(isBirthYearInAdultProfileRange(2009, referenceDate)).toBe(false);
+    expect(isBirthYearInAdultProfileRange(1931, referenceDate)).toBe(true);
+    expect(isBirthYearInAdultProfileRange(1930, referenceDate)).toBe(false);
+  });
+});
+
+describe("photo and recording comfort preferences", () => {
+  it("exposes the intended selectable options for settings and profile rendering", () => {
+    expect(photoRecordingComfortOptions).toEqual([
+      "Ask me first",
+      "No photos of me",
+      "Group photos are okay",
+      "Venue/event photos are okay",
+      "No videos please",
+      "No public posting without permission",
+      "Prefer no screenshots of chats/profile",
+    ]);
+  });
+
+  it("persists valid selections and restores defaults when saved selections are empty", () => {
+    expect(
+      normalizePhotoRecordingComfortPreferences([
+        "No videos please",
+        "No public posting without permission",
+        "Unknown saved option" as never,
+      ]),
+    ).toEqual(["No videos please", "No public posting without permission"]);
+
+    expect(normalizePhotoRecordingComfortPreferences([])).toEqual(
+      defaultPhotoRecordingComfortPreferences,
+    );
+  });
+});
+
+describe("alpha prototype defaults", () => {
+  it("keeps tiny tutorials off by default for alpha users", () => {
+    expect(getPrototypePreferenceDefaults().showTinyTutorials).toBe(false);
+  });
+
+  it("resets privacy, comfort, readiness, and alpha-only preferences together", () => {
+    expect(getPrototypePreferenceDefaults()).toMatchObject({
+      comfortMode: "Comfort Mode",
+      visibilityPreference: "Blurred",
+      privateProfile: false,
+      blurProfilePhoto: true,
+      blurLevel: "Medium blur",
+      softRevealSuggestions: true,
+      softRevealPace: "Gradual reveal",
+      preferSoftRevealPeople: false,
+      warmUpLowerBlur: true,
+      showSuburbArea: false,
+      middleNameDisplay: "Hidden",
+      lastNameDisplay: "Hidden",
+      showMiddleName: false,
+      showLastName: false,
+      showAge: false,
+      showPreferredAgeRange: false,
+      showGender: false,
+      showInterests: false,
+      showComfortPreferences: false,
+      minimalProfileView: false,
+      verificationLevel: "Readiness not reviewed",
+      verifiedButPrivate: true,
+      socialEnergyPreference: "Calm",
+      communicationPreferences: [],
+      groupSizePreference: "Small groups only",
+      photoRecordingComfortPreferences: defaultPhotoRecordingComfortPreferences,
+      physicalContactComfortPreferences: defaultPhysicalContactComfortPreferences,
+      profileShortcutLayout: "Clean",
+      settingsPrivacyMode: "Basic",
+      userPreferenceTextMode: "Simple",
+      emojiDisplayMode: "Full emoji display",
+      showProfileControlsShortcut: true,
+      showAlertsSettingsShortcut: true,
+      showTinyTutorials: false,
+      meetupReminders: true,
+      weatherAlerts: true,
+      chatNotifications: true,
+      quietNotifications: false,
+      notificationSnoozed: false,
+      useApproximateLocation: true,
+      showDistanceInMeetups: true,
+      allowMessageRequests: false,
+      safetyCheckIns: true,
+      batterySaver: false,
+      lowLightMode: false,
+      largerText: false,
+      highContrast: false,
+      reduceMotion: false,
+      screenReaderHints: true,
+    });
   });
 });
 

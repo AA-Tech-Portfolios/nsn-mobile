@@ -20,7 +20,7 @@ const rtlLanguages = new Set(["Arabic", "Hebrew", "Persian", "Urdu", "Yiddish"])
 
 export default function AlphaWalkthroughScreen() {
   const router = useRouter();
-  const { isNightMode, appLanguage, suburb, screenReaderHints } = useAppSettings();
+  const { isNightMode, appLanguage, suburb, screenReaderHints, showTinyTutorials } = useAppSettings();
   const [stepIndex, setStepIndex] = useState(0);
   const [dismissedTutorialIds, setDismissedTutorialIds] = useState<MeetupTutorialCard["id"][]>([]);
   const [expandedComparisonPlatforms, setExpandedComparisonPlatforms] = useState<Set<(typeof alphaProofOfConceptComparisonCards)[number]["platformType"]>>(new Set());
@@ -34,7 +34,9 @@ export default function AlphaWalkthroughScreen() {
   );
   const canGoBack = stepIndex > 0;
   const canGoNext = stepIndex < alphaWalkthroughSteps.length - 1;
-  const visibleTutorialCards = meetupTutorialCards.filter((card) => !dismissedTutorialIds.includes(card.id));
+  const visibleTutorialCards = showTinyTutorials
+    ? meetupTutorialCards.filter((card) => !dismissedTutorialIds.includes(card.id))
+    : [];
   const comparisonRows = getAlphaComparisonAccordionRows(alphaProofOfConceptComparisonCards, expandedComparisonPlatforms);
 
   const openStepRoute = () => {
@@ -224,6 +226,7 @@ export default function AlphaWalkthroughScreen() {
           })}
         </View>
 
+        {showTinyTutorials ? (
         <View style={[styles.tutorialPanel, isDay && styles.dayCard]}>
           <Text style={[styles.progressText, isDay && styles.dayAccentText, isRtl && styles.rtlText]}>Interactive tutorials</Text>
           <Text style={[styles.noteCopy, isDay && styles.dayMutedText, isRtl && styles.rtlText]}>
@@ -269,6 +272,7 @@ export default function AlphaWalkthroughScreen() {
             </Text>
           ) : null}
         </View>
+        ) : null}
 
         <View style={styles.navRow}>
           <TouchableOpacity
