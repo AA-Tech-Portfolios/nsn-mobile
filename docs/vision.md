@@ -38,6 +38,8 @@ The work is closer to designing an environment people can inhabit than a feed pe
 
 Future systems should support calm cooperation and community care before attention competition. Discovery, feedback, hosting, recommendations, and recognition should help people understand each other, coordinate gently, and belong at different speeds.
 
+For a related philosophy note on social media, confidence, and healthy visibility, see [`social-connection-and-visibility.md`](social-connection-and-visibility.md).
+
 The goal is not to maximize attention.
 
 The goal is to help people feel human with each other.
