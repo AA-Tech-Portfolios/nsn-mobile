@@ -12,6 +12,7 @@ Use this guide as the source of truth for preferred terms, deprecated language, 
 - Avoid implying guarantees of safety, identity verification, or moderation authority.
 - Prefer prototype-aware wording during alpha.
 - Keep terminology consistent across app screens and documentation.
+- Avoid copy that makes app confidence feel like a requirement for joining the community.
 
 ## Approved Terms
 
@@ -62,6 +63,12 @@ Use this guide as the source of truth for preferred terms, deprecated language, 
 - Preferred term: Alpha Prototype
 - Deprecated/avoid terms: Production App, Safety Platform, Verified Network, Final Product
 - Reasoning: Sets accurate expectations that NSN is still in an early pilot stage and that language should remain careful, provisional, and prototype-aware.
+
+### Alternative Access Pathways
+
+- Preferred terms: Alternative Access Pathways, Assisted RSVP, Host-Assisted Onboarding, Website View, Email Contact
+- Deprecated/avoid terms: Just Use The App, App-Only Access, App Required, Self-Service Only
+- Reasoning: The app is the primary NSN experience, but it should not be the only door into the community. Some people may need support from a host, family member, community partner, email, a simple web page, WhatsApp/SMS-style contact, printed information, libraries, support groups, or local organisers. Copy should treat these routes as valid and practical, not as awkward exceptions.
 
 ## Historical Naming
 

@@ -27,6 +27,20 @@ Profile visibility is a consent and comfort feature, not a growth mechanic.
 
 The future SoftHello concept includes staged reveal, but the current NSN prototype only has local blur/visibility controls and profile preview settings. Full staged reveal needs a real connection model, mutual consent rules, and backend-enforced visibility before it can be treated as production behaviour.
 
+## Connection-First Profiles
+
+Profiles should help people get to know one another, not market themselves. Treat them as optional conversation aids that support meetups, shared activities, local context, and real conversations.
+
+Avoid profile completion percentages, "your profile is incomplete" messaging, mandatory social sharing, excessive prompts, follower counts, like counts, popularity rankings, public engagement metrics, ratings, reviews, endorsements, and reputation scores.
+
+Prefer gentle optional language such as "Add if you'd like", "Optional", and "You can leave this blank". Profile refresh prompts should be lightweight, useful, and permanently dismissible.
+
+Discovery should stay activity-first: meetups, shared interests, events, and community participation should be more important than browsing polished personal profiles.
+
+Optional reflective profile sections can support connection when they do not behave like feeds. "Meaningful Memories", "Appreciated Moments", or "Things I'm Glad Happened" can invite small life moments, positive memories, meaningful encounters, and lessons learned.
+
+Appreciation notes may exist as personal thank-you messages after human interaction. They must not become ratings, public reviews, endorsements, reputation points, or popularity mechanics.
+
 ## Availability and Comfort Signals
 
 Availability and comfort signals are optional guidance. They should never become strict scheduling rules or a reason to pressure someone.

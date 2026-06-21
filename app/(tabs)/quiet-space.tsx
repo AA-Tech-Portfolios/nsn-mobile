@@ -7,10 +7,12 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAppSettings } from "@/lib/app-settings";
 import {
+  getAmbientPlaybackUnavailableCopy,
   quietSpaceAmbientPreview,
   quietSpaceAmbientPlaceholder,
   quietSpaceCards,
   quietSpaceCopy,
+  resolveAmbientPlaybackState,
 } from "@/lib/quiet-space";
 import { nsnColors } from "@/lib/nsn-data";
 import type { IconSymbolName } from "@/components/ui/icon-symbol-map";
@@ -103,6 +105,7 @@ export default function QuietSpaceScreen() {
   const [ambientSpeed, setAmbientSpeed] = useState<AmbientSpeed>(1);
   const [ambientVolume, setAmbientVolume] = useState<AmbientVolume>(0.6);
   const [isAmbientPlaying, setIsAmbientPlaying] = useState(false);
+  const [ambientPlaybackHelperCopy, setAmbientPlaybackHelperCopy] = useState<string | null>(null);
   const audioHandlesRef = useRef<AmbientAudioHandles | null>(null);
   const selectedAmbientSample = quietSpaceAmbientPreview.sampleOptions.find(
     (sample) => sample.id === ambientSampleId,
@@ -271,24 +274,37 @@ export default function QuietSpaceScreen() {
     const AudioContextCtor = getAudioContextConstructor();
 
     if (!AudioContextCtor) {
-      setIsAmbientPlaying(true);
-      return;
+      const nextState = resolveAmbientPlaybackState({ didStartAudio: false });
+      setIsAmbientPlaying(nextState.isPlaying);
+      setAmbientPlaybackHelperCopy(nextState.helperCopy);
+      return false;
     }
 
     const context = new AudioContextCtor();
-    const buffer = createAmbientBuffer(context);
-
-    const source = context.createBufferSource();
-    const gain = context.createGain();
-    source.buffer = buffer;
-    source.loop = true;
-    source.playbackRate.value = ambientSpeed;
-    gain.gain.value = ambientVolume * 0.14;
-    source.connect(gain);
-    gain.connect(context.destination);
-    source.start();
-    audioHandlesRef.current = { context, source, gain };
-    setIsAmbientPlaying(true);
+    try {
+      const buffer = createAmbientBuffer(context);
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      source.buffer = buffer;
+      source.loop = true;
+      source.playbackRate.value = ambientSpeed;
+      gain.gain.value = ambientVolume * 0.14;
+      source.connect(gain);
+      gain.connect(context.destination);
+      source.start();
+      audioHandlesRef.current = { context, source, gain };
+      const nextState = resolveAmbientPlaybackState({ didStartAudio: true });
+      setIsAmbientPlaying(nextState.isPlaying);
+      setAmbientPlaybackHelperCopy(nextState.helperCopy);
+      return true;
+    } catch {
+      context.close();
+      audioHandlesRef.current = null;
+      const nextState = resolveAmbientPlaybackState({ didStartAudio: false });
+      setIsAmbientPlaying(nextState.isPlaying);
+      setAmbientPlaybackHelperCopy(nextState.helperCopy);
+      return false;
+    }
   };
 
   const downloadAmbientSample = () => {
@@ -333,12 +349,36 @@ export default function QuietSpaceScreen() {
       utterance.onend = () => setIsAmbientPlaying(false);
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
+      setIsAmbientPlaying(true);
+      setAmbientPlaybackHelperCopy(null);
+      return true;
     }
 
-    setIsAmbientPlaying(true);
+    const nextState = resolveAmbientPlaybackState({ didStartAudio: false });
+    setIsAmbientPlaying(nextState.isPlaying);
+    setAmbientPlaybackHelperCopy(nextState.helperCopy);
+    return false;
+  };
+
+  const getSelectedSamplePlaybackUnavailableCopy = () => {
+    if (isVoiceSample(ambientSampleId)) {
+      return Platform.OS === "web" && typeof window !== "undefined" && "speechSynthesis" in window
+        ? null
+        : getAmbientPlaybackUnavailableCopy({ platformOS: Platform.OS, hasAudioContext: false });
+    }
+
+    return getAmbientPlaybackUnavailableCopy({
+      platformOS: Platform.OS,
+      hasAudioContext: Boolean(getAudioContextConstructor()),
+    });
   };
 
   const toggleAmbientPreview = () => {
+    if (isSelectedSamplePlaybackDisabled) {
+      setAmbientPlaybackHelperCopy(selectedSamplePlaybackUnavailableCopy);
+      return;
+    }
+
     if (isAmbientPlaying) {
       stopAmbientPreview();
       return;
@@ -353,6 +393,11 @@ export default function QuietSpaceScreen() {
   };
 
   const replayAmbientPreview = () => {
+    if (isSelectedSamplePlaybackDisabled) {
+      setAmbientPlaybackHelperCopy(selectedSamplePlaybackUnavailableCopy);
+      return;
+    }
+
     stopAmbientPreview(false);
 
     setTimeout(() => {
@@ -372,6 +417,7 @@ export default function QuietSpaceScreen() {
     if (isAmbientPlaying) {
       stopAmbientPreview();
     }
+    setAmbientPlaybackHelperCopy(null);
     setAmbientSampleId(sampleId);
   };
 
@@ -394,6 +440,11 @@ export default function QuietSpaceScreen() {
     }
     setAmbientVolume(volume);
   };
+
+  const selectedSamplePlaybackUnavailableCopy = getSelectedSamplePlaybackUnavailableCopy();
+  const isSelectedSamplePlaybackDisabled = Boolean(selectedSamplePlaybackUnavailableCopy);
+  const visibleAmbientPlaybackHelperCopy =
+    ambientPlaybackHelperCopy ?? selectedSamplePlaybackUnavailableCopy;
 
   return (
     <ScreenContainer
@@ -468,6 +519,11 @@ export default function QuietSpaceScreen() {
                         <Text style={[styles.previewCopy, isDay && styles.dayMutedText]}>
                           {quietSpaceAmbientPreview.helperCopy}
                         </Text>
+                        {visibleAmbientPlaybackHelperCopy ? (
+                          <Text style={[styles.previewSupportCopy, isDay && styles.dayMutedText]}>
+                            {visibleAmbientPlaybackHelperCopy}
+                          </Text>
+                        ) : null}
                       </View>
                       <Text style={[styles.previewBadge, isDay && styles.dayPreviewBadge]}>
                         {quietSpaceAmbientPreview.comingLaterLabel}
@@ -593,10 +649,16 @@ export default function QuietSpaceScreen() {
                       <View style={styles.controlBarRow}>
                         <TouchableOpacity
                           activeOpacity={0.82}
+                          disabled={isSelectedSamplePlaybackDisabled}
                           onPress={replayAmbientPreview}
                           accessibilityRole="button"
                           accessibilityLabel={quietSpaceAmbientPreview.rewindLabel}
-                          style={[styles.controlBarButton, isDay && styles.daySegmentButton]}
+                          accessibilityState={{ disabled: isSelectedSamplePlaybackDisabled }}
+                          style={[
+                            styles.controlBarButton,
+                            isDay && styles.daySegmentButton,
+                            isSelectedSamplePlaybackDisabled && styles.controlBarButtonDisabled,
+                          ]}
                         >
                           <IconSymbol name="flexible" color={isDay ? "#445E93" : nsnColors.day} size={17} />
                           <Text style={[styles.controlBarButtonText, isDay && styles.dayAccentText]}>
@@ -605,6 +667,7 @@ export default function QuietSpaceScreen() {
                         </TouchableOpacity>
                         <TouchableOpacity
                           activeOpacity={0.82}
+                          disabled={isSelectedSamplePlaybackDisabled}
                           onPress={toggleAmbientPreview}
                           accessibilityRole="button"
                           accessibilityLabel={
@@ -612,7 +675,12 @@ export default function QuietSpaceScreen() {
                               ? quietSpaceAmbientPreview.pauseLabel
                               : quietSpaceAmbientPreview.playLabel
                           }
-                          style={[styles.controlBarButton, styles.controlBarPrimaryButton]}
+                          accessibilityState={{ disabled: isSelectedSamplePlaybackDisabled }}
+                          style={[
+                            styles.controlBarButton,
+                            styles.controlBarPrimaryButton,
+                            isSelectedSamplePlaybackDisabled && styles.controlBarButtonDisabled,
+                          ]}
                         >
                           <IconSymbol
                             name={isAmbientPlaying ? "volume.off" : "volume"}
@@ -761,6 +829,7 @@ const styles = StyleSheet.create({
   previewHeaderText: { flex: 1, minWidth: 0 },
   previewTitle: { color: nsnColors.text, fontSize: 14, fontWeight: "900", lineHeight: 20 },
   previewCopy: { color: nsnColors.muted, fontSize: 12, lineHeight: 18, marginTop: 2 },
+  previewSupportCopy: { color: nsnColors.muted, fontSize: 12, fontWeight: "800", lineHeight: 18, marginTop: 6 },
   previewBadge: {
     color: "#F7C85B",
     borderRadius: 999,
@@ -831,6 +900,7 @@ const styles = StyleSheet.create({
     borderColor: "#1BB6C8",
     backgroundColor: nsnColors.primary,
   },
+  controlBarButtonDisabled: { opacity: 0.56 },
   controlBarButtonText: { color: nsnColors.day, fontSize: 12, fontWeight: "900", lineHeight: 17 },
   controlBarPrimaryText: { color: "#FFFFFF", fontSize: 13, fontWeight: "900", lineHeight: 18 },
   playButton: {

@@ -59,6 +59,8 @@ These features fit SoftHello but should not block v1.1 unless a specific launch 
 | Post-meetup contact preferences | Unlock phone or video call options only after meeting, then let each person choose how or whether to stay in contact. |
 | Post-meetup chat lifecycle controls | Let users archive or hide chats, delete with 30-day recovery, and manage whether the connection continues. |
 | Soft Exit | Give users a calm way to leave a meetup, chat, or connection with optional preset wording and no public drama. |
+| Meaningful Memories | Optional reflective profile context for small life moments, positive memories, meaningful encounters, and lessons learned; not a feed or profile completion task. |
+| Appreciation notes | Optional personal thank-you messages after meetups or conversations; not ratings, reviews, endorsements, reputation points, or public popularity signals. |
 | AI companion | Nice-to-have comfort layer for meetup preparation, reflection, and planning support after the core social and safety loop proves itself. |
 
 ## Future

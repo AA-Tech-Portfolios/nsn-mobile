@@ -62,6 +62,40 @@ export const quietSpaceAmbientPreview = {
   autoplay: false,
 } as const;
 
+export const quietSpaceAmbientPlaybackUnavailableCopy =
+  "Ambient audio is currently available on web during alpha testing.";
+
+export type AmbientPlaybackPlatform = "web" | "ios" | "android" | "windows" | "macos" | string;
+
+export function canPlayAmbientAudio({
+  platformOS,
+  hasAudioContext,
+}: {
+  platformOS: AmbientPlaybackPlatform;
+  hasAudioContext: boolean;
+}) {
+  return platformOS === "web" && hasAudioContext;
+}
+
+export function getAmbientPlaybackUnavailableCopy({
+  platformOS,
+  hasAudioContext,
+}: {
+  platformOS: AmbientPlaybackPlatform;
+  hasAudioContext: boolean;
+}) {
+  return canPlayAmbientAudio({ platformOS, hasAudioContext })
+    ? null
+    : quietSpaceAmbientPlaybackUnavailableCopy;
+}
+
+export function resolveAmbientPlaybackState({ didStartAudio }: { didStartAudio: boolean }) {
+  return {
+    isPlaying: didStartAudio,
+    helperCopy: didStartAudio ? null : quietSpaceAmbientPlaybackUnavailableCopy,
+  };
+}
+
 export const quietSpaceCards = [
   {
     id: "ambient-sounds",
