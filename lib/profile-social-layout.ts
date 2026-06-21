@@ -1,8 +1,11 @@
+import { meaningfulMemorySection } from "./connection-first-profile";
+
 export const profileHomeSectionOrder = [
   "avatarPhoto",
   "name",
   "myVibes",
   "aboutMe",
+  "meaningfulMemories",
   "verificationTrust",
   "profileShortcuts",
   "localArea",
@@ -15,6 +18,7 @@ export const profileHomeSectionOrder = [
 export type ProfileHomeSectionId = (typeof profileHomeSectionOrder)[number];
 export type ProfileManagementSectionId = "comfortTrustDetails" | "workStudyLifeContext" | "readinessPreviewDetails";
 export type MainProfileSummaryRowId =
+  | "meaningfulMemories"
   | "localArea"
   | "interests"
   | "comfortTrust"
@@ -23,12 +27,18 @@ export type MainProfileSummaryRowId =
 
 export type MainProfileSummaryRow = {
   id: MainProfileSummaryRowId;
-  icon: "location" | "interests" | "shield" | "settings" | "badge";
+  icon: "experience" | "location" | "interests" | "shield" | "settings" | "badge";
   title: string;
   description: string;
 };
 
 export const mainProfileSummaryRows: readonly MainProfileSummaryRow[] = [
+  {
+    id: "meaningfulMemories",
+    icon: "experience",
+    title: meaningfulMemorySection.titleOptions[0],
+    description: meaningfulMemorySection.description,
+  },
   {
     id: "localArea",
     icon: "location",
@@ -70,6 +80,7 @@ export const getSimpleProfileSummaryRows = () =>
 
 export const getDetailedProfileSummaryRows = () =>
   mainProfileSummaryRows.filter((row) =>
+    row.id === "meaningfulMemories" ||
     row.id === "localArea" ||
     row.id === "interests" ||
     row.id === "comfortTrust" ||

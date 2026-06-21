@@ -15,6 +15,7 @@ describe("profile social layout", () => {
       "name",
       "myVibes",
       "aboutMe",
+      "meaningfulMemories",
       "verificationTrust",
       "profileShortcuts",
       "localArea",
@@ -33,6 +34,7 @@ describe("profile social layout", () => {
 
   it("shows only clean summary rows after About me and My vibes", () => {
     expect(getMainProfileSummaryRows().map((row) => row.id)).toEqual([
+      "meaningfulMemories",
       "localArea",
       "interests",
       "comfortTrust",
@@ -47,6 +49,7 @@ describe("profile social layout", () => {
 
   it("moves Local Area, Interests, Comfort & Readiness, and Privacy into Detailed layout", () => {
     expect(getDetailedProfileSummaryRows().map((row) => row.id)).toEqual([
+      "meaningfulMemories",
       "localArea",
       "interests",
       "comfortTrust",

@@ -72,6 +72,7 @@ import { appearanceLayoutControlMetadata, getUserPreferenceRowDescription, getUs
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { connectionPromptCategories, getConnectionPromptProfile } from "@/lib/connection-prompts";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
+import { meaningfulMemorySection } from "@/lib/connection-first-profile";
 import { getInterestComfortLayout, interestComfortModifierTitle } from "@/lib/interest-comfort-layout";
 import { formatPreferenceChipLabel, formatSelectedPreferenceChipLabel } from "@/lib/preferences-layout";
 import { nsnSupportReadabilityColors } from "@/lib/support-readability";
@@ -3093,6 +3094,15 @@ export default function ProfileScreen() {
     return "";
   };
   const profileSummaryRowsById = new Map(getMainProfileSummaryRows().map((row) => {
+    if (row.id === "meaningfulMemories") {
+      return [row.id, {
+        ...row,
+        summary: meaningfulMemorySection.examples[1],
+        badge: "Optional",
+        action: () => openPreferenceDestination("personalityPresence", "personality"),
+      }] as const;
+    }
+
     if (row.id === "localArea") {
       return [row.id, {
         ...row,

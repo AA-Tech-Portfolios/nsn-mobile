@@ -40,6 +40,14 @@ Future systems should support calm cooperation and community care before attenti
 
 For a related philosophy note on social media, confidence, and healthy visibility, see [`social-connection-and-visibility.md`](social-connection-and-visibility.md).
 
+## Access Beyond The App
+
+Participation should not depend on technical confidence. The app is the main NSN experience, but it should not be the only way someone can discover, understand, or join a meetup.
+
+Some people may not have reliable app access, stable devices, disability support, comfort with apps, or the confidence to handle every step alone. Wherever practical, NSN should treat alternative participation pathways as valid access routes rather than exceptions. These may include a simple website view for meetups, email contact or assisted RSVP, host-assisted onboarding, WhatsApp/SMS-style contact where appropriate, printed flyers or community-centre information, and community partners such as libraries, support groups, or local organisers.
+
+Hosts should be able to help someone understand a meetup, ask questions, and join safely without making them feel embarrassed. NSN and SoftHello copy should avoid language that implies "just use the app" or makes app confidence feel like a requirement for belonging.
+
 The goal is not to maximize attention.
 
 The goal is to help people feel human with each other.
