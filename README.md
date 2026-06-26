@@ -2,7 +2,9 @@
 
 SofterHello is the current local app identity prepared from the North Shore Nights alpha. North Shore Nights (NSN) remains the Sydney/North Shore alpha pilot identity for calm, low-pressure social connection. SoftHello is reserved for the broader global/future direction, and SoftShore remains historical naming exploration.
 
-**Tagline:** Small meetups for big moments.
+**SofterHello tagline:** Smaller meetups for bigger moments.
+
+**SoftHello future-direction tagline:** Small meetups for big moments.
 
 The pilot is built for young adults who want easier, calmer ways to reach out, reconnect, and find small local gatherings: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
 
@@ -60,7 +62,7 @@ Use these docs before making brand-facing changes:
 - [`docs/codex-brand-context-prompt.md`](docs/codex-brand-context-prompt.md) - prompt context for future Codex sessions.
 - [`docs/brand-systems.md`](docs/brand-systems.md) - visual identity boundaries and implementation rules.
 
-In short: **NSN / North Shore Nights** is the local Sydney/North Shore alpha pilot, **SofterHello** is the current local app identity, **SoftHello** is the global/future direction, and **SoftShore** is retired naming exploration. The shared tagline remains **Small meetups for big moments.** Do not rename the repository, package, folders, bundle identifiers, or internal references without a separate migration task.
+In short: **NSN / North Shore Nights** is the local Sydney/North Shore alpha pilot and does not have a current standalone tagline, **SofterHello** is the current local app identity with the tagline **Smaller meetups for bigger moments**, **SoftHello** is the global/future direction with the tagline **Small meetups for big moments**, and **SoftShore** is retired naming exploration. Do not rename the repository, package, folders, bundle identifiers, or internal references without a separate migration task.
 
 ## Local Pilot
 
@@ -184,7 +186,8 @@ See [`design.md`](design.md) for the broader interface plan and [`docs/brand-sys
 
 A lightweight future website can reuse these same prototype-safe messages:
 
-- Small meetups for big moments.
+- Smaller meetups for bigger moments. (SofterHello)
+- Small meetups for big moments. (SoftHello future direction)
 - Supporting visual copy: Small moments. Big skies.
 - Optional mood line: Sometimes the best conversations start with simply showing up.
 - NSN is the Sydney/North Shore pilot for small, low-pressure local gatherings.

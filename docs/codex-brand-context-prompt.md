@@ -9,7 +9,9 @@ Brand context:
 - North Shore Nights (NSN) is the current Sydney/North Shore alpha pilot.
 - SoftHello is the future broader/global product direction, not a live or production-ready product.
 - SoftShore is historical naming exploration unless a future scoped naming review reopens it.
-- Tagline: Small meetups for big moments.
+- SofterHello tagline: Smaller meetups for bigger moments.
+- SoftHello tagline: Small meetups for big moments.
+- NSN / North Shore Nights has no current standalone tagline.
 - The repo may remain named nsn-mobile.
 - Do not blindly rename repositories, package names, folders, bundle identifiers, route names, code symbols, or every NSN reference.
 - Repo/package/app identifier renames must be separate future tasks with explicit scope and validation.

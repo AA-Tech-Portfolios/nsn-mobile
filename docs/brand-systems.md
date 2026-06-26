@@ -8,7 +8,11 @@ This repo currently contains three related naming layers:
 - **SoftHello** is the future broader/global product direction.
 - **SoftShore** is historical naming exploration.
 
-The shared tagline is: **Small meetups for big moments.**
+Taglines are identity-specific:
+
+- **SofterHello:** Smaller meetups for bigger moments.
+- **SoftHello:** Small meetups for big moments.
+- **NSN / North Shore Nights:** no current standalone tagline.
 
 The products can share low-pressure meetup principles, trust flows, accessibility thinking,
 and safety patterns. They should not accidentally share all visual language or local copy.
@@ -134,7 +138,8 @@ as the current pilot name unless a future scoped naming review reopens it.
 
 ### Prototype-Safe Lines
 
-- "Small meetups for big moments."
+- "Smaller meetups for bigger moments." (SofterHello)
+- "Small meetups for big moments." (SoftHello)
 - "Small moments. Big skies."
 - "Sometimes the best conversations start with simply showing up."
 - "SoftShore was historical naming exploration for the local pilot."

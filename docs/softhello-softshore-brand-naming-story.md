@@ -8,7 +8,7 @@ SoftShore was explored as a local Sydney North Shore pilot brand. "Shore" gave t
 
 North Shore Nights and NSN now carry the current local pilot language. They also explain why this repository is called `nsn-mobile`. The next brand move should not be a mechanical rename across every file; any future transition toward SoftHello needs a scoped plan for repository naming, package naming, Expo/app identifiers, CI, release metadata, screenshots, docs, and user-facing copy.
 
-The tagline is **Small meetups for big moments.** It keeps the product focused on modest, respectful gatherings while still acknowledging that small social steps can matter deeply.
+The SofterHello tagline is **Smaller meetups for bigger moments.** The SoftHello future-direction tagline remains **Small meetups for big moments.** NSN / North Shore Nights has no current standalone tagline. These lines keep the product focused on modest, respectful gatherings while still acknowledging that small social steps can matter deeply.
 
 ## Brand Relationship
 
@@ -45,6 +45,8 @@ Avoid language around:
 - vague promises of safety before systems are real
 
 ## Public Positioning
+
+Smaller meetups for bigger moments.
 
 Small meetups for big moments.
 

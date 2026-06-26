@@ -8,7 +8,7 @@ NSN is the public-facing local pilot direction: a Sydney/North Shore alpha proto
 
 SoftHello is the future broader/global product direction. It is not live, launched, available, or production-ready. SoftShore remains historical naming exploration while any future rename work is scoped separately.
 
-The current shared tagline is: **Small meetups for big moments.**
+Taglines are identity-specific: **SofterHello** uses **Smaller meetups for bigger moments**, **SoftHello** keeps **Small meetups for big moments**, and **NSN / North Shore Nights** has no current standalone tagline.
 
 ## Working Features
 
@@ -90,7 +90,9 @@ Current validation has focused on TypeScript checks, local Expo/web startup, scr
 - **Current local pilot:** North Shore Nights / NSN, the Sydney North Shore alpha direction.
 - **Future broader/global direction:** SoftHello, the broader product and brand direction for low-pressure, privacy-aware social connection once local learning is clearer.
 - **Historical naming exploration:** SoftShore, retained only where older planning context explains it.
-- **Tagline:** Small meetups for big moments.
+- **SofterHello tagline:** Smaller meetups for bigger moments.
+- **SoftHello tagline:** Small meetups for big moments.
+- **NSN tagline:** none currently.
 - **Temporary repository name:** `nsn-mobile` can remain as-is for now; repository and package renames should be separate future tasks.
 
 See also: [`BRAND_NAMING.md`](BRAND_NAMING.md), [`softhello-softshore-brand-naming-story.md`](softhello-softshore-brand-naming-story.md), [`nsn-alpha-readiness.md`](nsn-alpha-readiness.md), [`alpha-tester-guide.md`](alpha-tester-guide.md), [`alpha-tester-feedback-checklist.md`](alpha-tester-feedback-checklist.md), [`brand-systems.md`](brand-systems.md), [`softhello-feature-map.md`](softhello-feature-map.md), and [`../todo.md`](../todo.md).

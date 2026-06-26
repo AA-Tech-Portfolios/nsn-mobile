@@ -6,9 +6,13 @@ SoftHello is the future broader product direction. Use it for long-term product 
 
 SoftShore remains historical naming exploration. It should not be positioned as the current pilot name unless a future scoped naming decision reopens it.
 
-The shared tagline is: **Small meetups for big moments.**
+Taglines are identity-specific:
 
-Supporting marketing or visual-preview copy can use: **Small moments. Big skies.** This should evoke the feeling behind NSN's calm local gatherings, not replace the official tagline. A longer optional mood line is: **Sometimes the best conversations start with simply showing up.**
+- **SofterHello:** Smaller meetups for bigger moments.
+- **SoftHello:** Small meetups for big moments.
+- **NSN / North Shore Nights:** no current standalone tagline.
+
+Supporting marketing or visual-preview copy can use: **Small moments. Big skies.** This should evoke the feeling behind NSN's calm local gatherings, not replace the identity-specific taglines. A longer optional mood line is: **Sometimes the best conversations start with simply showing up.**
 
 Repository, package, folder, bundle identifier, and broad code-symbol renames should be planned as separate future tasks.
 
@@ -33,7 +37,8 @@ Repository, package, folder, bundle identifier, and broad code-symbol renames sh
 
 ## Prototype-Safe Copy
 
-- "Small meetups for big moments."
+- "Smaller meetups for bigger moments." (SofterHello)
+- "Small meetups for big moments." (SoftHello)
 - "Small moments. Big skies."
 - "Sometimes the best conversations start with simply showing up."
 - "NSN is the current Sydney/North Shore alpha pilot."

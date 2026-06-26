@@ -11,7 +11,11 @@ This is an internal product and brand planning note. It captures preliminary nam
 
 North Shore Nights / NSN is the current Sydney/North Shore alpha pilot. SoftHello is the future broader/global product direction. SoftShore remains historical naming exploration for older planning notes.
 
-The current tagline is:
+The SofterHello tagline is:
+
+> Smaller meetups for bigger moments.
+
+The SoftHello future-direction tagline remains:
 
 > Small meetups for big moments.
 
@@ -35,7 +39,7 @@ North Shore Nights / NSN is the public-facing Sydney/North Shore pilot/community
 
 The repository is not being renamed right now. North Shore Nights / NSN can remain in historical docs, internal references, package metadata, screenshots, and code identifiers until specific rename work is planned.
 
-Where NSN appears, "Nights" should be understood as atmosphere, calmness, and winding-down energy, not nightlife-only events. New public-facing pilot copy should generally prefer NSN / North Shore Nights and the line "Small meetups for big moments."
+Where NSN appears, "Nights" should be understood as atmosphere, calmness, and winding-down energy, not nightlife-only events. NSN / North Shore Nights does not currently have its own standalone tagline; use the SofterHello or SoftHello tagline only when that identity is being invoked.
 
 NSN should avoid sounding like:
 
@@ -130,7 +134,11 @@ SoftCove also gives the product room to grow. A cove can hold first hellos, smal
 
 ## Current Positioning Direction
 
-Current tagline:
+SofterHello tagline:
+
+> Smaller meetups for bigger moments.
+
+SoftHello future-direction tagline:
 
 > Small meetups for big moments.
 
@@ -206,7 +214,8 @@ Public copy should keep NSN plain-spoken, local, and human. It should make the p
 
 Prototype-safe lines can include:
 
-- "Small meetups for big moments."
+- "Smaller meetups for bigger moments." (SofterHello)
+- "Small meetups for big moments." (SoftHello)
 - "NSN is the current Sydney/North Shore alpha pilot."
 - "Calmer small-group meetups for Sydney's North Shore, day or evening."
 - "Local meetups with privacy-first, low-pressure social pacing."
