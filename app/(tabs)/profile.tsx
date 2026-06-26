@@ -68,7 +68,7 @@ import {
   type ProfileDrawerPanel,
   type ProfilePreferenceSection,
 } from "@/lib/alpha-readiness-controls";
-import { appearanceLayoutControlMetadata, getUserPreferenceRowDescription, getUserPreferenceRows, profileAppInfoDedication, profileOptionGroups, profileReleaseOutlook, profileResourceSupportRowMetadata, profileSupportRowMetadata, type AppearanceLayoutControlKey, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
+import { appearanceLayoutControlMetadata, getUserPreferenceRowDescription, getUserPreferenceRows, profileAppInfoDedication, profileAppInfoTransparencyNote, profileOptionGroups, profileReleaseOutlook, profileResourceSupportRowMetadata, profileSupportRowMetadata, type AppearanceLayoutControlKey, type UserPreferenceRowKey } from "@/lib/profile-menu-row-metadata";
 import { eventCommunityGuidelinesCopy } from "@/lib/community-guidelines-copy";
 import { connectionPromptCategories, getConnectionPromptProfile } from "@/lib/connection-prompts";
 import { getMainProfileSummaryRows, getSimpleProfileSummaryRows, shouldShowManagementSectionOnProfileHome } from "@/lib/profile-social-layout";
@@ -6349,6 +6349,14 @@ export default function ProfileScreen() {
                       </View>
                     ))}
                   </View>
+                </View>
+                <View style={[styles.profileMenuInfoCard, styles.appInfoDedicationCard, isDay && styles.daySoftOption]}>
+                  <Text style={[styles.appInfoDedicationTitle, isDay && styles.dayTitle]}>
+                    {profileAppInfoTransparencyNote.title}
+                  </Text>
+                  <Text style={[styles.appInfoDedicationCopy, isDay && styles.dayMutedText]}>
+                    {profileAppInfoTransparencyNote.copy}
+                  </Text>
                 </View>
                 <View style={[styles.profileMenuInfoCard, styles.appInfoDedicationCard, isDay && styles.daySoftOption]}>
                   <Text style={[styles.appInfoDedicationTitle, isDay && styles.dayTitle]}>

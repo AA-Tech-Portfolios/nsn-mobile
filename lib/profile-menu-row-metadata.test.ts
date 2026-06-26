@@ -5,6 +5,7 @@ import {
   getUserPreferenceRows,
   getUserPreferenceRowDescription,
   profileAppInfoDedication,
+  profileAppInfoTransparencyNote,
   profileReleaseOutlook,
   profileOptionGroups,
   profileResourceSupportRowMetadata,
@@ -108,6 +109,17 @@ describe("profile menu row metadata", () => {
     expect(`${profileAppInfoDedication.title} ${profileAppInfoDedication.copy}`.toLowerCase()).not.toMatch(
       /hero|dramatic|spotlight|animated|flashy/
     );
+  });
+
+  it("keeps the App Info AI transparency note neutral and factual", () => {
+    const visibleCopy = `${profileAppInfoTransparencyNote.title} ${profileAppInfoTransparencyNote.copy}`;
+
+    expect(profileAppInfoTransparencyNote.title).toBe("How NSN was built");
+    expect(profileAppInfoTransparencyNote.copy).toContain("AI-powered software development tools");
+    expect(profileAppInfoTransparencyNote.copy).toContain("Product decisions");
+    expect(profileAppInfoTransparencyNote.copy).toContain("remain the responsibility of the creator");
+    expect(profileAppInfoTransparencyNote.placement).toBe("appInfo");
+    expect(visibleCopy.toLowerCase()).not.toMatch(/warning|alert|apology|replaced by ai|autonomous ai|promotion|powered by ai magic/);
   });
 
   it("frames the release outlook as an estimated beta path, not a launch promise", () => {

@@ -266,6 +266,13 @@ export const profileAppInfoDedication = {
   placement: "appInfoBottom",
 } as const;
 
+export const profileAppInfoTransparencyNote = {
+  title: "How NSN was built",
+  copy:
+    "NSN is an independent project developed with the assistance of AI-powered software development tools. These tools helped accelerate implementation and prototyping. Product decisions, community guidelines, testing, moderation approach, and ongoing development remain the responsibility of the creator.",
+  placement: "appInfo",
+} as const;
+
 export const profileReleaseOutlook = {
   title: "Release outlook",
   body:
