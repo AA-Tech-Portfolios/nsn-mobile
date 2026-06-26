@@ -2,6 +2,8 @@
 
 North Shore Nights (NSN) is the current Sydney/North Shore alpha pilot. It describes the local prototype being tested now: a calmer way for adults to explore small local gatherings with privacy choices, consent-minded wording, and social comfort considered from the start.
 
+SofterHello is the current local app identity and public-facing local release direction. Use it for current local app naming, social media handlers, upcoming website/email preparation, and public profile copy that belongs to the current local product identity.
+
 SoftHello is the future broader product direction. Use it for long-term product thinking and reusable principles, but do not describe it as live, launched, available, or production-ready.
 
 SoftShore remains historical naming exploration. It should not be positioned as the current pilot name unless a future scoped naming decision reopens it.
@@ -21,12 +23,14 @@ Repository, package, folder, bundle identifier, and broad code-symbol renames sh
 | Name                     | Role                             | Use                                                                                                                                               |
 | ------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | North Shore Nights / NSN | Current Sydney/North Shore pilot | Current app copy, tester-facing docs, local prototype context, screenshots, repository/package continuity, and Sydney/North Shore alpha language. |
+| SofterHello              | Current local app identity       | Current app display name, local public release identity, current social media handlers, upcoming website/email planning, and local about/bio copy. |
 | SoftHello                | Future broader product direction | Long-term product strategy, shared principles, future broader/global copy, neutral contributor context, and post-pilot planning.                  |
 | SoftShore                | Historical naming exploration    | Older planning docs or naming research only. Do not use as the current pilot name without a scoped naming decision.                               |
 
 ## Contributor Guidance
 
 - Prefer **NSN** or **North Shore Nights** when writing about the current Sydney/North Shore alpha pilot.
+- Prefer **SofterHello** when writing current public app identity, social media profile, about/bio, website, email, and release-preparation copy.
 - Prefer **SoftHello** when discussing the future broader product direction or reusable product principles.
 - Keep **SoftShore** limited to historical naming exploration unless a future scoped naming review changes that decision.
 - Treat `nsn-mobile` as the expected repo name for now.
@@ -53,8 +57,14 @@ Repository, package, folder, bundle identifier, and broad code-symbol renames sh
 When adding or changing public-facing text, ask:
 
 1. Is this current Sydney/North Shore pilot language? Use NSN or North Shore Nights.
-2. Is this future broader product language? Use SoftHello, with future-facing wording.
-3. Is this older naming research? SoftShore can appear as historical context, not as the active pilot.
-4. Is this an internal code path, repo/package identifier, historical doc, or screenshot label? Keep existing names unless a scoped rename task says otherwise.
+2. Is this current local public app identity, including social profiles, about/bio copy, an upcoming website, or an email address? Use SofterHello.
+3. Is this future broader product language? Use SoftHello, with future-facing wording.
+4. Is this older naming research? SoftShore can appear as historical context, not as the active pilot.
+5. Is this an internal code path, repo/package identifier, historical doc, or screenshot label? Keep existing names unless a scoped rename task says otherwise.
+
+## Follow-Up Reminder
+
+- Update SofterHello social media branding, handles, about/bio sections, website preparation, and email preparation to match the current local app identity.
+- Keep SoftHello future-facing: it has no current social media handlers, no current website/domain, and no current email address until a separate future launch/clearance task creates them.
 
 This lets the product language stay clear without creating accidental technical churn.

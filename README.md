@@ -195,6 +195,8 @@ A lightweight future website can reuse these same prototype-safe messages:
 - Privacy and trust are design principles first; production safety, verification, matching, payments, and moderation claims should wait until those systems are real and reviewed.
 - Good preview assets for a future landing page or social profile are Home discovery, Event Details, Settings & Privacy, and Onboarding. These show the app's calm feel without overpromising live operations.
 - Reserving names or preparing preview images is separate from public marketing. The near-term goal is brand protection, tester clarity, and future discoverability.
+- Current social media branding, social about/bio sections, upcoming website/domain preparation, and email preparation should use SofterHello.
+- SoftHello has no current social media handlers, current web domain, or current email address. Keep those references future-facing until a separate launch and clearance task creates them.
 
 ## Roadmap
 
