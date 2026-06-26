@@ -84,6 +84,7 @@ import {
   toggleSettingsDropdown,
   type SettingsDropdownName,
 } from "@/lib/settings-controls";
+import { accountControlToneColors } from "@/lib/settings-account-control-colors";
 import {
   emojiDisplayModeOptions,
   getSettingsBackTarget,
@@ -9761,24 +9762,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderLeftWidth: 3,
-    borderLeftColor: "#55A96E",
-    backgroundColor: "rgba(114,214,126,0.13)",
+    borderLeftColor: accountControlToneColors.pause.dark.border,
+    backgroundColor: accountControlToneColors.pause.dark.surface,
   },
   deactivateSettingsText: {
-    color: "#B8F3D0",
+    color: accountControlToneColors.pause.dark.text,
   },
   deactivateSettingsCopy: {
-    color: "#DDFBE7",
+    color: accountControlToneColors.pause.dark.body,
   },
   dayDeactivateSettingsRow: {
-    borderLeftColor: "#55A96E",
-    backgroundColor: "#E8F8EE",
+    borderLeftColor: accountControlToneColors.pause.light.border,
+    backgroundColor: accountControlToneColors.pause.light.surface,
   },
   dayDeactivateSettingsText: {
-    color: "#0F6B2F",
+    color: accountControlToneColors.pause.light.text,
   },
   dayDeactivateSettingsCopy: {
-    color: "#255D38",
+    color: accountControlToneColors.pause.light.body,
   },
   pauseTimelineGrid: {
     flexDirection: "row",
@@ -9792,33 +9793,33 @@ const styles = StyleSheet.create({
     minHeight: 60,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(114,214,126,0.34)",
-    backgroundColor: "rgba(255,255,255,0.045)",
+    borderColor: accountControlToneColors.pause.dark.cardBorder,
+    backgroundColor: accountControlToneColors.pause.dark.cardSurface,
     paddingHorizontal: 12,
     paddingVertical: 9,
   },
   pauseTimelineLabel: {
-    color: "#B8F3D0",
+    color: accountControlToneColors.pause.dark.text,
     fontSize: 12,
     fontWeight: "900",
     lineHeight: 17,
   },
   pauseTimelineCopy: {
-    color: "#DDFBE7",
+    color: accountControlToneColors.pause.dark.body,
     fontSize: 11,
     fontWeight: "700",
     lineHeight: 15,
     marginTop: 2,
   },
   dayPauseTimelineButton: {
-    borderColor: "#55A96E",
-    backgroundColor: "#F5FCF7",
+    borderColor: accountControlToneColors.pause.light.cardBorder,
+    backgroundColor: accountControlToneColors.pause.light.cardSurface,
   },
   dayPauseTimelineLabel: {
-    color: "#0F6B2F",
+    color: accountControlToneColors.pause.light.text,
   },
   dayPauseTimelineCopy: {
-    color: "#255D38",
+    color: accountControlToneColors.pause.light.body,
   },
   deactivatePrimaryButton: {
     alignSelf: "flex-start",
@@ -9830,12 +9831,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   reactivateButton: {
-    backgroundColor: "#E8F8EE",
+    backgroundColor: accountControlToneColors.resume.light.surface,
     borderWidth: 1,
-    borderColor: "#55A96E",
+    borderColor: accountControlToneColors.resume.light.border,
   },
   reactivateButtonText: {
-    color: "#0F6B2F",
+    color: accountControlToneColors.resume.light.text,
     fontSize: 12,
     fontWeight: "900",
   },
