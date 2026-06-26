@@ -4,6 +4,10 @@
 
 SoftHello exists so people never have to feel alone in a crowded room.
 
+## Dedication
+
+This project is dedicated in loving memory of a close family relative whose kindness, compassion, and steady support helped shape its values of care, belonging, and meaningful human connection.
+
 It is built for the person who wants connection, but not pressure. The person who may be shy, introverted, privacy-conscious, socially tired, newly arrived, quietly curious, or simply done with apps that make human connection feel like a performance.
 
 SoftHello begins from a small but important feeling: meeting people can be hard even when the world is full of people. A crowded event can still feel lonely. A dating app can still feel exposing. A social feed can still feel like being watched instead of being known.

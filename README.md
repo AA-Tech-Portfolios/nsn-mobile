@@ -6,6 +6,8 @@ SofterHello is the current local app identity prepared from the North Shore Nigh
 
 The pilot is built for young adults who want easier, calmer ways to reach out, reconnect, and find small local gatherings: small groups, clear expectations, weather-aware plans, privacy controls, and chat scoped to a specific meetup.
 
+This project is dedicated in loving memory of a close family relative whose kindness, compassion, and steady support helped shape its values of care, belonging, and meaningful human connection.
+
 **Alpha note:** this repository is still a prototype. Several safety, trust, RSVP, verification, moderation, and account behaviours are local-only, mocked, or scaffolded. Do not treat the app as production-ready or rely on it for real-world meetups without separate alpha organiser confirmation.
 
 ## Current Prototype Status
