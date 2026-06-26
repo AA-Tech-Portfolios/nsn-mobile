@@ -1,6 +1,6 @@
-# North Shore Nights / NSN Mobile
+# SofterHello / NSN Mobile
 
-North Shore Nights (NSN) is the current Sydney/North Shore alpha pilot for calm, low-pressure social connection. **SoftHello** is the future broader product direction after local pilot learning is clearer; it is not live or production-ready. SoftShore remains historical naming exploration, not the active pilot name.
+SofterHello is the current local app identity prepared from the North Shore Nights alpha. North Shore Nights (NSN) remains the Sydney/North Shore alpha pilot identity for calm, low-pressure social connection. SoftHello is reserved for the broader global/future direction, and SoftShore remains historical naming exploration.
 
 **Tagline:** Small meetups for big moments.
 
@@ -44,7 +44,7 @@ NSN's tone should stay low-pressure and plain-spoken: people can browse quietly,
 
 ## Product Intent
 
-Many social apps assume users are ready for big groups, loud events, or open-ended networking. The NSN local pilot and future SoftHello direction are designed for people who may be shy, reserved, new to an area, neurodivergent, privacy-conscious, or simply more comfortable with structured, smaller gatherings.
+Many social apps assume users are ready for big groups, loud events, or open-ended networking. The NSN local pilot, current SofterHello local app identity, and future SoftHello direction are designed for people who may be shy, reserved, new to an area, neurodivergent, privacy-conscious, or simply more comfortable with structured, smaller gatherings.
 
 Core principles live in [`docs/core-principles.md`](docs/core-principles.md). The emotional mission lives in [`docs/vision.md`](docs/vision.md).
 
@@ -52,12 +52,13 @@ Core principles live in [`docs/core-principles.md`](docs/core-principles.md). Th
 
 Use these docs before making brand-facing changes:
 
-- [`docs/BRAND_NAMING.md`](docs/BRAND_NAMING.md) - current naming model for NSN, SoftHello, and retired SoftShore exploration.
+- [`docs/BRAND_NAMING.md`](docs/BRAND_NAMING.md) - current naming model for NSN, SofterHello, SoftHello, and retired SoftShore exploration.
+- [`docs/rebrand-preparation-plan.md`](docs/rebrand-preparation-plan.md) - practical rules for preparing the SofterHello identity without erasing the NSN alpha history or collapsing SoftHello into the current app.
 - [`docs/softhello-softshore-brand-naming-story.md`](docs/softhello-softshore-brand-naming-story.md) - naming story and tone guidance.
 - [`docs/codex-brand-context-prompt.md`](docs/codex-brand-context-prompt.md) - prompt context for future Codex sessions.
 - [`docs/brand-systems.md`](docs/brand-systems.md) - visual identity boundaries and implementation rules.
 
-In short: **NSN / North Shore Nights** is the current local Sydney/North Shore pilot, **SoftHello** is the future broader product direction, and **SoftShore** is retired naming exploration. The shared tagline remains **Small meetups for big moments.** Do not rename the repository, package, folders, bundle identifiers, or internal references without a separate migration task.
+In short: **NSN / North Shore Nights** is the local Sydney/North Shore alpha pilot, **SofterHello** is the current local app identity, **SoftHello** is the global/future direction, and **SoftShore** is retired naming exploration. The shared tagline remains **Small meetups for big moments.** Do not rename the repository, package, folders, bundle identifiers, or internal references without a separate migration task.
 
 ## Local Pilot
 
@@ -68,7 +69,7 @@ Pilot docs:
 - [`docs/alpha-tester-guide.md`](docs/alpha-tester-guide.md) - human-facing guide for trusted controlled alpha testers.
 - [`docs/alpha-tester-feedback-checklist.md`](docs/alpha-tester-feedback-checklist.md) - short feedback questions for alpha walkthroughs and debriefs.
 - [`docs/community-support-vision.md`](docs/community-support-vision.md) - support, resources, gentle independence, accessibility, and boundary principles.
-- [`docs/brand-systems.md`](docs/brand-systems.md) - NSN and future SoftHello visual identity boundaries.
+- [`docs/brand-systems.md`](docs/brand-systems.md) - NSN, SofterHello, and future SoftHello visual identity boundaries.
 - [`docs/development-workflow.md`](docs/development-workflow.md) - Windows/PowerShell workflow notes, verification commands, and Expo web/native testing guidance.
 - [`docs/browser-testing.md`](docs/browser-testing.md) - practical alpha browser coverage, web checks, and future platform testing boundaries.
 - [`docs/database-auth-planning.md`](docs/database-auth-planning.md) - early staged planning for real auth, database entities, and trust/safety guardrails.
