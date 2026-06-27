@@ -1,0 +1,30 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">SofterHello logo</title>
+  <desc id="desc">A rounded SofterHello mark with a warm gradient, soft chat shapes, and a small heart.</desc>
+  <defs>
+    <linearGradient id="bg" x1="82" y1="64" x2="442" y2="452" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7553C7"/>
+      <stop offset="0.54" stop-color="#A56BD6"/>
+      <stop offset="1" stop-color="#F59E69"/>
+    </linearGradient>
+    <linearGradient id="bubble" x1="122" y1="130" x2="388" y2="364" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFF2E8"/>
+    </linearGradient>
+    <filter id="shadow" x="72" y="91" width="368" height="323" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="20" stdDeviation="22" flood-color="#3C286F" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect x="38" y="38" width="436" height="436" rx="112" fill="url(#bg)"/>
+  <circle cx="139" cy="128" r="48" fill="#FFD9BC" fill-opacity="0.32"/>
+  <circle cx="388" cy="388" r="72" fill="#F4B8D2" fill-opacity="0.28"/>
+
+  <g filter="url(#shadow)">
+    <path d="M137 164C137 135.833 159.833 113 188 113H324C352.167 113 375 135.833 375 164V251C375 279.167 352.167 302 324 302H246.5L184.5 356C177.964 361.693 167.758 357.052 167.758 348.389V299.787C150.22 291.999 137 274.426 137 251V164Z" fill="url(#bubble)"/>
+  </g>
+
+  <path d="M256.061 250.387C252.153 250.387 248.251 248.986 245.147 246.185C232.375 234.661 214 217.216 214 198.929C214 183.965 225.317 172 239.603 172C247.6 172 253.84 175.404 256.061 178.708C258.281 175.404 264.522 172 272.519 172C286.805 172 298.122 183.965 298.122 198.929C298.122 217.216 279.747 234.661 266.975 246.185C263.871 248.986 259.969 250.387 256.061 250.387Z" fill="#7553C7"/>
+  <circle cx="207" cy="206" r="13" fill="#F59E69" fill-opacity="0.85"/>
+  <circle cx="305" cy="206" r="13" fill="#F59E69" fill-opacity="0.85"/>
+</svg>
