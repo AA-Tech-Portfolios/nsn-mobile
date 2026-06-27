@@ -1,0 +1,31 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">SofterHello social preview</title>
+  <desc id="desc">SofterHello social preview card with the tagline Smaller meetups for bigger moments.</desc>
+  <defs>
+    <linearGradient id="cardBg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8F3"/>
+      <stop offset="0.45" stop-color="#F7F0FF"/>
+      <stop offset="1" stop-color="#FFE6D2"/>
+    </linearGradient>
+    <linearGradient id="markBg" x1="84" y1="89" x2="309" y2="329" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7553C7"/>
+      <stop offset="0.54" stop-color="#A56BD6"/>
+      <stop offset="1" stop-color="#F59E69"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" rx="52" fill="url(#cardBg)"/>
+  <circle cx="1010" cy="122" r="190" fill="#F4B8D2" fill-opacity="0.34"/>
+  <circle cx="1044" cy="527" r="154" fill="#FFD9BC" fill-opacity="0.54"/>
+  <circle cx="142" cy="518" r="182" fill="#7553C7" fill-opacity="0.08"/>
+
+  <g transform="translate(84 88)">
+    <rect width="248" height="248" rx="68" fill="url(#markBg)"/>
+    <path d="M65 80C65 63.4315 78.4315 50 95 50H156C172.569 50 186 63.4315 186 80V122C186 138.569 172.569 152 156 152H124L92 181C88.761 183.937 83.585 181.64 83.585 177.269V149.934C72.694 145.483 65 134.781 65 122V80Z" fill="#FFF8F3"/>
+    <path d="M126 128C124.045 128 122.094 127.301 120.542 125.902C114.154 120.143 105 111.427 105 102.286C105 94.804 110.659 88.822 117.802 88.822C121.8 88.822 124.92 90.524 126 92.176C127.08 90.524 130.2 88.822 134.198 88.822C141.341 88.822 147 94.804 147 102.286C147 111.427 137.846 120.143 131.458 125.902C129.906 127.301 127.955 128 126 128Z" fill="#7553C7"/>
+  </g>
+
+  <text x="386" y="232" fill="#291F38" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="84" font-weight="800" letter-spacing="-5">SofterHello</text>
+  <text x="390" y="318" fill="#513894" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="48" font-weight="800" letter-spacing="-2">Smaller meetups for bigger moments.</text>
+  <text x="390" y="396" fill="#665A72" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="30" font-weight="600">Gentler ways to connect through community,</text>
+  <text x="390" y="438" fill="#665A72" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="30" font-weight="600">conversation, and small local meetups.</text>
+</svg>
